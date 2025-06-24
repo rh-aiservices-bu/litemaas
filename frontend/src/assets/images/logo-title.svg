@@ -1,66 +1,280 @@
-<svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
-  <defs>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 166 27.225548"
+   version="1.1"
+   id="svg20"
+   width="166"
+   height="27.225548"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs6">
     <!-- Gradient for the cloud -->
-    <linearGradient id="cloudGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#4FC3F7;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#29B6F6;stop-opacity:1" />
+    <linearGradient
+       id="cloudGradient"
+       x1="11.208901"
+       y1="3.8435206"
+       x2="44.835602"
+       y2="37.470222"
+       gradientTransform="matrix(1.3382222,0,0,0.74726004,-15,-2.8721094)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         style="stop-color:#4FC3F7;stop-opacity:1"
+         id="stop1" />
+      <stop
+         offset="100%"
+         style="stop-color:#29B6F6;stop-opacity:1"
+         id="stop2" />
     </linearGradient>
-    
     <!-- Gradient for the neural network nodes -->
-    <linearGradient id="nodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FFA726;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#FF7043;stop-opacity:1" />
+    <linearGradient
+       id="nodeGradient"
+       x1="0"
+       y1="0"
+       x2="1"
+       y2="1">
+      <stop
+         offset="0%"
+         style="stop-color:#FFA726;stop-opacity:1"
+         id="stop3" />
+      <stop
+         offset="100%"
+         style="stop-color:#FF7043;stop-opacity:1"
+         id="stop4" />
     </linearGradient>
-    
     <!-- Gradient for the text -->
-    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#37474F;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#546E7A;stop-opacity:1" />
+    <linearGradient
+       id="textGradient"
+       x1="31.768194"
+       y1="15.24033"
+       x2="60.205563"
+       y2="15.24033"
+       gradientTransform="matrix(2.3994616,0,0,0.41676016,-15,-2.8721094)"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         offset="0%"
+         style="stop-color:#37474F;stop-opacity:1"
+         id="stop5" />
+      <stop
+         offset="100%"
+         style="stop-color:#546E7A;stop-opacity:1"
+         id="stop6" />
     </linearGradient>
+    <linearGradient
+       xlink:href="#nodeGradient"
+       id="linearGradient20"
+       x1="22.5"
+       y1="12.5"
+       x2="27.5"
+       y2="17.5"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-15,-2.8721094)" />
+    <linearGradient
+       xlink:href="#nodeGradient"
+       id="linearGradient21"
+       x1="22.5"
+       y1="18.5"
+       x2="27.5"
+       y2="23.5"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-15,-2.8721094)" />
+    <linearGradient
+       xlink:href="#nodeGradient"
+       id="linearGradient22"
+       x1="34.5"
+       y1="10.5"
+       x2="39.5"
+       y2="15.5"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-15,-2.8721094)" />
+    <linearGradient
+       xlink:href="#nodeGradient"
+       id="linearGradient23"
+       x1="34.5"
+       y1="15.5"
+       x2="39.5"
+       y2="20.5"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-15,-2.8721094)" />
+    <linearGradient
+       xlink:href="#nodeGradient"
+       id="linearGradient24"
+       x1="34.5"
+       y1="20.5"
+       x2="39.5"
+       y2="25.5"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-15,-2.8721094)" />
+    <linearGradient
+       xlink:href="#nodeGradient"
+       id="linearGradient25"
+       x1="47.5"
+       y1="15.5"
+       x2="52.5"
+       y2="20.5"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="translate(-15,-2.8721094)" />
   </defs>
-  
   <!-- Cloud shape representing "as-a-Service" -->
-  <path d="M25 28 C20 28, 15 23, 15 18 C15 13, 20 8, 25 8 C27 5, 32 3, 37 5 C42 1, 48 3, 50 8 C55 8, 60 13, 60 18 C60 23, 55 28, 50 28 Z" 
-        fill="url(#cloudGradient)" 
-        opacity="0.9"/>
-  
+  <path
+     d="m 10,25.127891 c -5,0 -10,-5 -10,-10 0,-5 5,-10.0000004 10,-10.0000004 2,-3 7,-5.00000001 12,-3 5,-4 11,-2.00000001 13,3 5,0 10,5.0000004 10,10.0000004 0,5 -5,10 -10,10 z"
+     fill="url(#cloudGradient)"
+     opacity="0.9"
+     id="path6"
+     style="fill:url(#cloudGradient)" />
   <!-- Neural network representation inside cloud -->
   <!-- Input layer -->
-  <circle cx="25" cy="15" r="2.5" fill="url(#nodeGradient)"/>
-  <circle cx="25" cy="21" r="2.5" fill="url(#nodeGradient)"/>
-  
+  <circle
+     cx="10"
+     cy="12.127891"
+     r="2.5"
+     fill="url(#nodeGradient)"
+     id="circle6"
+     style="fill:url(#linearGradient20)" />
+  <circle
+     cx="10"
+     cy="18.127892"
+     r="2.5"
+     fill="url(#nodeGradient)"
+     id="circle7"
+     style="fill:url(#linearGradient21)" />
   <!-- Hidden layer -->
-  <circle cx="37" cy="13" r="2.5" fill="url(#nodeGradient)"/>
-  <circle cx="37" cy="18" r="2.5" fill="url(#nodeGradient)"/>
-  <circle cx="37" cy="23" r="2.5" fill="url(#nodeGradient)"/>
-  
+  <circle
+     cx="22"
+     cy="10.127891"
+     r="2.5"
+     fill="url(#nodeGradient)"
+     id="circle8"
+     style="fill:url(#linearGradient22)" />
+  <circle
+     cx="22"
+     cy="15.127891"
+     r="2.5"
+     fill="url(#nodeGradient)"
+     id="circle9"
+     style="fill:url(#linearGradient23)" />
+  <circle
+     cx="22"
+     cy="20.127892"
+     r="2.5"
+     fill="url(#nodeGradient)"
+     id="circle10"
+     style="fill:url(#linearGradient24)" />
   <!-- Output layer -->
-  <circle cx="50" cy="18" r="2.5" fill="url(#nodeGradient)"/>
-  
+  <circle
+     cx="35"
+     cy="15.127891"
+     r="2.5"
+     fill="url(#nodeGradient)"
+     id="circle11"
+     style="fill:url(#linearGradient25)" />
   <!-- Connections -->
-  <line x1="27.5" y1="15" x2="34.5" y2="13" stroke="#FF7043" stroke-width="1.5" opacity="0.9"/>
-  <line x1="27.5" y1="15" x2="34.5" y2="18" stroke="#FF7043" stroke-width="1.5" opacity="0.9"/>
-  <line x1="27.5" y1="21" x2="34.5" y2="18" stroke="#FF7043" stroke-width="1.5" opacity="0.9"/>
-  <line x1="27.5" y1="21" x2="34.5" y2="23" stroke="#FF7043" stroke-width="1.5" opacity="0.9"/>
-  
-  <line x1="39.5" y1="13" x2="47.5" y2="18" stroke="#FF7043" stroke-width="1.5" opacity="0.9"/>
-  <line x1="39.5" y1="18" x2="47.5" y2="18" stroke="#FF7043" stroke-width="2" opacity="1"/>
-  <line x1="39.5" y1="23" x2="47.5" y2="18" stroke="#FF7043" stroke-width="1.5" opacity="0.9"/>
-  
-
-  
+  <line
+     x1="12.5"
+     y1="12.127891"
+     x2="19.5"
+     y2="10.127891"
+     stroke="#ff7043"
+     stroke-width="1.5"
+     opacity="0.9"
+     id="line11" />
+  <line
+     x1="12.5"
+     y1="12.127891"
+     x2="19.5"
+     y2="15.127891"
+     stroke="#ff7043"
+     stroke-width="1.5"
+     opacity="0.9"
+     id="line12" />
+  <line
+     x1="12.5"
+     y1="18.127892"
+     x2="19.5"
+     y2="15.127891"
+     stroke="#ff7043"
+     stroke-width="1.5"
+     opacity="0.9"
+     id="line13" />
+  <line
+     x1="12.5"
+     y1="18.127892"
+     x2="19.5"
+     y2="20.127892"
+     stroke="#ff7043"
+     stroke-width="1.5"
+     opacity="0.9"
+     id="line14" />
+  <line
+     x1="24.5"
+     y1="10.127891"
+     x2="32.5"
+     y2="15.127891"
+     stroke="#ff7043"
+     stroke-width="1.5"
+     opacity="0.9"
+     id="line15" />
+  <line
+     x1="24.5"
+     y1="15.127891"
+     x2="32.5"
+     y2="15.127891"
+     stroke="#ff7043"
+     stroke-width="2"
+     opacity="1"
+     id="line16" />
+  <line
+     x1="24.5"
+     y1="20.127892"
+     x2="32.5"
+     y2="15.127891"
+     stroke="#ff7043"
+     stroke-width="1.5"
+     opacity="0.9"
+     id="line17" />
   <!-- Text -->
-  <text x="75" y="18" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="url(#textGradient)">
-    <tspan>Lite</tspan><tspan fill="#4CAF50">MaaS</tspan>
-  </text>
-  <text x="75" y="30" font-family="Arial, sans-serif" font-size="8" fill="#78909C" opacity="0.8">
-    Models-as-a-Service
-  </text>
-  
+  <text
+     x="60"
+     y="15.127891"
+     font-family="Arial, sans-serif"
+     font-size="16px"
+     font-weight="bold"
+     fill="url(#textGradient)"
+     id="text18"
+     style="fill:url(#textGradient)"><tspan
+       id="tspan17"
+       style="fill:url(#textGradient)">Lite</tspan><tspan
+       fill="#4caf50"
+       id="tspan18"
+       style="fill:url(#textGradient)">MaaS</tspan></text>
+  <text
+     x="60"
+     y="27.127892"
+     font-family="Arial, sans-serif"
+     font-size="8px"
+     fill="#78909c"
+     opacity="0.8"
+     id="text19">Models-as-a-Service</text>
   <!-- Subtle sparkles for "lite" feeling -->
-  <g opacity="0.6">
-    <path d="M65 10 L66 12 L68 11 L66 13 L65 15 L64 13 L62 11 L64 12 Z" fill="#FFD54F"/>
-    <circle cx="180" cy="15" r="1" fill="#FFD54F"/>
-    <path d="M175 25 L175.5 26 L176.5 25.5 L175.5 27 L175 28 L174.5 27 L173.5 25.5 L174.5 26 Z" fill="#FFD54F"/>
+  <g
+     opacity="0.6"
+     id="g20"
+     transform="translate(-15,-2.8721094)">
+    <path
+       d="m 65,10 1,2 2,-1 -2,2 -1,2 -1,-2 -2,-2 2,1 z"
+       fill="#ffd54f"
+       id="path19" />
+    <circle
+       cx="180"
+       cy="15"
+       r="1"
+       fill="#ffd54f"
+       id="circle19" />
+    <path
+       d="m 175,25 0.5,1 1,-0.5 -1,1.5 -0.5,1 -0.5,-1 -1,-1.5 1,0.5 z"
+       fill="#ffd54f"
+       id="path20" />
   </g>
 </svg>

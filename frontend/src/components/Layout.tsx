@@ -142,7 +142,7 @@ const Layout: React.FC = () => {
       <ToolbarContent>
         <ToolbarGroup align={{ default: 'alignEnd' }}>
           {/* Theme Toggle */}
-          <ToolbarItem>
+          <ToolbarItem style={{ display: 'flex', alignItems: 'center', height: '40px' }}>
             <ToggleGroup aria-label="Dark theme toggle group">
               <ToggleGroupItem
                 aria-label="light theme toggle"
@@ -159,7 +159,7 @@ const Layout: React.FC = () => {
             </ToggleGroup>
           </ToolbarItem>
           {/* Language Selector */}
-          <ToolbarItem>
+          <ToolbarItem style={{ display: 'flex', alignItems: 'center', height: '40px' }}>
             <Dropdown
               isOpen={isLanguageDropdownOpen}
               onSelect={() => setIsLanguageDropdownOpen(false)}
@@ -171,6 +171,13 @@ const Layout: React.FC = () => {
                   aria-label={t('ui.language.selector')}
                   variant="plain"
                   onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+                  style={{
+                    height: '40px',
+                    width: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
                 >
                   <GlobeIcon />
                 </MenuToggle>
@@ -181,7 +188,7 @@ const Layout: React.FC = () => {
           </ToolbarItem>
 
           {/* Notifications */}
-          <ToolbarItem>
+          <ToolbarItem style={{ display: 'flex', alignItems: 'center', height: '40px' }}>
             <NotificationBadgeButton
               onClick={() => setIsNotificationDrawerOpen(!isNotificationDrawerOpen)}
               unreadCount={unreadCount}
@@ -189,7 +196,7 @@ const Layout: React.FC = () => {
           </ToolbarItem>
 
           {/* User Menu */}
-          <ToolbarItem>
+          <ToolbarItem style={{ display: 'flex', alignItems: 'center', height: '40px' }}>
             <Dropdown
               isOpen={isUserDropdownOpen}
               onSelect={() => setIsUserDropdownOpen(false)}
@@ -201,6 +208,14 @@ const Layout: React.FC = () => {
                   aria-label="User menu"
                   variant="plain"
                   onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                  style={{
+                    height: '40px',
+                    width: '40px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '0'
+                  }}
                 >
                   <Avatar src={AvatarPlaceholder} alt="User Avatar" size="sm" />
                 </MenuToggle>
@@ -217,19 +232,29 @@ const Layout: React.FC = () => {
   const Header = (
     <Masthead>
       <MastheadMain>
-        <MastheadBrand>
+        <MastheadBrand style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <Button
             variant="plain"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             aria-label="Global navigation"
-            style={{ marginRight: '1rem' }}
+            style={{ 
+              height: '40px',
+              width: '40px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}
           >
             <BarsIcon />
           </Button>
           <img
             src={LogoTitle}
             alt={appConfig.appTitle}
-            style={{ height: '80px', maxWidth: '200px' }}
+            style={{ 
+              height: '40px', 
+              maxWidth: '240px',
+              objectFit: 'contain'
+            }}
           />
         </MastheadBrand>
       </MastheadMain>
