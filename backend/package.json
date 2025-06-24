@@ -8,8 +8,14 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "vitest",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:security": "vitest run tests/security",
     "test:coverage": "vitest run --coverage",
-    "lint": "eslint src --ext .ts",
+    "test:watch": "vitest watch",
+    "test:perf": "k6 run tests/performance/load-test.js",
+    "test:all": "npm run test:unit && npm run test:integration && npm run test:security",
+    "lint": "eslint src tests --ext .ts",
     "clean": "rimraf dist coverage .tsbuildinfo"
   },
   "dependencies": {
