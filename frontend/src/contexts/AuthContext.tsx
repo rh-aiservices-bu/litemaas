@@ -7,6 +7,7 @@ interface AuthContextType {
   loading: boolean;
   isAuthenticated: boolean;
   login: () => void;
+  loginAsAdmin: () => void;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -32,16 +33,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const refreshUser = async () => {
     try {
+      // Check for admin bypass first
+      const adminUser = localStorage.getItem('litemaas_admin_user');
+      if (adminUser) {
+        setUser(JSON.parse(adminUser));
+        return;
+      }
+
       const currentUser = await authService.getCurrentUser();
       setUser(currentUser);
     } catch (error) {
       console.error('Failed to fetch user:', error);
-      setUser(null);
+      // Check for admin bypass on error
+      const adminUser = localStorage.getItem('litemaas_admin_user');
+      if (adminUser) {
+        setUser(JSON.parse(adminUser));
+      } else {
+        setUser(null);
+      }
     }
   };
 
   useEffect(() => {
     const initAuth = async () => {
+      // Check for admin bypass first
+      const adminUser = localStorage.getItem('litemaas_admin_user');
+      if (adminUser) {
+        setUser(JSON.parse(adminUser));
+        setLoading(false);
+        return;
+      }
+
       if (authService.isAuthenticated()) {
         await refreshUser();
       }
@@ -55,13 +77,40 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     window.location.href = '/api/auth/login';
   };
 
+  const loginAsAdmin = () => {
+    const adminUser: User = {
+      id: 'admin-bypass',
+      username: 'admin',
+      email: 'admin@litemaas.local',
+      name: 'Administrator (Test)',
+      roles: ['admin', 'user'],
+    };
+    
+    setUser(adminUser);
+    localStorage.setItem('litemaas_admin_user', JSON.stringify(adminUser));
+    navigate('/');
+  };
+
   const logout = async () => {
     try {
+      // Check if this is an admin bypass session
+      const adminUser = localStorage.getItem('litemaas_admin_user');
+      if (adminUser) {
+        localStorage.removeItem('litemaas_admin_user');
+        setUser(null);
+        navigate('/login');
+        return;
+      }
+
       await authService.logout();
       setUser(null);
       navigate('/login');
     } catch (error) {
       console.error('Logout failed:', error);
+      // Force logout on error
+      localStorage.removeItem('litemaas_admin_user');
+      setUser(null);
+      navigate('/login');
     }
   };
 
@@ -70,6 +119,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     loading,
     isAuthenticated: !!user,
     login,
+    loginAsAdmin,
     logout,
     refreshUser,
   };

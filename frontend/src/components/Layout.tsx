@@ -22,6 +22,7 @@ import {
   DropdownItem,
   DropdownList,
   MenuToggle,
+  Divider,
   Drawer,
   DrawerPanelContent,
   DrawerContent,
@@ -34,11 +35,13 @@ import { BarsIcon, MoonIcon, SunIcon, GlobeIcon } from '@patternfly/react-icons'
 import { AvatarPlaceholder, LogoTitle } from '../assets';
 import { appConfig } from '../config/navigation';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useAuth } from '../contexts/AuthContext';
 import { NotificationDrawer, NotificationBadgeButton } from './NotificationDrawer';
 
 const Layout: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { unreadCount } = useNotifications();
+  const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
@@ -107,13 +110,28 @@ const Layout: React.FC = () => {
 
   const userDropdownItems = (
     <DropdownList>
-      <DropdownItem key="profile">Profile</DropdownItem>
+      <DropdownItem isDisabled key="user-info">
+        <div style={{ padding: '0.5rem 0' }}>
+          <div style={{ fontWeight: 'bold' }}>{user?.name || user?.username}</div>
+          <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+            {user?.email}
+          </div>
+          {user?.roles?.includes('admin') && (
+            <div style={{ fontSize: '0.75rem', color: 'var(--pf-t--global--text--color--brand)' }}>
+              Administrator
+            </div>
+          )}
+        </div>
+      </DropdownItem>
+      <Divider component="li" />
       <DropdownItem key="settings">
         <Link to="/settings" style={{ textDecoration: 'none', color: 'inherit' }}>
           Settings
         </Link>
       </DropdownItem>
-      <DropdownItem key="logout">{t('ui.actions.logout')}</DropdownItem>
+      <DropdownItem key="logout" onClick={logout}>
+        {t('ui.actions.logout')}
+      </DropdownItem>
     </DropdownList>
   );
 
