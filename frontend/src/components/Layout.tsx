@@ -244,7 +244,7 @@ const Layout: React.FC = () => {
   );
 
   const mainContent = (
-    <Page masthead={Header} sidebar={Sidebar}>
+    <Page masthead={Header} sidebar={isSidebarOpen ? Sidebar : undefined}>
       <Outlet />
     </Page>
   );
