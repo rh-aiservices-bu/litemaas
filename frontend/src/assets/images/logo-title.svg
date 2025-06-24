@@ -1,0 +1,66 @@
+<svg viewBox="0 0 200 80" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Gradient for the cloud -->
+    <linearGradient id="cloudGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4FC3F7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#29B6F6;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Gradient for the neural network nodes -->
+    <linearGradient id="nodeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFA726;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF7043;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Gradient for the text -->
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#37474F;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#546E7A;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Cloud shape representing "as-a-Service" -->
+  <path d="M25 28 C20 28, 15 23, 15 18 C15 13, 20 8, 25 8 C27 5, 32 3, 37 5 C42 1, 48 3, 50 8 C55 8, 60 13, 60 18 C60 23, 55 28, 50 28 Z" 
+        fill="url(#cloudGradient)" 
+        opacity="0.9"/>
+  
+  <!-- Neural network representation inside cloud -->
+  <!-- Input layer -->
+  <circle cx="25" cy="15" r="2.5" fill="url(#nodeGradient)"/>
+  <circle cx="25" cy="21" r="2.5" fill="url(#nodeGradient)"/>
+  
+  <!-- Hidden layer -->
+  <circle cx="37" cy="13" r="2.5" fill="url(#nodeGradient)"/>
+  <circle cx="37" cy="18" r="2.5" fill="url(#nodeGradient)"/>
+  <circle cx="37" cy="23" r="2.5" fill="url(#nodeGradient)"/>
+  
+  <!-- Output layer -->
+  <circle cx="50" cy="18" r="2.5" fill="url(#nodeGradient)"/>
+  
+  <!-- Connections -->
+  <line x1="27.5" y1="15" x2="34.5" y2="13" stroke="#FF7043" stroke-width="1.5" opacity="0.9"/>
+  <line x1="27.5" y1="15" x2="34.5" y2="18" stroke="#FF7043" stroke-width="1.5" opacity="0.9"/>
+  <line x1="27.5" y1="21" x2="34.5" y2="18" stroke="#FF7043" stroke-width="1.5" opacity="0.9"/>
+  <line x1="27.5" y1="21" x2="34.5" y2="23" stroke="#FF7043" stroke-width="1.5" opacity="0.9"/>
+  
+  <line x1="39.5" y1="13" x2="47.5" y2="18" stroke="#FF7043" stroke-width="1.5" opacity="0.9"/>
+  <line x1="39.5" y1="18" x2="47.5" y2="18" stroke="#FF7043" stroke-width="2" opacity="1"/>
+  <line x1="39.5" y1="23" x2="47.5" y2="18" stroke="#FF7043" stroke-width="1.5" opacity="0.9"/>
+  
+
+  
+  <!-- Text -->
+  <text x="75" y="18" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="url(#textGradient)">
+    <tspan>Lite</tspan><tspan fill="#4CAF50">MaaS</tspan>
+  </text>
+  <text x="75" y="30" font-family="Arial, sans-serif" font-size="8" fill="#78909C" opacity="0.8">
+    Models-as-a-Service
+  </text>
+  
+  <!-- Subtle sparkles for "lite" feeling -->
+  <g opacity="0.6">
+    <path d="M65 10 L66 12 L68 11 L66 13 L65 15 L64 13 L62 11 L64 12 Z" fill="#FFD54F"/>
+    <circle cx="180" cy="15" r="1" fill="#FFD54F"/>
+    <path d="M175 25 L175.5 26 L176.5 25.5 L175.5 27 L175 28 L174.5 27 L173.5 25.5 L174.5 26 Z" fill="#FFD54F"/>
+  </g>
+</svg>

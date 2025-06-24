@@ -1,0 +1,26 @@
+/* Import PatternFly 6 fonts - RedHatText and RedHatDisplay */
+@import url('https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@400;700&family=Red+Hat+Text:wght@400;500;700&display=swap');
+
+/* Root styles with PatternFly 6 design tokens */
+:root {
+  /* Use PatternFly 6 semantic tokens for typography */
+  font-family: var(--pf-t--global--font--family--body);
+  font-size: var(--pf-t--global--font--size--body--default);
+  color: var(--pf-t--global--text--color--regular);
+  background-color: var(--pf-t--global--background--color--primary--default);
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: var(--pf-t--global--font--family--mono);
+}
+
+/* Dark theme support - add class to html element */
+.pf-v6-theme-dark {
+  color-scheme: dark;
+}
