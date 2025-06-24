@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   PageSection,
   Title,
@@ -10,20 +11,40 @@ import {
   FlexItem,
   Content,
   ContentVariants,
+  Button,
 } from '@patternfly/react-core';
 import { CatalogIcon, KeyIcon, ChartLineIcon, CubesIcon } from '@patternfly/react-icons';
+import { useNotifications } from '../contexts/NotificationContext';
 
 const HomePage: React.FC = () => {
+  const { t } = useTranslation();
+  const { addNotification } = useNotifications();
+
+  const handleDemoNotification = () => {
+    addNotification({
+      title: 'Welcome to LiteMaaS!',
+      description: 'This is a demo notification to showcase the notification system.',
+      variant: 'success',
+      actions: [
+        {
+          label: 'View Tutorial',
+          onClick: () => console.log('Tutorial clicked'),
+        },
+      ],
+    });
+  };
+
   return (
     <>
       <PageSection variant="secondary">
         <Content>
           <Title headingLevel="h1" size="2xl">
-            Welcome to LiteMaaS
+            {t('pages.home.title')}
           </Title>
-          <Content component={ContentVariants.p}>
-            Your Model as a Service platform for accessing and managing AI models.
-          </Content>
+          <Content component={ContentVariants.p}>{t('pages.home.subtitle')}</Content>
+          <Button variant="primary" onClick={handleDemoNotification} style={{ marginTop: '1rem' }}>
+            Demo Notification
+          </Button>
         </Content>
       </PageSection>
       <PageSection>
@@ -40,7 +61,7 @@ const HomePage: React.FC = () => {
                   </FlexItem>
                   <FlexItem>
                     <Title headingLevel="h3" size="md">
-                      Models
+                      {t('nav.models')}
                     </Title>
                   </FlexItem>
                   <FlexItem>
@@ -62,7 +83,7 @@ const HomePage: React.FC = () => {
                   </FlexItem>
                   <FlexItem>
                     <Title headingLevel="h3" size="md">
-                      Subscriptions
+                      {t('nav.subscriptions')}
                     </Title>
                   </FlexItem>
                   <FlexItem>
@@ -84,7 +105,7 @@ const HomePage: React.FC = () => {
                   </FlexItem>
                   <FlexItem>
                     <Title headingLevel="h3" size="md">
-                      API Keys
+                      {t('nav.apiKeys')}
                     </Title>
                   </FlexItem>
                   <FlexItem>
@@ -106,7 +127,7 @@ const HomePage: React.FC = () => {
                   </FlexItem>
                   <FlexItem>
                     <Title headingLevel="h3" size="md">
-                      Usage
+                      {t('nav.usage')}
                     </Title>
                   </FlexItem>
                   <FlexItem>

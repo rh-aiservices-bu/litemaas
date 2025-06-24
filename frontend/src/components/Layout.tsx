@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Page,
   Masthead,
@@ -17,21 +18,32 @@ import {
   ToolbarContent,
   ToolbarGroup,
   ToolbarItem,
-  Switch,
+  Dropdown,
+  DropdownItem,
+  DropdownList,
+  MenuToggle,
+  Drawer,
+  DrawerPanelContent,
+  DrawerContent,
+  DrawerContentBody,
+  DrawerHead,
+  DrawerActions,
+  DrawerCloseButton,
 } from '@patternfly/react-core';
-import {
-  CubesIcon,
-  KeyIcon,
-  ChartLineIcon,
-  HomeIcon,
-  CatalogIcon,
-  BarsIcon,
-} from '@patternfly/react-icons';
-import { AvatarPlaceholder } from '../assets';
+import { BarsIcon, MoonIcon, SunIcon, GlobeIcon } from '@patternfly/react-icons';
+import { AvatarPlaceholder, LogoTitle } from '../assets';
+import { appConfig } from '../config/navigation';
+import { useNotifications } from '../contexts/NotificationContext';
+import { NotificationDrawer, NotificationBadgeButton } from './NotificationDrawer';
 
 const Layout: React.FC = () => {
+  const { t, i18n } = useTranslation();
+  const { unreadCount } = useNotifications();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
+  const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
   const location = useLocation();
 
   useEffect(() => {
@@ -54,65 +66,120 @@ const Layout: React.FC = () => {
     }
   };
 
+  const handleLanguageChange = (language: string) => {
+    i18n.changeLanguage(language);
+    setIsLanguageDropdownOpen(false);
+  };
+
   const PageNav = (
     <Nav aria-label="Global navigation">
       <NavList>
-        <NavItem itemId="home" isActive={location.pathname === '/home'}>
-          <Link to="/home" className="pf-v6-c-nav__link">
-            <span className="pf-v6-c-nav__link-text">
-              <HomeIcon /> Home
-            </span>
-          </Link>
-        </NavItem>
-        <NavItem itemId="models" isActive={location.pathname === '/models'}>
-          <Link to="/models" className="pf-v6-c-nav__link">
-            <span className="pf-v6-c-nav__link-text">
-              <CatalogIcon /> Models
-            </span>
-          </Link>
-        </NavItem>
-        <NavItem itemId="subscriptions" isActive={location.pathname === '/subscriptions'}>
-          <Link to="/subscriptions" className="pf-v6-c-nav__link">
-            <span className="pf-v6-c-nav__link-text">
-              <CubesIcon /> Subscriptions
-            </span>
-          </Link>
-        </NavItem>
-        <NavItem itemId="api-keys" isActive={location.pathname === '/api-keys'}>
-          <Link to="/api-keys" className="pf-v6-c-nav__link">
-            <span className="pf-v6-c-nav__link-text">
-              <KeyIcon /> API Keys
-            </span>
-          </Link>
-        </NavItem>
-        <NavItem itemId="usage" isActive={location.pathname === '/usage'}>
-          <Link to="/usage" className="pf-v6-c-nav__link">
-            <span className="pf-v6-c-nav__link-text">
-              <ChartLineIcon /> Usage
-            </span>
-          </Link>
-        </NavItem>
+        {appConfig.navigation.map((navItem) => {
+          const Icon = navItem.icon;
+          const isActive = location.pathname === navItem.path;
+
+          return (
+            <NavItem key={navItem.id} itemId={navItem.id} isActive={isActive}>
+              <Link to={navItem.path || '#'}>
+                {Icon && <Icon />}
+                <span style={{ marginLeft: Icon ? '0.5rem' : '0' }}>{t(navItem.label)}</span>
+              </Link>
+            </NavItem>
+          );
+        })}
       </NavList>
     </Nav>
+  );
+
+  const languageDropdownItems = (
+    <DropdownList>
+      <DropdownItem key="en" onClick={() => handleLanguageChange('en')}>
+        🇺🇸 {t('ui.language.english')}
+      </DropdownItem>
+      <DropdownItem key="es" onClick={() => handleLanguageChange('es')}>
+        🇪🇸 {t('ui.language.spanish')}
+      </DropdownItem>
+      <DropdownItem key="fr" onClick={() => handleLanguageChange('fr')}>
+        🇫🇷 {t('ui.language.french')}
+      </DropdownItem>
+    </DropdownList>
+  );
+
+  const userDropdownItems = (
+    <DropdownList>
+      <DropdownItem key="profile">Profile</DropdownItem>
+      <DropdownItem key="settings">
+        <Link to="/settings" style={{ textDecoration: 'none', color: 'inherit' }}>
+          Settings
+        </Link>
+      </DropdownItem>
+      <DropdownItem key="logout">{t('ui.actions.logout')}</DropdownItem>
+    </DropdownList>
   );
 
   const headerToolbar = (
     <Toolbar isFullHeight isStatic>
       <ToolbarContent>
         <ToolbarGroup align={{ default: 'alignEnd' }}>
+          {/* Theme Toggle */}
           <ToolbarItem>
-            <Switch
-              id="theme-toggle"
-              aria-label="Dark theme"
-              isChecked={isDarkTheme}
-              onChange={(_event, checked) => handleThemeToggle(checked)}
+            <Button
+              variant="plain"
+              aria-label={t('ui.theme.toggle')}
+              onClick={() => handleThemeToggle(!isDarkTheme)}
+            >
+              {isDarkTheme ? <SunIcon /> : <MoonIcon />}
+            </Button>
+          </ToolbarItem>
+
+          {/* Language Selector */}
+          <ToolbarItem>
+            <Dropdown
+              isOpen={isLanguageDropdownOpen}
+              onSelect={() => setIsLanguageDropdownOpen(false)}
+              onOpenChange={setIsLanguageDropdownOpen}
+              toggle={(toggleRef) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  aria-label={t('ui.language.selector')}
+                  variant="plain"
+                  onClick={() => setIsLanguageDropdownOpen(!isLanguageDropdownOpen)}
+                >
+                  <GlobeIcon />
+                </MenuToggle>
+              )}
+            >
+              {languageDropdownItems}
+            </Dropdown>
+          </ToolbarItem>
+
+          {/* Notifications */}
+          <ToolbarItem>
+            <NotificationBadgeButton
+              onClick={() => setIsNotificationDrawerOpen(!isNotificationDrawerOpen)}
+              unreadCount={unreadCount}
             />
           </ToolbarItem>
+
+          {/* User Menu */}
           <ToolbarItem>
-            <Avatar src={AvatarPlaceholder} alt="User Avatar" />
-          </ToolbarItem>
-          <ToolbarItem>
-            <Button variant="plain">Logout</Button>
+            <Dropdown
+              isOpen={isUserDropdownOpen}
+              onSelect={() => setIsUserDropdownOpen(false)}
+              onOpenChange={setIsUserDropdownOpen}
+              toggle={(toggleRef) => (
+                <MenuToggle
+                  ref={toggleRef}
+                  aria-label="User menu"
+                  variant="plain"
+                  onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                >
+                  <Avatar src={AvatarPlaceholder} alt="User Avatar" size="sm" />
+                </MenuToggle>
+              )}
+            >
+              {userDropdownItems}
+            </Dropdown>
           </ToolbarItem>
         </ToolbarGroup>
       </ToolbarContent>
@@ -127,10 +194,15 @@ const Layout: React.FC = () => {
             variant="plain"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             aria-label="Global navigation"
+            style={{ marginRight: '1rem' }}
           >
             <BarsIcon />
           </Button>
-          LiteMaaS
+          <img
+            src={LogoTitle}
+            alt={appConfig.appTitle}
+            style={{ height: '32px', maxWidth: '200px' }}
+          />
         </MastheadBrand>
       </MastheadMain>
       <MastheadContent>{headerToolbar}</MastheadContent>
@@ -143,10 +215,35 @@ const Layout: React.FC = () => {
     </PageSidebar>
   );
 
-  return (
+  const mainContent = (
     <Page masthead={Header} sidebar={Sidebar}>
       <Outlet />
     </Page>
+  );
+
+  return (
+    <Drawer
+      isExpanded={isNotificationDrawerOpen}
+      onExpand={() => setIsNotificationDrawerOpen(true)}
+    >
+      <DrawerContent
+        panelContent={
+          <DrawerPanelContent isResizable defaultSize="400px" minSize="300px">
+            <DrawerHead>
+              <DrawerActions>
+                <DrawerCloseButton onClick={() => setIsNotificationDrawerOpen(false)} />
+              </DrawerActions>
+            </DrawerHead>
+            <NotificationDrawer
+              isOpen={isNotificationDrawerOpen}
+              onClose={() => setIsNotificationDrawerOpen(false)}
+            />
+          </DrawerPanelContent>
+        }
+      >
+        <DrawerContentBody>{mainContent}</DrawerContentBody>
+      </DrawerContent>
+    </Drawer>
   );
 };
 

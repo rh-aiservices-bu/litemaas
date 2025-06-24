@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider } from '../contexts/AuthContext';
+import { NotificationProvider } from '../contexts/NotificationContext';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import Layout from '../components/Layout';
 import HomePage from '../pages/HomePage';
@@ -7,12 +8,15 @@ import ModelsPage from '../pages/ModelsPage';
 import SubscriptionsPage from '../pages/SubscriptionsPage';
 import ApiKeysPage from '../pages/ApiKeysPage';
 import UsagePage from '../pages/UsagePage';
+import SettingsPage from '../pages/SettingsPage';
 import LoginPage from '../pages/LoginPage';
 
-// Root component that provides AuthContext
+// Root component that provides all contexts
 const Root = () => (
   <AuthProvider>
-    <Outlet />
+    <NotificationProvider>
+      <Outlet />
+    </NotificationProvider>
   </AuthProvider>
 );
 
@@ -52,6 +56,10 @@ export const router = createBrowserRouter([
           {
             path: 'usage',
             element: <UsagePage />,
+          },
+          {
+            path: 'settings',
+            element: <SettingsPage />,
           },
         ],
       },

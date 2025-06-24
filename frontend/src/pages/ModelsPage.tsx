@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   PageSection,
   Title,
@@ -11,26 +12,25 @@ import {
 import { CatalogIcon } from '@patternfly/react-icons';
 
 const ModelsPage: React.FC = () => {
+  const { t } = useTranslation();
+
   return (
     <>
       <PageSection variant="secondary">
         <Title headingLevel="h1" size="2xl">
-          Available Models
+          {t('pages.models.title')}
         </Title>
       </PageSection>
       <PageSection>
         <EmptyState variant={EmptyStateVariant.full}>
           <CatalogIcon style={{ fontSize: '4rem' }} />
           <Title headingLevel="h2" size="lg">
-            No models available yet
+            {t('pages.models.noModels')}
           </Title>
-          <EmptyStateBody>
-            Model discovery and subscription functionality coming soon. Check back later for
-            available AI models.
-          </EmptyStateBody>
+          <EmptyStateBody>{t('pages.models.description')}</EmptyStateBody>
           <EmptyStateActions>
             <Button variant="primary" isDisabled>
-              Browse Models
+              {t('ui.actions.browse')} Models
             </Button>
           </EmptyStateActions>
         </EmptyState>
