@@ -30,6 +30,8 @@ import {
   DrawerHead,
   DrawerActions,
   DrawerCloseButton,
+  ToggleGroup,
+  ToggleGroupItem,
 } from '@patternfly/react-core';
 import { BarsIcon, MoonIcon, SunIcon, GlobeIcon } from '@patternfly/react-icons';
 import { AvatarPlaceholder, LogoTitle } from '../assets';
@@ -141,21 +143,28 @@ const Layout: React.FC = () => {
         <ToolbarGroup align={{ default: 'alignEnd' }}>
           {/* Theme Toggle */}
           <ToolbarItem>
-            <Button
-              variant="plain"
-              aria-label={t('ui.theme.toggle')}
-              onClick={() => handleThemeToggle(!isDarkTheme)}
-            >
-              {isDarkTheme ? <SunIcon /> : <MoonIcon />}
-            </Button>
+            <ToggleGroup aria-label="Dark theme toggle group">
+              <ToggleGroupItem
+                aria-label="light theme toggle"
+                icon={<SunIcon />}
+                isSelected={!isDarkTheme}
+                onClick={() => handleThemeToggle(false)}
+              />
+              <ToggleGroupItem
+                aria-label="dark theme toggle"
+                icon={<MoonIcon />}
+                isSelected={isDarkTheme}
+                onClick={() => handleThemeToggle(true)}
+              />
+            </ToggleGroup>
           </ToolbarItem>
-
           {/* Language Selector */}
           <ToolbarItem>
             <Dropdown
               isOpen={isLanguageDropdownOpen}
               onSelect={() => setIsLanguageDropdownOpen(false)}
               onOpenChange={setIsLanguageDropdownOpen}
+              popperProps={{ position: 'right' }}
               toggle={(toggleRef) => (
                 <MenuToggle
                   ref={toggleRef}
@@ -185,6 +194,7 @@ const Layout: React.FC = () => {
               isOpen={isUserDropdownOpen}
               onSelect={() => setIsUserDropdownOpen(false)}
               onOpenChange={setIsUserDropdownOpen}
+              popperProps={{ position: 'right' }}
               toggle={(toggleRef) => (
                 <MenuToggle
                   ref={toggleRef}
@@ -219,7 +229,7 @@ const Layout: React.FC = () => {
           <img
             src={LogoTitle}
             alt={appConfig.appTitle}
-            style={{ height: '32px', maxWidth: '200px' }}
+            style={{ height: '80px', maxWidth: '200px' }}
           />
         </MastheadBrand>
       </MastheadMain>

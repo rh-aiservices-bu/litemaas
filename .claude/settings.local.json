@@ -15,7 +15,9 @@
       "WebFetch(domain:raw.githubusercontent.com)",
       "Bash(npm install:*)",
       "Bash(npm run dev:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)"
     ],
     "deny": []
   }

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   NotificationDrawer as PFNotificationDrawer,
   NotificationDrawerBody,
@@ -28,20 +27,29 @@ interface NotificationDrawerProps {
 }
 
 export const NotificationDrawer: React.FC<NotificationDrawerProps> = () => {
-  const { t } = useTranslation();
   const { notifications, markAsRead, markAllAsRead, removeNotification, clearAll } =
     useNotifications();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const dropdownItems = (
-    <DropdownList>
-      <DropdownItem key="mark-all-read" onClick={markAllAsRead}>
-        {t('ui.notifications.markRead')}
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  const onDropdownSelect = () => {
+    setIsDropdownOpen(false);
+  };
+
+  const onDropdownToggle = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+
+  const notificationDrawerActions = (
+    <>
+      <DropdownItem key="markAllRead" onClick={markAllAsRead}>
+        Mark all read
       </DropdownItem>
-      <DropdownItem key="clear-all" onClick={clearAll}>
-        {t('ui.notifications.clear')}
+      <DropdownItem key="clearAll" onClick={clearAll}>
+        Clear all
       </DropdownItem>
-    </DropdownList>
+    </>
   );
 
   const getVariantIcon = (variant?: string) => {
@@ -61,26 +69,27 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = () => {
 
   return (
     <PFNotificationDrawer>
-      <NotificationDrawerHeader>
-        <Title headingLevel="h2" size="lg">
-          {t('ui.notifications.title')}
-        </Title>
+      <NotificationDrawerHeader 
+        count={unreadCount}
+      >
         <Dropdown
+          id="notification-drawer-0"
           isOpen={isDropdownOpen}
-          onSelect={() => setIsDropdownOpen(false)}
-          onOpenChange={setIsDropdownOpen}
+          onSelect={onDropdownSelect}
+          popperProps={{ position: 'right' }}
+          onOpenChange={(isOpen: boolean) => !isOpen && setIsDropdownOpen(false)}
           toggle={(toggleRef) => (
             <MenuToggle
               ref={toggleRef}
-              aria-label="Notification actions"
+              isExpanded={isDropdownOpen}
               variant="plain"
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            >
-              <EllipsisVIcon />
-            </MenuToggle>
+              onClick={onDropdownToggle}
+              aria-label="Notification drawer actions"
+              icon={<EllipsisVIcon />}
+            />
           )}
         >
-          {dropdownItems}
+          <DropdownList>{notificationDrawerActions}</DropdownList>
         </Dropdown>
       </NotificationDrawerHeader>
       <NotificationDrawerBody>
@@ -93,10 +102,10 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = () => {
               }}
             />
             <Title headingLevel="h3" size="md">
-              {t('ui.notifications.empty')}
+              No notifications found
             </Title>
             <EmptyStateBody>
-              You're all caught up! No new notifications at this time.
+              There are currently no notifications.
             </EmptyStateBody>
           </EmptyState>
         ) : (
@@ -183,10 +192,10 @@ export const NotificationBadgeButton: React.FC<NotificationBadgeButtonProps> = (
   unreadCount,
 }) => {
   return (
-    <Button variant="plain" aria-label="Notifications" onClick={onClick}>
-      <NotificationBadge count={unreadCount}>
-        <BellIcon />
-      </NotificationBadge>
-    </Button>
+    <NotificationBadge 
+      count={unreadCount}
+      onClick={onClick}
+      aria-label="Notifications"
+    />
   );
 };
