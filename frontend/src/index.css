@@ -47,9 +47,9 @@ code {
   padding: 0.75rem 1rem;
 }
 
-/* Reduce top padding/margin for tighter layout */
+/* Reduce all padding/margin for tighter layout */
 .pf-v6-c-page__main {
-  padding-top: 0.5rem !important;
+  padding: 0 !important;
 }
 
 .pf-v6-c-page__main-section {
