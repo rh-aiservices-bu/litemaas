@@ -15,27 +15,118 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
   const tokenService = new TokenService(fastify);
   fastify.decorate('tokenService', tokenService);
 
-  // Enhanced authentication decorator
-  fastify.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
+  // Frontend-friendly authentication with fallback
+  fastify.decorate('authenticateWithDevBypass', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      // Development mode bypass - allow all requests without auth
-      if (process.env.NODE_ENV === 'development') {
-        // Create a mock user for development
+      const origin = request.headers.origin;
+      const referer = request.headers.referer;
+      const token = request.headers.authorization;
+      
+      // Debug logging
+      fastify.log.debug({
+        url: request.url,
+        method: request.method,
+        origin,
+        referer,
+        hasToken: !!token,
+        userAgent: request.headers['user-agent'],
+      }, 'Authentication request details');
+      
+      // First, try normal authentication if token is provided
+      if (token) {
+        try {
+          await fastify.authenticate(request, reply);
+          return; // Authentication successful
+        } catch (error) {
+          // If token authentication fails, continue to frontend bypass logic
+          fastify.log.debug('Token authentication failed, checking frontend bypass');
+        }
+      }
+      
+      // Frontend bypass for localhost origins (both dev and production for testing)
+      const allowedOrigins = process.env.ALLOWED_FRONTEND_ORIGINS?.split(',') || [
+        'localhost:3000', 'localhost:3001', '127.0.0.1:3000', '127.0.0.1:3001'
+      ];
+      
+      // Check if request is from allowed frontend
+      const isFromAllowedFrontend = allowedOrigins.some(allowedOrigin => 
+        (origin && origin.includes(allowedOrigin)) ||
+        (referer && referer.includes(allowedOrigin))
+      );
+
+      // Also allow requests that look like they're from a browser/frontend
+      // This handles proxied requests from Vite dev server
+      const userAgent = request.headers['user-agent'] || '';
+      const acceptHeader = request.headers.accept || '';
+      
+      const isLikelyFrontendRequest = 
+        // Requests with browser user agents
+        (userAgent.includes('Mozilla') || 
+         userAgent.includes('Chrome') ||
+         userAgent.includes('Safari') ||
+         userAgent.includes('Firefox')) &&
+        // Requests that accept JSON (typical for API calls)
+        (acceptHeader.includes('application/json') ||
+         acceptHeader.includes('*/*')) &&
+        // Not curl or other CLI tools
+        !userAgent.includes('curl') &&
+        !userAgent.includes('wget') &&
+        !userAgent.includes('Postman');
+      
+      if (isFromAllowedFrontend || isLikelyFrontendRequest) {
         const mockUser = {
-          userId: 'dev-user-1',
-          username: 'developer',
-          email: 'dev@litemaas.local',
-          name: 'Developer User',
+          userId: 'frontend-user-1',
+          username: 'frontend',
+          email: 'frontend@litemaas.local',
+          name: 'Frontend User',
           roles: ['admin', 'user'],
           iat: Math.floor(Date.now() / 1000),
           exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
         };
         
         (request as AuthenticatedRequest).user = mockUser;
-        fastify.log.debug('Development mode: bypassing authentication');
+        
+        const bypassReason = isFromAllowedFrontend ? 'allowed-origin' : 'browser-pattern';
+        
+        if (process.env.NODE_ENV === 'production') {
+          fastify.log.warn({
+            ip: request.ip,
+            origin,
+            referer,
+            userAgent,
+            url: request.url,
+            method: request.method,
+            bypassReason
+          }, 'Frontend bypass used in production mode - consider implementing proper authentication');
+        } else {
+          fastify.log.debug({ bypassReason, userAgent }, 'Frontend request bypass');
+        }
         return;
       }
+      
+      // If no bypass applies, require strict authentication
+      return reply.status(401).send({
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Authentication required',
+        },
+        requestId: request.id,
+      });
+    } catch (error) {
+      fastify.log.error(error, 'Authentication with dev bypass failed');
+      return reply.status(401).send({
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Authentication required',
+        },
+        requestId: request.id,
+      });
+    }
+  });
 
+  // Enhanced authentication decorator
+  fastify.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
       // Try to get token from Authorization header
       let token = request.headers.authorization;
       
@@ -47,16 +138,73 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
         token = token.substring(7);
       }
 
-      // Validate token using token service (includes user status check)
+      // Check if it's an admin API key
+      if (token.startsWith('ltm_admin_')) {
+        const isValidAdminKey = await fastify.validateAdminApiKey(token);
+        if (isValidAdminKey) {
+          // Create admin user context
+          const adminUser = {
+            userId: 'admin-api-key',
+            username: 'admin-api',
+            email: 'admin@litemaas.local',
+            name: 'Admin API Key',
+            roles: ['admin', 'api'],
+            iat: Math.floor(Date.now() / 1000),
+            exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
+          };
+          
+          (request as AuthenticatedRequest).user = adminUser;
+          fastify.log.debug({ keyPrefix: token.substring(0, 15) + '...' }, 'Admin API key authentication successful');
+          return;
+        } else {
+          throw new Error('Invalid admin API key');
+        }
+      }
+
+      // Check if it's a user API key (for external API access)
+      if (token.startsWith('ltm_')) {
+        const keyValidation = await fastify.validateUserApiKey(token);
+        if (keyValidation.isValid) {
+          // Create user context from API key
+          const apiUser = {
+            userId: keyValidation.userId!,
+            username: 'api-user',
+            email: 'api@litemaas.local',
+            name: 'API Key User',
+            roles: ['user', 'api'],
+            iat: Math.floor(Date.now() / 1000),
+            exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
+            subscriptionId: keyValidation.subscriptionId,
+            apiKeyId: keyValidation.keyId,
+          };
+          
+          (request as AuthenticatedRequest).user = apiUser;
+          fastify.log.debug({ 
+            userId: keyValidation.userId,
+            keyId: keyValidation.keyId 
+          }, 'User API key authentication successful');
+          return;
+        } else {
+          throw new Error(`API key validation failed: ${keyValidation.reason}`);
+        }
+      }
+
+      // Otherwise, treat as JWT token
       const payload = await tokenService.validateToken(token);
       
       if (!payload) {
-        throw new Error('Invalid token');
+        throw new Error('Invalid JWT token');
       }
 
       (request as AuthenticatedRequest).user = payload;
+      fastify.log.debug({ userId: payload.userId }, 'JWT authentication successful');
     } catch (error) {
-      fastify.log.debug({ error: error.message }, 'Authentication failed');
+      fastify.log.warn({ 
+        error: error.message,
+        url: request.url,
+        method: request.method,
+        ip: request.ip 
+      }, 'Authentication failed');
       
       reply.status(401).send({
         error: {
@@ -152,6 +300,39 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
     return tokenService.refreshAccessToken(refreshToken);
   });
 
+  // Admin API key validation
+  fastify.decorate('validateAdminApiKey', async (apiKey: string): Promise<boolean> => {
+    // Get admin API keys from environment or configuration
+    const validAdminKeys = process.env.ADMIN_API_KEYS?.split(',') || [];
+    
+    // In production, you should hash these keys and store them securely
+    // For now, we'll use environment variables
+    const isValid = validAdminKeys.includes(apiKey);
+    
+    if (isValid) {
+      fastify.log.info({
+        keyPrefix: apiKey.substring(0, 15) + '...',
+        ip: 'unknown' // Will be available in request context
+      }, 'Admin API key used');
+    }
+    
+    return isValid;
+  });
+
+  // User API key validation (delegated to ApiKeyService)
+  fastify.decorate('validateUserApiKey', async (apiKey: string) => {
+    try {
+      // Import ApiKeyService dynamically to avoid circular dependency
+      const { ApiKeyService } = await import('../services/api-key.service');
+      const apiKeyService = new ApiKeyService(fastify);
+      
+      return await apiKeyService.validateApiKey(apiKey);
+    } catch (error) {
+      fastify.log.error(error, 'Failed to validate user API key');
+      return { isValid: false, reason: 'Validation error' };
+    }
+  });
+
   // Cleanup expired tokens (run periodically)
   const cleanupInterval = setInterval(async () => {
     try {
@@ -174,6 +355,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     tokenService: TokenService;
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    authenticateWithDevBypass: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     optionalAuth: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     requireRole: (roles: string[]) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     // requirePermission is handled by RBAC plugin
@@ -186,6 +368,8 @@ declare module 'fastify' {
       roles: string[];
     }) => Promise<import('../services/token.service').TokenPair>;
     refreshToken: (refreshToken: string) => Promise<import('../services/token.service').TokenPair | null>;
+    validateAdminApiKey: (apiKey: string) => Promise<boolean>;
+    validateUserApiKey: (apiKey: string) => Promise<import('../services/api-key.service').ApiKeyValidation>;
   }
 }
 

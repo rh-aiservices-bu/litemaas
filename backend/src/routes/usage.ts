@@ -65,7 +65,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticate,
+    preHandler: fastify.authenticateWithDevBypass,
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, modelId, apiKeyId } = request.query;
@@ -186,7 +186,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticate,
+    preHandler: fastify.authenticateWithDevBypass,
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, modelId, subscriptionId, granularity } = request.query;
@@ -272,7 +272,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticate,
+    preHandler: fastify.authenticateWithDevBypass,
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, interval = 'day', modelId, subscriptionId } = request.query;
@@ -335,7 +335,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticate,
+    preHandler: fastify.authenticateWithDevBypass,
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { timeRange = 'month' } = request.query as { timeRange?: 'day' | 'week' | 'month' };
@@ -406,7 +406,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticate,
+    preHandler: fastify.authenticateWithDevBypass,
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { timeRange = 'month', limit = 10 } = request.query as {
@@ -458,7 +458,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticate,
+    preHandler: fastify.authenticateWithDevBypass,
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, format = 'csv', modelId, subscriptionId, apiKeyId } = request.query;

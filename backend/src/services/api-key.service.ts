@@ -128,13 +128,38 @@ export class ApiKeyService {
 
   private shouldUseMockData(): boolean {
     // Use mock data if in development mode or if database is not available
-    return process.env.NODE_ENV === 'development' || this.isDatabaseUnavailable();
+    // In production, still use mock data if PostgreSQL is not configured/available
+    const isDev = process.env.NODE_ENV === 'development';
+    const dbUnavailable = this.isDatabaseUnavailable();
+    
+    this.fastify.log.debug({ 
+      isDev, 
+      dbUnavailable, 
+      nodeEnv: process.env.NODE_ENV,
+      hasPg: !!this.fastify.pg 
+    }, 'API Key Service: Checking if should use mock data');
+    
+    return isDev || dbUnavailable;
   }
 
   private isDatabaseUnavailable(): boolean {
     try {
-      return !this.fastify.pg;
-    } catch {
+      // Check if pg plugin is registered and has a working connection
+      if (!this.fastify.pg) {
+        this.fastify.log.debug('API Key Service: PostgreSQL plugin not available');
+        return true;
+      }
+      
+      // Additional check: if the database plugin detected unavailability during startup,
+      // it would have set up mock mode. Check if we're in mock mode.
+      if (this.fastify.isDatabaseMockMode && this.fastify.isDatabaseMockMode()) {
+        this.fastify.log.debug('API Key Service: Database mock mode enabled');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      this.fastify.log.debug({ error }, 'API Key Service: Error checking database availability');
       return true;
     }
   }

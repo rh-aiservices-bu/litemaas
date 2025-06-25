@@ -54,6 +54,11 @@ const databasePlugin: FastifyPluginAsync = async (fastify) => {
     }
   });
 
+  // Mock mode checker for services
+  fastify.decorate('isDatabaseMockMode', () => {
+    return mockMode;
+  });
+
   // Mock data for development
   const mockUsers = [
     {
@@ -137,6 +142,7 @@ const databasePlugin: FastifyPluginAsync = async (fastify) => {
 declare module 'fastify' {
   interface FastifyInstance {
     checkDatabaseHealth: () => Promise<{ status: string; error?: string }>;
+    isDatabaseMockMode: () => boolean;
     dbUtils: {
       withTransaction<T>(callback: (client: any) => Promise<T>): Promise<T>;
       query(text: string, params?: any[]): Promise<any>;

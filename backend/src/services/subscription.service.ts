@@ -168,15 +168,40 @@ export class SubscriptionService {
 
   private shouldUseMockData(): boolean {
     // Use mock data if in development mode or if database is not available
-    return process.env.NODE_ENV === 'development' || this.isDatabaseUnavailable();
+    // In production, still use mock data if PostgreSQL is not configured/available
+    const isDev = process.env.NODE_ENV === 'development';
+    const dbUnavailable = this.isDatabaseUnavailable();
+    
+    this.fastify.log.debug({ 
+      isDev, 
+      dbUnavailable, 
+      nodeEnv: process.env.NODE_ENV,
+      hasPg: !!this.fastify.pg 
+    }, 'Checking if should use mock data');
+    
+    return isDev || dbUnavailable;
   }
 
   private isDatabaseUnavailable(): boolean {
     // Check if database connection is available
     // This is a simple check - in a real scenario you might want to ping the database
     try {
-      return !this.fastify.pg;
-    } catch {
+      // Check if pg plugin is registered and has a working connection
+      if (!this.fastify.pg) {
+        this.fastify.log.debug('PostgreSQL plugin not available');
+        return true;
+      }
+      
+      // Additional check: if the database plugin detected unavailability during startup,
+      // it would have set up mock mode. Check if we're in mock mode.
+      if (this.fastify.isDatabaseMockMode && this.fastify.isDatabaseMockMode()) {
+        this.fastify.log.debug('Database mock mode enabled');
+        return true;
+      }
+      
+      return false;
+    } catch (error) {
+      this.fastify.log.debug({ error }, 'Error checking database availability');
       return true;
     }
   }

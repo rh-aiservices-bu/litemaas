@@ -33,6 +33,76 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     },
   });
 
+  // Development token endpoint - get JWT for frontend
+  fastify.post('/dev-token', {
+    schema: {
+      tags: ['Authentication'],
+      description: 'Get development JWT token for frontend (development only)',
+      hide: process.env.NODE_ENV === 'production',
+      body: {
+        type: 'object',
+        properties: {
+          username: { type: 'string', default: 'developer' },
+          roles: { type: 'array', items: { type: 'string' }, default: ['admin', 'user'] },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            access_token: { type: 'string' },
+            token_type: { type: 'string' },
+            expires_in: { type: 'number' },
+            user: {
+              type: 'object',
+              properties: {
+                userId: { type: 'string' },
+                username: { type: 'string' },
+                email: { type: 'string' },
+                roles: { type: 'array', items: { type: 'string' } },
+              },
+            },
+          },
+        },
+      },
+    },
+    handler: async (request, reply) => {
+      // Only allow in development or with explicit dev token environment variable
+      if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_DEV_TOKENS) {
+        throw fastify.createError(404, 'Endpoint not available');
+      }
+
+      const { username = 'developer', roles = ['admin', 'user'] } = request.body as any;
+
+      const user = {
+        userId: 'dev-user-1',
+        username,
+        email: `${username}@litemaas.local`,
+        name: 'Development User',
+        roles,
+      };
+
+      try {
+        const tokenPair = await fastify.generateTokenPair(user);
+        
+        return {
+          access_token: tokenPair.accessToken,
+          token_type: 'Bearer',
+          expires_in: 86400, // 24 hours
+          user: {
+            userId: user.userId,
+            username: user.username,
+            email: user.email,
+            roles: user.roles,
+          },
+        };
+      } catch (error) {
+        fastify.log.error(error, 'Failed to generate development token');
+        throw fastify.createError(500, 'Failed to generate token');
+      }
+    },
+  });
+
   // Mock login for development
   fastify.get('/mock-login', {
     schema: {

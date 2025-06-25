@@ -63,20 +63,56 @@ const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
       tryItOutEnabled: true,
     },
     uiHooks: {
-      onRequest: (request, reply, next) => {
-        // Add custom headers or validation
-        next();
+      onRequest: async (request, reply) => {
+        // In production, require strict authentication (no frontend bypass)
+        if (process.env.NODE_ENV === 'production') {
+          try {
+            // Use strict authentication - only allow admin API keys or JWT tokens
+            await fastify.authenticate(request, reply);
+            
+            fastify.log.warn({
+              ip: request.ip,
+              userAgent: request.headers['user-agent'],
+              url: request.url,
+              userId: (request as any).user?.userId,
+            }, 'Swagger documentation accessed in production mode');
+          } catch (error) {
+            fastify.log.warn({
+              ip: request.ip,
+              userAgent: request.headers['user-agent'],
+              url: request.url,
+              error: error.message,
+            }, 'Unauthorized access attempt to Swagger documentation in production');
+            
+            return reply.status(401).send({
+              error: {
+                code: 'UNAUTHORIZED',
+                message: 'Authentication required to access API documentation in production mode. Use admin API key or JWT token.',
+              },
+              requestId: request.id,
+            });
+          }
+          return;
+        }
+
+        // In development, log access and allow browser access
+        fastify.log.warn({
+          ip: request.ip,
+          userAgent: request.headers['user-agent'],
+          url: request.url,
+        }, 'Swagger documentation accessed in development mode');
       },
     },
     staticCSP: true,
     transformStaticCSP: (header) => header,
   });
 
-  // Add OpenAPI JSON endpoint
+  // Add OpenAPI JSON endpoint (protected)
   fastify.get('/openapi.json', {
     schema: {
       hide: true,
     },
+    preHandler: fastify.authenticateWithDevBypass,
     handler: (request, reply) => {
       reply.send(fastify.swagger());
     },

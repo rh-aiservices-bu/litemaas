@@ -11,6 +11,7 @@
     "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"magenta,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npm run dev --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
+    "check-backend": "node check-backend.js",
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
