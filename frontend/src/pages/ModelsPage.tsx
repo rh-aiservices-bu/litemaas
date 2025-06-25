@@ -402,7 +402,7 @@ const ModelsPage: React.FC = () => {
                       </Flex>
                     </CardBody>
                     <CardFooter>
-                      <Flex spaceItems={{ default: 'spaceItemsSm' }} wrap={{ default: 'wrap' }}>
+                      <Flex spaceItems={{ default: 'spaceItemsSm' }} flexWrap={{ default: 'wrap' }}>
                         {model.features.slice(0, 3).map((feature, index) => (
                           <FlexItem key={index}>
                             <Label color="grey">{feature}</Label>
@@ -410,7 +410,7 @@ const ModelsPage: React.FC = () => {
                         ))}
                         {model.features.length > 3 && (
                           <FlexItem>
-                            <Label color="outline">+{model.features.length - 3} more</Label>
+                            <Label isOutlined>+{model.features.length - 3} more</Label>
                           </FlexItem>
                         )}
                       </Flex>
@@ -493,7 +493,7 @@ const ModelsPage: React.FC = () => {
                 <DescriptionListGroup>
                   <DescriptionListTerm>Features</DescriptionListTerm>
                   <DescriptionListDescription>
-                    <Flex spaceItems={{ default: 'spaceItemsSm' }} wrap={{ default: 'wrap' }}>
+                    <Flex spaceItems={{ default: 'spaceItemsSm' }} flexWrap={{ default: 'wrap' }}>
                       {selectedModel.features.map((feature, index) => (
                         <FlexItem key={index}>
                           <Label color="grey">{feature}</Label>

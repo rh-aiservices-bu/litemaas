@@ -5,11 +5,6 @@ import {
   Title,
   Card,
   CardBody,
-  CardTitle,
-  CardFooter,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
   Button,
   Badge,
   Content,
@@ -27,12 +22,6 @@ import {
   FormSelectOption,
   CodeBlock,
   CodeBlockCode,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Spinner,
   EmptyState,
   EmptyStateVariant,
@@ -43,7 +32,6 @@ import {
   ClipboardCopyVariant,
   Bullseye,
   Tooltip,
-  ConfirmationModal,
 } from '@patternfly/react-core';
 import { 
   KeyIcon, 
@@ -53,9 +41,9 @@ import {
   EyeSlashIcon,
   TrashIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
-  InfoCircleIcon
+  CheckCircleIcon
 } from '@patternfly/react-icons';
+import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
 
 interface ApiKey {
@@ -74,7 +62,7 @@ interface ApiKey {
 }
 
 const ApiKeysPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { } = useTranslation();
   const { addNotification } = useNotifications();
   
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
@@ -279,14 +267,14 @@ const ApiKeysPage: React.FC = () => {
     });
   };
 
-  const permissionOptions = [
+  /* const permissionOptions = [
     { value: 'models:read', label: 'Read Models' },
     { value: 'models:write', label: 'Write Models' },
     { value: 'completions:create', label: 'Create Completions' },
     { value: 'usage:read', label: 'Read Usage' },
     { value: 'analytics:read', label: 'Read Analytics' },
     { value: 'admin:all', label: 'Admin Access' }
-  ];
+  ]; */
 
   if (loading) {
     return (
@@ -370,7 +358,7 @@ const ApiKeysPage: React.FC = () => {
                       <Td>
                         <Flex direction={{ default: 'column' }}>
                           <FlexItem>
-                            <Content component={ContentVariants.strong}>{apiKey.name}</Content>
+                            <strong>{apiKey.name}</strong>
                           </FlexItem>
                           {apiKey.description && (
                             <FlexItem>
@@ -572,30 +560,30 @@ const ApiKeysPage: React.FC = () => {
                 <Table aria-label="Key details" variant="compact">
                   <Tbody>
                     <Tr>
-                      <Td><Content component={ContentVariants.strong}>Created</Content></Td>
+                      <Td><strong>Created</strong></Td>
                       <Td>{new Date(selectedApiKey.createdAt).toLocaleDateString()}</Td>
                     </Tr>
                     <Tr>
-                      <Td><Content component={ContentVariants.strong}>Last Used</Content></Td>
+                      <Td><strong>Last Used</strong></Td>
                       <Td>{selectedApiKey.lastUsed ? new Date(selectedApiKey.lastUsed).toLocaleDateString() : 'Never'}</Td>
                     </Tr>
                     <Tr>
-                      <Td><Content component={ContentVariants.strong}>Total Requests</Content></Td>
+                      <Td><strong>Total Requests</strong></Td>
                       <Td>{selectedApiKey.usageCount.toLocaleString()}</Td>
                     </Tr>
                     <Tr>
-                      <Td><Content component={ContentVariants.strong}>Rate Limit</Content></Td>
+                      <Td><strong>Rate Limit</strong></Td>
                       <Td>{selectedApiKey.rateLimit.toLocaleString()} requests/minute</Td>
                     </Tr>
                     {selectedApiKey.expiresAt && (
                       <Tr>
-                        <Td><Content component={ContentVariants.strong}>Expires</Content></Td>
+                        <Td><strong>Expires</strong></Td>
                         <Td>{new Date(selectedApiKey.expiresAt).toLocaleDateString()}</Td>
                       </Tr>
                     )}
                     {selectedApiKey.description && (
                       <Tr>
-                        <Td><Content component={ContentVariants.strong}>Description</Content></Td>
+                        <Td><strong>Description</strong></Td>
                         <Td>{selectedApiKey.description}</Td>
                       </Tr>
                     )}
@@ -676,16 +664,16 @@ const ApiKeysPage: React.FC = () => {
                 <Table aria-label="Generated key details" variant="compact">
                   <Tbody>
                     <Tr>
-                      <Td><Content component={ContentVariants.strong}>Name</Content></Td>
+                      <Td><strong>Name</strong></Td>
                       <Td>{generatedKey.name}</Td>
                     </Tr>
                     <Tr>
-                      <Td><Content component={ContentVariants.strong}>Rate Limit</Content></Td>
+                      <Td><strong>Rate Limit</strong></Td>
                       <Td>{generatedKey.rateLimit.toLocaleString()} requests/minute</Td>
                     </Tr>
                     {generatedKey.expiresAt && (
                       <Tr>
-                        <Td><Content component={ContentVariants.strong}>Expires</Content></Td>
+                        <Td><strong>Expires</strong></Td>
                         <Td>{new Date(generatedKey.expiresAt).toLocaleDateString()}</Td>
                       </Tr>
                     )}
@@ -715,7 +703,7 @@ const ApiKeysPage: React.FC = () => {
             <>
               <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsMd' }} style={{ marginBottom: '1rem' }}>
                 <FlexItem>
-                  <ExclamationTriangleIcon color="var(--pf-v6-global--warning--color--100)" size="lg" />
+                  <ExclamationTriangleIcon color="var(--pf-v6-global--warning--color--100)" />
                 </FlexItem>
                 <FlexItem>
                   <Content component={ContentVariants.p}>

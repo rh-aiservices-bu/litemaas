@@ -334,9 +334,9 @@ const SubscriptionsPage: React.FC = () => {
                             <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
                               <FlexItem>{getPlanBadge(subscription.plan)}</FlexItem>
                               <FlexItem>
-                                <Content component={ContentVariants.strong}>
+                                <strong>
                                   ${subscription.costPerMonth}/{subscription.billingCycle === 'monthly' ? 'mo' : 'yr'}
-                                </Content>
+                                </strong>
                               </FlexItem>
                             </Flex>
                           </FlexItem>
@@ -483,7 +483,7 @@ const SubscriptionsPage: React.FC = () => {
                 <DescriptionListGroup>
                   <DescriptionListTerm>Features</DescriptionListTerm>
                   <DescriptionListDescription>
-                    <Flex spaceItems={{ default: 'spaceItemsSm' }} wrap={{ default: 'wrap' }}>
+                    <Flex spaceItems={{ default: 'spaceItemsSm' }} flexWrap={{ default: 'wrap' }}>
                       {selectedSubscription.features.map((feature, index) => (
                         <FlexItem key={index}>
                           <Label color="blue">{feature}</Label>

@@ -27,12 +27,6 @@ import {
   EmptyStateVariant,
   EmptyStateBody,
   EmptyStateActions,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
   Progress,
   ProgressMeasureLocation,
   Bullseye,
@@ -48,6 +42,7 @@ import {
   CubeIcon,
   ClockIcon
 } from '@patternfly/react-icons';
+import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
 
 // Mock chart component since PatternFly charts require additional setup
@@ -559,7 +554,7 @@ const UsagePage: React.FC = () => {
                       return (
                         <Tr key={index}>
                           <Td>
-                            <Content component={ContentVariants.strong}>{model.name}</Content>
+                            <strong>{model.name}</strong>
                           </Td>
                           <Td>{formatNumber(model.requests)}</Td>
                           <Td>{formatNumber(model.tokens)}</Td>
@@ -570,7 +565,7 @@ const UsagePage: React.FC = () => {
                                 <Progress
                                   value={usagePercentage}
                                   measureLocation={ProgressMeasureLocation.none}
-                                  variant={usagePercentage > 30 ? 'success' : usagePercentage > 15 ? 'warning' : 'default'}
+                                  variant={usagePercentage > 30 ? 'success' : usagePercentage > 15 ? 'warning' : undefined}
                                 />
                               </FlexItem>
                               <FlexItem>
@@ -643,7 +638,7 @@ const UsagePage: React.FC = () => {
                       {metrics.errorBreakdown.map((error, index) => (
                         <Tr key={index}>
                           <Td>
-                            <Content component={ContentVariants.strong}>{error.type}</Content>
+                            <strong>{error.type}</strong>
                           </Td>
                           <Td>{error.count}</Td>
                           <Td>
