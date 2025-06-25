@@ -237,7 +237,7 @@ export class RBACService {
     return Array.from(permissions);
   }
 
-  async createAccessCheck(permission: string, options?: {
+  createAccessCheck(permission: string, options?: {
     resourceIdParam?: string;
     ownershipCheck?: boolean;
     customCheck?: (request: any) => Promise<boolean>;

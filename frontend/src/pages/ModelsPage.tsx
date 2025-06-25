@@ -46,29 +46,13 @@ import {
   InfoCircleIcon 
 } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
-
-interface Model {
-  id: string;
-  name: string;
-  provider: string;
-  description: string;
-  category: string;
-  contextLength: number;
-  pricing: {
-    input: number;
-    output: number;
-  };
-  features: string[];
-  availability: 'available' | 'limited' | 'unavailable';
-  version: string;
-}
+import { modelsService, Model } from '../services/models.service';
 
 const ModelsPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
   
   const [models, setModels] = useState<Model[]>([]);
-  const [filteredModels, setFilteredModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchValue, setSearchValue] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
@@ -79,114 +63,65 @@ const ModelsPage: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(12);
+  const [total, setTotal] = useState(0);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const mockModels: Model[] = [
-      {
-        id: 'gpt-4',
-        name: 'GPT-4',
-        provider: 'OpenAI',
-        description: 'Advanced language model with superior reasoning capabilities',
-        category: 'Language Model',
-        contextLength: 8192,
-        pricing: { input: 0.03, output: 0.06 },
-        features: ['Code Generation', 'Creative Writing', 'Analysis'],
-        availability: 'available',
-        version: '1.0'
-      },
-      {
-        id: 'claude-3-opus',
-        name: 'Claude 3 Opus',
-        provider: 'Anthropic',
-        description: 'Most capable model with exceptional reasoning and creativity',
-        category: 'Language Model',
-        contextLength: 200000,
-        pricing: { input: 0.015, output: 0.075 },
-        features: ['Long Context', 'Code Generation', 'Analysis'],
-        availability: 'available',
-        version: '3.0'
-      },
-      {
-        id: 'llama-2-70b',
-        name: 'Llama 2 70B',
-        provider: 'Meta',
-        description: 'Open source large language model with strong performance',
-        category: 'Language Model',
-        contextLength: 4096,
-        pricing: { input: 0.007, output: 0.007 },
-        features: ['Open Source', 'Code Generation', 'Chat'],
-        availability: 'available',
-        version: '2.0'
-      },
-      {
-        id: 'dall-e-3',
-        name: 'DALL-E 3',
-        provider: 'OpenAI',
-        description: 'Advanced image generation model with improved quality',
-        category: 'Image Generation',
-        contextLength: 1024,
-        pricing: { input: 0.04, output: 0.08 },
-        features: ['High Quality', 'Prompt Following', 'Style Control'],
-        availability: 'limited',
-        version: '3.0'
-      },
-      {
-        id: 'stable-diffusion-xl',
-        name: 'Stable Diffusion XL',
-        provider: 'Stability AI',
-        description: 'Open source image generation with excellent results',
-        category: 'Image Generation',
-        contextLength: 512,
-        pricing: { input: 0.002, output: 0.002 },
-        features: ['Open Source', 'Fast Generation', 'Style Control'],
-        availability: 'available',
-        version: '1.0'
-      },
-      {
-        id: 'whisper-large',
-        name: 'Whisper Large',
-        provider: 'OpenAI',
-        description: 'Speech recognition model with multilingual support',
-        category: 'Audio',
-        contextLength: 30000,
-        pricing: { input: 0.006, output: 0.006 },
-        features: ['Multilingual', 'High Accuracy', 'Real-time'],
-        availability: 'available',
-        version: '3.0'
+  // Load models from API
+  const loadModels = async (resetPage = false) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const currentPage = resetPage ? 1 : page;
+      const response = await modelsService.getModels(
+        currentPage,
+        perPage,
+        searchValue || undefined,
+        selectedProvider !== 'all' ? selectedProvider : undefined,
+        selectedCategory !== 'all' ? selectedCategory : undefined
+      );
+      
+      setModels(response.models);
+      setTotal(response.pagination.total);
+      
+      if (resetPage) {
+        setPage(1);
       }
-    ];
-
-    setTimeout(() => {
-      setModels(mockModels);
-      setFilteredModels(mockModels);
+    } catch (err) {
+      console.error('Failed to load models:', err);
+      setError('Failed to load models. Please try again.');
+      addNotification({
+        title: 'Error',
+        description: 'Failed to load models from the server.',
+        variant: 'danger'
+      });
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
+  };
+
+  // Initial load
+  useEffect(() => {
+    loadModels();
   }, []);
 
+  // Reload when filters or pagination change
   useEffect(() => {
-    let filtered = models;
+    const timeoutId = setTimeout(() => {
+      loadModels(true); // Reset to page 1 when filters change
+    }, 300); // Debounce search
 
-    if (searchValue) {
-      filtered = filtered.filter(model => 
-        model.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-        model.description.toLowerCase().includes(searchValue.toLowerCase()) ||
-        model.provider.toLowerCase().includes(searchValue.toLowerCase())
-      );
+    return () => clearTimeout(timeoutId);
+  }, [searchValue, selectedCategory, selectedProvider]);
+
+  // Reload when page or perPage changes
+  useEffect(() => {
+    if (page > 1 || perPage !== 12) { // Only reload if not initial state
+      loadModels();
     }
+  }, [page, perPage]);
 
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(model => model.category === selectedCategory);
-    }
-
-    if (selectedProvider !== 'all') {
-      filtered = filtered.filter(model => model.provider === selectedProvider);
-    }
-
-    setFilteredModels(filtered);
-    setPage(1);
-  }, [searchValue, selectedCategory, selectedProvider, models]);
-
+  // Get unique categories and providers from current models for filters
   const categories = ['all', ...Array.from(new Set(models.map(m => m.category)))];
   const providers = ['all', ...Array.from(new Set(models.map(m => m.provider)))];
 
@@ -218,10 +153,8 @@ const ModelsPage: React.FC = () => {
     );
   };
 
-  const paginatedModels = filteredModels.slice(
-    (page - 1) * perPage,
-    page * perPage
-  );
+  // Models are already paginated by the API
+  const paginatedModels = models;
 
   if (loading) {
     return (
@@ -324,7 +257,7 @@ const ModelsPage: React.FC = () => {
             
             <ToolbarItem variant="pagination">
               <Pagination
-                itemCount={filteredModels.length}
+                itemCount={total}
                 perPage={perPage}
                 page={page}
                 onSetPage={(_event, pageNumber) => setPage(pageNumber)}
@@ -338,7 +271,22 @@ const ModelsPage: React.FC = () => {
           </ToolbarContent>
         </Toolbar>
 
-        {filteredModels.length === 0 ? (
+        {error ? (
+          <EmptyState variant={EmptyStateVariant.lg}>
+            <CatalogIcon />
+            <Title headingLevel="h2" size="lg">
+              Error loading models
+            </Title>
+            <EmptyStateBody>
+              {error}
+            </EmptyStateBody>
+            <EmptyStateActions>
+              <Button variant="primary" onClick={() => loadModels(true)}>
+                Retry
+              </Button>
+            </EmptyStateActions>
+          </EmptyState>
+        ) : models.length === 0 ? (
           <EmptyState variant={EmptyStateVariant.lg}>
             <CatalogIcon />
             <Title headingLevel="h2" size="lg">
@@ -410,7 +358,7 @@ const ModelsPage: React.FC = () => {
                         ))}
                         {model.features.length > 3 && (
                           <FlexItem>
-                            <Label isOutlined>+{model.features.length - 3} more</Label>
+                            <Label color="grey">+{model.features.length - 3} more</Label>
                           </FlexItem>
                         )}
                       </Flex>
@@ -422,7 +370,7 @@ const ModelsPage: React.FC = () => {
             
             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
               <Pagination
-                itemCount={filteredModels.length}
+                itemCount={total}
                 perPage={perPage}
                 page={page}
                 onSetPage={(_event, pageNumber) => setPage(pageNumber)}

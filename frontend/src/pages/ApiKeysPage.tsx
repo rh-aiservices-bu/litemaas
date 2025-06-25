@@ -45,21 +45,7 @@ import {
 } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
-
-interface ApiKey {
-  id: string;
-  name: string;
-  keyPreview: string;
-  fullKey?: string;
-  status: 'active' | 'revoked' | 'expired';
-  permissions: string[];
-  usageCount: number;
-  rateLimit: number;
-  createdAt: string;
-  lastUsed?: string;
-  expiresAt?: string;
-  description?: string;
-}
+import { apiKeysService, ApiKey, CreateApiKeyRequest } from '../services/apiKeys.service';
 
 const ApiKeysPage: React.FC = () => {
   const { } = useTranslation();
@@ -67,6 +53,7 @@ const ApiKeysPage: React.FC = () => {
   
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedApiKey, setSelectedApiKey] = useState<ApiKey | null>(null);
@@ -82,68 +69,29 @@ const ApiKeysPage: React.FC = () => {
   const [keyToDelete, setKeyToDelete] = useState<ApiKey | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const mockApiKeys: ApiKey[] = [
-      {
-        id: 'key-1',
-        name: 'Production API Key',
-        keyPreview: 'sk-...7x2K',
-        fullKey: 'sk-proj-abc123def456ghi789jkl012mno345pqr678stu901vwx234yzA7x2K',
-        status: 'active',
-        permissions: ['models:read', 'completions:create', 'usage:read'],
-        usageCount: 15420,
-        rateLimit: 5000,
-        createdAt: '2024-06-01',
-        lastUsed: '2024-06-23',
-        description: 'Main production key for the web application'
-      },
-      {
-        id: 'key-2',
-        name: 'Development Key',
-        keyPreview: 'sk-...9mN4',
-        fullKey: 'sk-proj-dev789xyz012abc345def678ghi901jkl234mno567pqr890st9mN4',
-        status: 'active',
-        permissions: ['models:read', 'completions:create'],
-        usageCount: 2341,
-        rateLimit: 1000,
-        createdAt: '2024-06-15',
-        lastUsed: '2024-06-22',
-        description: 'Development and testing purposes'
-      },
-      {
-        id: 'key-3',
-        name: 'Analytics Key',
-        keyPreview: 'sk-...8pQ5',
-        fullKey: 'sk-proj-analytics456def789ghi012jkl345mno678pqr901stu234vw8pQ5',
-        status: 'revoked',
-        permissions: ['usage:read', 'analytics:read'],
-        usageCount: 892,
-        rateLimit: 500,
-        createdAt: '2024-05-20',
-        lastUsed: '2024-06-10',
-        description: 'Read-only access for analytics dashboard'
-      },
-      {
-        id: 'key-4',
-        name: 'Temporary Key',
-        keyPreview: 'sk-...2rT8',
-        fullKey: 'sk-proj-temp123abc456def789ghi012jkl345mno678pqr901stuv2rT8',
-        status: 'expired',
-        permissions: ['models:read'],
-        usageCount: 45,
-        rateLimit: 100,
-        createdAt: '2024-06-01',
-        lastUsed: '2024-06-07',
-        expiresAt: '2024-06-07',
-        description: 'Short-term key for third-party integration'
-      }
-    ];
-
-    setTimeout(() => {
-      setApiKeys(mockApiKeys);
+  // Load API keys from backend
+  const loadApiKeys = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await apiKeysService.getApiKeys();
+      setApiKeys(response.data);
+    } catch (err) {
+      console.error('Failed to load API keys:', err);
+      setError('Failed to load API keys. Please try again.');
+      addNotification({
+        title: 'Error',
+        description: 'Failed to load API keys from the server.',
+        variant: 'danger'
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
+  };
+
+  useEffect(() => {
+    loadApiKeys();
   }, []);
 
   const getStatusBadge = (status: string) => {
@@ -190,26 +138,24 @@ const ApiKeysPage: React.FC = () => {
 
     setCreatingKey(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      const newKey: ApiKey = {
-        id: `key-${Date.now()}`,
+    try {
+      const request: CreateApiKeyRequest = {
         name: newKeyName,
-        keyPreview: `sk-...${Math.random().toString(36).slice(-4)}`,
-        fullKey: `sk-proj-${Math.random().toString(36).slice(2, 15)}${Math.random().toString(36).slice(2, 15)}${Math.random().toString(36).slice(2, 15)}${Math.random().toString(36).slice(-4)}`,
-        status: 'active',
-        permissions: newKeyPermissions,
-        usageCount: 0,
-        rateLimit: parseInt(newKeyRateLimit),
-        createdAt: new Date().toISOString().split('T')[0],
         description: newKeyDescription || undefined,
-        expiresAt: newKeyExpiration !== 'never' ? new Date(Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000).toISOString().split('T')[0] : undefined
+        permissions: newKeyPermissions,
+        rateLimit: parseInt(newKeyRateLimit),
+        expiresAt: newKeyExpiration !== 'never' 
+          ? new Date(Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000).toISOString()
+          : undefined
       };
+
+      const newKey = await apiKeysService.createApiKey(request);
       
-      setApiKeys([newKey, ...apiKeys]);
+      // Refresh the API keys list
+      await loadApiKeys();
+      
       setGeneratedKey(newKey);
       setShowGeneratedKey(true);
-      setCreatingKey(false);
       setIsCreateModalOpen(false);
       
       addNotification({
@@ -217,7 +163,16 @@ const ApiKeysPage: React.FC = () => {
         description: `${newKeyName} has been created successfully`,
         variant: 'success'
       });
-    }, 2000);
+    } catch (err) {
+      console.error('Failed to create API key:', err);
+      addNotification({
+        title: 'Error',
+        description: 'Failed to create API key. Please try again.',
+        variant: 'danger'
+      });
+    } finally {
+      setCreatingKey(false);
+    }
   };
 
   const handleViewKey = (apiKey: ApiKey) => {
@@ -230,22 +185,31 @@ const ApiKeysPage: React.FC = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmRevokeKey = () => {
+  const confirmRevokeKey = async () => {
     if (!keyToDelete) return;
     
-    const updatedKeys = apiKeys.map(key => 
-      key.id === keyToDelete.id ? { ...key, status: 'revoked' as const } : key
-    );
-    
-    setApiKeys(updatedKeys);
-    setIsDeleteModalOpen(false);
-    setKeyToDelete(null);
-    
-    addNotification({
-      title: 'API Key Revoked',
-      description: `${keyToDelete.name} has been revoked`,
-      variant: 'warning'
-    });
+    try {
+      await apiKeysService.revokeApiKey(keyToDelete.id);
+      
+      // Refresh the API keys list
+      await loadApiKeys();
+      
+      addNotification({
+        title: 'API Key Revoked',
+        description: `${keyToDelete.name} has been revoked`,
+        variant: 'warning'
+      });
+    } catch (err) {
+      console.error('Failed to revoke API key:', err);
+      addNotification({
+        title: 'Error',
+        description: 'Failed to revoke API key. Please try again.',
+        variant: 'danger'
+      });
+    } finally {
+      setIsDeleteModalOpen(false);
+      setKeyToDelete(null);
+    }
   };
 
   const toggleKeyVisibility = (keyId: string) => {
@@ -322,7 +286,22 @@ const ApiKeysPage: React.FC = () => {
       </PageSection>
       
       <PageSection>
-        {apiKeys.length === 0 ? (
+        {error ? (
+          <EmptyState variant={EmptyStateVariant.lg}>
+            <KeyIcon />
+            <Title headingLevel="h2" size="lg">
+              Error loading API keys
+            </Title>
+            <EmptyStateBody>
+              {error}
+            </EmptyStateBody>
+            <EmptyStateActions>
+              <Button variant="primary" onClick={loadApiKeys}>
+                Retry
+              </Button>
+            </EmptyStateActions>
+          </EmptyState>
+        ) : apiKeys.length === 0 ? (
           <EmptyState variant={EmptyStateVariant.lg}>
             <KeyIcon />
             <Title headingLevel="h2" size="lg">

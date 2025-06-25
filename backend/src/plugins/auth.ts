@@ -107,52 +107,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
     };
   });
 
-  // Permission-based authorization decorator
-  fastify.decorate('requirePermission', (permission: string) => {
-    return async (request: FastifyRequest, reply: FastifyReply) => {
-      const user = (request as AuthenticatedRequest).user;
-      
-      if (!user) {
-        return reply.status(401).send({
-          error: {
-            code: 'UNAUTHORIZED',
-            message: 'Authentication required',
-          },
-          requestId: request.id,
-        });
-      }
-
-      // Check permission based on roles
-      const permissions: Record<string, string[]> = {
-        'admin': ['*'], // Admin has all permissions
-        'user': ['read', 'write', 'subscribe', 'usage'],
-        'readonly': ['read', 'usage'],
-      };
-
-      const hasPermission = user.roles.some(role => {
-        const rolePermissions = permissions[role] || [];
-        return rolePermissions.includes('*') || rolePermissions.includes(permission);
-      });
-
-      if (!hasPermission) {
-        fastify.log.warn({
-          userId: user.userId,
-          requiredPermission: permission,
-          userRoles: user.roles,
-          url: request.url,
-          method: request.method,
-        }, 'Permission denied');
-
-        return reply.status(403).send({
-          error: {
-            code: 'FORBIDDEN',
-            message: `Access denied. Required permission: ${permission}`,
-          },
-          requestId: request.id,
-        });
-      }
-    };
-  });
+  // Note: requirePermission is now handled by the RBAC plugin for more advanced permission handling
 
   // Generate JWT token
   fastify.decorate('generateToken', (payload: Omit<JWTPayload, 'iat' | 'exp'>) => {
@@ -203,7 +158,7 @@ declare module 'fastify' {
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     optionalAuth: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     requireRole: (roles: string[]) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
-    requirePermission: (permission: string) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    // requirePermission is handled by RBAC plugin
     generateToken: (payload: Omit<JWTPayload, 'iat' | 'exp'>) => string;
     verifyToken: (token: string) => Promise<JWTPayload>;
     generateTokenPair: (user: {

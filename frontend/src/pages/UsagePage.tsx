@@ -44,6 +44,7 @@ import {
 } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
+import { usageService, UsageMetrics, UsageFilters } from '../services/usage.service';
 
 // Mock chart component since PatternFly charts require additional setup
 const MockLineChart = ({ data, title }: { data: any[], title: string }) => (
@@ -78,35 +79,6 @@ const MockDonutChart = ({ data, title }: { data: any[], title: string }) => (
   </div>
 );
 
-interface UsageMetrics {
-  totalRequests: number;
-  totalTokens: number;
-  totalCost: number;
-  averageResponseTime: number;
-  successRate: number;
-  activeModels: number;
-  topModels: Array<{
-    name: string;
-    requests: number;
-    tokens: number;
-    cost: number;
-  }>;
-  dailyUsage: Array<{
-    date: string;
-    requests: number;
-    tokens: number;
-    cost: number;
-  }>;
-  hourlyUsage: Array<{
-    hour: string;
-    requests: number;
-  }>;
-  errorBreakdown: Array<{
-    type: string;
-    count: number;
-    percentage: number;
-  }>;
-}
 
 const UsagePage: React.FC = () => {
   const { t } = useTranslation();
@@ -114,6 +86,7 @@ const UsagePage: React.FC = () => {
   
   const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState('7d');
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
   const [startDate, setStartDate] = useState('');
@@ -121,86 +94,88 @@ const UsagePage: React.FC = () => {
   const [viewType, setViewType] = useState('overview');
   const [isViewTypeOpen, setIsViewTypeOpen] = useState(false);
 
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const mockMetrics: UsageMetrics = {
-      totalRequests: 125430,
-      totalTokens: 8950000,
-      totalCost: 1247.50,
-      averageResponseTime: 1.2,
-      successRate: 99.2,
-      activeModels: 8,
-      topModels: [
-        { name: 'GPT-4', requests: 45200, tokens: 3200000, cost: 485.20 },
-        { name: 'Claude 3 Opus', requests: 38100, tokens: 2800000, cost: 320.15 },
-        { name: 'GPT-3.5 Turbo', requests: 25600, tokens: 1850000, cost: 185.40 },
-        { name: 'Llama 2 70B', requests: 12300, tokens: 890000, cost: 125.30 },
-        { name: 'DALL-E 3', requests: 4230, tokens: 210000, cost: 131.45 }
-      ],
-      dailyUsage: [
-        { date: '2024-06-17', requests: 15200, tokens: 1100000, cost: 145.60 },
-        { date: '2024-06-18', requests: 18500, tokens: 1320000, cost: 175.20 },
-        { date: '2024-06-19', requests: 17800, tokens: 1280000, cost: 168.40 },
-        { date: '2024-06-20', requests: 19200, tokens: 1400000, cost: 185.80 },
-        { date: '2024-06-21', requests: 16900, tokens: 1220000, cost: 162.30 },
-        { date: '2024-06-22', requests: 20100, tokens: 1450000, cost: 192.70 },
-        { date: '2024-06-23', requests: 17730, tokens: 1180000, cost: 157.50 }
-      ],
-      hourlyUsage: [
-        { hour: '00:00', requests: 450 },
-        { hour: '01:00', requests: 320 },
-        { hour: '02:00', requests: 280 },
-        { hour: '03:00', requests: 220 },
-        { hour: '04:00', requests: 190 },
-        { hour: '05:00', requests: 240 },
-        { hour: '06:00', requests: 380 },
-        { hour: '07:00', requests: 520 },
-        { hour: '08:00', requests: 680 },
-        { hour: '09:00', requests: 890 },
-        { hour: '10:00', requests: 1200 },
-        { hour: '11:00', requests: 1350 },
-        { hour: '12:00', requests: 1280 },
-        { hour: '13:00', requests: 1420 },
-        { hour: '14:00', requests: 1380 },
-        { hour: '15:00', requests: 1250 },
-        { hour: '16:00', requests: 1100 },
-        { hour: '17:00', requests: 980 },
-        { hour: '18:00', requests: 720 },
-        { hour: '19:00', requests: 580 },
-        { hour: '20:00', requests: 420 },
-        { hour: '21:00', requests: 380 },
-        { hour: '22:00', requests: 340 },
-        { hour: '23:00', requests: 290 }
-      ],
-      errorBreakdown: [
-        { type: 'Rate Limited', count: 45, percentage: 45 },
-        { type: 'Invalid Request', count: 32, percentage: 32 },
-        { type: 'Server Error', count: 18, percentage: 18 },
-        { type: 'Timeout', count: 5, percentage: 5 }
-      ]
-    };
-
-    setTimeout(() => {
-      setMetrics(mockMetrics);
+  // Load usage metrics from API
+  const loadUsageMetrics = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Convert dateRange to actual dates
+      const filters: UsageFilters = {};
+      const now = new Date();
+      const days = parseInt(dateRange.replace('d', ''));
+      
+      if (!isNaN(days)) {
+        const startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - days);
+        filters.startDate = startDate.toISOString().split('T')[0];
+        filters.endDate = now.toISOString().split('T')[0];
+      }
+      
+      const usageMetrics = await usageService.getUsageMetrics(filters);
+      setMetrics(usageMetrics);
+    } catch (err) {
+      console.error('Failed to load usage metrics:', err);
+      setError('Failed to load usage metrics. Please try again.');
+      addNotification({
+        title: 'Error',
+        description: 'Failed to load usage metrics from the server.',
+        variant: 'danger'
+      });
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
+  };
+
+  useEffect(() => {
+    loadUsageMetrics();
   }, [dateRange]);
 
-  const handleExportData = () => {
-    addNotification({
-      title: 'Export Started',
-      description: 'Your usage data export is being prepared and will be downloaded shortly.',
-      variant: 'info'
-    });
-    
-    // Simulate export
-    setTimeout(() => {
+  const handleExportData = async () => {
+    try {
+      addNotification({
+        title: 'Export Started',
+        description: 'Your usage data export is being prepared and will be downloaded shortly.',
+        variant: 'info'
+      });
+      
+      // Convert dateRange to actual dates for export
+      const filters: UsageFilters = {};
+      const now = new Date();
+      const days = parseInt(dateRange.replace('d', ''));
+      
+      if (!isNaN(days)) {
+        const startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - days);
+        filters.startDate = startDate.toISOString().split('T')[0];
+        filters.endDate = now.toISOString().split('T')[0];
+      }
+      
+      const blob = await usageService.exportUsageData(filters, 'csv');
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `usage-data-${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
       addNotification({
         title: 'Export Complete',
         description: 'Usage data has been exported successfully.',
         variant: 'success'
       });
-    }, 2000);
+    } catch (err) {
+      console.error('Failed to export usage data:', err);
+      addNotification({
+        title: 'Export Failed',
+        description: 'Failed to export usage data. Please try again.',
+        variant: 'danger'
+      });
+    }
   };
 
   const formatNumber = (num: number) => {

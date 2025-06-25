@@ -51,23 +51,8 @@ import {
   CogIcon
 } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
+import { subscriptionsService, Subscription } from '../services/subscriptions.service';
 
-interface Subscription {
-  id: string;
-  modelId: string;
-  modelName: string;
-  provider: string;
-  status: 'active' | 'suspended' | 'expired' | 'pending';
-  plan: 'starter' | 'professional' | 'enterprise';
-  usageLimit: number;
-  usageUsed: number;
-  billingCycle: 'monthly' | 'annual';
-  nextBillingDate: string;
-  costPerMonth: number;
-  features: string[];
-  createdAt: string;
-  expiresAt?: string;
-}
 
 const SubscriptionsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -75,82 +60,36 @@ const SubscriptionsPage: React.FC = () => {
   
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
   const [newPlan, setNewPlan] = useState('');
   const [processingModification, setProcessingModification] = useState(false);
 
-  // Mock data - replace with actual API call
-  useEffect(() => {
-    const mockSubscriptions: Subscription[] = [
-      {
-        id: 'sub-1',
-        modelId: 'gpt-4',
-        modelName: 'GPT-4',
-        provider: 'OpenAI',
-        status: 'active',
-        plan: 'professional',
-        usageLimit: 100000,
-        usageUsed: 65000,
-        billingCycle: 'monthly',
-        nextBillingDate: '2024-07-24',
-        costPerMonth: 50,
-        features: ['API Access', 'Priority Support', 'Advanced Analytics'],
-        createdAt: '2024-06-24',
-      },
-      {
-        id: 'sub-2',
-        modelId: 'claude-3-opus',
-        modelName: 'Claude 3 Opus',
-        provider: 'Anthropic',
-        status: 'active',
-        plan: 'starter',
-        usageLimit: 10000,
-        usageUsed: 2500,
-        billingCycle: 'monthly',
-        nextBillingDate: '2024-07-20',
-        costPerMonth: 20,
-        features: ['API Access', 'Community Support'],
-        createdAt: '2024-06-20',
-      },
-      {
-        id: 'sub-3',
-        modelId: 'dall-e-3',
-        modelName: 'DALL-E 3',
-        provider: 'OpenAI',
-        status: 'suspended',
-        plan: 'starter',
-        usageLimit: 1000,
-        usageUsed: 1000,
-        billingCycle: 'monthly',
-        nextBillingDate: '2024-07-15',
-        costPerMonth: 15,
-        features: ['API Access'],
-        createdAt: '2024-06-15',
-      },
-      {
-        id: 'sub-4',
-        modelId: 'llama-2-70b',
-        modelName: 'Llama 2 70B',
-        provider: 'Meta',
-        status: 'expired',
-        plan: 'professional',
-        usageLimit: 50000,
-        usageUsed: 50000,
-        billingCycle: 'monthly',
-        nextBillingDate: '2024-06-30',
-        costPerMonth: 35,
-        features: ['API Access', 'Priority Support'],
-        createdAt: '2024-05-30',
-        expiresAt: '2024-06-30'
-      }
-    ];
-
-    setTimeout(() => {
-      setSubscriptions(mockSubscriptions);
+  // Load subscriptions from API
+  const loadSubscriptions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const response = await subscriptionsService.getSubscriptions();
+      setSubscriptions(response.data);
+    } catch (err) {
+      console.error('Failed to load subscriptions:', err);
+      setError('Failed to load subscriptions. Please try again.');
+      addNotification({
+        title: 'Error',
+        description: 'Failed to load subscriptions from the server.',
+        variant: 'danger'
+      });
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
+  };
+
+  useEffect(() => {
+    loadSubscriptions();
   }, []);
 
   const getStatusBadge = (status: string) => {
