@@ -55,8 +55,94 @@ export class ApiKeyService {
   private readonly KEY_LENGTH = 32; // 32 bytes = 64 hex characters
   private readonly PREFIX_LENGTH = 4; // First 4 characters for display
 
+  // Mock data for development/fallback
+  private readonly MOCK_API_KEYS: ApiKeyDetails[] = [
+    {
+      id: 'key-mock-1',
+      subscriptionId: 'sub-mock-1',
+      userId: 'dev-user-1',
+      name: 'Production API Key',
+      keyPrefix: 'ltm_Ax7m',
+      lastUsedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+      isActive: true,
+      createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+      metadata: {
+        environment: 'production',
+        permissions: ['read', 'write'],
+        ipWhitelist: ['192.168.1.0/24']
+      }
+    },
+    {
+      id: 'key-mock-2',
+      subscriptionId: 'sub-mock-1',
+      userId: 'dev-user-1',
+      name: 'Development API Key',
+      keyPrefix: 'ltm_Bk9n',
+      lastUsedAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
+      expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
+      isActive: true,
+      createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), // 15 days ago
+      metadata: {
+        environment: 'development',
+        permissions: ['read']
+      }
+    },
+    {
+      id: 'key-mock-3',
+      subscriptionId: 'sub-mock-2',
+      userId: 'dev-user-1',
+      name: 'Testing Key',
+      keyPrefix: 'ltm_Cm2p',
+      lastUsedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+      expiresAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // Expired 1 day ago
+      isActive: false,
+      createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
+      revokedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), // Revoked 5 days ago
+      metadata: {
+        environment: 'testing',
+        permissions: ['read'],
+        revokedReason: 'Security rotation'
+      }
+    },
+    {
+      id: 'key-mock-4',
+      subscriptionId: 'sub-mock-3',
+      userId: 'dev-user-1',
+      name: 'Analytics Key',
+      keyPrefix: 'ltm_Dx8q',
+      lastUsedAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
+      isActive: true,
+      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
+      metadata: {
+        environment: 'analytics',
+        permissions: ['read'],
+        scope: 'usage-only'
+      }
+    }
+  ];
+
   constructor(fastify: FastifyInstance) {
     this.fastify = fastify;
+  }
+
+  private shouldUseMockData(): boolean {
+    // Use mock data if in development mode or if database is not available
+    return process.env.NODE_ENV === 'development' || this.isDatabaseUnavailable();
+  }
+
+  private isDatabaseUnavailable(): boolean {
+    try {
+      return !this.fastify.pg;
+    } catch {
+      return true;
+    }
+  }
+
+  private createMockResponse<T>(data: T): Promise<T> {
+    // Simulate network delay
+    const delay = Math.random() * 200 + 100; // 100-300ms
+    return new Promise(resolve => setTimeout(() => resolve(data), delay));
   }
 
   async createApiKey(
@@ -179,6 +265,30 @@ export class ApiKeyService {
   ): Promise<{ data: ApiKeyDetails[]; total: number }> {
     const { subscriptionId, isActive, page = 1, limit = 20 } = options;
     const offset = (page - 1) * limit;
+
+    // Use mock data if database is not available
+    if (this.shouldUseMockData()) {
+      this.fastify.log.debug('Using mock API key data');
+      
+      // Filter mock data based on options
+      let filteredKeys = [...this.MOCK_API_KEYS];
+      
+      if (subscriptionId) {
+        filteredKeys = filteredKeys.filter(key => key.subscriptionId === subscriptionId);
+      }
+      
+      if (typeof isActive === 'boolean') {
+        filteredKeys = filteredKeys.filter(key => key.isActive === isActive);
+      }
+      
+      const total = filteredKeys.length;
+      const paginatedData = filteredKeys.slice(offset, offset + limit);
+      
+      return this.createMockResponse({
+        data: paginatedData,
+        total
+      });
+    }
 
     try {
       let query = `

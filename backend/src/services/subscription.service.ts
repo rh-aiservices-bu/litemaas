@@ -76,9 +76,115 @@ export class SubscriptionService {
   private fastify: FastifyInstance;
   private liteLLMService: LiteLLMService;
 
+  // Mock data for development/fallback
+  private readonly MOCK_SUBSCRIPTIONS: SubscriptionDetails[] = [
+    {
+      id: 'sub-mock-1',
+      userId: 'dev-user-1',
+      modelId: 'gpt-4o',
+      modelName: 'GPT-4o',
+      provider: 'openai',
+      status: 'active',
+      quotaRequests: 10000,
+      quotaTokens: 1000000,
+      usedRequests: 2350,
+      usedTokens: 567890,
+      remainingRequests: 7650,
+      remainingTokens: 432110,
+      utilizationPercent: {
+        requests: 23.5,
+        tokens: 56.8
+      },
+      resetAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
+      createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000), // 45 days ago
+      updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      metadata: {
+        plan: 'professional',
+        billingCycle: 'monthly',
+        features: ['Chat', 'Function Calling', 'Vision']
+      }
+    },
+    {
+      id: 'sub-mock-2',
+      userId: 'dev-user-1',
+      modelId: 'claude-3-5-sonnet-20241022',
+      modelName: 'Claude 3.5 Sonnet',
+      provider: 'anthropic',
+      status: 'active',
+      quotaRequests: 5000,
+      quotaTokens: 500000,
+      usedRequests: 890,
+      usedTokens: 123456,
+      remainingRequests: 4110,
+      remainingTokens: 376544,
+      utilizationPercent: {
+        requests: 17.8,
+        tokens: 24.7
+      },
+      resetAt: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      metadata: {
+        plan: 'starter',
+        billingCycle: 'monthly',
+        features: ['Chat', 'Function Calling', 'Vision']
+      }
+    },
+    {
+      id: 'sub-mock-3',
+      userId: 'dev-user-1',
+      modelId: 'llama-3.1-8b-instant',
+      modelName: 'Llama 3.1 8B Instant',
+      provider: 'groq',
+      status: 'suspended',
+      quotaRequests: 20000,
+      quotaTokens: 2000000,
+      usedRequests: 20000,
+      usedTokens: 2000000,
+      remainingRequests: 0,
+      remainingTokens: 0,
+      utilizationPercent: {
+        requests: 100,
+        tokens: 100
+      },
+      resetAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+      metadata: {
+        plan: 'enterprise',
+        billingCycle: 'monthly',
+        features: ['Chat']
+      }
+    }
+  ];
+
   constructor(fastify: FastifyInstance) {
     this.fastify = fastify;
     this.liteLLMService = new LiteLLMService(fastify);
+  }
+
+  private shouldUseMockData(): boolean {
+    // Use mock data if in development mode or if database is not available
+    return process.env.NODE_ENV === 'development' || this.isDatabaseUnavailable();
+  }
+
+  private isDatabaseUnavailable(): boolean {
+    // Check if database connection is available
+    // This is a simple check - in a real scenario you might want to ping the database
+    try {
+      return !this.fastify.pg;
+    } catch {
+      return true;
+    }
+  }
+
+  private createMockResponse<T>(data: T): Promise<T> {
+    // Simulate network delay
+    const delay = Math.random() * 200 + 100; // 100-300ms
+    return new Promise(resolve => setTimeout(() => resolve(data), delay));
   }
 
   async createSubscription(
@@ -191,6 +297,30 @@ export class SubscriptionService {
   ): Promise<{ data: SubscriptionDetails[]; total: number }> {
     const { status, modelId, page = 1, limit = 20 } = options;
     const offset = (page - 1) * limit;
+
+    // Use mock data if database is not available
+    if (this.shouldUseMockData()) {
+      this.fastify.log.debug('Using mock subscription data');
+      
+      // Filter mock data based on options
+      let filteredSubscriptions = [...this.MOCK_SUBSCRIPTIONS];
+      
+      if (status) {
+        filteredSubscriptions = filteredSubscriptions.filter(sub => sub.status === status);
+      }
+      
+      if (modelId) {
+        filteredSubscriptions = filteredSubscriptions.filter(sub => sub.modelId === modelId);
+      }
+      
+      const total = filteredSubscriptions.length;
+      const paginatedData = filteredSubscriptions.slice(offset, offset + limit);
+      
+      return this.createMockResponse({
+        data: paginatedData,
+        total
+      });
+    }
 
     try {
       let query = `

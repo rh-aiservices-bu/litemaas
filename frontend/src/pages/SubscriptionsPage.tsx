@@ -117,7 +117,11 @@ const SubscriptionsPage: React.FC = () => {
     );
   };
 
-  const getPlanBadge = (plan: string) => {
+  const getPlanBadge = (plan: string | undefined) => {
+    if (!plan) {
+      return <Label color="grey">Unknown</Label>;
+    }
+    
     const colors = {
       starter: 'blue',
       professional: 'green',
