@@ -36,18 +36,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Check for admin bypass first
       const adminUser = localStorage.getItem('litemaas_admin_user');
       if (adminUser) {
-        setUser(JSON.parse(adminUser));
+        const parsedUser = JSON.parse(adminUser);
+        setUser(parsedUser);
         return;
       }
 
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
+      // Only try to fetch current user if we have a token
+      if (authService.isAuthenticated()) {
+        const currentUser = await authService.getCurrentUser();
+        setUser(currentUser);
+      } else {
+        setUser(null);
+      }
     } catch (error) {
       console.error('Failed to fetch user:', error);
       // Check for admin bypass on error
       const adminUser = localStorage.getItem('litemaas_admin_user');
       if (adminUser) {
-        setUser(JSON.parse(adminUser));
+        const parsedUser = JSON.parse(adminUser);
+        setUser(parsedUser);
       } else {
         setUser(null);
       }
@@ -114,10 +121,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const isAuthenticated = !!user || !!localStorage.getItem('litemaas_admin_user');
+
   const value: AuthContextType = {
     user,
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated,
     login,
     loginAsAdmin,
     logout,

@@ -20,6 +20,14 @@ class ApiClient {
 
     this.client.interceptors.request.use(
       (config) => {
+        // Check for admin bypass first
+        const adminUser = localStorage.getItem('litemaas_admin_user');
+        if (adminUser) {
+          // For admin bypass, don't send any authorization header
+          // The backend should handle requests without auth for development
+          return config;
+        }
+        
         const token = localStorage.getItem('access_token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
@@ -35,8 +43,13 @@ class ApiClient {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          localStorage.removeItem('access_token');
-          window.location.href = '/login';
+          // Check if this is an admin bypass session
+          const adminUser = localStorage.getItem('litemaas_admin_user');
+          if (!adminUser) {
+            // Only redirect to login if not in admin bypass mode
+            localStorage.removeItem('access_token');
+            window.location.href = '/login';
+          }
         }
         return Promise.reject(error);
       }

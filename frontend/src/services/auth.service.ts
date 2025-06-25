@@ -43,6 +43,12 @@ class AuthService {
   }
 
   isAuthenticated(): boolean {
+    // Check for admin bypass first
+    const adminUser = localStorage.getItem('litemaas_admin_user');
+    if (adminUser) {
+      return true;
+    }
+    
     return !!this.getAccessToken();
   }
 }

@@ -18,6 +18,24 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
   // Enhanced authentication decorator
   fastify.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
+      // Development mode bypass - allow all requests without auth
+      if (process.env.NODE_ENV === 'development') {
+        // Create a mock user for development
+        const mockUser = {
+          userId: 'dev-user-1',
+          username: 'developer',
+          email: 'dev@litemaas.local',
+          name: 'Developer User',
+          roles: ['admin', 'user'],
+          iat: Math.floor(Date.now() / 1000),
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60), // 24 hours
+        };
+        
+        (request as AuthenticatedRequest).user = mockUser;
+        fastify.log.debug('Development mode: bypassing authentication');
+        return;
+      }
+
       // Try to get token from Authorization header
       let token = request.headers.authorization;
       
