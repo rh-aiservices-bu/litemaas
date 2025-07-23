@@ -1,177 +1,368 @@
-# CLAUDE.md - PatternFly 6 Rules and Guidelines
+# CLAUDE.md - LiteMaaS Project Documentation
 
-This document outlines the mandatory rules and guidelines that must be followed when working with PatternFly 6. These rules ensure code consistency, proper token usage, and adherence to the latest PatternFly 6 standards.
+## 🚀 Project Overview
 
-## 🚨 Critical Breaking Changes in PatternFly 6
+**LiteMaaS** (LiteLLM User Application) is a comprehensive model subscription and management platform that provides a user-friendly interface for managing AI model subscriptions, API keys, and usage tracking. It's designed to work seamlessly with LiteLLM instances and serves as a bridge between users and AI model services.
 
-### 1. Version Prefix Requirements
-- **MANDATORY**: All PatternFly class names MUST use the `pf-v6-` prefix
-- **OLD**: `pf-c-button`, `pf-u-mt-lg`, `pf-l-grid`
-- **NEW**: `pf-v6-c-button`, `pf-v6-u-mt-lg`, `pf-v6-l-grid`
-- **Exception**: Only use non-versioned classes if explicitly supporting legacy PatternFly versions
+## 🏗️ Architecture Overview
 
-### 2. Design Token System (Required)
-- **MANDATORY**: Use semantic design tokens instead of global CSS variables
-- **Token Structure**: `--pf-t--[scope]--[component]--[property]--[concept]--[variant]--[state]`
-- **OLD**: `--pf-v5-global--FontSize--lg`
-- **NEW**: `--pf-t--global--font--size--lg`
-- **React Tokens**: `global_FontSize_lg` becomes `t_global_font_size_lg`
+### Project Type
+**Monorepo** using npm workspaces with two main packages:
+- **Backend** (`@litemaas/backend`): High-performance Fastify-based API server
+- **Frontend** (`@litemaas/frontend`): Modern React application with PatternFly 6 UI
 
-### 3. Units Changed from Pixels to Rems
-- **MANDATORY**: All breakpoint logic must use rem units instead of pixels
-- **Conversion**: Divide pixel values by 16 to get rem equivalent
-- **Example**: `768px` becomes `48rem` (768 ÷ 16)
+### Technology Stack
 
-## 🎯 Component-Specific Rules
+#### Backend Stack
+- **Framework**: Fastify 4.26.1 (high-performance Node.js web framework)
+- **Language**: TypeScript 5.3.3 with strict mode
+- **Database**: PostgreSQL with @fastify/postgres
+- **Authentication**: OAuth2 (OpenShift) + JWT tokens
+- **API Docs**: Swagger/OpenAPI with @fastify/swagger
+- **Security**: Helmet, CORS, Rate limiting, JWT
+- **Validation**: @sinclair/typebox with Fastify Type Provider
+- **Testing**: Vitest (unit/integration), K6 (performance)
+- **Logging**: Pino structured logging
 
-### Button Component
-- **Breaking Change**: `isDisabled` prop now assigns value for `disabled` attribute, not `aria-disabled`
-- **Testing Impact**: Tests looking for `aria-disabled` will fail
-- **New Wrapper**: Buttons now have a wrapping div around text content
-- **Testing Fix**: Use `byRole` with button text in `name` instead of `byText`
+#### Frontend Stack
+- **Framework**: React 18.2.0 with TypeScript 5.3.3
+- **Build Tool**: Vite 5.1.4
+- **UI Framework**: PatternFly 6 (Red Hat's design system)
+- **State Management**: React Context API
+- **Routing**: React Router v6.22.1
+- **HTTP Client**: Axios with interceptors
+- **i18n**: react-i18next (EN, ES, FR)
+- **Testing**: Vitest + React Testing Library + Playwright
 
-### Dark Theme Support
-- **Implementation**: Add `pf-v6-theme-dark` class to `<html>` tag to enable dark theme
-- **Automatic**: Token system automatically adapts to dark theme when class is present
+## 📁 Project Structure
 
-### Typography
-- **New Modifier**: Use `.pf-v6-m-tabular-nums` for tabular numbers
-- **Font Change**: Default font changed from Overpass to RedHatText and RedHatDisplay
-- **Legacy Support**: Add `pf-m-overpass-font` class to continue using Overpass
-
-## 📝 CSS Override Rules
-
-### 1. Temporary Removal During Upgrade
-- **MANDATORY**: Remove ALL existing CSS overrides before starting PatternFly 6 upgrade
-- **Reason**: Overrides targeting PatternFly 5 variables will not work with PatternFly 6 tokens
-- **Process**: Remove → Run codemods → Evaluate what's still needed
-
-### 2. Post-Upgrade CSS Guidelines
-- **Preference**: Avoid CSS overrides whenever possible for easier future upgrades
-- **If Required**: Update variable names to use appropriate semantic tokens
-- **No 1:1 Mapping**: Choose tokens based on semantic meaning, not old variable names
-
-## 🔧 Codemod Requirements
-
-### 1. Mandatory Codemods (Run in Order)
-1. **class-name-updater**: Updates class names from `pf-v5-` to `pf-v6-`
-   ```bash
-   npx @patternfly/class-name-updater --v6 --fix path/to/code
-   ```
-
-2. **pf-codemods**: Updates React component code
-   ```bash
-   npx @patternfly/pf-codemods --v6 --fix path/to/code
-   ```
-
-3. **tokens-update**: Updates CSS variables to design tokens
-   ```bash
-   npx @patternfly/tokens-update --fix path/to/code
-   ```
-
-### 2. Codemod Best Practices
-- **MANDATORY**: Run codemods BEFORE making manual changes
-- **Multiple Passes**: Run codemods multiple times until no new issues are found
-- **Manual Review**: Always review codemod changes before committing
-- **Hot Pink Tokens**: Replace any `--pf-t--temp--dev--tbd` tokens manually
-
-## 🎨 Design Token Usage Rules
-
-### 1. Token Selection Guidelines
-- **Semantic First**: Choose tokens based on their semantic meaning, not color/size
-- **Fuzzy Matching**: Use VS Code plugin for token discovery (type `pft` then relevant keywords)
-- **Example Process**: For disabled state → `pft` + `back` (background) + `dis` (disabled)
-
-### 2. Token Naming Structure
 ```
---pf-t--[scope]--[component]--[property]--[concept]--[variant]--[state]
+litemaas/
+├── backend/                    # Fastify API Server
+│   ├── src/
+│   │   ├── config/            # Configuration modules
+│   │   ├── middleware/        # Auth, error handling, CORS
+│   │   ├── models/            # Database models (TypeScript interfaces)
+│   │   ├── plugins/           # Fastify plugins (auth, db, swagger, etc.)
+│   │   ├── routes/            # API endpoints (/auth, /users, /models, etc.)
+│   │   ├── schemas/           # TypeBox validation schemas
+│   │   ├── services/          # Business logic layer
+│   │   ├── types/             # TypeScript type definitions
+│   │   ├── utils/             # Utility functions
+│   │   ├── app.ts            # Main Fastify application setup
+│   │   └── index.ts          # Application entry point
+│   ├── tests/
+│   │   ├── fixtures/         # Test data and mocks
+│   │   ├── integration/      # API integration tests
+│   │   ├── performance/      # K6 load testing scripts
+│   │   ├── security/         # Security and auth tests
+│   │   └── unit/            # Unit tests for services
+│   └── dist/                # Compiled JavaScript output
+├── frontend/                  # React Application
+│   ├── src/
+│   │   ├── assets/           # Static assets (images, icons)
+│   │   ├── components/       # Reusable React components
+│   │   ├── config/           # App configuration (navigation)
+│   │   ├── contexts/         # React Context providers
+│   │   ├── hooks/            # Custom React hooks
+│   │   ├── i18n/             # Internationalization setup
+│   │   ├── pages/            # Page-level components
+│   │   ├── routes/           # Routing configuration
+│   │   ├── services/         # API service layer (Axios-based)
+│   │   ├── types/            # TypeScript interfaces
+│   │   └── utils/            # Utility functions
+│   ├── public/              # Static public assets
+│   └── dist/                # Vite build output
+├── docs/                    # Project documentation
+└── package.json            # Workspace configuration
 ```
-- **Scope**: `global` or `chart`
-- **Component**: `background`, `text`, `icon`, `border`, `box-shadow`, `motion`, `spacer`
-- **Property**: `color`, `size`, `radius`, `width`
-- **Concept**: `primary`, `status`, `nonstatus`, `action`
-- **Variant**: Specific variation needed
-- **State**: `hover`, `focus`, `disabled`, etc.
 
-### 3. Token Layer Hierarchy
-1. **Semantic Tokens** (Use These): `--pf-t--global--text--color--regular`
-2. **Base Tokens** (Avoid): Lower-level tokens
-3. **Palette Tokens** (Avoid): Raw color values
+## 🔧 Backend Architecture
 
-## 🧪 Testing Updates Required
+### Core Components
 
-### 1. Component Testing
-- **Button Tests**: Update tests expecting `aria-disabled` to look for `disabled` attribute
-- **Text Queries**: Replace `byText` with `byRole` for buttons due to new wrapper divs
-- **Class Names**: Update all test selectors to use `pf-v6-` prefixed classes
+#### Plugin System
+- **Authentication Plugin**: JWT + OAuth2 (OpenShift SSO)
+- **Database Plugin**: PostgreSQL with connection pooling
+- **Rate Limiting Plugin**: API protection and throttling
+- **Session Plugin**: OAuth state management
+- **RBAC Plugin**: Role-based access control
+- **Swagger Plugin**: Auto-generated API documentation
+- **Security Plugin**: Helmet, CORS, CSP headers
 
-### 2. Breakpoint Testing
-- **Unit Changes**: Update any hardcoded pixel breakpoints to rem values
-- **Table Breakpoints**: Special attention needed - table breakpoints were adjusted by 1px
+#### API Routes (prefix: `/api`)
+- `/auth` - Authentication and OAuth flows
+- `/users` - User management and profiles
+- `/models` - AI model registry and metadata
+- `/subscriptions` - User subscription management
+- `/api-keys` - API key generation and validation
+- `/usage` - Usage tracking and analytics
+- `/health` - System health checks
 
-## 🚫 Deprecated/Removed Features
+#### Service Layer
+- **ApiKeyService**: API key lifecycle management
+- **LiteLLMService**: Integration with LiteLLM instances
+- **OAuthService**: OAuth2 authentication flows
+- **RBACService**: Permission and role management
+- **SessionService**: Session state management
+- **SubscriptionService**: Model subscription logic
+- **TokenService**: JWT token management
+- **UsageStatsService**: Usage analytics and reporting
 
-### 1. No Longer Supported
-- **UMD Builds**: Individual package UMD builds removed
-- **PropTypes**: Removed in favor of TypeScript types
-- **Global Variables**: Replaced entirely with design token system
+### Database Schema
+PostgreSQL tables:
+- `users` - User accounts with OAuth integration
+- `models` - AI model registry and metadata
+- `subscriptions` - User model subscriptions
+- `api_keys` - API access keys with permissions
+- `usage_logs` - Detailed usage tracking
+- `audit_logs` - Security and admin audit trail
 
-### 2. Component-Specific Deprecations
-- **Select Component**: Old Select implementations deprecated, use new Select
-- **Dropdown Component**: Old Dropdown implementations deprecated
-- **Wizard Component**: Old Wizard implementations deprecated
-- **Table Component**: Old Table implementations deprecated
+### Security Features
+- Multi-layered authentication (JWT + OAuth2 + API keys)
+- Rate limiting and request throttling
+- CORS protection with configurable origins
+- Security headers via Helmet.js
+- Request ID tracking for audit trails
+- Development mode bypass for testing
 
-## ✅ Quality Assurance Checklist
+## 🎨 Frontend Architecture
 
-### Before Code Review
-- [ ] All `pf-c-`, `pf-u-`, `pf-l-` classes updated to `pf-v6-` versions
-- [ ] All global CSS variables replaced with design tokens
-- [ ] All codemods run successfully without errors
-- [ ] Custom CSS overrides reviewed and updated or removed
-- [ ] Tests updated for new component structures
-- [ ] Breakpoint logic updated to use rem units
+### Component Architecture
+- **Pages**: Route-level components (`/pages`)
+- **Components**: Reusable UI components (`/components`)
+- **Layouts**: Page layout wrappers
+- **Forms**: Form components with validation
 
-### During Development
-- [ ] Use semantic tokens, not base/palette tokens
-- [ ] Choose tokens by meaning, not by old variable names
-- [ ] Avoid CSS overrides when possible
-- [ ] Test in both light and dark themes
-- [ ] Verify responsive behavior with new rem-based breakpoints
+### State Management
+- **AuthContext**: User authentication state
+- **NotificationContext**: App-wide notifications
+- No external state libraries - uses React Context API
 
-### Post-Upgrade Validation
-- [ ] Product builds without errors
-- [ ] Visual regression testing completed
-- [ ] All tests pass with new PatternFly 6 changes
-- [ ] Performance impact assessed
-- [ ] Accessibility compliance maintained
+### Routing Structure
+- `/home` - Dashboard and overview
+- `/models` - Browse available models
+- `/subscriptions` - Manage model subscriptions
+- `/api-keys` - API key management
+- `/usage` - Usage analytics and reports
+- `/settings` - User settings and preferences
+- `/login` - Authentication page
 
-## 🆘 Support and Resources
+### API Integration
+- Centralized Axios client with interceptors
+- Automatic JWT token handling
+- Service layer pattern for API calls
+- Error handling and retry logic
+
+## 🎯 PatternFly 6 Integration
+
+⚠️ **IMPORTANT**: This project uses PatternFly 6. For detailed PatternFly 6 rules, guidelines, and migration instructions, see **[PATTERNFLY6_RULES.md](./PATTERNFLY6_RULES.md)**.
+
+### Key Requirements
+- **Class Prefixes**: All classes MUST use `pf-v6-` prefix
+- **Design Tokens**: Use semantic tokens instead of CSS variables
+- **Units**: Rem-based breakpoints (divide pixels by 16)
+- **Dark Theme**: Support via `pf-v6-theme-dark` class
+
+### Components Used
+- `@patternfly/react-core`: Main component library
+- `@patternfly/react-charts`: Data visualization
+- `@patternfly/react-icons`: Icon library
+- `@patternfly/react-table`: Advanced table components
+
+## 🚀 Development Workflow
+
+### Environment Setup
+```bash
+# Install dependencies
+npm install
+
+# Start development (both backend and frontend)
+npm run dev
+
+# Backend only (http://localhost:8080)
+npm run dev:backend
+
+# Frontend only (http://localhost:3000)
+npm run dev:frontend
+```
+
+### Environment Variables
+#### Backend (.env)
+```env
+# Database
+DATABASE_URL=postgresql://user:pass@localhost:5432/litemaas
+
+# OAuth (OpenShift)
+OAUTH_CLIENT_ID=your-client-id
+OAUTH_CLIENT_SECRET=your-client-secret
+OAUTH_ISSUER_URL=https://your-openshift-instance
+
+# JWT
+JWT_SECRET=your-jwt-secret
+JWT_EXPIRES_IN=24h
+
+# LiteLLM Integration
+LITELLM_API_URL=http://localhost:4000
+LITELLM_API_KEY=your-litellm-key
+
+# Security
+ADMIN_API_KEYS=key1,key2,key3
+RATE_LIMIT_MAX=100
+RATE_LIMIT_WINDOW=60000
+```
+
+#### Frontend (.env)
+```env
+VITE_API_URL=http://localhost:8080
+VITE_OAUTH_CLIENT_ID=your-client-id
+VITE_APP_NAME=LiteMaaS
+VITE_APP_VERSION=1.0.0
+```
+
+### Testing Strategy
+- **Unit Tests**: Service logic and utilities
+- **Integration Tests**: API endpoints and database
+- **E2E Tests**: User workflows with Playwright
+- **Performance Tests**: Load testing with K6
+- **Security Tests**: Authentication and authorization
+
+### Build Process
+```bash
+# Build both packages
+npm run build
+
+# Test all packages
+npm run test
+
+# Lint and format
+npm run lint
+npm run format
+```
+
+## 🔒 Security Considerations
+
+### Authentication Flow
+1. User initiates OAuth2 flow with OpenShift
+2. Backend handles OAuth callback and exchanges code
+3. JWT token issued for subsequent API calls
+4. API keys generated for programmatic access
+
+### Security Headers
+- Content Security Policy (CSP)
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- Referrer-Policy: strict-origin-when-cross-origin
+
+### Data Protection
+- Sensitive data encrypted at rest
+- API keys hashed before storage
+- Audit logging for all admin actions
+- Rate limiting to prevent abuse
+
+## 📊 Performance Characteristics
+
+### Backend Performance
+- Fastify provides 2x+ performance over Express
+- Connection pooling for database efficiency
+- Response time targets: <200ms for API calls
+- Memory usage: <500MB under normal load
+
+### Frontend Performance
+- Vite for fast development and builds
+- Code splitting for optimal bundle sizes
+- PatternFly components are tree-shakeable
+- Target: <3s load time on 3G networks
+
+## 🔄 CI/CD Pipeline
+
+### GitHub Actions
+- Node.js 18.x and 20.x testing matrix
+- PostgreSQL service for integration tests
+- Code coverage with Codecov
+- Automated linting and type checking
+- Security scanning with npm audit
+
+### Quality Gates
+- All tests must pass
+- Code coverage >80%
+- No high-severity security vulnerabilities
+- TypeScript compilation without errors
+- Linting passes without warnings
+
+## 🌐 Internationalization
+
+### Supported Languages
+- English (default)
+- Spanish (es)
+- French (fr)
+
+### i18n Implementation
+- react-i18next for React components
+- Browser language detection
+- LocalStorage for user preference
+- Namespace organization by feature
+
+## 📈 Usage Analytics
+
+### Metrics Tracked
+- API calls per user/model
+- Token consumption
+- Response times
+- Error rates
+- User engagement patterns
+
+### Analytics Features
+- Real-time usage dashboards
+- Historical usage reports
+- Cost tracking and billing
+- Usage quotas and limits
+
+## 🛠️ Development Commands
+
+```bash
+# Development
+npm run dev                    # Start both backend and frontend
+npm run dev:backend           # Backend only
+npm run dev:frontend          # Frontend only
+
+# Building
+npm run build                 # Build both packages
+npm run build:backend         # Backend only
+npm run build:frontend        # Frontend only
+
+# Testing
+npm run test                  # All tests
+npm run test:backend          # Backend tests only
+npm run test:frontend         # Frontend tests only
+npm run test:e2e             # End-to-end tests
+
+# Code Quality
+npm run lint                  # Lint all code
+npm run format               # Format code
+npm run type-check           # TypeScript checking
+
+# Database
+npm run db:migrate           # Run database migrations
+npm run db:seed              # Seed test data
+
+# Utilities
+npm run check-backend        # Backend health check
+npm run clean               # Clean build artifacts
+```
+
+## 📚 Additional Resources
 
 ### Documentation
+- [Fastify Documentation](https://www.fastify.io/docs/)
+- [React Documentation](https://react.dev/)
 - [PatternFly 6 Upgrade Guide](https://www.patternfly.org/get-started/upgrade/)
-- [Design Tokens Documentation](https://www.patternfly.org/tokens/)
-- [Release Highlights](https://www.patternfly.org/get-started/release-highlights/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
 
-### Community Support
-- **Slack**: PatternFly community Slack
-- **GitHub**: [Discussion board](https://github.com/patternfly/patternfly-org/discussions)
-- **Issues**: Report problems on relevant PatternFly repositories
-
-### Migration Tools
-- [@patternfly/pf-codemods](https://www.npmjs.com/package/@patternfly/pf-codemods)
-- [@patternfly/class-name-updater](https://github.com/patternfly/class-name-updater)
-- [PatternFly 6 Design Kit](https://www.patternfly.org/get-started/design/)
+### API Documentation
+- Swagger UI: http://localhost:8080/docs (when backend running)
+- OpenAPI spec: http://localhost:8080/docs/json
 
 ---
 
-## ⚠️ Important Notes
-
-1. **No Rollback**: Once upgraded to PatternFly 6, rolling back requires significant work
-2. **PatternFly 5 Support**: Ends with PatternFly 7 release (following N-1 support policy)
-3. **Visual Changes**: PatternFly 6 includes significant visual updates - review all UIs
-4. **Custom Themes**: Products with custom PatternFly replications need complete re-skinning
-
----
-
-*Last Updated: Based on PatternFly 6 upgrade documentation and release highlights*
+*This documentation is automatically updated to reflect the current project state. Last updated based on project analysis.*
