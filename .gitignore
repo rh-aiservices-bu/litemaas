@@ -15,6 +15,7 @@ build/
 .env
 .env.local
 .env.*.local
+**/.env
 
 # Logs
 logs/
@@ -69,3 +70,8 @@ Thumbs.db
 !.yarn/plugins
 !.yarn/sdks
 !.yarn/versions
+
+# DevelopmentData directories
+data/
+data/postgres/
+data/litellm/
