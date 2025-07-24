@@ -23,6 +23,7 @@
 - **Validation**: @sinclair/typebox with Fastify Type Provider
 - **Testing**: Vitest (unit/integration), K6 (performance)
 - **Logging**: Pino structured logging
+- **LiteLLM Integration**: Real-time model data synchronization with fallback to mock data
 
 #### Frontend Stack
 - **Framework**: React 18.2.0 with TypeScript 5.3.3
@@ -33,6 +34,7 @@
 - **HTTP Client**: Axios with interceptors
 - **i18n**: react-i18next (EN, ES, FR)
 - **Testing**: Vitest + React Testing Library + Playwright
+- **Data Handling**: Graceful handling of undefined values with "N/A" fallbacks
 
 ## 📁 Project Structure
 
@@ -208,7 +210,8 @@ JWT_SECRET=your-jwt-secret
 JWT_EXPIRES_IN=24h
 
 # LiteLLM Integration
-LITELLM_API_URL=http://localhost:4000
+LITELLM_API_URL=http://localhost:4000  # Primary variable name
+# LITELLM_BASE_URL=http://localhost:4000  # Alternative for backward compatibility
 LITELLM_API_KEY=your-litellm-key
 LITELLM_AUTO_SYNC=true
 LITELLM_SYNC_INTERVAL=60
@@ -324,10 +327,19 @@ npm run format
 - **Auto-Sync**: Configurable automatic synchronization with conflict resolution
 
 ### Integration Architecture
-- **LiteLLMService**: Core API integration layer
+- **LiteLLMService**: Core API integration layer with `/model/info` endpoint integration
 - **LiteLLMIntegrationService**: Centralized sync orchestration
-- **Enhanced Data Models**: Extended types with LiteLLM compatibility
+- **Enhanced Data Models**: Extended types matching actual LiteLLM API structure
 - **Circuit Breaker**: Resilient API communication with fallback strategies
+- **Mock Data Fallback**: Development mode with realistic mock responses
+
+### Model Data Integration
+- **Real-time Model Discovery**: Fetches models from LiteLLM `/model/info` endpoint
+- **Accurate Pricing**: Uses actual `input_cost_per_token` and `output_cost_per_token` from LiteLLM
+- **Capability Detection**: Reads `supports_vision`, `supports_function_calling`, etc. from model metadata
+- **Provider Detection**: Extracts provider information from `custom_llm_provider` and model paths
+- **Graceful Data Handling**: Returns `undefined` for missing data instead of default values
+- **Frontend Compatibility**: UI displays "N/A" for missing context length or pricing information
 
 ### Synchronization Features
 - **Global Sync**: System-wide synchronization of all entities

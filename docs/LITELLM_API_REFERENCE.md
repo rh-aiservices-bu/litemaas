@@ -23,7 +23,7 @@ x-litellm-api-key: sk-your-api-key-here
 | Endpoint | Method | Purpose | Priority |
 |----------|--------|---------|----------|
 | `/health/liveliness` | GET | Service health check | **Critical** |
-| `/models` | GET | List available models | **Critical** |
+| `/model/info` | GET | List available models with detailed info | **Critical** |
 | `/key/generate` | POST | Create API keys | **Critical** |
 | `/key/info` | GET | Get key details | **High** |
 | `/user/new` | POST | Create internal users | **High** |
@@ -46,9 +46,9 @@ GET /health/liveliness
 
 ## 🤖 Model Management
 
-### List Available Models
+### List Available Models with Detailed Information
 ```http
-GET /models
+GET /model/info
 ```
 
 **Response**:
@@ -56,28 +56,48 @@ GET /models
 {
   "data": [
     {
-      "id": "gpt-4o",
-      "object": "model",
-      "created": 1234567890,
-      "owned_by": "openai",
-      "litellm_provider": "openai",
-      "supports_function_calling": true,
-      "supports_vision": true,
-      "max_tokens": 4096
+      "model_name": "gpt-4o",
+      "litellm_params": {
+        "input_cost_per_token": 0.01,
+        "output_cost_per_token": 0.03,
+        "api_base": "https://api.openai.com/v1",
+        "custom_llm_provider": "openai",
+        "use_in_pass_through": false,
+        "use_litellm_proxy": false,
+        "model": "openai/gpt-4o"
+      },
+      "model_info": {
+        "id": "model-uuid-123",
+        "db_model": true,
+        "max_tokens": 128000,
+        "access_groups": [],
+        "direct_access": true,
+        "supports_vision": true,
+        "supports_function_calling": true,
+        "supports_parallel_function_calling": true,
+        "access_via_team_ids": ["team-id-1", "team-id-2"],
+        "input_cost_per_token": 0.01,
+        "output_cost_per_token": 0.03
+      }
     }
   ]
 }
 ```
 
 **Integration Use**: 
-- Populate LiteMaaS model registry
-- Validate subscription model access
-- Display capabilities to users
+- Populate LiteMaaS model registry with accurate pricing and capabilities
+- Extract model capabilities (`supports_vision`, `supports_function_calling`, etc.)
+- Validate subscription model access via `access_via_team_ids`
+- Display real-time pricing information to users
+- Handle missing data gracefully (undefined values for missing `max_tokens` or pricing)
 
 ### Model Discovery with Filters
 ```http
-GET /models?team_id=team_123&include_model_access_groups=true
+GET /model/info?team_id=team_123
 ```
+
+**Query Parameters**:
+- `team_id`: Filter models accessible by specific team
 
 ---
 
