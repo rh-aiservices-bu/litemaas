@@ -1,18 +1,17 @@
 # This configuration exposes services on your host machine's network
-# PostgreSQL for LiteLLM: localhost:5432
-# PostgreSQL for LiteMaaS: localhost:5433
+# PostgreSQL: localhost:5432
 # LiteLLM: http://localhost:4000
 
 services:
-  # PostgreSQL Database for LiteLLM
+  # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: litellm-postgres
+    container_name: postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_LITTELLM_USER:-litellm_user}
-      POSTGRES_PASSWORD: ${POSTGRES_LITTELLM_PASSWORD:-litellm_password}
-      POSTGRES_DB: ${POSTGRES_LITTELLM_DB:-litellm_db}
+      POSTGRES_MULTIPLE_DATABASES: litellm, litemaas
+      POSTGRES_USER: ${POSTGRES_USER:-litemaas_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-litemaas_password}
       PGDATA: /var/lib/postgresql/data/pgdata
       # Allow connections from any host (development only!)
       POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
@@ -20,15 +19,16 @@ services:
       - "5432:5432"  # PostgreSQL accessible at localhost:5432
     userns_mode: keep-id
     volumes:
-      - ./data/postgres-litellm:/var/lib/postgresql/data:Z
+      - ./data/postgres:/var/lib/postgresql/data:Z
+      - ./entrypoint.sh:/docker-entrypoint-initdb.d/entrypoint.sh:ro
     networks:
-      - litellm-network
+      - litemaas-network
     # Make PostgreSQL listen on all interfaces (not just localhost)
     command: postgres -c listen_addresses='*'
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_LITTELLM_USER:-litellm_user} -d ${POSTGRES_LITTELLM_DB:-litellm_db}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-litellm_user} -d ${POSTGRES_DB:-litellm_db}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -60,41 +60,12 @@ services:
       - ./data/litellm:/app/data:Z
       - ./litellm-config.yaml:/app/config.yaml:ro  # Optional: mount config file
     networks:
-      - litellm-network
+      - litemaas-network
     extra_hosts:
       - "host.docker.internal:host-gateway"
     command: [ "--config", "/app/config.yaml", "--detailed_debug" ]
 
-  # PostgreSQL Database for LiteMaaS
-  postgres-litemaas:
-    image: postgres:16-alpine
-    container_name: litemaas-postgres
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_LITEMAAS_USER:-litemaas_user}
-      POSTGRES_PASSWORD: ${POSTGRES_LITEMAAS_PASSWORD:-litemaas_password}
-      POSTGRES_DB: ${POSTGRES_LITEMAAS_DB:-litemaas_db}
-      PGDATA: /var/lib/postgresql/data/pgdata
-      # Allow connections from any host (development only!)
-      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
-    ports:
-      - "5433:5432"  # FIXED: Map host 5433 to container 5432 (where PostgreSQL actually listens)
-    userns_mode: keep-id  # This can stay!
-    volumes:
-      - ./data/postgres-litemaas:/var/lib/postgresql/data:Z
-    networks:
-      - litellm-network
-    # Make PostgreSQL listen on all interfaces (not just localhost)
-    command: postgres -c listen_addresses='*'
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_LITEMAAS_USER:-litemaas_user} -d ${POSTGRES_LITEMAAS_DB:-litemaas_db}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
 networks:
-  litellm-network:
+  litemaas-network:
     driver: bridge
-    name: litellm-network
+    name: litemaas-network
