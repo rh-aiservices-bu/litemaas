@@ -1,5 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { OAuthUserInfo, OAuthTokenResponse } from '../types';
+import { LiteLLMService } from './litellm.service';
+import { LiteLLMUserRequest } from '../types/user.types';
 
 export interface MockUser {
   id: string;
@@ -41,10 +43,12 @@ const MOCK_USERS: MockUser[] = [
 export class OAuthService {
   private fastify: FastifyInstance;
   private isMockEnabled: boolean;
+  private liteLLMService: LiteLLMService;
 
-  constructor(fastify: FastifyInstance) {
+  constructor(fastify: FastifyInstance, liteLLMService?: LiteLLMService) {
     this.fastify = fastify;
     this.isMockEnabled = process.env.OAUTH_MOCK_ENABLED === 'true' || process.env.NODE_ENV === 'development';
+    this.liteLLMService = liteLLMService || new LiteLLMService(fastify);
   }
 
   generateAuthUrl(state: string): string {
@@ -180,6 +184,49 @@ export class OAuthService {
     return roles.size > 0 ? Array.from(roles) : ['user'];
   }
 
+  /**
+   * Ensures user exists in LiteLLM backend, creating them if necessary
+   */
+  private async ensureLiteLLMUser(user: {
+    id: string;
+    username: string;
+    email: string;
+    fullName?: string;
+    roles: string[];
+  }): Promise<void> {
+    try {
+      // First check if user exists in LiteLLM
+      await this.liteLLMService.getUserInfo(user.id);
+      this.fastify.log.debug({ userId: user.id }, 'User already exists in LiteLLM');
+    } catch (error) {
+      // User doesn't exist in LiteLLM, create them
+      this.fastify.log.info({ userId: user.id, email: user.email }, 'Creating user in LiteLLM');
+      
+      try {
+        await this.liteLLMService.createUser({
+          user_id: user.id,
+          user_email: user.email,
+          user_alias: user.username,
+          user_role: user.roles.includes('admin') ? 'proxy_admin' : 'internal_user',
+          max_budget: 100, // Default budget - can be customized via environment
+          tpm_limit: 1000, // Default TPM limit
+          rpm_limit: 60,   // Default RPM limit
+          auto_create_key: false, // Don't auto-create key during user creation
+        });
+
+        this.fastify.log.info({ userId: user.id }, 'Successfully created user in LiteLLM');
+      } catch (createError) {
+        this.fastify.log.warn({
+          userId: user.id,
+          error: createError instanceof Error ? createError.message : 'Unknown error'
+        }, 'Failed to create user in LiteLLM - will retry during sync');
+        
+        // Don't throw here - let the user continue and sync will retry later
+        throw createError;
+      }
+    }
+  }
+
   async processOAuthUser(userInfo: OAuthUserInfo): Promise<{
     id: string;
     username: string;
@@ -195,6 +242,14 @@ export class OAuthService {
       [userInfo.sub, 'openshift']
     );
 
+    let user: {
+      id: string;
+      username: string;
+      email: string;
+      fullName?: string;
+      roles: string[];
+    };
+
     if (existingUser) {
       // Update existing user
       await this.fastify.dbUtils.query(
@@ -204,7 +259,7 @@ export class OAuthService {
         [userInfo.preferred_username, userInfo.email, userInfo.name, roles, existingUser.id]
       );
 
-      return {
+      user = {
         id: existingUser.id,
         username: userInfo.preferred_username,
         email: userInfo.email || userInfo.preferred_username,
@@ -227,7 +282,7 @@ export class OAuthService {
         ]
       );
 
-      return {
+      user = {
         id: newUser.id,
         username: newUser.username,
         email: newUser.email,
@@ -235,5 +290,33 @@ export class OAuthService {
         roles,
       };
     }
+
+    // NEW: Ensure user exists in LiteLLM
+    try {
+      await this.ensureLiteLLMUser(user);
+      
+      // Update sync status to 'synced' if successful
+      await this.fastify.dbUtils.query(
+        'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
+        ['synced', user.id]
+      );
+      
+      this.fastify.log.info({ userId: user.id }, 'User successfully synced to LiteLLM during authentication');
+    } catch (error) {
+      // Update sync status to 'error' but don't fail authentication
+      await this.fastify.dbUtils.query(
+        'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
+        ['error', user.id]
+      );
+      
+      this.fastify.log.warn({
+        userId: user.id,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      }, 'Failed to sync user to LiteLLM during authentication - user can still proceed');
+      
+      // Continue without throwing - user authentication should not fail due to LiteLLM issues
+    }
+
+    return user;
   }
 }

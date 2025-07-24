@@ -7,6 +7,7 @@ export interface ApiKeyAuthRequest extends FastifyRequest {
     keyId: string;
     subscriptionId: string;
     userId: string;
+    allowedModels: string[]; // NEW: List of models this API key can access
   };
 }
 
@@ -78,6 +79,7 @@ const apiKeyAuthPlugin: FastifyPluginAsync<ApiKeyAuthOptions> = async (fastify, 
         keyId: validation.keyId!,
         subscriptionId: validation.subscriptionId!,
         userId: validation.userId!,
+        allowedModels: validation.allowedModels || [], // NEW: Include allowed models
       };
 
       fastify.log.debug({
@@ -117,6 +119,29 @@ const apiKeyAuthPlugin: FastifyPluginAsync<ApiKeyAuthOptions> = async (fastify, 
       
       if (subscriptionId && request.apiKey.subscriptionId !== subscriptionId) {
         throw fastify.createForbiddenError('API key does not have access to this subscription');
+      }
+    };
+  });
+
+  // NEW: Decorator for checking model access permissions
+  fastify.decorate('requireModelAccess', (requestedModel: string) => {
+    return async (request: ApiKeyAuthRequest, reply: FastifyReply) => {
+      if (!request.apiKey) {
+        throw fastify.createAuthError('Valid API key required');
+      }
+
+      if (!request.apiKey.allowedModels.includes(requestedModel)) {
+        fastify.log.warn({
+          keyId: request.apiKey.keyId,
+          requestedModel,
+          allowedModels: request.apiKey.allowedModels,
+          ip: request.ip,
+          userAgent: request.headers['user-agent']
+        }, 'API key attempted access to unauthorized model');
+
+        throw fastify.createForbiddenError(
+          `API key does not have access to model: ${requestedModel}`
+        );
       }
     };
   });
@@ -224,6 +249,7 @@ const apiKeyProtectedPlugin: FastifyPluginAsync = async (fastify) => {
       keyId: validation.keyId!,
       subscriptionId: validation.subscriptionId!,
       userId: validation.userId!,
+      allowedModels: validation.allowedModels || [], // NEW: Include allowed models
     };
   });
 };
@@ -278,6 +304,7 @@ declare module 'fastify' {
   interface FastifyInstance {
     requireApiKey(): (request: ApiKeyAuthRequest, reply: FastifyReply) => Promise<void>;
     requireSubscriptionAccess(targetSubscriptionId?: string): (request: ApiKeyAuthRequest, reply: FastifyReply) => Promise<void>;
+    requireModelAccess(requestedModel: string): (request: ApiKeyAuthRequest, reply: FastifyReply) => Promise<void>; // NEW: Model access validation
     rateLimitByApiKey(options: {
       max: number;
       timeWindow: string | number;

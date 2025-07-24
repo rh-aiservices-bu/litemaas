@@ -31,6 +31,7 @@ export interface ApiKeyValidation {
   subscriptionId?: string;
   userId?: string;
   keyId?: string;
+  allowedModels?: string[]; // NEW: Models this API key can access
   reason?: string;
 }
 
@@ -165,6 +166,9 @@ export class ApiKeyService {
     const { subscriptionId, name, expiresAt, maxBudget, budgetDuration, tpmLimit, rpmLimit, allowedModels, teamId, tags, permissions, softBudget, guardrails } = request;
 
     try {
+      // NEW: Ensure user exists in LiteLLM before creating API key
+      await this.ensureUserExistsInLiteLLM(userId);
+
       if (this.shouldUseMockData()) {
         // Mock implementation
         const mockKey = this.generateApiKey();
@@ -805,5 +809,178 @@ export class ApiKeyService {
       syncStatus: apiKey.sync_status || 'pending',
       syncError: apiKey.sync_error,
     };
+  }
+
+  /**
+   * Validates an API key and returns validation details including allowed models
+   */
+  async validateApiKey(keyValue: string): Promise<ApiKeyValidation> {
+    // Basic format validation
+    if (!keyValue || typeof keyValue !== 'string') {
+      return {
+        isValid: false,
+        reason: 'Invalid API key format'
+      };
+    }
+
+    // Check key format (should start with appropriate prefix)
+    if (!keyValue.startsWith('sk-') && !keyValue.startsWith('ltm_')) {
+      return {
+        isValid: false,
+        reason: 'Invalid API key format'
+      };
+    }
+
+    // Minimum length check
+    if (keyValue.length < 32) {
+      return {
+        isValid: false,
+        reason: 'Invalid API key format'
+      };
+    }
+
+    try {
+      // Generate hash for database lookup
+      const keyHash = this.hashApiKey(keyValue);
+
+      // Look up API key in database
+      const keyRecord = await this.fastify.dbUtils.queryOne(`
+        SELECT 
+          ak.id, ak.subscription_id, ak.is_active, ak.expires_at, ak.revoked_at,
+          s.user_id, s.status as subscription_status, s.model_id
+        FROM api_keys ak
+        JOIN subscriptions s ON ak.subscription_id = s.id
+        WHERE ak.key_hash = $1
+      `, [keyHash]);
+
+      if (!keyRecord) {
+        return {
+          isValid: false,
+          reason: 'API key not found'
+        };
+      }
+
+      // Check if key is active
+      if (!keyRecord.is_active) {
+        return {
+          isValid: false,
+          reason: 'API key is inactive'
+        };
+      }
+
+      // Check if key is revoked
+      if (keyRecord.revoked_at) {
+        return {
+          isValid: false,
+          reason: 'API key has been revoked'
+        };
+      }
+
+      // Check if key is expired
+      if (keyRecord.expires_at && new Date(keyRecord.expires_at) < new Date()) {
+        return {
+          isValid: false,
+          reason: 'API key has expired'
+        };
+      }
+
+      // Check subscription status
+      if (keyRecord.subscription_status !== 'active') {
+        return {
+          isValid: false,
+          reason: `Subscription is ${keyRecord.subscription_status}`
+        };
+      }
+
+      // Get allowed models for this subscription
+      const allowedModels = keyRecord.model_id ? [keyRecord.model_id] : [];
+
+      // Update last used timestamp
+      await this.fastify.dbUtils.query(
+        'UPDATE api_keys SET last_used_at = NOW() WHERE id = $1',
+        [keyRecord.id]
+      );
+
+      return {
+        isValid: true,
+        keyId: keyRecord.id,
+        subscriptionId: keyRecord.subscription_id,
+        userId: keyRecord.user_id,
+        allowedModels: allowedModels
+      };
+
+    } catch (error) {
+      this.fastify.log.error(error, 'Error validating API key');
+      return {
+        isValid: false,
+        reason: 'API key validation failed'
+      };
+    }
+  }
+
+  /**
+   * Helper method to hash API keys for secure storage
+   */
+  private hashApiKey(key: string): string {
+    return createHash('sha256').update(key).digest('hex');
+  }
+
+  /**
+   * Ensures user exists in LiteLLM backend, creating them if necessary
+   */
+  private async ensureUserExistsInLiteLLM(userId: string): Promise<void> {
+    try {
+      // First check if user exists in LiteLLM
+      await this.liteLLMService.getUserInfo(userId);
+      this.fastify.log.debug({ userId }, 'User already exists in LiteLLM');
+    } catch (error) {
+      // User doesn't exist in LiteLLM, get user from database and create them
+      this.fastify.log.info({ userId }, 'Creating user in LiteLLM for API key creation');
+      
+      try {
+        // Get user information from database
+        const user = await this.fastify.dbUtils.queryOne(
+          'SELECT id, username, email, full_name, roles, max_budget, tpm_limit, rpm_limit FROM users WHERE id = $1',
+          [userId]
+        );
+
+        if (!user) {
+          throw new Error(`User ${userId} not found in database`);
+        }
+
+        // Create user in LiteLLM
+        await this.liteLLMService.createUser({
+          user_id: user.id,
+          user_email: user.email,
+          user_alias: user.username,
+          user_role: user.roles?.includes('admin') ? 'proxy_admin' : 'internal_user',
+          max_budget: user.max_budget || 100, // Use user's budget or default
+          tpm_limit: user.tpm_limit || 1000,  // Use user's limit or default
+          rpm_limit: user.rpm_limit || 60,    // Use user's limit or default
+          auto_create_key: false, // Don't auto-create key during user creation
+        });
+
+        // Update user sync status in database
+        await this.fastify.dbUtils.query(
+          'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
+          ['synced', userId]
+        );
+
+        this.fastify.log.info({ userId }, 'Successfully created user in LiteLLM for API key creation');
+      } catch (createError) {
+        // Update user sync status to error
+        await this.fastify.dbUtils.query(
+          'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
+          ['error', userId]
+        );
+
+        this.fastify.log.error({
+          userId,
+          error: createError instanceof Error ? createError.message : 'Unknown error'
+        }, 'Failed to create user in LiteLLM for API key creation');
+        
+        throw new Error(`Failed to create user in LiteLLM: ${createError instanceof Error ? createError.message : 'Unknown error'}`);
+      }
+    }
   }
 }
