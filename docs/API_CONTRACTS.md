@@ -332,6 +332,181 @@ Query Parameters:
 Response: File download
 ```
 
+### Teams
+
+#### GET /teams
+List user teams
+```json
+Query Parameters:
+- page: number (default: 1)
+- limit: number (default: 20)
+
+Response:
+{
+  "data": [
+    {
+      "id": "team_123",
+      "name": "Development Team",
+      "description": "Main development team",
+      "maxBudget": 1000.00,
+      "currentSpend": 245.50,
+      "members": [
+        {
+          "userId": "user_123",
+          "role": "admin",
+          "joinedAt": "2024-01-01T00:00:00Z"
+        }
+      ],
+      "liteLLMTeamId": "litellm_team_456",
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 5,
+    "totalPages": 1
+  }
+}
+```
+
+#### POST /teams
+Create new team
+```json
+Request:
+{
+  "name": "New Team",
+  "description": "Team description",
+  "maxBudget": 500.00
+}
+
+Response:
+{
+  "id": "team_456",
+  "name": "New Team",
+  "description": "Team description",
+  "maxBudget": 500.00,
+  "currentSpend": 0.00,
+  "liteLLMTeamId": "litellm_team_789",
+  "createdAt": "2024-01-20T10:00:00Z"
+}
+```
+
+#### POST /teams/:id/sync
+Sync team with LiteLLM
+```json
+Request:
+{
+  "forceSync": true,
+  "syncBudget": true,
+  "syncMembers": true,
+  "syncUsage": true
+}
+
+Response:
+{
+  "success": true,
+  "syncedAt": "2024-01-20T10:00:00Z",
+  "changes": {
+    "budget": "updated",
+    "members": "no_changes",
+    "usage": "updated"
+  }
+}
+```
+
+### Integration
+
+#### GET /integration/health
+LiteLLM integration health check
+```json
+Response:
+{
+  "liteLLMConnection": {
+    "status": "healthy",
+    "responseTime": 45,
+    "lastChecked": "2024-01-20T10:00:00Z"
+  },
+  "syncStatus": {
+    "lastGlobalSync": "2024-01-20T09:00:00Z",
+    "nextScheduledSync": "2024-01-20T11:00:00Z",
+    "pendingSyncs": 0,
+    "failedSyncs": 1
+  },
+  "dataConsistency": {
+    "usersInSync": 10,
+    "usersOutOfSync": 2,
+    "teamsInSync": 5,
+    "teamsOutOfSync": 1
+  }
+}
+```
+
+#### POST /integration/sync
+Perform global synchronization
+```json
+Request:
+{
+  "forceSync": false,
+  "syncUsers": true,
+  "syncTeams": true,
+  "syncSubscriptions": true,
+  "syncApiKeys": true,
+  "syncModels": true,
+  "userId": "user_123",  // Optional: sync specific user
+  "teamId": "team_456"   // Optional: sync specific team
+}
+
+Response:
+{
+  "syncId": "sync-1642674000-abc123",
+  "startedAt": "2024-01-20T10:00:00Z",
+  "completedAt": "2024-01-20T10:02:15Z",
+  "success": true,
+  "results": {
+    "users": {
+      "total": 12,
+      "synced": 10,
+      "errors": 2
+    },
+    "teams": {
+      "total": 6,
+      "synced": 5,
+      "errors": 1
+    },
+    "models": {
+      "total": 25,
+      "synced": 25,
+      "errors": 0
+    }
+  },
+  "duration": 135000
+}
+```
+
+#### GET /integration/alerts
+Get system alerts
+```json
+Response:
+{
+  "alerts": [
+    {
+      "type": "budget_alert",
+      "severity": "high",
+      "message": "Budget utilization at 92%",
+      "createdAt": "2024-01-20T10:00:00Z",
+      "entityId": "team_123"
+    },
+    {
+      "type": "sync_failure",
+      "severity": "medium",
+      "message": "3 sync failures detected",
+      "createdAt": "2024-01-20T09:30:00Z"
+    }
+  ]
+}
+```
+
 ### Health & Status
 
 #### GET /health

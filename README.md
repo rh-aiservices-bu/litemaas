@@ -6,8 +6,12 @@ A user-friendly application for interacting with LiteLLM, providing model discov
 
 - 🔐 **OpenShift OAuth Authentication** - Secure authentication using OpenShift OAuth provider
 - 🔍 **Model Discovery** - Browse and search available models through LiteLLM
-- 🔑 **API Key Management** - Generate and manage API keys for model access
-- 📊 **Usage Statistics** - Track and visualize model consumption
+- 🔑 **API Key Management** - Generate and manage API keys with budget tracking
+- 👥 **Team Management** - Multi-tenant team support with shared budgets
+- 💰 **Budget Control** - Multi-level budget management (user, team, subscription)
+- 📊 **Usage Analytics** - Real-time cost tracking and usage visualization
+- 🔄 **LiteLLM Integration** - Bidirectional synchronization with conflict resolution
+- 🚨 **Smart Alerting** - Automated budget alerts and usage monitoring
 - 🚀 **Modern Stack** - Built with Fastify, React, and PatternFly 6
 
 ## Prerequisites

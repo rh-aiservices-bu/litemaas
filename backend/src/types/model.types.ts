@@ -58,19 +58,73 @@ export interface ModelListParams {
 }
 
 export interface LiteLLMModel {
-  model_name: string;
-  litellm_params: {
-    model: string;
-    api_key?: string;
-    api_base?: string;
-    [key: string]: any;
+  // Standard OpenAI-compatible fields
+  id: string;
+  object: string;
+  created: number;
+  owned_by: string;
+  
+  // LiteLLM-specific extensions
+  litellm_provider?: string;
+  source?: string;
+  max_tokens?: number;
+  supports_function_calling?: boolean;
+  supports_parallel_function_calling?: boolean;
+  supports_vision?: boolean;
+  supports_assistant_api?: boolean;
+  
+  // Cost information (if available)
+  input_cost_per_token?: number;
+  output_cost_per_token?: number;
+  
+  // Additional metadata
+  [key: string]: any;
+}
+
+/**
+ * Enhanced model interface that combines LiteMaaS model data with LiteLLM information
+ */
+export interface EnhancedModel extends Model {
+  // LiteLLM integration fields
+  liteLLMInfo?: {
+    id: string; // LiteLLM model ID
+    object: string;
+    created: number;
+    owned_by: string;
+    litellm_provider?: string;
+    source?: string;
+    supports_function_calling?: boolean;
+    supports_parallel_function_calling?: boolean;
+    supports_vision?: boolean;
+    supports_assistant_api?: boolean;
   };
-  model_info?: {
-    max_tokens?: number;
-    max_input_tokens?: number;
-    max_output_tokens?: number;
-    input_cost_per_token?: number;
-    output_cost_per_token?: number;
-    [key: string]: any;
-  };
+  
+  // Sync metadata
+  lastSyncAt?: Date;
+  syncStatus?: 'synced' | 'pending' | 'error';
+  syncError?: string;
+}
+
+/**
+ * Request/response types for LiteLLM model operations
+ */
+export interface LiteLLMModelListResponse {
+  object: 'list';
+  data: LiteLLMModel[];
+}
+
+export interface ModelSyncRequest {
+  forceSync?: boolean;
+  provider?: string;
+  includeInactive?: boolean;
+}
+
+export interface ModelSyncResponse {
+  syncedCount: number;
+  errorCount: number;
+  errors?: Array<{
+    modelId: string;
+    error: string;
+  }>;
+  lastSyncAt: Date;
 }

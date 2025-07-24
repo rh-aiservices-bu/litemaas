@@ -6,7 +6,7 @@ PostgreSQL database schema for LiteMaaS application with focus on user managemen
 ## Tables
 
 ### users
-Stores user information from OpenShift OAuth
+Stores user information from OpenShift OAuth with LiteLLM integration
 ```sql
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -17,6 +17,16 @@ CREATE TABLE users (
     oauth_id VARCHAR(255) NOT NULL,
     roles TEXT[] DEFAULT ARRAY['user'],
     is_active BOOLEAN DEFAULT true,
+    
+    -- LiteLLM Integration Fields
+    litellm_user_id VARCHAR(255),
+    max_budget DECIMAL(10, 2) DEFAULT 100.00,
+    current_spend DECIMAL(10, 2) DEFAULT 0.00,
+    tpm_limit INTEGER DEFAULT 1000,
+    rpm_limit INTEGER DEFAULT 60,
+    last_sync_at TIMESTAMP WITH TIME ZONE,
+    sync_status VARCHAR(20) DEFAULT 'pending', -- pending, synced, error
+    
     last_login_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -26,10 +36,12 @@ CREATE TABLE users (
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_oauth ON users(oauth_provider, oauth_id);
+CREATE INDEX idx_users_litellm ON users(litellm_user_id);
+CREATE INDEX idx_users_sync_status ON users(sync_status);
 ```
 
 ### models
-Cached model information from LiteLLM
+Cached model information from LiteLLM with enhanced metadata
 ```sql
 CREATE TABLE models (
     id VARCHAR(255) PRIMARY KEY,
@@ -40,6 +52,13 @@ CREATE TABLE models (
     context_length INTEGER,
     input_price_per_1k DECIMAL(10, 6),
     output_price_per_1k DECIMAL(10, 6),
+    
+    -- LiteLLM Enhanced Fields
+    max_tokens INTEGER,
+    supports_function_calling BOOLEAN DEFAULT false,
+    supports_vision BOOLEAN DEFAULT false,
+    litellm_provider VARCHAR(100),
+    
     metadata JSONB DEFAULT '{}',
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -49,10 +68,56 @@ CREATE TABLE models (
 CREATE INDEX idx_models_provider ON models(provider);
 CREATE INDEX idx_models_active ON models(is_active);
 CREATE INDEX idx_models_capabilities ON models USING GIN(capabilities);
+CREATE INDEX idx_models_litellm_provider ON models(litellm_provider);
+```
+
+### teams
+Team management with LiteLLM integration
+```sql
+CREATE TABLE teams (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    created_by UUID NOT NULL REFERENCES users(id),
+    max_budget DECIMAL(10, 2) DEFAULT 1000.00,
+    current_spend DECIMAL(10, 2) DEFAULT 0.00,
+    
+    -- LiteLLM Integration Fields
+    litellm_team_id VARCHAR(255),
+    budget_duration VARCHAR(20) DEFAULT 'monthly', -- monthly, yearly, lifetime
+    tpm_limit INTEGER DEFAULT 10000,
+    rpm_limit INTEGER DEFAULT 1000,
+    last_sync_at TIMESTAMP WITH TIME ZONE,
+    sync_status VARCHAR(20) DEFAULT 'pending', -- pending, synced, error
+    
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_teams_created_by ON teams(created_by);
+CREATE INDEX idx_teams_litellm ON teams(litellm_team_id);
+CREATE INDEX idx_teams_sync_status ON teams(sync_status);
+```
+
+### team_members
+Team membership and roles
+```sql
+CREATE TABLE team_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    team_id UUID NOT NULL REFERENCES teams(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role VARCHAR(20) DEFAULT 'member', -- admin, member
+    joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(team_id, user_id)
+);
+
+CREATE INDEX idx_team_members_team ON team_members(team_id);
+CREATE INDEX idx_team_members_user ON team_members(user_id);
 ```
 
 ### subscriptions
-User subscriptions to models
+User subscriptions to models with enhanced budget tracking
 ```sql
 CREATE TYPE subscription_status AS ENUM ('pending', 'active', 'suspended', 'cancelled', 'expired');
 
@@ -60,11 +125,26 @@ CREATE TABLE subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     model_id VARCHAR(255) NOT NULL REFERENCES models(id),
+    team_id UUID REFERENCES teams(id) ON DELETE SET NULL,
     status subscription_status DEFAULT 'pending',
     quota_requests INTEGER DEFAULT 10000,
     quota_tokens BIGINT DEFAULT 1000000,
     used_requests INTEGER DEFAULT 0,
     used_tokens BIGINT DEFAULT 0,
+    
+    -- Enhanced Budget and Rate Limiting
+    max_budget DECIMAL(10, 2) DEFAULT 100.00,
+    current_spend DECIMAL(10, 2) DEFAULT 0.00,
+    budget_duration VARCHAR(20) DEFAULT 'monthly',
+    tpm_limit INTEGER DEFAULT 1000,
+    rpm_limit INTEGER DEFAULT 60,
+    
+    -- LiteLLM Integration Fields
+    litellm_key_id VARCHAR(255),
+    litellm_key_alias VARCHAR(255),
+    last_sync_at TIMESTAMP WITH TIME ZONE,
+    sync_status VARCHAR(20) DEFAULT 'pending',
+    
     reset_at TIMESTAMP WITH TIME ZONE,
     expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -74,12 +154,14 @@ CREATE TABLE subscriptions (
 
 CREATE INDEX idx_subscriptions_user ON subscriptions(user_id);
 CREATE INDEX idx_subscriptions_model ON subscriptions(model_id);
+CREATE INDEX idx_subscriptions_team ON subscriptions(team_id);
 CREATE INDEX idx_subscriptions_status ON subscriptions(status);
 CREATE INDEX idx_subscriptions_expires ON subscriptions(expires_at);
+CREATE INDEX idx_subscriptions_litellm ON subscriptions(litellm_key_id);
 ```
 
 ### api_keys
-API keys for accessing subscribed models
+API keys for accessing subscribed models with LiteLLM integration
 ```sql
 CREATE TABLE api_keys (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -87,6 +169,21 @@ CREATE TABLE api_keys (
     name VARCHAR(255),
     key_hash VARCHAR(255) UNIQUE NOT NULL,
     key_prefix VARCHAR(10) NOT NULL,
+    
+    -- Enhanced Budget and Rate Limiting
+    max_budget DECIMAL(10, 2) DEFAULT 100.00,
+    current_spend DECIMAL(10, 2) DEFAULT 0.00,
+    budget_duration VARCHAR(20) DEFAULT 'monthly',
+    tpm_limit INTEGER DEFAULT 1000,
+    rpm_limit INTEGER DEFAULT 60,
+    
+    -- LiteLLM Integration Fields
+    litellm_key_id VARCHAR(255),
+    litellm_key_alias VARCHAR(255),
+    team_id UUID REFERENCES teams(id) ON DELETE SET NULL,
+    last_sync_at TIMESTAMP WITH TIME ZONE,
+    sync_status VARCHAR(20) DEFAULT 'pending',
+    
     last_used_at TIMESTAMP WITH TIME ZONE,
     expires_at TIMESTAMP WITH TIME ZONE,
     is_active BOOLEAN DEFAULT true,
@@ -98,22 +195,35 @@ CREATE INDEX idx_api_keys_subscription ON api_keys(subscription_id);
 CREATE INDEX idx_api_keys_hash ON api_keys(key_hash);
 CREATE INDEX idx_api_keys_prefix ON api_keys(key_prefix);
 CREATE INDEX idx_api_keys_active ON api_keys(is_active);
+CREATE INDEX idx_api_keys_litellm ON api_keys(litellm_key_id);
+CREATE INDEX idx_api_keys_team ON api_keys(team_id);
 ```
 
 ### usage_logs
-Detailed usage logging for analytics
+Detailed usage logging for analytics with cost calculation
 ```sql
 CREATE TABLE usage_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
     api_key_id UUID REFERENCES api_keys(id) ON DELETE SET NULL,
+    team_id UUID REFERENCES teams(id) ON DELETE SET NULL,
     model_id VARCHAR(255) NOT NULL,
     request_tokens INTEGER NOT NULL,
     response_tokens INTEGER NOT NULL,
     total_tokens INTEGER GENERATED ALWAYS AS (request_tokens + response_tokens) STORED,
+    
+    -- Cost Calculation Fields
+    input_cost DECIMAL(10, 6) DEFAULT 0.000000,
+    output_cost DECIMAL(10, 6) DEFAULT 0.000000,
+    total_cost DECIMAL(10, 6) GENERATED ALWAYS AS (input_cost + output_cost) STORED,
+    
     latency_ms INTEGER,
     status_code INTEGER,
     error_message TEXT,
+    
+    -- LiteLLM Integration Fields
+    litellm_request_id VARCHAR(255),
+    
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 ) PARTITION BY RANGE (created_at);
@@ -125,6 +235,8 @@ CREATE TABLE usage_logs_2024_01 PARTITION OF usage_logs
 CREATE INDEX idx_usage_logs_subscription ON usage_logs(subscription_id);
 CREATE INDEX idx_usage_logs_created ON usage_logs(created_at);
 CREATE INDEX idx_usage_logs_model ON usage_logs(model_id);
+CREATE INDEX idx_usage_logs_team ON usage_logs(team_id);
+CREATE INDEX idx_usage_logs_litellm ON usage_logs(litellm_request_id);
 ```
 
 ### usage_summaries

@@ -2,7 +2,7 @@
 
 ## Overview
 
-LiteMaaS follows a microservices architecture with clear separation between frontend and backend services, utilizing OpenShift OAuth for authentication and LiteLLM as the model provider.
+LiteMaaS follows a microservices architecture with clear separation between frontend and backend services, utilizing OpenShift OAuth for authentication and deep integration with LiteLLM for model management, budget tracking, and usage analytics.
 
 ## High-Level Architecture
 
@@ -36,20 +36,25 @@ LiteMaaS follows a microservices architecture with clear separation between fron
   - Responsive design
 
 ### Backend (Fastify)
-- **Purpose**: API server handling business logic and integrations
+- **Purpose**: API server handling business logic and LiteLLM integration
 - **Technology**: Fastify, TypeScript, Node.js
 - **Key Features**:
   - RESTful API with OpenAPI documentation
   - JWT-based authentication
-  - Rate limiting and quota management
-  - LiteLLM proxy
+  - Multi-level budget and rate limiting
+  - Bidirectional LiteLLM synchronization
+  - Team management and collaboration
+  - Real-time cost tracking and analytics
 
 ### Database (PostgreSQL)
-- **Purpose**: Persistent storage for user data, subscriptions, and usage metrics
-- **Schema**: Users, Subscriptions, API Keys, Usage Metrics
+- **Purpose**: Persistent storage for user data, teams, subscriptions, and cost analytics
+- **Schema**: Users, Teams, Subscriptions, API Keys, Usage Metrics with Cost Tracking
 - **Features**:
   - Transaction support
   - JSON data types for flexible model metadata
+  - Partitioned tables for high-volume usage logs
+  - LiteLLM synchronization metadata
+  - Multi-level budget and spend tracking
   - Indexes for performance
 
 ### Cache (Redis)
@@ -68,9 +73,68 @@ LiteMaaS follows a microservices architecture with clear separation between fron
 - **User Info**: Retrieves user profile and groups
 
 #### LiteLLM Instance
-- **Purpose**: Model provider and proxy
-- **Integration**: REST API
-- **Features**: Model listing, completion requests, usage tracking
+- **Purpose**: AI model proxy with budget management
+- **Integration**: Bidirectional REST API synchronization
+- **Features**: 
+  - Model listing and metadata
+  - Completion requests with cost tracking
+  - User and team budget management
+  - Rate limiting (TPM/RPM)
+  - API key generation and management
+  - Real-time usage analytics
+
+## LiteLLM Integration Architecture
+
+### Integration Layers
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    LiteMaaS Backend                         │
+├─────────────────┬─────────────────┬─────────────────────────┤
+│ LiteLLM         │ Team            │ LiteLLM Integration     │
+│ Service         │ Service         │ Service                 │
+├─────────────────┼─────────────────┼─────────────────────────┤
+│ API Key         │ Subscription    │ Enhanced Data Models    │
+│ Service         │ Service         │ with Sync Metadata     │
+└─────────────────┴─────────────────┴─────────────────────────┘
+                            │
+                    ┌───────┼───────┐
+                    │       │       │
+        ┌───────────▼───┐   │   ┌───▼─────────┐
+        │               │   │   │             │
+        │  PostgreSQL   │   │   │  LiteLLM    │
+        │  Database     │   │   │  Instance   │
+        │               │   │   │             │
+        └───────────────┘   │   └─────────────┘
+                            │
+                    ┌───────▼───────┐
+                    │               │
+                    │ Sync & Health │
+                    │  Monitoring   │
+                    │               │
+                    └───────────────┘
+```
+
+### Synchronization Strategy
+- **Bidirectional Sync**: Changes flow both directions between LiteMaaS and LiteLLM
+- **Conflict Resolution**: Configurable strategies (LiteLLM wins, LiteMaaS wins, merge)
+- **Circuit Breaker**: Resilient communication with automatic fallback
+- **Health Monitoring**: Continuous integration health checks
+- **Audit Trail**: Complete sync operation logging
+
+### Budget Management Hierarchy
+```
+Organization Level
+├── Team Budgets (shared across team members)
+│   ├── User Budgets (individual limits within team)
+│   └── Subscription Budgets (per-model limits)
+│       └── API Key Budgets (granular access control)
+```
+
+### Data Flow Architecture
+1. **User Actions** → LiteMaaS API → Database Updates
+2. **Sync Process** → LiteLLM API Updates → Bidirectional Synchronization
+3. **Usage Events** → LiteLLM → Usage Logs → Cost Calculation
+4. **Budget Monitoring** → Real-time Alerts → Automated Actions
 
 ## Security Architecture
 

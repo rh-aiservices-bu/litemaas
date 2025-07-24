@@ -96,27 +96,32 @@ litemaas/
 - `/models` - AI model registry and metadata
 - `/subscriptions` - User subscription management
 - `/api-keys` - API key generation and validation
+- `/teams` - Team management and collaboration
+- `/integration` - LiteLLM integration and synchronization
 - `/usage` - Usage tracking and analytics
 - `/health` - System health checks
 
 #### Service Layer
-- **ApiKeyService**: API key lifecycle management
-- **LiteLLMService**: Integration with LiteLLM instances
+- **ApiKeyService**: API key lifecycle management with LiteLLM integration
+- **LiteLLMService**: Core integration with LiteLLM instances
+- **LiteLLMIntegrationService**: Centralized synchronization and orchestration
+- **TeamService**: Team management with budget tracking
 - **OAuthService**: OAuth2 authentication flows
 - **RBACService**: Permission and role management
 - **SessionService**: Session state management
-- **SubscriptionService**: Model subscription logic
+- **SubscriptionService**: Model subscription logic with LiteLLM sync
 - **TokenService**: JWT token management
 - **UsageStatsService**: Usage analytics and reporting
 
 ### Database Schema
 PostgreSQL tables:
-- `users` - User accounts with OAuth integration
-- `models` - AI model registry and metadata
-- `subscriptions` - User model subscriptions
-- `api_keys` - API access keys with permissions
-- `usage_logs` - Detailed usage tracking
-- `audit_logs` - Security and admin audit trail
+- `users` - User accounts with OAuth integration and LiteLLM synchronization
+- `teams` - Team management with budget tracking and LiteLLM integration
+- `models` - AI model registry and metadata synchronized with LiteLLM
+- `subscriptions` - User model subscriptions with enhanced budget and rate limiting
+- `api_keys` - API access keys with LiteLLM integration and budget tracking
+- `usage_logs` - Detailed usage tracking with cost calculation
+- `audit_logs` - Security and admin audit trail including sync operations
 
 ### Security Features
 - Multi-layered authentication (JWT + OAuth2 + API keys)
@@ -205,6 +210,9 @@ JWT_EXPIRES_IN=24h
 # LiteLLM Integration
 LITELLM_API_URL=http://localhost:4000
 LITELLM_API_KEY=your-litellm-key
+LITELLM_AUTO_SYNC=true
+LITELLM_SYNC_INTERVAL=60
+LITELLM_CONFLICT_RESOLUTION=litellm_wins
 
 # Security
 ADMIN_API_KEYS=key1,key2,key3
@@ -246,7 +254,8 @@ npm run format
 1. User initiates OAuth2 flow with OpenShift
 2. Backend handles OAuth callback and exchanges code
 3. JWT token issued for subsequent API calls
-4. API keys generated for programmatic access
+4. API keys generated for programmatic access with LiteLLM integration
+5. Budget and rate limiting enforced at multiple levels
 
 ### Security Headers
 - Content Security Policy (CSP)
@@ -257,8 +266,10 @@ npm run format
 ### Data Protection
 - Sensitive data encrypted at rest
 - API keys hashed before storage
-- Audit logging for all admin actions
+- Audit logging for all admin actions and sync operations
 - Rate limiting to prevent abuse
+- Budget enforcement to prevent cost overruns
+- Circuit breaker pattern for external API resilience
 
 ## 📊 Performance Characteristics
 
@@ -303,20 +314,52 @@ npm run format
 - LocalStorage for user preference
 - Namespace organization by feature
 
+## 🔗 LiteLLM Integration
+
+### Core Integration Features
+- **Bidirectional Synchronization**: Two-way sync between LiteMaaS and LiteLLM
+- **Budget Management**: Per-user, per-team, and per-subscription budget tracking
+- **Rate Limiting**: Configurable TPM (tokens per minute) and RPM (requests per minute) limits
+- **Team Management**: Multi-tenant team support with shared budgets
+- **Auto-Sync**: Configurable automatic synchronization with conflict resolution
+
+### Integration Architecture
+- **LiteLLMService**: Core API integration layer
+- **LiteLLMIntegrationService**: Centralized sync orchestration
+- **Enhanced Data Models**: Extended types with LiteLLM compatibility
+- **Circuit Breaker**: Resilient API communication with fallback strategies
+
+### Synchronization Features
+- **Global Sync**: System-wide synchronization of all entities
+- **Selective Sync**: Sync specific users, teams, or subscriptions
+- **Conflict Resolution**: Configurable strategies (LiteLLM wins, LiteMaaS wins, merge)
+- **Health Monitoring**: Integration health checks and alerting
+- **Audit Trail**: Complete sync operation logging
+
+### Budget and Rate Limiting
+- **Multi-Level Budgets**: User, team, and subscription-level budget controls
+- **Usage Tracking**: Real-time spend monitoring and alerts
+- **Rate Limiting**: TPM/RPM limits with burst capacity
+- **Budget Alerts**: Automated alerts at configurable thresholds
+- **Cost Calculation**: Accurate cost tracking with pricing models
+
 ## 📈 Usage Analytics
 
 ### Metrics Tracked
 - API calls per user/model
-- Token consumption
-- Response times
-- Error rates
+- Token consumption and costs
+- Response times and latencies
+- Error rates and failure patterns
 - User engagement patterns
+- Budget utilization and spending
 
 ### Analytics Features
 - Real-time usage dashboards
 - Historical usage reports
 - Cost tracking and billing
 - Usage quotas and limits
+- Team-based analytics
+- Integration health monitoring
 
 ## 🛠️ Development Commands
 

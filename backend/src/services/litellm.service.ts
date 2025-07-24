@@ -1,125 +1,23 @@
 import { FastifyInstance } from 'fastify';
-
-export interface LiteLLMModel {
-  id: string;
-  object: string;
-  created: number;
-  owned_by: string;
-  permission?: any[];
-  root?: string;
-  parent?: string;
-  max_tokens?: number;
-  mode?: string;
-  supports_function_calling?: boolean;
-  supports_parallel_function_calling?: boolean;
-  supports_vision?: boolean;
-  litellm_provider?: string;
-  source?: string;
-}
-
-export interface LiteLLMHealth {
-  status: 'healthy' | 'unhealthy';
-  db: string;
-  redis?: string;
-  litellm_version?: string;
-  oldest_unprocessed_webhook_age_seconds?: number;
-  oldest_unprocessed_spend_log_age_seconds?: number;
-}
-
-export interface ChatCompletionRequest {
-  model: string;
-  messages: Array<{
-    role: 'system' | 'user' | 'assistant';
-    content: string;
-  }>;
-  max_tokens?: number;
-  temperature?: number;
-  top_p?: number;
-  frequency_penalty?: number;
-  presence_penalty?: number;
-  stop?: string | string[];
-  stream?: boolean;
-  user?: string;
-}
-
-export interface ChatCompletionResponse {
-  id: string;
-  object: 'chat.completion';
-  created: number;
-  model: string;
-  choices: Array<{
-    index: number;
-    message: {
-      role: 'assistant';
-      content: string;
-    };
-    finish_reason: 'stop' | 'length' | 'content_filter';
-  }>;
-  usage: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
-}
-
-export interface KeyGenerationRequest {
-  models?: string[];
-  aliases?: Record<string, string>;
-  config?: Record<string, any>;
-  spend?: number;
-  max_budget?: number;
-  user_id?: string;
-  team_id?: string;
-  max_parallel_requests?: number;
-  metadata?: Record<string, any>;
-  tpm_limit?: number;
-  rpm_limit?: number;
-  budget_duration?: string;
-  allowed_cache_controls?: string[];
-  soft_budget?: number;
-  tags?: string[];
-  key_alias?: string;
-  duration?: string;
-  permissions?: Record<string, any>;
-  model_max_budget?: Record<string, number>;
-}
-
-export interface KeyGenerationResponse {
-  key: string;
-  expires?: string;
-  user_id: string;
-  max_budget?: number;
-  spend?: number;
-  model_max_budget?: Record<string, number>;
-  metadata?: Record<string, any>;
-  models?: string[];
-  tpm_limit?: number;
-  rpm_limit?: number;
-  budget_duration?: string;
-  tags?: string[];
-  team_id?: string;
-  permissions?: Record<string, any>;
-  key_alias?: string;
-  soft_budget?: number;
-}
-
-export interface LiteLLMError {
-  error: {
-    message: string;
-    type: string;
-    param?: string;
-    code?: string;
-  };
-}
-
-interface LiteLLMConfig {
-  baseUrl: string;
-  apiKey?: string;
-  timeout: number;
-  retryAttempts: number;
-  retryDelay: number;
-  enableMocking: boolean;
-}
+import {
+  LiteLLMModel,
+  LiteLLMHealth,
+  LiteLLMError,
+  LiteLLMConfig,
+  ChatCompletionRequest,
+  ChatCompletionResponse,
+} from '../types/model.types.js';
+import {
+  LiteLLMKeyGenerationRequest,
+  LiteLLMKeyGenerationResponse,
+  LiteLLMKeyInfo,
+} from '../types/api-key.types.js';
+import {
+  LiteLLMUserRequest,
+  LiteLLMUserResponse,
+  LiteLLMTeamRequest,
+  LiteLLMTeamResponse,
+} from '../types/user.types.js';
 
 export class LiteLLMService {
   private config: LiteLLMConfig;
@@ -140,7 +38,6 @@ export class LiteLLMService {
       created: 1686935002,
       owned_by: 'openai',
       max_tokens: 128000,
-      mode: 'chat',
       supports_function_calling: true,
       supports_parallel_function_calling: true,
       supports_vision: true,
@@ -153,7 +50,6 @@ export class LiteLLMService {
       created: 1686935002,
       owned_by: 'openai',
       max_tokens: 128000,
-      mode: 'chat',
       supports_function_calling: true,
       supports_parallel_function_calling: true,
       supports_vision: true,
@@ -166,38 +62,11 @@ export class LiteLLMService {
       created: 1686935002,
       owned_by: 'anthropic',
       max_tokens: 200000,
-      mode: 'chat',
       supports_function_calling: true,
       supports_parallel_function_calling: false,
       supports_vision: true,
       litellm_provider: 'anthropic',
       source: 'anthropic'
-    },
-    {
-      id: 'llama-3.1-8b-instant',
-      object: 'model',
-      created: 1686935002,
-      owned_by: 'meta',
-      max_tokens: 131072,
-      mode: 'chat',
-      supports_function_calling: false,
-      supports_parallel_function_calling: false,
-      supports_vision: false,
-      litellm_provider: 'groq',
-      source: 'groq'
-    },
-    {
-      id: 'gemini-1.5-pro',
-      object: 'model',
-      created: 1686935002,
-      owned_by: 'google',
-      max_tokens: 2097152,
-      mode: 'chat',
-      supports_function_calling: true,
-      supports_parallel_function_calling: false,
-      supports_vision: true,
-      litellm_provider: 'vertex_ai',
-      source: 'vertex_ai'
     }
   ];
 
@@ -248,7 +117,7 @@ export class LiteLLMService {
     return cached.data as T;
   }
 
-  private clearCache(pattern?: string): void {
+  private clearCacheInternal(pattern?: string): void {
     if (pattern) {
       const keys = Array.from(this.cache.keys()).filter(key => key.includes(pattern));
       keys.forEach(key => this.cache.delete(key));
@@ -262,7 +131,6 @@ export class LiteLLMService {
       return false;
     }
 
-    // Check if timeout has passed
     if (Date.now() - this.circuitBreakerLastFailureTime > this.CIRCUIT_BREAKER_TIMEOUT) {
       this.fastify.log.info('Circuit breaker timeout expired, attempting to close');
       this.isCircuitBreakerOpen = false;
@@ -313,7 +181,7 @@ export class LiteLLMService {
     };
 
     if (this.config.apiKey) {
-      requestHeaders['Authorization'] = `Bearer ${this.config.apiKey}`;
+      requestHeaders['x-litellm-api-key'] = this.config.apiKey;
     }
 
     let lastError: Error;
@@ -377,13 +245,13 @@ export class LiteLLMService {
   }
 
   private createMockResponse<T>(data: T): Promise<T> {
-    // Simulate network delay
     const delay = Math.random() * 100 + 50; // 50-150ms
     return new Promise(resolve => setTimeout(() => resolve(data), delay));
   }
 
-  async getModels(options: { refresh?: boolean } = {}): Promise<LiteLLMModel[]> {
-    const cacheKey = 'models';
+  // Enhanced Model Management
+  async getModels(options: { refresh?: boolean; teamId?: string } = {}): Promise<LiteLLMModel[]> {
+    const cacheKey = `models:${options.teamId || 'default'}`;
     
     if (!options.refresh) {
       const cached = this.getCache<LiteLLMModel[]>(cacheKey);
@@ -401,13 +269,18 @@ export class LiteLLMService {
     }
 
     try {
-      const response = await this.makeRequest<{ data: LiteLLMModel[] }>('/models');
+      const queryParams = new URLSearchParams();
+      if (options.teamId) {
+        queryParams.append('team_id', options.teamId);
+      }
+      
+      const endpoint = `/models${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const response = await this.makeRequest<{ data: LiteLLMModel[] }>(endpoint);
       this.setCache(cacheKey, response.data);
       return response.data;
     } catch (error) {
       this.fastify.log.error(error, 'Failed to fetch models from LiteLLM');
       
-      // Fallback to cache if available
       const cached = this.getCache<LiteLLMModel[]>(cacheKey);
       if (cached) {
         this.fastify.log.warn('Returning stale cached models due to API failure');
@@ -423,6 +296,7 @@ export class LiteLLMService {
     return models.find(model => model.id === modelId) || null;
   }
 
+  // Enhanced Health Monitoring
   async getHealth(): Promise<LiteLLMHealth> {
     const cacheKey = 'health';
     const cached = this.getCache<LiteLLMHealth>(cacheKey);
@@ -436,14 +310,14 @@ export class LiteLLMService {
         status: 'healthy',
         db: 'connected',
         redis: 'connected',
-        litellm_version: '1.0.0-mock',
+        litellm_version: '1.74.3-mock',
       };
-      this.setCache(cacheKey, health, 30000); // 30 seconds cache
+      this.setCache(cacheKey, health, 30000);
       return this.createMockResponse(health);
     }
 
     try {
-      const health = await this.makeRequest<LiteLLMHealth>('/health');
+      const health = await this.makeRequest<LiteLLMHealth>('/health/liveliness');
       this.setCache(cacheKey, health, 30000);
       return health;
     } catch (error) {
@@ -458,19 +332,19 @@ export class LiteLLMService {
     }
   }
 
-  async generateApiKey(request: KeyGenerationRequest): Promise<KeyGenerationResponse> {
+  // Enhanced API Key Management
+  async generateApiKey(request: LiteLLMKeyGenerationRequest): Promise<LiteLLMKeyGenerationResponse> {
     if (this.config.enableMocking) {
-      const mockKey = `sk-mock-${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
-      const response: KeyGenerationResponse = {
+      const mockKey = `sk-litellm-${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
+      const response: LiteLLMKeyGenerationResponse = {
         key: mockKey,
+        key_name: request.key_alias || `key-${Date.now()}`,
         user_id: request.user_id || 'mock-user',
+        team_id: request.team_id,
         max_budget: request.max_budget || 100,
-        spend: 0,
-        models: request.models || ['gpt-4o', 'claude-3-5-sonnet-20241022'],
-        tpm_limit: request.tpm_limit || 10000,
-        rpm_limit: request.rpm_limit || 100,
-        metadata: request.metadata || {},
-        tags: request.tags || [],
+        current_spend: 0,
+        created_by: 'litemaas',
+        created_at: new Date().toISOString(),
         expires: request.duration ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : undefined,
       };
       
@@ -478,7 +352,7 @@ export class LiteLLMService {
     }
 
     try {
-      return await this.makeRequest<KeyGenerationResponse>('/key/generate', {
+      return await this.makeRequest<LiteLLMKeyGenerationResponse>('/key/generate', {
         method: 'POST',
         body: request,
       });
@@ -488,6 +362,202 @@ export class LiteLLMService {
     }
   }
 
+  async getKeyInfo(apiKey: string): Promise<LiteLLMKeyInfo> {
+    if (this.config.enableMocking) {
+      const mockInfo: LiteLLMKeyInfo = {
+        key_name: 'mock-key',
+        spend: Math.random() * 50,
+        max_budget: 100,
+        models: ['gpt-4o', 'claude-3-5-sonnet-20241022'],
+        tpm_limit: 10000,
+        rpm_limit: 100,
+        user_id: 'mock-user',
+        expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+        budget_reset_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      };
+      
+      return this.createMockResponse(mockInfo);
+    }
+
+    try {
+      return await this.makeRequest<LiteLLMKeyInfo>('/key/info', {
+        headers: { 'x-litellm-api-key': apiKey }
+      });
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to get key info');
+      throw error;
+    }
+  }
+
+  async updateKey(apiKey: string, updates: Partial<LiteLLMKeyGenerationRequest>): Promise<void> {
+    if (this.config.enableMocking) {
+      return this.createMockResponse(undefined);
+    }
+
+    try {
+      await this.makeRequest('/key/update', {
+        method: 'POST',
+        body: { key: apiKey, ...updates },
+      });
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to update key');
+      throw error;
+    }
+  }
+
+  async deleteKey(apiKey: string): Promise<void> {
+    if (this.config.enableMocking) {
+      return this.createMockResponse(undefined);
+    }
+
+    try {
+      await this.makeRequest('/key/delete', {
+        method: 'POST',
+        body: { keys: [apiKey] },
+      });
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to delete key');
+      throw error;
+    }
+  }
+
+  // User Management
+  async createUser(request: LiteLLMUserRequest): Promise<LiteLLMUserResponse> {
+    if (this.config.enableMocking) {
+      const mockResponse: LiteLLMUserResponse = {
+        user_id: request.user_id || `user-${Date.now()}`,
+        user_email: request.user_email,
+        user_alias: request.user_alias,
+        user_role: request.user_role || 'internal_user',
+        teams: request.teams || [],
+        max_budget: request.max_budget || 100,
+        spend: 0,
+        models: request.models || ['gpt-4o'],
+        tpm_limit: request.tpm_limit || 1000,
+        rpm_limit: request.rpm_limit || 60,
+        created_at: new Date().toISOString(),
+        api_key: request.auto_create_key ? `sk-litellm-${Math.random().toString(36).substring(2, 15)}` : undefined,
+      };
+      
+      return this.createMockResponse(mockResponse);
+    }
+
+    try {
+      return await this.makeRequest<LiteLLMUserResponse>('/user/new', {
+        method: 'POST',
+        body: request,
+      });
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to create user');
+      throw error;
+    }
+  }
+
+  async getUserInfo(userId: string): Promise<LiteLLMUserResponse> {
+    if (this.config.enableMocking) {
+      const mockResponse: LiteLLMUserResponse = {
+        user_id: userId,
+        user_alias: `User ${userId}`,
+        user_role: 'internal_user',
+        max_budget: 100,
+        spend: Math.random() * 50,
+        models: ['gpt-4o', 'claude-3-5-sonnet-20241022'],
+        tpm_limit: 1000,
+        rpm_limit: 60,
+        created_at: new Date().toISOString(),
+      };
+      
+      return this.createMockResponse(mockResponse);
+    }
+
+    try {
+      return await this.makeRequest<LiteLLMUserResponse>(`/user/info?user_id=${userId}`);
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to get user info');
+      throw error;
+    }
+  }
+
+  async updateUser(userId: string, updates: Partial<LiteLLMUserRequest>): Promise<LiteLLMUserResponse> {
+    if (this.config.enableMocking) {
+      const mockResponse: LiteLLMUserResponse = {
+        user_id: userId,
+        ...updates,
+        spend: Math.random() * 50,
+        created_at: new Date().toISOString(),
+      };
+      
+      return this.createMockResponse(mockResponse);
+    }
+
+    try {
+      return await this.makeRequest<LiteLLMUserResponse>('/user/update', {
+        method: 'POST',
+        body: { user_id: userId, ...updates },
+      });
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to update user');
+      throw error;
+    }
+  }
+
+  // Team Management
+  async createTeam(request: LiteLLMTeamRequest): Promise<LiteLLMTeamResponse> {
+    if (this.config.enableMocking) {
+      const mockResponse: LiteLLMTeamResponse = {
+        team_id: request.team_id || `team-${Date.now()}`,
+        team_alias: request.team_alias,
+        max_budget: request.max_budget || 1000,
+        spend: 0,
+        models: request.models || ['gpt-4o'],
+        tpm_limit: request.tpm_limit || 10000,
+        rpm_limit: request.rpm_limit || 500,
+        admins: request.admins || [],
+        members: [],
+        created_at: new Date().toISOString(),
+      };
+      
+      return this.createMockResponse(mockResponse);
+    }
+
+    try {
+      return await this.makeRequest<LiteLLMTeamResponse>('/team/new', {
+        method: 'POST',
+        body: request,
+      });
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to create team');
+      throw error;
+    }
+  }
+
+  async getTeamInfo(teamId: string): Promise<LiteLLMTeamResponse> {
+    if (this.config.enableMocking) {
+      const mockResponse: LiteLLMTeamResponse = {
+        team_id: teamId,
+        team_alias: `Team ${teamId}`,
+        max_budget: 1000,
+        spend: Math.random() * 500,
+        models: ['gpt-4o', 'claude-3-5-sonnet-20241022'],
+        tpm_limit: 10000,
+        rpm_limit: 500,
+        admins: ['admin-user'],
+        members: ['member-user-1', 'member-user-2'],
+        created_at: new Date().toISOString(),
+      };
+      
+      return this.createMockResponse(mockResponse);
+    }
+
+    try {
+      return await this.makeRequest<LiteLLMTeamResponse>(`/team/info?team_id=${teamId}`);
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to get team info');
+      throw error;
+    }
+  }
+
+  // LLM Operations
   async chatCompletion(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
     if (this.config.enableMocking) {
       const mockResponse: ChatCompletionResponse = {
@@ -528,19 +598,18 @@ export class LiteLLMService {
 
   async validateApiKey(apiKey: string): Promise<boolean> {
     if (this.config.enableMocking) {
-      return apiKey.startsWith('sk-mock-') || apiKey === 'test-key';
+      return apiKey.startsWith('sk-litellm-') || apiKey === 'test-key';
     }
 
     try {
-      await this.makeRequest('/models', {
-        headers: { 'Authorization': `Bearer ${apiKey}` }
-      });
+      await this.getKeyInfo(apiKey);
       return true;
     } catch (error) {
       return false;
     }
   }
 
+  // Utility Methods
   getMetrics(): {
     cacheSize: number;
     circuitBreakerStatus: {
@@ -570,7 +639,7 @@ export class LiteLLMService {
   }
 
   async clearCache(pattern?: string): Promise<void> {
-    this.clearCache(pattern);
+    this.clearCacheInternal(pattern);
     this.fastify.log.info({ pattern }, 'LiteLLM cache cleared');
   }
 

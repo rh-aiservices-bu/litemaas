@@ -63,3 +63,67 @@ export const UpdateModelSchema = Type.Object({
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
   isActive: Type.Optional(Type.Boolean()),
 });
+/**
+ * LiteLLM-specific model schemas
+ */
+export const LiteLLMModelSchema = Type.Object({
+  id: Type.String(),
+  object: Type.String(),
+  created: Type.Number(),
+  owned_by: Type.String(),
+  litellm_provider: Type.Optional(Type.String()),
+  source: Type.Optional(Type.String()),
+  max_tokens: Type.Optional(Type.Number()),
+  supports_function_calling: Type.Optional(Type.Boolean()),
+  supports_parallel_function_calling: Type.Optional(Type.Boolean()),
+  supports_vision: Type.Optional(Type.Boolean()),
+  supports_assistant_api: Type.Optional(Type.Boolean()),
+  input_cost_per_token: Type.Optional(Type.Number()),
+  output_cost_per_token: Type.Optional(Type.Number()),
+});
+
+export const LiteLLMModelListResponseSchema = Type.Object({
+  object: Type.Literal('list'),
+  data: Type.Array(LiteLLMModelSchema),
+});
+
+export const EnhancedModelSchema = Type.Intersect([
+  ModelSchema,
+  Type.Object({
+    liteLLMInfo: Type.Optional(Type.Object({
+      id: Type.String(),
+      object: Type.String(),
+      created: Type.Number(),
+      owned_by: Type.String(),
+      litellm_provider: Type.Optional(Type.String()),
+      source: Type.Optional(Type.String()),
+      supports_function_calling: Type.Optional(Type.Boolean()),
+      supports_parallel_function_calling: Type.Optional(Type.Boolean()),
+      supports_vision: Type.Optional(Type.Boolean()),
+      supports_assistant_api: Type.Optional(Type.Boolean()),
+    })),
+    lastSyncAt: Type.Optional(TimestampSchema),
+    syncStatus: Type.Optional(Type.Union([
+      Type.Literal('synced'),
+      Type.Literal('pending'),
+      Type.Literal('error')
+    ])),
+    syncError: Type.Optional(Type.String()),
+  })
+]);
+
+export const ModelSyncRequestSchema = Type.Object({
+  forceSync: Type.Optional(Type.Boolean()),
+  provider: Type.Optional(Type.String()),
+  includeInactive: Type.Optional(Type.Boolean()),
+});
+
+export const ModelSyncResponseSchema = Type.Object({
+  syncedCount: Type.Number(),
+  errorCount: Type.Number(),
+  errors: Type.Optional(Type.Array(Type.Object({
+    modelId: Type.String(),
+    error: Type.String(),
+  }))),
+  lastSyncAt: TimestampSchema,
+});
