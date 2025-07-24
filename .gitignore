@@ -78,3 +78,6 @@ data/litellm/
 
 # Claude
 **/.claude/settings.local.json
+
+# Serena
+.serena
