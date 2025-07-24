@@ -58,27 +58,33 @@ export interface ModelListParams {
 }
 
 export interface LiteLLMModel {
-  // Standard OpenAI-compatible fields
-  id: string;
-  object: string;
-  created: number;
-  owned_by: string;
-  
-  // LiteLLM-specific extensions
-  litellm_provider?: string;
-  source?: string;
-  max_tokens?: number;
-  supports_function_calling?: boolean;
-  supports_parallel_function_calling?: boolean;
-  supports_vision?: boolean;
-  supports_assistant_api?: boolean;
-  
-  // Cost information (if available)
-  input_cost_per_token?: number;
-  output_cost_per_token?: number;
-  
-  // Additional metadata
-  [key: string]: any;
+  model_name: string;
+  litellm_params: {
+    input_cost_per_token: number;
+    output_cost_per_token: number;
+    api_base?: string;
+    custom_llm_provider?: string;
+    use_in_pass_through?: boolean;
+    use_litellm_proxy?: boolean;
+    merge_reasoning_content_in_choices?: boolean;
+    model?: string;
+    [key: string]: any;
+  };
+  model_info: {
+    id: string;
+    db_model?: boolean;
+    max_tokens?: number;
+    access_groups?: string[];
+    direct_access?: boolean;
+    supports_vision?: boolean;
+    supports_function_calling?: boolean;
+    supports_parallel_function_calling?: boolean;
+    supports_assistant_api?: boolean;
+    access_via_team_ids?: string[];
+    input_cost_per_token?: number;
+    output_cost_per_token?: number;
+    [key: string]: any;
+  };
 }
 
 /**

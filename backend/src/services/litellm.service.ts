@@ -33,52 +33,79 @@ export class LiteLLMService {
   // Mock data for development
   private readonly MOCK_MODELS: LiteLLMModel[] = [
     {
-      id: 'gpt-4o',
-      object: 'model',
-      created: 1686935002,
-      owned_by: 'openai',
-      max_tokens: 128000,
-      supports_function_calling: true,
-      supports_parallel_function_calling: true,
-      supports_vision: true,
-      litellm_provider: 'openai',
-      source: 'openai'
+      model_name: 'gpt-4o',
+      litellm_params: {
+        input_cost_per_token: 0.01,
+        output_cost_per_token: 0.03,
+        custom_llm_provider: 'openai',
+        model: 'openai/gpt-4o'
+      },
+      model_info: {
+        id: 'mock-gpt-4o-id',
+        db_model: true,
+        max_tokens: 128000,
+        supports_function_calling: true,
+        supports_parallel_function_calling: true,
+        supports_vision: true,
+        direct_access: true,
+        access_via_team_ids: [],
+        input_cost_per_token: 0.01,
+        output_cost_per_token: 0.03
+      }
     },
     {
-      id: 'gpt-4o-mini',
-      object: 'model',
-      created: 1686935002,
-      owned_by: 'openai',
-      max_tokens: 128000,
-      supports_function_calling: true,
-      supports_parallel_function_calling: true,
-      supports_vision: true,
-      litellm_provider: 'openai',
-      source: 'openai'
+      model_name: 'gpt-4o-mini',
+      litellm_params: {
+        input_cost_per_token: 0.00015,
+        output_cost_per_token: 0.0006,
+        custom_llm_provider: 'openai',
+        model: 'openai/gpt-4o-mini'
+      },
+      model_info: {
+        id: 'mock-gpt-4o-mini-id',
+        db_model: true,
+        max_tokens: 128000,
+        supports_function_calling: true,
+        supports_parallel_function_calling: true,
+        supports_vision: true,
+        direct_access: true,
+        access_via_team_ids: [],
+        input_cost_per_token: 0.00015,
+        output_cost_per_token: 0.0006
+      }
     },
     {
-      id: 'claude-3-5-sonnet-20241022',
-      object: 'model',
-      created: 1686935002,
-      owned_by: 'anthropic',
-      max_tokens: 200000,
-      supports_function_calling: true,
-      supports_parallel_function_calling: false,
-      supports_vision: true,
-      litellm_provider: 'anthropic',
-      source: 'anthropic'
+      model_name: 'claude-3-5-sonnet-20241022',
+      litellm_params: {
+        input_cost_per_token: 0.003,
+        output_cost_per_token: 0.015,
+        custom_llm_provider: 'anthropic',
+        model: 'anthropic/claude-3-5-sonnet-20241022'
+      },
+      model_info: {
+        id: 'mock-claude-3-5-sonnet-id',
+        db_model: true,
+        max_tokens: 200000,
+        supports_function_calling: true,
+        supports_parallel_function_calling: false,
+        supports_vision: true,
+        direct_access: true,
+        access_via_team_ids: [],
+        input_cost_per_token: 0.003,
+        output_cost_per_token: 0.015
+      }
     }
   ];
 
   constructor(fastify: FastifyInstance, config?: Partial<LiteLLMConfig>) {
     this.fastify = fastify;
     this.config = {
-      baseUrl: config?.baseUrl || process.env.LITELLM_BASE_URL || 'http://localhost:4000',
+      baseUrl: config?.baseUrl || process.env.LITELLM_API_URL || process.env.LITELLM_BASE_URL || 'http://localhost:4000',
       apiKey: config?.apiKey || process.env.LITELLM_API_KEY,
       timeout: config?.timeout || 30000,
       retryAttempts: config?.retryAttempts || 3,
       retryDelay: config?.retryDelay || 1000,
-      enableMocking: config?.enableMocking ?? (process.env.NODE_ENV === 'development' || !process.env.LITELLM_BASE_URL),
+      enableMocking: config?.enableMocking ?? (process.env.NODE_ENV === 'development' && !process.env.LITELLM_API_URL && !process.env.LITELLM_BASE_URL),
     };
 
     this.fastify.log.info({
@@ -274,7 +301,7 @@ export class LiteLLMService {
         queryParams.append('team_id', options.teamId);
       }
       
-      const endpoint = `/models${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+      const endpoint = `/model/info${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await this.makeRequest<{ data: LiteLLMModel[] }>(endpoint);
       this.setCache(cacheKey, response.data);
       return response.data;
@@ -293,7 +320,7 @@ export class LiteLLMService {
 
   async getModelById(modelId: string): Promise<LiteLLMModel | null> {
     const models = await this.getModels();
-    return models.find(model => model.id === modelId) || null;
+    return models.find(model => model.model_name === modelId || model.model_info.id === modelId) || null;
   }
 
   // Enhanced Health Monitoring

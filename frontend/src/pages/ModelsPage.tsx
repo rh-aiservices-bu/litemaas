@@ -339,12 +339,15 @@ const ModelsPage: React.FC = () => {
                         </FlexItem>
                         <FlexItem>
                           <Content component={ContentVariants.small}>
-                            Context: {model.contextLength.toLocaleString()} tokens
+                            Context: {model.contextLength ? model.contextLength.toLocaleString() : 'N/A'} tokens
                           </Content>
                         </FlexItem>
                         <FlexItem>
                           <Content component={ContentVariants.small}>
-                            Input: ${model.pricing.input}/1K • Output: ${model.pricing.output}/1K
+                            {model.pricing ? 
+                              `Input: $${model.pricing.input}/1K • Output: $${model.pricing.output}/1K` : 
+                              'Pricing: N/A'
+                            }
                           </Content>
                         </FlexItem>
                       </Flex>
@@ -422,19 +425,27 @@ const ModelsPage: React.FC = () => {
                 <DescriptionListGroup>
                   <DescriptionListTerm>Context Length</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {selectedModel.contextLength.toLocaleString()} tokens
+                    {selectedModel.contextLength ? selectedModel.contextLength.toLocaleString() : 'N/A'} tokens
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 
                 <DescriptionListGroup>
                   <DescriptionListTerm>Pricing</DescriptionListTerm>
                   <DescriptionListDescription>
-                    <Content component={ContentVariants.p}>
-                      Input: ${selectedModel.pricing.input}/1K tokens
-                    </Content>
-                    <Content component={ContentVariants.p}>
-                      Output: ${selectedModel.pricing.output}/1K tokens
-                    </Content>
+                    {selectedModel.pricing ? (
+                      <>
+                        <Content component={ContentVariants.p}>
+                          Input: ${selectedModel.pricing.input}/1K tokens
+                        </Content>
+                        <Content component={ContentVariants.p}>
+                          Output: ${selectedModel.pricing.output}/1K tokens
+                        </Content>
+                      </>
+                    ) : (
+                      <Content component={ContentVariants.p}>
+                        N/A
+                      </Content>
+                    )}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 

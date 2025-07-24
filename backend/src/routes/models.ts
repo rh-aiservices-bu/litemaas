@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { ModelListParams, PaginatedResponse, Model, ModelDetails, AuthenticatedRequest } from '../types';
-import { LiteLLMService, LiteLLMModel } from '../services/litellm.service';
+import { LiteLLMModel } from '../types/model.types';
+import { LiteLLMService } from '../services/litellm.service';
 
 const modelsRoutes: FastifyPluginAsync = async (fastify) => {
   // Initialize LiteLLM service
@@ -10,37 +11,53 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
   const convertLiteLLMModel = (model: LiteLLMModel): Model => {
     const capabilities: string[] = [];
     
-    if (model.supports_function_calling) capabilities.push('function_calling');
-    if (model.supports_parallel_function_calling) capabilities.push('parallel_function_calling');
-    if (model.supports_vision) capabilities.push('vision');
-    if (model.mode === 'chat') capabilities.push('chat');
+    if (model.model_info.supports_function_calling) capabilities.push('function_calling');
+    if (model.model_info.supports_parallel_function_calling) capabilities.push('parallel_function_calling');
+    if (model.model_info.supports_vision) capabilities.push('vision');
+    capabilities.push('chat'); // Assume all models support chat
     
-    // Estimate pricing based on provider (mock data for development)
-    const getPricing = (provider: string) => {
-      switch (provider) {
-        case 'openai':
-          return { input: 0.01, output: 0.03, unit: 'per 1K tokens' };
-        case 'anthropic':
-          return { input: 0.015, output: 0.075, unit: 'per 1K tokens' };
-        case 'google':
-        case 'vertex_ai':
-          return { input: 0.00125, output: 0.00375, unit: 'per 1K tokens' };
-        case 'groq':
-          return { input: 0.0001, output: 0.0002, unit: 'per 1K tokens' };
-        default:
-          return { input: 0.001, output: 0.002, unit: 'per 1K tokens' };
+    // Extract provider from litellm_params or model name
+    const getProvider = () => {
+      if (model.litellm_params.custom_llm_provider) {
+        return model.litellm_params.custom_llm_provider;
       }
+      if (model.litellm_params.model?.includes('/')) {
+        return model.litellm_params.model.split('/')[0];
+      }
+      return 'unknown';
     };
     
-    return {
-      id: model.id,
-      name: model.id,
-      provider: model.owned_by || model.litellm_provider || 'unknown',
-      description: `${model.id} model by ${model.owned_by || model.litellm_provider}`,
+    const provider = getProvider();
+    
+    const result: Model = {
+      id: model.model_name,
+      name: model.model_name,
+      provider,
+      description: `${model.model_name} model`,
       capabilities,
-      contextLength: model.max_tokens || 4096,
-      pricing: getPricing(model.litellm_provider || model.owned_by || 'unknown'),
+      isActive: model.model_info.direct_access ?? true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
+
+    // Only set contextLength if it's actually provided
+    if (model.model_info.max_tokens) {
+      result.contextLength = model.model_info.max_tokens;
+    }
+
+    // Only set pricing if cost information is available
+    const inputCost = model.model_info.input_cost_per_token ?? model.litellm_params.input_cost_per_token;
+    const outputCost = model.model_info.output_cost_per_token ?? model.litellm_params.output_cost_per_token;
+    
+    if (inputCost !== undefined || outputCost !== undefined) {
+      result.pricing = {
+        input: inputCost || 0,
+        output: outputCost || 0,
+        unit: 'per_1k_tokens' as const
+      };
+    }
+
+    return result;
   };
   
   const convertToModelDetails = (model: LiteLLMModel): ModelDetails => {
@@ -48,16 +65,17 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     return {
       ...baseModel,
       metadata: {
-        object: model.object,
-        created: model.created,
-        ownedBy: model.owned_by,
-        litellmProvider: model.litellm_provider,
-        source: model.source,
-        maxTokens: model.max_tokens,
-        mode: model.mode,
-        supportsFunctionCalling: model.supports_function_calling,
-        supportsParallelFunctionCalling: model.supports_parallel_function_calling,
-        supportsVision: model.supports_vision,
+        modelInfoId: model.model_info.id,
+        litellmProvider: model.litellm_params.custom_llm_provider,
+        apiBase: model.litellm_params.api_base,
+        modelPath: model.litellm_params.model,
+        maxTokens: model.model_info.max_tokens,
+        supportsFunctionCalling: model.model_info.supports_function_calling,
+        supportsParallelFunctionCalling: model.model_info.supports_parallel_function_calling,
+        supportsVision: model.model_info.supports_vision,
+        supportsAssistantApi: model.model_info.supports_assistant_api,
+        accessGroups: model.model_info.access_groups,
+        accessViaTeamIds: model.model_info.access_via_team_ids,
       },
     };
   };
@@ -135,7 +153,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
           models = models.filter(model => 
             model.name.toLowerCase().includes(searchLower) ||
             model.provider.toLowerCase().includes(searchLower) ||
-            model.description.toLowerCase().includes(searchLower)
+            model.description?.toLowerCase().includes(searchLower)
           );
         }
         
@@ -247,7 +265,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
       } catch (error) {
         fastify.log.error(error, 'Failed to retrieve model details');
         
-        if (error.statusCode) {
+        if (error && typeof error === 'object' && 'statusCode' in error) {
           throw error;
         }
         
