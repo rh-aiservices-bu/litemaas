@@ -246,7 +246,66 @@ litemaas/
 - [ ] Set up monitoring with Prometheus
 - [ ] Configure log aggregation
 
-### Phase 9: Documentation & Polish
+### Phase 9: Critical Workflow Fixes (URGENT - January 2025)
+**Status**: 🚨 **CRITICAL PRIORITY** - Blocking User Workflows  
+**Timeline**: 3-5 days  
+**Reference**: [WORKFLOW_ANALYSIS.md](./WORKFLOW_ANALYSIS.md) | [IMPLEMENTATION_PLAN.md](./IMPLEMENTATION_PLAN.md)
+
+#### Phase 9.1: Critical Integration Fixes (Days 1-3)
+- [ ] **Fix OAuth → LiteLLM User Creation**
+  - [ ] Modify `oauth.service.ts` to create LiteLLM users during authentication
+  - [ ] Add `ensureLiteLLMUser()` helper method with error handling  
+  - [ ] Implement retry mechanisms for LiteLLM failures
+  - [ ] Add unit and integration tests for OAuth + LiteLLM flow
+
+- [ ] **Implement Model Access Validation** 
+  - [ ] Enhance API key validation middleware to check model permissions
+  - [ ] Add `requireModelAccess()` middleware for route protection
+  - [ ] Update `ApiKeyAuthRequest` interface to include allowed models
+  - [ ] Create model access enforcement in `api-key-auth.ts`
+  - [ ] Add security tests for unauthorized model access prevention
+
+- [ ] **Add User Verification to Critical Flows**
+  - [ ] Enhance `createApiKey()` to verify LiteLLM user exists first
+  - [ ] Update `createEnhancedSubscription()` with user verification
+  - [ ] Add fallback user creation in subscription/API key flows
+  - [ ] Implement transactional consistency between systems
+
+#### Phase 9.2: Enhanced Error Handling (Day 4)  
+- [ ] **Implement Circuit Breaker Pattern**
+  - [ ] Add circuit breaker to `LiteLLMService` for API resilience
+  - [ ] Configure timeout, error threshold, and reset policies
+  - [ ] Apply circuit breaker to all LiteLLM API calls
+
+- [ ] **Add Integration Health Monitoring**
+  - [ ] Create `/health/integration` endpoint with LiteLLM status
+  - [ ] Implement latency and availability monitoring
+  - [ ] Add alerting for integration failures
+
+#### Phase 9.3: User Experience Improvements (Day 5)
+- [ ] **Frontend Model Access Display**
+  - [ ] Update `ApiKeysPage.tsx` to show model restrictions clearly
+  - [ ] Add model access information to API key cards
+  - [ ] Enhance key creation flow with model visibility
+
+- [ ] **Enhanced Error Messages**
+  - [ ] Map backend errors to user-friendly messages
+  - [ ] Improve error handling in `api.service.ts`
+  - [ ] Add contextual help for common workflow issues
+
+#### Issues Addressed:
+1. **Missing LiteLLM User Creation**: Users authenticate but aren't created in LiteLLM, causing API key failures
+2. **API Key Model Access Disconnect**: API keys don't enforce model subscription restrictions  
+3. **Race Conditions**: Users can create API keys before LiteLLM user exists
+4. **Poor Error Handling**: Cryptic errors when LiteLLM integration fails
+
+#### Success Metrics:
+- API Key Creation Success Rate: >95% (currently ~80%)
+- Model Access Errors: <1% false negatives
+- User Authentication Flow Completion: >99%
+- LiteLLM Integration Uptime: >99.5%
+
+### Phase 10: Documentation & Polish
 - [ ] Generate API documentation with Swagger
 - [ ] Create user guide
 - [ ] Write deployment guide
