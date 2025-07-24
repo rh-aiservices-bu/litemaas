@@ -6,12 +6,12 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:16-alpine
-    container_name: litellm-postgres
+    container_name: postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-litellm_user}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-litellm_password}
-      POSTGRES_DB: ${POSTGRES_DB:-litellm_db}
+      POSTGRES_MULTIPLE_DATABASES: litellm, litemaas
+      POSTGRES_USER: ${POSTGRES_USER:-litemaas_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-litemaas_password}
       PGDATA: /var/lib/postgresql/data/pgdata
       # Allow connections from any host (development only!)
       POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
@@ -20,8 +20,9 @@ services:
     userns_mode: keep-id
     volumes:
       - ./data/postgres:/var/lib/postgresql/data:Z
+      - ./entrypoint.sh:/docker-entrypoint-initdb.d/entrypoint.sh:ro
     networks:
-      - litellm-network
+      - litemaas-network
     # Make PostgreSQL listen on all interfaces (not just localhost)
     command: postgres -c listen_addresses='*'
     extra_hosts:
@@ -59,12 +60,12 @@ services:
       - ./data/litellm:/app/data:Z
       - ./litellm-config.yaml:/app/config.yaml:ro  # Optional: mount config file
     networks:
-      - litellm-network
+      - litemaas-network
     extra_hosts:
       - "host.docker.internal:host-gateway"
     command: [ "--config", "/app/config.yaml", "--detailed_debug" ]
 
 networks:
-  litellm-network:
+  litemaas-network:
     driver: bridge
-    name: litellm-network
+    name: litemaas-network
