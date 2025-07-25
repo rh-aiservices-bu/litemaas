@@ -10,7 +10,7 @@ A user-friendly application for interacting with LiteLLM, providing model discov
 - 👥 **Team Management** - Multi-tenant team support with shared budgets
 - 💰 **Budget Control** - Multi-level budget management (user, team, subscription)
 - 📊 **Usage Analytics** - Real-time cost tracking and usage visualization
-- 🔄 **LiteLLM Integration** - Bidirectional synchronization with conflict resolution
+- 🔄 **LiteLLM Integration** - Automated model synchronization with real-time updates
 - 🚨 **Smart Alerting** - Automated budget alerts and usage monitoring
 - 🚀 **Modern Stack** - Built with Fastify, React, and PatternFly 6
 
@@ -62,6 +62,23 @@ litemaas/
 - `npm run build` - Build both applications for production
 - `npm run test` - Run tests for all workspaces
 - `npm run lint` - Lint all workspaces
+
+## Documentation
+
+### Core Documentation
+- **[CLAUDE.md](./CLAUDE.md)** - Complete project overview and architecture guide
+- **[PATTERNFLY6_RULES.md](./PATTERNFLY6_RULES.md)** - PatternFly 6 migration and usage guidelines
+
+### API Documentation
+- **[Model Sync API](./backend/docs/MODEL_SYNC_API.md)** - Model synchronization endpoints and usage
+- **[Model Sync Configuration](./backend/docs/MODEL_SYNC_CONFIG.md)** - Configuration guide for model synchronization
+- **[Swagger UI](http://localhost:8080/docs)** - Interactive API documentation (when backend running)
+
+### Features
+- **Automatic Model Sync** - Models are synchronized from LiteLLM on application startup
+- **Manual Sync API** - Admin endpoints for on-demand model synchronization
+- **Database Migrations** - Automatic schema management and upgrades
+- **Health Monitoring** - Comprehensive health checks and system status
 
 ## License
 

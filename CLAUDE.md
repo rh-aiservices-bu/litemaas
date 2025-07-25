@@ -95,7 +95,7 @@ litemaas/
 #### API Routes (prefix: `/api`)
 - `/auth` - Authentication and OAuth flows
 - `/users` - User management and profiles
-- `/models` - AI model registry and metadata
+- `/models` - AI model registry, metadata, and synchronization endpoints
 - `/subscriptions` - User subscription management
 - `/api-keys` - API key generation and validation
 - `/teams` - Team management and collaboration
@@ -106,6 +106,7 @@ litemaas/
 #### Service Layer
 - **ApiKeyService**: API key lifecycle management with LiteLLM integration
 - **LiteLLMService**: Core integration with LiteLLM instances
+- **ModelSyncService**: Automated model synchronization between LiteLLM and database
 - **LiteLLMIntegrationService**: Centralized synchronization and orchestration
 - **TeamService**: Team management with budget tracking
 - **OAuthService**: OAuth2 authentication flows
@@ -328,10 +329,12 @@ npm run format
 
 ### Integration Architecture
 - **LiteLLMService**: Core API integration layer with `/model/info` endpoint integration
+- **ModelSyncService**: Automated model synchronization between LiteLLM and database
 - **LiteLLMIntegrationService**: Centralized sync orchestration
 - **Enhanced Data Models**: Extended types matching actual LiteLLM API structure
 - **Circuit Breaker**: Resilient API communication with fallback strategies
 - **Mock Data Fallback**: Development mode with realistic mock responses
+- **Database Migration System**: Automated schema management and initial setup
 
 ### Model Data Integration
 - **Real-time Model Discovery**: Fetches models from LiteLLM `/model/info` endpoint
@@ -342,11 +345,13 @@ npm run format
 - **Frontend Compatibility**: UI displays "N/A" for missing context length or pricing information
 
 ### Synchronization Features
-- **Global Sync**: System-wide synchronization of all entities
-- **Selective Sync**: Sync specific users, teams, or subscriptions
-- **Conflict Resolution**: Configurable strategies (LiteLLM wins, LiteMaaS wins, merge)
-- **Health Monitoring**: Integration health checks and alerting
-- **Audit Trail**: Complete sync operation logging
+- **Automatic Startup Sync**: Models synchronized automatically when application starts
+- **Manual Sync API**: Admin endpoints for on-demand model synchronization
+- **Incremental Updates**: Only updates models when changes are detected
+- **Model Availability Management**: Missing models marked as "unavailable" but preserved
+- **Health Monitoring**: Integration health checks and sync status monitoring
+- **Audit Trail**: Complete sync operation logging with detailed metrics
+- **Error Recovery**: Robust error handling with detailed error reporting
 
 ### Budget and Rate Limiting
 - **Multi-Level Budgets**: User, team, and subscription-level budget controls
@@ -354,6 +359,47 @@ npm run format
 - **Rate Limiting**: TPM/RPM limits with burst capacity
 - **Budget Alerts**: Automated alerts at configurable thresholds
 - **Cost Calculation**: Accurate cost tracking with pricing models
+
+## 🔄 Model Synchronization API
+
+### Core Synchronization Endpoints
+- **`POST /api/v1/models/sync`** - Manual model synchronization (Admin only)
+  - Parameters: `forceUpdate`, `markUnavailable`
+  - Returns: Sync results with statistics and error details
+- **`GET /api/v1/models/sync/stats`** - Synchronization statistics
+- **`GET /api/v1/models/validate`** - Model integrity validation
+- **`GET /api/v1/models/health`** - Model sync health check
+
+### Synchronization Behavior
+- **New Models**: Automatically added to database with full metadata
+- **Existing Models**: Updated with latest pricing, capabilities, and metadata
+- **Missing Models**: Marked as "unavailable" but preserved for existing subscriptions
+- **Automatic Startup**: Models synchronized when application starts
+- **Error Handling**: Detailed error reporting and graceful degradation
+
+### Model Data Mapping
+```typescript
+// LiteLLM Model → Database Mapping
+model_name → id, name
+litellm_params.custom_llm_provider → provider
+model_info.max_tokens → context_length
+model_info.input_cost_per_token → input_cost_per_token
+model_info.output_cost_per_token → output_cost_per_token
+model_info.supports_* → capability flags
+```
+
+### Sync Result Format
+```typescript
+{
+  success: boolean;
+  totalModels: number;
+  newModels: number;
+  updatedModels: number;
+  unavailableModels: number;
+  errors: string[];
+  syncedAt: string;
+}
+```
 
 ## 📈 Usage Analytics
 
@@ -398,8 +444,12 @@ npm run format               # Format code
 npm run type-check           # TypeScript checking
 
 # Database
-npm run db:migrate           # Run database migrations
-npm run db:seed              # Seed test data
+npm run db:migrate           # Run database migrations (automatic on startup)
+npm run db:seed              # Seed test data (users and teams only)
+
+# Model Synchronization
+# Models are automatically synchronized on startup
+# Manual sync available via API: POST /api/v1/models/sync
 
 # Utilities
 npm run check-backend        # Backend health check
