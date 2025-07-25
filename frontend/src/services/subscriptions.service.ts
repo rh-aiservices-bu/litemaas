@@ -53,8 +53,9 @@ interface BackendSubscriptionsResponse {
 
 export interface CreateSubscriptionRequest {
   modelId: string;
-  plan: 'starter' | 'professional' | 'enterprise';
-  billingCycle: 'monthly' | 'yearly';
+  quotaRequests?: number;
+  quotaTokens?: number;
+  expiresAt?: string;
 }
 
 export interface UpdateSubscriptionRequest {

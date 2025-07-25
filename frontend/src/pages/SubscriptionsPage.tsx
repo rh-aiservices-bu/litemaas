@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   PageSection,
@@ -57,6 +58,7 @@ import { subscriptionsService, Subscription } from '../services/subscriptions.se
 const SubscriptionsPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
+  const navigate = useNavigate();
   
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -226,7 +228,11 @@ const SubscriptionsPage: React.FC = () => {
             </Content>
           </FlexItem>
           <FlexItem>
-            <Button variant="primary" icon={<PlusCircleIcon />}>
+            <Button 
+              variant="primary" 
+              icon={<PlusCircleIcon />}
+              onClick={() => navigate('/models')}
+            >
               New Subscription
             </Button>
           </FlexItem>
@@ -244,7 +250,11 @@ const SubscriptionsPage: React.FC = () => {
               You don't have any active subscriptions. Start by subscribing to an AI model.
             </EmptyStateBody>
             <EmptyStateActions>
-              <Button variant="primary" icon={<PlusCircleIcon />}>
+              <Button 
+                variant="primary" 
+                icon={<PlusCircleIcon />}
+                onClick={() => navigate('/models')}
+              >
                 Browse Models
               </Button>
             </EmptyStateActions>

@@ -47,6 +47,7 @@ import {
 } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
 import { modelsService, Model } from '../services/models.service';
+import { subscriptionsService } from '../services/subscriptions.service';
 
 const ModelsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -130,13 +131,30 @@ const ModelsPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSubscribe = (model: Model) => {
-    addNotification({
-      title: 'Subscription Request',
-      description: `Subscription request for ${model.name} has been submitted.`,
-      variant: 'info'
-    });
-    setIsModalOpen(false);
+  const handleSubscribe = async (model: Model) => {
+    try {
+      // Create subscription with default values
+      await subscriptionsService.createSubscription({
+        modelId: model.id,
+        quotaRequests: 10000, // Default quota
+        quotaTokens: 1000000, // Default tokens quota
+      });
+
+      addNotification({
+        title: 'Subscription Created',
+        description: `Successfully subscribed to ${model.name}`,
+        variant: 'success'
+      });
+      
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error('Failed to create subscription:', error);
+      addNotification({
+        title: 'Subscription Failed',
+        description: `Failed to subscribe to ${model.name}. Please try again.`,
+        variant: 'danger'
+      });
+    }
   };
 
   const getAvailabilityBadge = (availability: string) => {

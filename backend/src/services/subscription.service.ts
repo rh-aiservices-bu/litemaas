@@ -373,9 +373,9 @@ export class SubscriptionService {
       const subscription = await this.fastify.dbUtils.queryOne(
         `INSERT INTO subscriptions (
           user_id, model_id, status, quota_requests, quota_tokens, 
-          expires_at, reset_at, metadata, max_budget, budget_duration,
-          tpm_limit, rpm_limit, team_id, soft_budget
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+          expires_at, reset_at, max_budget, budget_duration,
+          tpm_limit, rpm_limit, team_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING *`,
         [
           userId,
@@ -385,13 +385,11 @@ export class SubscriptionService {
           quotaTokens,
           expiresAt,
           this.calculateNextResetDate(),
-          metadata,
           maxBudget,
           budgetDuration,
           tpmLimit,
           rpmLimit,
           teamId,
-          softBudget,
         ]
       );
 
@@ -588,10 +586,8 @@ export class SubscriptionService {
         params.push(expiresAt);
       }
 
-      if (metadata !== undefined) {
-        updateFields.push(`metadata = $${paramIndex++}`);
-        params.push(metadata);
-      }
+      // Note: metadata column doesn't exist in subscriptions table
+      // Skip metadata update
 
       if (maxBudget !== undefined) {
         updateFields.push(`max_budget = $${paramIndex++}`);
@@ -623,10 +619,8 @@ export class SubscriptionService {
         params.push(teamId);
       }
 
-      if (softBudget !== undefined) {
-        updateFields.push(`soft_budget = $${paramIndex++}`);
-        params.push(softBudget);
-      }
+      // Note: soft_budget column doesn't exist in subscriptions table
+      // Skip soft_budget update
 
       if (updateFields.length === 0) {
         return existing;
@@ -1435,7 +1429,7 @@ export class SubscriptionService {
       expiresAt: subscription.expires_at ? new Date(subscription.expires_at) : undefined,
       createdAt: new Date(subscription.created_at),
       updatedAt: new Date(subscription.updated_at),
-      metadata: subscription.metadata || {},
+      metadata: {}, // metadata column doesn't exist in database
     };
 
     // Add enhanced LiteLLM integration fields

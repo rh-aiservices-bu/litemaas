@@ -360,6 +360,43 @@ npm run format
 - **Budget Alerts**: Automated alerts at configurable thresholds
 - **Cost Calculation**: Accurate cost tracking with pricing models
 
+## 📝 Subscription Management
+
+### Subscription Creation Flow
+1. **Browse Models**: Users navigate to `/models` page to view available AI models
+2. **Model Selection**: Click on a model card to view detailed information in a modal
+3. **Subscribe**: Click "Subscribe to model" button in the modal
+4. **API Call**: Frontend sends request to `POST /api/subscriptions` with:
+   - `modelId`: The selected model's ID
+   - `quotaRequests`: Default 10,000 requests per month
+   - `quotaTokens`: Default 1,000,000 tokens per month
+5. **Success**: Subscription created with "pending" status, user sees success notification
+6. **View Subscriptions**: Navigate to `/subscriptions` to manage subscriptions
+
+### Subscription Page Features
+- **Empty State**: Shows "Browse Models" button that navigates to `/models`
+- **Header Button**: "New Subscription" button navigates to `/models`
+- **Subscription Cards**: Display usage metrics, plan details, and management options
+- **Actions**: View details, modify plans, and cancel subscriptions
+
+### Database Schema Limitations
+⚠️ **Important**: The `subscriptions` table does NOT have the following columns:
+- `metadata`: Any metadata should be stored in related tables or handled differently
+- `soft_budget`: Budget features are limited to `max_budget` field only
+
+### Subscription API Endpoints
+- **`POST /api/subscriptions`** - Create new subscription
+  - Required: `modelId`
+  - Optional: `quotaRequests`, `quotaTokens`, `expiresAt`
+  - Note: Do not send `metadata` or `soft_budget` fields
+- **`GET /api/subscriptions`** - List user subscriptions with pagination
+- **`GET /api/subscriptions/:id`** - Get specific subscription details
+- **`PATCH /api/subscriptions/:id`** - Update subscription (status, quotas, limits)
+- **`POST /api/subscriptions/:id/activate`** - Activate pending subscription
+- **`POST /api/subscriptions/:id/cancel`** - Cancel active subscription
+- **`GET /api/subscriptions/:id/quota`** - Get quota usage information
+- **`GET /api/subscriptions/stats`** - Get subscription statistics
+
 ## 🔄 Model Synchronization API
 
 ### Core Synchronization Endpoints
