@@ -1,6 +1,6 @@
 import { beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import { FastifyInstance } from 'fastify';
-import { build } from '../src/app';
+import { createApp } from '../src/app';
 
 declare global {
   var testApp: FastifyInstance;
@@ -9,19 +9,23 @@ declare global {
 // Global test setup
 beforeAll(async () => {
   // Build test app instance
-  global.testApp = build({
+  global.testApp = await createApp({
     logger: false,
-    ajv: {
-      customOptions: {
-        removeAdditional: false,
-        useDefaults: true,
-        coerceTypes: true,
-      },
-    },
   });
 
   // Register test-specific plugins or overrides
   await global.testApp.register(async function (fastify) {
+    // Override authentication for testing
+    fastify.decorate('authenticateWithDevBypass', async (request: any, reply: any) => {
+      // Mock user for testing
+      request.user = mockUser;
+    });
+
+    fastify.decorate('authenticate', async (request: any, reply: any) => {
+      // Mock user for testing
+      request.user = mockUser;
+    });
+
     // Override database connection for testing
     fastify.decorate('db', {
       query: async (text: string, params?: any[]) => {
@@ -34,6 +38,46 @@ beforeAll(async () => {
           release: () => {},
         }),
       },
+    });
+
+    // Override dbUtils for testing
+    fastify.decorate('dbUtils', {
+      async query(text: string, params?: any[]) {
+        // Mock database queries for testing
+        return { rows: [], rowCount: 0 };
+      },
+      async queryOne(text: string, params?: any[]) {
+        // Mock single row query for testing
+        return null;
+      },
+      async queryMany(text: string, params?: any[]) {
+        // Mock multiple rows query for testing
+        return [];
+      },
+      async withTransaction<T>(callback: (client: any) => Promise<T>): Promise<T> {
+        // Simulate transaction in mock mode
+        const mockClient = { query: () => Promise.resolve({ rows: [] }) };
+        return callback(mockClient);
+      },
+    });
+
+    // Mock Fastify error methods
+    fastify.decorate('createError', (statusCode: number, message: string) => {
+      const error = new Error(message) as any;
+      error.statusCode = statusCode;
+      return error;
+    });
+
+    fastify.decorate('createNotFoundError', (resource: string) => {
+      const error = new Error(`${resource} not found`) as any;
+      error.statusCode = 404;
+      return error;
+    });
+
+    fastify.decorate('createValidationError', (message: string) => {
+      const error = new Error(message) as any;
+      error.statusCode = 400;
+      return error;
     });
 
     // Override LiteLLM service for testing

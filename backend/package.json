@@ -16,7 +16,10 @@
     "test:perf": "k6 run tests/performance/load-test.js",
     "test:all": "npm run test:unit && npm run test:integration && npm run test:security",
     "lint": "eslint src tests --ext .ts",
-    "clean": "rimraf dist coverage .tsbuildinfo"
+    "clean": "rimraf dist coverage .tsbuildinfo",
+    "db:migrate": "tsx src/scripts/run-migrations.ts",
+    "db:seed": "tsx src/scripts/seed-data.ts",
+    "db:setup": "npm run db:migrate && npm run db:seed"
   },
   "dependencies": {
     "@fastify/autoload": "^5.8.0",

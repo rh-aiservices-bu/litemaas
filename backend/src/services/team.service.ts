@@ -212,17 +212,16 @@ export class TeamService {
   }
 
   private shouldUseMockData(): boolean {
-    const isDev = process.env.NODE_ENV === 'development';
     const dbUnavailable = this.isDatabaseUnavailable();
     
     this.fastify.log.debug({ 
-      isDev, 
       dbUnavailable, 
       nodeEnv: process.env.NODE_ENV,
-      hasPg: !!this.fastify.pg 
+      hasPg: !!this.fastify.pg,
+      mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined
     }, 'Team Service: Checking if should use mock data');
     
-    return isDev || dbUnavailable;
+    return dbUnavailable;
   }
 
   private isDatabaseUnavailable(): boolean {

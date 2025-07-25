@@ -63,7 +63,7 @@ export const createApp = async (opts: { logger?: boolean } = {}): Promise<Fastif
   await fastify.register(swaggerPlugin);
 
   // Register routes
-  await fastify.register(routes, { prefix: '/api' });
+  await fastify.register(routes, { prefix: '/api/v1' });
 
   return fastify;
 };

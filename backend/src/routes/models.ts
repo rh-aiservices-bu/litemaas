@@ -2,10 +2,12 @@ import { FastifyPluginAsync } from 'fastify';
 import { ModelListParams, PaginatedResponse, Model, ModelDetails, AuthenticatedRequest } from '../types';
 import { LiteLLMModel } from '../types/model.types';
 import { LiteLLMService } from '../services/litellm.service';
+import { ModelSyncService } from '../services/model-sync.service';
 
 const modelsRoutes: FastifyPluginAsync = async (fastify) => {
-  // Initialize LiteLLM service
+  // Initialize services
   const liteLLMService = new LiteLLMService(fastify);
+  const modelSyncService = new ModelSyncService(fastify);
   
   // Helper function to convert LiteLLM model to our Model format
   const convertLiteLLMModel = (model: LiteLLMModel): Model => {
@@ -141,11 +143,46 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
       const { page = 1, limit = 20, search, provider, capability, isActive } = request.query;
       
       try {
-        // Get models from LiteLLM
-        const liteLLMModels = await liteLLMService.getModels();
+        // Try to get models from database first (synchronized models)
+        let models: Model[] = [];
         
-        // Convert to our model format
-        let models = liteLLMModels.map(convertLiteLLMModel);
+        try {
+          const dbModels = await fastify.dbUtils.queryMany(`
+            SELECT * FROM models 
+            WHERE availability = 'available'
+            ORDER BY provider, name
+          `);
+          
+          if (dbModels.length > 0) {
+            // Use database models (synchronized)
+            models = dbModels.map(model => ({
+              id: model.id,
+              name: model.name,
+              provider: model.provider,
+              description: model.description,
+              capabilities: model.features || [],
+              contextLength: model.context_length,
+              pricing: model.input_cost_per_token || model.output_cost_per_token ? {
+                input: model.input_cost_per_token || 0,
+                output: model.output_cost_per_token || 0,
+                unit: 'per_1k_tokens' as const,
+              } : undefined,
+              isActive: model.availability === 'available',
+              createdAt: new Date(model.created_at),
+              updatedAt: new Date(model.updated_at),
+            }));
+            
+            fastify.log.debug({ count: models.length }, 'Using synchronized models from database');
+          } else {
+            throw new Error('No models in database, falling back to LiteLLM');
+          }
+        } catch (dbError) {
+          fastify.log.debug(dbError, 'Database models unavailable, fetching from LiteLLM');
+          
+          // Fallback to direct LiteLLM fetch
+          const liteLLMModels = await liteLLMService.getModels();
+          models = liteLLMModels.map(convertLiteLLMModel);
+        }
         
         // Apply filters
         if (search) {
@@ -471,6 +508,258 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
       } catch (error) {
         fastify.log.error(error, 'Failed to retrieve capabilities');
         throw fastify.createError(500, 'Failed to retrieve capabilities');
+      }
+    },
+  });
+
+  // === MODEL SYNCHRONIZATION ENDPOINTS ===
+
+  // Sync models from LiteLLM to database
+  fastify.post('/sync', {
+    schema: {
+      tags: ['Models', 'Admin'],
+      description: 'Synchronize models from LiteLLM backend to database',
+      security: [{ bearerAuth: [] }],
+      body: {
+        type: 'object',
+        properties: {
+          forceUpdate: { type: 'boolean', default: false },
+          markUnavailable: { type: 'boolean', default: true },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            totalModels: { type: 'number' },
+            newModels: { type: 'number' },
+            updatedModels: { type: 'number' },
+            unavailableModels: { type: 'number' },
+            errors: { type: 'array', items: { type: 'string' } },
+            syncedAt: { type: 'string' },
+          },
+        },
+        500: {
+          type: 'object',
+          properties: {
+            error: {
+              type: 'object',
+              properties: {
+                code: { type: 'string' },
+                message: { type: 'string' },
+              },
+            },
+          },
+        },
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('models:write')],
+    handler: async (request, reply) => {
+      const user = (request as AuthenticatedRequest).user;
+      const { forceUpdate = false, markUnavailable = true } = request.body as any;
+
+      try {
+        fastify.log.info({ userId: user.userId }, 'Starting model synchronization');
+
+        const result = await modelSyncService.syncModels({
+          forceUpdate,
+          markUnavailable,
+        });
+
+        // Create audit log
+        await fastify.dbUtils.query(
+          `INSERT INTO audit_logs (user_id, action, resource_type, metadata, success)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            user.userId,
+            'MODELS_SYNC',
+            'MODEL',
+            JSON.stringify({
+              forceUpdate,
+              markUnavailable,
+              result: {
+                totalModels: result.totalModels,
+                newModels: result.newModels,
+                updatedModels: result.updatedModels,
+                unavailableModels: result.unavailableModels,
+                errors: result.errors.length,
+              },
+            }),
+            result.success,
+          ]
+        );
+
+        if (!result.success && result.errors.length > 0) {
+          return reply.status(500).send({
+            error: {
+              code: 'SYNC_FAILED',
+              message: `Model synchronization failed: ${result.errors.join(', ')}`,
+            },
+          });
+        }
+
+        fastify.log.info({
+          userId: user.userId,
+          result,
+        }, 'Model synchronization completed');
+
+        return result;
+      } catch (error) {
+        fastify.log.error(error, 'Model sync endpoint failed');
+        
+        // Create audit log for failure
+        await fastify.dbUtils.query(
+          `INSERT INTO audit_logs (user_id, action, resource_type, metadata, success, error_message)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [
+            user.userId,
+            'MODELS_SYNC',
+            'MODEL',
+            JSON.stringify({ forceUpdate, markUnavailable }),
+            false,
+            error.message,
+          ]
+        );
+
+        return reply.status(500).send({
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to synchronize models',
+          },
+        });
+      }
+    },
+  });
+
+  // Get sync statistics
+  fastify.get('/sync/stats', {
+    schema: {
+      tags: ['Models', 'Admin'],
+      description: 'Get model synchronization statistics',
+      security: [{ bearerAuth: [] }],
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            totalModels: { type: 'number' },
+            availableModels: { type: 'number' },
+            unavailableModels: { type: 'number' },
+            lastSyncAt: { type: 'string', nullable: true },
+          },
+        },
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('models:read')],
+    handler: async (request, reply) => {
+      try {
+        const stats = await modelSyncService.getSyncStats();
+        return stats;
+      } catch (error) {
+        fastify.log.error(error, 'Failed to get sync stats');
+        return reply.status(500).send({
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to get synchronization statistics',
+          },
+        });
+      }
+    },
+  });
+
+  // Validate model integrity
+  fastify.get('/validate', {
+    schema: {
+      tags: ['Models', 'Admin'],
+      description: 'Validate model data integrity',
+      security: [{ bearerAuth: [] }],
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            validModels: { type: 'number' },
+            invalidModels: { type: 'array', items: { type: 'string' } },
+            orphanedSubscriptions: { type: 'number' },
+          },
+        },
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('models:read')],
+    handler: async (request, reply) => {
+      try {
+        const validation = await modelSyncService.validateModels();
+        return validation;
+      } catch (error) {
+        fastify.log.error(error, 'Failed to validate models');
+        return reply.status(500).send({
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: 'Failed to validate models',
+          },
+        });
+      }
+    },
+  });
+
+  // Health check for model sync
+  fastify.get('/health', {
+    schema: {
+      tags: ['Models', 'Health'],
+      description: 'Check model synchronization health',
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            status: { type: 'string' },
+            lastSync: { type: 'string', nullable: true },
+            modelsCount: { type: 'number' },
+            litellmConnected: { type: 'boolean' },
+            issues: { type: 'array', items: { type: 'string' } },
+          },
+        },
+      },
+    },
+    handler: async (request, reply) => {
+      try {
+        const stats = await modelSyncService.getSyncStats();
+        const validation = await modelSyncService.validateModels();
+        
+        // Check LiteLLM connectivity
+        let litellmConnected = false;
+        try {
+          const models = await liteLLMService.getModels();
+          litellmConnected = models.length > 0;
+        } catch (error) {
+          litellmConnected = false;
+        }
+
+        const issues: string[] = [];
+        if (!litellmConnected) {
+          issues.push('Cannot connect to LiteLLM backend');
+        }
+        if (validation.invalidModels.length > 0) {
+          issues.push(`${validation.invalidModels.length} invalid models found`);
+        }
+        if (validation.orphanedSubscriptions > 0) {
+          issues.push(`${validation.orphanedSubscriptions} subscriptions reference unavailable models`);
+        }
+
+        return {
+          status: issues.length === 0 ? 'healthy' : 'warning',
+          lastSync: stats.lastSyncAt,
+          modelsCount: stats.totalModels,
+          litellmConnected,
+          issues,
+        };
+      } catch (error) {
+        fastify.log.error(error, 'Failed to check model health');
+        return {
+          status: 'error',
+          lastSync: null,
+          modelsCount: 0,
+          litellmConnected: false,
+          issues: ['Failed to check model health'],
+        };
       }
     },
   });

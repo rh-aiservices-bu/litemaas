@@ -14,7 +14,7 @@ const databasePlugin: FastifyPluginAsync = async (fastify) => {
       connectionTimeoutMillis: parseInt(fastify.config.DB_CONNECTION_TIMEOUT || '2000'),
     });
 
-    // Test database connection
+    // Test database connection and run migrations
     fastify.addHook('onReady', async () => {
       try {
         const client = await fastify.pg.connect();
@@ -25,6 +25,44 @@ const databasePlugin: FastifyPluginAsync = async (fastify) => {
         );
         client.release();
         isPostgresAvailable = true;
+
+        // Run database migrations
+        try {
+          const { applyMigrations } = await import('../lib/database-migrations');
+          await applyMigrations(fastify.dbUtils);
+          fastify.log.info('Database migrations applied successfully');
+        } catch (migrationError) {
+          fastify.log.error(migrationError, 'Failed to apply database migrations');
+          // Don't fail the startup, but log the error
+        }
+
+        // Run initial model synchronization
+        try {
+          const { ModelSyncService } = await import('../services/model-sync.service');
+          const modelSyncService = new ModelSyncService(fastify);
+          
+          fastify.log.info('Starting initial model synchronization...');
+          const syncResult = await modelSyncService.syncModels({
+            forceUpdate: false,
+            markUnavailable: true,
+          });
+          
+          if (syncResult.success) {
+            fastify.log.info({
+              totalModels: syncResult.totalModels,
+              newModels: syncResult.newModels,
+              updatedModels: syncResult.updatedModels,
+              unavailableModels: syncResult.unavailableModels,
+            }, 'Initial model synchronization completed successfully');
+          } else {
+            fastify.log.warn({
+              errors: syncResult.errors,
+            }, 'Initial model synchronization completed with errors');
+          }
+        } catch (syncError) {
+          fastify.log.warn(syncError, 'Failed to perform initial model synchronization - models may be out of date');
+          // Don't fail the startup, but log the warning
+        }
       } catch (error) {
         fastify.log.warn(error, 'PostgreSQL not available, using mock data for development');
         mockMode = true;

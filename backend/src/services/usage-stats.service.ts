@@ -173,19 +173,18 @@ export class UsageStatsService {
   }
 
   private shouldUseMockData(): boolean {
-    // Use mock data if in development mode or if database is not available
-    // In production, still use mock data if PostgreSQL is not configured/available
-    const isDev = process.env.NODE_ENV === 'development';
+    // Use mock data only if database is not available
+    // This allows using real data in development when database is connected
     const dbUnavailable = this.isDatabaseUnavailable();
     
     this.fastify.log.debug({ 
-      isDev, 
       dbUnavailable, 
       nodeEnv: process.env.NODE_ENV,
-      hasPg: !!this.fastify.pg 
+      hasPg: !!this.fastify.pg,
+      mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined
     }, 'Usage Stats Service: Checking if should use mock data');
     
-    return isDev || dbUnavailable;
+    return dbUnavailable;
   }
 
   private isDatabaseUnavailable(): boolean {
