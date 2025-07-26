@@ -1,85 +1,146 @@
-# LiteMaaS - LiteLLM Model as a Service
+# LiteMaaS - LiteLLM User Application
 
-A user-friendly application for interacting with LiteLLM, providing model discovery, subscription management, and usage analytics.
+**LiteMaaS** is a comprehensive model subscription and management platform that provides a user-friendly interface for managing AI model subscriptions, API keys, and usage tracking. It's designed to work seamlessly with LiteLLM instances and serves as a bridge between users and AI model services.
 
-## Features
+## 🚀 Quick Start
 
-- 🔐 **OpenShift OAuth Authentication** - Secure authentication using OpenShift OAuth provider
-- 🔍 **Model Discovery** - Browse and search available models through LiteLLM
-- 🔑 **API Key Management** - Generate and manage API keys with budget tracking
-- 👥 **Team Management** - Multi-tenant team support with shared budgets
-- 💰 **Budget Control** - Multi-level budget management (user, team, subscription)
-- 📊 **Usage Analytics** - Real-time cost tracking and usage visualization
-- 🔄 **LiteLLM Integration** - Automated model synchronization with real-time updates
-- 🚨 **Smart Alerting** - Automated budget alerts and usage monitoring
-- 🚀 **Modern Stack** - Built with Fastify, React, and PatternFly 6
-
-## Prerequisites
-
-- Node.js >= 18.0.0
-- npm >= 9.0.0
-- PostgreSQL database
-- Access to OpenShift OAuth provider
-- LiteLLM instance
-
-## Quick Start
-
-1. Clone the repository:
 ```bash
-git clone <repository-url>
-cd litemaas
-```
-
-2. Install dependencies:
-```bash
+# Install dependencies
 npm install
-```
 
-3. Set up environment variables:
-```bash
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-```
-
-4. Start development servers:
-```bash
+# Start development servers (both backend and frontend)
 npm run dev
+
+# Backend only (http://localhost:8080)
+npm run dev:backend
+
+# Frontend only (http://localhost:3000)
+npm run dev:frontend
 ```
 
-## Project Structure
+## 📋 Prerequisites
 
+- Node.js 18.x or 20.x
+- PostgreSQL 12+
+- npm 8+
+- LiteLLM instance (optional, has mock fallback)
+
+## 🏗️ Architecture
+
+LiteMaaS is a **monorepo** using npm workspaces with two main packages:
+
+- **Backend** (`@litemaas/backend`): High-performance Fastify API server with PostgreSQL
+- **Frontend** (`@litemaas/frontend`): Modern React application with PatternFly 6 UI
+
+### Key Features
+
+- 🔐 **OAuth2 Authentication** with OpenShift integration
+- 🤖 **LiteLLM Integration** for AI model management
+- 💳 **Subscription Management** with budget tracking
+- 🔑 **API Key Generation** for programmatic access
+- 📊 **Usage Analytics** and cost tracking
+- 👥 **Team Management** with shared budgets
+- 🌐 **Internationalization** (EN, ES, FR)
+- 📖 **Auto-generated API Documentation** via Swagger
+
+## 🛠️ Development Setup
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-org/litemaas.git
+   cd litemaas
+   ```
+
+2. **Set up environment variables**
+   ```bash
+   # Copy example environment files
+   cp backend/.env.example backend/.env
+   cp frontend/.env.example frontend/.env
+   ```
+
+3. **Configure your environment**
+   - See [Configuration Guide](docs/deployment/configuration.md) for all available options
+   - Minimum required: `DATABASE_URL`, `JWT_SECRET`, OAuth credentials
+
+4. **Start PostgreSQL** (using Docker)
+   ```bash
+   docker compose -f dev-tools/compose.yaml up -d postgres
+   ```
+
+5. **Run the application**
+   ```bash
+   npm run dev
+   ```
+
+## 📚 Documentation
+
+- [Architecture Overview](docs/architecture/overview.md)
+- [API Reference](docs/api/README.md)
+- [Configuration Guide](docs/deployment/configuration.md)
+- [Development Guide](docs/development/setup.md)
+- [Production Deployment](docs/deployment/production-guide.md)
+- [UI Guidelines (PatternFly 6)](docs/development/ui-guidelines.md)
+
+### Project Planning
+- [Project Plan](PROJECT_PLAN.md) - Development roadmap and milestones
+- [Implementation Plan](IMPLEMENTATION_PLAN.md) - Detailed implementation phases
+
+## 🧪 Testing
+
+```bash
+# Run all tests
+npm run test
+
+# Backend tests
+npm run test:backend
+
+# Frontend tests
+npm run test:frontend
+
+# E2E tests
+npm run test:e2e
+
+# Performance tests
+npm run test:perf
 ```
-litemaas/
-├── backend/          # Fastify backend service
-├── frontend/         # React frontend application
-├── docs/            # Documentation
-└── deployment/      # Kubernetes/OpenShift manifests
+
+## 🚀 Deployment
+
+For production deployment instructions, see the [Production Guide](docs/deployment/production-guide.md).
+
+### Quick Production Build
+```bash
+# Build both packages
+npm run build
+
+# Build output locations:
+# - Backend: backend/dist/
+# - Frontend: frontend/dist/
 ```
 
-## Development
+## 🤝 Contributing
 
-- `npm run dev` - Start both backend and frontend in development mode
-- `npm run build` - Build both applications for production
-- `npm run test` - Run tests for all workspaces
-- `npm run lint` - Lint all workspaces
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
+- Code style and conventions
+- Development workflow
+- Submitting pull requests
+- Reporting issues
 
-## Documentation
+## 📄 License
 
-### Core Documentation
-- **[CLAUDE.md](./CLAUDE.md)** - Complete project overview and architecture guide
-- **[PATTERNFLY6_RULES.md](./PATTERNFLY6_RULES.md)** - PatternFly 6 migration and usage guidelines
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-### API Documentation
-- **[Model Sync API](./backend/docs/MODEL_SYNC_API.md)** - Model synchronization endpoints and usage
-- **[Model Sync Configuration](./backend/docs/MODEL_SYNC_CONFIG.md)** - Configuration guide for model synchronization
-- **[Swagger UI](http://localhost:8080/docs)** - Interactive API documentation (when backend running)
+## 🔗 Related Projects
 
-### Features
-- **Automatic Model Sync** - Models are synchronized from LiteLLM on application startup
-- **Manual Sync API** - Admin endpoints for on-demand model synchronization
-- **Database Migrations** - Automatic schema management and upgrades
-- **Health Monitoring** - Comprehensive health checks and system status
+- [LiteLLM](https://github.com/BerriAI/litellm) - The AI model proxy that LiteMaaS integrates with
+- [PatternFly](https://www.patternfly.org/) - The UI framework used in the frontend
 
-## License
+## 💬 Support
 
-[License information to be added]
+- 📧 Email: support@litemaas.example.com
+- 💬 Discord: [Join our community](https://discord.gg/litemaas)
+- 🐛 Issues: [GitHub Issues](https://github.com/your-org/litemaas/issues)
+
+---
+
+Built with ❤️ by the LiteMaaS team

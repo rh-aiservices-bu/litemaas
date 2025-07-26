@@ -1,40 +1,27 @@
-# CLAUDE.md - LiteMaaS Project Documentation
+# CLAUDE.md - LiteMaaS AI Context File
+
+> **Note for AI Assistants**: This is a condensed context file for AI-powered development tools. For detailed documentation, see:
+> - API Documentation: `docs/api/`
+> - Architecture Details: `docs/architecture/`
+> - Development Guide: `docs/development/`
+> - Deployment Guide: `docs/deployment/`
+> - Configuration: `docs/deployment/configuration.md`
 
 ## 🚀 Project Overview
 
-**LiteMaaS** (LiteLLM User Application) is a comprehensive model subscription and management platform that provides a user-friendly interface for managing AI model subscriptions, API keys, and usage tracking. It's designed to work seamlessly with LiteLLM instances and serves as a bridge between users and AI model services.
+**LiteMaaS** is a model subscription and management platform that bridges users and AI model services through LiteLLM integration.
 
 ## 🏗️ Architecture Overview
 
-### Project Type
-**Monorepo** using npm workspaces with two main packages:
-- **Backend** (`@litemaas/backend`): High-performance Fastify-based API server
-- **Frontend** (`@litemaas/frontend`): Modern React application with PatternFly 6 UI
+**Monorepo** with two packages:
+- **Backend** (`@litemaas/backend`): Fastify API server
+- **Frontend** (`@litemaas/frontend`): React + PatternFly 6 UI
 
-### Technology Stack
-
-#### Backend Stack
-- **Framework**: Fastify 4.26.1 (high-performance Node.js web framework)
-- **Language**: TypeScript 5.3.3 with strict mode
-- **Database**: PostgreSQL with @fastify/postgres
-- **Authentication**: OAuth2 (OpenShift) + JWT tokens
-- **API Docs**: Swagger/OpenAPI with @fastify/swagger
-- **Security**: Helmet, CORS, Rate limiting, JWT
-- **Validation**: @sinclair/typebox with Fastify Type Provider
-- **Testing**: Vitest (unit/integration), K6 (performance)
-- **Logging**: Pino structured logging
-- **LiteLLM Integration**: Real-time model data synchronization with fallback to mock data
-
-#### Frontend Stack
-- **Framework**: React 18.2.0 with TypeScript 5.3.3
-- **Build Tool**: Vite 5.1.4
-- **UI Framework**: PatternFly 6 (Red Hat's design system)
-- **State Management**: React Context API
-- **Routing**: React Router v6.22.1
-- **HTTP Client**: Axios with interceptors
-- **i18n**: react-i18next (EN, ES, FR)
-- **Testing**: Vitest + React Testing Library + Playwright
-- **Data Handling**: Graceful handling of undefined values with "N/A" fallbacks
+### Tech Stack Summary
+- **Backend**: Fastify, TypeScript, PostgreSQL, OAuth2/JWT, LiteLLM integration
+- **Frontend**: React, TypeScript, Vite, PatternFly 6, React Router
+- **Testing**: Vitest, Playwright, K6
+- **i18n**: EN, ES, FR
 
 ## 📁 Project Structure
 
@@ -79,432 +66,96 @@ litemaas/
 └── package.json            # Workspace configuration
 ```
 
-## 🔧 Backend Architecture
+## 🔧 Key Features
 
-### Core Components
+### Backend
+- Fastify plugin architecture (auth, db, rate limiting, RBAC, swagger)
+- OAuth2 + JWT authentication with API key support
+- PostgreSQL database with migration system
+- LiteLLM integration for model synchronization
+- Budget management and usage tracking
+- Team collaboration features
 
-#### Plugin System
-- **Authentication Plugin**: JWT + OAuth2 (OpenShift SSO)
-- **Database Plugin**: PostgreSQL with connection pooling
-- **Rate Limiting Plugin**: API protection and throttling
-- **Session Plugin**: OAuth state management
-- **RBAC Plugin**: Role-based access control
-- **Swagger Plugin**: Auto-generated API documentation
-- **Security Plugin**: Helmet, CORS, CSP headers
+### Database Tables
+`users`, `teams`, `models`, `subscriptions`, `api_keys`, `usage_logs`, `audit_logs`
 
-#### API Routes (prefix: `/api`)
-- `/auth` - Authentication and OAuth flows
-- `/users` - User management and profiles
-- `/models` - AI model registry, metadata, and synchronization endpoints
-- `/subscriptions` - User subscription management
-- `/api-keys` - API key generation and validation
-- `/teams` - Team management and collaboration
-- `/integration` - LiteLLM integration and synchronization
-- `/usage` - Usage tracking and analytics
-- `/health` - System health checks
+### API Routes
+Auth, user management, model registry, subscriptions, API keys, teams, LiteLLM integration, usage analytics
 
-#### Service Layer
-- **ApiKeyService**: API key lifecycle management with LiteLLM integration
-- **LiteLLMService**: Core integration with LiteLLM instances
-- **ModelSyncService**: Automated model synchronization between LiteLLM and database
-- **LiteLLMIntegrationService**: Centralized synchronization and orchestration
-- **TeamService**: Team management with budget tracking
-- **OAuthService**: OAuth2 authentication flows
-- **RBACService**: Permission and role management
-- **SessionService**: Session state management
-- **SubscriptionService**: Model subscription logic with LiteLLM sync
-- **TokenService**: JWT token management
-- **UsageStatsService**: Usage analytics and reporting
+*See `docs/api/` for detailed endpoint documentation*
 
-### Database Schema
-PostgreSQL tables:
-- `users` - User accounts with OAuth integration and LiteLLM synchronization
-- `teams` - Team management with budget tracking and LiteLLM integration
-- `models` - AI model registry and metadata synchronized with LiteLLM
-- `subscriptions` - User model subscriptions with enhanced budget and rate limiting
-- `api_keys` - API access keys with LiteLLM integration and budget tracking
-- `usage_logs` - Detailed usage tracking with cost calculation
-- `audit_logs` - Security and admin audit trail including sync operations
-
-### Security Features
-- Multi-layered authentication (JWT + OAuth2 + API keys)
-- Rate limiting and request throttling
-- CORS protection with configurable origins
-- Security headers via Helmet.js
-- Request ID tracking for audit trails
-- Development mode bypass for testing
-
-## 🎨 Frontend Architecture
-
-### Component Architecture
-- **Pages**: Route-level components (`/pages`)
-- **Components**: Reusable UI components (`/components`)
-- **Layouts**: Page layout wrappers
-- **Forms**: Form components with validation
-
-### State Management
-- **AuthContext**: User authentication state
-- **NotificationContext**: App-wide notifications
-- No external state libraries - uses React Context API
-
-### Routing Structure
-- `/home` - Dashboard and overview
-- `/models` - Browse available models
-- `/subscriptions` - Manage model subscriptions
-- `/api-keys` - API key management
-- `/usage` - Usage analytics and reports
-- `/settings` - User settings and preferences
-- `/login` - Authentication page
-
-### API Integration
-- Centralized Axios client with interceptors
-- Automatic JWT token handling
-- Service layer pattern for API calls
-- Error handling and retry logic
+## 🎨 Frontend
+- React Context API for state (Auth, Notifications)
+- Axios service layer with JWT interceptors
+- PatternFly 6 components (`pf-v6-` prefix required)
+- Main routes: `/home`, `/models`, `/subscriptions`, `/api-keys`, `/usage`, `/settings`
 
 ## 🎯 PatternFly 6 Integration
 
-⚠️ **IMPORTANT**: This project uses PatternFly 6. For detailed PatternFly 6 rules, guidelines, and migration instructions, see **[PATTERNFLY6_RULES.md](./PATTERNFLY6_RULES.md)**.
+⚠️ **CRITICAL**: PatternFly 6 requires `pf-v6-` prefix for all classes. See [PATTERNFLY6_RULES.md](./PATTERNFLY6_RULES.md).
 
-### Key Requirements
-- **Class Prefixes**: All classes MUST use `pf-v6-` prefix
-- **Design Tokens**: Use semantic tokens instead of CSS variables
-- **Units**: Rem-based breakpoints (divide pixels by 16)
-- **Dark Theme**: Support via `pf-v6-theme-dark` class
+## 🚀 Quick Start
 
-### Components Used
-- `@patternfly/react-core`: Main component library
-- `@patternfly/react-charts`: Data visualization
-- `@patternfly/react-icons`: Icon library
-- `@patternfly/react-table`: Advanced table components
-
-## 🚀 Development Workflow
-
-### Environment Setup
 ```bash
-# Install dependencies
-npm install
-
-# Start development (both backend and frontend)
-npm run dev
-
-# Backend only (http://localhost:8080)
-npm run dev:backend
-
-# Frontend only (http://localhost:3000)
-npm run dev:frontend
+npm install        # Install dependencies
+npm run dev        # Start both backend and frontend
 ```
 
-### Environment Variables
-#### Backend (.env)
-```env
-# Database
-DATABASE_URL=postgresql://user:pass@localhost:5432/litemaas
+*See `docs/development/` for detailed setup and `docs/deployment/configuration.md` for environment variables*
 
-# OAuth (OpenShift)
-OAUTH_CLIENT_ID=your-client-id
-OAUTH_CLIENT_SECRET=your-client-secret
-OAUTH_ISSUER_URL=https://your-openshift-instance
+## 🔒 Security & Performance
 
-# JWT
-JWT_SECRET=your-jwt-secret
-JWT_EXPIRES_IN=24h
-
-# LiteLLM Integration
-LITELLM_API_URL=http://localhost:4000  # Primary variable name
-# LITELLM_BASE_URL=http://localhost:4000  # Alternative for backward compatibility
-LITELLM_API_KEY=your-litellm-key
-LITELLM_AUTO_SYNC=true
-LITELLM_SYNC_INTERVAL=60
-LITELLM_CONFLICT_RESOLUTION=litellm_wins
-
-# Security
-ADMIN_API_KEYS=key1,key2,key3
-RATE_LIMIT_MAX=100
-RATE_LIMIT_WINDOW=60000
-```
-
-#### Frontend (.env)
-```env
-VITE_API_URL=http://localhost:8080
-VITE_OAUTH_CLIENT_ID=your-client-id
-VITE_APP_NAME=LiteMaaS
-VITE_APP_VERSION=1.0.0
-```
-
-### Testing Strategy
-- **Unit Tests**: Service logic and utilities
-- **Integration Tests**: API endpoints and database
-- **E2E Tests**: User workflows with Playwright
-- **Performance Tests**: Load testing with K6
-- **Security Tests**: Authentication and authorization
-
-### Build Process
-```bash
-# Build both packages
-npm run build
-
-# Test all packages
-npm run test
-
-# Lint and format
-npm run lint
-npm run format
-```
-
-## 🔒 Security Considerations
-
-### Authentication Flow
-1. User initiates OAuth2 flow with OpenShift
-2. Backend handles OAuth callback and exchanges code
-3. JWT token issued for subsequent API calls
-4. API keys generated for programmatic access with LiteLLM integration
-5. Budget and rate limiting enforced at multiple levels
-
-### Security Headers
-- Content Security Policy (CSP)
-- X-Frame-Options: DENY
-- X-Content-Type-Options: nosniff
-- Referrer-Policy: strict-origin-when-cross-origin
-
-### Data Protection
-- Sensitive data encrypted at rest
-- API keys hashed before storage
-- Audit logging for all admin actions and sync operations
-- Rate limiting to prevent abuse
-- Budget enforcement to prevent cost overruns
-- Circuit breaker pattern for external API resilience
-
-## 📊 Performance Characteristics
-
-### Backend Performance
-- Fastify provides 2x+ performance over Express
-- Connection pooling for database efficiency
-- Response time targets: <200ms for API calls
-- Memory usage: <500MB under normal load
-
-### Frontend Performance
-- Vite for fast development and builds
-- Code splitting for optimal bundle sizes
-- PatternFly components are tree-shakeable
-- Target: <3s load time on 3G networks
-
-## 🔄 CI/CD Pipeline
-
-### GitHub Actions
-- Node.js 18.x and 20.x testing matrix
-- PostgreSQL service for integration tests
-- Code coverage with Codecov
-- Automated linting and type checking
-- Security scanning with npm audit
-
-### Quality Gates
-- All tests must pass
-- Code coverage >80%
-- No high-severity security vulnerabilities
-- TypeScript compilation without errors
-- Linting passes without warnings
-
-## 🌐 Internationalization
-
-### Supported Languages
-- English (default)
-- Spanish (es)
-- French (fr)
-
-### i18n Implementation
-- react-i18next for React components
-- Browser language detection
-- LocalStorage for user preference
-- Namespace organization by feature
+- **Auth**: OAuth2 (OpenShift) + JWT + API keys
+- **Security**: Rate limiting, CORS, CSP, encrypted storage
+- **Performance**: <200ms API response, <3s frontend load
+- **i18n**: EN, ES, FR via react-i18next
+- **CI/CD**: GitHub Actions, 80%+ coverage requirement
 
 ## 🔗 LiteLLM Integration
 
-### Core Integration Features
-- **Bidirectional Synchronization**: Two-way sync between LiteMaaS and LiteLLM
-- **Budget Management**: Per-user, per-team, and per-subscription budget tracking
-- **Rate Limiting**: Configurable TPM (tokens per minute) and RPM (requests per minute) limits
-- **Team Management**: Multi-tenant team support with shared budgets
-- **Auto-Sync**: Configurable automatic synchronization with conflict resolution
-
-### Integration Architecture
-- **LiteLLMService**: Core API integration layer with `/model/info` endpoint integration
-- **ModelSyncService**: Automated model synchronization between LiteLLM and database
-- **LiteLLMIntegrationService**: Centralized sync orchestration
-- **Enhanced Data Models**: Extended types matching actual LiteLLM API structure
-- **Circuit Breaker**: Resilient API communication with fallback strategies
-- **Mock Data Fallback**: Development mode with realistic mock responses
-- **Database Migration System**: Automated schema management and initial setup
-
-### Model Data Integration
-- **Real-time Model Discovery**: Fetches models from LiteLLM `/model/info` endpoint
-- **Accurate Pricing**: Uses actual `input_cost_per_token` and `output_cost_per_token` from LiteLLM
-- **Capability Detection**: Reads `supports_vision`, `supports_function_calling`, etc. from model metadata
-- **Provider Detection**: Extracts provider information from `custom_llm_provider` and model paths
-- **Graceful Data Handling**: Returns `undefined` for missing data instead of default values
-- **Frontend Compatibility**: UI displays "N/A" for missing context length or pricing information
-
-### Synchronization Features
-- **Automatic Startup Sync**: Models synchronized automatically when application starts
-- **Manual Sync API**: Admin endpoints for on-demand model synchronization
-- **Incremental Updates**: Only updates models when changes are detected
-- **Model Availability Management**: Missing models marked as "unavailable" but preserved
-- **Health Monitoring**: Integration health checks and sync status monitoring
-- **Audit Trail**: Complete sync operation logging with detailed metrics
-- **Error Recovery**: Robust error handling with detailed error reporting
-
-### Budget and Rate Limiting
-- **Multi-Level Budgets**: User, team, and subscription-level budget controls
-- **Usage Tracking**: Real-time spend monitoring and alerts
+- **Model Sync**: Auto-sync from LiteLLM `/model/info` endpoint on startup
+- **Budget Management**: User/team/subscription-level budgets with alerts
 - **Rate Limiting**: TPM/RPM limits with burst capacity
-- **Budget Alerts**: Automated alerts at configurable thresholds
-- **Cost Calculation**: Accurate cost tracking with pricing models
+- **Data Handling**: Graceful handling of missing data (returns `undefined`, UI shows "N/A")
+- **Circuit Breaker**: Resilient API communication with mock data fallback
 
-## 📝 Subscription Management
+*See `docs/architecture/litellm-integration.md` for details*
 
-### Subscription Creation Flow
-1. **Browse Models**: Users navigate to `/models` page to view available AI models
-2. **Model Selection**: Click on a model card to view detailed information in a modal
-3. **Subscribe**: Click "Subscribe to model" button in the modal
-4. **API Call**: Frontend sends request to `POST /api/subscriptions` with:
-   - `modelId`: The selected model's ID
-   - `quotaRequests`: Default 10,000 requests per month
-   - `quotaTokens`: Default 1,000,000 tokens per month
-5. **Success**: Subscription created with "pending" status, user sees success notification
-6. **View Subscriptions**: Navigate to `/subscriptions` to manage subscriptions
+## 📝 Key Implementation Notes
 
-### Subscription Page Features
-- **Empty State**: Shows "Browse Models" button that navigates to `/models`
-- **Header Button**: "New Subscription" button navigates to `/models`
-- **Subscription Cards**: Display usage metrics, plan details, and management options
-- **Actions**: View details, modify plans, and cancel subscriptions
-
-### Database Schema Limitations
-⚠️ **Important**: The `subscriptions` table does NOT have the following columns:
-- `metadata`: Any metadata should be stored in related tables or handled differently
-- `soft_budget`: Budget features are limited to `max_budget` field only
-
-### Subscription API Endpoints
-- **`POST /api/subscriptions`** - Create new subscription
-  - Required: `modelId`
-  - Optional: `quotaRequests`, `quotaTokens`, `expiresAt`
-  - Note: Do not send `metadata` or `soft_budget` fields
-- **`GET /api/subscriptions`** - List user subscriptions with pagination
-- **`GET /api/subscriptions/:id`** - Get specific subscription details
-- **`PATCH /api/subscriptions/:id`** - Update subscription (status, quotas, limits)
-- **`POST /api/subscriptions/:id/activate`** - Activate pending subscription
-- **`POST /api/subscriptions/:id/cancel`** - Cancel active subscription
-- **`GET /api/subscriptions/:id/quota`** - Get quota usage information
-- **`GET /api/subscriptions/stats`** - Get subscription statistics
-
-## 🔄 Model Synchronization API
-
-### Core Synchronization Endpoints
-- **`POST /api/v1/models/sync`** - Manual model synchronization (Admin only)
-  - Parameters: `forceUpdate`, `markUnavailable`
-  - Returns: Sync results with statistics and error details
-- **`GET /api/v1/models/sync/stats`** - Synchronization statistics
-- **`GET /api/v1/models/validate`** - Model integrity validation
-- **`GET /api/v1/models/health`** - Model sync health check
-
-### Synchronization Behavior
-- **New Models**: Automatically added to database with full metadata
-- **Existing Models**: Updated with latest pricing, capabilities, and metadata
-- **Missing Models**: Marked as "unavailable" but preserved for existing subscriptions
-- **Automatic Startup**: Models synchronized when application starts
-- **Error Handling**: Detailed error reporting and graceful degradation
+### Subscription Management
+- Browse models → Select → Subscribe (creates "pending" status)
+- Default quotas: 10K requests/month, 1M tokens/month
+- ⚠️ Database limitation: No `metadata` or `soft_budget` columns in `subscriptions` table
 
 ### Model Data Mapping
 ```typescript
-// LiteLLM Model → Database Mapping
+// LiteLLM → Database
 model_name → id, name
 litellm_params.custom_llm_provider → provider
 model_info.max_tokens → context_length
-model_info.input_cost_per_token → input_cost_per_token
-model_info.output_cost_per_token → output_cost_per_token
-model_info.supports_* → capability flags
+model_info.input/output_cost_per_token → pricing
 ```
 
-### Sync Result Format
-```typescript
-{
-  success: boolean;
-  totalModels: number;
-  newModels: number;
-  updatedModels: number;
-  unavailableModels: number;
-  errors: string[];
-  syncedAt: string;
-}
+## 📚 Documentation Structure
+
+```
+docs/
+├── api/                    # API endpoints, schemas, examples
+├── architecture/           # System design, services, integration
+├── deployment/            # Configuration, environment setup
+├── development/           # Setup guide, testing, conventions
+└── features/              # Feature-specific documentation
 ```
 
-## 📈 Usage Analytics
-
-### Metrics Tracked
-- API calls per user/model
-- Token consumption and costs
-- Response times and latencies
-- Error rates and failure patterns
-- User engagement patterns
-- Budget utilization and spending
-
-### Analytics Features
-- Real-time usage dashboards
-- Historical usage reports
-- Cost tracking and billing
-- Usage quotas and limits
-- Team-based analytics
-- Integration health monitoring
-
-## 🛠️ Development Commands
-
-```bash
-# Development
-npm run dev                    # Start both backend and frontend
-npm run dev:backend           # Backend only
-npm run dev:frontend          # Frontend only
-
-# Building
-npm run build                 # Build both packages
-npm run build:backend         # Backend only
-npm run build:frontend        # Frontend only
-
-# Testing
-npm run test                  # All tests
-npm run test:backend          # Backend tests only
-npm run test:frontend         # Frontend tests only
-npm run test:e2e             # End-to-end tests
-
-# Code Quality
-npm run lint                  # Lint all code
-npm run format               # Format code
-npm run type-check           # TypeScript checking
-
-# Database
-npm run db:migrate           # Run database migrations (automatic on startup)
-npm run db:seed              # Seed test data (users and teams only)
-
-# Model Synchronization
-# Models are automatically synchronized on startup
-# Manual sync available via API: POST /api/v1/models/sync
-
-# Utilities
-npm run check-backend        # Backend health check
-npm run clean               # Clean build artifacts
-```
-
-## 📚 Additional Resources
-
-### Documentation
-- [Fastify Documentation](https://www.fastify.io/docs/)
-- [React Documentation](https://react.dev/)
-- [PatternFly 6 Upgrade Guide](https://www.patternfly.org/get-started/upgrade/)
-- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
-
-### API Documentation
-- Swagger UI: http://localhost:8080/docs (when backend running)
-- OpenAPI spec: http://localhost:8080/docs/json
+### Key Documentation Files
+- `docs/api/subscriptions-api.md` - Subscription endpoints
+- `docs/api/model-sync-api.md` - Model synchronization
+- `docs/architecture/services.md` - Service layer details
+- `docs/deployment/configuration.md` - Environment variables
+- `docs/development/README.md` - Development setup
+- `PATTERNFLY6_RULES.md` - PatternFly 6 migration rules
 
 ---
 
-*This documentation is automatically updated to reflect the current project state. Last updated based on project analysis.*
+*This is an AI context file. For human-readable documentation, see the `docs/` directory.*
