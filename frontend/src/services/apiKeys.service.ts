@@ -40,11 +40,14 @@ interface BackendApiKeysResponse {
 }
 
 export interface CreateApiKeyRequest {
-  name: string;
-  description?: string;
-  permissions: string[];
-  rateLimit: number;
+  subscriptionId: string; // ✅ Required field
+  name?: string;
   expiresAt?: string;
+  metadata?: {
+    description?: string;
+    permissions?: string[];
+    rateLimit?: number;
+  };
 }
 
 export interface ApiKeysResponse {

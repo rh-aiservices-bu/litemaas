@@ -46,6 +46,7 @@ import {
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
 import { apiKeysService, ApiKey, CreateApiKeyRequest } from '../services/apiKeys.service';
+import { subscriptionsService, Subscription } from '../services/subscriptions.service';
 
 const ApiKeysPage: React.FC = () => {
   const { } = useTranslation();
@@ -68,6 +69,11 @@ const ApiKeysPage: React.FC = () => {
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [keyToDelete, setKeyToDelete] = useState<ApiKey | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  
+  // ✅ Added subscription-related state
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
+  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState('');
 
   // Load API keys from backend
   const loadApiKeys = async () => {
@@ -90,8 +96,29 @@ const ApiKeysPage: React.FC = () => {
     }
   };
 
+  // Load subscriptions for dropdown
+  const loadSubscriptions = async () => {
+    try {
+      setLoadingSubscriptions(true);
+      const response = await subscriptionsService.getSubscriptions(1, 100); // Get all active subscriptions
+      // Filter only active subscriptions
+      const activeSubscriptions = response.data.filter(sub => sub.status === 'active');
+      setSubscriptions(activeSubscriptions);
+    } catch (err) {
+      console.error('Failed to load subscriptions:', err);
+      addNotification({
+        title: 'Error',
+        description: 'Failed to load subscriptions.',
+        variant: 'danger'
+      });
+    } finally {
+      setLoadingSubscriptions(false);
+    }
+  };
+
   useEffect(() => {
     loadApiKeys();
+    loadSubscriptions(); // ✅ Load subscriptions on component mount
   }, []);
 
   const getStatusBadge = (status: string) => {
@@ -123,6 +150,7 @@ const ApiKeysPage: React.FC = () => {
     setNewKeyPermissions([]);
     setNewKeyRateLimit('1000');
     setNewKeyExpiration('never');
+    setSelectedSubscriptionId(''); // ✅ Reset subscription selection
     setIsCreateModalOpen(true);
   };
 
@@ -136,17 +164,31 @@ const ApiKeysPage: React.FC = () => {
       return;
     }
 
+    // ✅ Validate subscription selection
+    if (!selectedSubscriptionId) {
+      addNotification({
+        title: 'Validation Error',
+        description: 'Please select a subscription for this API key',
+        variant: 'danger'
+      });
+      return;
+    }
+
     setCreatingKey(true);
     
     try {
       const request: CreateApiKeyRequest = {
+        subscriptionId: selectedSubscriptionId, // ✅ Include required subscription ID
         name: newKeyName,
-        description: newKeyDescription || undefined,
-        permissions: newKeyPermissions,
-        rateLimit: parseInt(newKeyRateLimit),
         expiresAt: newKeyExpiration !== 'never' 
           ? new Date(Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000).toISOString()
-          : undefined
+          : undefined,
+        // ✅ Put additional fields in metadata as backend expects
+        metadata: {
+          description: newKeyDescription || undefined,
+          permissions: newKeyPermissions,
+          rateLimit: parseInt(newKeyRateLimit)
+        }
       };
 
       const newKey = await apiKeysService.createApiKey(request);
@@ -452,6 +494,32 @@ const ApiKeysPage: React.FC = () => {
                 onChange={(_event, value) => setNewKeyDescription(value)}
                 placeholder="Optional description of this key's purpose"
               />
+            </FormGroup>
+            
+            {/* ✅ Added subscription selection */}
+            <FormGroup label="Subscription" isRequired fieldId="key-subscription">
+              <FormSelect
+                isRequired
+                value={selectedSubscriptionId}
+                onChange={(_event, value) => setSelectedSubscriptionId(value)}
+                id="key-subscription"
+                placeholder="Select a subscription for this API key"
+                isDisabled={loadingSubscriptions || subscriptions.length === 0}
+              >
+                <FormSelectOption value="" label="Select a subscription..." />
+                {subscriptions.map((subscription) => (
+                  <FormSelectOption
+                    key={subscription.id}
+                    value={subscription.id}
+                    label={`${subscription.modelName} (${subscription.provider})`}
+                  />
+                ))}
+              </FormSelect>
+              {subscriptions.length === 0 && !loadingSubscriptions && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--pf-v6-global--danger-color--100)' }}>
+                  No active subscriptions found. You need an active subscription to create an API key.
+                </div>
+              )}
             </FormGroup>
             
             <FormGroup label="Rate Limit (requests per minute)" fieldId="key-rate-limit">

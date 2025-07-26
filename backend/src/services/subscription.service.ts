@@ -1043,7 +1043,7 @@ export class SubscriptionService {
              tpm_limit = $3,
              rpm_limit = $4,
              team_id = $5,
-             litellm_key_id = $6,
+             lite_llm_key_id = $6,
              last_sync_at = CURRENT_TIMESTAMP,
              sync_status = 'synced'
          WHERE id = $7
@@ -1432,8 +1432,8 @@ export class SubscriptionService {
       ...baseSubscription,
       
       // LiteLLM integration info
-      liteLLMInfo: subscription.litellm_key_id ? {
-        keyId: subscription.litellm_key_id,
+      liteLLMInfo: subscription.lite_llm_key_id ? {
+        keyId: subscription.lite_llm_key_id,
         teamId: subscription.team_id,
         maxBudget: subscription.max_budget,
         currentSpend: subscription.current_spend || 0,

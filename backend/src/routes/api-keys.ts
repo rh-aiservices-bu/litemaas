@@ -9,10 +9,12 @@ import {
   AuthenticatedRequest,
 } from '../types';
 import { ApiKeyService } from '../services/api-key.service';
+import { LiteLLMService } from '../services/litellm.service';
 
 const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
-  // Initialize API key service
-  const apiKeyService = new ApiKeyService(fastify);
+  // Initialize services
+  const liteLLMService = new LiteLLMService(fastify);
+  const apiKeyService = new ApiKeyService(fastify, liteLLMService);
 
   // List API keys
   fastify.get<{

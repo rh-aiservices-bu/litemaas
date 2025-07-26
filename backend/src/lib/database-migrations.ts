@@ -15,6 +15,10 @@ CREATE TABLE IF NOT EXISTS users (
     roles TEXT[] DEFAULT ARRAY['user'],
     is_active BOOLEAN DEFAULT true,
     lite_llm_user_id VARCHAR(255),
+    max_budget DECIMAL(10,2) DEFAULT 100.00,
+    tpm_limit INTEGER DEFAULT 1000,
+    rpm_limit INTEGER DEFAULT 60,
+    sync_status VARCHAR(20) DEFAULT 'pending' CHECK (sync_status IN ('pending', 'synced', 'error')),
     last_login_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -24,6 +28,19 @@ CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider, oauth_id);
 CREATE INDEX IF NOT EXISTS idx_users_lite_llm ON users(lite_llm_user_id);
+
+-- Add missing columns for existing tables
+ALTER TABLE users ADD COLUMN IF NOT EXISTS max_budget DECIMAL(10,2) DEFAULT 100.00;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS tpm_limit INTEGER DEFAULT 1000;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS rpm_limit INTEGER DEFAULT 60;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS sync_status VARCHAR(20) DEFAULT 'pending';
+
+-- Add constraint after column exists
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_sync_status_check') THEN
+        ALTER TABLE users ADD CONSTRAINT users_sync_status_check CHECK (sync_status IN ('pending', 'synced', 'error'));
+    END IF;
+END $$;
 `;
 
 // Teams table
