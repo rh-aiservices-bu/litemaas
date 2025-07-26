@@ -650,14 +650,54 @@ export class SubscriptionService {
         );
       }
 
-      // Revoke associated API keys
-      await this.fastify.dbUtils.query(
-        `UPDATE api_keys SET is_active = false, revoked_at = CURRENT_TIMESTAMP
-         WHERE subscription_id = $1`,
+      // NEW: Check for linked active API keys before allowing cancellation
+      const linkedApiKeys = await this.fastify.dbUtils.queryMany(
+        `SELECT id, name, key_prefix 
+         FROM api_keys 
+         WHERE subscription_id = $1 AND is_active = true`,
         [subscriptionId]
       );
 
-      return this.updateSubscription(subscriptionId, userId, { status: SubscriptionStatus.CANCELLED });
+      if (linkedApiKeys.length > 0) {
+        // Build a descriptive error message with API key details
+        const keyDetails = linkedApiKeys.map(key => 
+          `${key.name || 'Unnamed'} (${key.key_prefix}***)`
+        ).join(', ');
+        
+        const errorMessage = linkedApiKeys.length === 1 
+          ? `Cannot cancel subscription: There is 1 active API key linked to this subscription (${keyDetails}). Please delete the API key first, then cancel the subscription.`
+          : `Cannot cancel subscription: There are ${linkedApiKeys.length} active API keys linked to this subscription (${keyDetails}). Please delete all API keys first, then cancel the subscription.`;
+
+        throw this.fastify.createValidationError(errorMessage);
+      }
+
+      // If no active API keys are linked, proceed with deletion
+      // First get the subscription data before deletion for the response
+      const subscriptionToDelete = await this.getSubscription(subscriptionId, userId);
+      if (!subscriptionToDelete) {
+        throw this.fastify.createNotFoundError('Subscription');
+      }
+
+      // Delete the subscription from the database
+      const deleteResult = await this.fastify.dbUtils.query(
+        'DELETE FROM subscriptions WHERE id = $1 AND user_id = $2',
+        [subscriptionId, userId]
+      );
+
+      // Check if deletion was successful
+      if (deleteResult.rowCount === 0) {
+        throw this.fastify.createNotFoundError('Subscription');
+      }
+
+      this.fastify.log.info({ subscriptionId, userId }, 'Subscription deleted successfully');
+
+      // Return the subscription data with cancelled status for frontend compatibility
+      // This allows the frontend to show the cancellation was successful
+      return {
+        ...subscriptionToDelete,
+        status: SubscriptionStatus.CANCELLED,
+        updatedAt: new Date(),
+      };
     } catch (error) {
       this.fastify.log.error(error, 'Failed to cancel subscription');
       throw error;

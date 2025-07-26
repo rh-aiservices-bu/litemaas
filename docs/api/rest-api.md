@@ -285,14 +285,49 @@ Response:
 }
 ```
 
-#### DELETE /subscriptions/:id
+#### POST /subscriptions/:id/cancel
 Cancel subscription
+
+**Important**: A subscription can only be cancelled if there are no active API keys linked to it. If active API keys exist, the cancellation will be rejected with a 400 error.
+
+**Note**: Cancelling a subscription permanently deletes it from the database. This action cannot be undone.
+
 ```json
-Response:
+Response (Success):
 {
-  "message": "Subscription cancelled successfully"
+  "id": "sub_123",
+  "userId": "user_123", 
+  "modelId": "gpt-4",
+  "modelName": "GPT-4",
+  "provider": "OpenAI",
+  "status": "cancelled",
+  "quotaRequests": 10000,
+  "quotaTokens": 1000000,
+  "usedRequests": 1500,
+  "usedTokens": 150000,
+  "createdAt": "2024-01-01T00:00:00Z",
+  "updatedAt": "2024-01-20T10:00:00Z",
+  "expiresAt": null
+}
+
+Response (Error - Active API Keys):
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Cannot cancel subscription: There are 2 active API keys linked to this subscription (Production Key (sk-litemaas_abc123***), Development Key (sk-litemaas_def456***)). Please delete all API keys first, then cancel the subscription."
 }
 ```
+
+**Cancellation Workflow**:
+1. Check for linked API keys: `GET /api-keys?subscriptionId={id}`
+2. Delete all active API keys: `DELETE /api-keys/{keyId}` for each key
+3. Cancel subscription: `POST /subscriptions/{id}/cancel`
+
+**Notes**:
+- Only subscriptions with status `active` or `suspended` can be cancelled
+- Subscriptions already `cancelled` or `expired` cannot be cancelled again
+- The cancellation permanently deletes the subscription from the database and cannot be undone
+- The subscription will no longer appear in subscription lists after cancellation
 
 ### API Keys
 

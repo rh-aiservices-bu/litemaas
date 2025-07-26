@@ -120,6 +120,8 @@ CREATE INDEX idx_team_members_user ON team_members(user_id);
 User subscriptions to models with enhanced budget tracking
 ```sql
 CREATE TYPE subscription_status AS ENUM ('pending', 'active', 'suspended', 'cancelled', 'expired');
+-- Note: 'cancelled' status is maintained for schema compatibility, but cancellation 
+-- now permanently deletes subscription records from the database
 
 CREATE TABLE subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

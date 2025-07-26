@@ -55,6 +55,7 @@ const SubscriptionsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   // Load subscriptions from API
   const loadSubscriptions = async () => {
@@ -136,12 +137,44 @@ const SubscriptionsPage: React.FC = () => {
     setIsDetailsModalOpen(true);
   };
 
-  const handleCancelSubscription = (subscription: Subscription) => {
-    addNotification({
-      title: 'Subscription Cancelled',
-      description: `${subscription.modelName} subscription has been cancelled.`,
-      variant: 'warning'
-    });
+  const handleCancelSubscription = async (subscription: Subscription) => {
+    try {
+      setIsCancelling(true);
+      
+      // Call the backend API to cancel the subscription
+      await subscriptionsService.cancelSubscription(subscription.id);
+      
+      // If successful, show success notification and reload subscriptions
+      addNotification({
+        title: 'Subscription Cancelled',
+        description: `${subscription.modelName} subscription has been cancelled and removed from your account.`,
+        variant: 'success'
+      });
+      
+      // Close the modal and reload subscriptions to reflect changes
+      setIsDetailsModalOpen(false);
+      await loadSubscriptions();
+      
+    } catch (error: any) {
+      // Handle API key validation error specifically
+      if (error.statusCode === 400 || error.status === 400) {
+        addNotification({
+          title: 'Cannot Cancel Subscription',
+          description: error.message || 'There are active API keys linked to this subscription. Please delete all API keys first, then cancel the subscription.',
+          variant: 'warning'
+        });
+      } else {
+        // Handle other errors
+        console.error('Failed to cancel subscription:', error);
+        addNotification({
+          title: 'Error',
+          description: error.message || 'Failed to cancel subscription. Please try again.',
+          variant: 'danger'
+        });
+      }
+    } finally {
+      setIsCancelling(false);
+    }
   };
 
   if (loading) {
@@ -409,9 +442,10 @@ const SubscriptionsPage: React.FC = () => {
             <Button
               variant="danger"
               onClick={() => selectedSubscription && handleCancelSubscription(selectedSubscription)}
-              isDisabled={selectedSubscription?.status === 'expired'}
+              isDisabled={selectedSubscription?.status === 'expired' || isCancelling}
+              isLoading={isCancelling}
             >
-              Cancel Subscription
+              {isCancelling ? 'Cancelling...' : 'Cancel Subscription'}
             </Button>
             <Button variant="link" onClick={() => setIsDetailsModalOpen(false)}>
               Close

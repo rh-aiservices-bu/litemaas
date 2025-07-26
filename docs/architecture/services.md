@@ -208,7 +208,7 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - Create and manage user subscriptions
 - Enforce subscription quotas (requests/tokens)
 - Track subscription usage and costs
-- Handle subscription lifecycle (pending/active/cancelled)
+- Handle subscription lifecycle (pending/active/deletion)
 - Synchronize subscriptions with LiteLLM
 
 **Dependencies**:
@@ -222,7 +222,7 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - `activateSubscription()` - Enable subscription usage
 - `updateQuotas()` - Modify subscription limits
 - `checkQuotaUsage()` - Verify remaining quota
-- `cancelSubscription()` - Terminate subscription
+- `cancelSubscription()` - Permanently delete subscription
 - `syncWithLiteLLM()` - Update LiteLLM configuration
 
 ---
@@ -288,6 +288,13 @@ The LiteMaaS backend service layer implements the business logic and core functi
 3. SubscriptionService creates subscription record
 4. LiteLLMIntegrationService syncs with external system
 5. UsageStatsService initializes tracking
+
+### Subscription Cancellation
+1. SubscriptionService validates API key dependencies
+2. ApiKeyService checks for active keys linked to subscription
+3. If active keys exist, cancellation is rejected with error
+4. If no active keys, SubscriptionService permanently deletes subscription
+5. Database record is removed completely
 
 ### API Key Usage
 1. ApiKeyService validates incoming key

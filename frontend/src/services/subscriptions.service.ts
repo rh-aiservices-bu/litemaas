@@ -161,8 +161,9 @@ class SubscriptionsService {
     return this.mapBackendToFrontend(response);
   }
 
-  async cancelSubscription(subscriptionId: string): Promise<void> {
-    return apiClient.delete(`/subscriptions/${subscriptionId}`);
+  async cancelSubscription(subscriptionId: string): Promise<Subscription> {
+    const response = await apiClient.post<BackendSubscriptionDetails>(`/subscriptions/${subscriptionId}/cancel`);
+    return this.mapBackendToFrontend(response);
   }
 
   async suspendSubscription(subscriptionId: string): Promise<Subscription> {
