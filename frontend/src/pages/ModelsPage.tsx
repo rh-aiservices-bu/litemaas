@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from 'react-query';
 import {
   PageSection,
   Title,
@@ -39,6 +40,7 @@ import {
   EmptyStateBody,
   EmptyStateActions,
   Label,
+  Stack,
 } from '@patternfly/react-core';
 import { 
   CatalogIcon, 
@@ -52,6 +54,7 @@ import { subscriptionsService } from '../services/subscriptions.service';
 const ModelsPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
+  const queryClient = useQueryClient();
   
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,6 +65,7 @@ const ModelsPage: React.FC = () => {
   const [isCategorySelectOpen, setIsCategorySelectOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(12);
   const [total, setTotal] = useState(0);
@@ -131,29 +135,43 @@ const ModelsPage: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleSubscribe = async (model: Model) => {
+  const handleSubscribe = async () => {
     try {
-      // Create subscription with default values
+      setIsSubscribing(true);
+      
+      // Create subscription - expect immediate activation
       await subscriptionsService.createSubscription({
-        modelId: model.id,
-        quotaRequests: 10000, // Default quota
-        quotaTokens: 1000000, // Default tokens quota
+        modelId: selectedModel!.id,
+        // Use default quotas or let user specify
+        quotaRequests: 10000,
+        quotaTokens: 1000000,
       });
-
+      
       addNotification({
-        title: 'Subscription Created',
-        description: `Successfully subscribed to ${model.name}`,
-        variant: 'success'
+        variant: 'success',
+        title: 'Successfully subscribed!',
+        description: `You now have access to ${selectedModel!.name}. You can generate API keys from the Subscriptions page.`,
       });
       
       setIsModalOpen(false);
-    } catch (error) {
-      console.error('Failed to create subscription:', error);
+      
+      // Refresh subscriptions to show new one
+      queryClient.invalidateQueries('subscriptions');
+      
+    } catch (error: any) {
+      let errorMessage = 'Failed to subscribe to model';
+      
+      if (error.message?.includes('already subscribed') || error.status === 409) {
+        errorMessage = 'You are already subscribed to this model';
+      }
+      
       addNotification({
-        title: 'Subscription Failed',
-        description: `Failed to subscribe to ${model.name}. Please try again.`,
-        variant: 'danger'
+        variant: 'danger',
+        title: 'Subscription failed',
+        description: errorMessage,
       });
+    } finally {
+      setIsSubscribing(false);
     }
   };
 
@@ -432,6 +450,23 @@ const ModelsPage: React.FC = () => {
                 {selectedModel.description}
               </Content>
               
+              <Stack hasGutter style={{ marginBottom: '1.5rem' }}>
+                <Content><strong>Provider:</strong> {selectedModel.provider}</Content>
+                
+                {/* Show real pricing from LiteLLM */}
+                {selectedModel.pricing && (
+                  <Stack hasGutter>
+                    <Content><strong>Pricing:</strong></Content>
+                    <Content>Input: ${selectedModel.pricing.input}/1K tokens</Content>
+                    <Content>Output: ${selectedModel.pricing.output}/1K tokens</Content>
+                  </Stack>
+                )}
+                
+                <Content>
+                  By subscribing, you'll get access to this model and can generate API keys to use it.
+                </Content>
+              </Stack>
+              
               <DescriptionList isHorizontal>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Category</DescriptionListTerm>
@@ -451,18 +486,12 @@ const ModelsPage: React.FC = () => {
                   <DescriptionListTerm>Pricing</DescriptionListTerm>
                   <DescriptionListDescription>
                     {selectedModel.pricing ? (
-                      <>
-                        <Content component={ContentVariants.p}>
-                          Input: ${selectedModel.pricing.input}/1K tokens
-                        </Content>
-                        <Content component={ContentVariants.p}>
-                          Output: ${selectedModel.pricing.output}/1K tokens
-                        </Content>
-                      </>
+                      <Stack hasGutter>
+                        <Content>Input: ${selectedModel.pricing.input}/1K tokens</Content>
+                        <Content>Output: ${selectedModel.pricing.output}/1K tokens</Content>
+                      </Stack>
                     ) : (
-                      <Content component={ContentVariants.p}>
-                        N/A
-                      </Content>
+                      <Content>Pricing information unavailable</Content>
                     )}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
@@ -497,12 +526,13 @@ const ModelsPage: React.FC = () => {
           )}
           
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-            <Button
-              variant="primary"
-              onClick={() => selectedModel && handleSubscribe(selectedModel)}
-              isDisabled={selectedModel?.availability === 'unavailable'}
+            <Button 
+              variant="primary" 
+              onClick={handleSubscribe}
+              isLoading={isSubscribing}
+              isDisabled={isSubscribing || selectedModel?.availability === 'unavailable'}
             >
-              Subscribe to Model
+              {isSubscribing ? 'Creating subscription...' : 'Subscribe'}
             </Button>
             <Button variant="link" onClick={() => setIsModalOpen(false)}>
               Close

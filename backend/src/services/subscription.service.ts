@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { LiteLLMService } from './litellm.service';
 import {
+  SubscriptionStatus,
   EnhancedSubscription,
   EnhancedCreateSubscriptionDto,
   EnhancedUpdateSubscriptionDto,
@@ -11,6 +12,9 @@ import {
   BulkSubscriptionOperation,
   BulkSubscriptionResult,
   SubscriptionListParams,
+  SubscriptionQuota,
+  SubscriptionStats,
+  SubscriptionValidation,
 } from '../types/subscription.types.js';
 import {
   LiteLLMKeyGenerationRequest,
@@ -61,36 +65,6 @@ export interface SubscriptionDetails {
   metadata?: Record<string, any>;
 }
 
-export interface SubscriptionQuota {
-  requests: {
-    limit: number;
-    used: number;
-    remaining: number;
-    resetAt?: Date;
-  };
-  tokens: {
-    limit: number;
-    used: number;
-    remaining: number;
-    resetAt?: Date;
-  };
-}
-
-export interface SubscriptionStats {
-  total: number;
-  byStatus: Record<string, number>;
-  byProvider: Record<string, number>;
-  totalQuotaUsage: {
-    requests: { used: number; limit: number };
-    tokens: { used: number; limit: number };
-  };
-}
-
-export interface SubscriptionValidation {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-}
 
 export class SubscriptionService {
   private fastify: FastifyInstance;
@@ -104,7 +78,7 @@ export class SubscriptionService {
       modelId: 'gpt-4o',
       modelName: 'GPT-4o',
       provider: 'openai',
-      status: 'active',
+      status: SubscriptionStatus.ACTIVE,
       quotaRequests: 10000,
       quotaTokens: 1000000,
       usedRequests: 2350,
@@ -120,9 +94,9 @@ export class SubscriptionService {
       createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
       metadata: {
-        plan: 'professional',
-        billingCycle: 'monthly',
-        features: ['Chat', 'Function Calling', 'Vision']
+        inputCostPer1kTokens: 0.01,
+        outputCostPer1kTokens: 0.03,
+        currency: 'USD'
       },
       // Enhanced LiteLLM integration fields
       liteLLMInfo: {
@@ -165,7 +139,7 @@ export class SubscriptionService {
       modelId: 'claude-3-5-sonnet-20241022',
       modelName: 'Claude 3.5 Sonnet',
       provider: 'anthropic',
-      status: 'active',
+      status: SubscriptionStatus.ACTIVE,
       quotaRequests: 5000,
       quotaTokens: 500000,
       usedRequests: 890,
@@ -181,9 +155,9 @@ export class SubscriptionService {
       createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
       metadata: {
-        plan: 'starter',
-        billingCycle: 'monthly',
-        features: ['Chat', 'Function Calling', 'Vision']
+        inputCostPer1kTokens: 0.003,
+        outputCostPer1kTokens: 0.015,
+        currency: 'USD'
       },
       // Enhanced LiteLLM integration fields
       liteLLMInfo: {
@@ -219,7 +193,7 @@ export class SubscriptionService {
       modelId: 'llama-3.1-8b-instant',
       modelName: 'Llama 3.1 8B Instant',
       provider: 'groq',
-      status: 'suspended',
+      status: SubscriptionStatus.SUSPENDED,
       quotaRequests: 20000,
       quotaTokens: 2000000,
       usedRequests: 20000,
@@ -235,9 +209,9 @@ export class SubscriptionService {
       createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000),
       updatedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
       metadata: {
-        plan: 'enterprise',
-        billingCycle: 'monthly',
-        features: ['Chat']
+        inputCostPer1kTokens: 0.0004,
+        outputCostPer1kTokens: 0.0008,
+        currency: 'USD'
       },
       // Enhanced LiteLLM integration fields
       liteLLMInfo: {
@@ -356,16 +330,16 @@ export class SubscriptionService {
         throw this.fastify.createValidationError(`Model ${modelId} not found`);
       }
 
-      // Check for existing active subscription
+      // Check for existing subscription (any status)
       const existingSubscription = await this.fastify.dbUtils.queryOne(
         `SELECT id FROM subscriptions 
-         WHERE user_id = $1 AND model_id = $2 AND status = 'active'`,
+         WHERE user_id = $1 AND model_id = $2`,
         [userId, modelId]
       );
 
       if (existingSubscription) {
         throw this.fastify.createValidationError(
-          `Active subscription already exists for model ${modelId}`
+          `Subscription already exists for model ${modelId}. Use the existing subscription or cancel it first.`
         );
       }
 
@@ -380,7 +354,7 @@ export class SubscriptionService {
         [
           userId,
           modelId,
-          'pending',
+          'active',
           quotaRequests,
           quotaTokens,
           expiresAt,
@@ -662,25 +636,6 @@ export class SubscriptionService {
     }
   }
 
-  async activateSubscription(subscriptionId: string, userId: string): Promise<EnhancedSubscription> {
-    try {
-      const subscription = await this.getSubscription(subscriptionId, userId);
-      if (!subscription) {
-        throw this.fastify.createNotFoundError('Subscription');
-      }
-
-      if (subscription.status !== 'pending') {
-        throw this.fastify.createValidationError(
-          `Cannot activate subscription with status: ${subscription.status}`
-        );
-      }
-
-      return this.updateSubscription(subscriptionId, userId, { status: 'active' });
-    } catch (error) {
-      this.fastify.log.error(error, 'Failed to activate subscription');
-      throw error;
-    }
-  }
 
   async cancelSubscription(subscriptionId: string, userId: string): Promise<EnhancedSubscription> {
     try {
@@ -702,7 +657,7 @@ export class SubscriptionService {
         [subscriptionId]
       );
 
-      return this.updateSubscription(subscriptionId, userId, { status: 'cancelled' });
+      return this.updateSubscription(subscriptionId, userId, { status: SubscriptionStatus.CANCELLED });
     } catch (error) {
       this.fastify.log.error(error, 'Failed to cancel subscription');
       throw error;
@@ -718,15 +673,15 @@ export class SubscriptionService {
 
       return {
         requests: {
-          limit: subscription.quotaRequests,
-          used: subscription.usedRequests,
-          remaining: subscription.remainingRequests,
+          limit: subscription.quotaRequests || 0,
+          used: subscription.usedRequests || 0,
+          remaining: subscription.remainingRequests || 0,
           resetAt: subscription.resetAt,
         },
         tokens: {
-          limit: subscription.quotaTokens,
-          used: subscription.usedTokens,
-          remaining: subscription.remainingTokens,
+          limit: subscription.quotaTokens || 0,
+          used: subscription.usedTokens || 0,
+          remaining: subscription.remainingTokens || 0,
           resetAt: subscription.resetAt,
         },
       };
@@ -958,7 +913,7 @@ export class SubscriptionService {
         id: `sub-enhanced-${Date.now()}`,
         userId,
         modelId,
-        status: 'active',
+        status: SubscriptionStatus.ACTIVE,
         quotaRequests,
         quotaTokens,
         usedRequests: 0,
@@ -1323,10 +1278,10 @@ export class SubscriptionService {
         try {
           switch (operationType) {
             case 'suspend':
-              await this.updateSubscription(subscriptionId, adminUserId, { status: 'suspended' });
+              await this.updateSubscription(subscriptionId, adminUserId, { status: SubscriptionStatus.SUSPENDED });
               break;
             case 'activate':
-              await this.updateSubscription(subscriptionId, adminUserId, { status: 'active' });
+              await this.updateSubscription(subscriptionId, adminUserId, { status: SubscriptionStatus.ACTIVE });
               break;
             case 'update_budget':
               if (params.maxBudget) {

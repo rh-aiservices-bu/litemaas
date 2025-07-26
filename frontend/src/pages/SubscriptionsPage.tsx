@@ -10,9 +10,6 @@ import {
   CardFooter,
   Grid,
   GridItem,
-  Toolbar,
-  ToolbarContent,
-  ToolbarItem,
   Button,
   Badge,
   Content,
@@ -23,10 +20,6 @@ import {
   ModalVariant,
   ModalHeader,
   ModalBody,
-  Form,
-  FormGroup,
-  FormSelect,
-  FormSelectOption,
   DescriptionList,
   DescriptionListGroup,
   DescriptionListTerm,
@@ -40,46 +33,38 @@ import {
   EmptyStateActions,
   Label,
   Alert,
-  AlertGroup,
   Bullseye,
+  Stack,
 } from '@patternfly/react-core';
 import { 
   CubesIcon, 
   PlusCircleIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  TimesCircleIcon,
-  CogIcon
+  TimesCircleIcon
 } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
 import { subscriptionsService, Subscription } from '../services/subscriptions.service';
 
 
 const SubscriptionsPage: React.FC = () => {
-  const { t } = useTranslation();
   const { addNotification } = useNotifications();
   const navigate = useNavigate();
   
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [isModifyModalOpen, setIsModifyModalOpen] = useState(false);
-  const [newPlan, setNewPlan] = useState('');
-  const [processingModification, setProcessingModification] = useState(false);
 
   // Load subscriptions from API
   const loadSubscriptions = async () => {
     try {
       setLoading(true);
-      setError(null);
       
       const response = await subscriptionsService.getSubscriptions();
       setSubscriptions(response.data);
     } catch (err) {
       console.error('Failed to load subscriptions:', err);
-      setError('Failed to load subscriptions. Please try again.');
       addNotification({
         title: 'Error',
         description: 'Failed to load subscriptions from the server.',
@@ -119,18 +104,21 @@ const SubscriptionsPage: React.FC = () => {
     );
   };
 
-  const getPlanBadge = (plan: string | undefined) => {
-    if (!plan) {
-      return <Label color="grey">Unknown</Label>;
+  const getPricingInfo = (subscription: Subscription) => {
+    if (!subscription.pricing) {
+      return <Content component={ContentVariants.small}>Pricing information unavailable</Content>;
     }
     
-    const colors = {
-      starter: 'blue',
-      professional: 'green',
-      enterprise: 'purple'
-    } as const;
-
-    return <Label color={colors[plan as keyof typeof colors]}>{plan.charAt(0).toUpperCase() + plan.slice(1)}</Label>;
+    return (
+      <Stack hasGutter>
+        <Content component={ContentVariants.small}>
+          Input: ${subscription.pricing.inputCostPer1kTokens.toFixed(4)}/1K tokens
+        </Content>
+        <Content component={ContentVariants.small}>
+          Output: ${subscription.pricing.outputCostPer1kTokens.toFixed(4)}/1K tokens
+        </Content>
+      </Stack>
+    );
   };
 
   const getUsagePercentage = (used: number, limit: number) => {
@@ -148,44 +136,10 @@ const SubscriptionsPage: React.FC = () => {
     setIsDetailsModalOpen(true);
   };
 
-  const handleModifySubscription = (subscription: Subscription) => {
-    setSelectedSubscription(subscription);
-    setNewPlan(subscription.plan);
-    setIsModifyModalOpen(true);
-  };
-
-  const handleSaveModification = async () => {
-    if (!selectedSubscription || newPlan === selectedSubscription.plan) {
-      setIsModifyModalOpen(false);
-      return;
-    }
-
-    setProcessingModification(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const updatedSubscriptions = subscriptions.map(sub => 
-        sub.id === selectedSubscription.id 
-          ? { ...sub, plan: newPlan as any }
-          : sub
-      );
-      setSubscriptions(updatedSubscriptions);
-      
-      addNotification({
-        title: 'Subscription Updated',
-        description: `${selectedSubscription.modelName} subscription has been updated to ${newPlan} plan.`,
-        variant: 'success'
-      });
-      
-      setProcessingModification(false);
-      setIsModifyModalOpen(false);
-    }, 2000);
-  };
-
   const handleCancelSubscription = (subscription: Subscription) => {
     addNotification({
       title: 'Subscription Cancelled',
-      description: `${subscription.modelName} subscription has been cancelled and will expire on ${subscription.nextBillingDate}.`,
+      description: `${subscription.modelName} subscription has been cancelled.`,
       variant: 'warning'
     });
   };
@@ -263,7 +217,6 @@ const SubscriptionsPage: React.FC = () => {
           <>
             <Grid hasGutter>
               {subscriptions.map((subscription) => {
-                const usagePercentage = getUsagePercentage(subscription.usageUsed, subscription.usageLimit);
                 
                 return (
                   <GridItem key={subscription.id} lg={6} xl={4}>
@@ -283,30 +236,21 @@ const SubscriptionsPage: React.FC = () => {
                       </CardTitle>
                       <CardBody>
                         <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsSm' }}>
-                          <FlexItem>
-                            <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
-                              <FlexItem>{getPlanBadge(subscription.plan)}</FlexItem>
-                              <FlexItem>
-                                <strong>
-                                  ${subscription.costPerMonth}/{subscription.billingCycle === 'monthly' ? 'mo' : 'yr'}
-                                </strong>
-                              </FlexItem>
-                            </Flex>
-                          </FlexItem>
+                          <FlexItem>{getPricingInfo(subscription)}</FlexItem>
                           
                           <FlexItem>
-                            <Content component={ContentVariants.small}>Usage this month</Content>
+                            <Content component={ContentVariants.small}>Token usage this month</Content>
                             <Progress
-                              value={usagePercentage}
-                              title={`${subscription.usageUsed.toLocaleString()} / ${subscription.usageLimit.toLocaleString()} tokens`}
-                              variant={getUsageVariant(usagePercentage)}
+                              value={getUsagePercentage(subscription.usedTokens, subscription.quotaTokens)}
+                              title={`${subscription.usedTokens.toLocaleString()} / ${subscription.quotaTokens.toLocaleString()} tokens`}
+                              variant={getUsageVariant(getUsagePercentage(subscription.usedTokens, subscription.quotaTokens))}
                               measureLocation={ProgressMeasureLocation.outside}
                             />
                           </FlexItem>
                           
                           <FlexItem>
                             <Content component={ContentVariants.small}>
-                              Next billing: {new Date(subscription.nextBillingDate).toLocaleDateString()}
+                              Quota: {subscription.quotaRequests.toLocaleString()} requests, {subscription.quotaTokens.toLocaleString()} tokens
                             </Content>
                           </FlexItem>
                         </Flex>
@@ -320,17 +264,6 @@ const SubscriptionsPage: React.FC = () => {
                               onClick={() => handleSubscriptionDetails(subscription)}
                             >
                               View Details
-                            </Button>
-                          </FlexItem>
-                          <FlexItem>
-                            <Button 
-                              variant="secondary" 
-                              size="sm"
-                              onClick={() => handleModifySubscription(subscription)}
-                              isDisabled={subscription.status === 'expired'}
-                              icon={<CogIcon />}
-                            >
-                              Modify
                             </Button>
                           </FlexItem>
                         </Flex>
@@ -374,9 +307,9 @@ const SubscriptionsPage: React.FC = () => {
                 </DescriptionListGroup>
                 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Plan</DescriptionListTerm>
+                  <DescriptionListTerm>Pricing</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {getPlanBadge(selectedSubscription.plan)}
+                    {getPricingInfo(selectedSubscription)}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 
@@ -388,30 +321,30 @@ const SubscriptionsPage: React.FC = () => {
                 </DescriptionListGroup>
                 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Monthly Cost</DescriptionListTerm>
+                  <DescriptionListTerm>Request Quota</DescriptionListTerm>
                   <DescriptionListDescription>
-                    ${selectedSubscription.costPerMonth} ({selectedSubscription.billingCycle})
+                    {selectedSubscription.quotaRequests.toLocaleString()} per month
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Usage Limit</DescriptionListTerm>
+                  <DescriptionListTerm>Token Quota</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {selectedSubscription.usageLimit.toLocaleString()} tokens per month
+                    {selectedSubscription.quotaTokens.toLocaleString()} per month
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Usage This Month</DescriptionListTerm>
+                  <DescriptionListTerm>Requests Used</DescriptionListTerm>
                   <DescriptionListDescription>
                     <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsXs' }}>
                       <FlexItem>
-                        {selectedSubscription.usageUsed.toLocaleString()} / {selectedSubscription.usageLimit.toLocaleString()} tokens
+                        {selectedSubscription.usedRequests.toLocaleString()} / {selectedSubscription.quotaRequests.toLocaleString()} requests
                       </FlexItem>
                       <FlexItem>
                         <Progress
-                          value={getUsagePercentage(selectedSubscription.usageUsed, selectedSubscription.usageLimit)}
-                          variant={getUsageVariant(getUsagePercentage(selectedSubscription.usageUsed, selectedSubscription.usageLimit))}
+                          value={getUsagePercentage(selectedSubscription.usedRequests, selectedSubscription.quotaRequests)}
+                          variant={getUsageVariant(getUsagePercentage(selectedSubscription.usedRequests, selectedSubscription.quotaRequests))}
                           measureLocation={ProgressMeasureLocation.outside}
                         />
                       </FlexItem>
@@ -420,9 +353,20 @@ const SubscriptionsPage: React.FC = () => {
                 </DescriptionListGroup>
                 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Next Billing Date</DescriptionListTerm>
+                  <DescriptionListTerm>Tokens Used</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {new Date(selectedSubscription.nextBillingDate).toLocaleDateString()}
+                    <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsXs' }}>
+                      <FlexItem>
+                        {selectedSubscription.usedTokens.toLocaleString()} / {selectedSubscription.quotaTokens.toLocaleString()} tokens
+                      </FlexItem>
+                      <FlexItem>
+                        <Progress
+                          value={getUsagePercentage(selectedSubscription.usedTokens, selectedSubscription.quotaTokens)}
+                          variant={getUsageVariant(getUsagePercentage(selectedSubscription.usedTokens, selectedSubscription.quotaTokens))}
+                          measureLocation={ProgressMeasureLocation.outside}
+                        />
+                      </FlexItem>
+                    </Flex>
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 
@@ -449,7 +393,7 @@ const SubscriptionsPage: React.FC = () => {
               
               {selectedSubscription.status === 'suspended' && (
                 <Alert variant="warning" title="Subscription Suspended" style={{ marginTop: '1rem' }}>
-                  Your subscription has been suspended due to usage limit exceeded. Upgrade your plan or wait for the next billing cycle.
+                  Your subscription has been suspended. Contact support or check your account status.
                 </Alert>
               )}
               
@@ -476,57 +420,6 @@ const SubscriptionsPage: React.FC = () => {
         </ModalBody>
       </Modal>
 
-      {/* Modify Subscription Modal */}
-      <Modal
-        variant={ModalVariant.small}
-        title="Modify Subscription"
-        isOpen={isModifyModalOpen}
-        onClose={() => setIsModifyModalOpen(false)}
-      >
-        <ModalBody>
-          {selectedSubscription && (
-            <>
-              <Content component={ContentVariants.p} style={{ marginBottom: '1rem' }}>
-                Modify your subscription plan for <strong>{selectedSubscription.modelName}</strong>
-              </Content>
-              
-              <Form>
-                <FormGroup label="Select Plan" fieldId="plan-select">
-                  <FormSelect
-                    value={newPlan}
-                    onChange={(_event, value) => setNewPlan(value)}
-                    id="plan-select"
-                  >
-                    <FormSelectOption value="starter" label="Starter - $20/month" />
-                    <FormSelectOption value="professional" label="Professional - $50/month" />
-                    <FormSelectOption value="enterprise" label="Enterprise - $100/month" />
-                  </FormSelect>
-                </FormGroup>
-              </Form>
-              
-              {newPlan !== selectedSubscription.plan && (
-                <Alert variant="info" title="Plan Change" style={{ marginTop: '1rem' }}>
-                  Your plan will be updated immediately and you'll be charged the prorated amount.
-                </Alert>
-              )}
-            </>
-          )}
-          
-          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-            <Button
-              variant="primary"
-              onClick={handleSaveModification}
-              isLoading={processingModification}
-              isDisabled={newPlan === selectedSubscription?.plan}
-            >
-              {processingModification ? 'Updating...' : 'Save Changes'}
-            </Button>
-            <Button variant="link" onClick={() => setIsModifyModalOpen(false)}>
-              Cancel
-            </Button>
-          </div>
-        </ModalBody>
-      </Modal>
     </>
   );
 };

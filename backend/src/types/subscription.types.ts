@@ -1,5 +1,4 @@
 export enum SubscriptionStatus {
-  PENDING = 'pending',
   ACTIVE = 'active',
   SUSPENDED = 'suspended',
   CANCELLED = 'cancelled',
@@ -10,20 +9,39 @@ export interface Subscription {
   id: string;
   userId: string;
   modelId: string;
+  modelName?: string;
+  provider?: string;
   status: SubscriptionStatus;
   quotaRequests: number;
   quotaTokens: number;
   usedRequests: number;
   usedTokens: number;
+  remainingRequests?: number;
+  remainingTokens?: number;
+  utilizationPercent?: {
+    requests: number;
+    tokens: number;
+  };
   resetAt?: Date;
   expiresAt?: Date;
   createdAt: Date;
   updatedAt: Date;
+  metadata?: Record<string, any>;
 }
 
 export interface SubscriptionQuota {
-  requests: number;
-  tokens: number;
+  requests: {
+    limit: number;
+    used: number;
+    remaining: number;
+    resetAt?: Date;
+  };
+  tokens: {
+    limit: number;
+    used: number;
+    remaining: number;
+    resetAt?: Date;
+  };
 }
 
 export interface SubscriptionUsage {
@@ -33,8 +51,27 @@ export interface SubscriptionUsage {
 
 export interface CreateSubscriptionDto {
   modelId: string;
-  quota: SubscriptionQuota;
+  quota?: SubscriptionQuota;
+  quotaRequests?: number;
+  quotaTokens?: number;
   expiresAt?: Date;
+  metadata?: any;
+}
+
+export interface SubscriptionStats {
+  total: number;
+  byStatus: Record<string, number>;
+  byProvider: Record<string, number>;
+  totalQuotaUsage: {
+    requests: { used: number; limit: number };
+    tokens: { used: number; limit: number };
+  };
+}
+
+export interface SubscriptionValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
 }
 
 export interface UpdateSubscriptionDto {
@@ -98,6 +135,13 @@ export interface EnhancedSubscription extends Subscription {
     currentRpm?: number;
   };
   
+  // LiteLLM pricing info
+  pricing?: {
+    inputCostPer1kTokens: number;
+    outputCostPer1kTokens: number;
+    currency: string;
+  };
+  
   // Team association
   teamId?: string;
   teamInfo?: {
@@ -142,6 +186,11 @@ export interface EnhancedUpdateSubscriptionDto extends UpdateSubscriptionDto {
   allowedModels?: string[];
   teamId?: string;
   softBudget?: number;
+  
+  // Direct quota updates
+  quotaRequests?: number;
+  quotaTokens?: number;
+  metadata?: any;
 }
 
 export interface SubscriptionBudgetInfo {
@@ -185,7 +234,7 @@ export interface SubscriptionUsageAnalytics {
 }
 
 export interface SubscriptionSyncRequest {
-  subscriptionId: string;
+  subscriptionId?: string;
   forceSync?: boolean;
   syncBudget?: boolean;
   syncUsage?: boolean;

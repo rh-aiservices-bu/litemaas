@@ -130,6 +130,24 @@ npm run dev:frontend
 cd frontend && npm run dev
 ```
 
+## Frontend Technology Stack
+
+### React Query Integration
+The frontend uses React Query for server state management:
+
+- **QueryClient Setup**: Configured in `frontend/src/routes/index.tsx`
+- **Cache Configuration**: 5-minute stale time, 10-minute cache time
+- **Error Handling**: Automatic retry with 2 attempts
+- **Usage**: Available via `useQueryClient()` hook throughout the application
+
+### Key Libraries
+- **React**: 18.x with hooks and modern patterns
+- **React Router**: 6.x for client-side routing
+- **React Query**: 3.x for server state management
+- **PatternFly 6**: Component library and design system
+- **Axios**: HTTP client with interceptors for authentication
+- **React i18next**: Internationalization (EN, ES, FR)
+
 ## Development Tools
 
 ### VS Code Extensions

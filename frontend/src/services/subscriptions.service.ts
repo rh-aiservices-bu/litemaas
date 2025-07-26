@@ -5,13 +5,24 @@ export interface Subscription {
   modelId: string;
   modelName: string;
   provider: string;
-  status: 'active' | 'suspended' | 'expired' | 'pending';
-  plan: 'starter' | 'professional' | 'enterprise';
+  status: 'active' | 'suspended' | 'expired'; // Remove 'pending'
+  
+  // Real usage and pricing from LiteLLM
+  quotaRequests: number;
+  quotaTokens: number;
+  usedRequests: number;
+  usedTokens: number;
+  
+  // LiteLLM pricing
+  pricing?: {
+    inputCostPer1kTokens: number;
+    outputCostPer1kTokens: number;
+    currency: string;
+  };
+  
+  // Legacy fields for compatibility
   usageLimit: number;
   usageUsed: number;
-  billingCycle: 'monthly' | 'yearly';
-  nextBillingDate: string;
-  costPerMonth: number;
   features: string[];
   createdAt: string;
   expiresAt?: string;
@@ -24,7 +35,7 @@ interface BackendSubscriptionDetails {
   modelId: string;
   modelName?: string;
   provider?: string;
-  status: 'pending' | 'active' | 'suspended' | 'cancelled' | 'expired';
+  status: 'active' | 'suspended' | 'cancelled' | 'expired'; // Remove 'pending'
   quotaRequests: number;
   quotaTokens: number;
   usedRequests: number;
@@ -39,9 +50,15 @@ interface BackendSubscriptionDetails {
   expiresAt?: string;
   createdAt: string;
   updatedAt: string;
+  
+  // LiteLLM pricing info
+  pricing?: {
+    inputCostPer1kTokens: number;
+    outputCostPer1kTokens: number;
+    currency: string;
+  };
+  
   metadata?: {
-    plan?: string;
-    billingCycle?: string;
     features?: string[];
   };
 }
@@ -59,8 +76,8 @@ export interface CreateSubscriptionRequest {
 }
 
 export interface UpdateSubscriptionRequest {
-  plan?: 'starter' | 'professional' | 'enterprise';
-  billingCycle?: 'monthly' | 'yearly';
+  quotaRequests?: number;
+  quotaTokens?: number;
 }
 
 export interface SubscriptionsResponse {
@@ -75,34 +92,33 @@ export interface SubscriptionsResponse {
 
 class SubscriptionsService {
   private mapBackendToFrontend(backend: BackendSubscriptionDetails): Subscription {
-    const resetDate = new Date();
-    resetDate.setMonth(resetDate.getMonth() + 1, 1); // First day of next month
-    
     return {
       id: backend.id,
       modelId: backend.modelId,
       modelName: backend.modelName || backend.modelId,
       provider: backend.provider || 'unknown',
-      status: backend.status === 'cancelled' ? 'expired' : backend.status,
-      plan: (backend.metadata?.plan as 'starter' | 'professional' | 'enterprise') || 'starter',
-      usageLimit: backend.quotaRequests,
-      usageUsed: backend.usedRequests,
-      billingCycle: (backend.metadata?.billingCycle as 'monthly' | 'yearly') || 'monthly',
-      nextBillingDate: backend.resetAt || resetDate.toISOString(),
-      costPerMonth: this.calculateCostPerMonth(backend.metadata?.plan || 'starter'),
+      status: backend.status === 'cancelled' ? 'expired' : backend.status as any,
+      
+      // Map quotas and usage
+      quotaRequests: backend.quotaRequests || 0,
+      quotaTokens: backend.quotaTokens || 0,
+      usedRequests: backend.usedRequests || 0,
+      usedTokens: backend.usedTokens || 0,
+      
+      // Map pricing if available
+      pricing: backend.pricing ? {
+        inputCostPer1kTokens: backend.pricing.inputCostPer1kTokens,
+        outputCostPer1kTokens: backend.pricing.outputCostPer1kTokens,
+        currency: backend.pricing.currency || 'USD'
+      } : undefined,
+      
+      // Legacy fields for compatibility
+      usageLimit: backend.quotaTokens || 0,
+      usageUsed: backend.usedTokens || 0,
       features: backend.metadata?.features || [],
       createdAt: backend.createdAt,
       expiresAt: backend.expiresAt,
     };
-  }
-
-  private calculateCostPerMonth(plan: string): number {
-    const costs = {
-      starter: 29,
-      professional: 99,
-      enterprise: 299
-    };
-    return costs[plan as keyof typeof costs] || 29;
   }
 
   async getSubscriptions(page = 1, limit = 20): Promise<SubscriptionsResponse> {
@@ -131,6 +147,12 @@ class SubscriptionsService {
 
   async createSubscription(request: CreateSubscriptionRequest): Promise<Subscription> {
     const response = await apiClient.post<BackendSubscriptionDetails>('/subscriptions', request);
+    
+    // Expect active status immediately
+    if (response.status !== 'active') {
+      throw new Error('Subscription creation failed - expected active status');
+    }
+    
     return this.mapBackendToFrontend(response);
   }
 

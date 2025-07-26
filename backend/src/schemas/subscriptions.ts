@@ -12,7 +12,6 @@ export const SubscriptionUsageSchema = Type.Object({
 });
 
 export const SubscriptionStatusEnum = Type.Union([
-  Type.Literal('pending'),
   Type.Literal('active'),
   Type.Literal('suspended'),
   Type.Literal('cancelled'),
@@ -111,6 +110,11 @@ export const EnhancedSubscriptionSchema = Type.Intersect([
       rpmLimit: Type.Optional(Type.Number()),
       currentTpm: Type.Optional(Type.Number()),
       currentRpm: Type.Optional(Type.Number()),
+    })),
+    pricing: Type.Optional(Type.Object({
+      inputCostPer1kTokens: Type.Number(),
+      outputCostPer1kTokens: Type.Number(),
+      currency: Type.String(),
     })),
     teamId: Type.Optional(Type.String()),
     teamInfo: Type.Optional(Type.Object({

@@ -165,6 +165,61 @@ describe('Security Tests', () => {
 
       expect(response.statusCode).toBe(413); // Payload too large
     });
+
+    it('should validate subscription payload schemas', async () => {
+      const token = generateTestToken({ id: 'test-user' });
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/subscriptions',
+        headers: { authorization: `Bearer ${token}` },
+        payload: {
+          // Missing required 'modelId' field
+          quotaRequests: 'invalid-number', // Invalid type
+          quotaTokens: -1000, // Invalid negative value
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const error = response.json();
+      expect(error.message).toContain('validation');
+    });
+
+    it('should sanitize subscription inputs', async () => {
+      const token = generateTestToken({ id: 'test-user' });
+
+      const maliciousPayload = {
+        modelId: "<script>alert('XSS')</script>",
+        quotaRequests: 10000,
+        quotaTokens: 1000000,
+      };
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/subscriptions',
+        headers: { authorization: `Bearer ${token}` },
+        payload: maliciousPayload,
+      });
+
+      // Should either reject malicious input or sanitize it
+      if (response.statusCode === 201) {
+        const result = response.json();
+        expect(result.modelId).not.toContain('<script>');
+      } else {
+        expect(response.statusCode).toBe(400);
+      }
+    });
+      const largePayload = 'x'.repeat(10 * 1024 * 1024); // 10MB
+
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/api-keys',
+        headers: { authorization: `Bearer ${token}` },
+        payload: { name: largePayload },
+      });
+
+      expect(response.statusCode).toBe(413); // Payload too large
+    });
   });
 
   describe('Rate Limiting', () => {
@@ -286,7 +341,8 @@ describe('Security Tests', () => {
         headers: { authorization: `Bearer ${apiKey.fullKey}` },
         payload: {
           modelId: 'gpt-4',
-          plan: 'professional',
+          quotaRequests: 10000,
+          quotaTokens: 1000000,
         },
       });
 

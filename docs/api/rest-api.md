@@ -122,6 +122,12 @@ Response:
 #### GET /subscriptions
 List user subscriptions
 ```json
+Query Parameters:
+- status: string (optional) - Filter by status (active, cancelled, suspended, expired)
+- modelId: string (optional) - Filter by model ID
+- page: number (default: 1)
+- limit: number (default: 20)
+
 Response:
 {
   "data": [
@@ -129,19 +135,54 @@ Response:
       "id": "sub_123",
       "userId": "user_123",
       "modelId": "gpt-4",
+      "modelName": "GPT-4",
+      "provider": "OpenAI",
       "status": "active",
-      "quota": {
-        "requests": 10000,
-        "tokens": 1000000
-      },
-      "usage": {
-        "requests": 5000,
-        "tokens": 500000
-      },
+      "quotaRequests": 10000,
+      "quotaTokens": 1000000,
+      "usedRequests": 1500,
+      "usedTokens": 150000,
+      "inputCostPerToken": 0.00003,
+      "outputCostPerToken": 0.00006,
+      "requestUtilization": 15,
+      "tokenUtilization": 15,
+      "estimatedMonthlyCost": 9.75,
       "createdAt": "2024-01-01T00:00:00Z",
-      "expiresAt": "2024-12-31T23:59:59Z"
+      "updatedAt": "2024-01-20T10:00:00Z",
+      "expiresAt": null
     }
-  ]
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 3,
+    "totalPages": 1
+  }
+}
+```
+
+#### GET /subscriptions/:id
+Get subscription details
+```json
+Response:
+{
+  "id": "sub_123",
+  "userId": "user_123",
+  "modelId": "gpt-4",
+  "modelName": "GPT-4",
+  "provider": "OpenAI",
+  "status": "active",
+  "quotaRequests": 10000,
+  "quotaTokens": 1000000,
+  "usedRequests": 1500,
+  "usedTokens": 150000,
+  "inputCostPerToken": 0.00003,
+  "outputCostPerToken": 0.00006,
+  "contextLength": 8192,
+  "features": ["Code Generation", "Creative Writing"],
+  "createdAt": "2024-01-01T00:00:00Z",
+  "updatedAt": "2024-01-20T10:00:00Z",
+  "expiresAt": null
 }
 ```
 
@@ -151,10 +192,8 @@ Create new subscription
 Request:
 {
   "modelId": "gpt-4",
-  "quota": {
-    "requests": 10000,
-    "tokens": 1000000
-  }
+  "quotaRequests": 10000,      // Optional, defaults to 10K
+  "quotaTokens": 1000000       // Optional, defaults to 1M
 }
 
 Response:
@@ -162,39 +201,86 @@ Response:
   "id": "sub_123",
   "userId": "user_123",
   "modelId": "gpt-4",
+  "modelName": "GPT-4",
+  "provider": "OpenAI",
   "status": "active",
-  "quota": {
-    "requests": 10000,
-    "tokens": 1000000
-  },
-  "apiKey": {
-    "id": "key_123",
-    "key": "lm_1234567890abcdef",
-    "createdAt": "2024-01-01T00:00:00Z"
-  },
+  "quotaRequests": 10000,
+  "quotaTokens": 1000000,
+  "usedRequests": 0,
+  "usedTokens": 0,
+  "inputCostPerToken": 0.00003,
+  "outputCostPerToken": 0.00006,
   "createdAt": "2024-01-01T00:00:00Z",
-  "expiresAt": "2024-12-31T23:59:59Z"
+  "updatedAt": "2024-01-01T00:00:00Z",
+  "expiresAt": null
 }
 ```
 
-#### PATCH /subscriptions/:id
-Update subscription
+#### PUT /subscriptions/:id/quotas
+Update subscription quotas
 ```json
 Request:
 {
-  "quota": {
-    "requests": 20000,
-    "tokens": 2000000
-  }
+  "quotaRequests": 20000,
+  "quotaTokens": 2000000
 }
 
 Response:
 {
   "id": "sub_123",
+  "modelId": "gpt-4",
   "status": "active",
-  "quota": {
-    "requests": 20000,
-    "tokens": 2000000
+  "quotaRequests": 20000,
+  "quotaTokens": 2000000,
+  "usedRequests": 1500,
+  "usedTokens": 150000,
+  "updatedAt": "2024-01-20T10:00:00Z"
+}
+```
+
+#### GET /subscriptions/:id/pricing
+Get subscription pricing information
+```json
+Response:
+{
+  "subscriptionId": "sub_123",
+  "usedRequests": 1500,
+  "usedTokens": 150000,
+  "inputCostPerToken": 0.00003,
+  "outputCostPerToken": 0.00006,
+  "estimatedCost": 9.75,
+  "costBreakdown": {
+    "inputTokens": 75000,
+    "outputTokens": 75000,
+    "inputCost": 2.25,
+    "outputCost": 4.50,
+    "totalCost": 6.75
+  },
+  "billingPeriod": {
+    "start": "2024-01-01T00:00:00Z",
+    "end": "2024-01-31T23:59:59Z"
+  }
+}
+```
+
+#### GET /subscriptions/:id/usage
+Get subscription usage and quota information
+```json
+Response:
+{
+  "subscriptionId": "sub_123",
+  "quotaRequests": 10000,
+  "quotaTokens": 1000000,
+  "usedRequests": 1500,
+  "usedTokens": 150000,
+  "requestUtilization": 15,
+  "tokenUtilization": 15,
+  "withinRequestLimit": true,
+  "withinTokenLimit": true,
+  "resetDate": "2024-02-01T00:00:00Z",
+  "warningThresholds": {
+    "requests": 8000,
+    "tokens": 800000
   }
 }
 ```

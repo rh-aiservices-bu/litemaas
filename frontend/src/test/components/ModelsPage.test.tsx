@@ -73,6 +73,27 @@ describe('ModelsPage', () => {
     });
     
     // Click on model card to open modal
+    const modelCard = screen.getByText('GPT-4').closest('div[style*="cursor: pointer"]');
+    if (modelCard) {
+      await user.click(modelCard);
+      
+      await waitFor(() => {
+        const subscribeButton = screen.getByText('Subscribe to Model');
+        expect(subscribeButton).toBeInTheDocument();
+      });
+      
+      // Should show subscription form with quota options
+      expect(screen.getByText('Request Quota')).toBeInTheDocument();
+      expect(screen.getByText('Token Quota')).toBeInTheDocument();
+      
+      const subscribeButton = screen.getByText('Subscribe to Model');
+      await user.click(subscribeButton);
+      
+      // Should show success notification (this would be tested with notification context)
+    }
+  });
+    
+    // Click on model card to open modal
     const modelCard = screen.getByText('GPT-4').closest('div[style*=\"cursor: pointer\"]');
     if (modelCard) {
       await user.click(modelCard);
@@ -167,6 +188,36 @@ describe('ModelsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('GPT-4')).toBeInTheDocument();
     });
+    
+    // Should display pricing in token per 1K format
+    expect(screen.getByText('Input: $0.03/1K • Output: $0.06/1K')).toBeInTheDocument();
+  });
+
+  it('should display detailed pricing in model modal', async () => {
+    const user = userEvent.setup();
+    render(<ModelsPage />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('GPT-4')).toBeInTheDocument();
+    });
+    
+    // Click on model card to open modal
+    const modelCard = screen.getByText('GPT-4').closest('div[style*="cursor: pointer"]');
+    if (modelCard) {
+      await user.click(modelCard);
+      
+      await waitFor(() => {
+        expect(screen.getByText('Subscribe to Model')).toBeInTheDocument();
+      });
+      
+      // Should show detailed pricing information
+      expect(screen.getByText('Pricing')).toBeInTheDocument();
+      expect(screen.getByText('Input tokens')).toBeInTheDocument();
+      expect(screen.getByText('Output tokens')).toBeInTheDocument();
+      expect(screen.getByText('$0.00003 per token')).toBeInTheDocument();
+      expect(screen.getByText('$0.00006 per token')).toBeInTheDocument();
+    }
+  });
     
     expect(screen.getByText('Input: $0.03/1K • Output: $0.06/1K')).toBeInTheDocument();
   });

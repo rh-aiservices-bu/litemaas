@@ -28,7 +28,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         properties: {
           page: { type: 'number', minimum: 1, default: 1 },
           limit: { type: 'number', minimum: 1, maximum: 100, default: 20 },
-          status: { type: 'string', enum: ['pending', 'active', 'suspended', 'cancelled', 'expired'] },
+          status: { type: 'string', enum: ['active', 'suspended', 'cancelled', 'expired'] },
           modelId: { type: 'string' },
         },
       },
@@ -274,6 +274,11 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
           throw error;
         }
         
+        // Handle unique constraint violations
+        if (error.code === '23505' || error.message?.includes('unique constraint')) {
+          throw fastify.createError(409, 'A subscription for this model already exists');
+        }
+        
         throw fastify.createError(500, 'Failed to create subscription');
       }
     },
@@ -362,54 +367,6 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         }
         
         throw fastify.createError(500, 'Failed to update subscription');
-      }
-    },
-  });
-
-  // Activate subscription
-  fastify.post<{
-    Params: { id: string };
-    Reply: SubscriptionDetails;
-  }>('/:id/activate', {
-    schema: {
-      tags: ['Subscriptions'],
-      description: 'Activate pending subscription',
-      security: [{ bearerAuth: [] }],
-      params: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-        },
-        required: ['id'],
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-            status: { type: 'string' },
-            createdAt: { type: 'string', format: 'date-time' },
-            updatedAt: { type: 'string', format: 'date-time' },
-          },
-        },
-      },
-    },
-    preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
-      const user = (request as AuthenticatedRequest).user;
-      const { id } = request.params;
-
-      try {
-        const subscription = await subscriptionService.activateSubscription(id, user.userId);
-        return subscription;
-      } catch (error) {
-        fastify.log.error(error, 'Failed to activate subscription');
-        
-        if (error.statusCode) {
-          throw error;
-        }
-        
-        throw fastify.createError(500, 'Failed to activate subscription');
       }
     },
   });

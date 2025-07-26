@@ -44,6 +44,14 @@ const scenarios = {
     weight: 15,
     exec: 'getUsage',
   },
+  createSubscription: {
+    weight: 10,
+    exec: 'createSubscription',
+  },
+  getSubscriptionPricing: {
+    weight: 5,
+    exec: 'getSubscriptionPricing',
+  },
   createCompletion: {
     weight: 15,
     exec: 'createCompletion',
@@ -161,6 +169,78 @@ export function getUsage() {
   sleep(1);
 }
 
+// Test function: Create subscription
+export function createSubscription() {
+  const payload = JSON.stringify({
+    modelId: 'gpt-3.5-turbo',
+    quotaRequests: 10000,
+    quotaTokens: 1000000,
+  });
+
+  const response = http.post(`${BASE_URL}/api/v1/subscriptions`, payload, {
+    headers: getAuthHeaders(),
+  });
+
+  const success = check(response, {
+    'create subscription status is 201': (r) => r.status === 201,
+    'create subscription response time < 1000ms': (r) => r.timings.duration < 1000,
+    'create subscription has id': (r) => {
+      try {
+        const data = JSON.parse(r.body);
+        return data.id && data.modelId === 'gpt-3.5-turbo';
+      } catch {
+        return false;
+      }
+    },
+  });
+
+  if (!success) {
+    errors.add(1);
+    errorRate.add(true);
+  } else {
+    errorRate.add(false);
+  }
+
+  apiResponseTime.add(response.timings.duration);
+  sleep(1);
+}
+
+// Test function: Get subscription pricing
+export function getSubscriptionPricing() {
+  // Use a mock subscription ID for testing
+  const subscriptionId = 'sub-test-123';
+  
+  const response = http.get(`${BASE_URL}/api/v1/subscriptions/${subscriptionId}/pricing`, {
+    headers: getAuthHeaders(),
+  });
+
+  const success = check(response, {
+    'get subscription pricing status is 200 or 404': (r) => r.status === 200 || r.status === 404,
+    'get subscription pricing response time < 500ms': (r) => r.timings.duration < 500,
+    'get subscription pricing has valid structure': (r) => {
+      if (r.status === 404) return true; // 404 is expected for non-existent subscription
+      try {
+        const data = JSON.parse(r.body);
+        return data.subscriptionId && 
+               typeof data.inputCostPerToken === 'number' && 
+               typeof data.outputCostPerToken === 'number';
+      } catch {
+        return false;
+      }
+    },
+  });
+
+  if (!success) {
+    errors.add(1);
+    errorRate.add(true);
+  } else {
+    errorRate.add(false);
+  }
+
+  apiResponseTime.add(response.timings.duration);
+  sleep(1);
+}
+
 // Test function: Create completion
 export function createCompletion() {
   const payload = JSON.stringify({
@@ -225,6 +305,12 @@ export default function () {
           break;
         case 'getUsage':
           getUsage();
+          break;
+        case 'createSubscription':
+          createSubscription();
+          break;
+        case 'getSubscriptionPricing':
+          getSubscriptionPricing();
           break;
         case 'createCompletion':
           createCompletion();

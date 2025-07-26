@@ -19,7 +19,7 @@
 
 ### Tech Stack Summary
 - **Backend**: Fastify, TypeScript, PostgreSQL, OAuth2/JWT, LiteLLM integration
-- **Frontend**: React, TypeScript, Vite, PatternFly 6, React Router
+- **Frontend**: React, TypeScript, Vite, PatternFly 6, React Router, React Query
 - **Testing**: Vitest, Playwright, K6
 - **i18n**: EN, ES, FR
 
@@ -86,6 +86,7 @@ Auth, user management, model registry, subscriptions, API keys, teams, LiteLLM i
 
 ## 🎨 Frontend
 - React Context API for state (Auth, Notifications)
+- React Query for server state management with intelligent caching
 - Axios service layer with JWT interceptors
 - PatternFly 6 components (`pf-v6-` prefix required)
 - Main routes: `/home`, `/models`, `/subscriptions`, `/api-keys`, `/usage`, `/settings`
@@ -124,8 +125,10 @@ npm run dev        # Start both backend and frontend
 ## 📝 Key Implementation Notes
 
 ### Subscription Management
-- Browse models → Select → Subscribe (creates "pending" status)
+- Browse models → Select → Subscribe (creates "active" status immediately)
+- Self-service model: No approval workflow required
 - Default quotas: 10K requests/month, 1M tokens/month
+- Unique constraint: One subscription per user-model pair
 - ⚠️ Database limitation: No `metadata` or `soft_budget` columns in `subscriptions` table
 
 ### Model Data Mapping

@@ -66,6 +66,26 @@ test.describe('Models Page', () => {
     await expect(page.getByText('GPT-4')).toBeVisible({ timeout: 10000 });
     await page.getByText('GPT-4').first().click();
     
+    // Should show subscription form with quota options
+    await expect(page.getByText('Subscribe to Model')).toBeVisible();
+    await expect(page.getByText('Request Quota')).toBeVisible();
+    await expect(page.getByText('Token Quota')).toBeVisible();
+    
+    // Optional: Customize quotas
+    await page.getByLabel('Request Quota').fill('20000');
+    await page.getByLabel('Token Quota').fill('2000000');
+    
+    // Subscribe to model
+    await page.getByText('Subscribe to Model').click();
+    
+    // Should show success notification
+    await expect(page.getByText('Successfully subscribed')).toBeVisible({ timeout: 5000 });
+    
+    // Should navigate to subscriptions page or update UI
+    await expect(page.getByText('View Subscription')).toBeVisible();
+  });
+    await page.getByText('GPT-4').first().click();
+    
     // Subscribe to model
     await expect(page.getByText('Subscribe to Model')).toBeVisible();
     await page.getByText('Subscribe to Model').click();

@@ -1,4 +1,5 @@
 import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from 'react-query';
 import { AuthProvider } from '../contexts/AuthContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
 import { ProtectedRoute } from '../components/ProtectedRoute';
@@ -11,13 +12,26 @@ import UsagePage from '../pages/UsagePage';
 import SettingsPage from '../pages/SettingsPage';
 import LoginPage from '../pages/LoginPage';
 
+// Create a client for React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 2,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      cacheTime: 1000 * 60 * 10, // 10 minutes
+    },
+  },
+});
+
 // Root component that provides all contexts
 const Root = () => (
-  <AuthProvider>
-    <NotificationProvider>
-      <Outlet />
-    </NotificationProvider>
-  </AuthProvider>
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <NotificationProvider>
+        <Outlet />
+      </NotificationProvider>
+    </AuthProvider>
+  </QueryClientProvider>
 );
 
 export const router = createBrowserRouter([
