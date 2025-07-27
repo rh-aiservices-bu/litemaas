@@ -72,10 +72,22 @@ class ApiKeysService {
       status = 'revoked';
     }
 
+    // Generate a demo full key based on the keyPrefix for demo purposes
+    const generateDemoFullKey = (keyPrefix: string): string => {
+      // Generate a realistic-looking API key for demo
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      let suffix = '';
+      for (let i = 0; i < 45; i++) {
+        suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return `${keyPrefix}_${suffix}`;
+    };
+
     return {
       id: backend.id,
       name: backend.name || 'Unnamed Key',
       keyPreview: backend.keyPrefix + '...',
+      fullKey: generateDemoFullKey(backend.keyPrefix), // Always generate full key for demo
       status,
       permissions: backend.metadata?.permissions || ['read'],
       usageCount: Math.floor(Math.random() * 1000), // Mock usage count

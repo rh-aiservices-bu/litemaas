@@ -367,8 +367,6 @@ const ApiKeysPage: React.FC = () => {
                     <Th>Name</Th>
                     <Th>Key</Th>
                     <Th>Status</Th>
-                    <Th>Usage</Th>
-                    <Th>Rate Limit</Th>
                     <Th>Last Used</Th>
                     <Th>Actions</Th>
                   </Tr>
@@ -394,7 +392,7 @@ const ApiKeysPage: React.FC = () => {
                         <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
                           <FlexItem>
                             <code style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
-                              {visibleKeys.has(apiKey.id) ? apiKey.fullKey : apiKey.keyPreview}
+                              {visibleKeys.has(apiKey.id) ? apiKey.fullKey : '************'}
                             </code>
                           </FlexItem>
                           <FlexItem>
@@ -421,16 +419,6 @@ const ApiKeysPage: React.FC = () => {
                       </Td>
                       <Td>
                         {getStatusBadge(apiKey.status)}
-                      </Td>
-                      <Td>
-                        <Content component={ContentVariants.small}>
-                          {apiKey.usageCount.toLocaleString()} requests
-                        </Content>
-                      </Td>
-                      <Td>
-                        <Content component={ContentVariants.small}>
-                          {apiKey.rateLimit.toLocaleString()}/min
-                        </Content>
                       </Td>
                       <Td>
                         <Content component={ContentVariants.small}>
@@ -588,14 +576,42 @@ const ApiKeysPage: React.FC = () => {
           {selectedApiKey && (
             <>
               <FormGroup label="API Key" fieldId="view-key">
-                <ClipboardCopy
-                  hoverTip="Copy"
-                  clickTip="Copied"
-                  variant={ClipboardCopyVariant.expansion}
-                  isReadOnly
-                >
-                  {selectedApiKey.fullKey}
-                </ClipboardCopy>
+                <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                  <FlexItem flex={{ default: 'flex_1' }}>
+                    <code style={{ 
+                      fontFamily: 'monospace', 
+                      fontSize: '0.875rem', 
+                      padding: '0.5rem', 
+                      backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)',
+                      border: '1px solid var(--pf-v6-global--BorderColor--100)',
+                      borderRadius: '3px',
+                      display: 'block',
+                      wordBreak: 'break-all'
+                    }}>
+                      {visibleKeys.has(selectedApiKey.id) ? selectedApiKey.fullKey : '************'}
+                    </code>
+                  </FlexItem>
+                  <FlexItem>
+                    <Tooltip content={visibleKeys.has(selectedApiKey.id) ? 'Hide key' : 'Show key'}>
+                      <Button
+                        variant="plain"
+                        size="sm"
+                        onClick={() => toggleKeyVisibility(selectedApiKey.id)}
+                        icon={visibleKeys.has(selectedApiKey.id) ? <EyeSlashIcon /> : <EyeIcon />}
+                      />
+                    </Tooltip>
+                  </FlexItem>
+                  <FlexItem>
+                    <Tooltip content="Copy to clipboard">
+                      <Button
+                        variant="plain"
+                        size="sm"
+                        onClick={() => copyToClipboard(selectedApiKey.fullKey || '', 'API key')}
+                        icon={<CopyIcon />}
+                      />
+                    </Tooltip>
+                  </FlexItem>
+                </Flex>
               </FormGroup>
               
               <div style={{ marginTop: '1rem' }}>
