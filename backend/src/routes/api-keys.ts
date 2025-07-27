@@ -8,6 +8,13 @@ import {
   PaginatedResponse,
   AuthenticatedRequest,
 } from '../types';
+import {
+  CreateApiKeySchema,
+  LegacyCreateApiKeySchema,
+  CreateApiKeyRequestSchema,
+  ApiKeyResponseSchema,
+  SingleApiKeyResponseSchema,
+} from '../schemas/api-keys';
 import { ApiKeyService } from '../services/api-key.service';
 import { LiteLLMService } from '../services/litellm.service';
 
@@ -23,61 +30,35 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
   }>('/', {
     schema: {
       tags: ['API Keys'],
-      description: 'List user API keys',
+      description: 'List user API keys with multi-model support',
       security: [{ bearerAuth: [] }],
       querystring: {
         type: 'object',
         properties: {
           page: { type: 'number', minimum: 1, default: 1 },
           limit: { type: 'number', minimum: 1, maximum: 100, default: 20 },
-          subscriptionId: { type: 'string' },
+          subscriptionId: { type: 'string', description: 'Legacy: Filter by subscription ID' },
+          modelIds: { 
+            type: 'array', 
+            items: { type: 'string' },
+            description: 'New: Filter by model IDs'
+          },
           isActive: { type: 'boolean' },
         },
       },
       response: {
-        200: {
-          type: 'object',
-          properties: {
-            data: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  subscriptionId: { type: 'string' },
-                  userId: { type: 'string' },
-                  name: { type: 'string' },
-                  keyPrefix: { type: 'string' },
-                  lastUsedAt: { type: 'string', format: 'date-time' },
-                  expiresAt: { type: 'string', format: 'date-time' },
-                  isActive: { type: 'boolean' },
-                  createdAt: { type: 'string', format: 'date-time' },
-                  revokedAt: { type: 'string', format: 'date-time' },
-                  metadata: { type: 'object' },
-                },
-              },
-            },
-            pagination: {
-              type: 'object',
-              properties: {
-                page: { type: 'number' },
-                limit: { type: 'number' },
-                total: { type: 'number' },
-                totalPages: { type: 'number' },
-              },
-            },
-          },
-        },
+        200: ApiKeyResponseSchema,
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
-      const { page = 1, limit = 20, subscriptionId, isActive } = request.query;
+      const { page = 1, limit = 20, subscriptionId, modelIds, isActive } = request.query;
 
       try {
         const result = await apiKeyService.getUserApiKeys(user.userId, {
           subscriptionId,
+          modelIds,
           isActive,
           page,
           limit,
@@ -108,7 +89,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
   }>('/:id', {
     schema: {
       tags: ['API Keys'],
-      description: 'Get API key by ID',
+      description: 'Get API key by ID with multi-model support',
       security: [{ bearerAuth: [] }],
       params: {
         type: 'object',
@@ -118,22 +99,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         required: ['id'],
       },
       response: {
-        200: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-            subscriptionId: { type: 'string' },
-            userId: { type: 'string' },
-            name: { type: 'string' },
-            keyPrefix: { type: 'string' },
-            lastUsedAt: { type: 'string', format: 'date-time' },
-            expiresAt: { type: 'string', format: 'date-time' },
-            isActive: { type: 'boolean' },
-            createdAt: { type: 'string', format: 'date-time' },
-            revokedAt: { type: 'string', format: 'date-time' },
-            metadata: { type: 'object' },
-          },
-        },
+        200: SingleApiKeyResponseSchema,
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
@@ -168,60 +134,43 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
   }>('/', {
     schema: {
       tags: ['API Keys'],
-      description: 'Generate new API key',
+      description: 'Generate new API key with multi-model support',
       security: [{ bearerAuth: [] }],
-      body: {
-        type: 'object',
-        properties: {
-          subscriptionId: { type: 'string' },
-          name: { type: 'string', maxLength: 255 },
-          expiresAt: { type: 'string', format: 'date-time' },
-          metadata: { type: 'object' },
-        },
-        required: ['subscriptionId'],
-      },
+      body: CreateApiKeyRequestSchema,
       response: {
-        201: {
-          type: 'object',
-          properties: {
-            id: { type: 'string' },
-            subscriptionId: { type: 'string' },
-            userId: { type: 'string' },
-            name: { type: 'string' },
-            key: { type: 'string' },
-            keyPrefix: { type: 'string' },
-            isActive: { type: 'boolean' },
-            expiresAt: { type: 'string', format: 'date-time' },
-            createdAt: { type: 'string', format: 'date-time' },
-            metadata: { type: 'object' },
-          },
-        },
+        201: SingleApiKeyResponseSchema,
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
-      const { subscriptionId, name, expiresAt, metadata } = request.body;
+      const body = request.body;
+
+      // Check if this is the new format or legacy format
+      const isLegacyFormat = 'subscriptionId' in body && !('modelIds' in body);
+      
+      if (isLegacyFormat) {
+        // Add deprecation warning header
+        reply.header('X-API-Deprecation-Warning', 
+          'subscriptionId parameter is deprecated. Use modelIds array instead.');
+        reply.header('X-API-Migration-Guide', 
+          'See /docs/api/migration-guide for details on upgrading to multi-model API keys.');
+      }
 
       try {
-        const apiKey = await apiKeyService.createApiKey(user.userId, {
-          subscriptionId,
-          name,
-          expiresAt: expiresAt ? new Date(expiresAt) : undefined,
-          metadata,
-        });
+        const apiKey = await apiKeyService.createApiKey(user.userId, body);
 
         reply.status(201);
         return {
           id: apiKey.id,
-          subscriptionId: apiKey.subscriptionId,
-          userId: apiKey.userId,
           name: apiKey.name,
           key: apiKey.key, // Only returned on creation
-          keyPrefix: apiKey.keyPrefix,
+          models: apiKey.models,
+          modelDetails: apiKey.modelDetails,
+          subscriptionId: apiKey.subscriptionId, // For backward compatibility
+          createdAt: apiKey.createdAt,
+          expiresAt: apiKey.expiresAt,
           isActive: apiKey.isActive,
-          expiresAt: apiKey.expiresAt?.toISOString(),
-          createdAt: apiKey.createdAt.toISOString(),
           metadata: apiKey.metadata,
         };
       } catch (error) {
@@ -424,6 +373,12 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             bySubscription: {
               type: 'object',
               additionalProperties: { type: 'number' },
+              description: 'Legacy: Count by subscription (for backward compatibility)'
+            },
+            byModel: {
+              type: 'object',
+              additionalProperties: { type: 'number' },
+              description: 'New: Count by model'
             },
           },
         },
@@ -461,7 +416,15 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           type: 'object',
           properties: {
             isValid: { type: 'boolean' },
-            subscriptionId: { type: 'string' },
+            subscriptionId: { 
+              type: 'string',
+              description: 'Legacy field for backward compatibility'
+            },
+            models: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Array of model IDs this API key can access'
+            },
             userId: { type: 'string' },
             keyId: { type: 'string' },
             reason: { type: 'string' },

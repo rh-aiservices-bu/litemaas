@@ -1,22 +1,71 @@
+/**
+ * API key permissions interface
+ */
+export interface ApiKeyPermissions {
+  allowChatCompletions?: boolean;
+  allowEmbeddings?: boolean;
+  allowCompletions?: boolean;
+  [key: string]: any;
+}
+
+/**
+ * New interface for multi-model API key creation
+ */
+export interface CreateApiKeyRequest {
+  modelIds: string[];  // Array of model IDs
+  name?: string;
+  expiresAt?: Date;
+  maxBudget?: number;
+  budgetDuration?: string;
+  tpmLimit?: number;
+  rpmLimit?: number;
+  teamId?: string;
+  tags?: string[];
+  permissions?: ApiKeyPermissions;
+  softBudget?: number;
+  guardrails?: string[];
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Legacy interface for backward compatibility
+ */
+export interface LegacyCreateApiKeyRequest extends Omit<CreateApiKeyRequest, 'modelIds'> {
+  subscriptionId: string;
+}
+
 export interface ApiKey {
   id: string;
-  subscriptionId: string;
   userId: string;
-  name?: string;
+  models: string[];  // Array of model IDs instead of single subscription
+  name: string;
   keyHash: string;
   keyPrefix: string;
-  lastUsedAt?: Date;
   expiresAt?: Date;
   isActive: boolean;
   createdAt: Date;
+  lastUsedAt?: Date;
   revokedAt?: Date;
+  // LiteLLM integration fields
+  liteLLMKeyId?: string;
+  lastSyncAt?: Date;
+  syncStatus?: 'pending' | 'synced' | 'error';
+  syncError?: string;
+  // Budget and limits
+  maxBudget?: number;
+  currentSpend?: number;
+  tpmLimit?: number;
+  rpmLimit?: number;
+  // Metadata
+  metadata?: Record<string, any>;
 }
 
 export interface ApiKeyDetails {
   id: string;
   name?: string;
   prefix: string;
-  subscriptionId: string;
+  models: string[];  // Updated to support multi-model
+  subscriptionId?: string;  // Kept for backward compatibility
   lastUsedAt?: Date;
   createdAt: Date;
 }
@@ -31,7 +80,8 @@ export interface CreateApiKeyResponse {
   id: string;
   name?: string;
   key: string;
-  subscriptionId: string;
+  models: string[];  // Updated to support multi-model
+  subscriptionId?: string;  // Kept for backward compatibility
   createdAt: Date;
 }
 
@@ -101,30 +151,22 @@ export interface LiteLLMKeyInfo {
 }
 
 /**
- * Enhanced API key interface that includes LiteLLM integration
+ * Enhanced API key interface that includes model and subscription details
  */
 export interface EnhancedApiKey extends ApiKey {
-  // LiteLLM integration fields
-  liteLLMKeyId?: string;
-  liteLLMInfo?: {
-    key_name?: string;
-    max_budget?: number;
-    current_spend?: number;
-    tpm_limit?: number;
-    rpm_limit?: number;
-    team_id?: string;
-    budget_duration?: string;
-    soft_budget?: number;
-    blocked?: boolean;
-    tags?: string[];
-    models?: string[];
-    spend_reset_at?: Date;
-  };
-  
-  // Sync metadata
-  lastSyncAt?: Date;
-  syncStatus?: 'synced' | 'pending' | 'error';
-  syncError?: string;
+  modelDetails?: Array<{
+    id: string;
+    name: string;
+    provider: string;
+    contextLength?: number;
+  }>;
+  subscriptionDetails?: Array<{
+    subscriptionId: string;
+    modelId: string;
+    status: string;
+    quotaRequests: number;
+    usedRequests: number;
+  }>;
 }
 
 /**
@@ -175,7 +217,8 @@ export interface ApiKeyUsageMetrics {
 export interface ApiKeyListParams {
   page?: number;
   limit?: number;
-  subscriptionId?: string;
+  subscriptionId?: string;  // Kept for backward compatibility
+  modelIds?: string[];  // New multi-model filtering
   isActive?: boolean;
 }
 
@@ -189,6 +232,14 @@ export interface ApiKeyValidation {
     status: string;
     remainingRequests: number;
     remainingTokens: number;
-  };
+  };  // Kept for backward compatibility
+  subscriptions?: Array<{
+    id: string;
+    userId: string;
+    modelId: string;
+    status: string;
+    remainingRequests: number;
+    remainingTokens: number;
+  }>;  // New multi-model validation
   error?: string;
 }

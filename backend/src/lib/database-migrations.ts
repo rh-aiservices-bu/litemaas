@@ -3,6 +3,10 @@
  * All tables required for the application functionality
  */
 
+// Import migration files
+import { addApiKeyModelsTable } from '../migrations/001-add-api-key-models';
+import { migrateApiKeySubscriptions } from '../migrations/002-migrate-api-key-subscriptions';
+
 // Users table
 export const usersTable = `
 CREATE TABLE IF NOT EXISTS users (
@@ -344,6 +348,12 @@ export const applyMigrations = async (dbUtils: any) => {
     
     console.log('🔑 Creating api_keys table...');
     await dbUtils.query(apiKeysTable);
+    
+    console.log('🔑 Creating api_key_models table...');
+    await dbUtils.query(addApiKeyModelsTable);
+
+    console.log('📦 Migrating existing API key subscriptions...');
+    await dbUtils.query(migrateApiKeySubscriptions);
     
     console.log('📈 Creating usage_logs table...');
     await dbUtils.query(usageLogsTable);

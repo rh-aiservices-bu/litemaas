@@ -21,10 +21,10 @@ const API_KEY_HEADER = 'x-api-key';
 const BEARER_PREFIX = 'Bearer ';
 
 const apiKeyAuthPlugin: FastifyPluginAsync<ApiKeyAuthOptions> = async (fastify, options = {}) => {
-  const { required = false, allowInactive = false, skipRoutes = [] } = options;
+  const { required = false, skipRoutes = [] } = options;
   
   // Initialize API key service
-  const apiKeyService = new ApiKeyService(fastify);
+  const apiKeyService = new ApiKeyService(fastify, fastify.liteLLMService);
 
   // Helper function to extract API key from request
   const extractApiKey = (request: FastifyRequest): string | null => {
@@ -66,30 +66,31 @@ const apiKeyAuthPlugin: FastifyPluginAsync<ApiKeyAuthOptions> = async (fastify, 
       if (!validation.isValid) {
         fastify.log.warn({
           apiKey: apiKey.substring(0, 10) + '...',
-          reason: validation.reason,
+          error: validation.error,
           ip: request.ip,
           userAgent: request.headers['user-agent'],
         }, 'Invalid API key attempt');
 
-        throw fastify.createAuthError(validation.reason || 'Invalid API key');
+        throw fastify.createAuthError(validation.error || 'Invalid API key');
       }
 
       // Attach API key information to request
       request.apiKey = {
-        keyId: validation.keyId!,
-        subscriptionId: validation.subscriptionId!,
-        userId: validation.userId!,
-        allowedModels: validation.allowedModels || [], // NEW: Include allowed models
+        keyId: validation.apiKey!.id,
+        subscriptionId: validation.subscription?.id || validation.subscriptions?.[0]?.id,
+        userId: validation.apiKey!.userId,
+        allowedModels: validation.apiKey!.models || [], // Include allowed models from new structure
       };
 
       fastify.log.debug({
-        keyId: validation.keyId,
-        subscriptionId: validation.subscriptionId,
-        userId: validation.userId,
+        keyId: validation.apiKey!.id,
+        subscriptionId: validation.subscription?.id || validation.subscriptions?.[0]?.id,
+        userId: validation.apiKey!.userId,
+        models: validation.apiKey!.models,
       }, 'API key validated successfully');
 
     } catch (error) {
-      fastify.log.error(error, 'API key validation error');
+      fastify.log.error(error as Error, 'API key validation error');
       
       if (error.statusCode) {
         throw error;
@@ -225,31 +226,38 @@ const apiKeyProtectedPlugin: FastifyPluginAsync = async (fastify) => {
           'API_KEY',
           request.ip,
           request.headers['user-agent'],
-          { reason: validation.reason, keyPrefix: apiKey.substring(0, 10) },
+          { error: validation.error, keyPrefix: apiKey.substring(0, 10) },
         ]
       );
 
-      throw fastify.createAuthError(validation.reason || 'Invalid API key');
+      throw fastify.createAuthError(validation.error || 'Invalid API key');
     }
 
     // Check quota before allowing request
     const subscriptionService = fastify.subscriptionService;
     if (subscriptionService) {
-      const quotaCheck = await subscriptionService.checkQuotaAvailability(
-        validation.subscriptionId!,
-        100 // Estimated tokens - this should be calculated based on request
-      );
+      // For multi-model keys, check quota for each subscription
+      const subscriptionIds = validation.subscriptions?.map(s => s.id) || 
+                             (validation.subscription ? [validation.subscription.id] : []);
+      
+      if (subscriptionIds.length > 0) {
+        const quotaCheck = await subscriptionService.checkQuotaAvailability(
+          subscriptionIds[0], // Use first subscription for quota check
+          100 // Estimated tokens - this should be calculated based on request
+        );
 
-      if (!quotaCheck.canProceed) {
-        throw fastify.createError(403, quotaCheck.reason || 'Quota exceeded');
+        if (!quotaCheck.canProceed) {
+          throw fastify.createError(403, quotaCheck.reason || 'Quota exceeded');
+        }
       }
+
     }
 
     request.apiKey = {
-      keyId: validation.keyId!,
-      subscriptionId: validation.subscriptionId!,
-      userId: validation.userId!,
-      allowedModels: validation.allowedModels || [], // NEW: Include allowed models
+      keyId: validation.apiKey!.id,
+      subscriptionId: validation.subscription?.id || validation.subscriptions?.[0]?.id,
+      userId: validation.apiKey!.userId,
+      allowedModels: validation.apiKey!.models || [], // Include allowed models from new structure
     };
   });
 };
@@ -274,7 +282,7 @@ const apiKeyUsagePlugin: FastifyPluginAsync = async (fastify) => {
           response_tokens, latency_ms, status_code, metadata
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
         [
-          request.apiKey.subscriptionId,
+          request.apiKey.subscriptionId || 'no-subscription',
           request.apiKey.keyId,
           'unknown', // Would be extracted from request
           requestTokens,
@@ -291,7 +299,9 @@ const apiKeyUsagePlugin: FastifyPluginAsync = async (fastify) => {
 
       // Trigger quota check hooks
       if (fastify.subscriptionHooks) {
-        await fastify.subscriptionHooks.checkQuotaThresholds(request.apiKey.subscriptionId);
+        if (request.apiKey.subscriptionId) {
+          await fastify.subscriptionHooks.checkQuotaThresholds(request.apiKey.subscriptionId);
+        }
       }
 
     } catch (error) {

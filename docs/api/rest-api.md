@@ -331,42 +331,178 @@ Response (Error - Active API Keys):
 
 ### API Keys
 
+> **🔄 UPDATED**: API Keys now support multi-model access. A single API key can be associated with multiple models instead of a single subscription.
+
 #### GET /api-keys
-List user API keys
+List user API keys with multi-model support
 ```json
+Query Parameters:
+- page: number (default: 1)
+- limit: number (default: 20)
+- subscriptionId: string (optional) - LEGACY: Filter by subscription ID
+- modelIds: string[] (optional) - NEW: Filter by model IDs
+- isActive: boolean (optional) - Filter by active status
+
 Response:
 {
   "data": [
     {
       "id": "key_123",
-      "subscriptionId": "sub_123",
-      "userId": "user_123",
       "name": "Production Key",
       "prefix": "lm_1234",
+      "models": ["gpt-4", "gpt-3.5-turbo"],  // NEW: Array of model IDs
+      "modelDetails": [                      // NEW: Detailed model information
+        {
+          "id": "gpt-4",
+          "name": "GPT-4",
+          "provider": "openai",
+          "contextLength": 8192
+        },
+        {
+          "id": "gpt-3.5-turbo",
+          "name": "GPT-3.5 Turbo",
+          "provider": "openai",
+          "contextLength": 4096
+        }
+      ],
+      "subscriptionId": "sub_123",           // LEGACY: For backward compatibility
       "lastUsedAt": "2024-01-15T10:30:00Z",
-      "createdAt": "2024-01-01T00:00:00Z"
+      "createdAt": "2024-01-01T00:00:00Z",
+      "expiresAt": null,
+      "isActive": true,
+      "metadata": {}
     }
-  ]
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 5,
+    "totalPages": 1
+  }
 }
 ```
 
 #### POST /api-keys
-Generate new API key
+Generate new API key with multi-model support
+
+**NEW FORMAT** (Recommended):
 ```json
 Request:
 {
-  "subscriptionId": "sub_123",
-  "name": "Development Key"
+  "modelIds": ["gpt-4", "gpt-3.5-turbo"],  // NEW: Array of model IDs
+  "name": "Development Key",
+  "expiresAt": "2024-12-31T23:59:59Z",     // Optional
+  "maxBudget": 100.00,                     // Optional
+  "budgetDuration": "monthly",             // Optional: daily, weekly, monthly, yearly
+  "tpmLimit": 1000,                        // Optional: tokens per minute
+  "rpmLimit": 60,                          // Optional: requests per minute
+  "teamId": "team_123",                    // Optional
+  "tags": ["production", "api"],           // Optional
+  "permissions": {                         // Optional
+    "allowChatCompletions": true,
+    "allowEmbeddings": false,
+    "allowCompletions": true
+  },
+  "metadata": {                            // Optional
+    "environment": "production",
+    "application": "chatbot"
+  }
 }
 
 Response:
 {
   "id": "key_456",
-  "subscriptionId": "sub_123",
-  "userId": "user_123",
   "name": "Development Key",
+  "key": "lm_abcdef1234567890",            // Only returned on creation
+  "models": ["gpt-4", "gpt-3.5-turbo"],
+  "modelDetails": [
+    {
+      "id": "gpt-4",
+      "name": "GPT-4", 
+      "provider": "openai",
+      "contextLength": 8192
+    },
+    {
+      "id": "gpt-3.5-turbo",
+      "name": "GPT-3.5 Turbo",
+      "provider": "openai", 
+      "contextLength": 4096
+    }
+  ],
+  "subscriptionId": "sub_123",             // LEGACY: For backward compatibility
+  "createdAt": "2024-01-20T00:00:00Z",
+  "expiresAt": "2024-12-31T23:59:59Z",
+  "isActive": true,
+  "metadata": {
+    "environment": "production",
+    "application": "chatbot"
+  }
+}
+```
+
+**LEGACY FORMAT** (Deprecated but supported):
+```json
+Request:
+{
+  "subscriptionId": "sub_123",             // DEPRECATED: Use modelIds instead
+  "name": "Development Key"
+}
+
+Response Headers:
+X-API-Deprecation-Warning: subscriptionId parameter is deprecated. Use modelIds array instead.
+X-API-Migration-Guide: See /docs/api/migration-guide for details on upgrading to multi-model API keys.
+
+Response:
+{
+  "id": "key_456",
+  "name": "Development Key", 
   "key": "lm_abcdef1234567890",
-  "createdAt": "2024-01-20T00:00:00Z"
+  "models": ["gpt-4"],                     // Derived from subscription's model
+  "modelDetails": [
+    {
+      "id": "gpt-4",
+      "name": "GPT-4",
+      "provider": "openai",
+      "contextLength": 8192
+    }
+  ],
+  "subscriptionId": "sub_123",             // Legacy field maintained
+  "createdAt": "2024-01-20T00:00:00Z",
+  "isActive": true
+}
+```
+
+#### GET /api-keys/:id
+Get API key details with multi-model information
+```json
+Response:
+{
+  "id": "key_123",
+  "name": "Production Key",
+  "prefix": "lm_1234",
+  "models": ["gpt-4", "gpt-3.5-turbo"],
+  "modelDetails": [
+    {
+      "id": "gpt-4",
+      "name": "GPT-4",
+      "provider": "openai",
+      "contextLength": 8192
+    },
+    {
+      "id": "gpt-3.5-turbo", 
+      "name": "GPT-3.5 Turbo",
+      "provider": "openai",
+      "contextLength": 4096
+    }
+  ],
+  "subscriptionId": "sub_123",           // LEGACY: For backward compatibility
+  "lastUsedAt": "2024-01-15T10:30:00Z",
+  "createdAt": "2024-01-01T00:00:00Z",
+  "expiresAt": null,
+  "isActive": true,
+  "metadata": {
+    "environment": "production"
+  }
 }
 ```
 
@@ -376,9 +512,10 @@ Rotate API key
 Response:
 {
   "id": "key_456",
-  "userId": "user_123",
   "key": "lm_newkey1234567890",
-  "rotatedAt": "2024-01-20T10:00:00Z"
+  "keyPrefix": "lm_newkey",
+  "rotatedAt": "2024-01-20T10:00:00Z",
+  "oldPrefix": "lm_oldkey"
 }
 ```
 
@@ -400,6 +537,58 @@ Response:
 - The API key is completely removed from the database
 - An audit log entry is created to track the deletion
 - All active connections using this key will be immediately terminated
+
+#### GET /api-keys/:id/usage
+Get API key usage statistics
+```json
+Response:
+{
+  "totalRequests": 15000,
+  "requestsThisMonth": 2500,
+  "lastUsedAt": "2024-01-20T09:30:00Z",
+  "createdAt": "2024-01-01T00:00:00Z"
+}
+```
+
+#### GET /api-keys/stats
+Get user API key statistics
+```json
+Response:
+{
+  "total": 10,
+  "active": 8,
+  "expired": 1,
+  "revoked": 1,
+  "bySubscription": {                    // LEGACY: For backward compatibility
+    "sub_123": 3,
+    "sub_456": 2
+  },
+  "byModel": {                           // NEW: Count by model
+    "gpt-4": 5,
+    "gpt-3.5-turbo": 7,
+    "claude-3": 2
+  }
+}
+```
+
+#### POST /api-keys/validate
+Validate API key (admin endpoint)
+```json
+Request:
+{
+  "key": "lm_abcdef1234567890"
+}
+
+Response:
+{
+  "isValid": true,
+  "subscriptionId": "sub_123",           // LEGACY: For backward compatibility  
+  "models": ["gpt-4", "gpt-3.5-turbo"], // NEW: Array of accessible models
+  "userId": "user_123",
+  "keyId": "key_456",
+  "reason": null
+}
+```
 
 ### Usage Statistics
 

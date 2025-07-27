@@ -1,4 +1,4 @@
-import { Type } from '@sinclair/typebox';
+import { Type, Static } from '@sinclair/typebox';
 import { PaginationSchema, TimestampSchema, createPaginatedResponse } from './common';
 
 export const ApiKeySchema = Type.Object({
@@ -23,12 +23,205 @@ export const ApiKeyDetailsSchema = Type.Object({
   createdAt: TimestampSchema,
 });
 
+// New schema for multi-model support
 export const CreateApiKeySchema = Type.Object({
-  subscriptionId: Type.String(),
-  name: Type.Optional(Type.String()),
-  expiresAt: Type.Optional(TimestampSchema),
+  modelIds: Type.Array(Type.String(), { 
+    minItems: 1,
+    description: 'Array of model IDs to associate with this API key',
+    examples: [['gpt-4', 'gpt-3.5-turbo']]
+  }),
+  name: Type.Optional(Type.String({ 
+    minLength: 1, 
+    maxLength: 255,
+    description: 'Human-readable name for the API key' 
+  })),
+  expiresAt: Type.Optional(Type.String({ 
+    format: 'date-time',
+    description: 'ISO 8601 date-time when the key expires' 
+  })),
+  maxBudget: Type.Optional(Type.Number({ 
+    minimum: 0,
+    description: 'Maximum budget for this API key' 
+  })),
+  budgetDuration: Type.Optional(Type.String({ 
+    enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
+    description: 'Budget duration period, defaults to monthly' 
+  })),
+  tpmLimit: Type.Optional(Type.Integer({ 
+    minimum: 0,
+    description: 'Tokens per minute limit' 
+  })),
+  rpmLimit: Type.Optional(Type.Integer({ 
+    minimum: 0,
+    description: 'Requests per minute limit' 
+  })),
+  teamId: Type.Optional(Type.String()),
+  tags: Type.Optional(Type.Array(Type.String())),
+  permissions: Type.Optional(Type.Object({
+    allowChatCompletions: Type.Optional(Type.Boolean()),
+    allowEmbeddings: Type.Optional(Type.Boolean()),
+    allowCompletions: Type.Optional(Type.Boolean()),
+  })),
+  softBudget: Type.Optional(Type.Number()),
+  guardrails: Type.Optional(Type.Array(Type.String())),
+  metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
 });
 
+// Legacy schema for backward compatibility
+export const LegacyCreateApiKeySchema = Type.Object({
+  subscriptionId: Type.String({ 
+    description: 'DEPRECATED: Use modelIds instead. Subscription ID to associate with this API key',
+    deprecated: true 
+  }),
+  name: Type.Optional(Type.String({ 
+    minLength: 1, 
+    maxLength: 255,
+    description: 'Human-readable name for the API key' 
+  })),
+  expiresAt: Type.Optional(Type.String({ 
+    format: 'date-time',
+    description: 'ISO 8601 date-time when the key expires' 
+  })),
+  maxBudget: Type.Optional(Type.Number({ 
+    minimum: 0,
+    description: 'Maximum budget for this API key' 
+  })),
+  budgetDuration: Type.Optional(Type.String({ 
+    enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
+    description: 'Budget duration period, defaults to monthly' 
+  })),
+  tpmLimit: Type.Optional(Type.Integer({ 
+    minimum: 0,
+    description: 'Tokens per minute limit' 
+  })),
+  rpmLimit: Type.Optional(Type.Integer({ 
+    minimum: 0,
+    description: 'Requests per minute limit' 
+  })),
+  teamId: Type.Optional(Type.String()),
+  tags: Type.Optional(Type.Array(Type.String())),
+  permissions: Type.Optional(Type.Object({
+    allowChatCompletions: Type.Optional(Type.Boolean()),
+    allowEmbeddings: Type.Optional(Type.Boolean()),
+    allowCompletions: Type.Optional(Type.Boolean()),
+  })),
+  softBudget: Type.Optional(Type.Number()),
+  guardrails: Type.Optional(Type.Array(Type.String())),
+  metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
+});
+
+// Union type for API endpoint
+export const CreateApiKeyRequestSchema = Type.Object({
+  // Required for new format
+  modelIds: Type.Optional(Type.Array(Type.String(), { 
+    minItems: 1,
+    description: 'Array of model IDs to associate with this API key',
+    examples: [['gpt-4', 'gpt-3.5-turbo']]
+  })),
+  // Required for legacy format
+  subscriptionId: Type.Optional(Type.String({ 
+    description: 'DEPRECATED: Use modelIds instead. Subscription ID to associate with this API key'
+  })),
+  // Common optional fields
+  name: Type.Optional(Type.String({ 
+    minLength: 1, 
+    maxLength: 255,
+    description: 'Human-readable name for the API key' 
+  })),
+  expiresAt: Type.Optional(Type.String({ 
+    format: 'date-time',
+    description: 'ISO 8601 date-time when the key expires' 
+  })),
+  maxBudget: Type.Optional(Type.Number({ 
+    minimum: 0,
+    description: 'Maximum budget for this API key' 
+  })),
+  budgetDuration: Type.Optional(Type.String({ 
+    enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
+    description: 'Budget duration period, defaults to monthly' 
+  })),
+  tpmLimit: Type.Optional(Type.Integer({ 
+    minimum: 0,
+    description: 'Tokens per minute limit' 
+  })),
+  rpmLimit: Type.Optional(Type.Integer({ 
+    minimum: 0,
+    description: 'Requests per minute limit' 
+  })),
+  teamId: Type.Optional(Type.String()),
+  tags: Type.Optional(Type.Array(Type.String())),
+  permissions: Type.Optional(Type.Object({
+    allowChatCompletions: Type.Optional(Type.Boolean()),
+    allowEmbeddings: Type.Optional(Type.Boolean()),
+    allowCompletions: Type.Optional(Type.Boolean()),
+  })),
+  softBudget: Type.Optional(Type.Number()),
+  guardrails: Type.Optional(Type.Array(Type.String())),
+  metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
+});
+
+// Response schema for list endpoint with pagination
+export const ApiKeyResponseSchema = Type.Object({
+  data: Type.Array(Type.Object({
+    id: Type.String(),
+    name: Type.Optional(Type.String()),
+    prefix: Type.String(),
+    models: Type.Array(Type.String()),
+    modelDetails: Type.Optional(Type.Array(Type.Object({
+      id: Type.String(),
+      name: Type.String(),
+      provider: Type.String(),
+      contextLength: Type.Optional(Type.Integer()),
+    }))),
+    subscriptionId: Type.Optional(Type.String()),
+    lastUsedAt: Type.Optional(Type.String({ format: 'date-time' })),
+    createdAt: Type.String({ format: 'date-time' }),
+    expiresAt: Type.Optional(Type.String({ format: 'date-time' })),
+    isActive: Type.Boolean(),
+    metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
+  })),
+  pagination: Type.Object({
+    page: Type.Integer(),
+    limit: Type.Integer(),
+    total: Type.Integer(),
+    totalPages: Type.Integer(),
+  }),
+});
+
+// Single API key response schema
+export const SingleApiKeyResponseSchema = Type.Object({
+  id: Type.String(),
+  models: Type.Array(Type.String()),
+  modelDetails: Type.Optional(Type.Array(Type.Object({
+    id: Type.String(),
+    name: Type.String(),
+    provider: Type.String(),
+    contextLength: Type.Optional(Type.Integer()),
+  }))),
+  name: Type.Optional(Type.String()),
+  prefix: Type.String(),
+  key: Type.Optional(Type.String({ description: 'Only included on creation' })),
+  expiresAt: Type.Optional(Type.String({ format: 'date-time' })),
+  isActive: Type.Boolean(),
+  createdAt: Type.String({ format: 'date-time' }),
+  lastUsedAt: Type.Optional(Type.String({ format: 'date-time' })),
+  // Legacy field for backward compatibility
+  subscriptionId: Type.Optional(Type.String()),
+  // LiteLLM fields
+  liteLLMKeyId: Type.Optional(Type.String()),
+  liteLLMInfo: Type.Optional(Type.Object({
+    key_name: Type.String(),
+    max_budget: Type.Optional(Type.Number()),
+    current_spend: Type.Number(),
+    models: Type.Array(Type.String()),
+    tpm_limit: Type.Optional(Type.Integer()),
+    rpm_limit: Type.Optional(Type.Integer()),
+  })),
+  // Metadata
+  metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
+});
+
+// Legacy response schema for backward compatibility
 export const CreateApiKeyResponseSchema = Type.Object({
   id: Type.String(),
   name: Type.Optional(Type.String()),
@@ -198,3 +391,8 @@ export const ApiKeyValidationSchema = Type.Object({
   })),
   error: Type.Optional(Type.String()),
 });
+
+// TypeScript types
+export type CreateApiKeyRequest = Static<typeof CreateApiKeySchema>;
+export type LegacyCreateApiKeyRequest = Static<typeof LegacyCreateApiKeySchema>;
+export type ApiKeyResponse = Static<typeof ApiKeyResponseSchema>;

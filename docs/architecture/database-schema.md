@@ -163,11 +163,11 @@ CREATE INDEX idx_subscriptions_litellm ON subscriptions(litellm_key_id);
 ```
 
 ### api_keys
-API keys for accessing subscribed models with LiteLLM integration
+API keys with multi-model support and LiteLLM integration
 ```sql
 CREATE TABLE api_keys (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+    subscription_id UUID REFERENCES subscriptions(id) ON DELETE SET NULL, -- MODIFIED: Now nullable for multi-model support
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255),
     key_hash VARCHAR(255) UNIQUE NOT NULL,
@@ -191,15 +191,31 @@ CREATE TABLE api_keys (
     expires_at TIMESTAMP WITH TIME ZONE,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    revoked_at TIMESTAMP WITH TIME ZONE
+    revoked_at TIMESTAMP WITH TIME ZONE,
+    metadata JSONB DEFAULT '{}'
 );
 
 CREATE INDEX idx_api_keys_subscription ON api_keys(subscription_id);
+CREATE INDEX idx_api_keys_user ON api_keys(user_id);
 CREATE INDEX idx_api_keys_hash ON api_keys(key_hash);
 CREATE INDEX idx_api_keys_prefix ON api_keys(key_prefix);
 CREATE INDEX idx_api_keys_active ON api_keys(is_active);
 CREATE INDEX idx_api_keys_litellm ON api_keys(litellm_key_id);
 CREATE INDEX idx_api_keys_team ON api_keys(team_id);
+```
+
+### api_key_models
+Junction table for many-to-many relationship between API keys and models
+```sql
+CREATE TABLE api_key_models (
+    api_key_id UUID NOT NULL REFERENCES api_keys(id) ON DELETE CASCADE,
+    model_id VARCHAR(255) NOT NULL REFERENCES models(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (api_key_id, model_id)
+);
+
+CREATE INDEX idx_api_key_models_key ON api_key_models(api_key_id);
+CREATE INDEX idx_api_key_models_model ON api_key_models(model_id);
 ```
 
 ### usage_logs
@@ -410,6 +426,116 @@ JOIN subscriptions s ON ul.subscription_id = s.id
 GROUP BY s.user_id, s.model_id, date_trunc('day', ul.created_at);
 ```
 
+## Multi-Model API Key Migration
+
+### Migration Overview
+The system has been enhanced to support multi-model API keys, allowing a single API key to access multiple models instead of being tied to a single subscription.
+
+### Migration Strategy
+1. **Phase 1**: Add new `api_key_models` junction table
+2. **Phase 2**: Migrate existing API key data from subscription-based to model-based associations
+3. **Phase 3**: Make `subscription_id` nullable in `api_keys` table for backward compatibility
+
+### Migration Scripts
+
+#### Migration 001: Add API Key Models Junction Table
+```sql
+-- Create junction table for many-to-many relationship
+CREATE TABLE api_key_models (
+    api_key_id UUID NOT NULL REFERENCES api_keys(id) ON DELETE CASCADE,
+    model_id VARCHAR(255) NOT NULL REFERENCES models(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (api_key_id, model_id)
+);
+
+CREATE INDEX idx_api_key_models_key ON api_key_models(api_key_id);
+CREATE INDEX idx_api_key_models_model ON api_key_models(model_id);
+```
+
+#### Migration 002: Migrate Existing Data
+```sql
+-- Migrate existing API key-subscription relationships to API key-model relationships
+INSERT INTO api_key_models (api_key_id, model_id, created_at)
+SELECT 
+    ak.id as api_key_id,
+    s.model_id,
+    ak.created_at
+FROM api_keys ak
+JOIN subscriptions s ON ak.subscription_id = s.id
+WHERE ak.subscription_id IS NOT NULL
+ON CONFLICT (api_key_id, model_id) DO NOTHING;
+
+-- Make subscription_id nullable for transition period
+ALTER TABLE api_keys ALTER COLUMN subscription_id DROP NOT NULL;
+
+-- Add metadata column for additional API key information
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}';
+```
+
+### Enhanced Views
+
+#### Multi-Model API Keys View
+```sql
+CREATE OR REPLACE VIEW api_keys_with_models AS
+SELECT 
+    ak.id,
+    ak.user_id,
+    ak.name,
+    ak.key_prefix,
+    ak.subscription_id, -- Legacy field for backward compatibility
+    ak.is_active,
+    ak.created_at,
+    ak.last_used_at,
+    ak.expires_at,
+    ak.metadata,
+    -- Aggregated model information
+    ARRAY_AGG(akm.model_id ORDER BY akm.created_at) as model_ids,
+    ARRAY_AGG(m.name ORDER BY akm.created_at) as model_names,
+    ARRAY_AGG(m.provider ORDER BY akm.created_at) as model_providers,
+    COUNT(akm.model_id) as model_count
+FROM api_keys ak
+LEFT JOIN api_key_models akm ON ak.id = akm.api_key_id
+LEFT JOIN models m ON akm.model_id = m.id
+GROUP BY ak.id, ak.user_id, ak.name, ak.key_prefix, ak.subscription_id, 
+         ak.is_active, ak.created_at, ak.last_used_at, ak.expires_at, ak.metadata;
+```
+
+#### Updated Active Subscriptions View
+```sql
+CREATE OR REPLACE VIEW active_subscriptions AS
+SELECT 
+    s.*,
+    u.username,
+    u.email,
+    m.name as model_name,
+    m.provider,
+    (s.quota_requests - s.used_requests) as remaining_requests,
+    (s.quota_tokens - s.used_tokens) as remaining_tokens,
+    -- Count associated API keys (both legacy and new multi-model)
+    COALESCE(legacy_keys.count, 0) + COALESCE(multi_model_keys.count, 0) as total_api_keys
+FROM subscriptions s
+JOIN users u ON s.user_id = u.id
+JOIN models m ON s.model_id = m.id
+LEFT JOIN (
+    -- Legacy API keys directly linked to subscription
+    SELECT subscription_id, COUNT(*) as count
+    FROM api_keys 
+    WHERE subscription_id IS NOT NULL AND is_active = true
+    GROUP BY subscription_id
+) legacy_keys ON s.id = legacy_keys.subscription_id
+LEFT JOIN (
+    -- New multi-model API keys linked through junction table
+    SELECT s2.id as subscription_id, COUNT(DISTINCT ak.id) as count
+    FROM subscriptions s2
+    JOIN api_key_models akm ON s2.model_id = akm.model_id
+    JOIN api_keys ak ON akm.api_key_id = ak.id
+    WHERE ak.is_active = true AND s2.user_id = s.user_id
+    GROUP BY s2.id
+) multi_model_keys ON s.id = multi_model_keys.subscription_id
+WHERE s.status = 'active'
+    AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP);
+```
+
 ## Migrations
 
 ### Initial setup
@@ -423,4 +549,13 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Run all CREATE FUNCTION statements above
 -- Run all CREATE TRIGGER statements above
 -- Run all CREATE VIEW statements above
+```
+
+### Multi-Model Migration Commands
+```bash
+# Run multi-model API key migrations
+npm run db:migrate
+
+# Validate migration success
+npm run validate:migration
 ```

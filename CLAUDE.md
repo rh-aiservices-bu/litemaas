@@ -77,7 +77,9 @@ litemaas/
 - Team collaboration features
 
 ### Database Tables
-`users`, `teams`, `models`, `subscriptions`, `api_keys`, `usage_logs`, `audit_logs`
+`users`, `teams`, `models`, `subscriptions`, `api_keys`, `api_key_models` (NEW), `usage_logs`, `audit_logs`
+
+> **🔄 UPDATED**: Added `api_key_models` junction table for multi-model API key support
 
 ### API Routes
 Auth, user management, model registry, subscriptions, API keys, teams, LiteLLM integration, usage analytics
@@ -124,6 +126,14 @@ npm run dev        # Start both backend and frontend
 
 ## 📝 Key Implementation Notes
 
+### Multi-Model API Keys (NEW)
+> **🔄 UPDATED**: API keys now support multi-model access instead of single subscription binding
+
+- **Architecture**: Many-to-many relationship between API keys and models via `api_key_models` junction table
+- **Backward Compatibility**: Legacy subscription-based keys still work with deprecation warnings
+- **Enhanced Features**: Budget limits, rate limiting, team support, metadata, and expiration per key
+- **Migration Strategy**: Gradual transition with full compatibility maintained
+
 ### Subscription Management
 - Browse models → Select → Subscribe (creates "active" status immediately)
 - Self-service model: No approval workflow required
@@ -140,6 +150,23 @@ model_info.max_tokens → context_length
 model_info.input/output_cost_per_token → pricing
 ```
 
+### API Key Management
+```typescript
+// NEW: Multi-model API key creation
+{
+  "modelIds": ["gpt-4", "gpt-3.5-turbo"],  // Multiple models per key
+  "maxBudget": 500.00,                     // Per-key budget limits
+  "tpmLimit": 2000,                        // Rate limiting
+  "permissions": {...},                    // Fine-grained permissions
+  "metadata": {...}                        // Custom metadata
+}
+
+// LEGACY: Single subscription (still supported)
+{
+  "subscriptionId": "sub_123"              // Deprecated with warnings
+}
+```
+
 ## 📚 Documentation Structure
 
 ```
@@ -152,6 +179,10 @@ docs/
 ```
 
 ### Key Documentation Files
+- `docs/api/rest-api.md` - Complete API reference with multi-model support
+- `docs/api/api-migration-guide.md` - **NEW**: Multi-model API migration guide
+- `docs/architecture/database-schema.md` - **UPDATED**: Database schema with multi-model tables
+- `docs/features/multi-model-api-keys-implementation.md` - **NEW**: Implementation details
 - `docs/api/subscriptions-api.md` - Subscription endpoints
 - `docs/api/model-sync-api.md` - Model synchronization
 - `docs/architecture/services.md` - Service layer details
