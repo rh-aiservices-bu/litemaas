@@ -549,11 +549,7 @@ const ApiKeysPage: React.FC = () => {
             </FormGroup>
           </Form>
           
-          <Alert variant="info" title="Security Notice" style={{ marginTop: '1rem' }}>
-            Make sure to copy your API key after creation. You won't be able to see it again for security reasons.
-          </Alert>
-          
-          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+<div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
             <Button
               variant="primary"
               onClick={handleSaveApiKey}
@@ -691,11 +687,7 @@ const ApiKeysPage: React.FC = () => {
                 Your API key has been created successfully.
               </Alert>
               
-              <Alert variant="warning" title="Important!" style={{ marginBottom: '1rem' }}>
-                Copy your API key now. You won't be able to see it again for security reasons.
-              </Alert>
-              
-              <FormGroup label="Your new API key" fieldId="generated-key">
+<FormGroup label="Your new API key" fieldId="generated-key">
                 <ClipboardCopy
                   hoverTip="Copy"
                   clickTip="Copied"
@@ -732,7 +724,7 @@ const ApiKeysPage: React.FC = () => {
           
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
             <Button variant="primary" onClick={() => setShowGeneratedKey(false)}>
-              I've Copied the Key
+              Close
             </Button>
           </div>
         </ModalBody>
