@@ -275,14 +275,15 @@ export class ApiKeyService {
       // Store the API key locally
       const apiKey = await this.fastify.dbUtils.queryOne(
         `INSERT INTO api_keys (
-          subscription_id, name, key_hash, key_prefix, 
+          subscription_id, user_id, name, key_hash, key_prefix, 
           expires_at, is_active, lite_llm_key_id,
           max_budget, current_spend, tpm_limit, rpm_limit,
           last_sync_at, sync_status
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING *`,
         [
           subscriptionId,
+          userId,
           name,
           keyHash,
           keyPrefix,
@@ -779,6 +780,7 @@ export class ApiKeyService {
     return {
       id: apiKey.id,
       subscriptionId: apiKey.subscription_id,
+      userId: apiKey.user_id,
       name: apiKey.name,
       keyHash: apiKey.key_hash,
       keyPrefix: apiKey.key_prefix,

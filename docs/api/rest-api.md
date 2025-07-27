@@ -339,9 +339,10 @@ Response:
   "data": [
     {
       "id": "key_123",
+      "subscriptionId": "sub_123",
+      "userId": "user_123",
       "name": "Production Key",
       "prefix": "lm_1234",
-      "subscriptionId": "sub_123",
       "lastUsedAt": "2024-01-15T10:30:00Z",
       "createdAt": "2024-01-01T00:00:00Z"
     }
@@ -361,9 +362,10 @@ Request:
 Response:
 {
   "id": "key_456",
+  "subscriptionId": "sub_123",
+  "userId": "user_123",
   "name": "Development Key",
   "key": "lm_abcdef1234567890",
-  "subscriptionId": "sub_123",
   "createdAt": "2024-01-20T00:00:00Z"
 }
 ```
@@ -374,6 +376,7 @@ Rotate API key
 Response:
 {
   "id": "key_456",
+  "userId": "user_123",
   "key": "lm_newkey1234567890",
   "rotatedAt": "2024-01-20T10:00:00Z"
 }

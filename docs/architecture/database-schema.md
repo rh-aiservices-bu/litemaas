@@ -168,6 +168,7 @@ API keys for accessing subscribed models with LiteLLM integration
 CREATE TABLE api_keys (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255),
     key_hash VARCHAR(255) UNIQUE NOT NULL,
     key_prefix VARCHAR(10) NOT NULL,

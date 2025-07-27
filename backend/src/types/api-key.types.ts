@@ -1,6 +1,7 @@
 export interface ApiKey {
   id: string;
   subscriptionId: string;
+  userId: string;
   name?: string;
   keyHash: string;
   keyPrefix: string;
