@@ -668,29 +668,27 @@ export class ApiKeyService {
     }
   }
 
-  async revokeApiKey(keyId: string, userId: string): Promise<EnhancedApiKey> {
+  async deleteApiKey(keyId: string, userId: string): Promise<void> {
     try {
       const apiKey = await this.getApiKey(keyId, userId);
       if (!apiKey) {
         throw this.fastify.createNotFoundError('API key');
       }
 
-      // Revoke in LiteLLM if integrated
+      // Delete from LiteLLM if integrated
       if (apiKey.liteLLMKeyId && !this.shouldUseMockData()) {
         try {
           await this.liteLLMService.deleteKey(apiKey.liteLLMKeyId);
         } catch (error) {
-          this.fastify.log.warn(error, 'Failed to delete key from LiteLLM, proceeding with local revocation');
+          this.fastify.log.warn(error, 'Failed to delete key from LiteLLM, proceeding with local deletion');
         }
       }
 
-      // Revoke locally
-      const revokedApiKey = await this.fastify.dbUtils.queryOne(`
-        UPDATE api_keys
-        SET is_active = false, revoked_at = CURRENT_TIMESTAMP
-        WHERE id = $1
-        RETURNING *
-      `, [keyId]);
+      // Delete from local database
+      await this.fastify.dbUtils.query(
+        'DELETE FROM api_keys WHERE id = $1',
+        [keyId]
+      );
 
       // Create audit log
       await this.fastify.dbUtils.query(
@@ -698,10 +696,14 @@ export class ApiKeyService {
          VALUES ($1, $2, $3, $4, $5)`,
         [
           userId,
-          'API_KEY_REVOKE',
+          'API_KEY_DELETE',
           'API_KEY',
           keyId,
-          { subscriptionId: apiKey.subscriptionId },
+          { 
+            subscriptionId: apiKey.subscriptionId,
+            keyName: apiKey.name,
+            keyPrefix: apiKey.keyPrefix
+          },
         ]
       );
 
@@ -709,11 +711,9 @@ export class ApiKeyService {
         userId,
         apiKeyId: keyId,
         subscriptionId: apiKey.subscriptionId,
-      }, 'API key revoked');
-
-      return this.mapToEnhancedApiKey(revokedApiKey);
+      }, 'API key deleted');
     } catch (error) {
-      this.fastify.log.error(error, 'Failed to revoke API key');
+      this.fastify.log.error(error, 'Failed to delete API key');
       throw error;
     }
   }

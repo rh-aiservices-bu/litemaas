@@ -298,14 +298,14 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
     },
   });
 
-  // Revoke API key
+  // Delete API key
   fastify.delete<{
     Params: { id: string };
-    Reply: { message: string; revokedAt: string };
+    Reply: { message: string; deletedAt: string };
   }>('/:id', {
     schema: {
       tags: ['API Keys'],
-      description: 'Revoke API key',
+      description: 'Delete API key',
       security: [{ bearerAuth: [] }],
       params: {
         type: 'object',
@@ -319,7 +319,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           type: 'object',
           properties: {
             message: { type: 'string' },
-            revokedAt: { type: 'string', format: 'date-time' },
+            deletedAt: { type: 'string', format: 'date-time' },
           },
         },
       },
@@ -330,20 +330,20 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       const { id } = request.params;
 
       try {
-        const revokedApiKey = await apiKeyService.revokeApiKey(id, user.userId);
+        await apiKeyService.deleteApiKey(id, user.userId);
 
         return {
-          message: 'API key revoked successfully',
-          revokedAt: revokedApiKey.revokedAt?.toISOString() || new Date().toISOString(),
+          message: 'API key deleted successfully',
+          deletedAt: new Date().toISOString(),
         };
       } catch (error) {
-        fastify.log.error(error, 'Failed to revoke API key');
+        fastify.log.error(error, 'Failed to delete API key');
         
         if (error.statusCode) {
           throw error;
         }
         
-        throw fastify.createError(500, 'Failed to revoke API key');
+        throw fastify.createError(500, 'Failed to delete API key');
       }
     },
   });

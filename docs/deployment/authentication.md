@@ -25,7 +25,7 @@ LiteMaaS implements a multi-layered authentication system that supports differen
 - **Format**: `ltm_<unique_identifier>`
 - **Storage**: Hashed in database
 - **Header**: `Authorization: Bearer ltm_<key>`
-- **Management**: Created/revoked through UI or API
+- **Management**: Created/deleted through UI or API
 
 ### 4. Development Bypass
 - **Purpose**: Frontend development without authentication setup
@@ -263,7 +263,7 @@ curl -s -H "Origin: http://localhost:3000" \
 - `POST /api/subscriptions` - Create subscription
 - `GET /api/api-keys` - List API keys
 - `POST /api/api-keys` - Generate API key
-- `DELETE /api/api-keys/:id` - Revoke API key
+- `DELETE /api/api-keys/:id` - Delete API key
 - `GET /api/usage/*` - Usage metrics
 - `GET /api/teams/*` - Team management
 - `POST /api/models/sync` - Admin only

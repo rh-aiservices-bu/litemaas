@@ -170,7 +170,7 @@ describe('ApiKeysPage', () => {
     });
   });
 
-  it('should revoke API key with confirmation', async () => {
+  it('should delete API key with confirmation', async () => {
     const user = userEvent.setup();
     render(<ApiKeysPage />);
     
@@ -178,17 +178,17 @@ describe('ApiKeysPage', () => {
       expect(screen.getByText('Test API Key')).toBeInTheDocument();
     });
     
-    // Click revoke button
-    const revokeButton = screen.getByText('Revoke');
-    await user.click(revokeButton);
+    // Click delete button
+    const deleteButton = screen.getByText('Delete');
+    await user.click(deleteButton);
     
     await waitFor(() => {
-      expect(screen.getByText('Revoke API Key')).toBeInTheDocument();
+      expect(screen.getByText('Delete API Key')).toBeInTheDocument();
       expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
     });
     
-    // Confirm revocation
-    const confirmButton = screen.getByText('Revoke Key');
+    // Confirm deletion
+    const confirmButton = screen.getByText('Delete Key');
     await user.click(confirmButton);
   });
 
@@ -238,7 +238,7 @@ describe('ApiKeysPage', () => {
     });
   });
 
-  it('should disable revoke button for non-active keys', async () => {
+  it('should disable delete button for non-active keys', async () => {
     // Mock a revoked API key
     const revokedKey = { ...mockApiResponses.apiKeys[0], status: 'revoked' };
     
@@ -252,7 +252,7 @@ describe('ApiKeysPage', () => {
       expect(screen.getByText('Revoked')).toBeInTheDocument();
     });
     
-    const revokeButton = screen.getByText('Revoke');
-    expect(revokeButton).toBeDisabled();
+    const deleteButton = screen.getByText('Delete');
+    expect(deleteButton).toBeDisabled();
   });
 });

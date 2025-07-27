@@ -123,7 +123,7 @@ class ApiKeysService {
     return mappedKey;
   }
 
-  async revokeApiKey(keyId: string): Promise<void> {
+  async deleteApiKey(keyId: string): Promise<void> {
     return apiClient.delete(`/api-keys/${keyId}`);
   }
 

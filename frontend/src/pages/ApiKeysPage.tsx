@@ -222,30 +222,30 @@ const ApiKeysPage: React.FC = () => {
     setIsViewModalOpen(true);
   };
 
-  const handleRevokeKey = (apiKey: ApiKey) => {
+  const handleDeleteKey = (apiKey: ApiKey) => {
     setKeyToDelete(apiKey);
     setIsDeleteModalOpen(true);
   };
 
-  const confirmRevokeKey = async () => {
+  const confirmDeleteKey = async () => {
     if (!keyToDelete) return;
     
     try {
-      await apiKeysService.revokeApiKey(keyToDelete.id);
+      await apiKeysService.deleteApiKey(keyToDelete.id);
       
       // Refresh the API keys list
       await loadApiKeys();
       
       addNotification({
-        title: 'API Key Revoked',
-        description: `${keyToDelete.name} has been revoked`,
-        variant: 'warning'
+        title: 'API Key Deleted',
+        description: `${keyToDelete.name} has been deleted`,
+        variant: 'success'
       });
     } catch (err) {
-      console.error('Failed to revoke API key:', err);
+      console.error('Failed to delete API key:', err);
       addNotification({
         title: 'Error',
-        description: 'Failed to revoke API key. Please try again.',
+        description: 'Failed to delete API key. Please try again.',
         variant: 'danger'
       });
     } finally {
@@ -448,11 +448,11 @@ const ApiKeysPage: React.FC = () => {
                             <Button 
                               variant="danger" 
                               size="sm" 
-                              onClick={() => handleRevokeKey(apiKey)}
+                              onClick={() => handleDeleteKey(apiKey)}
                               isDisabled={apiKey.status !== 'active'}
                               icon={<TrashIcon />}
                             >
-                              Revoke
+                              Delete
                             </Button>
                           </FlexItem>
                         </Flex>
@@ -741,7 +741,7 @@ const ApiKeysPage: React.FC = () => {
       {/* Delete Confirmation Modal */}
       <Modal
         variant={ModalVariant.small}
-        title="Revoke API Key"
+        title="Delete API Key"
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
       >
@@ -750,24 +750,24 @@ const ApiKeysPage: React.FC = () => {
             <>
               <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsMd' }} style={{ marginBottom: '1rem' }}>
                 <FlexItem>
-                  <ExclamationTriangleIcon color="var(--pf-v6-global--warning--color--100)" />
+                  <ExclamationTriangleIcon color="var(--pf-v6-global--danger--color--100)" />
                 </FlexItem>
                 <FlexItem>
                   <Content component={ContentVariants.p}>
-                    Are you sure you want to revoke the API key <strong>{keyToDelete.name}</strong>?
+                    Are you sure you want to delete the API key <strong>{keyToDelete.name}</strong>?
                   </Content>
                 </FlexItem>
               </Flex>
               
-              <Alert variant="warning" title="Warning" style={{ marginBottom: '1rem' }}>
-                This action cannot be undone. Applications using this key will lose access immediately.
+              <Alert variant="danger" title="Warning" style={{ marginBottom: '1rem' }}>
+                This action cannot be undone. The API key will be permanently removed and applications using this key will lose access immediately.
               </Alert>
             </>
           )}
           
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-            <Button variant="danger" onClick={confirmRevokeKey}>
-              Revoke Key
+            <Button variant="danger" onClick={confirmDeleteKey}>
+              Delete Key
             </Button>
             <Button variant="link" onClick={() => setIsDeleteModalOpen(false)}>
               Cancel

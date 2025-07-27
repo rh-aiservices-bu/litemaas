@@ -1,5 +1,69 @@
 # Migration Notes
 
+## API Key Deletion Workflow Change (January 2025)
+
+### Overview
+Changed the API key management workflow from "revoke" (soft delete) to "delete" (hard delete) to permanently remove API keys from both LiteMaaS and LiteLLM databases.
+
+### Problem
+- API keys were previously only marked as revoked (`is_active = false`, `revoked_at = timestamp`) but remained in the database
+- This caused storage bloat and potential security concerns with inactive keys persisting
+- User expectation was that "delete" would completely remove the key
+
+### Changes Made
+
+#### 1. Backend Service Update (`backend/src/services/api-key.service.ts`)
+- Replaced `revokeApiKey()` method with `deleteApiKey()` method
+- Changed from UPDATE query to DELETE query for permanent removal
+- Updated audit log action from `API_KEY_REVOKE` to `API_KEY_DELETE`
+- Enhanced audit log metadata to include key name and prefix for better tracking
+
+**Before:**
+```sql
+UPDATE api_keys
+SET is_active = false, revoked_at = CURRENT_TIMESTAMP
+WHERE id = $1
+```
+
+**After:**
+```sql
+DELETE FROM api_keys WHERE id = $1
+```
+
+#### 2. API Route Update (`backend/src/routes/api-keys.ts`)
+- Updated DELETE `/:id` endpoint response from `revokedAt` to `deletedAt`
+- Changed endpoint description from "Revoke API key" to "Delete API key"
+- Updated response message from "revoked successfully" to "deleted successfully"
+
+#### 3. Frontend Updates
+- Updated API service method from `revokeApiKey()` to `deleteApiKey()`
+- Changed UI button text from "Revoke" to "Delete"
+- Updated modal title from "Revoke API Key" to "Delete API Key"
+- Modified confirmation dialog styling to use danger variant instead of warning
+- Updated success notification from "API Key Revoked" to "API Key Deleted"
+
+#### 4. Documentation Updates
+- Updated REST API documentation to reflect deletion behavior
+- Added warnings about permanent deletion and immediate access termination
+- Updated authentication documentation references
+
+### Migration Impact
+- **Existing API keys**: No database migration required - existing revoked keys remain as-is for historical purposes
+- **New deletions**: All future API key deletions will be permanent
+- **Audit trail**: Deletion actions are still logged in `audit_logs` table with enhanced metadata
+- **LiteLLM integration**: Keys are still removed from LiteLLM as before
+
+### Testing
+Verified the changes work by:
+1. Deleting an API key through the UI
+2. Confirming it's completely removed from the database
+3. Verifying LiteLLM integration still removes the key
+4. Checking audit log entry is created with proper metadata
+
+### Breaking Changes
+- API clients expecting `revokedAt` field should update to use `deletedAt`
+- Frontend components expecting "revoke" terminology should update to "delete"
+
 ## API Keys user_id Column Fix (July 2025)
 
 ### Overview

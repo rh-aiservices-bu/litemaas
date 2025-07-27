@@ -383,13 +383,23 @@ Response:
 ```
 
 #### DELETE /api-keys/:id
-Revoke API key
+Delete API key
+
+**Important**: This permanently deletes the API key from both LiteMaaS and LiteLLM. This action cannot be undone. Applications using this key will lose access immediately.
+
 ```json
 Response:
 {
-  "message": "API key revoked successfully"
+  "message": "API key deleted successfully",
+  "deletedAt": "2024-01-20T10:00:00Z"
 }
 ```
+
+**Notes**:
+- Only active API keys can be deleted
+- The API key is completely removed from the database
+- An audit log entry is created to track the deletion
+- All active connections using this key will be immediately terminated
 
 ### Usage Statistics
 
