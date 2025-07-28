@@ -271,7 +271,7 @@ export class ApiKeyService {
       }
 
       // Validate user has active subscriptions for all requested models
-      const validModels = await this.fastify.dbUtils.query(
+      const validModels = await this.fastify.dbUtils.queryMany(
         `SELECT DISTINCT s.model_id, s.id as subscription_id, 
                 m.name as model_name, m.provider
          FROM subscriptions s
@@ -423,7 +423,12 @@ export class ApiKeyService {
           createdAt: enhancedApiKey.createdAt,
           key, // Only include the actual key on creation
           models: modelIds,
-          modelDetails: validModels,
+          modelDetails: validModels.map(m => ({
+            id: m.model_id,
+            name: m.model_name,
+            provider: m.provider,
+            contextLength: m.context_length
+          })),
           subscriptionId: isLegacyRequest ? (request as LegacyCreateApiKeyRequest).subscriptionId : undefined,
         };
       } catch (error) {

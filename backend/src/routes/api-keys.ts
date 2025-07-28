@@ -67,7 +67,10 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         const totalPages = Math.ceil(result.total / limit);
 
         return {
-          data: result.data,
+          data: result.data.map(apiKey => ({
+            ...apiKey,
+            prefix: apiKey.keyPrefix, // Map keyPrefix to prefix for schema compatibility
+          })),
           pagination: {
             page,
             limit,
@@ -114,7 +117,10 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           throw fastify.createNotFoundError('API key');
         }
 
-        return apiKey;
+        return {
+          ...apiKey,
+          prefix: apiKey.keyPrefix, // Map keyPrefix to prefix for schema compatibility
+        };
       } catch (error) {
         fastify.log.error(error, 'Failed to get API key');
         
@@ -165,6 +171,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           id: apiKey.id,
           name: apiKey.name,
           key: apiKey.key, // Only returned on creation
+          prefix: apiKey.keyPrefix, // Map keyPrefix to prefix for schema compatibility
           models: apiKey.models,
           modelDetails: apiKey.modelDetails,
           subscriptionId: apiKey.subscriptionId, // For backward compatibility
