@@ -1,19 +1,14 @@
 import { FastifyInstance } from 'fastify';
 import { LiteLLMService } from './litellm.service.js';
 import {
-  Team,
+  User,
   TeamMember,
   CreateTeamDto,
   UpdateTeamDto,
   TeamWithMembers,
-  UserTeamAssignment,
   CreateUserTeamAssignmentDto,
   TeamListParams,
-  TeamMemberListParams,
   LiteLLMTeamRequest,
-  LiteLLMTeamResponse,
-  EnhancedUser,
-  UserBudgetInfo,
 } from '../types/user.types.js';
 
 export interface TeamBudgetInfo {
@@ -59,7 +54,7 @@ export interface TeamUsageStats {
 }
 
 export interface TeamSyncRequest {
-  teamId: string;
+  teamId?: string;
   forceSync?: boolean;
   syncBudget?: boolean;
   syncMembers?: boolean;
@@ -99,7 +94,7 @@ export class TeamService {
       metadata: {
         department: 'Engineering',
         priority: 'high',
-        environment: 'production'
+        environment: 'production',
       },
       isActive: true,
       createdAt: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), // 60 days ago
@@ -117,8 +112,8 @@ export class TeamService {
             id: 'user-1',
             username: 'john.doe',
             email: 'john.doe@company.com',
-            fullName: 'John Doe'
-          }
+            fullName: 'John Doe',
+          },
         },
         {
           id: 'member-2',
@@ -131,9 +126,9 @@ export class TeamService {
             id: 'user-2',
             username: 'jane.smith',
             email: 'jane.smith@company.com',
-            fullName: 'Jane Smith'
-          }
-        }
+            fullName: 'Jane Smith',
+          },
+        },
       ],
       memberCount: 2,
     },
@@ -144,7 +139,7 @@ export class TeamService {
       description: 'Team for development and testing',
       liteLLMTeamId: 'litellm-team-dev-001',
       maxBudget: 500,
-      currentSpend: 125.30,
+      currentSpend: 125.3,
       budgetDuration: 'monthly',
       tpmLimit: 20000,
       rpmLimit: 200,
@@ -152,7 +147,7 @@ export class TeamService {
       metadata: {
         department: 'Engineering',
         priority: 'medium',
-        environment: 'development'
+        environment: 'development',
       },
       isActive: true,
       createdAt: new Date(Date.now() - 45 * 24 * 60 * 60 * 1000),
@@ -170,8 +165,8 @@ export class TeamService {
             id: 'user-3',
             username: 'alice.wilson',
             email: 'alice.wilson@company.com',
-            fullName: 'Alice Wilson'
-          }
+            fullName: 'Alice Wilson',
+          },
         },
         {
           id: 'member-4',
@@ -184,8 +179,8 @@ export class TeamService {
             id: 'user-4',
             username: 'bob.johnson',
             email: 'bob.johnson@company.com',
-            fullName: 'Bob Johnson'
-          }
+            fullName: 'Bob Johnson',
+          },
         },
         {
           id: 'member-5',
@@ -198,12 +193,12 @@ export class TeamService {
             id: 'user-5',
             username: 'charlie.brown',
             email: 'charlie.brown@company.com',
-            fullName: 'Charlie Brown'
-          }
-        }
+            fullName: 'Charlie Brown',
+          },
+        },
       ],
       memberCount: 3,
-    }
+    },
   ];
 
   constructor(fastify: FastifyInstance, liteLLMService?: LiteLLMService) {
@@ -213,14 +208,17 @@ export class TeamService {
 
   private shouldUseMockData(): boolean {
     const dbUnavailable = this.isDatabaseUnavailable();
-    
-    this.fastify.log.debug({ 
-      dbUnavailable, 
-      nodeEnv: process.env.NODE_ENV,
-      hasPg: !!this.fastify.pg,
-      mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined
-    }, 'Team Service: Checking if should use mock data');
-    
+
+    this.fastify.log.debug(
+      {
+        dbUnavailable,
+        nodeEnv: process.env.NODE_ENV,
+        hasPg: !!this.fastify.pg,
+        mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined,
+      },
+      'Team Service: Checking if should use mock data',
+    );
+
     return dbUnavailable;
   }
 
@@ -230,12 +228,12 @@ export class TeamService {
         this.fastify.log.debug('Team Service: PostgreSQL plugin not available');
         return true;
       }
-      
+
       if (this.fastify.isDatabaseMockMode && this.fastify.isDatabaseMockMode()) {
         this.fastify.log.debug('Team Service: Database mock mode enabled');
         return true;
       }
-      
+
       return false;
     } catch (error) {
       this.fastify.log.debug({ error }, 'Team Service: Error checking database availability');
@@ -245,24 +243,21 @@ export class TeamService {
 
   private createMockResponse<T>(data: T): Promise<T> {
     const delay = Math.random() * 200 + 100; // 100-300ms
-    return new Promise(resolve => setTimeout(() => resolve(data), delay));
+    return new Promise((resolve) => setTimeout(() => resolve(data), delay));
   }
 
-  async createTeam(
-    userId: string,
-    request: CreateTeamDto
-  ): Promise<TeamWithMembers> {
-    const { 
-      name, 
-      alias, 
-      description, 
-      maxBudget, 
-      budgetDuration = 'monthly', 
-      tpmLimit, 
-      rpmLimit, 
-      allowedModels, 
+  async createTeam(userId: string, request: CreateTeamDto): Promise<TeamWithMembers> {
+    const {
+      name,
+      alias,
+      description,
+      maxBudget,
+      budgetDuration = 'monthly',
+      tpmLimit,
+      rpmLimit,
+      allowedModels,
       metadata = {},
-      adminIds = []
+      adminIds = [],
     } = request;
 
     try {
@@ -297,9 +292,9 @@ export class TeamService {
                 id: userId,
                 username: 'mock-user',
                 email: 'mock@example.com',
-                fullName: 'Mock User'
-              }
-            }
+                fullName: 'Mock User',
+              },
+            },
           ],
           memberCount: 1,
         };
@@ -310,7 +305,7 @@ export class TeamService {
       // Check if team name is unique
       const existingTeam = await this.fastify.dbUtils.queryOne(
         `SELECT id FROM teams WHERE name = $1 AND is_active = true`,
-        [name]
+        [name],
       );
 
       if (existingTeam) {
@@ -357,24 +352,32 @@ export class TeamService {
           metadata,
           true,
           userId,
-        ]
+        ],
       );
 
       // Add creator as admin
-      await this.addTeamMember(team.id, {
+      await this.addTeamMember(
+        team.id,
+        {
+          userId,
+          teamId: team.id,
+          role: 'admin',
+        },
         userId,
-        teamId: team.id,
-        role: 'admin',
-      }, userId);
+      );
 
       // Add additional admins
       for (const adminId of adminIds) {
         if (adminId !== userId) {
-          await this.addTeamMember(team.id, {
-            userId: adminId,
-            teamId: team.id,
-            role: 'admin',
-          }, userId);
+          await this.addTeamMember(
+            team.id,
+            {
+              userId: adminId,
+              teamId: team.id,
+              role: 'admin',
+            },
+            userId,
+          );
         }
       }
 
@@ -388,17 +391,24 @@ export class TeamService {
           'TEAM',
           team.id,
           { name, maxBudget, liteLLMTeamId: liteLLMResponse.team_id },
-        ]
+        ],
       );
 
-      this.fastify.log.info({
-        userId,
-        teamId: team.id,
-        name,
-        liteLLMTeamId: liteLLMResponse.team_id,
-      }, 'Team created with LiteLLM integration');
+      this.fastify.log.info(
+        {
+          userId,
+          teamId: team.id,
+          name,
+          liteLLMTeamId: liteLLMResponse.team_id,
+        },
+        'Team created with LiteLLM integration',
+      );
 
-      return this.getTeam(team.id, userId);
+      const createdTeam = await this.getTeam(team.id, userId);
+      if (!createdTeam) {
+        throw new Error('Failed to retrieve newly created team');
+      }
+      return createdTeam;
     } catch (error) {
       this.fastify.log.error(error, 'Failed to create team');
       throw error;
@@ -407,7 +417,7 @@ export class TeamService {
 
   async getTeam(teamId: string, userId?: string): Promise<TeamWithMembers | null> {
     if (this.shouldUseMockData()) {
-      const mockTeam = this.MOCK_TEAMS.find(t => t.id === teamId);
+      const mockTeam = this.MOCK_TEAMS.find((t) => t.id === teamId);
       return mockTeam ? this.createMockResponse(mockTeam) : null;
     }
 
@@ -438,13 +448,16 @@ export class TeamService {
       }
 
       // Get team members
-      const members = await this.fastify.dbUtils.queryMany(`
+      const members = await this.fastify.dbUtils.queryMany(
+        `
         SELECT tm.*, u.username, u.email, u.full_name
         FROM team_members tm
         JOIN users u ON tm.user_id = u.id
         WHERE tm.team_id = $1
         ORDER BY tm.joined_at ASC
-      `, [teamId]);
+      `,
+        [teamId],
+      );
 
       return this.mapToTeamWithMembers(team, members);
     } catch (error) {
@@ -455,37 +468,38 @@ export class TeamService {
 
   async getUserTeams(
     userId: string,
-    params: TeamListParams = {}
+    params: TeamListParams = {},
   ): Promise<{ data: TeamWithMembers[]; total: number }> {
     const { page = 1, limit = 20, search, isActive, createdBy } = params;
     const offset = (page - 1) * limit;
 
     if (this.shouldUseMockData()) {
       this.fastify.log.debug('Using mock team data');
-      
+
       let filteredTeams = [...this.MOCK_TEAMS];
-      
+
       if (search) {
-        filteredTeams = filteredTeams.filter(team => 
-          team.name.toLowerCase().includes(search.toLowerCase()) ||
-          (team.alias && team.alias.toLowerCase().includes(search.toLowerCase()))
+        filteredTeams = filteredTeams.filter(
+          (team) =>
+            team.name.toLowerCase().includes(search.toLowerCase()) ||
+            (team.alias && team.alias.toLowerCase().includes(search.toLowerCase())),
         );
       }
-      
+
       if (typeof isActive === 'boolean') {
-        filteredTeams = filteredTeams.filter(team => team.isActive === isActive);
+        filteredTeams = filteredTeams.filter((team) => team.isActive === isActive);
       }
-      
+
       if (createdBy) {
-        filteredTeams = filteredTeams.filter(team => team.createdBy === createdBy);
+        filteredTeams = filteredTeams.filter((team) => team.createdBy === createdBy);
       }
-      
+
       const total = filteredTeams.length;
       const paginatedData = filteredTeams.slice(offset, offset + limit);
-      
+
       return this.createMockResponse({
         data: paginatedData,
-        total
+        total,
       });
     }
 
@@ -532,7 +546,7 @@ export class TeamService {
           WHERE tm.team_id = t.id AND tm.user_id = $1
         )
       `;
-      const countParams = [userId];
+      const countParams: any[] = [userId];
       let countParamIndex = 2;
 
       if (search) {
@@ -560,16 +574,19 @@ export class TeamService {
 
       const teamsWithMembers = await Promise.all(
         teams.map(async (team) => {
-          const members = await this.fastify.dbUtils.queryMany(`
+          const members = await this.fastify.dbUtils.queryMany(
+            `
             SELECT tm.*, u.username, u.email, u.full_name
             FROM team_members tm
             JOIN users u ON tm.user_id = u.id
             WHERE tm.team_id = $1
             ORDER BY tm.joined_at ASC
-          `, [team.id]);
+          `,
+            [team.id],
+          );
 
           return this.mapToTeamWithMembers(team, members);
-        })
+        }),
       );
 
       return {
@@ -585,7 +602,7 @@ export class TeamService {
   async updateTeam(
     teamId: string,
     userId: string,
-    updates: UpdateTeamDto
+    updates: UpdateTeamDto,
   ): Promise<TeamWithMembers> {
     try {
       // Verify user has admin access
@@ -604,7 +621,7 @@ export class TeamService {
         rpmLimit,
         allowedModels,
         metadata,
-        isActive
+        isActive,
       } = updates;
 
       // Build update query
@@ -616,7 +633,7 @@ export class TeamService {
         // Check name uniqueness
         const existingTeam = await this.fastify.dbUtils.queryOne(
           `SELECT id FROM teams WHERE name = $1 AND id != $2 AND is_active = true`,
-          [name, teamId]
+          [name, teamId],
         );
         if (existingTeam) {
           throw this.fastify.createValidationError(`Team with name '${name}' already exists`);
@@ -671,7 +688,11 @@ export class TeamService {
       }
 
       if (updateFields.length === 0) {
-        return await this.getTeam(teamId, userId);
+        const team = await this.getTeam(teamId, userId);
+        if (!team) {
+          throw new Error('Team not found');
+        }
+        return team;
       }
 
       updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
@@ -681,7 +702,7 @@ export class TeamService {
         `UPDATE teams SET ${updateFields.join(', ')}
          WHERE id = $${paramIndex}
          RETURNING *`,
-        params
+        params,
       );
 
       // Update in LiteLLM if integrated
@@ -689,10 +710,13 @@ export class TeamService {
         try {
           // Note: LiteLLM doesn't have a direct team update endpoint in the current API
           // This would be implemented when the API supports it
-          this.fastify.log.debug({
-            teamId,
-            liteLLMTeamId: updatedTeam.litellm_team_id,
-          }, 'Team update - LiteLLM sync would be implemented here');
+          this.fastify.log.debug(
+            {
+              teamId,
+              liteLLMTeamId: updatedTeam.litellm_team_id,
+            },
+            'Team update - LiteLLM sync would be implemented here',
+          );
         } catch (error) {
           this.fastify.log.warn(error, 'Failed to sync team update with LiteLLM');
         }
@@ -702,22 +726,23 @@ export class TeamService {
       await this.fastify.dbUtils.query(
         `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
          VALUES ($1, $2, $3, $4, $5)`,
-        [
-          userId,
-          'TEAM_UPDATE',
-          'TEAM',
-          teamId,
-          updates,
-        ]
+        [userId, 'TEAM_UPDATE', 'TEAM', teamId, updates],
       );
 
-      this.fastify.log.info({
-        userId,
-        teamId,
-        updates,
-      }, 'Team updated');
+      this.fastify.log.info(
+        {
+          userId,
+          teamId,
+          updates,
+        },
+        'Team updated',
+      );
 
-      return await this.getTeam(teamId, userId);
+      const teamWithMembers = await this.getTeam(teamId, userId);
+      if (!teamWithMembers) {
+        throw new Error('Failed to retrieve updated team');
+      }
+      return teamWithMembers;
     } catch (error) {
       this.fastify.log.error(error, 'Failed to update team');
       throw error;
@@ -727,8 +752,8 @@ export class TeamService {
   async addTeamMember(
     teamId: string,
     assignment: CreateUserTeamAssignmentDto,
-    adminUserId: string
-  ): Promise<TeamMember> {
+    adminUserId: string,
+  ): Promise<TeamMember & { user: Pick<User, 'id' | 'username' | 'email' | 'fullName'> }> {
     try {
       // Verify admin has access
       const hasAccess = await this.checkTeamAccess(teamId, adminUserId, 'admin');
@@ -741,7 +766,7 @@ export class TeamService {
       // Check if user is already a member
       const existingMember = await this.fastify.dbUtils.queryOne(
         `SELECT id FROM team_members WHERE team_id = $1 AND user_id = $2`,
-        [teamId, userId]
+        [teamId, userId],
       );
 
       if (existingMember) {
@@ -751,7 +776,7 @@ export class TeamService {
       // Verify user exists
       const user = await this.fastify.dbUtils.queryOne(
         `SELECT id, username, email, full_name FROM users WHERE id = $1 AND is_active = true`,
-        [userId]
+        [userId],
       );
 
       if (!user) {
@@ -763,28 +788,25 @@ export class TeamService {
         `INSERT INTO team_members (team_id, user_id, role, added_by)
          VALUES ($1, $2, $3, $4)
          RETURNING *`,
-        [teamId, userId, role, adminUserId]
+        [teamId, userId, role, adminUserId],
       );
 
       // Create audit log
       await this.fastify.dbUtils.query(
         `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
          VALUES ($1, $2, $3, $4, $5)`,
-        [
-          adminUserId,
-          'TEAM_MEMBER_ADD',
-          'TEAM',
-          teamId,
-          { addedUserId: userId, role },
-        ]
+        [adminUserId, 'TEAM_MEMBER_ADD', 'TEAM', teamId, { addedUserId: userId, role }],
       );
 
-      this.fastify.log.info({
-        adminUserId,
-        teamId,
-        addedUserId: userId,
-        role,
-      }, 'Team member added');
+      this.fastify.log.info(
+        {
+          adminUserId,
+          teamId,
+          addedUserId: userId,
+          role,
+        },
+        'Team member added',
+      );
 
       return {
         id: member.id,
@@ -806,11 +828,7 @@ export class TeamService {
     }
   }
 
-  async removeTeamMember(
-    teamId: string,
-    userId: string,
-    adminUserId: string
-  ): Promise<void> {
+  async removeTeamMember(teamId: string, userId: string, adminUserId: string): Promise<void> {
     try {
       // Verify admin has access
       const hasAccess = await this.checkTeamAccess(teamId, adminUserId, 'admin');
@@ -821,7 +839,7 @@ export class TeamService {
       // Check if member exists
       const member = await this.fastify.dbUtils.queryOne(
         `SELECT * FROM team_members WHERE team_id = $1 AND user_id = $2`,
-        [teamId, userId]
+        [teamId, userId],
       );
 
       if (!member) {
@@ -832,7 +850,7 @@ export class TeamService {
       if (member.role === 'admin') {
         const adminCount = await this.fastify.dbUtils.queryOne(
           `SELECT COUNT(*) FROM team_members WHERE team_id = $1 AND role = 'admin'`,
-          [teamId]
+          [teamId],
         );
 
         if (parseInt(adminCount.count) <= 1) {
@@ -843,7 +861,7 @@ export class TeamService {
       // Remove member
       await this.fastify.dbUtils.query(
         `DELETE FROM team_members WHERE team_id = $1 AND user_id = $2`,
-        [teamId, userId]
+        [teamId, userId],
       );
 
       // Create audit log
@@ -856,14 +874,17 @@ export class TeamService {
           'TEAM',
           teamId,
           { removedUserId: userId, previousRole: member.role },
-        ]
+        ],
       );
 
-      this.fastify.log.info({
-        adminUserId,
-        teamId,
-        removedUserId: userId,
-      }, 'Team member removed');
+      this.fastify.log.info(
+        {
+          adminUserId,
+          teamId,
+          removedUserId: userId,
+        },
+        'Team member removed',
+      );
     } catch (error) {
       this.fastify.log.error(error, 'Failed to remove team member');
       throw error;
@@ -874,8 +895,8 @@ export class TeamService {
     teamId: string,
     userId: string,
     newRole: 'admin' | 'member' | 'viewer',
-    adminUserId: string
-  ): Promise<TeamMember> {
+    adminUserId: string,
+  ): Promise<TeamMember & { user: Pick<User, 'id' | 'username' | 'email' | 'fullName'> }> {
     try {
       // Verify admin has access
       const hasAccess = await this.checkTeamAccess(teamId, adminUserId, 'admin');
@@ -889,7 +910,7 @@ export class TeamService {
          FROM team_members tm
          JOIN users u ON tm.user_id = u.id
          WHERE tm.team_id = $1 AND tm.user_id = $2`,
-        [teamId, userId]
+        [teamId, userId],
       );
 
       if (!member) {
@@ -900,7 +921,7 @@ export class TeamService {
       if (member.role === 'admin' && newRole !== 'admin') {
         const adminCount = await this.fastify.dbUtils.queryOne(
           `SELECT COUNT(*) FROM team_members WHERE team_id = $1 AND role = 'admin'`,
-          [teamId]
+          [teamId],
         );
 
         if (parseInt(adminCount.count) <= 1) {
@@ -912,7 +933,7 @@ export class TeamService {
       const updatedMember = await this.fastify.dbUtils.queryOne(
         `UPDATE team_members SET role = $1 WHERE team_id = $2 AND user_id = $3
          RETURNING *`,
-        [newRole, teamId, userId]
+        [newRole, teamId, userId],
       );
 
       // Create audit log
@@ -925,16 +946,19 @@ export class TeamService {
           'TEAM',
           teamId,
           { targetUserId: userId, previousRole: member.role, newRole },
-        ]
+        ],
       );
 
-      this.fastify.log.info({
-        adminUserId,
-        teamId,
-        targetUserId: userId,
-        previousRole: member.role,
-        newRole,
-      }, 'Team member role updated');
+      this.fastify.log.info(
+        {
+          adminUserId,
+          teamId,
+          targetUserId: userId,
+          previousRole: member.role,
+          newRole,
+        },
+        'Team member role updated',
+      );
 
       return {
         id: updatedMember.id,
@@ -1006,9 +1030,14 @@ export class TeamService {
   async syncTeamWithLiteLLM(
     teamId: string,
     userId: string,
-    request: TeamSyncRequest = {}
+    request: TeamSyncRequest = {},
   ): Promise<TeamSyncResponse> {
-    const { forceSync = false, syncBudget = true, syncMembers = true, syncUsage = true } = request;
+    const {
+      forceSync = false,
+      syncBudget = true,
+      syncMembers: _syncMembers = true,
+      syncUsage = true,
+    } = request;
 
     try {
       // Verify user has admin access
@@ -1047,6 +1076,12 @@ export class TeamService {
         changes.usageUpdated = true;
       }
 
+      // TODO: Implement member syncing when _syncMembers is true
+      if (_syncMembers) {
+        // Member syncing would be implemented here
+        this.fastify.log.debug('Member syncing not yet implemented');
+      }
+
       if (updateFields.length > 0) {
         updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
         params.push(teamId);
@@ -1056,15 +1091,18 @@ export class TeamService {
            SET ${updateFields.join(', ')}
            WHERE id = $${paramIndex}
            RETURNING *`,
-          params
+          params,
         );
       }
 
-      this.fastify.log.info({
-        teamId,
-        userId,
-        changes,
-      }, 'Team synced with LiteLLM');
+      this.fastify.log.info(
+        {
+          teamId,
+          userId,
+          changes,
+        },
+        'Team synced with LiteLLM',
+      );
 
       return {
         teamId,
@@ -1074,12 +1112,12 @@ export class TeamService {
       };
     } catch (error) {
       this.fastify.log.error(error, 'Failed to sync team with LiteLLM');
-      
+
       return {
         teamId,
         syncedAt: new Date(),
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -1100,19 +1138,19 @@ export class TeamService {
       // Check if team has active subscriptions or resources
       const activeSubscriptions = await this.fastify.dbUtils.queryOne(
         `SELECT COUNT(*) FROM subscriptions WHERE team_id = $1 AND status = 'active'`,
-        [teamId]
+        [teamId],
       );
 
       if (parseInt(activeSubscriptions.count) > 0) {
         throw this.fastify.createValidationError(
-          'Cannot delete team with active subscriptions. Please cancel or transfer them first.'
+          'Cannot delete team with active subscriptions. Please cancel or transfer them first.',
         );
       }
 
       // Soft delete (mark as inactive)
       await this.fastify.dbUtils.query(
         `UPDATE teams SET is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
-        [teamId]
+        [teamId],
       );
 
       // Create audit log
@@ -1125,14 +1163,17 @@ export class TeamService {
           'TEAM',
           teamId,
           { teamName: team.name, liteLLMTeamId: team.liteLLMTeamId },
-        ]
+        ],
       );
 
-      this.fastify.log.info({
-        userId,
-        teamId,
-        teamName: team.name,
-      }, 'Team deleted (soft delete)');
+      this.fastify.log.info(
+        {
+          userId,
+          teamId,
+          teamName: team.name,
+        },
+        'Team deleted (soft delete)',
+      );
     } catch (error) {
       this.fastify.log.error(error, 'Failed to delete team');
       throw error;
@@ -1142,14 +1183,14 @@ export class TeamService {
   // Helper methods
 
   private async checkTeamAccess(
-    teamId: string, 
-    userId: string, 
-    requiredRole: 'admin' | 'member' | 'viewer' = 'viewer'
+    teamId: string,
+    userId: string,
+    requiredRole: 'admin' | 'member' | 'viewer' = 'viewer',
   ): Promise<boolean> {
     try {
       const member = await this.fastify.dbUtils.queryOne(
         `SELECT role FROM team_members WHERE team_id = $1 AND user_id = $2`,
-        [teamId, userId]
+        [teamId, userId],
       );
 
       if (!member) {
@@ -1157,7 +1198,8 @@ export class TeamService {
       }
 
       const roleHierarchy = { viewer: 0, member: 1, admin: 2 };
-      return roleHierarchy[member.role] >= roleHierarchy[requiredRole];
+      const memberRole = member.role as 'admin' | 'member' | 'viewer';
+      return roleHierarchy[memberRole] >= roleHierarchy[requiredRole];
     } catch (error) {
       this.fastify.log.error(error, 'Failed to check team access');
       return false;
@@ -1182,7 +1224,7 @@ export class TeamService {
       createdAt: new Date(team.created_at),
       updatedAt: new Date(team.updated_at),
       createdBy: team.created_by,
-      members: members.map(member => ({
+      members: members.map((member) => ({
         id: member.id,
         teamId: member.team_id,
         userId: member.user_id,

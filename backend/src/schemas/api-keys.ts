@@ -25,43 +25,57 @@ export const ApiKeyDetailsSchema = Type.Object({
 
 // New schema for multi-model support
 export const CreateApiKeySchema = Type.Object({
-  modelIds: Type.Array(Type.String(), { 
+  modelIds: Type.Array(Type.String(), {
     minItems: 1,
     description: 'Array of model IDs to associate with this API key',
-    examples: [['gpt-4', 'gpt-3.5-turbo']]
+    examples: [['gpt-4', 'gpt-3.5-turbo']],
   }),
-  name: Type.Optional(Type.String({ 
-    minLength: 1, 
-    maxLength: 255,
-    description: 'Human-readable name for the API key' 
-  })),
-  expiresAt: Type.Optional(Type.String({ 
-    format: 'date-time',
-    description: 'ISO 8601 date-time when the key expires' 
-  })),
-  maxBudget: Type.Optional(Type.Number({ 
-    minimum: 0,
-    description: 'Maximum budget for this API key' 
-  })),
-  budgetDuration: Type.Optional(Type.String({ 
-    enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
-    description: 'Budget duration period, defaults to monthly' 
-  })),
-  tpmLimit: Type.Optional(Type.Integer({ 
-    minimum: 0,
-    description: 'Tokens per minute limit' 
-  })),
-  rpmLimit: Type.Optional(Type.Integer({ 
-    minimum: 0,
-    description: 'Requests per minute limit' 
-  })),
+  name: Type.Optional(
+    Type.String({
+      minLength: 1,
+      maxLength: 255,
+      description: 'Human-readable name for the API key',
+    }),
+  ),
+  expiresAt: Type.Optional(
+    Type.String({
+      format: 'date-time',
+      description: 'ISO 8601 date-time when the key expires',
+    }),
+  ),
+  maxBudget: Type.Optional(
+    Type.Number({
+      minimum: 0,
+      description: 'Maximum budget for this API key',
+    }),
+  ),
+  budgetDuration: Type.Optional(
+    Type.String({
+      enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
+      description: 'Budget duration period, defaults to monthly',
+    }),
+  ),
+  tpmLimit: Type.Optional(
+    Type.Integer({
+      minimum: 0,
+      description: 'Tokens per minute limit',
+    }),
+  ),
+  rpmLimit: Type.Optional(
+    Type.Integer({
+      minimum: 0,
+      description: 'Requests per minute limit',
+    }),
+  ),
   teamId: Type.Optional(Type.String()),
   tags: Type.Optional(Type.Array(Type.String())),
-  permissions: Type.Optional(Type.Object({
-    allowChatCompletions: Type.Optional(Type.Boolean()),
-    allowEmbeddings: Type.Optional(Type.Boolean()),
-    allowCompletions: Type.Optional(Type.Boolean()),
-  })),
+  permissions: Type.Optional(
+    Type.Object({
+      allowChatCompletions: Type.Optional(Type.Boolean()),
+      allowEmbeddings: Type.Optional(Type.Boolean()),
+      allowCompletions: Type.Optional(Type.Boolean()),
+    }),
+  ),
   softBudget: Type.Optional(Type.Number()),
   guardrails: Type.Optional(Type.Array(Type.String())),
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
@@ -69,42 +83,56 @@ export const CreateApiKeySchema = Type.Object({
 
 // Legacy schema for backward compatibility
 export const LegacyCreateApiKeySchema = Type.Object({
-  subscriptionId: Type.String({ 
+  subscriptionId: Type.String({
     description: 'DEPRECATED: Use modelIds instead. Subscription ID to associate with this API key',
-    deprecated: true 
+    deprecated: true,
   }),
-  name: Type.Optional(Type.String({ 
-    minLength: 1, 
-    maxLength: 255,
-    description: 'Human-readable name for the API key' 
-  })),
-  expiresAt: Type.Optional(Type.String({ 
-    format: 'date-time',
-    description: 'ISO 8601 date-time when the key expires' 
-  })),
-  maxBudget: Type.Optional(Type.Number({ 
-    minimum: 0,
-    description: 'Maximum budget for this API key' 
-  })),
-  budgetDuration: Type.Optional(Type.String({ 
-    enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
-    description: 'Budget duration period, defaults to monthly' 
-  })),
-  tpmLimit: Type.Optional(Type.Integer({ 
-    minimum: 0,
-    description: 'Tokens per minute limit' 
-  })),
-  rpmLimit: Type.Optional(Type.Integer({ 
-    minimum: 0,
-    description: 'Requests per minute limit' 
-  })),
+  name: Type.Optional(
+    Type.String({
+      minLength: 1,
+      maxLength: 255,
+      description: 'Human-readable name for the API key',
+    }),
+  ),
+  expiresAt: Type.Optional(
+    Type.String({
+      format: 'date-time',
+      description: 'ISO 8601 date-time when the key expires',
+    }),
+  ),
+  maxBudget: Type.Optional(
+    Type.Number({
+      minimum: 0,
+      description: 'Maximum budget for this API key',
+    }),
+  ),
+  budgetDuration: Type.Optional(
+    Type.String({
+      enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
+      description: 'Budget duration period, defaults to monthly',
+    }),
+  ),
+  tpmLimit: Type.Optional(
+    Type.Integer({
+      minimum: 0,
+      description: 'Tokens per minute limit',
+    }),
+  ),
+  rpmLimit: Type.Optional(
+    Type.Integer({
+      minimum: 0,
+      description: 'Requests per minute limit',
+    }),
+  ),
   teamId: Type.Optional(Type.String()),
   tags: Type.Optional(Type.Array(Type.String())),
-  permissions: Type.Optional(Type.Object({
-    allowChatCompletions: Type.Optional(Type.Boolean()),
-    allowEmbeddings: Type.Optional(Type.Boolean()),
-    allowCompletions: Type.Optional(Type.Boolean()),
-  })),
+  permissions: Type.Optional(
+    Type.Object({
+      allowChatCompletions: Type.Optional(Type.Boolean()),
+      allowEmbeddings: Type.Optional(Type.Boolean()),
+      allowCompletions: Type.Optional(Type.Boolean()),
+    }),
+  ),
   softBudget: Type.Optional(Type.Number()),
   guardrails: Type.Optional(Type.Array(Type.String())),
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
@@ -113,48 +141,67 @@ export const LegacyCreateApiKeySchema = Type.Object({
 // Union type for API endpoint
 export const CreateApiKeyRequestSchema = Type.Object({
   // Required for new format
-  modelIds: Type.Optional(Type.Array(Type.String(), { 
-    minItems: 1,
-    description: 'Array of model IDs to associate with this API key',
-    examples: [['gpt-4', 'gpt-3.5-turbo']]
-  })),
+  modelIds: Type.Optional(
+    Type.Array(Type.String(), {
+      minItems: 1,
+      description: 'Array of model IDs to associate with this API key',
+      examples: [['gpt-4', 'gpt-3.5-turbo']],
+    }),
+  ),
   // Required for legacy format
-  subscriptionId: Type.Optional(Type.String({ 
-    description: 'DEPRECATED: Use modelIds instead. Subscription ID to associate with this API key'
-  })),
+  subscriptionId: Type.Optional(
+    Type.String({
+      description:
+        'DEPRECATED: Use modelIds instead. Subscription ID to associate with this API key',
+    }),
+  ),
   // Common optional fields
-  name: Type.Optional(Type.String({ 
-    minLength: 1, 
-    maxLength: 255,
-    description: 'Human-readable name for the API key' 
-  })),
-  expiresAt: Type.Optional(Type.String({ 
-    format: 'date-time',
-    description: 'ISO 8601 date-time when the key expires' 
-  })),
-  maxBudget: Type.Optional(Type.Number({ 
-    minimum: 0,
-    description: 'Maximum budget for this API key' 
-  })),
-  budgetDuration: Type.Optional(Type.String({ 
-    enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
-    description: 'Budget duration period, defaults to monthly' 
-  })),
-  tpmLimit: Type.Optional(Type.Integer({ 
-    minimum: 0,
-    description: 'Tokens per minute limit' 
-  })),
-  rpmLimit: Type.Optional(Type.Integer({ 
-    minimum: 0,
-    description: 'Requests per minute limit' 
-  })),
+  name: Type.Optional(
+    Type.String({
+      minLength: 1,
+      maxLength: 255,
+      description: 'Human-readable name for the API key',
+    }),
+  ),
+  expiresAt: Type.Optional(
+    Type.String({
+      format: 'date-time',
+      description: 'ISO 8601 date-time when the key expires',
+    }),
+  ),
+  maxBudget: Type.Optional(
+    Type.Number({
+      minimum: 0,
+      description: 'Maximum budget for this API key',
+    }),
+  ),
+  budgetDuration: Type.Optional(
+    Type.String({
+      enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
+      description: 'Budget duration period, defaults to monthly',
+    }),
+  ),
+  tpmLimit: Type.Optional(
+    Type.Integer({
+      minimum: 0,
+      description: 'Tokens per minute limit',
+    }),
+  ),
+  rpmLimit: Type.Optional(
+    Type.Integer({
+      minimum: 0,
+      description: 'Requests per minute limit',
+    }),
+  ),
   teamId: Type.Optional(Type.String()),
   tags: Type.Optional(Type.Array(Type.String())),
-  permissions: Type.Optional(Type.Object({
-    allowChatCompletions: Type.Optional(Type.Boolean()),
-    allowEmbeddings: Type.Optional(Type.Boolean()),
-    allowCompletions: Type.Optional(Type.Boolean()),
-  })),
+  permissions: Type.Optional(
+    Type.Object({
+      allowChatCompletions: Type.Optional(Type.Boolean()),
+      allowEmbeddings: Type.Optional(Type.Boolean()),
+      allowCompletions: Type.Optional(Type.Boolean()),
+    }),
+  ),
   softBudget: Type.Optional(Type.Number()),
   guardrails: Type.Optional(Type.Array(Type.String())),
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
@@ -162,24 +209,30 @@ export const CreateApiKeyRequestSchema = Type.Object({
 
 // Response schema for list endpoint with pagination
 export const ApiKeyResponseSchema = Type.Object({
-  data: Type.Array(Type.Object({
-    id: Type.String(),
-    name: Type.Optional(Type.String()),
-    prefix: Type.String(),
-    models: Type.Array(Type.String()),
-    modelDetails: Type.Optional(Type.Array(Type.Object({
+  data: Type.Array(
+    Type.Object({
       id: Type.String(),
-      name: Type.String(),
-      provider: Type.String(),
-      contextLength: Type.Optional(Type.Integer()),
-    }))),
-    subscriptionId: Type.Optional(Type.String()),
-    lastUsedAt: Type.Optional(Type.String({ format: 'date-time' })),
-    createdAt: Type.String({ format: 'date-time' }),
-    expiresAt: Type.Optional(Type.String({ format: 'date-time' })),
-    isActive: Type.Boolean(),
-    metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
-  })),
+      name: Type.Optional(Type.String()),
+      prefix: Type.String(),
+      models: Type.Array(Type.String()),
+      modelDetails: Type.Optional(
+        Type.Array(
+          Type.Object({
+            id: Type.String(),
+            name: Type.String(),
+            provider: Type.String(),
+            contextLength: Type.Optional(Type.Integer()),
+          }),
+        ),
+      ),
+      subscriptionId: Type.Optional(Type.String()),
+      lastUsedAt: Type.Optional(Type.String({ format: 'date-time' })),
+      createdAt: Type.String({ format: 'date-time' }),
+      expiresAt: Type.Optional(Type.String({ format: 'date-time' })),
+      isActive: Type.Boolean(),
+      metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
+    }),
+  ),
   pagination: Type.Object({
     page: Type.Integer(),
     limit: Type.Integer(),
@@ -192,12 +245,16 @@ export const ApiKeyResponseSchema = Type.Object({
 export const SingleApiKeyResponseSchema = Type.Object({
   id: Type.String(),
   models: Type.Array(Type.String()),
-  modelDetails: Type.Optional(Type.Array(Type.Object({
-    id: Type.String(),
-    name: Type.String(),
-    provider: Type.String(),
-    contextLength: Type.Optional(Type.Integer()),
-  }))),
+  modelDetails: Type.Optional(
+    Type.Array(
+      Type.Object({
+        id: Type.String(),
+        name: Type.String(),
+        provider: Type.String(),
+        contextLength: Type.Optional(Type.Integer()),
+      }),
+    ),
+  ),
   name: Type.Optional(Type.String()),
   prefix: Type.String(),
   key: Type.Optional(Type.String({ description: 'Only included on creation' })),
@@ -209,14 +266,16 @@ export const SingleApiKeyResponseSchema = Type.Object({
   subscriptionId: Type.Optional(Type.String()),
   // LiteLLM fields
   liteLLMKeyId: Type.Optional(Type.String()),
-  liteLLMInfo: Type.Optional(Type.Object({
-    key_name: Type.String(),
-    max_budget: Type.Optional(Type.Number()),
-    current_spend: Type.Number(),
-    models: Type.Array(Type.String()),
-    tpm_limit: Type.Optional(Type.Integer()),
-    rpm_limit: Type.Optional(Type.Integer()),
-  })),
+  liteLLMInfo: Type.Optional(
+    Type.Object({
+      key_name: Type.String(),
+      max_budget: Type.Optional(Type.Number()),
+      current_spend: Type.Number(),
+      models: Type.Array(Type.String()),
+      tpm_limit: Type.Optional(Type.Integer()),
+      rpm_limit: Type.Optional(Type.Integer()),
+    }),
+  ),
   // Metadata
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
 });
@@ -249,11 +308,13 @@ export const LiteLLMKeyGenerationRequestSchema = Type.Object({
   tpm_limit: Type.Optional(Type.Number()),
   rpm_limit: Type.Optional(Type.Number()),
   budget_duration: Type.Optional(Type.String()),
-  permissions: Type.Optional(Type.Object({
-    allow_chat_completions: Type.Optional(Type.Boolean()),
-    allow_embeddings: Type.Optional(Type.Boolean()),
-    allow_completions: Type.Optional(Type.Boolean()),
-  })),
+  permissions: Type.Optional(
+    Type.Object({
+      allow_chat_completions: Type.Optional(Type.Boolean()),
+      allow_embeddings: Type.Optional(Type.Boolean()),
+      allow_completions: Type.Optional(Type.Boolean()),
+    }),
+  ),
   guardrails: Type.Optional(Type.Array(Type.String())),
   blocked: Type.Optional(Type.Boolean()),
   tags: Type.Optional(Type.Array(Type.String())),
@@ -295,53 +356,57 @@ export const EnhancedApiKeySchema = Type.Intersect([
   ApiKeySchema,
   Type.Object({
     liteLLMKeyId: Type.Optional(Type.String()),
-    liteLLMInfo: Type.Optional(Type.Object({
-      key_name: Type.Optional(Type.String()),
-      max_budget: Type.Optional(Type.Number()),
-      current_spend: Type.Optional(Type.Number()),
-      tpm_limit: Type.Optional(Type.Number()),
-      rpm_limit: Type.Optional(Type.Number()),
-      team_id: Type.Optional(Type.String()),
-      budget_duration: Type.Optional(Type.String()),
-      soft_budget: Type.Optional(Type.Number()),
-      blocked: Type.Optional(Type.Boolean()),
-      tags: Type.Optional(Type.Array(Type.String())),
-      models: Type.Optional(Type.Array(Type.String())),
-      spend_reset_at: Type.Optional(TimestampSchema),
-    })),
+    liteLLMInfo: Type.Optional(
+      Type.Object({
+        key_name: Type.Optional(Type.String()),
+        max_budget: Type.Optional(Type.Number()),
+        current_spend: Type.Optional(Type.Number()),
+        tpm_limit: Type.Optional(Type.Number()),
+        rpm_limit: Type.Optional(Type.Number()),
+        team_id: Type.Optional(Type.String()),
+        budget_duration: Type.Optional(Type.String()),
+        soft_budget: Type.Optional(Type.Number()),
+        blocked: Type.Optional(Type.Boolean()),
+        tags: Type.Optional(Type.Array(Type.String())),
+        models: Type.Optional(Type.Array(Type.String())),
+        spend_reset_at: Type.Optional(TimestampSchema),
+      }),
+    ),
     lastSyncAt: Type.Optional(TimestampSchema),
-    syncStatus: Type.Optional(Type.Union([
-      Type.Literal('synced'),
-      Type.Literal('pending'),
-      Type.Literal('error')
-    ])),
+    syncStatus: Type.Optional(
+      Type.Union([Type.Literal('synced'), Type.Literal('pending'), Type.Literal('error')]),
+    ),
     syncError: Type.Optional(Type.String()),
-  })
+  }),
 ]);
 
 export const EnhancedCreateApiKeySchema = Type.Intersect([
   CreateApiKeySchema,
   Type.Object({
     maxBudget: Type.Optional(Type.Number()),
-    budgetDuration: Type.Optional(Type.Union([
-      Type.Literal('daily'),
-      Type.Literal('weekly'),
-      Type.Literal('monthly'),
-      Type.Literal('yearly')
-    ])),
+    budgetDuration: Type.Optional(
+      Type.Union([
+        Type.Literal('daily'),
+        Type.Literal('weekly'),
+        Type.Literal('monthly'),
+        Type.Literal('yearly'),
+      ]),
+    ),
     tpmLimit: Type.Optional(Type.Number()),
     rpmLimit: Type.Optional(Type.Number()),
     allowedModels: Type.Optional(Type.Array(Type.String())),
     teamId: Type.Optional(Type.String()),
     tags: Type.Optional(Type.Array(Type.String())),
-    permissions: Type.Optional(Type.Object({
-      allowChatCompletions: Type.Optional(Type.Boolean()),
-      allowEmbeddings: Type.Optional(Type.Boolean()),
-      allowCompletions: Type.Optional(Type.Boolean()),
-    })),
+    permissions: Type.Optional(
+      Type.Object({
+        allowChatCompletions: Type.Optional(Type.Boolean()),
+        allowEmbeddings: Type.Optional(Type.Boolean()),
+        allowCompletions: Type.Optional(Type.Boolean()),
+      }),
+    ),
     softBudget: Type.Optional(Type.Number()),
     guardrails: Type.Optional(Type.Array(Type.String())),
-  })
+  }),
 ]);
 
 export const ApiKeySpendInfoSchema = Type.Object({
@@ -361,11 +426,13 @@ export const ApiKeyUsageMetricsSchema = Type.Object({
   errorCount: Type.Number(),
   lastRequestAt: Type.Optional(TimestampSchema),
   averageResponseTime: Type.Optional(Type.Number()),
-  topModels: Type.Array(Type.Object({
-    model: Type.String(),
-    requestCount: Type.Number(),
-    tokenCount: Type.Number(),
-  })),
+  topModels: Type.Array(
+    Type.Object({
+      model: Type.String(),
+      requestCount: Type.Number(),
+      tokenCount: Type.Number(),
+    }),
+  ),
 });
 
 export const ApiKeyListQuerySchema = Type.Composite([
@@ -381,14 +448,16 @@ export const ApiKeyListResponseSchema = createPaginatedResponse(ApiKeyDetailsSch
 export const ApiKeyValidationSchema = Type.Object({
   isValid: Type.Boolean(),
   apiKey: Type.Optional(ApiKeySchema),
-  subscription: Type.Optional(Type.Object({
-    id: Type.String(),
-    userId: Type.String(),
-    modelId: Type.String(),
-    status: Type.String(),
-    remainingRequests: Type.Integer(),
-    remainingTokens: Type.Integer(),
-  })),
+  subscription: Type.Optional(
+    Type.Object({
+      id: Type.String(),
+      userId: Type.String(),
+      modelId: Type.String(),
+      status: Type.String(),
+      remainingRequests: Type.Integer(),
+      remainingTokens: Type.Integer(),
+    }),
+  ),
   error: Type.Optional(Type.String()),
 });
 

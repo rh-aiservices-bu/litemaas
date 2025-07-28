@@ -38,7 +38,7 @@ export class LiteLLMService {
         input_cost_per_token: 0.01,
         output_cost_per_token: 0.03,
         custom_llm_provider: 'openai',
-        model: 'openai/gpt-4o'
+        model: 'openai/gpt-4o',
       },
       model_info: {
         id: 'mock-gpt-4o-id',
@@ -50,8 +50,8 @@ export class LiteLLMService {
         direct_access: true,
         access_via_team_ids: [],
         input_cost_per_token: 0.01,
-        output_cost_per_token: 0.03
-      }
+        output_cost_per_token: 0.03,
+      },
     },
     {
       model_name: 'gpt-4o-mini',
@@ -59,7 +59,7 @@ export class LiteLLMService {
         input_cost_per_token: 0.00015,
         output_cost_per_token: 0.0006,
         custom_llm_provider: 'openai',
-        model: 'openai/gpt-4o-mini'
+        model: 'openai/gpt-4o-mini',
       },
       model_info: {
         id: 'mock-gpt-4o-mini-id',
@@ -71,8 +71,8 @@ export class LiteLLMService {
         direct_access: true,
         access_via_team_ids: [],
         input_cost_per_token: 0.00015,
-        output_cost_per_token: 0.0006
-      }
+        output_cost_per_token: 0.0006,
+      },
     },
     {
       model_name: 'claude-3-5-sonnet-20241022',
@@ -80,7 +80,7 @@ export class LiteLLMService {
         input_cost_per_token: 0.003,
         output_cost_per_token: 0.015,
         custom_llm_provider: 'anthropic',
-        model: 'anthropic/claude-3-5-sonnet-20241022'
+        model: 'anthropic/claude-3-5-sonnet-20241022',
       },
       model_info: {
         id: 'mock-claude-3-5-sonnet-id',
@@ -92,27 +92,38 @@ export class LiteLLMService {
         direct_access: true,
         access_via_team_ids: [],
         input_cost_per_token: 0.003,
-        output_cost_per_token: 0.015
-      }
-    }
+        output_cost_per_token: 0.015,
+      },
+    },
   ];
 
   constructor(fastify: FastifyInstance, config?: Partial<LiteLLMConfig>) {
     this.fastify = fastify;
     this.config = {
-      baseUrl: config?.baseUrl || process.env.LITELLM_API_URL || process.env.LITELLM_BASE_URL || 'http://localhost:4000',
+      baseUrl:
+        config?.baseUrl ||
+        process.env.LITELLM_API_URL ||
+        process.env.LITELLM_BASE_URL ||
+        'http://localhost:4000',
       apiKey: config?.apiKey || process.env.LITELLM_API_KEY,
       timeout: config?.timeout || 30000,
       retryAttempts: config?.retryAttempts || 3,
       retryDelay: config?.retryDelay || 1000,
-      enableMocking: config?.enableMocking ?? (process.env.NODE_ENV === 'development' && !process.env.LITELLM_API_URL && !process.env.LITELLM_BASE_URL),
+      enableMocking:
+        config?.enableMocking ??
+        (process.env.NODE_ENV === 'development' &&
+          !process.env.LITELLM_API_URL &&
+          !process.env.LITELLM_BASE_URL),
     };
 
-    this.fastify.log.info({
-      baseUrl: this.config.baseUrl,
-      enableMocking: this.config.enableMocking,
-      timeout: this.config.timeout,
-    }, 'LiteLLM service initialized');
+    this.fastify.log.info(
+      {
+        baseUrl: this.config.baseUrl,
+        enableMocking: this.config.enableMocking,
+        timeout: this.config.timeout,
+      },
+      'LiteLLM service initialized',
+    );
   }
 
   private getCacheKey(key: string): string {
@@ -131,7 +142,7 @@ export class LiteLLMService {
   private getCache<T>(key: string): T | null {
     const cacheKey = this.getCacheKey(key);
     const cached = this.cache.get(cacheKey);
-    
+
     if (!cached) {
       return null;
     }
@@ -146,8 +157,8 @@ export class LiteLLMService {
 
   private clearCacheInternal(pattern?: string): void {
     if (pattern) {
-      const keys = Array.from(this.cache.keys()).filter(key => key.includes(pattern));
-      keys.forEach(key => this.cache.delete(key));
+      const keys = Array.from(this.cache.keys()).filter((key) => key.includes(pattern));
+      keys.forEach((key) => this.cache.delete(key));
     } else {
       this.cache.clear();
     }
@@ -179,10 +190,13 @@ export class LiteLLMService {
 
     if (this.circuitBreakerFailureCount >= this.CIRCUIT_BREAKER_THRESHOLD) {
       this.isCircuitBreakerOpen = true;
-      this.fastify.log.warn({
-        failureCount: this.circuitBreakerFailureCount,
-        threshold: this.CIRCUIT_BREAKER_THRESHOLD,
-      }, 'Circuit breaker opened due to consecutive failures');
+      this.fastify.log.warn(
+        {
+          failureCount: this.circuitBreakerFailureCount,
+          threshold: this.CIRCUIT_BREAKER_THRESHOLD,
+        },
+        'Circuit breaker opened due to consecutive failures',
+      );
     }
   }
 
@@ -192,16 +206,16 @@ export class LiteLLMService {
       method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
       body?: any;
       headers?: Record<string, string>;
-    } = {}
+    } = {},
   ): Promise<T> {
     if (this.isCircuitBreakerTripped()) {
       throw new Error('Circuit breaker is open - LiteLLM service unavailable');
     }
 
     const { method = 'GET', body, headers = {} } = options;
-    
+
     const url = `${this.config.baseUrl}${endpoint}`;
-    
+
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       ...headers,
@@ -215,12 +229,15 @@ export class LiteLLMService {
 
     for (let attempt = 1; attempt <= this.config.retryAttempts; attempt++) {
       try {
-        this.fastify.log.debug({
-          url,
-          method,
-          attempt,
-          maxAttempts: this.config.retryAttempts,
-        }, 'Making request to LiteLLM');
+        this.fastify.log.debug(
+          {
+            url,
+            method,
+            attempt,
+            maxAttempts: this.config.retryAttempts,
+          },
+          'Making request to LiteLLM',
+        );
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
@@ -235,34 +252,42 @@ export class LiteLLMService {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          const errorData = await response.json() as LiteLLMError;
-          throw new Error(`LiteLLM API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
+          const errorData = (await response.json()) as LiteLLMError;
+          throw new Error(
+            `LiteLLM API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`,
+          );
         }
 
         const data = await response.json();
         this.recordSuccess();
-        
-        this.fastify.log.debug({
-          url,
-          method,
-          status: response.status,
-          attempt,
-        }, 'LiteLLM request successful');
+
+        this.fastify.log.debug(
+          {
+            url,
+            method,
+            status: response.status,
+            attempt,
+          },
+          'LiteLLM request successful',
+        );
 
         return data as T;
       } catch (error) {
         lastError = error as Error;
-        
-        this.fastify.log.warn({
-          url,
-          method,
-          attempt,
-          maxAttempts: this.config.retryAttempts,
-          error: lastError.message,
-        }, 'LiteLLM request failed');
+
+        this.fastify.log.warn(
+          {
+            url,
+            method,
+            attempt,
+            maxAttempts: this.config.retryAttempts,
+            error: lastError.message,
+          },
+          'LiteLLM request failed',
+        );
 
         if (attempt < this.config.retryAttempts) {
-          await new Promise(resolve => setTimeout(resolve, this.config.retryDelay * attempt));
+          await new Promise((resolve) => setTimeout(resolve, this.config.retryDelay * attempt));
         }
       }
     }
@@ -273,13 +298,13 @@ export class LiteLLMService {
 
   private createMockResponse<T>(data: T): Promise<T> {
     const delay = Math.random() * 100 + 50; // 50-150ms
-    return new Promise(resolve => setTimeout(() => resolve(data), delay));
+    return new Promise((resolve) => setTimeout(() => resolve(data), delay));
   }
 
   // Enhanced Model Management
   async getModels(options: { refresh?: boolean; teamId?: string } = {}): Promise<LiteLLMModel[]> {
     const cacheKey = `models:${options.teamId || 'default'}`;
-    
+
     if (!options.refresh) {
       const cached = this.getCache<LiteLLMModel[]>(cacheKey);
       if (cached) {
@@ -300,34 +325,37 @@ export class LiteLLMService {
       if (options.teamId) {
         queryParams.append('team_id', options.teamId);
       }
-      
+
       const endpoint = `/model/info${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await this.makeRequest<{ data: LiteLLMModel[] }>(endpoint);
       this.setCache(cacheKey, response.data);
       return response.data;
     } catch (error) {
       this.fastify.log.error(error, 'Failed to fetch models from LiteLLM');
-      
+
       const cached = this.getCache<LiteLLMModel[]>(cacheKey);
       if (cached) {
         this.fastify.log.warn('Returning stale cached models due to API failure');
         return cached;
       }
-      
+
       throw error;
     }
   }
 
   async getModelById(modelId: string): Promise<LiteLLMModel | null> {
     const models = await this.getModels();
-    return models.find(model => model.model_name === modelId || model.model_info.id === modelId) || null;
+    return (
+      models.find((model) => model.model_name === modelId || model.model_info.id === modelId) ||
+      null
+    );
   }
 
   // Enhanced Health Monitoring
   async getHealth(): Promise<LiteLLMHealth> {
     const cacheKey = 'health';
     const cached = this.getCache<LiteLLMHealth>(cacheKey);
-    
+
     if (cached) {
       return cached;
     }
@@ -349,18 +377,20 @@ export class LiteLLMService {
       return health;
     } catch (error) {
       this.fastify.log.error(error, 'Failed to check LiteLLM health');
-      
+
       const fallbackHealth: LiteLLMHealth = {
         status: 'unhealthy',
         db: 'unknown',
       };
-      
+
       return fallbackHealth;
     }
   }
 
   // Enhanced API Key Management
-  async generateApiKey(request: LiteLLMKeyGenerationRequest): Promise<LiteLLMKeyGenerationResponse> {
+  async generateApiKey(
+    request: LiteLLMKeyGenerationRequest,
+  ): Promise<LiteLLMKeyGenerationResponse> {
     if (this.config.enableMocking) {
       const mockKey = `sk-litellm-${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
       const response: LiteLLMKeyGenerationResponse = {
@@ -372,9 +402,11 @@ export class LiteLLMService {
         current_spend: 0,
         created_by: 'litemaas',
         created_at: new Date().toISOString(),
-        expires: request.duration ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() : undefined,
+        expires: request.duration
+          ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+          : undefined,
       };
-      
+
       return this.createMockResponse(response);
     }
 
@@ -402,13 +434,13 @@ export class LiteLLMService {
         expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         budget_reset_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
       };
-      
+
       return this.createMockResponse(mockInfo);
     }
 
     try {
       return await this.makeRequest<LiteLLMKeyInfo>('/key/info', {
-        headers: { 'x-litellm-api-key': apiKey }
+        headers: { 'x-litellm-api-key': apiKey },
       });
     } catch (error) {
       this.fastify.log.error(error, 'Failed to get key info');
@@ -463,9 +495,11 @@ export class LiteLLMService {
         tpm_limit: request.tpm_limit || 1000,
         rpm_limit: request.rpm_limit || 60,
         created_at: new Date().toISOString(),
-        api_key: request.auto_create_key ? `sk-litellm-${Math.random().toString(36).substring(2, 15)}` : undefined,
+        api_key: request.auto_create_key
+          ? `sk-litellm-${Math.random().toString(36).substring(2, 15)}`
+          : undefined,
       };
-      
+
       return this.createMockResponse(mockResponse);
     }
 
@@ -493,7 +527,7 @@ export class LiteLLMService {
         rpm_limit: 60,
         created_at: new Date().toISOString(),
       };
-      
+
       return this.createMockResponse(mockResponse);
     }
 
@@ -505,7 +539,10 @@ export class LiteLLMService {
     }
   }
 
-  async updateUser(userId: string, updates: Partial<LiteLLMUserRequest>): Promise<LiteLLMUserResponse> {
+  async updateUser(
+    userId: string,
+    updates: Partial<LiteLLMUserRequest>,
+  ): Promise<LiteLLMUserResponse> {
     if (this.config.enableMocking) {
       const mockResponse: LiteLLMUserResponse = {
         user_id: userId,
@@ -513,7 +550,7 @@ export class LiteLLMService {
         spend: Math.random() * 50,
         created_at: new Date().toISOString(),
       };
-      
+
       return this.createMockResponse(mockResponse);
     }
 
@@ -543,7 +580,7 @@ export class LiteLLMService {
         members: [],
         created_at: new Date().toISOString(),
       };
-      
+
       return this.createMockResponse(mockResponse);
     }
 
@@ -572,7 +609,7 @@ export class LiteLLMService {
         members: ['member-user-1', 'member-user-2'],
         created_at: new Date().toISOString(),
       };
-      
+
       return this.createMockResponse(mockResponse);
     }
 
@@ -592,23 +629,26 @@ export class LiteLLMService {
         object: 'chat.completion',
         created: Math.floor(Date.now() / 1000),
         model: request.model,
-        choices: [{
-          index: 0,
-          message: {
-            role: 'assistant',
-            content: `This is a mock response for model ${request.model}. Your message was: "${request.messages[request.messages.length - 1]?.content}"`
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: 'assistant',
+              content: `This is a mock response for model ${request.model}. Your message was: "${request.messages[request.messages.length - 1]?.content}"`,
+            },
+            finish_reason: 'stop',
           },
-          finish_reason: 'stop'
-        }],
+        ],
         usage: {
           prompt_tokens: request.messages.reduce((sum, msg) => sum + msg.content.length / 4, 0),
           completion_tokens: 50,
-          total_tokens: 0
-        }
+          total_tokens: 0,
+        },
       };
-      
-      mockResponse.usage.total_tokens = mockResponse.usage.prompt_tokens + mockResponse.usage.completion_tokens;
-      
+
+      mockResponse.usage.total_tokens =
+        mockResponse.usage.prompt_tokens + mockResponse.usage.completion_tokens;
+
       return this.createMockResponse(mockResponse);
     }
 

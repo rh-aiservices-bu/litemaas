@@ -1,10 +1,7 @@
 import { Type } from '@sinclair/typebox';
 import { TimestampSchema } from './common';
 
-export const HealthStatusEnum = Type.Union([
-  Type.Literal('healthy'),
-  Type.Literal('unhealthy'),
-]);
+export const HealthStatusEnum = Type.Union([Type.Literal('healthy'), Type.Literal('unhealthy')]);
 
 export const HealthCheckSchema = Type.Object({
   status: HealthStatusEnum,

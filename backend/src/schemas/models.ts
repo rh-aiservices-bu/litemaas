@@ -90,26 +90,26 @@ export const LiteLLMModelListResponseSchema = Type.Object({
 export const EnhancedModelSchema = Type.Intersect([
   ModelSchema,
   Type.Object({
-    liteLLMInfo: Type.Optional(Type.Object({
-      id: Type.String(),
-      object: Type.String(),
-      created: Type.Number(),
-      owned_by: Type.String(),
-      litellm_provider: Type.Optional(Type.String()),
-      source: Type.Optional(Type.String()),
-      supports_function_calling: Type.Optional(Type.Boolean()),
-      supports_parallel_function_calling: Type.Optional(Type.Boolean()),
-      supports_vision: Type.Optional(Type.Boolean()),
-      supports_assistant_api: Type.Optional(Type.Boolean()),
-    })),
+    liteLLMInfo: Type.Optional(
+      Type.Object({
+        id: Type.String(),
+        object: Type.String(),
+        created: Type.Number(),
+        owned_by: Type.String(),
+        litellm_provider: Type.Optional(Type.String()),
+        source: Type.Optional(Type.String()),
+        supports_function_calling: Type.Optional(Type.Boolean()),
+        supports_parallel_function_calling: Type.Optional(Type.Boolean()),
+        supports_vision: Type.Optional(Type.Boolean()),
+        supports_assistant_api: Type.Optional(Type.Boolean()),
+      }),
+    ),
     lastSyncAt: Type.Optional(TimestampSchema),
-    syncStatus: Type.Optional(Type.Union([
-      Type.Literal('synced'),
-      Type.Literal('pending'),
-      Type.Literal('error')
-    ])),
+    syncStatus: Type.Optional(
+      Type.Union([Type.Literal('synced'), Type.Literal('pending'), Type.Literal('error')]),
+    ),
     syncError: Type.Optional(Type.String()),
-  })
+  }),
 ]);
 
 export const ModelSyncRequestSchema = Type.Object({
@@ -121,9 +121,13 @@ export const ModelSyncRequestSchema = Type.Object({
 export const ModelSyncResponseSchema = Type.Object({
   syncedCount: Type.Number(),
   errorCount: Type.Number(),
-  errors: Type.Optional(Type.Array(Type.Object({
-    modelId: Type.String(),
-    error: Type.String(),
-  }))),
+  errors: Type.Optional(
+    Type.Array(
+      Type.Object({
+        modelId: Type.String(),
+        error: Type.String(),
+      }),
+    ),
+  ),
   lastSyncAt: TimestampSchema,
 });

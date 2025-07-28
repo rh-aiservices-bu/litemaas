@@ -21,7 +21,7 @@ describe('ApiKeyService', () => {
         warn: vi.fn(),
         debug: vi.fn(),
       },
-    } as any;
+    } as unknown as FastifyInstance;
 
     service = new ApiKeyService(mockFastify as FastifyInstance);
   });
@@ -58,12 +58,13 @@ describe('ApiKeyService', () => {
           expect.any(String), // permissions JSON
           keyData.rateLimit,
           keyData.description,
-        ])
+        ]),
       );
     });
 
     it('should generate a unique API key each time', async () => {
-      const mockQuery = vi.fn()
+      const mockQuery = vi
+        .fn()
         .mockResolvedValueOnce({
           rows: [{ ...mockApiKey, id: 'key-1', keyPreview: 'sk-...abc123' }],
           rowCount: 1,
@@ -103,11 +104,13 @@ describe('ApiKeyService', () => {
   describe('validateApiKey', () => {
     it('should validate a correct API key', async () => {
       const mockQuery = vi.fn().mockResolvedValue({
-        rows: [{
-          ...mockApiKey,
-          status: 'active',
-          userId: mockUser.id,
-        }],
+        rows: [
+          {
+            ...mockApiKey,
+            status: 'active',
+            userId: mockUser.id,
+          },
+        ],
         rowCount: 1,
       });
       mockFastify.db!.query = mockQuery;
@@ -135,10 +138,12 @@ describe('ApiKeyService', () => {
 
     it('should reject a revoked API key', async () => {
       const mockQuery = vi.fn().mockResolvedValue({
-        rows: [{
-          ...mockApiKey,
-          status: 'revoked',
-        }],
+        rows: [
+          {
+            ...mockApiKey,
+            status: 'revoked',
+          },
+        ],
         rowCount: 1,
       });
       mockFastify.db!.query = mockQuery;
@@ -152,11 +157,13 @@ describe('ApiKeyService', () => {
     it('should reject an expired API key', async () => {
       const expiredDate = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
       const mockQuery = vi.fn().mockResolvedValue({
-        rows: [{
-          ...mockApiKey,
-          status: 'active',
-          expiresAt: expiredDate,
-        }],
+        rows: [
+          {
+            ...mockApiKey,
+            status: 'active',
+            expiresAt: expiredDate,
+          },
+        ],
         rowCount: 1,
       });
       mockFastify.db!.query = mockQuery;
@@ -181,7 +188,7 @@ describe('ApiKeyService', () => {
       expect(result).toBe(true);
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE api_keys SET status = $1'),
-        ['revoked', mockApiKey.id, mockUser.id]
+        ['revoked', mockApiKey.id, mockUser.id],
       );
     });
 
@@ -210,7 +217,7 @@ describe('ApiKeyService', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE api_keys SET usage_count = usage_count + 1'),
-        [mockApiKey.id]
+        [mockApiKey.id],
       );
     });
 
@@ -223,10 +230,9 @@ describe('ApiKeyService', () => {
 
       await service.incrementUsage(mockApiKey.id);
 
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining('last_used_at = NOW()'),
-        [mockApiKey.id]
-      );
+      expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('last_used_at = NOW()'), [
+        mockApiKey.id,
+      ]);
     });
   });
 
@@ -249,7 +255,7 @@ describe('ApiKeyService', () => {
       expect(result[1].name).toBe('Key 2');
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('SELECT * FROM api_keys WHERE user_id = $1'),
-        [mockUser.id]
+        [mockUser.id],
       );
     });
 
@@ -262,10 +268,10 @@ describe('ApiKeyService', () => {
 
       await service.getUserApiKeys(mockUser.id, 'active');
 
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining('AND status = $2'),
-        [mockUser.id, 'active']
-      );
+      expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('AND status = $2'), [
+        mockUser.id,
+        'active',
+      ]);
     });
   });
 });

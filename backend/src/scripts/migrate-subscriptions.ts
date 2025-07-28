@@ -2,17 +2,17 @@
 
 /**
  * Subscription Self-Service Migration Script
- * 
+ *
  * This script migrates the subscription system from approval-based to self-service:
  * 1. Converts all pending subscriptions to active
  * 2. Removes duplicate subscriptions (keeps most recent)
  * 3. Adds unique constraint to prevent future duplicates
  * 4. Updates default status and constraints
- * 
+ *
  * Note: This migration was executed as part of the subscription refactor.
  * This script serves as documentation and can be used for future reference.
- * 
- * Usage: 
+ *
+ * Usage:
  *   npm run migrate:subscriptions
  *   or ts-node src/scripts/migrate-subscriptions.ts
  */
@@ -30,10 +30,12 @@ interface MigrationResult {
   error?: string;
 }
 
-export async function migrateSubscriptionsToSelfService(fastify: FastifyInstance): Promise<MigrationResult> {
+export async function migrateSubscriptionsToSelfService(
+  fastify: FastifyInstance,
+): Promise<MigrationResult> {
   const startTime = Date.now();
   fastify.log.info('🚀 Starting subscription migration to self-service model');
-  
+
   let pendingConverted = 0;
   let duplicatesRemoved = 0;
   let constraintAdded = false;
@@ -49,13 +51,13 @@ export async function migrateSubscriptionsToSelfService(fastify: FastifyInstance
       WHERE status = 'pending'
       RETURNING id
     `);
-    
+
     pendingConverted = pendingResult.rowCount || 0;
     fastify.log.info(`✅ Converted ${pendingConverted} pending subscriptions to active`);
 
     // Step 2: Identify and remove duplicate subscriptions (keep most recent)
     fastify.log.info('🔍 Step 2: Identifying and removing duplicate subscriptions...');
-    
+
     // First, get a count of duplicates for logging
     const duplicateCountResult = await fastify.dbUtils.query(`
       WITH duplicates AS (
@@ -66,7 +68,7 @@ export async function migrateSubscriptionsToSelfService(fastify: FastifyInstance
       )
       SELECT SUM(count - 1) as total_duplicates FROM duplicates
     `);
-    
+
     const expectedDuplicates = duplicateCountResult.rows[0]?.total_duplicates || 0;
     fastify.log.info(`📊 Found ${expectedDuplicates} duplicate subscriptions to remove`);
 
@@ -99,8 +101,9 @@ export async function migrateSubscriptionsToSelfService(fastify: FastifyInstance
       `);
       constraintAdded = true;
       fastify.log.info('✅ Added unique constraint for user-model subscriptions');
-    } catch (error: any) {
-      if (error.message?.includes('already exists')) {
+    } catch (error: unknown) {
+      const err = error as Error;
+      if (err.message?.includes('already exists')) {
         fastify.log.info('ℹ️ Unique constraint already exists, skipping...');
         constraintAdded = true;
       } else {
@@ -125,7 +128,7 @@ export async function migrateSubscriptionsToSelfService(fastify: FastifyInstance
         ALTER TABLE subscriptions 
         DROP CONSTRAINT IF EXISTS subscriptions_status_check
       `);
-      
+
       // Add new constraint without 'pending'
       await fastify.dbUtils.query(`
         ALTER TABLE subscriptions 
@@ -133,8 +136,9 @@ export async function migrateSubscriptionsToSelfService(fastify: FastifyInstance
         CHECK (status IN ('active', 'suspended', 'cancelled', 'expired'))
       `);
       fastify.log.info('✅ Updated status check constraint (removed pending)');
-    } catch (error: any) {
-      fastify.log.warn(error, 'Failed to update status constraint, continuing...');
+    } catch (error: unknown) {
+      const err = error as Error;
+      fastify.log.warn(err, 'Failed to update status constraint, continuing...');
     }
 
     // Step 6: Create performance indexes
@@ -144,28 +148,29 @@ export async function migrateSubscriptionsToSelfService(fastify: FastifyInstance
         CREATE INDEX IF NOT EXISTS idx_subscriptions_user_model_unique 
         ON subscriptions(user_id, model_id)
       `);
-      
+
       await fastify.dbUtils.query(`
         CREATE INDEX IF NOT EXISTS idx_subscriptions_active_status 
         ON subscriptions(status) WHERE status = 'active'
       `);
-      
+
       indexesCreated = true;
       fastify.log.info('✅ Created performance indexes');
-    } catch (error: any) {
-      fastify.log.warn(error, 'Failed to create some indexes, continuing...');
+    } catch (error: unknown) {
+      const err = error as Error;
+      fastify.log.warn(err, 'Failed to create some indexes, continuing...');
       indexesCreated = false;
     }
 
     // Step 7: Verification queries
     fastify.log.info('🔍 Step 7: Verifying migration results...');
-    
+
     // Check no pending subscriptions remain
-    const remainingPendingResult = await fastify.dbUtils.query(`
+    const remainingPendingResult = await fastify.dbUtils.query<{ count: string }>(`
       SELECT COUNT(*) as count FROM subscriptions WHERE status = 'pending'
     `);
-    const remainingPending = remainingPendingResult.rows[0]?.count || 0;
-    
+    const remainingPending = parseInt(remainingPendingResult.rows[0]?.count || '0');
+
     // Check for any remaining duplicates
     const remainingDuplicatesResult = await fastify.dbUtils.query(`
       SELECT user_id, model_id, COUNT(*) as count
@@ -183,27 +188,29 @@ export async function migrateSubscriptionsToSelfService(fastify: FastifyInstance
     }
 
     if (remainingDuplicates > 0) {
-      fastify.log.warn(`⚠️ Warning: ${remainingDuplicates} duplicate subscription pairs still exist`);
+      fastify.log.warn(
+        `⚠️ Warning: ${remainingDuplicates} duplicate subscription pairs still exist`,
+      );
     } else {
       fastify.log.info('✅ Verification: No duplicate subscriptions remain');
     }
 
     const duration = Date.now() - startTime;
     fastify.log.info(`🎉 Subscription migration completed successfully in ${duration}ms`);
-    
+
     return {
       pendingConverted,
       duplicatesRemoved,
       constraintAdded,
       defaultStatusUpdated,
       indexesCreated,
-      success: true
+      success: true,
     };
-
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as Error;
     const duration = Date.now() - startTime;
-    fastify.log.error(error, `❌ Subscription migration failed after ${duration}ms`);
-    
+    fastify.log.error(err, `❌ Subscription migration failed after ${duration}ms`);
+
     return {
       pendingConverted,
       duplicatesRemoved,
@@ -211,7 +218,7 @@ export async function migrateSubscriptionsToSelfService(fastify: FastifyInstance
       defaultStatusUpdated,
       indexesCreated,
       success: false,
-      error: error.message
+      error: err.message,
     };
   }
 }
@@ -220,9 +227,11 @@ export async function migrateSubscriptionsToSelfService(fastify: FastifyInstance
  * Rollback function to revert the migration changes
  * Use with extreme caution - this will restore the approval-based workflow
  */
-export async function rollbackSubscriptionMigration(fastify: FastifyInstance): Promise<MigrationResult> {
+export async function rollbackSubscriptionMigration(
+  fastify: FastifyInstance,
+): Promise<MigrationResult> {
   fastify.log.warn('🚨 Starting subscription migration rollback - USE WITH CAUTION');
-  
+
   try {
     // Step 1: Remove unique constraint
     fastify.log.info('🔓 Removing unique constraint...');
@@ -237,7 +246,7 @@ export async function rollbackSubscriptionMigration(fastify: FastifyInstance): P
       ALTER TABLE subscriptions 
       DROP CONSTRAINT IF EXISTS subscriptions_status_check
     `);
-    
+
     await fastify.dbUtils.query(`
       ALTER TABLE subscriptions 
       ADD CONSTRAINT subscriptions_status_check 
@@ -256,25 +265,25 @@ export async function rollbackSubscriptionMigration(fastify: FastifyInstance): P
     await fastify.dbUtils.query(`
       DROP INDEX IF EXISTS idx_subscriptions_user_model_unique
     `);
-    
+
     await fastify.dbUtils.query(`
       DROP INDEX IF EXISTS idx_subscriptions_active_status
     `);
 
     fastify.log.warn('✅ Subscription migration rollback completed');
-    
+
     return {
       pendingConverted: 0,
       duplicatesRemoved: 0,
       constraintAdded: false,
       defaultStatusUpdated: true,
       indexesCreated: false,
-      success: true
+      success: true,
     };
-
-  } catch (error: any) {
-    fastify.log.error(error, '❌ Subscription migration rollback failed');
-    throw error;
+  } catch (error: unknown) {
+    const err = error as Error;
+    fastify.log.error(err, '❌ Subscription migration rollback failed');
+    throw err;
   }
 }
 
@@ -287,18 +296,18 @@ export async function validateSubscriptionMigration(fastify: FastifyInstance): P
   checks: Record<string, { passed: boolean; details?: string }>;
 }> {
   fastify.log.info('🔍 Validating subscription migration state...');
-  
+
   const checks: Record<string, { passed: boolean; details?: string }> = {};
 
   try {
     // Check 1: No pending subscriptions
-    const pendingResult = await fastify.dbUtils.query(`
+    const pendingResult = await fastify.dbUtils.query<{ count: string }>(`
       SELECT COUNT(*) as count FROM subscriptions WHERE status = 'pending'
     `);
-    const pendingCount = pendingResult.rows[0]?.count || 0;
+    const pendingCount = parseInt(pendingResult.rows[0]?.count || '0');
     checks.noPendingSubscriptions = {
       passed: pendingCount === 0,
-      details: pendingCount > 0 ? `Found ${pendingCount} pending subscriptions` : undefined
+      details: pendingCount > 0 ? `Found ${pendingCount} pending subscriptions` : undefined,
     };
 
     // Check 2: No duplicate subscriptions
@@ -310,7 +319,10 @@ export async function validateSubscriptionMigration(fastify: FastifyInstance): P
     `);
     checks.noDuplicateSubscriptions = {
       passed: duplicateResult.rows.length === 0,
-      details: duplicateResult.rows.length > 0 ? `Found ${duplicateResult.rows.length} duplicate pairs` : undefined
+      details:
+        duplicateResult.rows.length > 0
+          ? `Found ${duplicateResult.rows.length} duplicate pairs`
+          : undefined,
     };
 
     // Check 3: Unique constraint exists
@@ -322,24 +334,24 @@ export async function validateSubscriptionMigration(fastify: FastifyInstance): P
       AND constraint_name = 'unique_user_model_subscription'
     `);
     checks.uniqueConstraintExists = {
-      passed: constraintResult.rows.length > 0
+      passed: constraintResult.rows.length > 0,
     };
 
     // Check 4: Default status is 'active'
-    const defaultResult = await fastify.dbUtils.query(`
+    const defaultResult = await fastify.dbUtils.query<{ column_default: string }>(`
       SELECT column_default 
       FROM information_schema.columns 
       WHERE table_name = 'subscriptions' 
       AND column_name = 'status'
     `);
-    const defaultValue = defaultResult.rows[0]?.column_default;
+    const defaultValue = defaultResult.rows[0]?.column_default || '';
     checks.defaultStatusActive = {
-      passed: defaultValue?.includes('active') || false,
-      details: `Current default: ${defaultValue}`
+      passed: defaultValue.includes('active'),
+      details: `Current default: ${defaultValue}`,
     };
 
     // Check 5: Status constraint doesn't include 'pending'
-    const checkConstraintResult = await fastify.dbUtils.query(`
+    const checkConstraintResult = await fastify.dbUtils.query<{ check_clause: string }>(`
       SELECT check_clause 
       FROM information_schema.check_constraints cc
       JOIN information_schema.constraint_column_usage ccu 
@@ -350,31 +362,34 @@ export async function validateSubscriptionMigration(fastify: FastifyInstance): P
     const checkClause = checkConstraintResult.rows[0]?.check_clause || '';
     checks.statusConstraintUpdated = {
       passed: !checkClause.includes('pending'),
-      details: `Current constraint: ${checkClause}`
+      details: `Current constraint: ${checkClause}`,
     };
 
-    const allPassed = Object.values(checks).every(check => check.passed);
-    
-    fastify.log.info({
-      isValid: allPassed,
-      checks
-    }, 'Subscription migration validation completed');
+    const allPassed = Object.values(checks).every((check) => check.passed);
+
+    fastify.log.info(
+      {
+        isValid: allPassed,
+        checks,
+      },
+      'Subscription migration validation completed',
+    );
 
     return {
       isValid: allPassed,
-      checks
+      checks,
     };
-
-  } catch (error: any) {
-    fastify.log.error(error, 'Failed to validate subscription migration');
+  } catch (error: unknown) {
+    const err = error as Error;
+    fastify.log.error(err, 'Failed to validate subscription migration');
     return {
       isValid: false,
       checks: {
         validationError: {
           passed: false,
-          details: error.message
-        }
-      }
+          details: err.message,
+        },
+      },
     };
   }
 }
@@ -384,25 +399,27 @@ export async function validateSubscriptionMigration(fastify: FastifyInstance): P
  */
 async function runSubscriptionMigration() {
   console.log('🚀 Starting subscription migration script...');
-  
+
   try {
     // Create the app to initialize all plugins including database
     const app = await createApp({ logger: true });
-    
+
     // Wait for the app to be ready
     await app.ready();
-    
+
     if (app.isDatabaseMockMode()) {
       console.log('⚠️ Running in mock mode - migration simulation only');
     }
-    
+
     // Run the migration
     const result = await migrateSubscriptionsToSelfService(app);
-    
+
     if (result.success) {
       console.log('✅ Migration completed successfully!');
-      console.log(`📊 Results: ${result.pendingConverted} pending converted, ${result.duplicatesRemoved} duplicates removed`);
-      
+      console.log(
+        `📊 Results: ${result.pendingConverted} pending converted, ${result.duplicatesRemoved} duplicates removed`,
+      );
+
       // Run validation
       const validation = await validateSubscriptionMigration(app);
       if (validation.isValid) {
@@ -414,12 +431,13 @@ async function runSubscriptionMigration() {
       console.error('❌ Migration failed:', result.error);
       process.exit(1);
     }
-    
+
     // Close the app
     await app.close();
     process.exit(0);
-  } catch (error) {
-    console.error('❌ Migration script failed:', error);
+  } catch (error: unknown) {
+    const err = error as Error;
+    console.error('❌ Migration script failed:', err);
     process.exit(1);
   }
 }

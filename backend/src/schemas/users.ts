@@ -1,5 +1,5 @@
 import { Type } from '@sinclair/typebox';
-import { DateStringSchema } from './common.js';
+import { TimestampSchema } from './common.js';
 
 /**
  * User schema definitions
@@ -13,9 +13,9 @@ export const UserSchema = Type.Object({
   oauthId: Type.String(),
   roles: Type.Array(Type.String()),
   isActive: Type.Boolean(),
-  lastLoginAt: Type.Optional(DateStringSchema),
-  createdAt: DateStringSchema,
-  updatedAt: DateStringSchema,
+  lastLoginAt: Type.Optional(TimestampSchema),
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
 });
 
 export const CreateUserSchema = Type.Object({
@@ -41,7 +41,7 @@ export const UserProfileSchema = Type.Object({
   email: Type.String(),
   fullName: Type.Optional(Type.String()),
   roles: Type.Array(Type.String()),
-  createdAt: DateStringSchema,
+  createdAt: TimestampSchema,
 });
 
 /**
@@ -55,19 +55,21 @@ export const TeamSchema = Type.Object({
   liteLLMTeamId: Type.Optional(Type.String()),
   maxBudget: Type.Optional(Type.Number()),
   currentSpend: Type.Optional(Type.Number()),
-  budgetDuration: Type.Optional(Type.Union([
-    Type.Literal('daily'),
-    Type.Literal('weekly'),
-    Type.Literal('monthly'),
-    Type.Literal('yearly')
-  ])),
+  budgetDuration: Type.Optional(
+    Type.Union([
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+    ]),
+  ),
   tpmLimit: Type.Optional(Type.Number()),
   rpmLimit: Type.Optional(Type.Number()),
   allowedModels: Type.Optional(Type.Array(Type.String())),
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
   isActive: Type.Boolean(),
-  createdAt: DateStringSchema,
-  updatedAt: DateStringSchema,
+  createdAt: TimestampSchema,
+  updatedAt: TimestampSchema,
   createdBy: Type.String(),
 });
 
@@ -76,12 +78,14 @@ export const CreateTeamSchema = Type.Object({
   alias: Type.Optional(Type.String()),
   description: Type.Optional(Type.String()),
   maxBudget: Type.Optional(Type.Number({ minimum: 0 })),
-  budgetDuration: Type.Optional(Type.Union([
-    Type.Literal('daily'),
-    Type.Literal('weekly'),
-    Type.Literal('monthly'),
-    Type.Literal('yearly')
-  ])),
+  budgetDuration: Type.Optional(
+    Type.Union([
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+    ]),
+  ),
   tpmLimit: Type.Optional(Type.Number({ minimum: 0 })),
   rpmLimit: Type.Optional(Type.Number({ minimum: 0 })),
   allowedModels: Type.Optional(Type.Array(Type.String())),
@@ -94,12 +98,14 @@ export const UpdateTeamSchema = Type.Object({
   alias: Type.Optional(Type.String()),
   description: Type.Optional(Type.String()),
   maxBudget: Type.Optional(Type.Number({ minimum: 0 })),
-  budgetDuration: Type.Optional(Type.Union([
-    Type.Literal('daily'),
-    Type.Literal('weekly'),
-    Type.Literal('monthly'),
-    Type.Literal('yearly')
-  ])),
+  budgetDuration: Type.Optional(
+    Type.Union([
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+    ]),
+  ),
   tpmLimit: Type.Optional(Type.Number({ minimum: 0 })),
   rpmLimit: Type.Optional(Type.Number({ minimum: 0 })),
   allowedModels: Type.Optional(Type.Array(Type.String())),
@@ -111,26 +117,24 @@ export const TeamMemberSchema = Type.Object({
   id: Type.String(),
   teamId: Type.String(),
   userId: Type.String(),
-  role: Type.Union([
-    Type.Literal('admin'),
-    Type.Literal('member'),
-    Type.Literal('viewer')
-  ]),
-  joinedAt: DateStringSchema,
+  role: Type.Union([Type.Literal('admin'), Type.Literal('member'), Type.Literal('viewer')]),
+  joinedAt: TimestampSchema,
   addedBy: Type.String(),
 });
 
 export const TeamWithMembersSchema = Type.Intersect([
   TeamSchema,
   Type.Object({
-    members: Type.Array(Type.Intersect([
-      TeamMemberSchema,
-      Type.Object({
-        user: Type.Pick(UserSchema, ['id', 'username', 'email', 'fullName']),
-      })
-    ])),
+    members: Type.Array(
+      Type.Intersect([
+        TeamMemberSchema,
+        Type.Object({
+          user: Type.Pick(UserSchema, ['id', 'username', 'email', 'fullName']),
+        }),
+      ]),
+    ),
     memberCount: Type.Number(),
-  })
+  }),
 ]);
 
 /**
@@ -140,11 +144,13 @@ export const LiteLLMUserRequestSchema = Type.Object({
   user_id: Type.Optional(Type.String()),
   user_alias: Type.Optional(Type.String()),
   user_email: Type.Optional(Type.String({ format: 'email' })),
-  user_role: Type.Optional(Type.Union([
-    Type.Literal('proxy_admin'),
-    Type.Literal('internal_user'),
-    Type.Literal('internal_user_viewer')
-  ])),
+  user_role: Type.Optional(
+    Type.Union([
+      Type.Literal('proxy_admin'),
+      Type.Literal('internal_user'),
+      Type.Literal('internal_user_viewer'),
+    ]),
+  ),
   teams: Type.Optional(Type.Array(Type.String())),
   max_budget: Type.Optional(Type.Number({ minimum: 0 })),
   models: Type.Optional(Type.Array(Type.String())),
@@ -204,45 +210,49 @@ export const EnhancedUserSchema = Type.Intersect([
   UserSchema,
   Type.Object({
     liteLLMUserId: Type.Optional(Type.String()),
-    liteLLMInfo: Type.Optional(Type.Object({
-      user_role: Type.Optional(Type.Union([
-        Type.Literal('proxy_admin'),
-        Type.Literal('internal_user'),
-        Type.Literal('internal_user_viewer')
-      ])),
-      max_budget: Type.Optional(Type.Number()),
-      current_spend: Type.Optional(Type.Number()),
-      tpm_limit: Type.Optional(Type.Number()),
-      rpm_limit: Type.Optional(Type.Number()),
-      budget_duration: Type.Optional(Type.String()),
-      budget_reset_at: Type.Optional(DateStringSchema),
-      models: Type.Optional(Type.Array(Type.String())),
-    })),
-    teams: Type.Optional(Type.Array(Type.Object({
-      teamId: Type.String(),
-      teamName: Type.String(),
-      role: Type.Union([
-        Type.Literal('admin'),
-        Type.Literal('member'),
-        Type.Literal('viewer')
-      ]),
-      joinedAt: DateStringSchema,
-    }))),
-    budgetInfo: Type.Optional(Type.Object({
-      maxBudget: Type.Optional(Type.Number()),
-      currentSpend: Type.Optional(Type.Number()),
-      budgetUtilization: Type.Optional(Type.Number()),
-      remainingBudget: Type.Optional(Type.Number()),
-      nextResetAt: Type.Optional(DateStringSchema),
-    })),
-    lastSyncAt: Type.Optional(DateStringSchema),
-    syncStatus: Type.Optional(Type.Union([
-      Type.Literal('synced'),
-      Type.Literal('pending'),
-      Type.Literal('error')
-    ])),
+    liteLLMInfo: Type.Optional(
+      Type.Object({
+        user_role: Type.Optional(
+          Type.Union([
+            Type.Literal('proxy_admin'),
+            Type.Literal('internal_user'),
+            Type.Literal('internal_user_viewer'),
+          ]),
+        ),
+        max_budget: Type.Optional(Type.Number()),
+        current_spend: Type.Optional(Type.Number()),
+        tpm_limit: Type.Optional(Type.Number()),
+        rpm_limit: Type.Optional(Type.Number()),
+        budget_duration: Type.Optional(Type.String()),
+        budget_reset_at: Type.Optional(TimestampSchema),
+        models: Type.Optional(Type.Array(Type.String())),
+      }),
+    ),
+    teams: Type.Optional(
+      Type.Array(
+        Type.Object({
+          teamId: Type.String(),
+          teamName: Type.String(),
+          role: Type.Union([Type.Literal('admin'), Type.Literal('member'), Type.Literal('viewer')]),
+          joinedAt: TimestampSchema,
+        }),
+      ),
+    ),
+    budgetInfo: Type.Optional(
+      Type.Object({
+        maxBudget: Type.Optional(Type.Number()),
+        currentSpend: Type.Optional(Type.Number()),
+        budgetUtilization: Type.Optional(Type.Number()),
+        remainingBudget: Type.Optional(Type.Number()),
+        nextResetAt: Type.Optional(TimestampSchema),
+      }),
+    ),
+    lastSyncAt: Type.Optional(TimestampSchema),
+    syncStatus: Type.Optional(
+      Type.Union([Type.Literal('synced'), Type.Literal('pending'), Type.Literal('error')]),
+    ),
     syncError: Type.Optional(Type.String()),
-  })
+  }),
 ]);
 
 /**
@@ -255,18 +265,14 @@ export const UserBudgetInfoSchema = Type.Object({
   budgetUtilization: Type.Number(),
   remainingBudget: Type.Optional(Type.Number()),
   budgetDuration: Type.Optional(Type.String()),
-  resetAt: Type.Optional(DateStringSchema),
-  lastUpdatedAt: DateStringSchema,
+  resetAt: Type.Optional(TimestampSchema),
+  lastUpdatedAt: TimestampSchema,
 });
 
 export const CreateUserTeamAssignmentSchema = Type.Object({
   userId: Type.String(),
   teamId: Type.String(),
-  role: Type.Union([
-    Type.Literal('admin'),
-    Type.Literal('member'),
-    Type.Literal('viewer')
-  ]),
+  role: Type.Union([Type.Literal('admin'), Type.Literal('member'), Type.Literal('viewer')]),
 });
 
 export const TeamListQuerySchema = Type.Object({
@@ -281,9 +287,7 @@ export const TeamMemberListQuerySchema = Type.Object({
   teamId: Type.String(),
   page: Type.Optional(Type.Number({ minimum: 1 })),
   limit: Type.Optional(Type.Number({ minimum: 1, maximum: 100 })),
-  role: Type.Optional(Type.Union([
-    Type.Literal('admin'),
-    Type.Literal('member'),
-    Type.Literal('viewer')
-  ])),
+  role: Type.Optional(
+    Type.Union([Type.Literal('admin'), Type.Literal('member'), Type.Literal('viewer')]),
+  ),
 });

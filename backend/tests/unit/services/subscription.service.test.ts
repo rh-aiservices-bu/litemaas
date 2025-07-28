@@ -49,14 +49,15 @@ describe('SubscriptionService', () => {
       },
       createNotFoundError: vi.fn((resource) => new Error(`${resource} not found`)),
       createValidationError: vi.fn((message) => new Error(message)),
-    } as any;
+    } as Partial<FastifyInstance>;
 
     service = new SubscriptionService(mockFastify as FastifyInstance);
   });
 
   describe('createSubscription', () => {
     it('should create a new subscription with default quotas', async () => {
-      const mockQueryOne = vi.fn()
+      const mockQueryOne = vi
+        .fn()
         .mockResolvedValueOnce(mockModel) // Model exists check
         .mockResolvedValueOnce(null) // No existing subscription
         .mockResolvedValueOnce(mockSubscription); // Created subscription
@@ -82,12 +83,13 @@ describe('SubscriptionService', () => {
           'active', // Default status
           10000, // Default quota_requests
           1000000, // Default quota_tokens
-        ])
+        ]),
       );
     });
 
     it('should prevent duplicate active subscriptions for same model', async () => {
-      const mockQueryOne = vi.fn()
+      const mockQueryOne = vi
+        .fn()
         .mockResolvedValueOnce(mockModel) // Model exists
         .mockResolvedValueOnce(mockSubscription); // Existing subscription found
       mockFastify.dbUtils!.queryOne = mockQueryOne;
@@ -98,7 +100,7 @@ describe('SubscriptionService', () => {
       };
 
       await expect(service.createSubscription(subscriptionData)).rejects.toThrow(
-        'Active subscription already exists for this model'
+        'Active subscription already exists for this model',
       );
     });
 
@@ -111,13 +113,12 @@ describe('SubscriptionService', () => {
         modelId: 'invalid-model',
       };
 
-      await expect(service.createSubscription(subscriptionData)).rejects.toThrow(
-        'Model not found'
-      );
+      await expect(service.createSubscription(subscriptionData)).rejects.toThrow('Model not found');
     });
 
     it('should allow custom quotas when provided', async () => {
-      const mockQueryOne = vi.fn()
+      const mockQueryOne = vi
+        .fn()
         .mockResolvedValueOnce(mockModel) // Model exists
         .mockResolvedValueOnce(null) // No existing subscription
         .mockResolvedValueOnce({ ...mockSubscription, quotaRequests: 50000, quotaTokens: 5000000 });
@@ -153,7 +154,7 @@ describe('SubscriptionService', () => {
       expect(result[1].modelId).toBe('claude-3-opus');
       expect(mockQueryMany).toHaveBeenCalledWith(
         expect.stringContaining('JOIN models m ON s.model_id = m.id'),
-        [mockUser.id]
+        [mockUser.id],
       );
     });
 
@@ -163,10 +164,10 @@ describe('SubscriptionService', () => {
 
       await service.getUserSubscriptions(mockUser.id, 'active');
 
-      expect(mockQueryMany).toHaveBeenCalledWith(
-        expect.stringContaining('AND s.status = $2'),
-        [mockUser.id, 'active']
-      );
+      expect(mockQueryMany).toHaveBeenCalledWith(expect.stringContaining('AND s.status = $2'), [
+        mockUser.id,
+        'active',
+      ]);
     });
 
     it('should include pricing information in results', async () => {
@@ -187,7 +188,8 @@ describe('SubscriptionService', () => {
 
   describe('updateSubscriptionQuotas', () => {
     it('should update subscription quotas', async () => {
-      const mockQueryOne = vi.fn()
+      const mockQueryOne = vi
+        .fn()
         .mockResolvedValueOnce(mockSubscription) // Subscription exists
         .mockResolvedValueOnce({ ...mockSubscription, quotaRequests: 20000, quotaTokens: 2000000 });
       mockFastify.dbUtils!.queryOne = mockQueryOne;
@@ -201,7 +203,7 @@ describe('SubscriptionService', () => {
       expect(result.quotaTokens).toBe(2000000);
       expect(mockQueryOne).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE subscriptions SET'),
-        expect.arrayContaining([20000, 2000000, mockSubscription.id, mockUser.id])
+        expect.arrayContaining([20000, 2000000, mockSubscription.id, mockUser.id]),
       );
     });
 
@@ -219,7 +221,8 @@ describe('SubscriptionService', () => {
 
   describe('cancelSubscription', () => {
     it('should cancel an active subscription', async () => {
-      const mockQueryOne = vi.fn()
+      const mockQueryOne = vi
+        .fn()
         .mockResolvedValueOnce(mockSubscription) // Subscription exists
         .mockResolvedValueOnce({ ...mockSubscription, status: 'cancelled' });
       mockFastify.dbUtils!.queryOne = mockQueryOne;
@@ -229,7 +232,7 @@ describe('SubscriptionService', () => {
       expect(result).toBe(true);
       expect(mockQueryOne).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE subscriptions SET status = $1'),
-        ['cancelled', mockSubscription.id, mockUser.id]
+        ['cancelled', mockSubscription.id, mockUser.id],
       );
     });
 
@@ -245,9 +248,9 @@ describe('SubscriptionService', () => {
 
   describe('checkQuotaLimits', () => {
     it('should return true when usage is within limits', async () => {
-      const mockQueryOne = vi.fn().mockResolvedValue({ 
-        ...mockSubscription, 
-        usedRequests: 5000, 
+      const mockQueryOne = vi.fn().mockResolvedValue({
+        ...mockSubscription,
+        usedRequests: 5000,
         quotaRequests: 10000,
         usedTokens: 500000,
         quotaTokens: 1000000,
@@ -263,9 +266,9 @@ describe('SubscriptionService', () => {
     });
 
     it('should return false when request quota is exceeded', async () => {
-      const mockQueryOne = vi.fn().mockResolvedValue({ 
-        ...mockSubscription, 
-        usedRequests: 15000, 
+      const mockQueryOne = vi.fn().mockResolvedValue({
+        ...mockSubscription,
+        usedRequests: 15000,
         quotaRequests: 10000,
         usedTokens: 500000,
         quotaTokens: 1000000,
@@ -280,9 +283,9 @@ describe('SubscriptionService', () => {
     });
 
     it('should return false when token quota is exceeded', async () => {
-      const mockQueryOne = vi.fn().mockResolvedValue({ 
-        ...mockSubscription, 
-        usedRequests: 5000, 
+      const mockQueryOne = vi.fn().mockResolvedValue({
+        ...mockSubscription,
+        usedRequests: 5000,
         quotaRequests: 10000,
         usedTokens: 1500000,
         quotaTokens: 1000000,
@@ -301,7 +304,7 @@ describe('SubscriptionService', () => {
       mockFastify.dbUtils!.queryOne = mockQueryOne;
 
       await expect(service.checkQuotaLimits('non-existent')).rejects.toThrow(
-        'Subscription not found'
+        'Subscription not found',
       );
     });
   });
@@ -318,8 +321,10 @@ describe('SubscriptionService', () => {
       });
 
       expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining('UPDATE subscriptions SET used_requests = used_requests + $1, used_tokens = used_tokens + $2'),
-        [1, 150, mockSubscription.id] // 100 + 50 = 150 total tokens
+        expect.stringContaining(
+          'UPDATE subscriptions SET used_requests = used_requests + $1, used_tokens = used_tokens + $2',
+        ),
+        [1, 150, mockSubscription.id], // 100 + 50 = 150 total tokens
       );
     });
 
@@ -334,7 +339,7 @@ describe('SubscriptionService', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE subscriptions SET used_tokens = used_tokens + $1'),
-        [300, mockSubscription.id] // 200 + 100 = 300 total tokens
+        [300, mockSubscription.id], // 200 + 100 = 300 total tokens
       );
     });
 
@@ -348,7 +353,7 @@ describe('SubscriptionService', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE subscriptions SET used_requests = used_requests + $1'),
-        [5, mockSubscription.id]
+        [5, mockSubscription.id],
       );
     });
   });
@@ -384,7 +389,6 @@ describe('SubscriptionService', () => {
       expect(result).toBeNull();
     });
   });
-});
 
   describe('createSubscription', () => {
     it('should create a new subscription', async () => {
@@ -413,7 +417,7 @@ describe('SubscriptionService', () => {
           subscriptionData.modelId,
           subscriptionData.plan,
           subscriptionData.billingCycle,
-        ])
+        ]),
       );
     });
 
@@ -432,7 +436,7 @@ describe('SubscriptionService', () => {
       };
 
       await expect(service.createSubscription(subscriptionData)).rejects.toThrow(
-        'Active subscription already exists for this model'
+        'Active subscription already exists for this model',
       );
     });
 
@@ -445,7 +449,7 @@ describe('SubscriptionService', () => {
       };
 
       await expect(service.createSubscription(subscriptionData)).rejects.toThrow(
-        'Invalid subscription plan'
+        'Invalid subscription plan',
       );
     });
   });
@@ -478,10 +482,10 @@ describe('SubscriptionService', () => {
 
       await service.getUserSubscriptions(mockUser.id, 'active');
 
-      expect(mockQuery).toHaveBeenCalledWith(
-        expect.stringContaining('AND status = $2'),
-        [mockUser.id, 'active']
-      );
+      expect(mockQuery).toHaveBeenCalledWith(expect.stringContaining('AND status = $2'), [
+        mockUser.id,
+        'active',
+      ]);
     });
   });
 
@@ -500,7 +504,7 @@ describe('SubscriptionService', () => {
       expect(result.plan).toBe('enterprise');
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE subscriptions SET plan = $1'),
-        ['enterprise', mockSubscription.id, mockUser.id]
+        ['enterprise', mockSubscription.id, mockUser.id],
       );
     });
 
@@ -532,7 +536,7 @@ describe('SubscriptionService', () => {
       expect(result).toBe(true);
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE subscriptions SET status = $1'),
-        ['cancelled', mockSubscription.id, mockUser.id]
+        ['cancelled', mockSubscription.id, mockUser.id],
       );
     });
 
@@ -584,7 +588,7 @@ describe('SubscriptionService', () => {
       mockFastify.db!.query = mockQuery;
 
       await expect(service.checkUsageLimit('non-existent')).rejects.toThrow(
-        'Subscription not found'
+        'Subscription not found',
       );
     });
   });
@@ -601,12 +605,13 @@ describe('SubscriptionService', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE subscriptions SET usage_used = usage_used + $1'),
-        [1, mockSubscription.id]
+        [1, mockSubscription.id],
       );
     });
 
     it('should suspend subscription when limit exceeded', async () => {
-      const mockQuery = vi.fn()
+      const mockQuery = vi
+        .fn()
         .mockResolvedValueOnce({
           rows: [{ ...mockSubscription, usageUsed: 100001, usageLimit: 100000 }],
           rowCount: 1,
@@ -621,7 +626,7 @@ describe('SubscriptionService', () => {
 
       expect(mockQuery).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE subscriptions SET status = $1'),
-        ['suspended', mockSubscription.id]
+        ['suspended', mockSubscription.id],
       );
     });
   });

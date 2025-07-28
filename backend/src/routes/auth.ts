@@ -1,12 +1,17 @@
 import { FastifyPluginAsync } from 'fastify';
 import { Static } from '@sinclair/typebox';
-import { AuthCallbackParams, LoginResponse, TokenResponse, AuthenticatedRequest } from '../types';
-import { 
-  LoginResponseSchema, 
-  AuthCallbackQuerySchema, 
-  TokenResponseSchema, 
-  UserProfileSchema 
+import { AuthenticatedRequest } from '../types';
+import {
+  LoginResponseSchema,
+  AuthCallbackQuerySchema,
+  TokenResponseSchema,
+  UserProfileSchema,
 } from '../schemas';
+
+interface DevTokenRequestBody {
+  username?: string;
+  roles?: string[];
+}
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   // OAuth login initiation
@@ -20,7 +25,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         200: LoginResponseSchema,
       },
     },
-    handler: async (request, reply) => {
+    handler: async (_request, _reply) => {
       try {
         const state = fastify.oauthHelpers.generateAndStoreState();
         const authUrl = fastify.oauth.generateAuthUrl(state);
@@ -66,16 +71,17 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       // Only allow in development or with explicit dev token environment variable
       if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_DEV_TOKENS) {
         throw fastify.createError(404, 'Endpoint not available');
       }
 
-      const { username = 'developer', roles = ['admin', 'user'] } = request.body as any;
+      const { username = 'developer', roles = ['admin', 'user'] } =
+        request.body as DevTokenRequestBody;
 
       const user = {
-        userId: 'dev-user-1',
+        id: 'dev-user-1',
         username,
         email: `${username}@litemaas.local`,
         name: 'Development User',
@@ -84,13 +90,13 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         const tokenPair = await fastify.generateTokenPair(user);
-        
+
         return {
           access_token: tokenPair.accessToken,
           token_type: 'Bearer',
           expires_in: 86400, // 24 hours
           user: {
-            userId: user.userId,
+            userId: user.id,
             username: user.username,
             email: user.email,
             roles: user.roles,
@@ -124,12 +130,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const { state, user = '0' } = request.query as { state: string; user?: string };
-      
+
       // Redirect to callback with mock authorization code
       const callbackUrl = new URL('/api/auth/callback', 'http://localhost:8080');
       callbackUrl.searchParams.set('code', user);
       callbackUrl.searchParams.set('state', state);
-      
+
       reply.redirect(callbackUrl.toString());
     },
   });
@@ -169,10 +175,10 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Exchange authorization code for access token
         const tokenResponse = await fastify.oauth.exchangeCodeForToken(code, state);
-        
+
         // Get user information
         const userInfo = await fastify.oauth.getUserInfo(tokenResponse.access_token);
-        
+
         // Process user (create or update in database)
         const user = await fastify.oauth.processOAuthUser(userInfo);
 
@@ -194,7 +200,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
             request.ip,
             request.headers['user-agent'],
             { oauth_provider: 'openshift', method: 'oauth' },
-          ]
+          ],
         );
 
         fastify.log.info({ userId: user.id, username: user.username }, 'User logged in');
@@ -215,15 +221,15 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           // Redirect to frontend with token in URL fragment (SPA)
           const frontendUrl = new URL(process.env.FRONTEND_URL || 'http://localhost:3000');
           frontendUrl.hash = `token=${token}&expires_in=${24 * 60 * 60}`;
-          reply.redirect(frontendUrl.toString());
+          return reply.redirect(frontendUrl.toString());
         }
       } catch (error) {
         fastify.log.error(error, 'OAuth callback error');
-        
-        if (error.statusCode) {
+
+        if (error && typeof error === 'object' && 'statusCode' in error) {
           throw error;
         }
-        
+
         throw fastify.createError(400, 'Authentication failed');
       }
     },
@@ -251,7 +257,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (_request, _reply) => {
       if (process.env.NODE_ENV === 'production') {
         throw fastify.createNotFoundError('Endpoint');
       }
@@ -276,7 +282,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticate,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
 
       try {
@@ -284,7 +290,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, ip_address, user_agent)
            VALUES ($1, $2, $3, $4)`,
-          [user.userId, 'LOGOUT', request.ip, request.headers['user-agent']]
+          [user.userId, 'LOGOUT', request.ip, request.headers['user-agent']],
         );
 
         fastify.log.info({ userId: user.userId, username: user.username }, 'User logged out');
@@ -310,14 +316,14 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticate,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
 
       try {
         // Get user details from database
         const userDetails = await fastify.dbUtils.queryOne(
           'SELECT id, username, email, full_name, roles, created_at FROM users WHERE id = $1',
-          [user.userId]
+          [user.userId],
         );
 
         if (!userDetails) {
@@ -325,20 +331,20 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         return {
-          id: userDetails.id,
-          username: userDetails.username,
-          email: userDetails.email,
-          fullName: userDetails.full_name,
-          roles: userDetails.roles,
-          createdAt: userDetails.created_at,
+          id: String(userDetails.id),
+          username: String(userDetails.username),
+          email: String(userDetails.email),
+          fullName: userDetails.full_name as string | undefined,
+          roles: userDetails.roles as string[],
+          createdAt: String(userDetails.created_at),
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to get user profile');
-        
-        if (error.statusCode) {
+
+        if (error && typeof error === 'object' && 'statusCode' in error) {
           throw error;
         }
-        
+
         throw fastify.createError(500, 'Failed to get user profile');
       }
     },
@@ -386,7 +392,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         const payload = await fastify.verifyToken(token);
-        
+
         return {
           valid: true,
           user: {

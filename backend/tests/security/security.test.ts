@@ -107,7 +107,7 @@ describe('Security Tests', () => {
       const token = generateTestToken({ id: 'test-user' });
 
       const maliciousPayload = {
-        name: \"Test'; DROP TABLE api_keys; --\",
+        name: "Test'; DROP TABLE api_keys; --",
         permissions: ['models:read'],
         rateLimit: 1000,
       };
@@ -132,8 +132,8 @@ describe('Security Tests', () => {
       const token = generateTestToken({ id: 'test-user' });
 
       const xssPayload = {
-        name: '<script>alert(\"XSS\")</script>',
-        description: '<img src=x onerror=alert(\"XSS\")>',
+        name: '<script>alert("XSS")</script>',
+        description: '<img src=x onerror=alert("XSS")>',
         permissions: ['models:read'],
         rateLimit: 1000,
       };
@@ -209,59 +209,46 @@ describe('Security Tests', () => {
         expect(response.statusCode).toBe(400);
       }
     });
-      const largePayload = 'x'.repeat(10 * 1024 * 1024); // 10MB
-
-      const response = await app.inject({
-        method: 'POST',
-        url: '/api/v1/api-keys',
-        headers: { authorization: `Bearer ${token}` },
-        payload: { name: largePayload },
-      });
-
-      expect(response.statusCode).toBe(413); // Payload too large
-    });
   });
 
   describe('Rate Limiting', () => {
     it('should enforce rate limits per user', async () => {
       const token = generateTestToken({ id: 'test-user' });
-      
+
       // Make multiple rapid requests
       const promises = Array.from({ length: 15 }, () =>
         app.inject({
           method: 'GET',
           url: '/api/v1/models',
           headers: { authorization: `Bearer ${token}` },
-        })
+        }),
       );
 
       const responses = await Promise.all(promises);
-      
+
       // Some requests should be rate limited
-      const rateLimitedResponses = responses.filter(r => r.statusCode === 429);
+      const rateLimitedResponses = responses.filter((r) => r.statusCode === 429);
       expect(rateLimitedResponses.length).toBeGreaterThan(0);
     });
 
     it('should enforce global rate limits', async () => {
-      const tokens = Array.from({ length: 5 }, (_, i) => 
-        generateTestToken({ id: `user-${i}` })
-      );
+      const tokens = Array.from({ length: 5 }, (_, i) => generateTestToken({ id: `user-${i}` }));
 
       // Make many concurrent requests from different users
-      const promises = tokens.flatMap(token =>
+      const promises = tokens.flatMap((token) =>
         Array.from({ length: 10 }, () =>
           app.inject({
             method: 'GET',
             url: '/api/v1/models',
             headers: { authorization: `Bearer ${token}` },
-          })
-        )
+          }),
+        ),
       );
 
       const responses = await Promise.all(promises);
-      
+
       // Some requests should be rate limited
-      const rateLimitedResponses = responses.filter(r => r.statusCode === 429);
+      const rateLimitedResponses = responses.filter((r) => r.statusCode === 429);
       expect(rateLimitedResponses.length).toBeGreaterThan(0);
     });
   });
@@ -310,7 +297,7 @@ describe('Security Tests', () => {
 
       expect(response.statusCode).toBe(201);
       const result = response.json();
-      
+
       // The response should not contain the full key
       expect(result.keyPreview).toMatch(/^sk-\.\.\..+$/);
       expect(result).not.toHaveProperty('fullKey');
@@ -369,7 +356,9 @@ describe('Security Tests', () => {
         method: 'POST',
         url: '/api/v1/completions',
         headers: { authorization: `Bearer ${generateTestToken({ id: 'test-user' })}` },
-        payload: { /* invalid payload to trigger error */ },
+        payload: {
+          /* invalid payload to trigger error */
+        },
       });
 
       const error = response.json();
@@ -377,15 +366,44 @@ describe('Security Tests', () => {
       expect(error.message).not.toContain('/src/');
     });
   });
+
+  // Helper functions
+  interface TestUser {
+    id: string;
+    username?: string;
+    email?: string;
+    roles?: string[];
+  }
+
+  function generateTestToken(user: TestUser): string {
+    // Create a mock JWT token for testing
+    // In a real implementation, this would use the same JWT signing key as the app
+    const payload = {
+      userId: user.id,
+      username: user.username || `user-${user.id}`,
+      email: user.email || `${user.id}@test.com`,
+      roles: user.roles || ['user'],
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour from now
+    };
+
+    // For testing purposes, return a predictable token format
+    // The test setup should recognize this pattern
+    return `test-token-${Buffer.from(JSON.stringify(payload)).toString('base64')}`;
+  }
+
+  function generateExpiredToken(): string {
+    // Create a mock JWT token that's already expired
+    const payload = {
+      userId: 'expired-user',
+      username: 'expired-user',
+      email: 'expired@test.com',
+      roles: ['user'],
+      iat: Math.floor(Date.now() / 1000) - 7200, // 2 hours ago
+      exp: Math.floor(Date.now() / 1000) - 3600, // 1 hour ago (expired)
+    };
+
+    // Return an expired token format
+    return `expired-token-${Buffer.from(JSON.stringify(payload)).toString('base64')}`;
+  }
 });
-
-// Helper functions
-function generateTestToken(user: any): string {
-  // In a real implementation, this would generate a proper JWT
-  return `test-token-${user.id}`;
-}
-
-function generateExpiredToken(): string {
-  // Generate a token that's already expired
-  return 'expired-test-token';
-}

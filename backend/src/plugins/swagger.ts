@@ -1,8 +1,10 @@
 import { FastifyPluginAsync } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
+import swagger from '@fastify/swagger';
+import { AuthenticatedRequest } from '../types/auth.types';
 
 const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
-  await fastify.register(import('@fastify/swagger'), {
+  await fastify.register(swagger, {
     swagger: {
       info: {
         title: 'LiteMaaS API',
@@ -10,7 +12,7 @@ const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
         version: '1.0.0',
         contact: {
           name: 'LiteMaaS Team',
-          email: 'support@litemaas.com',
+          email: 'ai-bu-cai@redhat.com',
         },
         license: {
           name: 'MIT',
@@ -23,10 +25,10 @@ const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
       produces: ['application/json'],
       securityDefinitions: {
         bearerAuth: {
-          type: 'http',
-          scheme: 'bearer',
-          bearerFormat: 'JWT',
-          description: 'JWT token for authentication',
+          type: 'apiKey',
+          name: 'Authorization',
+          in: 'header',
+          description: 'JWT token for authentication (Bearer token)',
         },
       },
       tags: [
@@ -69,25 +71,32 @@ const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
           try {
             // Use strict authentication - only allow admin API keys or JWT tokens
             await fastify.authenticate(request, reply);
-            
-            fastify.log.warn({
-              ip: request.ip,
-              userAgent: request.headers['user-agent'],
-              url: request.url,
-              userId: (request as any).user?.userId,
-            }, 'Swagger documentation accessed in production mode');
+
+            fastify.log.warn(
+              {
+                ip: request.ip,
+                userAgent: request.headers['user-agent'],
+                url: request.url,
+                userId: (request as AuthenticatedRequest).user?.userId,
+              },
+              'Swagger documentation accessed in production mode',
+            );
           } catch (error) {
-            fastify.log.warn({
-              ip: request.ip,
-              userAgent: request.headers['user-agent'],
-              url: request.url,
-              error: error.message,
-            }, 'Unauthorized access attempt to Swagger documentation in production');
-            
+            fastify.log.warn(
+              {
+                ip: request.ip,
+                userAgent: request.headers['user-agent'],
+                url: request.url,
+                error: (error as Error).message,
+              },
+              'Unauthorized access attempt to Swagger documentation in production',
+            );
+
             return reply.status(401).send({
               error: {
                 code: 'UNAUTHORIZED',
-                message: 'Authentication required to access API documentation in production mode. Use admin API key or JWT token.',
+                message:
+                  'Authentication required to access API documentation in production mode. Use admin API key or JWT token.',
               },
               requestId: request.id,
             });
@@ -96,11 +105,14 @@ const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
         }
 
         // In development, log access and allow browser access
-        fastify.log.warn({
-          ip: request.ip,
-          userAgent: request.headers['user-agent'],
-          url: request.url,
-        }, 'Swagger documentation accessed in development mode');
+        fastify.log.warn(
+          {
+            ip: request.ip,
+            userAgent: request.headers['user-agent'],
+            url: request.url,
+          },
+          'Swagger documentation accessed in development mode',
+        );
       },
     },
     staticCSP: true,
@@ -113,7 +125,7 @@ const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
       hide: true,
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: (request, reply) => {
+    handler: (_request, reply) => {
       reply.send(fastify.swagger());
     },
   });

@@ -35,7 +35,7 @@ const routes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (_request, _reply) => {
       return {
         name: 'LiteMaaS API',
         version: '1.0.0',

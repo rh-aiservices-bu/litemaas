@@ -11,19 +11,11 @@ import {
   SubscriptionSyncResponse,
   BulkSubscriptionOperation,
   BulkSubscriptionResult,
-  SubscriptionListParams,
   SubscriptionQuota,
   SubscriptionStats,
   SubscriptionValidation,
 } from '../types/subscription.types.js';
-import {
-  LiteLLMKeyGenerationRequest,
-  LiteLLMKeyGenerationResponse,
-} from '../types/api-key.types.js';
-import {
-  LiteLLMUserRequest,
-  LiteLLMTeamRequest,
-} from '../types/user.types.js';
+import { LiteLLMKeyGenerationRequest } from '../types/api-key.types.js';
 
 export interface CreateSubscriptionRequest {
   modelId: string;
@@ -65,7 +57,6 @@ export interface SubscriptionDetails {
   metadata?: Record<string, any>;
 }
 
-
 export class SubscriptionService {
   private fastify: FastifyInstance;
   private liteLLMService: LiteLLMService;
@@ -87,7 +78,7 @@ export class SubscriptionService {
       remainingTokens: 432110,
       utilizationPercent: {
         requests: 23.5,
-        tokens: 56.8
+        tokens: 56.8,
       },
       resetAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
@@ -96,14 +87,14 @@ export class SubscriptionService {
       metadata: {
         inputCostPer1kTokens: 0.01,
         outputCostPer1kTokens: 0.03,
-        currency: 'USD'
+        currency: 'USD',
       },
       // Enhanced LiteLLM integration fields
       liteLLMInfo: {
         keyId: 'sk-litellm-mock-key-1',
         teamId: 'team-prod',
         maxBudget: 500,
-        currentSpend: 125.50,
+        currentSpend: 125.5,
         budgetDuration: 'monthly',
         tpmLimit: 10000,
         rpmLimit: 100,
@@ -113,8 +104,8 @@ export class SubscriptionService {
       },
       budgetInfo: {
         maxBudget: 500,
-        currentSpend: 125.50,
-        remainingBudget: 374.50,
+        currentSpend: 125.5,
+        remainingBudget: 374.5,
         budgetUtilization: 25.1,
         spendResetAt: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       },
@@ -148,7 +139,7 @@ export class SubscriptionService {
       remainingTokens: 376544,
       utilizationPercent: {
         requests: 17.8,
-        tokens: 24.7
+        tokens: 24.7,
       },
       resetAt: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
       expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
@@ -157,7 +148,7 @@ export class SubscriptionService {
       metadata: {
         inputCostPer1kTokens: 0.003,
         outputCostPer1kTokens: 0.015,
-        currency: 'USD'
+        currency: 'USD',
       },
       // Enhanced LiteLLM integration fields
       liteLLMInfo: {
@@ -202,7 +193,7 @@ export class SubscriptionService {
       remainingTokens: 0,
       utilizationPercent: {
         requests: 100,
-        tokens: 100
+        tokens: 100,
       },
       resetAt: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
       expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
@@ -211,7 +202,7 @@ export class SubscriptionService {
       metadata: {
         inputCostPer1kTokens: 0.0004,
         outputCostPer1kTokens: 0.0008,
-        currency: 'USD'
+        currency: 'USD',
       },
       // Enhanced LiteLLM integration fields
       liteLLMInfo: {
@@ -248,7 +239,7 @@ export class SubscriptionService {
       lastSyncAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
       syncStatus: 'error',
       syncError: 'Budget limit exceeded',
-    }
+    },
   ];
 
   constructor(fastify: FastifyInstance, liteLLMService?: LiteLLMService) {
@@ -260,14 +251,17 @@ export class SubscriptionService {
     // Use mock data only if database is not available
     // This allows using real data in development when database is connected
     const dbUnavailable = this.isDatabaseUnavailable();
-    
-    this.fastify.log.debug({ 
-      dbUnavailable, 
-      nodeEnv: process.env.NODE_ENV,
-      hasPg: !!this.fastify.pg,
-      mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined
-    }, 'Checking if should use mock data');
-    
+
+    this.fastify.log.debug(
+      {
+        dbUnavailable,
+        nodeEnv: process.env.NODE_ENV,
+        hasPg: !!this.fastify.pg,
+        mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined,
+      },
+      'Checking if should use mock data',
+    );
+
     return dbUnavailable;
   }
 
@@ -280,14 +274,14 @@ export class SubscriptionService {
         this.fastify.log.debug('PostgreSQL plugin not available');
         return true;
       }
-      
+
       // Additional check: if the database plugin detected unavailability during startup,
       // it would have set up mock mode. Check if we're in mock mode.
       if (this.fastify.isDatabaseMockMode && this.fastify.isDatabaseMockMode()) {
         this.fastify.log.debug('Database mock mode enabled');
         return true;
       }
-      
+
       return false;
     } catch (error) {
       this.fastify.log.debug({ error }, 'Error checking database availability');
@@ -298,26 +292,23 @@ export class SubscriptionService {
   private createMockResponse<T>(data: T): Promise<T> {
     // Simulate network delay
     const delay = Math.random() * 200 + 100; // 100-300ms
-    return new Promise(resolve => setTimeout(() => resolve(data), delay));
+    return new Promise((resolve) => setTimeout(() => resolve(data), delay));
   }
 
   async createSubscription(
-    userId: string, 
-    request: EnhancedCreateSubscriptionDto
+    userId: string,
+    request: EnhancedCreateSubscriptionDto,
   ): Promise<EnhancedSubscription> {
-    const { 
-      modelId, 
-      quotaRequests = 10000, 
-      quotaTokens = 1000000, 
-      expiresAt, 
-      metadata = {},
+    const {
+      modelId,
+      quotaRequests = 10000,
+      quotaTokens = 1000000,
+      expiresAt,
       maxBudget,
       budgetDuration,
       tpmLimit,
       rpmLimit,
-      allowedModels,
       teamId,
-      softBudget
     } = request;
 
     try {
@@ -334,12 +325,12 @@ export class SubscriptionService {
       const existingSubscription = await this.fastify.dbUtils.queryOne(
         `SELECT id FROM subscriptions 
          WHERE user_id = $1 AND model_id = $2`,
-        [userId, modelId]
+        [userId, modelId],
       );
 
       if (existingSubscription) {
         throw this.fastify.createValidationError(
-          `Subscription already exists for model ${modelId}. Use the existing subscription or cancel it first.`
+          `Subscription already exists for model ${modelId}. Use the existing subscription or cancel it first.`,
         );
       }
 
@@ -364,7 +355,7 @@ export class SubscriptionService {
           tpmLimit,
           rpmLimit,
           teamId,
-        ]
+        ],
       );
 
       // Create audit log
@@ -377,14 +368,17 @@ export class SubscriptionService {
           'SUBSCRIPTION',
           subscription.id,
           { modelId, quotaRequests, quotaTokens },
-        ]
+        ],
       );
 
-      this.fastify.log.info({
-        userId,
-        subscriptionId: subscription.id,
-        modelId,
-      }, 'Subscription created');
+      this.fastify.log.info(
+        {
+          userId,
+          subscriptionId: subscription.id,
+          modelId,
+        },
+        'Subscription created',
+      );
 
       return this.mapToEnhancedSubscription(subscription);
     } catch (error) {
@@ -393,7 +387,10 @@ export class SubscriptionService {
     }
   }
 
-  async getSubscription(subscriptionId: string, userId?: string): Promise<EnhancedSubscription | null> {
+  async getSubscription(
+    subscriptionId: string,
+    userId?: string,
+  ): Promise<EnhancedSubscription | null> {
     try {
       let query = `
         SELECT s.*, m.name as model_name, m.provider
@@ -409,7 +406,7 @@ export class SubscriptionService {
       }
 
       const subscription = await this.fastify.dbUtils.queryOne(query, params);
-      
+
       if (!subscription) {
         return null;
       }
@@ -428,7 +425,7 @@ export class SubscriptionService {
       modelId?: string;
       page?: number;
       limit?: number;
-    } = {}
+    } = {},
   ): Promise<{ data: EnhancedSubscription[]; total: number }> {
     const { status, modelId, page = 1, limit = 20 } = options;
     const offset = (page - 1) * limit;
@@ -436,24 +433,24 @@ export class SubscriptionService {
     // Use mock data if database is not available
     if (this.shouldUseMockData()) {
       this.fastify.log.debug('Using mock subscription data');
-      
+
       // Filter mock data based on options
       let filteredSubscriptions = [...this.MOCK_SUBSCRIPTIONS];
-      
+
       if (status) {
-        filteredSubscriptions = filteredSubscriptions.filter(sub => sub.status === status);
+        filteredSubscriptions = filteredSubscriptions.filter((sub) => sub.status === status);
       }
-      
+
       if (modelId) {
-        filteredSubscriptions = filteredSubscriptions.filter(sub => sub.modelId === modelId);
+        filteredSubscriptions = filteredSubscriptions.filter((sub) => sub.modelId === modelId);
       }
-      
+
       const total = filteredSubscriptions.length;
       const paginatedData = filteredSubscriptions.slice(offset, offset + limit);
-      
+
       return this.createMockResponse({
         data: paginatedData,
-        total
+        total,
       });
     }
 
@@ -499,7 +496,7 @@ export class SubscriptionService {
       ]);
 
       return {
-        data: subscriptions.map(sub => this.mapToEnhancedSubscription(sub)),
+        data: subscriptions.map((sub) => this.mapToEnhancedSubscription(sub)),
         total: parseInt(countResult.count),
       };
     } catch (error) {
@@ -511,7 +508,7 @@ export class SubscriptionService {
   async updateSubscription(
     subscriptionId: string,
     userId: string,
-    updates: EnhancedUpdateSubscriptionDto
+    updates: EnhancedUpdateSubscriptionDto,
   ): Promise<EnhancedSubscription> {
     try {
       // Validate subscription ownership
@@ -520,19 +517,17 @@ export class SubscriptionService {
         throw this.fastify.createNotFoundError('Subscription');
       }
 
-      const { 
-        status, 
-        quotaRequests, 
-        quotaTokens, 
-        expiresAt, 
-        metadata,
+      const {
+        status,
+        quotaRequests,
+        quotaTokens,
+        expiresAt,
         maxBudget,
         budgetDuration,
         tpmLimit,
         rpmLimit,
         allowedModels,
         teamId,
-        softBudget
       } = updates;
 
       // Build update query
@@ -607,27 +602,24 @@ export class SubscriptionService {
         `UPDATE subscriptions SET ${updateFields.join(', ')}
          WHERE id = $${paramIndex} AND user_id = $${paramIndex + 1}
          RETURNING *`,
-        params
+        params,
       );
 
       // Create audit log
       await this.fastify.dbUtils.query(
         `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
          VALUES ($1, $2, $3, $4, $5)`,
-        [
-          userId,
-          'SUBSCRIPTION_UPDATE',
-          'SUBSCRIPTION',
-          subscriptionId,
-          updates,
-        ]
+        [userId, 'SUBSCRIPTION_UPDATE', 'SUBSCRIPTION', subscriptionId, updates],
       );
 
-      this.fastify.log.info({
-        userId,
-        subscriptionId,
-        updates,
-      }, 'Subscription updated');
+      this.fastify.log.info(
+        {
+          userId,
+          subscriptionId,
+          updates,
+        },
+        'Subscription updated',
+      );
 
       return this.mapToEnhancedSubscription(updatedSubscription);
     } catch (error) {
@@ -635,7 +627,6 @@ export class SubscriptionService {
       throw error;
     }
   }
-
 
   async cancelSubscription(subscriptionId: string, userId: string): Promise<EnhancedSubscription> {
     try {
@@ -645,9 +636,7 @@ export class SubscriptionService {
       }
 
       if (['cancelled', 'expired'].includes(subscription.status)) {
-        throw this.fastify.createValidationError(
-          `Subscription is already ${subscription.status}`
-        );
+        throw this.fastify.createValidationError(`Subscription is already ${subscription.status}`);
       }
 
       // NEW: Check for linked active API keys before allowing cancellation
@@ -655,18 +644,19 @@ export class SubscriptionService {
         `SELECT id, name, key_prefix 
          FROM api_keys 
          WHERE subscription_id = $1 AND is_active = true`,
-        [subscriptionId]
+        [subscriptionId],
       );
 
       if (linkedApiKeys.length > 0) {
         // Build a descriptive error message with API key details
-        const keyDetails = linkedApiKeys.map(key => 
-          `${key.name || 'Unnamed'} (${key.key_prefix}***)`
-        ).join(', ');
-        
-        const errorMessage = linkedApiKeys.length === 1 
-          ? `Cannot cancel subscription: There is 1 active API key linked to this subscription (${keyDetails}). Please delete the API key first, then cancel the subscription.`
-          : `Cannot cancel subscription: There are ${linkedApiKeys.length} active API keys linked to this subscription (${keyDetails}). Please delete all API keys first, then cancel the subscription.`;
+        const keyDetails = linkedApiKeys
+          .map((key) => `${key.name || 'Unnamed'} (${key.key_prefix}***)`)
+          .join(', ');
+
+        const errorMessage =
+          linkedApiKeys.length === 1
+            ? `Cannot cancel subscription: There is 1 active API key linked to this subscription (${keyDetails}). Please delete the API key first, then cancel the subscription.`
+            : `Cannot cancel subscription: There are ${linkedApiKeys.length} active API keys linked to this subscription (${keyDetails}). Please delete all API keys first, then cancel the subscription.`;
 
         throw this.fastify.createValidationError(errorMessage);
       }
@@ -681,7 +671,7 @@ export class SubscriptionService {
       // Delete the subscription from the database
       const deleteResult = await this.fastify.dbUtils.query(
         'DELETE FROM subscriptions WHERE id = $1 AND user_id = $2',
-        [subscriptionId, userId]
+        [subscriptionId, userId],
       );
 
       // Check if deletion was successful
@@ -733,12 +723,12 @@ export class SubscriptionService {
 
   async checkQuotaAvailability(
     subscriptionId: string,
-    requestTokens: number
+    requestTokens: number,
   ): Promise<{ canProceed: boolean; reason?: string }> {
     try {
       const subscription = await this.fastify.dbUtils.queryOne(
         'SELECT * FROM subscriptions WHERE id = $1',
-        [subscriptionId]
+        [subscriptionId],
       );
 
       if (!subscription) {
@@ -775,7 +765,7 @@ export class SubscriptionService {
         SET used_requests = 0, used_tokens = 0, reset_at = $1
         WHERE status = 'active' AND (reset_at IS NULL OR reset_at <= CURRENT_TIMESTAMP)
       `;
-      const params = [this.calculateNextResetDate()];
+      const params: any[] = [this.calculateNextResetDate()];
 
       if (userId) {
         query += ` AND user_id = $2`;
@@ -783,11 +773,14 @@ export class SubscriptionService {
       }
 
       const result = await this.fastify.dbUtils.query(query, params);
-      
-      this.fastify.log.info({
-        userId,
-        resetCount: result.rowCount,
-      }, 'Quotas reset');
+
+      this.fastify.log.info(
+        {
+          userId,
+          resetCount: result.rowCount,
+        },
+        'Quotas reset',
+      );
 
       return result.rowCount || 0;
     } catch (error) {
@@ -796,7 +789,9 @@ export class SubscriptionService {
     }
   }
 
-  async validateSubscription(subscriptionData: EnhancedCreateSubscriptionDto): Promise<SubscriptionValidation> {
+  async validateSubscription(
+    subscriptionData: EnhancedCreateSubscriptionDto,
+  ): Promise<SubscriptionValidation> {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -891,13 +886,13 @@ export class SubscriptionService {
       const byStatus: Record<string, number> = {};
       let total = 0;
 
-      statusCounts.forEach(row => {
+      statusCounts.forEach((row) => {
         byStatus[row.status] = parseInt(row.count);
         total += parseInt(row.count);
       });
 
       const byProvider: Record<string, number> = {};
-      providerCounts.forEach(row => {
+      providerCounts.forEach((row) => {
         byProvider[row.provider] = parseInt(row.count);
       });
 
@@ -926,13 +921,13 @@ export class SubscriptionService {
 
   async createEnhancedSubscription(
     userId: string,
-    request: EnhancedCreateSubscriptionDto
+    request: EnhancedCreateSubscriptionDto,
   ): Promise<EnhancedSubscription> {
-    const { 
-      modelId, 
-      quotaRequests = 10000, 
-      quotaTokens = 1000000, 
-      expiresAt, 
+    const {
+      modelId,
+      quotaRequests = 10000,
+      quotaTokens = 1000000,
+      expiresAt,
       metadata = {},
       maxBudget,
       budgetDuration = 'monthly',
@@ -944,7 +939,7 @@ export class SubscriptionService {
       generateApiKey = false,
       apiKeyAlias,
       apiKeyTags,
-      apiKeyPermissions
+      apiKeyPermissions,
     } = request;
 
     if (this.shouldUseMockData()) {
@@ -1018,11 +1013,13 @@ export class SubscriptionService {
           tpm_limit: tpmLimit,
           rpm_limit: rpmLimit,
           budget_duration: budgetDuration,
-          permissions: apiKeyPermissions ? {
-            allow_chat_completions: apiKeyPermissions.allowChatCompletions,
-            allow_embeddings: apiKeyPermissions.allowEmbeddings,
-            allow_completions: apiKeyPermissions.allowCompletions,
-          } : undefined,
+          permissions: apiKeyPermissions
+            ? {
+                allow_chat_completions: apiKeyPermissions.allowChatCompletions,
+                allow_embeddings: apiKeyPermissions.allowEmbeddings,
+                allow_completions: apiKeyPermissions.allowCompletions,
+              }
+            : undefined,
           tags: apiKeyTags,
           soft_budget: softBudget,
           metadata: {
@@ -1048,17 +1045,20 @@ export class SubscriptionService {
              sync_status = 'synced'
          WHERE id = $7
          RETURNING *`,
-        [maxBudget, budgetDuration, tpmLimit, rpmLimit, teamId, liteLLMKeyId, baseSubscription.id]
+        [maxBudget, budgetDuration, tpmLimit, rpmLimit, teamId, liteLLMKeyId, baseSubscription.id],
       );
 
-      this.fastify.log.info({
-        userId,
-        subscriptionId: baseSubscription.id,
-        modelId,
-        hasApiKey: !!liteLLMKeyId,
-        maxBudget,
-        teamId,
-      }, 'Enhanced subscription created with LiteLLM integration');
+      this.fastify.log.info(
+        {
+          userId,
+          subscriptionId: baseSubscription.id,
+          modelId,
+          hasApiKey: !!liteLLMKeyId,
+          maxBudget,
+          teamId,
+        },
+        'Enhanced subscription created with LiteLLM integration',
+      );
 
       return this.mapToEnhancedSubscription(enhancedSubscription);
     } catch (error) {
@@ -1068,11 +1068,16 @@ export class SubscriptionService {
   }
 
   async syncSubscriptionWithLiteLLM(
-    subscriptionId: string, 
-    userId: string, 
-    request: SubscriptionSyncRequest = {}
+    subscriptionId: string,
+    userId: string,
+    request: SubscriptionSyncRequest = {},
   ): Promise<SubscriptionSyncResponse> {
-    const { forceSync = false, syncBudget = true, syncUsage = true, syncRateLimits = true } = request;
+    const {
+      forceSync = false,
+      syncBudget = true,
+      syncUsage = true,
+      syncRateLimits = true,
+    } = request;
 
     try {
       const subscription = await this.getSubscription(subscriptionId, userId);
@@ -1093,7 +1098,10 @@ export class SubscriptionService {
       const params: any[] = [];
       let paramIndex = 1;
 
-      if (syncBudget && (forceSync || liteLLMInfo.max_budget !== subscription.liteLLMInfo.maxBudget)) {
+      if (
+        syncBudget &&
+        (forceSync || liteLLMInfo.max_budget !== subscription.liteLLMInfo.maxBudget)
+      ) {
         updateFields.push(`max_budget = $${paramIndex++}`);
         params.push(liteLLMInfo.max_budget);
         changes.budgetUpdated = true;
@@ -1105,9 +1113,12 @@ export class SubscriptionService {
         changes.usageUpdated = true;
       }
 
-      if (syncRateLimits && (forceSync || 
+      if (
+        syncRateLimits &&
+        (forceSync ||
           liteLLMInfo.tpm_limit !== subscription.liteLLMInfo.tpmLimit ||
-          liteLLMInfo.rpm_limit !== subscription.liteLLMInfo.rpmLimit)) {
+          liteLLMInfo.rpm_limit !== subscription.liteLLMInfo.rpmLimit)
+      ) {
         updateFields.push(`tpm_limit = $${paramIndex++}`, `rpm_limit = $${paramIndex++}`);
         params.push(liteLLMInfo.tpm_limit, liteLLMInfo.rpm_limit);
         changes.rateLimitsUpdated = true;
@@ -1122,15 +1133,18 @@ export class SubscriptionService {
            SET ${updateFields.join(', ')}
            WHERE id = $${paramIndex}
            RETURNING *`,
-          params
+          params,
         );
       }
 
-      this.fastify.log.info({
-        subscriptionId,
-        userId,
-        changes,
-      }, 'Subscription synced with LiteLLM');
+      this.fastify.log.info(
+        {
+          subscriptionId,
+          userId,
+          changes,
+        },
+        'Subscription synced with LiteLLM',
+      );
 
       return {
         subscriptionId,
@@ -1146,21 +1160,24 @@ export class SubscriptionService {
              sync_error = $1,
              last_sync_at = CURRENT_TIMESTAMP
          WHERE id = $2`,
-        [error.message, subscriptionId]
+        [error instanceof Error ? error.message : String(error), subscriptionId],
       );
 
       this.fastify.log.error(error, 'Failed to sync subscription with LiteLLM');
-      
+
       return {
         subscriptionId,
         syncedAt: new Date(),
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
 
-  async getSubscriptionBudgetInfo(subscriptionId: string, userId: string): Promise<SubscriptionBudgetInfo> {
+  async getSubscriptionBudgetInfo(
+    subscriptionId: string,
+    userId: string,
+  ): Promise<SubscriptionBudgetInfo> {
     try {
       const subscription = await this.getSubscription(subscriptionId, userId);
       if (!subscription) {
@@ -1183,8 +1200,9 @@ export class SubscriptionService {
 
       const budgetUtilization = maxBudget ? (currentSpend / maxBudget) * 100 : 0;
       const remainingBudget = maxBudget ? maxBudget - currentSpend : undefined;
-      const alertTriggered = subscription.liteLLMInfo?.budgetUtilization ? 
-        subscription.liteLLMInfo.budgetUtilization >= 90 : false;
+      const alertTriggered = subscription.liteLLMInfo?.budgetUtilization
+        ? subscription.liteLLMInfo.budgetUtilization >= 90
+        : false;
 
       return {
         subscriptionId,
@@ -1194,7 +1212,9 @@ export class SubscriptionService {
         remainingBudget,
         budgetDuration: subscription.liteLLMInfo?.budgetDuration,
         spendResetAt: subscription.liteLLMInfo?.spendResetAt,
-        softBudget: subscription.budgetInfo?.maxBudget ? subscription.budgetInfo.maxBudget * 0.9 : undefined,
+        softBudget: subscription.budgetInfo?.maxBudget
+          ? subscription.budgetInfo.maxBudget * 0.9
+          : undefined,
         alertTriggered,
         lastUpdatedAt: subscription.lastSyncAt || subscription.createdAt,
       };
@@ -1211,7 +1231,7 @@ export class SubscriptionService {
       start: Date;
       end: Date;
       type: 'day' | 'week' | 'month' | 'year';
-    }
+    },
   ): Promise<SubscriptionUsageAnalytics> {
     try {
       const subscription = await this.getSubscription(subscriptionId, userId);
@@ -1238,7 +1258,7 @@ export class SubscriptionService {
               requestCount: Math.floor(Math.random() * 800) + 80,
               tokenCount: Math.floor(Math.random() * 80000) + 8000,
               spend: Math.random() * 40 + 8,
-            }
+            },
           ],
           rateLimitEvents: {
             tpmViolations: Math.floor(Math.random() * 5),
@@ -1276,21 +1296,25 @@ export class SubscriptionService {
           averageRequestCost: acc.averageRequestCost,
           averageTokenCost: acc.averageTokenCost,
         }),
-        { requestCount: 0, tokenCount: 0, totalSpend: 0, averageRequestCost: 0, averageTokenCost: 0 }
+        {
+          requestCount: 0,
+          tokenCount: 0,
+          totalSpend: 0,
+          averageRequestCost: 0,
+          averageTokenCost: 0,
+        },
       );
 
-      totalUsage.averageRequestCost = totalUsage.requestCount > 0 
-        ? totalUsage.totalSpend / totalUsage.requestCount 
-        : 0;
-      totalUsage.averageTokenCost = totalUsage.tokenCount > 0 
-        ? totalUsage.totalSpend / totalUsage.tokenCount 
-        : 0;
+      totalUsage.averageRequestCost =
+        totalUsage.requestCount > 0 ? totalUsage.totalSpend / totalUsage.requestCount : 0;
+      totalUsage.averageTokenCost =
+        totalUsage.tokenCount > 0 ? totalUsage.totalSpend / totalUsage.tokenCount : 0;
 
       return {
         subscriptionId,
         period,
         usage: totalUsage,
-        models: usageData.map(row => ({
+        models: usageData.map((row) => ({
           modelId: row.model_id,
           modelName: row.model_id, // Would be joined from models table in real implementation
           requestCount: parseInt(row.request_count),
@@ -1306,7 +1330,7 @@ export class SubscriptionService {
 
   async bulkUpdateSubscriptions(
     operation: BulkSubscriptionOperation,
-    adminUserId: string
+    adminUserId: string,
   ): Promise<BulkSubscriptionResult> {
     const { subscriptionIds, operation: operationType, params = {} } = operation;
     const results: BulkSubscriptionResult['results'] = [];
@@ -1318,14 +1342,20 @@ export class SubscriptionService {
         try {
           switch (operationType) {
             case 'suspend':
-              await this.updateSubscription(subscriptionId, adminUserId, { status: SubscriptionStatus.SUSPENDED });
+              await this.updateSubscription(subscriptionId, adminUserId, {
+                status: SubscriptionStatus.SUSPENDED,
+              });
               break;
             case 'activate':
-              await this.updateSubscription(subscriptionId, adminUserId, { status: SubscriptionStatus.ACTIVE });
+              await this.updateSubscription(subscriptionId, adminUserId, {
+                status: SubscriptionStatus.ACTIVE,
+              });
               break;
             case 'update_budget':
               if (params.maxBudget) {
-                await this.updateSubscription(subscriptionId, adminUserId, { maxBudget: params.maxBudget });
+                await this.updateSubscription(subscriptionId, adminUserId, {
+                  maxBudget: params.maxBudget,
+                });
               }
               break;
             case 'update_limits':
@@ -1336,7 +1366,9 @@ export class SubscriptionService {
               break;
             case 'transfer_team':
               if (params.teamId) {
-                await this.updateSubscription(subscriptionId, adminUserId, { teamId: params.teamId });
+                await this.updateSubscription(subscriptionId, adminUserId, {
+                  teamId: params.teamId,
+                });
               }
               break;
             default:
@@ -1346,10 +1378,10 @@ export class SubscriptionService {
           results.push({ subscriptionId, success: true });
           successCount++;
         } catch (error) {
-          results.push({ 
-            subscriptionId, 
-            success: false, 
-            error: error.message 
+          results.push({
+            subscriptionId,
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
           });
           errorCount++;
         }
@@ -1363,17 +1395,26 @@ export class SubscriptionService {
           adminUserId,
           'BULK_SUBSCRIPTION_UPDATE',
           'SUBSCRIPTION',
-          { operation: operationType, params, totalCount: subscriptionIds.length, successCount, errorCount },
-        ]
+          {
+            operation: operationType,
+            params,
+            totalCount: subscriptionIds.length,
+            successCount,
+            errorCount,
+          },
+        ],
       );
 
-      this.fastify.log.info({
-        adminUserId,
-        operation: operationType,
-        totalCount: subscriptionIds.length,
-        successCount,
-        errorCount,
-      }, 'Bulk subscription operation completed');
+      this.fastify.log.info(
+        {
+          adminUserId,
+          operation: operationType,
+          totalCount: subscriptionIds.length,
+          successCount,
+          errorCount,
+        },
+        'Bulk subscription operation completed',
+      );
 
       return {
         totalCount: subscriptionIds.length,
@@ -1413,12 +1454,14 @@ export class SubscriptionService {
       remainingRequests,
       remainingTokens,
       utilizationPercent: {
-        requests: subscription.quota_requests > 0 
-          ? Math.round((subscription.used_requests / subscription.quota_requests) * 100) 
-          : 0,
-        tokens: subscription.quota_tokens > 0 
-          ? Math.round((subscription.used_tokens / subscription.quota_tokens) * 100) 
-          : 0,
+        requests:
+          subscription.quota_requests > 0
+            ? Math.round((subscription.used_requests / subscription.quota_requests) * 100)
+            : 0,
+        tokens:
+          subscription.quota_tokens > 0
+            ? Math.round((subscription.used_tokens / subscription.quota_tokens) * 100)
+            : 0,
       },
       resetAt: subscription.reset_at ? new Date(subscription.reset_at) : undefined,
       expiresAt: subscription.expires_at ? new Date(subscription.expires_at) : undefined,
@@ -1430,49 +1473,66 @@ export class SubscriptionService {
     // Add enhanced LiteLLM integration fields
     const enhanced: EnhancedSubscription = {
       ...baseSubscription,
-      
+
       // LiteLLM integration info
-      liteLLMInfo: subscription.lite_llm_key_id ? {
-        keyId: subscription.lite_llm_key_id,
-        teamId: subscription.team_id,
-        maxBudget: subscription.max_budget,
-        currentSpend: subscription.current_spend || 0,
-        budgetDuration: subscription.budget_duration,
-        tpmLimit: subscription.tpm_limit,
-        rpmLimit: subscription.rpm_limit,
-        allowedModels: subscription.allowed_models ? JSON.parse(subscription.allowed_models) : undefined,
-        spendResetAt: subscription.spend_reset_at ? new Date(subscription.spend_reset_at) : undefined,
-        budgetUtilization: subscription.max_budget && subscription.current_spend 
-          ? (subscription.current_spend / subscription.max_budget) * 100 
-          : 0,
-      } : undefined,
+      liteLLMInfo: subscription.lite_llm_key_id
+        ? {
+            keyId: subscription.lite_llm_key_id,
+            teamId: subscription.team_id,
+            maxBudget: subscription.max_budget,
+            currentSpend: subscription.current_spend || 0,
+            budgetDuration: subscription.budget_duration,
+            tpmLimit: subscription.tpm_limit,
+            rpmLimit: subscription.rpm_limit,
+            allowedModels: subscription.allowed_models
+              ? JSON.parse(subscription.allowed_models)
+              : undefined,
+            spendResetAt: subscription.spend_reset_at
+              ? new Date(subscription.spend_reset_at)
+              : undefined,
+            budgetUtilization:
+              subscription.max_budget && subscription.current_spend
+                ? (subscription.current_spend / subscription.max_budget) * 100
+                : 0,
+          }
+        : undefined,
 
       // Budget information
-      budgetInfo: subscription.max_budget ? {
-        maxBudget: subscription.max_budget,
-        currentSpend: subscription.current_spend || 0,
-        remainingBudget: subscription.max_budget - (subscription.current_spend || 0),
-        budgetUtilization: subscription.max_budget && subscription.current_spend 
-          ? (subscription.current_spend / subscription.max_budget) * 100 
-          : 0,
-        spendResetAt: subscription.spend_reset_at ? new Date(subscription.spend_reset_at) : undefined,
-      } : undefined,
+      budgetInfo: subscription.max_budget
+        ? {
+            maxBudget: subscription.max_budget,
+            currentSpend: subscription.current_spend || 0,
+            remainingBudget: subscription.max_budget - (subscription.current_spend || 0),
+            budgetUtilization:
+              subscription.max_budget && subscription.current_spend
+                ? (subscription.current_spend / subscription.max_budget) * 100
+                : 0,
+            spendResetAt: subscription.spend_reset_at
+              ? new Date(subscription.spend_reset_at)
+              : undefined,
+          }
+        : undefined,
 
       // Rate limits
-      rateLimits: (subscription.tpm_limit || subscription.rpm_limit) ? {
-        tpmLimit: subscription.tpm_limit,
-        rpmLimit: subscription.rpm_limit,
-        currentTpm: subscription.current_tpm || 0,
-        currentRpm: subscription.current_rpm || 0,
-      } : undefined,
+      rateLimits:
+        subscription.tpm_limit || subscription.rpm_limit
+          ? {
+              tpmLimit: subscription.tpm_limit,
+              rpmLimit: subscription.rpm_limit,
+              currentTpm: subscription.current_tpm || 0,
+              currentRpm: subscription.current_rpm || 0,
+            }
+          : undefined,
 
       // Team association
       teamId: subscription.team_id,
-      teamInfo: subscription.team_name ? {
-        id: subscription.team_id,
-        name: subscription.team_name,
-        role: subscription.team_role || 'member',
-      } : undefined,
+      teamInfo: subscription.team_name
+        ? {
+            id: subscription.team_id,
+            name: subscription.team_name,
+            role: subscription.team_role || 'member',
+          }
+        : undefined,
 
       // Sync metadata
       lastSyncAt: subscription.last_sync_at ? new Date(subscription.last_sync_at) : undefined,
@@ -1501,12 +1561,12 @@ export class SubscriptionService {
     } catch (error) {
       // User doesn't exist in LiteLLM, get user from database and create them
       this.fastify.log.info({ userId }, 'Creating user in LiteLLM for subscription creation');
-      
+
       try {
         // Get user information from database
         const user = await this.fastify.dbUtils.queryOne(
           'SELECT id, username, email, full_name, roles, max_budget, tpm_limit, rpm_limit FROM users WHERE id = $1',
-          [userId]
+          [userId],
         );
 
         if (!user) {
@@ -1520,31 +1580,39 @@ export class SubscriptionService {
           user_alias: user.username,
           user_role: user.roles?.includes('admin') ? 'proxy_admin' : 'internal_user',
           max_budget: user.max_budget || 100, // Use user's budget or default
-          tpm_limit: user.tpm_limit || 1000,  // Use user's limit or default
-          rpm_limit: user.rpm_limit || 60,    // Use user's limit or default
+          tpm_limit: user.tpm_limit || 1000, // Use user's limit or default
+          rpm_limit: user.rpm_limit || 60, // Use user's limit or default
           auto_create_key: false, // Don't auto-create key during user creation
         });
 
         // Update user sync status in database
         await this.fastify.dbUtils.query(
           'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
-          ['synced', userId]
+          ['synced', userId],
         );
 
-        this.fastify.log.info({ userId }, 'Successfully created user in LiteLLM for subscription creation');
+        this.fastify.log.info(
+          { userId },
+          'Successfully created user in LiteLLM for subscription creation',
+        );
       } catch (createError) {
         // Update user sync status to error
         await this.fastify.dbUtils.query(
           'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
-          ['error', userId]
+          ['error', userId],
         );
 
-        this.fastify.log.error({
-          userId,
-          error: createError instanceof Error ? createError.message : 'Unknown error'
-        }, 'Failed to create user in LiteLLM for subscription creation');
-        
-        throw new Error(`Failed to create user in LiteLLM: ${createError instanceof Error ? createError.message : 'Unknown error'}`);
+        this.fastify.log.error(
+          {
+            userId,
+            error: createError instanceof Error ? createError.message : 'Unknown error',
+          },
+          'Failed to create user in LiteLLM for subscription creation',
+        );
+
+        throw new Error(
+          `Failed to create user in LiteLLM: ${createError instanceof Error ? createError.message : 'Unknown error'}`,
+        );
       }
     }
   }

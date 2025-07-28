@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { mockUser } from '../../setup';
 
@@ -157,7 +157,7 @@ describe('Subscriptions Routes', () => {
       expect(response.statusCode).toBe(200);
       const result = JSON.parse(response.body);
       expect(Array.isArray(result.data)).toBe(true);
-      
+
       if (result.data.length > 0) {
         const subscription = result.data[0];
         expect(subscription).toHaveProperty('id');
@@ -169,7 +169,7 @@ describe('Subscriptions Routes', () => {
         expect(subscription).toHaveProperty('quotaTokens');
         expect(subscription).toHaveProperty('usedRequests');
         expect(subscription).toHaveProperty('usedTokens');
-        
+
         // Should include pricing information
         expect(subscription).toHaveProperty('inputCostPerToken');
         expect(subscription).toHaveProperty('outputCostPerToken');
@@ -188,7 +188,7 @@ describe('Subscriptions Routes', () => {
       expect(response.statusCode).toBe(200);
       const result = JSON.parse(response.body);
       expect(Array.isArray(result.data)).toBe(true);
-      
+
       // All returned subscriptions should have status 'active'
       result.data.forEach((subscription: any) => {
         expect(subscription.status).toBe('active');
@@ -413,7 +413,7 @@ describe('Subscriptions Routes', () => {
       expect(result).toHaveProperty('tokenUtilization');
       expect(result).toHaveProperty('withinRequestLimit');
       expect(result).toHaveProperty('withinTokenLimit');
-      
+
       // Utilization should be percentages
       expect(typeof result.requestUtilization).toBe('number');
       expect(typeof result.tokenUtilization).toBe('number');

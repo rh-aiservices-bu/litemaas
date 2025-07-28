@@ -1,9 +1,8 @@
-import { FastifyPluginAsync } from 'fastify';
+import { FastifyPluginAsync, FastifyError } from 'fastify';
 import {
   CreateSubscriptionDto,
   UpdateSubscriptionDto,
   SubscriptionDetails,
-  SubscriptionWithApiKey,
   SubscriptionListParams,
   PaginatedResponse,
   AuthenticatedRequest,
@@ -82,7 +81,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { page = 1, limit = 20, status, modelId } = request.query;
 
@@ -97,7 +96,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         const totalPages = Math.ceil(result.total / limit);
 
         return {
-          data: result.data,
+          data: result.data as SubscriptionDetails[],
           pagination: {
             page,
             limit,
@@ -161,25 +160,25 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
 
       try {
         const subscription = await subscriptionService.getSubscription(id, user.userId);
-        
+
         if (!subscription) {
           throw fastify.createNotFoundError('Subscription');
         }
 
-        return subscription;
+        return subscription as SubscriptionDetails;
       } catch (error) {
         fastify.log.error(error, 'Failed to get subscription');
-        
-        if (error.statusCode) {
+
+        if ((error as FastifyError).statusCode) {
           throw error;
         }
-        
+
         throw fastify.createError(500, 'Failed to get subscription');
       }
     },
@@ -266,19 +265,22 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         });
 
         reply.status(201);
-        return subscription;
+        return subscription as SubscriptionDetails;
       } catch (error) {
         fastify.log.error(error, 'Failed to create subscription');
-        
-        if (error.statusCode) {
+
+        if ((error as FastifyError).statusCode) {
           throw error;
         }
-        
+
         // Handle unique constraint violations
-        if (error.code === '23505' || error.message?.includes('unique constraint')) {
+        if (
+          (error as Error & { code?: string }).code === '23505' ||
+          (error as Error).message?.includes('unique constraint')
+        ) {
           throw fastify.createError(409, 'A subscription for this model already exists');
         }
-        
+
         throw fastify.createError(500, 'Failed to create subscription');
       }
     },
@@ -344,7 +346,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
       const { status, quotaRequests, quotaTokens, expiresAt, metadata } = request.body;
@@ -358,14 +360,14 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
           metadata,
         });
 
-        return subscription;
+        return subscription as SubscriptionDetails;
       } catch (error) {
         fastify.log.error(error, 'Failed to update subscription');
-        
-        if (error.statusCode) {
+
+        if ((error as FastifyError).statusCode) {
           throw error;
         }
-        
+
         throw fastify.createError(500, 'Failed to update subscription');
       }
     },
@@ -400,20 +402,20 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
 
       try {
         const subscription = await subscriptionService.cancelSubscription(id, user.userId);
-        return subscription;
+        return subscription as SubscriptionDetails;
       } catch (error) {
         fastify.log.error(error, 'Failed to cancel subscription');
-        
-        if (error.statusCode) {
+
+        if ((error as FastifyError).statusCode) {
           throw error;
         }
-        
+
         throw fastify.createError(500, 'Failed to cancel subscription');
       }
     },
@@ -475,13 +477,13 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
 
       try {
         const quota = await subscriptionService.getSubscriptionQuota(id, user.userId);
-        
+
         return {
           requests: {
             limit: quota.requests.limit,
@@ -498,11 +500,11 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to get subscription quota');
-        
-        if (error.statusCode) {
+
+        if ((error as FastifyError).statusCode) {
           throw error;
         }
-        
+
         throw fastify.createError(500, 'Failed to get subscription quota');
       }
     },
@@ -551,7 +553,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
 
       try {
@@ -565,7 +567,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // Admin endpoints
-  
+
   // List all subscriptions (admin only)
   fastify.get('/admin/all', {
     schema: {
@@ -593,7 +595,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('subscriptions:read')],
-    handler: async (request, reply) => {
+    handler: async (_request, _reply) => {
       // This would be implemented for admin use
       throw fastify.createError(501, 'Admin endpoint not implemented yet');
     },
@@ -622,23 +624,18 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('subscriptions:write')],
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { userId } = request.body as { userId?: string };
 
       try {
         const resetCount = await subscriptionService.resetQuotas(userId);
-        
+
         // Create audit log
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, metadata)
            VALUES ($1, $2, $3, $4)`,
-          [
-            user.userId,
-            'QUOTAS_RESET',
-            'SUBSCRIPTION',
-            { targetUserId: userId, resetCount },
-          ]
+          [user.userId, 'QUOTAS_RESET', 'SUBSCRIPTION', { targetUserId: userId, resetCount }],
         );
 
         return {

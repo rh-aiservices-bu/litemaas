@@ -1,5 +1,4 @@
 import { FastifyInstance } from 'fastify';
-import { AuthenticatedRequest } from '../types';
 
 export interface UserSession {
   id: string;
@@ -31,19 +30,26 @@ export class SessionService {
 
   constructor(fastify: FastifyInstance) {
     this.fastify = fastify;
-    
+
     // Clean up expired sessions every 30 minutes
-    setInterval(() => {
-      this.cleanupExpiredSessions();
-    }, 30 * 60 * 1000);
+    setInterval(
+      () => {
+        this.cleanupExpiredSessions();
+      },
+      30 * 60 * 1000,
+    );
   }
 
-  async createSession(user: {
-    id: string;
-    username: string;
-    email: string;
-    roles: string[];
-  }, ipAddress: string, userAgent: string): Promise<{
+  async createSession(
+    user: {
+      id: string;
+      username: string;
+      email: string;
+      roles: string[];
+    },
+    ipAddress: string,
+    userAgent: string,
+  ): Promise<{
     sessionId: string;
     accessToken: string;
     refreshToken: string;
@@ -76,17 +82,20 @@ export class SessionService {
     await this.fastify.dbUtils.query(
       `INSERT INTO user_sessions (id, user_id, ip_address, user_agent, expires_at)
        VALUES ($1, $2, $3, $4, $5)`,
-      [sessionId, user.id, ipAddress, userAgent, expiresAt]
+      [sessionId, user.id, ipAddress, userAgent, expiresAt],
     );
 
     // Cleanup old sessions for this user
     await this.cleanupUserSessions(user.id);
 
-    this.fastify.log.info({
-      userId: user.id,
-      sessionId,
-      ipAddress,
-    }, 'Session created');
+    this.fastify.log.info(
+      {
+        userId: user.id,
+        sessionId,
+        ipAddress,
+      },
+      'Session created',
+    );
 
     return {
       sessionId,
@@ -96,20 +105,23 @@ export class SessionService {
     };
   }
 
-  async refreshSession(sessionId: string, refreshToken: string): Promise<{
+  async refreshSession(
+    sessionId: string,
+    refreshToken: string,
+  ): Promise<{
     accessToken: string;
     refreshToken: string;
     expiresIn: number;
   } | null> {
     const session = this.sessionStore.get(sessionId);
-    
+
     if (!session || !session.isActive || session.expiresAt < new Date()) {
       return null;
     }
 
     // Verify refresh token
     const tokenPair = await this.fastify.refreshToken(refreshToken);
-    
+
     if (!tokenPair) {
       await this.invalidateSession(sessionId);
       return null;
@@ -123,13 +135,16 @@ export class SessionService {
     // Update in database
     await this.fastify.dbUtils.query(
       'UPDATE user_sessions SET last_activity_at = NOW() WHERE id = $1',
-      [sessionId]
+      [sessionId],
     );
 
-    this.fastify.log.debug({
-      sessionId,
-      userId: session.userId,
-    }, 'Session refreshed');
+    this.fastify.log.debug(
+      {
+        sessionId,
+        userId: session.userId,
+      },
+      'Session refreshed',
+    );
 
     return {
       accessToken: tokenPair.accessToken,
@@ -140,7 +155,7 @@ export class SessionService {
 
   async validateSession(sessionId: string): Promise<UserSession | null> {
     const session = this.sessionStore.get(sessionId);
-    
+
     if (!session || !session.isActive || session.expiresAt < new Date()) {
       if (session) {
         await this.invalidateSession(sessionId);
@@ -156,7 +171,7 @@ export class SessionService {
 
   async invalidateSession(sessionId: string): Promise<boolean> {
     const session = this.sessionStore.get(sessionId);
-    
+
     if (!session) {
       return false;
     }
@@ -175,13 +190,16 @@ export class SessionService {
     // Update database
     await this.fastify.dbUtils.query(
       'UPDATE user_sessions SET is_active = false, ended_at = NOW() WHERE id = $1',
-      [sessionId]
+      [sessionId],
     );
 
-    this.fastify.log.info({
-      sessionId,
-      userId: session.userId,
-    }, 'Session invalidated');
+    this.fastify.log.info(
+      {
+        sessionId,
+        userId: session.userId,
+      },
+      'Session invalidated',
+    );
 
     return true;
   }
@@ -193,10 +211,10 @@ export class SessionService {
        FROM user_sessions
        WHERE user_id = $1 AND is_active = true
        ORDER BY last_activity_at DESC`,
-      [userId]
+      [userId],
     );
 
-    return sessions.map(session => ({
+    return sessions.map((session) => ({
       sessionId: session.id,
       ipAddress: session.ip_address,
       userAgent: session.user_agent,
@@ -222,14 +240,17 @@ export class SessionService {
       `UPDATE user_sessions 
        SET is_active = false, ended_at = NOW() 
        WHERE user_id = $1 AND is_active = true ${exceptSessionId ? 'AND id != $2' : ''}`,
-      exceptSessionId ? [userId, exceptSessionId] : [userId]
+      exceptSessionId ? [userId, exceptSessionId] : [userId],
     );
 
-    this.fastify.log.info({
-      userId,
-      invalidatedSessions: count,
-      exceptSessionId,
-    }, 'Invalidated user sessions');
+    this.fastify.log.info(
+      {
+        userId,
+        invalidatedSessions: count,
+        exceptSessionId,
+      },
+      'Invalidated user sessions',
+    );
 
     return Math.max(count, result.rowCount || 0);
   }
@@ -237,11 +258,11 @@ export class SessionService {
   async getSessionFromRequest(request: any): Promise<UserSession | null> {
     // Try to get session ID from various sources
     let sessionId = request.headers['x-session-id'];
-    
+
     if (!sessionId && request.user) {
       // Try to find session by user and token
       const token = request.headers.authorization?.replace('Bearer ', '');
-      
+
       for (const [id, session] of this.sessionStore.entries()) {
         if (session.userId === request.user.userId && session.token === token) {
           sessionId = id;
@@ -263,12 +284,12 @@ export class SessionService {
        WHERE user_id = $1 AND is_active = true
        ORDER BY created_at DESC
        OFFSET $2`,
-      [userId, this.maxSessionsPerUser]
+      [userId, this.maxSessionsPerUser],
     );
 
     if (sessions.length > 0) {
-      const sessionIds = sessions.map(s => s.id);
-      
+      const sessionIds = sessions.map((s) => s.id);
+
       // Invalidate old sessions
       for (const sessionId of sessionIds) {
         await this.invalidateSession(sessionId);
@@ -286,14 +307,17 @@ export class SessionService {
       }
     }
 
-    expiredSessions.forEach(sessionId => {
+    expiredSessions.forEach((sessionId) => {
       this.invalidateSession(sessionId);
     });
 
     if (expiredSessions.length > 0) {
-      this.fastify.log.debug({
-        cleanedSessions: expiredSessions.length,
-      }, 'Cleaned up expired sessions');
+      this.fastify.log.debug(
+        {
+          cleanedSessions: expiredSessions.length,
+        },
+        'Cleaned up expired sessions',
+      );
     }
   }
 

@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { QueryParameter } from '../types/common.types.js';
 
 export interface UsageMetrics {
   totalRequests: number;
@@ -88,7 +89,7 @@ export class UsageStatsService {
       totalOutputTokens: 5210643,
       averageLatency: 1.2,
       errorRate: 2.3,
-      successRate: 97.7
+      successRate: 97.7,
     },
     timeSeriesData: [
       {
@@ -101,7 +102,7 @@ export class UsageStatsService {
         totalOutputTokens: 166833,
         averageLatency: 1.1,
         errorRate: 1.8,
-        successRate: 98.2
+        successRate: 98.2,
       },
       {
         period: '2024-12-21',
@@ -113,7 +114,7 @@ export class UsageStatsService {
         totalOutputTokens: 208778,
         averageLatency: 1.3,
         errorRate: 2.1,
-        successRate: 97.9
+        successRate: 97.9,
       },
       {
         period: '2024-12-22',
@@ -125,8 +126,8 @@ export class UsageStatsService {
         totalOutputTokens: 264198,
         averageLatency: 1.0,
         errorRate: 3.2,
-        successRate: 96.8
-      }
+        successRate: 96.8,
+      },
     ],
     modelBreakdown: [
       {
@@ -139,7 +140,7 @@ export class UsageStatsService {
         totalOutputTokens: 3111111,
         averageLatency: 1.1,
         errorRate: 1.8,
-        successRate: 98.2
+        successRate: 98.2,
       },
       {
         modelId: 'claude-3-5-sonnet-20241022',
@@ -151,7 +152,7 @@ export class UsageStatsService {
         totalOutputTokens: 1469135,
         averageLatency: 1.4,
         errorRate: 2.1,
-        successRate: 97.9
+        successRate: 97.9,
       },
       {
         modelId: 'llama-3.1-8b-instant',
@@ -163,9 +164,9 @@ export class UsageStatsService {
         totalOutputTokens: 630397,
         averageLatency: 0.8,
         errorRate: 4.5,
-        successRate: 95.5
-      }
-    ]
+        successRate: 95.5,
+      },
+    ],
   };
 
   constructor(fastify: FastifyInstance) {
@@ -176,14 +177,17 @@ export class UsageStatsService {
     // Use mock data only if database is not available
     // This allows using real data in development when database is connected
     const dbUnavailable = this.isDatabaseUnavailable();
-    
-    this.fastify.log.debug({ 
-      dbUnavailable, 
-      nodeEnv: process.env.NODE_ENV,
-      hasPg: !!this.fastify.pg,
-      mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined
-    }, 'Usage Stats Service: Checking if should use mock data');
-    
+
+    this.fastify.log.debug(
+      {
+        dbUnavailable,
+        nodeEnv: process.env.NODE_ENV,
+        hasPg: !!this.fastify.pg,
+        mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined,
+      },
+      'Usage Stats Service: Checking if should use mock data',
+    );
+
     return dbUnavailable;
   }
 
@@ -194,17 +198,20 @@ export class UsageStatsService {
         this.fastify.log.debug('Usage Stats Service: PostgreSQL plugin not available');
         return true;
       }
-      
+
       // Additional check: if the database plugin detected unavailability during startup,
       // it would have set up mock mode. Check if we're in mock mode.
       if (this.fastify.isDatabaseMockMode && this.fastify.isDatabaseMockMode()) {
         this.fastify.log.debug('Usage Stats Service: Database mock mode enabled');
         return true;
       }
-      
+
       return false;
     } catch (error) {
-      this.fastify.log.debug({ error }, 'Usage Stats Service: Error checking database availability');
+      this.fastify.log.debug(
+        { error },
+        'Usage Stats Service: Error checking database availability',
+      );
       return true;
     }
   }
@@ -212,14 +219,14 @@ export class UsageStatsService {
   private createMockResponse<T>(data: T): Promise<T> {
     // Simulate network delay
     const delay = Math.random() * 200 + 100; // 100-300ms
-    return new Promise(resolve => setTimeout(() => resolve(data), delay));
+    return new Promise((resolve) => setTimeout(() => resolve(data), delay));
   }
 
   async getUsageStats(query: UsageStatsQuery): Promise<UsageStatsResponse> {
     const cacheKey = this.generateCacheKey('usage_stats', query);
-    
+
     // Check cache first
-    const cached = this.getFromCache(cacheKey);
+    const cached = this.getFromCache<UsageStatsResponse>(cacheKey);
     if (cached) {
       return cached;
     }
@@ -227,27 +234,29 @@ export class UsageStatsService {
     // Use mock data if database is not available
     if (this.shouldUseMockData()) {
       this.fastify.log.debug('Using mock usage stats data');
-      
+
       // Filter and modify mock data based on query parameters
-      let response = JSON.parse(JSON.stringify(this.MOCK_USAGE_METRICS));
-      
+      const response = JSON.parse(JSON.stringify(this.MOCK_USAGE_METRICS));
+
       // Apply filters to model breakdown if specific modelId is requested
       if (query.modelId) {
-        response.modelBreakdown = response.modelBreakdown?.filter(
-          model => model.modelId === query.modelId
-        ) || [];
+        response.modelBreakdown =
+          response.modelBreakdown?.filter(
+            (model: ModelUsageStats) => model.modelId === query.modelId,
+          ) || [];
       }
-      
+
       // Apply date range filtering to time series data if specified
       if (query.startDate || query.endDate) {
-        response.timeSeriesData = response.timeSeriesData?.filter(period => {
-          const periodDate = new Date(period.period);
-          if (query.startDate && periodDate < query.startDate) return false;
-          if (query.endDate && periodDate > query.endDate) return false;
-          return true;
-        }) || [];
+        response.timeSeriesData =
+          response.timeSeriesData?.filter((period: TimePeriodMetrics) => {
+            const periodDate = new Date(period.period);
+            if (query.startDate && periodDate < query.startDate) return false;
+            if (query.endDate && periodDate > query.endDate) return false;
+            return true;
+          }) || [];
       }
-      
+
       this.setCache(cacheKey, response);
       return this.createMockResponse(response);
     }
@@ -266,7 +275,7 @@ export class UsageStatsService {
 
       // Build base WHERE clause
       const whereConditions: string[] = ['1=1'];
-      const params: any[] = [];
+      const params: QueryParameter[] = [];
 
       if (userId) {
         whereConditions.push('s.user_id = $' + (params.length + 1));
@@ -348,33 +357,37 @@ export class UsageStatsService {
           usage.statusCode,
           {},
           usage.timestamp,
-        ]
+        ],
       );
 
       // Invalidate relevant caches
       this.invalidateCache(usage.subscriptionId);
 
-      this.fastify.log.debug({
-        subscriptionId: usage.subscriptionId,
-        modelId: usage.modelId,
-        totalTokens: usage.requestTokens + usage.responseTokens,
-      }, 'Usage recorded');
-
+      this.fastify.log.debug(
+        {
+          subscriptionId: usage.subscriptionId,
+          modelId: usage.modelId,
+          totalTokens: usage.requestTokens + usage.responseTokens,
+        },
+        'Usage recorded',
+      );
     } catch (error) {
       this.fastify.log.error(error, 'Failed to record usage');
       throw error;
     }
   }
 
-  async getTopStats(options: {
-    userId?: string;
-    limit?: number;
-    timeRange?: 'day' | 'week' | 'month';
-  } = {}): Promise<TopStats> {
+  async getTopStats(
+    options: {
+      userId?: string;
+      limit?: number;
+      timeRange?: 'day' | 'week' | 'month';
+    } = {},
+  ): Promise<TopStats> {
     const { userId, limit = 10, timeRange = 'month' } = options;
-    const cacheKey = this.generateCacheKey('top_stats', { userId, limit, timeRange });
+    const cacheKey = `top_stats:${JSON.stringify({ userId, limit, timeRange })}`;
 
-    const cached = this.getFromCache(cacheKey);
+    const cached = this.getFromCache<TopStats>(cacheKey);
     if (cached) {
       return cached;
     }
@@ -401,7 +414,9 @@ export class UsageStatsService {
       `;
 
       // Top users (only for admin/global view)
-      const topUsersQuery = userId ? null : `
+      const topUsersQuery = userId
+        ? null
+        : `
         SELECT 
           s.user_id,
           u.username,
@@ -439,38 +454,40 @@ export class UsageStatsService {
       ]);
 
       const result: TopStats = {
-        topModels: topModels.map(row => ({
-          modelId: row.model_id,
-          modelName: row.model_name,
-          totalRequests: parseInt(row.total_requests),
-          totalTokens: parseInt(row.total_tokens) || 0,
+        topModels: topModels.map((row) => ({
+          modelId: String(row.model_id),
+          modelName: row.model_name as string,
+          totalRequests: parseInt(String(row.total_requests)),
+          totalTokens: parseInt(String(row.total_tokens)) || 0,
         })),
-        topUsers: (topUsers || []).map(row => ({
-          userId: row.user_id,
-          username: row.username,
-          totalRequests: parseInt(row.total_requests),
-          totalTokens: parseInt(row.total_tokens) || 0,
+        topUsers: (topUsers || []).map((row) => ({
+          userId: String(row.user_id),
+          username: row.username as string,
+          totalRequests: parseInt(String(row.total_requests)),
+          totalTokens: parseInt(String(row.total_tokens)) || 0,
         })),
-        recentActivity: recentActivity.map(row => ({
-          timestamp: new Date(row.timestamp),
-          modelId: row.model_id,
-          userId: row.user_id,
-          requestTokens: row.request_tokens,
-          responseTokens: row.response_tokens,
-          statusCode: row.status_code,
+        recentActivity: recentActivity.map((row) => ({
+          timestamp: new Date(row.timestamp as string),
+          modelId: String(row.model_id),
+          userId: String(row.user_id),
+          requestTokens: Number(row.request_tokens),
+          responseTokens: Number(row.response_tokens),
+          statusCode: Number(row.status_code),
         })),
       };
 
       this.setCache(cacheKey, result);
       return result;
-
     } catch (error) {
       this.fastify.log.error(error, 'Failed to get top statistics');
       throw error;
     }
   }
 
-  async getUserUsageSummary(userId: string, timeRange: 'day' | 'week' | 'month' = 'month'): Promise<{
+  async getUserUsageSummary(
+    userId: string,
+    timeRange: 'day' | 'week' | 'month' = 'month',
+  ): Promise<{
     currentPeriod: UsageMetrics;
     previousPeriod: UsageMetrics;
     percentChange: {
@@ -487,28 +504,34 @@ export class UsageStatsService {
       const previousTimeCondition = this.getPreviousTimeCondition(timeRange);
 
       // Current period metrics
-      const currentMetrics = await this.getTotalMetrics(
-        `${timeCondition} AND s.user_id = $1`,
-        [userId]
-      );
+      const currentMetrics = await this.getTotalMetrics(`${timeCondition} AND s.user_id = $1`, [
+        { name: 'user_id', value: userId },
+      ]);
 
       // Previous period metrics
       const previousMetrics = await this.getTotalMetrics(
         `${previousTimeCondition} AND s.user_id = $1`,
-        [userId]
+        [userId],
       );
 
       // Calculate percentage changes
-      const requestsChange = previousMetrics.totalRequests > 0
-        ? ((currentMetrics.totalRequests - previousMetrics.totalRequests) / previousMetrics.totalRequests) * 100
-        : 0;
+      const requestsChange =
+        previousMetrics.totalRequests > 0
+          ? ((currentMetrics.totalRequests - previousMetrics.totalRequests) /
+              previousMetrics.totalRequests) *
+            100
+          : 0;
 
-      const tokensChange = previousMetrics.totalTokens > 0
-        ? ((currentMetrics.totalTokens - previousMetrics.totalTokens) / previousMetrics.totalTokens) * 100
-        : 0;
+      const tokensChange =
+        previousMetrics.totalTokens > 0
+          ? ((currentMetrics.totalTokens - previousMetrics.totalTokens) /
+              previousMetrics.totalTokens) *
+            100
+          : 0;
 
       // Get quota utilization
-      const quotaStats = await this.fastify.dbUtils.queryOne(`
+      const quotaStats = await this.fastify.dbUtils.queryOne(
+        `
         SELECT 
           SUM(quota_requests) as total_quota_requests,
           SUM(quota_tokens) as total_quota_tokens,
@@ -516,15 +539,20 @@ export class UsageStatsService {
           SUM(used_tokens) as total_used_tokens
         FROM subscriptions
         WHERE user_id = $1 AND status = 'active'
-      `, [userId]);
+      `,
+        [userId],
+      );
 
       const quotaUtilization = {
-        requests: quotaStats.total_quota_requests > 0
-          ? (quotaStats.total_used_requests / quotaStats.total_quota_requests) * 100
-          : 0,
-        tokens: quotaStats.total_quota_tokens > 0
-          ? (quotaStats.total_used_tokens / quotaStats.total_quota_tokens) * 100
-          : 0,
+        requests:
+          quotaStats && Number(quotaStats.total_quota_requests) > 0
+            ? (Number(quotaStats.total_used_requests) / Number(quotaStats.total_quota_requests)) *
+              100
+            : 0,
+        tokens:
+          quotaStats && Number(quotaStats.total_quota_tokens) > 0
+            ? (Number(quotaStats.total_used_tokens) / Number(quotaStats.total_quota_tokens)) * 100
+            : 0,
       };
 
       return {
@@ -536,7 +564,6 @@ export class UsageStatsService {
         },
         quotaUtilization,
       };
-
     } catch (error) {
       this.fastify.log.error(error, 'Failed to get user usage summary');
       throw error;
@@ -550,17 +577,20 @@ export class UsageStatsService {
 
       const result = await this.fastify.dbUtils.query(
         'DELETE FROM usage_logs WHERE created_at < $1',
-        [cutoffDate]
+        [cutoffDate],
       );
 
       const deletedCount = result.rowCount || 0;
 
       if (deletedCount > 0) {
-        this.fastify.log.info({
-          deletedCount,
-          retentionDays,
-          cutoffDate,
-        }, 'Cleaned up old usage data');
+        this.fastify.log.info(
+          {
+            deletedCount,
+            retentionDays,
+            cutoffDate,
+          },
+          'Cleaned up old usage data',
+        );
       }
 
       return deletedCount;
@@ -570,7 +600,10 @@ export class UsageStatsService {
     }
   }
 
-  private async getTotalMetrics(whereClause: string, params: any[]): Promise<UsageMetrics> {
+  private async getTotalMetrics(
+    whereClause: string,
+    params: QueryParameter[],
+  ): Promise<UsageMetrics> {
     const query = `
       SELECT 
         COUNT(*) as total_requests,
@@ -586,24 +619,39 @@ export class UsageStatsService {
 
     const result = await this.fastify.dbUtils.queryOne(query, params);
 
-    const totalRequests = parseInt(result.total_requests) || 0;
-    const errorCount = parseInt(result.error_count) || 0;
+    if (!result) {
+      return {
+        totalRequests: 0,
+        totalTokens: 0,
+        totalInputTokens: 0,
+        totalOutputTokens: 0,
+        averageLatency: 0,
+        errorRate: 0,
+        successRate: 0,
+      };
+    }
+
+    const totalRequests = parseInt(String(result.total_requests)) || 0;
+    const errorCount = parseInt(String(result.error_count)) || 0;
 
     return {
       totalRequests,
-      totalTokens: parseInt(result.total_tokens) || 0,
-      totalInputTokens: parseInt(result.total_input_tokens) || 0,
-      totalOutputTokens: parseInt(result.total_output_tokens) || 0,
-      averageLatency: Math.round(parseFloat(result.average_latency) || 0),
+      totalTokens: parseInt(String(result.total_tokens)) || 0,
+      totalInputTokens: parseInt(String(result.total_input_tokens)) || 0,
+      totalOutputTokens: parseInt(String(result.total_output_tokens)) || 0,
+      averageLatency: Math.round(parseFloat(String(result.average_latency)) || 0),
       errorRate: totalRequests > 0 ? Math.round((errorCount / totalRequests) * 100 * 100) / 100 : 0,
-      successRate: totalRequests > 0 ? Math.round(((totalRequests - errorCount) / totalRequests) * 100 * 100) / 100 : 0,
+      successRate:
+        totalRequests > 0
+          ? Math.round(((totalRequests - errorCount) / totalRequests) * 100 * 100) / 100
+          : 0,
     };
   }
 
   private async getTimeSeriesData(
     whereClause: string,
-    params: any[],
-    granularity: 'hour' | 'day' | 'week' | 'month'
+    params: QueryParameter[],
+    granularity: 'hour' | 'day' | 'week' | 'month',
   ): Promise<TimePeriodMetrics[]> {
     const truncFunction = {
       hour: 'hour',
@@ -630,10 +678,10 @@ export class UsageStatsService {
 
     const results = await this.fastify.dbUtils.queryMany(query, params);
 
-    return results.map(row => {
-      const totalRequests = parseInt(row.total_requests) || 0;
-      const errorCount = parseInt(row.error_count) || 0;
-      const periodStart = new Date(row.period);
+    return results.map((row) => {
+      const totalRequests = parseInt(String(row.total_requests)) || 0;
+      const errorCount = parseInt(String(row.error_count)) || 0;
+      const periodStart = new Date(String(row.period));
       const periodEnd = new Date(periodStart);
 
       // Calculate period end based on granularity
@@ -653,21 +701,28 @@ export class UsageStatsService {
       }
 
       return {
-        period: row.period,
+        period: String(row.period),
         startTime: periodStart,
         endTime: periodEnd,
         totalRequests,
-        totalTokens: parseInt(row.total_tokens) || 0,
-        totalInputTokens: parseInt(row.total_input_tokens) || 0,
-        totalOutputTokens: parseInt(row.total_output_tokens) || 0,
-        averageLatency: Math.round(parseFloat(row.average_latency) || 0),
-        errorRate: totalRequests > 0 ? Math.round((errorCount / totalRequests) * 100 * 100) / 100 : 0,
-        successRate: totalRequests > 0 ? Math.round(((totalRequests - errorCount) / totalRequests) * 100 * 100) / 100 : 0,
+        totalTokens: parseInt(String(row.total_tokens)) || 0,
+        totalInputTokens: parseInt(String(row.total_input_tokens)) || 0,
+        totalOutputTokens: parseInt(String(row.total_output_tokens)) || 0,
+        averageLatency: Math.round(parseFloat(String(row.average_latency)) || 0),
+        errorRate:
+          totalRequests > 0 ? Math.round((errorCount / totalRequests) * 100 * 100) / 100 : 0,
+        successRate:
+          totalRequests > 0
+            ? Math.round(((totalRequests - errorCount) / totalRequests) * 100 * 100) / 100
+            : 0,
       };
     });
   }
 
-  private async getModelBreakdown(whereClause: string, params: any[]): Promise<ModelUsageStats[]> {
+  private async getModelBreakdown(
+    whereClause: string,
+    params: QueryParameter[],
+  ): Promise<ModelUsageStats[]> {
     const query = `
       SELECT 
         ul.model_id,
@@ -689,21 +744,25 @@ export class UsageStatsService {
 
     const results = await this.fastify.dbUtils.queryMany(query, params);
 
-    return results.map(row => {
-      const totalRequests = parseInt(row.total_requests) || 0;
-      const errorCount = parseInt(row.error_count) || 0;
+    return results.map((row) => {
+      const totalRequests = parseInt(String(row.total_requests)) || 0;
+      const errorCount = parseInt(String(row.error_count)) || 0;
 
       return {
-        modelId: row.model_id,
-        modelName: row.model_name,
-        provider: row.provider,
+        modelId: String(row.model_id),
+        modelName: row.model_name as string,
+        provider: row.provider as string,
         totalRequests,
-        totalTokens: parseInt(row.total_tokens) || 0,
-        totalInputTokens: parseInt(row.total_input_tokens) || 0,
-        totalOutputTokens: parseInt(row.total_output_tokens) || 0,
-        averageLatency: Math.round(parseFloat(row.average_latency) || 0),
-        errorRate: totalRequests > 0 ? Math.round((errorCount / totalRequests) * 100 * 100) / 100 : 0,
-        successRate: totalRequests > 0 ? Math.round(((totalRequests - errorCount) / totalRequests) * 100 * 100) / 100 : 0,
+        totalTokens: parseInt(String(row.total_tokens)) || 0,
+        totalInputTokens: parseInt(String(row.total_input_tokens)) || 0,
+        totalOutputTokens: parseInt(String(row.total_output_tokens)) || 0,
+        averageLatency: Math.round(parseFloat(String(row.average_latency)) || 0),
+        errorRate:
+          totalRequests > 0 ? Math.round((errorCount / totalRequests) * 100 * 100) / 100 : 0,
+        successRate:
+          totalRequests > 0
+            ? Math.round(((totalRequests - errorCount) / totalRequests) * 100 * 100) / 100
+            : 0,
       };
     });
   }
@@ -711,7 +770,7 @@ export class UsageStatsService {
   private getTimeCondition(timeRange: 'day' | 'week' | 'month'): string {
     switch (timeRange) {
       case 'day':
-        return "ul.created_at >= CURRENT_DATE";
+        return 'ul.created_at >= CURRENT_DATE';
       case 'week':
         return "ul.created_at >= date_trunc('week', CURRENT_DATE)";
       case 'month':
@@ -734,7 +793,7 @@ export class UsageStatsService {
     }
   }
 
-  private generateCacheKey(prefix: string, params: any): string {
+  private generateCacheKey(prefix: string, params: UsageStatsQuery): string {
     return `${prefix}:${JSON.stringify(params)}`;
   }
 
@@ -746,7 +805,7 @@ export class UsageStatsService {
     return null;
   }
 
-  private setCache(key: string, data: any): void {
+  private setCache<T>(key: string, data: T): void {
     this.cache.set(key, { data, timestamp: Date.now() });
   }
 

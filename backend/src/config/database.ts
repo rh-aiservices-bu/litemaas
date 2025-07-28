@@ -11,7 +11,8 @@ export interface DatabaseConfig {
 
 const databaseConfig: FastifyPluginAsync = async (fastify) => {
   const config: DatabaseConfig = {
-    connectionString: process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/litemaas',
+    connectionString:
+      process.env.DATABASE_URL || 'postgresql://user:password@localhost:5432/litemaas',
     ssl: process.env.NODE_ENV === 'production',
     maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || '20'),
     idleTimeoutMillis: parseInt(process.env.DB_IDLE_TIMEOUT || '30000'),

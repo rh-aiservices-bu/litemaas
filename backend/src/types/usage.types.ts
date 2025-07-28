@@ -1,4 +1,4 @@
-import { TimeInterval, TimePeriod } from './common.types';
+import { TimeInterval, TimePeriod, UsageMetadata } from './common.types';
 
 export interface UsageLog {
   id: string;
@@ -11,7 +11,7 @@ export interface UsageLog {
   latencyMs?: number;
   statusCode: number;
   errorMessage?: string;
-  metadata?: Record<string, any>;
+  metadata?: UsageMetadata;
   createdAt: Date;
 }
 
@@ -24,7 +24,7 @@ export interface CreateUsageLogDto {
   latencyMs?: number;
   statusCode: number;
   errorMessage?: string;
-  metadata?: Record<string, any>;
+  metadata?: UsageMetadata;
 }
 
 export interface UsageSummary {
@@ -72,6 +72,8 @@ export interface UsageSummaryParams {
   startDate: Date;
   endDate: Date;
   modelId?: string;
+  subscriptionId?: string;
+  granularity?: 'hour' | 'day' | 'week' | 'month';
 }
 
 export interface UsageTimeSeriesParams {
@@ -79,6 +81,7 @@ export interface UsageTimeSeriesParams {
   endDate: Date;
   interval: TimeInterval;
   modelId?: string;
+  subscriptionId?: string;
 }
 
 export interface UsageExportParams {
@@ -86,6 +89,7 @@ export interface UsageExportParams {
   endDate: Date;
   format: 'csv' | 'json';
   modelId?: string;
+  subscriptionId?: string;
 }
 
 export interface UsageMetrics {

@@ -63,7 +63,7 @@ export class TokenService {
       `INSERT INTO refresh_tokens (user_id, token, expires_at)
        VALUES ($1, $2, $3)
        RETURNING id, user_id, token, expires_at, created_at`,
-      [userId, token, expiresAt]
+      [userId, token, expiresAt],
     );
 
     return {
@@ -85,7 +85,7 @@ export class TokenService {
          AND rt.expires_at > NOW()
          AND rt.revoked_at IS NULL
          AND u.is_active = true`,
-      [refreshToken]
+      [refreshToken],
     );
 
     if (!tokenRecord) {
@@ -95,7 +95,7 @@ export class TokenService {
     // Update last used timestamp
     await this.fastify.dbUtils.query(
       'UPDATE refresh_tokens SET last_used_at = NOW() WHERE id = $1',
-      [tokenRecord.id]
+      [tokenRecord.id],
     );
 
     // Generate new token pair
@@ -110,7 +110,7 @@ export class TokenService {
   async revokeRefreshToken(token: string): Promise<boolean> {
     const result = await this.fastify.dbUtils.query(
       'UPDATE refresh_tokens SET revoked_at = NOW() WHERE token = $1 AND revoked_at IS NULL',
-      [token]
+      [token],
     );
 
     return result.rowCount > 0;
@@ -119,7 +119,7 @@ export class TokenService {
   async revokeAllUserTokens(userId: string): Promise<number> {
     const result = await this.fastify.dbUtils.query(
       'UPDATE refresh_tokens SET revoked_at = NOW() WHERE user_id = $1 AND revoked_at IS NULL',
-      [userId]
+      [userId],
     );
 
     return result.rowCount;
@@ -127,8 +127,8 @@ export class TokenService {
 
   async cleanupExpiredTokens(): Promise<number> {
     const result = await this.fastify.dbUtils.query(
-      'DELETE FROM refresh_tokens WHERE expires_at < NOW() OR revoked_at < NOW() - INTERVAL \'30 days\'',
-      []
+      "DELETE FROM refresh_tokens WHERE expires_at < NOW() OR revoked_at < NOW() - INTERVAL '30 days'",
+      [],
     );
 
     return result.rowCount;
@@ -137,11 +137,11 @@ export class TokenService {
   async validateToken(token: string): Promise<JWTPayload | null> {
     try {
       const payload = await this.fastify.verifyToken(token);
-      
+
       // Additional validation: check if user is still active
       const user = await this.fastify.dbUtils.queryOne(
         'SELECT is_active FROM users WHERE id = $1',
-        [payload.userId]
+        [payload.userId],
       );
 
       if (!user || !user.is_active) {
@@ -160,10 +160,10 @@ export class TokenService {
        FROM refresh_tokens
        WHERE user_id = $1 AND revoked_at IS NULL
        ORDER BY created_at DESC`,
-      [userId]
+      [userId],
     );
 
-    return tokens.map(token => ({
+    return tokens.map((token) => ({
       id: token.id,
       userId: token.user_id,
       token: token.token,
@@ -181,6 +181,7 @@ export class TokenService {
       crypto.getRandomValues(buffer);
     } else {
       // Fallback for Node.js
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const crypto = require('crypto');
       const randomBytes = crypto.randomBytes(32);
       buffer.set(randomBytes);
@@ -197,7 +198,7 @@ export class TokenService {
   private getAccessTokenExpiry(): number {
     // Parse JWT_EXPIRES_IN (e.g., "24h", "1d", "3600s")
     const expiresIn = this.fastify.config.JWT_EXPIRES_IN;
-    
+
     if (expiresIn.endsWith('h')) {
       return parseInt(expiresIn) * 60 * 60;
     } else if (expiresIn.endsWith('d')) {

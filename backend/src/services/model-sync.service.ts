@@ -29,10 +29,7 @@ export class ModelSyncService {
    * Synchronize models from LiteLLM to the database
    */
   async syncModels(options: ModelSyncOptions = {}): Promise<ModelSyncResult> {
-    const {
-      forceUpdate = false,
-      markUnavailable = true
-    } = options;
+    const { forceUpdate = false, markUnavailable = true } = options;
 
     const result: ModelSyncResult = {
       success: false,
@@ -41,7 +38,7 @@ export class ModelSyncService {
       updatedModels: 0,
       unavailableModels: 0,
       errors: [],
-      syncedAt: new Date().toISOString()
+      syncedAt: new Date().toISOString(),
     };
 
     try {
@@ -58,8 +55,8 @@ export class ModelSyncService {
 
       // Get existing models from database
       const existingModels = await this.getExistingModels();
-      const existingModelIds = new Set(existingModels.map(m => m.id));
-      const litellmModelIds = new Set(litellmModels.map(m => m.model_name));
+      const existingModelIds = new Set(existingModels.map((m) => m.id));
+      const litellmModelIds = new Set(litellmModels.map((m) => m.model_name));
 
       // Process each LiteLLM model
       for (const litellmModel of litellmModels) {
@@ -77,35 +74,49 @@ export class ModelSyncService {
             result.newModels++;
           }
         } catch (error) {
-          this.fastify.log.error({ modelId: litellmModel.model_name, error }, 'Failed to sync model');
-          result.errors.push(`Failed to sync model ${litellmModel.model_name}: ${error.message}`);
+          this.fastify.log.error(
+            { modelId: litellmModel.model_name, error },
+            'Failed to sync model',
+          );
+          result.errors.push(
+            `Failed to sync model ${litellmModel.model_name}: ${error instanceof Error ? error.message : String(error)}`,
+          );
         }
       }
 
       // Mark unavailable models
       if (markUnavailable) {
-        const unavailableModelIds = Array.from(existingModelIds).filter(id => !litellmModelIds.has(id));
+        const unavailableModelIds = Array.from(existingModelIds).filter(
+          (id) => !litellmModelIds.has(id),
+        );
         for (const modelId of unavailableModelIds) {
           try {
             await this.markModelUnavailable(modelId);
             result.unavailableModels++;
           } catch (error) {
             this.fastify.log.error({ modelId, error }, 'Failed to mark model as unavailable');
-            result.errors.push(`Failed to mark model ${modelId} as unavailable: ${error.message}`);
+            result.errors.push(
+              `Failed to mark model ${modelId} as unavailable: ${error instanceof Error ? error.message : String(error)}`,
+            );
           }
         }
       }
 
       result.success = result.errors.length === 0;
 
-      this.fastify.log.info({
-        result
-      }, 'Model synchronization completed');
+      this.fastify.log.info(
+        {
+          result,
+        },
+        'Model synchronization completed',
+      );
 
       return result;
     } catch (error) {
       this.fastify.log.error(error, 'Model synchronization failed');
-      result.errors.push(`Synchronization failed: ${error.message}`);
+      result.errors.push(
+        `Synchronization failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return result;
     }
   }
@@ -129,22 +140,29 @@ export class ModelSyncService {
     // Convert LiteLLM model format to our database format
     const modelId = litellmModel.model_name;
     const modelName = litellmModel.model_name;
-    
+
     // Extract provider from custom_llm_provider or model path
-    const provider = litellmModel.litellm_params?.custom_llm_provider || 
-                    (litellmModel.litellm_params?.model?.includes('/') ? 
-                     litellmModel.litellm_params.model.split('/')[0] : 'unknown');
-    
+    const provider =
+      litellmModel.litellm_params?.custom_llm_provider ||
+      (litellmModel.litellm_params?.model?.includes('/')
+        ? litellmModel.litellm_params.model.split('/')[0]
+        : 'unknown');
+
     const description = `${modelName} model from ${provider}`;
     const contextLength = litellmModel.model_info?.max_tokens;
-    const inputCostPerToken = litellmModel.model_info?.input_cost_per_token || litellmModel.litellm_params?.input_cost_per_token;
-    const outputCostPerToken = litellmModel.model_info?.output_cost_per_token || litellmModel.litellm_params?.output_cost_per_token;
-    
+    const inputCostPerToken =
+      litellmModel.model_info?.input_cost_per_token ||
+      litellmModel.litellm_params?.input_cost_per_token;
+    const outputCostPerToken =
+      litellmModel.model_info?.output_cost_per_token ||
+      litellmModel.litellm_params?.output_cost_per_token;
+
     // Extract capabilities
     const supportsVision = litellmModel.model_info?.supports_vision || false;
     const supportsFunctionCalling = litellmModel.model_info?.supports_function_calling || false;
-    const supportsParallelFunctionCalling = litellmModel.model_info?.supports_parallel_function_calling || false;
-    
+    const supportsParallelFunctionCalling =
+      litellmModel.model_info?.supports_parallel_function_calling || false;
+
     // Build features array
     const features = [];
     if (supportsFunctionCalling) features.push('function_calling');
@@ -152,7 +170,8 @@ export class ModelSyncService {
     if (supportsVision) features.push('vision');
     features.push('chat'); // Assume all models support chat
 
-    await this.fastify.dbUtils.query(`
+    await this.fastify.dbUtils.query(
+      `
       INSERT INTO models (
         id, name, provider, description, category, context_length,
         input_cost_per_token, output_cost_per_token, supports_vision,
@@ -160,28 +179,30 @@ export class ModelSyncService {
         supports_parallel_function_calling, supports_streaming,
         features, availability, version, metadata
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
-    `, [
-      modelId,
-      modelName,
-      provider,
-      description,
-      'Language Model', // Default category
-      contextLength,
-      inputCostPerToken,
-      outputCostPerToken,
-      supportsVision,
-      supportsFunctionCalling,
-      false, // supports_tool_choice - not provided by LiteLLM
-      supportsParallelFunctionCalling,
-      true, // supports_streaming - default to true
-      features,
-      'available',
-      '1.0', // Default version
-      JSON.stringify({
-        litellm_model_info: litellmModel.model_info,
-        litellm_params: litellmModel.litellm_params
-      })
-    ]);
+    `,
+      [
+        modelId,
+        modelName,
+        provider,
+        description,
+        'Language Model', // Default category
+        contextLength,
+        inputCostPerToken,
+        outputCostPerToken,
+        supportsVision,
+        supportsFunctionCalling,
+        false, // supports_tool_choice - not provided by LiteLLM
+        supportsParallelFunctionCalling,
+        true, // supports_streaming - default to true
+        features,
+        'available',
+        '1.0', // Default version
+        JSON.stringify({
+          litellm_model_info: litellmModel.model_info,
+          litellm_params: litellmModel.litellm_params,
+        }),
+      ],
+    );
 
     this.fastify.log.debug({ modelId }, 'Inserted new model');
   }
@@ -191,21 +212,28 @@ export class ModelSyncService {
    */
   private async updateModel(litellmModel: any, forceUpdate: boolean = false): Promise<boolean> {
     const modelId = litellmModel.model_name;
-    
+
     // Extract all the same fields as in insertModel
     const modelName = litellmModel.model_name;
-    const provider = litellmModel.litellm_params?.custom_llm_provider || 
-                    (litellmModel.litellm_params?.model?.includes('/') ? 
-                     litellmModel.litellm_params.model.split('/')[0] : 'unknown');
+    const provider =
+      litellmModel.litellm_params?.custom_llm_provider ||
+      (litellmModel.litellm_params?.model?.includes('/')
+        ? litellmModel.litellm_params.model.split('/')[0]
+        : 'unknown');
     const description = `${modelName} model from ${provider}`;
     const contextLength = litellmModel.model_info?.max_tokens;
-    const inputCostPerToken = litellmModel.model_info?.input_cost_per_token || litellmModel.litellm_params?.input_cost_per_token;
-    const outputCostPerToken = litellmModel.model_info?.output_cost_per_token || litellmModel.litellm_params?.output_cost_per_token;
-    
+    const inputCostPerToken =
+      litellmModel.model_info?.input_cost_per_token ||
+      litellmModel.litellm_params?.input_cost_per_token;
+    const outputCostPerToken =
+      litellmModel.model_info?.output_cost_per_token ||
+      litellmModel.litellm_params?.output_cost_per_token;
+
     const supportsVision = litellmModel.model_info?.supports_vision || false;
     const supportsFunctionCalling = litellmModel.model_info?.supports_function_calling || false;
-    const supportsParallelFunctionCalling = litellmModel.model_info?.supports_parallel_function_calling || false;
-    
+    const supportsParallelFunctionCalling =
+      litellmModel.model_info?.supports_parallel_function_calling || false;
+
     const features = [];
     if (supportsFunctionCalling) features.push('function_calling');
     if (supportsParallelFunctionCalling) features.push('parallel_function_calling');
@@ -214,20 +242,24 @@ export class ModelSyncService {
 
     // Check if update is needed
     if (!forceUpdate) {
-      const existing = await this.fastify.dbUtils.queryOne(`
+      const existing = await this.fastify.dbUtils.queryOne(
+        `
         SELECT input_cost_per_token, output_cost_per_token, availability, 
                context_length, supports_vision, supports_function_calling,
                supports_tool_choice, supports_parallel_function_calling,
                supports_streaming, features, version, metadata
         FROM models WHERE id = $1
-      `, [modelId]);
+      `,
+        [modelId],
+      );
 
       if (existing && this.modelsEqual(existing, litellmModel)) {
         return false; // No update needed
       }
     }
 
-    await this.fastify.dbUtils.query(`
+    await this.fastify.dbUtils.query(
+      `
       UPDATE models SET
         name = $2,
         provider = $3,
@@ -247,28 +279,30 @@ export class ModelSyncService {
         metadata = $17,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
-    `, [
-      modelId,
-      modelName,
-      provider,
-      description,
-      'Language Model',
-      contextLength,
-      inputCostPerToken,
-      outputCostPerToken,
-      supportsVision,
-      supportsFunctionCalling,
-      false, // supports_tool_choice
-      supportsParallelFunctionCalling,
-      true, // supports_streaming
-      features,
-      'available',
-      '1.0',
-      JSON.stringify({
-        litellm_model_info: litellmModel.model_info,
-        litellm_params: litellmModel.litellm_params
-      })
-    ]);
+    `,
+      [
+        modelId,
+        modelName,
+        provider,
+        description,
+        'Language Model',
+        contextLength,
+        inputCostPerToken,
+        outputCostPerToken,
+        supportsVision,
+        supportsFunctionCalling,
+        false, // supports_tool_choice
+        supportsParallelFunctionCalling,
+        true, // supports_streaming
+        features,
+        'available',
+        '1.0',
+        JSON.stringify({
+          litellm_model_info: litellmModel.model_info,
+          litellm_params: litellmModel.litellm_params,
+        }),
+      ],
+    );
 
     this.fastify.log.debug({ modelId }, 'Updated existing model');
     return true;
@@ -278,11 +312,14 @@ export class ModelSyncService {
    * Mark a model as unavailable
    */
   private async markModelUnavailable(modelId: string): Promise<void> {
-    await this.fastify.dbUtils.query(`
+    await this.fastify.dbUtils.query(
+      `
       UPDATE models 
       SET availability = 'unavailable', updated_at = CURRENT_TIMESTAMP
       WHERE id = $1 AND availability != 'unavailable'
-    `, [modelId]);
+    `,
+      [modelId],
+    );
 
     this.fastify.log.debug({ modelId }, 'Marked model as unavailable');
   }
@@ -292,24 +329,29 @@ export class ModelSyncService {
    */
   private modelsEqual(existing: any, litellmModel: any): boolean {
     // Extract pricing from LiteLLM model
-    const inputCostPerToken = litellmModel.model_info?.input_cost_per_token || litellmModel.litellm_params?.input_cost_per_token;
-    const outputCostPerToken = litellmModel.model_info?.output_cost_per_token || litellmModel.litellm_params?.output_cost_per_token;
-    
+    const inputCostPerToken =
+      litellmModel.model_info?.input_cost_per_token ||
+      litellmModel.litellm_params?.input_cost_per_token;
+    const outputCostPerToken =
+      litellmModel.model_info?.output_cost_per_token ||
+      litellmModel.litellm_params?.output_cost_per_token;
+
     const existingPrice = {
       input: parseFloat(existing.input_cost_per_token || '0'),
-      output: parseFloat(existing.output_cost_per_token || '0')
+      output: parseFloat(existing.output_cost_per_token || '0'),
     };
-    
+
     const newPrice = {
       input: parseFloat(inputCostPerToken || '0'),
-      output: parseFloat(outputCostPerToken || '0')
+      output: parseFloat(outputCostPerToken || '0'),
     };
 
     // Extract capabilities from LiteLLM model
     const supportsVision = litellmModel.model_info?.supports_vision || false;
     const supportsFunctionCalling = litellmModel.model_info?.supports_function_calling || false;
-    const supportsParallelFunctionCalling = litellmModel.model_info?.supports_parallel_function_calling || false;
-    
+    const supportsParallelFunctionCalling =
+      litellmModel.model_info?.supports_parallel_function_calling || false;
+
     // Build expected features
     const expectedFeatures = [];
     if (supportsFunctionCalling) expectedFeatures.push('function_calling');
@@ -350,10 +392,10 @@ export class ModelSyncService {
     `);
 
     return {
-      totalModels: parseInt(stats?.total_models || '0'),
-      availableModels: parseInt(stats?.available_models || '0'),
-      unavailableModels: parseInt(stats?.unavailable_models || '0'),
-      lastSyncAt: stats?.last_sync_at
+      totalModels: parseInt(String(stats?.total_models || '0')),
+      availableModels: parseInt(String(stats?.available_models || '0')),
+      unavailableModels: parseInt(String(stats?.unavailable_models || '0')),
+      lastSyncAt: stats?.last_sync_at ? String(stats.last_sync_at) : undefined,
     };
   }
 
@@ -383,9 +425,9 @@ export class ModelSyncService {
     `);
 
     return {
-      validModels: parseInt(totalModels?.count || '0') - invalidModels.length,
-      invalidModels: invalidModels.map(m => `${m.id} (${m.name})`),
-      orphanedSubscriptions: parseInt(orphanedSubscriptions?.count || '0')
+      validModels: parseInt(String(totalModels?.count || '0')) - invalidModels.length,
+      invalidModels: invalidModels.map((m) => `${m.id} (${m.name})`),
+      orphanedSubscriptions: parseInt(String(orphanedSubscriptions?.count || '0')),
     };
   }
 }
