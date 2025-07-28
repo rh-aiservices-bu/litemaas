@@ -1,6 +1,20 @@
 import { FastifyPluginAsync } from 'fastify';
 import { LiteLLMService } from '../services/litellm.service';
 
+interface LiteLLMMetrics {
+  cacheSize: number;
+  circuitBreakerStatus: {
+    isOpen: boolean;
+    failureCount: number;
+    lastFailureTime: number;
+  };
+  config: {
+    enableMocking: boolean;
+    baseUrl: string;
+    timeout: number;
+  };
+}
+
 interface HealthStatus {
   status: 'healthy' | 'unhealthy';
   timestamp: string;
@@ -14,14 +28,14 @@ interface HealthStatus {
     uptime: number;
     memoryUsage: NodeJS.MemoryUsage;
     environment: string;
-    litellmMetrics?: any;
+    litellmMetrics?: LiteLLMMetrics;
   };
 }
 
 const healthRoutes: FastifyPluginAsync = async (fastify) => {
   // Initialize LiteLLM service
   const liteLLMService = new LiteLLMService(fastify);
-  
+
   // Helper function to check database health
   const checkDatabaseHealth = async (): Promise<'healthy' | 'unhealthy'> => {
     try {
@@ -32,7 +46,7 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
       return 'unhealthy';
     }
   };
-  
+
   // Helper function to check LiteLLM health
   const checkLiteLLMHealth = async (): Promise<'healthy' | 'unhealthy'> => {
     try {
@@ -43,13 +57,13 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
       return 'unhealthy';
     }
   };
-  
+
   // Helper function to check auth system health
   const checkAuthHealth = async (): Promise<'healthy' | 'unhealthy'> => {
     try {
       // Check if authentication services are available
       // This is a basic check - in production you might want to verify OAuth endpoints
-      if (fastify.rbac && fastify.oauth && fastify.session) {
+      if (fastify.rbac && fastify.oauth && fastify.sessionService) {
         return 'healthy';
       }
       return 'unhealthy';
@@ -94,33 +108,33 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (_request, reply) => {
       const startTime = Date.now();
-      
+
       // Perform health checks in parallel
       const [databaseStatus, litellmStatus, authStatus] = await Promise.allSettled([
         checkDatabaseHealth(),
         checkLiteLLMHealth(),
         checkAuthHealth(),
       ]);
-      
+
       const checks = {
         database: databaseStatus.status === 'fulfilled' ? databaseStatus.value : 'unhealthy',
         litellm: litellmStatus.status === 'fulfilled' ? litellmStatus.value : 'unhealthy',
         auth: authStatus.status === 'fulfilled' ? authStatus.value : 'unhealthy',
       };
-      
-      const allHealthy = Object.values(checks).every(status => status === 'healthy');
+
+      const allHealthy = Object.values(checks).every((status) => status === 'healthy');
       const checkDuration = Date.now() - startTime;
-      
+
       // Get additional metrics
-      let litellmMetrics = undefined;
+      let litellmMetrics: LiteLLMMetrics | undefined = undefined;
       try {
         litellmMetrics = liteLLMService.getMetrics();
       } catch (error) {
         fastify.log.warn(error, 'Failed to get LiteLLM metrics');
       }
-      
+
       const response: HealthStatus = {
         status: allHealthy ? 'healthy' : 'unhealthy',
         timestamp: new Date().toISOString(),
@@ -133,18 +147,21 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
           litellmMetrics,
         },
       };
-      
+
       // Set appropriate HTTP status
       if (!allHealthy) {
         reply.status(503);
       }
-      
-      fastify.log.debug({
-        healthStatus: response.status,
-        checks,
-        checkDuration,
-      }, 'Health check completed');
-      
+
+      fastify.log.debug(
+        {
+          healthStatus: response.status,
+          checks,
+          checkDuration,
+        },
+        'Health check completed',
+      );
+
       return response;
     },
   });
@@ -163,22 +180,24 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (_request, reply) => {
       try {
         // Check if essential services are ready
         const [dbReady, authReady] = await Promise.allSettled([
           checkDatabaseHealth(),
           checkAuthHealth(),
         ]);
-        
-        const isReady = 
-          dbReady.status === 'fulfilled' && dbReady.value === 'healthy' &&
-          authReady.status === 'fulfilled' && authReady.value === 'healthy';
-        
+
+        const isReady =
+          dbReady.status === 'fulfilled' &&
+          dbReady.value === 'healthy' &&
+          authReady.status === 'fulfilled' &&
+          authReady.value === 'healthy';
+
         if (!isReady) {
           reply.status(503);
         }
-        
+
         return { ready: isReady };
       } catch (error) {
         fastify.log.error(error, 'Readiness check failed');
@@ -202,23 +221,20 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (_request, reply) => {
       // Simple liveness check - just verify the process is running
       // and basic Node.js functions work
       try {
         const memUsage = process.memoryUsage();
         const uptime = process.uptime();
-        
+
         // Basic sanity checks
-        const isAlive = 
-          memUsage.heapUsed > 0 &&
-          uptime > 0 &&
-          Date.now() > 0;
-        
+        const isAlive = memUsage.heapUsed > 0 && uptime > 0 && Date.now() > 0;
+
         if (!isAlive) {
           reply.status(503);
         }
-        
+
         return { alive: isAlive };
       } catch (error) {
         fastify.log.error(error, 'Liveness check failed');
@@ -240,21 +256,21 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    handler: async (request, reply) => {
+    handler: async (_request, reply) => {
       try {
         reply.header('Content-Type', 'text/plain; version=0.0.4; charset=utf-8');
-        
+
         const memUsage = process.memoryUsage();
         const uptime = process.uptime();
         const timestamp = Date.now();
-        
-        let litellmMetrics = {};
+
+        let litellmMetrics: LiteLLMMetrics | null = null;
         try {
           litellmMetrics = liteLLMService.getMetrics();
         } catch (error) {
           fastify.log.warn(error, 'Failed to get LiteLLM metrics for Prometheus');
         }
-        
+
         // Basic application metrics in Prometheus format
         const metrics = [
           '# HELP litemaas_uptime_seconds Application uptime in seconds',
@@ -274,19 +290,19 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
           '',
           '# HELP litemaas_litellm_cache_size LiteLLM cache size',
           '# TYPE litemaas_litellm_cache_size gauge',
-          `litemaas_litellm_cache_size ${litellmMetrics.cacheSize || 0}`,
+          `litemaas_litellm_cache_size ${litellmMetrics?.cacheSize || 0}`,
           '',
           '# HELP litemaas_litellm_circuit_breaker_status LiteLLM circuit breaker status',
           '# TYPE litemaas_litellm_circuit_breaker_status gauge',
-          `litemaas_litellm_circuit_breaker_status{status="open"} ${litellmMetrics.circuitBreakerStatus?.isOpen ? 1 : 0}`,
-          `litemaas_litellm_circuit_breaker_failures_total ${litellmMetrics.circuitBreakerStatus?.failureCount || 0}`,
+          `litemaas_litellm_circuit_breaker_status{status="open"} ${litellmMetrics?.circuitBreakerStatus?.isOpen ? 1 : 0}`,
+          `litemaas_litellm_circuit_breaker_failures_total ${litellmMetrics?.circuitBreakerStatus?.failureCount || 0}`,
           '',
           '# HELP litemaas_timestamp_seconds Current timestamp',
           '# TYPE litemaas_timestamp_seconds gauge',
           `litemaas_timestamp_seconds ${Math.floor(timestamp / 1000)}`,
           '',
         ];
-        
+
         return metrics.join('\n');
       } catch (error) {
         fastify.log.error(error, 'Failed to generate metrics');
@@ -321,7 +337,7 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:health')],
-    handler: async (request, reply) => {
+    handler: async (_request, _reply) => {
       try {
         // Get detailed status for each service
         const services = {
@@ -340,11 +356,11 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
             services: {
               rbac: !!fastify.rbac,
               oauth: !!fastify.oauth,
-              session: !!fastify.session,
+              session: !!fastify.sessionService,
             },
           },
         };
-        
+
         const metrics = {
           uptime: process.uptime(),
           memoryUsage: process.memoryUsage(),
@@ -353,7 +369,7 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
           nodeVersion: process.version,
           pid: process.pid,
         };
-        
+
         const configuration = {
           litellm: {
             baseUrl: liteLLMService.getMetrics().config.baseUrl,
@@ -363,7 +379,7 @@ const healthRoutes: FastifyPluginAsync = async (fastify) => {
           environment: process.env.NODE_ENV || 'development',
           logLevel: process.env.LOG_LEVEL || 'info',
         };
-        
+
         return {
           services,
           metrics,

@@ -1,6 +1,7 @@
-import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyPluginAsync, FastifyRequest, FastifyReply, FastifyError } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
-import { AuthenticatedRequest } from '../types';
+import { AuthenticatedRequest } from '../types/auth.types.js';
+import { QueryParameter } from '../types/common.types.js';
 
 const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
   // Pre-authentication hook for rate limiting by user
@@ -22,7 +23,7 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
       '/openapi.json',
     ];
 
-    const isPublicRoute = publicRoutes.some(route => request.url.startsWith(route));
+    const isPublicRoute = publicRoutes.some((route) => request.url.startsWith(route));
     if (isPublicRoute) {
       return;
     }
@@ -30,14 +31,14 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
     // Try to extract user for rate limiting (but don't enforce authentication yet)
     try {
       let token = request.headers.authorization;
-      
+
       if (token && token.startsWith('Bearer ')) {
         token = token.substring(7);
         const payload = await fastify.tokenService.validateToken(token);
-        
+
         if (payload) {
           (request as AuthenticatedRequest).user = payload;
-          
+
           // Apply user-specific rate limiting
           await fastify.apiKeyRateLimit(request, reply);
         }
@@ -51,7 +52,7 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
   // Post-authentication hook for audit logging
   fastify.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
     const user = (request as AuthenticatedRequest).user;
-    
+
     // Only log authenticated requests
     if (!user || !request.url.startsWith('/api/')) {
       return;
@@ -63,7 +64,7 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
       '/api/auth/profile', // Too frequent
     ];
 
-    const shouldSkip = skipLogging.some(route => request.url.startsWith(route));
+    const shouldSkip = skipLogging.some((route) => request.url.startsWith(route));
     if (shouldSkip) {
       return;
     }
@@ -86,7 +87,7 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
             method: request.method,
             url: request.url,
           },
-        ]
+        ],
       );
     } catch (error) {
       fastify.log.error(error, 'Failed to create audit log');
@@ -94,41 +95,44 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
   });
 
   // Error hook for authentication errors
-  fastify.addHook('onError', async (request: FastifyRequest, reply: FastifyReply, error: any) => {
-    // Log authentication/authorization errors
-    if (error.statusCode === 401 || error.statusCode === 403) {
-      const user = (request as AuthenticatedRequest).user;
-      
-      try {
-        await fastify.dbUtils.query(
-          `INSERT INTO audit_logs (user_id, action, resource_type, ip_address, user_agent, metadata)
+  fastify.addHook(
+    'onError',
+    async (request: FastifyRequest, _reply: FastifyReply, error: FastifyError) => {
+      // Log authentication/authorization errors
+      if (error.statusCode === 401 || error.statusCode === 403) {
+        const user = (request as AuthenticatedRequest).user;
+
+        try {
+          await fastify.dbUtils.query(
+            `INSERT INTO audit_logs (user_id, action, resource_type, ip_address, user_agent, metadata)
            VALUES ($1, $2, $3, $4, $5, $6)`,
-          [
-            user?.userId || null,
-            error.statusCode === 401 ? 'AUTH_FAILED' : 'AUTH_DENIED',
-            'SECURITY',
-            request.ip,
-            request.headers['user-agent'],
-            {
-              error: error.message,
-              statusCode: error.statusCode,
-              method: request.method,
-              url: request.url,
-              userId: user?.userId,
-              userRoles: user?.roles,
-            },
-          ]
-        );
-      } catch (auditError) {
-        fastify.log.error(auditError, 'Failed to create security audit log');
+            [
+              user?.userId || null,
+              error.statusCode === 401 ? 'AUTH_FAILED' : 'AUTH_DENIED',
+              'SECURITY',
+              request.ip,
+              request.headers['user-agent'],
+              {
+                error: error.message,
+                statusCode: error.statusCode,
+                method: request.method,
+                url: request.url,
+                userId: user?.userId,
+                userRoles: user?.roles,
+              },
+            ],
+          );
+        } catch (auditError) {
+          fastify.log.error(auditError, 'Failed to create security audit log');
+        }
       }
-    }
-  });
+    },
+  );
 
   // Request context decorator for user information
-  fastify.decorateRequest('getUserContext', function() {
+  fastify.decorateRequest('getUserContext', function () {
     const user = (this as AuthenticatedRequest).user;
-    
+
     if (!user) {
       return null;
     }
@@ -139,15 +143,15 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
       email: user.email,
       roles: user.roles,
       isAdmin: user.roles.includes('admin'),
-      canWrite: user.roles.some(role => ['admin', 'user'].includes(role)),
-      canRead: user.roles.some(role => ['admin', 'user', 'readonly'].includes(role)),
+      canWrite: user.roles.some((role) => ['admin', 'user'].includes(role)),
+      canRead: user.roles.some((role) => ['admin', 'user', 'readonly'].includes(role)),
     };
   });
 
   // Helper to check if user has permission for resource
-  fastify.decorateRequest('hasPermission', function(permission: string, resourceUserId?: string) {
+  fastify.decorateRequest('hasPermission', function (permission: string, resourceUserId?: string) {
     const user = (this as AuthenticatedRequest).user;
-    
+
     if (!user) {
       return false;
     }
@@ -164,82 +168,84 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
 
     // Check permission based on roles
     const permissions: Record<string, string[]> = {
-      'user': ['read', 'write', 'subscribe', 'usage'],
-      'readonly': ['read', 'usage'],
+      user: ['read', 'write', 'subscribe', 'usage'],
+      readonly: ['read', 'usage'],
     };
 
-    return user.roles.some(role => {
+    return user.roles.some((role) => {
       const rolePermissions = permissions[role] || [];
       return rolePermissions.includes(permission);
     });
   });
 
   // Helper to ensure user owns resource
-  fastify.decorateRequest('ensureResourceOwnership', async function(resourceType: string, resourceId: string) {
-    const user = (this as AuthenticatedRequest).user;
-    
-    if (!user) {
-      throw fastify.createAuthError('Authentication required');
-    }
+  fastify.decorateRequest(
+    'ensureResourceOwnership',
+    async function (resourceType: string, resourceId: string) {
+      const user = (this as AuthenticatedRequest).user;
 
-    // Admin can access all resources
-    if (user.roles.includes('admin')) {
-      return true;
-    }
+      if (!user) {
+        throw fastify.createAuthError('Authentication required');
+      }
 
-    // Check resource ownership based on type
-    let query: string;
-    let params: any[];
+      // Admin can access all resources
+      if (user.roles.includes('admin')) {
+        return true;
+      }
 
-    switch (resourceType) {
-      case 'subscription':
-        query = 'SELECT user_id FROM subscriptions WHERE id = $1';
-        params = [resourceId];
-        break;
-      case 'api_key':
-        query = `SELECT s.user_id 
+      // Check resource ownership based on type
+      let query: string;
+      let params: QueryParameter[];
+
+      switch (resourceType) {
+        case 'subscription':
+          query = 'SELECT user_id FROM subscriptions WHERE id = $1';
+          params = [resourceId];
+          break;
+        case 'api_key':
+          query = `SELECT s.user_id 
                  FROM api_keys ak 
                  JOIN subscriptions s ON ak.subscription_id = s.id 
                  WHERE ak.id = $1`;
-        params = [resourceId];
-        break;
-      case 'usage':
-        query = `SELECT s.user_id 
+          params = [resourceId];
+          break;
+        case 'usage':
+          query = `SELECT s.user_id 
                  FROM usage_logs ul 
                  JOIN subscriptions s ON ul.subscription_id = s.id 
                  WHERE ul.id = $1`;
-        params = [resourceId];
-        break;
-      default:
-        throw fastify.createValidationError(`Unknown resource type: ${resourceType}`);
-    }
+          params = [resourceId];
+          break;
+        default:
+          throw fastify.createValidationError(`Unknown resource type: ${resourceType}`);
+      }
 
-    const resource = await fastify.dbUtils.queryOne(query, params);
-    
-    if (!resource) {
-      throw fastify.createNotFoundError(resourceType);
-    }
+      const resource = await fastify.dbUtils.queryOne(query, params);
 
-    if (resource.user_id !== user.userId) {
-      throw fastify.createForbiddenError('Access denied to resource');
-    }
+      if (!resource) {
+        throw fastify.createNotFoundError(resourceType);
+      }
 
-    return true;
-  });
+      if (resource.user_id !== user.userId) {
+        throw fastify.createForbiddenError('Access denied to resource');
+      }
+
+      return true;
+    },
+  );
 
   // Session validation middleware
-  fastify.decorate('validateSession', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.decorate('validateSession', async (request: FastifyRequest, _reply: FastifyReply) => {
     const user = (request as AuthenticatedRequest).user;
-    
+
     if (!user) {
       throw fastify.createAuthError('Authentication required');
     }
 
     // Check if user is still active
-    const userRecord = await fastify.dbUtils.queryOne(
-      'SELECT is_active FROM users WHERE id = $1',
-      [user.userId]
-    );
+    const userRecord = await fastify.dbUtils.queryOne('SELECT is_active FROM users WHERE id = $1', [
+      user.userId,
+    ]);
 
     if (!userRecord || !userRecord.is_active) {
       throw fastify.createAuthError('User account is disabled');
@@ -257,17 +263,16 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
   // Activity tracking
   fastify.addHook('onResponse', async (request: FastifyRequest, reply: FastifyReply) => {
     const user = (request as AuthenticatedRequest).user;
-    
+
     if (!user || reply.statusCode >= 400) {
       return;
     }
 
     // Update last activity for authenticated users
     try {
-      await fastify.dbUtils.query(
-        'UPDATE users SET last_login_at = NOW() WHERE id = $1',
-        [user.userId]
-      );
+      await fastify.dbUtils.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [
+        user.userId,
+      ]);
     } catch (error) {
       fastify.log.debug(error, 'Failed to update user activity');
     }
@@ -290,7 +295,7 @@ declare module 'fastify' {
     hasPermission(permission: string, resourceUserId?: string): boolean;
     ensureResourceOwnership(resourceType: string, resourceId: string): Promise<boolean>;
   }
-  
+
   interface FastifyInstance {
     validateSession: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }

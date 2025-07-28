@@ -1,3 +1,5 @@
+import { UserMetadata } from './common.types.js';
+
 export interface User {
   id: string;
   username: string;
@@ -51,7 +53,7 @@ export interface Team {
   tpmLimit?: number;
   rpmLimit?: number;
   allowedModels?: string[];
-  metadata?: Record<string, any>;
+  metadata?: UserMetadata;
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
@@ -76,7 +78,7 @@ export interface CreateTeamDto {
   tpmLimit?: number;
   rpmLimit?: number;
   allowedModels?: string[];
-  metadata?: Record<string, any>;
+  metadata?: UserMetadata;
   adminIds?: string[]; // Initial admin user IDs
 }
 
@@ -89,14 +91,16 @@ export interface UpdateTeamDto {
   tpmLimit?: number;
   rpmLimit?: number;
   allowedModels?: string[];
-  metadata?: Record<string, any>;
+  metadata?: UserMetadata;
   isActive?: boolean;
 }
 
 export interface TeamWithMembers extends Team {
-  members: Array<TeamMember & {
-    user: Pick<User, 'id' | 'username' | 'email' | 'fullName'>;
-  }>;
+  members: Array<
+    TeamMember & {
+      user: Pick<User, 'id' | 'username' | 'email' | 'fullName'>;
+    }
+  >;
   memberCount: number;
 }
 
@@ -115,7 +119,7 @@ export interface LiteLLMUserRequest {
   tpm_limit?: number;
   rpm_limit?: number;
   budget_duration?: string;
-  metadata?: Record<string, any>;
+  metadata?: UserMetadata;
 }
 
 export interface LiteLLMUserResponse {
@@ -142,7 +146,7 @@ export interface LiteLLMTeamRequest {
   tpm_limit?: number;
   rpm_limit?: number;
   budget_duration?: string;
-  metadata?: Record<string, any>;
+  metadata?: UserMetadata;
   admins?: string[];
 }
 
@@ -176,7 +180,7 @@ export interface EnhancedUser extends User {
     budget_reset_at?: Date;
     models?: string[];
   };
-  
+
   // Team associations
   teams?: Array<{
     teamId: string;
@@ -184,7 +188,7 @@ export interface EnhancedUser extends User {
     role: 'admin' | 'member' | 'viewer';
     joinedAt: Date;
   }>;
-  
+
   // Budget and usage info
   budgetInfo?: {
     maxBudget?: number;
@@ -193,7 +197,7 @@ export interface EnhancedUser extends User {
     remainingBudget?: number;
     nextResetAt?: Date;
   };
-  
+
   // Sync metadata
   lastSyncAt?: Date;
   syncStatus?: 'synced' | 'pending' | 'error';

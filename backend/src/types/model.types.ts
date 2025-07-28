@@ -104,7 +104,7 @@ export interface EnhancedModel extends Model {
     supports_vision?: boolean;
     supports_assistant_api?: boolean;
   };
-  
+
   // Sync metadata
   lastSyncAt?: Date;
   syncStatus?: 'synced' | 'pending' | 'error';
@@ -133,4 +133,77 @@ export interface ModelSyncResponse {
     error: string;
   }>;
   lastSyncAt: Date;
+}
+
+/**
+ * LiteLLM service configuration
+ */
+export interface LiteLLMConfig {
+  baseUrl: string;
+  apiKey?: string;
+  timeout: number;
+  retryAttempts: number;
+  retryDelay: number;
+  enableMocking: boolean;
+}
+
+/**
+ * LiteLLM health check response
+ */
+export interface LiteLLMHealth {
+  status: 'healthy' | 'unhealthy' | 'degraded';
+  db?: 'connected' | 'disconnected' | 'unknown';
+  redis?: 'connected' | 'disconnected' | 'unknown';
+  litellm_version?: string;
+}
+
+/**
+ * LiteLLM error response
+ */
+export interface LiteLLMError {
+  error?: {
+    message: string;
+    type?: string;
+    code?: string;
+  };
+  detail?: string;
+}
+
+/**
+ * Chat completion request
+ */
+export interface ChatCompletionRequest {
+  model: string;
+  messages: Array<{
+    role: 'system' | 'user' | 'assistant';
+    content: string;
+  }>;
+  max_tokens?: number;
+  temperature?: number;
+  top_p?: number;
+  stream?: boolean;
+  user?: string;
+}
+
+/**
+ * Chat completion response
+ */
+export interface ChatCompletionResponse {
+  id: string;
+  object: 'chat.completion';
+  created: number;
+  model: string;
+  choices: Array<{
+    index: number;
+    message: {
+      role: 'assistant';
+      content: string;
+    };
+    finish_reason: 'stop' | 'length' | 'content_filter' | null;
+  }>;
+  usage: {
+    prompt_tokens: number;
+    completion_tokens: number;
+    total_tokens: number;
+  };
 }

@@ -1,4 +1,4 @@
-import { Type } from '@sinclair/typebox';
+import { Type, TSchema } from '@sinclair/typebox';
 
 // Common schemas for reuse across endpoints
 export const PaginationSchema = Type.Object({
@@ -38,18 +38,22 @@ export const DateQuerySchema = Type.Object({
 });
 
 // Common response wrapper
-export const createPaginatedResponse = <T>(itemSchema: T) => Type.Object({
-  data: Type.Array(itemSchema),
-  pagination: PaginationResponseSchema,
-});
+export const createPaginatedResponse = <T extends TSchema>(itemSchema: T) =>
+  Type.Object({
+    data: Type.Array(itemSchema),
+    pagination: PaginationResponseSchema,
+  });
 
 // Common API response wrapper
-export const createApiResponse = <T>(dataSchema: T) => Type.Object({
-  success: Type.Boolean(),
-  data: Type.Optional(dataSchema),
-  error: Type.Optional(Type.Object({
-    code: Type.String(),
-    message: Type.String(),
-    details: Type.Optional(Type.Record(Type.String(), Type.Any())),
-  })),
-});
+export const createApiResponse = <T extends TSchema>(dataSchema: T) =>
+  Type.Object({
+    success: Type.Boolean(),
+    data: Type.Optional(dataSchema),
+    error: Type.Optional(
+      Type.Object({
+        code: Type.String(),
+        message: Type.String(),
+        details: Type.Optional(Type.Record(Type.String(), Type.Any())),
+      }),
+    ),
+  });

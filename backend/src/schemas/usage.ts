@@ -39,11 +39,7 @@ export const UsageSummarySchema = Type.Object({
   id: Type.String(),
   subscriptionId: Type.String(),
   modelId: Type.String(),
-  periodType: Type.Union([
-    Type.Literal('hour'),
-    Type.Literal('day'),
-    Type.Literal('month'),
-  ]),
+  periodType: Type.Union([Type.Literal('hour'), Type.Literal('day'), Type.Literal('month')]),
   periodStart: TimestampSchema,
   requestCount: Type.Integer({ minimum: 0 }),
   totalTokens: Type.Integer({ minimum: 0 }),
@@ -62,13 +58,15 @@ export const UsageStatisticsSchema = Type.Object({
     tokens: Type.Integer({ minimum: 0 }),
     cost: Type.Number({ minimum: 0 }),
   }),
-  byModel: Type.Array(Type.Object({
-    modelId: Type.String(),
-    modelName: Type.String(),
-    requests: Type.Integer({ minimum: 0 }),
-    tokens: Type.Integer({ minimum: 0 }),
-    cost: Type.Number({ minimum: 0 }),
-  })),
+  byModel: Type.Array(
+    Type.Object({
+      modelId: Type.String(),
+      modelName: Type.String(),
+      requests: Type.Integer({ minimum: 0 }),
+      tokens: Type.Integer({ minimum: 0 }),
+      cost: Type.Number({ minimum: 0 }),
+    }),
+  ),
 });
 
 export const UsageTimeSeriesPointSchema = Type.Object({
@@ -101,10 +99,9 @@ export const UsageTimeSeriesQuerySchema = Type.Composite([
 export const UsageExportQuerySchema = Type.Composite([
   DateQuerySchema,
   Type.Object({
-    format: Type.Optional(Type.Union([
-      Type.Literal('csv'),
-      Type.Literal('json'),
-    ], { default: 'csv' })),
+    format: Type.Optional(
+      Type.Union([Type.Literal('csv'), Type.Literal('json')], { default: 'csv' }),
+    ),
     modelId: Type.Optional(Type.String()),
   }),
 ]);
@@ -115,10 +112,12 @@ export const UsageMetricsSchema = Type.Object({
   totalCost: Type.Number({ minimum: 0 }),
   avgLatency: Type.Number({ minimum: 0 }),
   errorRate: Type.Number({ minimum: 0, maximum: 1 }),
-  topModels: Type.Array(Type.Object({
-    modelId: Type.String(),
-    modelName: Type.String(),
-    usage: Type.Integer({ minimum: 0 }),
-    percentage: Type.Number({ minimum: 0, maximum: 100 }),
-  })),
+  topModels: Type.Array(
+    Type.Object({
+      modelId: Type.String(),
+      modelName: Type.String(),
+      usage: Type.Integer({ minimum: 0 }),
+      percentage: Type.Number({ minimum: 0, maximum: 100 }),
+    }),
+  ),
 });

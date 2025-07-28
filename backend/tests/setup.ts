@@ -1,8 +1,9 @@
 import { beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
-import { FastifyInstance } from 'fastify';
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { createApp } from '../src/app';
 
 declare global {
+  // eslint-disable-next-line no-var
   var testApp: FastifyInstance;
 }
 
@@ -16,19 +17,22 @@ beforeAll(async () => {
   // Register test-specific plugins or overrides
   await global.testApp.register(async function (fastify) {
     // Override authentication for testing
-    fastify.decorate('authenticateWithDevBypass', async (request: any, reply: any) => {
-      // Mock user for testing
-      request.user = mockUser;
-    });
+    fastify.decorate(
+      'authenticateWithDevBypass',
+      async (request: FastifyRequest, _reply: FastifyReply) => {
+        // Mock user for testing
+        request.user = mockUser;
+      },
+    );
 
-    fastify.decorate('authenticate', async (request: any, reply: any) => {
+    fastify.decorate('authenticate', async (request: FastifyRequest, _reply: FastifyReply) => {
       // Mock user for testing
       request.user = mockUser;
     });
 
     // Override database connection for testing
     fastify.decorate('db', {
-      query: async (text: string, params?: any[]) => {
+      query: async (_text: string, _params?: unknown[]) => {
         // Mock database queries for testing
         return { rows: [], rowCount: 0 };
       },
@@ -42,19 +46,19 @@ beforeAll(async () => {
 
     // Override dbUtils for testing
     fastify.decorate('dbUtils', {
-      async query(text: string, params?: any[]) {
+      async query(_text: string, _params?: unknown[]) {
         // Mock database queries for testing
-        return { rows: [], rowCount: 0 };
+        return { rows: [], rowCount: 0, command: '', oid: 0, fields: [] };
       },
-      async queryOne(text: string, params?: any[]) {
+      async queryOne(_text: string, _params?: unknown[]) {
         // Mock single row query for testing
         return null;
       },
-      async queryMany(text: string, params?: any[]) {
+      async queryMany(_text: string, _params?: unknown[]) {
         // Mock multiple rows query for testing
         return [];
       },
-      async withTransaction<T>(callback: (client: any) => Promise<T>): Promise<T> {
+      async withTransaction<T>(callback: (client: unknown) => Promise<T>): Promise<T> {
         // Simulate transaction in mock mode
         const mockClient = { query: () => Promise.resolve({ rows: [] }) };
         return callback(mockClient);
@@ -63,19 +67,19 @@ beforeAll(async () => {
 
     // Mock Fastify error methods
     fastify.decorate('createError', (statusCode: number, message: string) => {
-      const error = new Error(message) as any;
+      const error = new Error(message) as Error & { statusCode: number };
       error.statusCode = statusCode;
       return error;
     });
 
     fastify.decorate('createNotFoundError', (resource: string) => {
-      const error = new Error(`${resource} not found`) as any;
+      const error = new Error(`${resource} not found`) as Error & { statusCode: number };
       error.statusCode = 404;
       return error;
     });
 
     fastify.decorate('createValidationError', (message: string) => {
-      const error = new Error(message) as any;
+      const error = new Error(message) as Error & { statusCode: number };
       error.statusCode = 400;
       return error;
     });
@@ -83,7 +87,7 @@ beforeAll(async () => {
     // Override LiteLLM service for testing
     fastify.decorate('litellm', {
       getModels: async () => mockModels,
-      getModel: async (id: string) => mockModels.find(m => m.id === id),
+      getModel: async (id: string) => mockModels.find((m) => m.id === id),
       createCompletion: async () => mockCompletion,
     });
   });

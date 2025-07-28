@@ -3,28 +3,9 @@ import { LiteLLMService } from './litellm.service.js';
 import { ApiKeyService } from './api-key.service.js';
 import { SubscriptionService } from './subscription.service.js';
 import { TeamService } from './team.service.js';
-import {
-  EnhancedSubscription,
-  SubscriptionSyncRequest,
-  SubscriptionSyncResponse,
-} from '../types/subscription.types.js';
-import {
-  EnhancedApiKey,
-  ApiKeySpendInfo,
-} from '../types/api-key.types.js';
-import {
-  TeamWithMembers,
-  TeamSyncRequest,
-  TeamSyncResponse,
-  EnhancedUser,
-  UserBudgetInfo,
-} from '../types/user.types.js';
-import {
-  LiteLLMModel,
-  EnhancedModel,
-  ModelSyncRequest,
-  ModelSyncResponse,
-} from '../types/model.types.js';
+import { EnhancedSubscription } from '../types/subscription.types.js';
+import { EnhancedApiKey } from '../types/api-key.types.js';
+import { TeamWithMembers } from '../types/user.types.js';
 
 export interface GlobalSyncRequest {
   forceSync?: boolean;
@@ -115,9 +96,9 @@ export interface ConflictResolution {
   entity: 'user' | 'team' | 'subscription' | 'api_key';
   entityId: string;
   conflictType: 'budget_mismatch' | 'usage_mismatch' | 'permission_mismatch' | 'data_inconsistency';
-  liteMaaSValue: any;
-  liteLLMValue: any;
-  resolvedValue: any;
+  liteMaaSValue: unknown;
+  liteLLMValue: unknown;
+  resolvedValue: unknown;
   resolution: 'litemaas_wins' | 'litellm_wins' | 'merge' | 'manual_required';
   resolvedAt: Date;
   resolvedBy?: string;
@@ -142,7 +123,7 @@ export class LiteLLMIntegrationService {
   private apiKeyService: ApiKeyService;
   private subscriptionService: SubscriptionService;
   private teamService: TeamService;
-  
+
   private autoSyncConfig: AutoSyncConfig = {
     enabled: process.env.LITELLM_AUTO_SYNC === 'true',
     interval: parseInt(process.env.LITELLM_SYNC_INTERVAL || '60'), // 1 hour
@@ -151,7 +132,12 @@ export class LiteLLMIntegrationService {
     syncSubscriptions: true,
     syncApiKeys: true,
     syncModels: true,
-    conflictResolution: (process.env.LITELLM_CONFLICT_RESOLUTION as any) || 'litellm_wins',
+    conflictResolution:
+      (process.env.LITELLM_CONFLICT_RESOLUTION as
+        | 'litemaas_wins'
+        | 'litellm_wins'
+        | 'merge'
+        | 'manual') || 'litellm_wins',
     retryAttempts: 3,
     retryDelay: 30,
   };
@@ -166,12 +152,13 @@ export class LiteLLMIntegrationService {
     liteLLMService?: LiteLLMService,
     apiKeyService?: ApiKeyService,
     subscriptionService?: SubscriptionService,
-    teamService?: TeamService
+    teamService?: TeamService,
   ) {
     this.fastify = fastify;
     this.liteLLMService = liteLLMService || new LiteLLMService(fastify);
     this.apiKeyService = apiKeyService || new ApiKeyService(fastify, this.liteLLMService);
-    this.subscriptionService = subscriptionService || new SubscriptionService(fastify, this.liteLLMService);
+    this.subscriptionService =
+      subscriptionService || new SubscriptionService(fastify, this.liteLLMService);
     this.teamService = teamService || new TeamService(fastify, this.liteLLMService);
 
     // Initialize auto-sync if enabled
@@ -182,7 +169,7 @@ export class LiteLLMIntegrationService {
 
   private initializeAutoSync(): void {
     const intervalMs = this.autoSyncConfig.interval * 60 * 1000;
-    
+
     setInterval(async () => {
       if (!this.syncInProgress) {
         try {
@@ -201,10 +188,13 @@ export class LiteLLMIntegrationService {
       }
     }, intervalMs);
 
-    this.fastify.log.info({
-      interval: this.autoSyncConfig.interval,
-      enabled: this.autoSyncConfig.enabled,
-    }, 'Auto-sync initialized');
+    this.fastify.log.info(
+      {
+        interval: this.autoSyncConfig.interval,
+        enabled: this.autoSyncConfig.enabled,
+      },
+      'Auto-sync initialized',
+    );
   }
 
   async performGlobalSync(request: GlobalSyncRequest = {}): Promise<GlobalSyncResponse> {
@@ -214,9 +204,9 @@ export class LiteLLMIntegrationService {
 
     const syncId = `sync-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
     const startedAt = new Date();
-    
+
     this.syncInProgress = true;
-    
+
     try {
       this.fastify.log.info({ syncId, request }, 'Starting global sync operation');
 
@@ -245,7 +235,10 @@ export class LiteLLMIntegrationService {
 
       // Sync subscriptions
       if (request.syncSubscriptions !== false) {
-        response.results.subscriptions = await this.syncSubscriptions(request.forceSync, request.userId);
+        response.results.subscriptions = await this.syncSubscriptions(
+          request.forceSync,
+          request.userId,
+        );
       }
 
       // Sync API keys
@@ -258,7 +251,9 @@ export class LiteLLMIntegrationService {
       response.duration = completedAt.getTime() - startedAt.getTime();
 
       // Check if any sync failed
-      const hasErrors = Object.values(response.results).some(result => result && result.errors > 0);
+      const hasErrors = Object.values(response.results).some(
+        (result) => result && result.errors > 0,
+      );
       response.success = !hasErrors;
 
       // Store sync history
@@ -282,15 +277,18 @@ export class LiteLLMIntegrationService {
             duration: response.duration,
             success: response.success,
           },
-        ]
+        ],
       );
 
-      this.fastify.log.info({
-        syncId,
-        duration: response.duration,
-        success: response.success,
-        results: response.results,
-      }, 'Global sync completed');
+      this.fastify.log.info(
+        {
+          syncId,
+          duration: response.duration,
+          success: response.success,
+          results: response.results,
+        },
+        'Global sync completed',
+      );
 
       return response;
     } catch (error) {
@@ -300,7 +298,7 @@ export class LiteLLMIntegrationService {
         startedAt,
         completedAt,
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         results: {},
         duration: completedAt.getTime() - startedAt.getTime(),
       };
@@ -316,10 +314,10 @@ export class LiteLLMIntegrationService {
   private async syncModels(forceSync = false): Promise<GlobalSyncResponse['results']['models']> {
     try {
       this.fastify.log.debug('Starting models sync');
-      
+
       // Get models from LiteLLM
       const liteLLMModels = await this.liteLLMService.getModels({ refresh: forceSync });
-      
+
       const results = {
         total: liteLLMModels.length,
         synced: 0,
@@ -332,7 +330,7 @@ export class LiteLLMIntegrationService {
           // Check if model exists locally
           const existingModel = await this.fastify.dbUtils.queryOne(
             `SELECT * FROM models WHERE id = $1`,
-            [model.id]
+            [model.model_info.id],
           );
 
           if (existingModel) {
@@ -344,14 +342,14 @@ export class LiteLLMIntegrationService {
                    litellm_provider = $6, updated_at = CURRENT_TIMESTAMP
                WHERE id = $7`,
               [
-                model.id,
-                model.owned_by,
-                model.max_tokens,
-                model.supports_function_calling,
-                model.supports_vision,
-                model.litellm_provider,
-                model.id,
-              ]
+                model.model_name,
+                model.litellm_params.custom_llm_provider,
+                model.model_info.max_tokens,
+                model.model_info.supports_function_calling,
+                model.model_info.supports_vision,
+                model.litellm_params.custom_llm_provider,
+                model.model_info.id,
+              ],
             );
           } else {
             // Create new model
@@ -361,24 +359,28 @@ export class LiteLLMIntegrationService {
                 supports_vision, litellm_provider, is_active
               ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
               [
-                model.id,
-                model.id,
-                model.owned_by,
-                model.max_tokens,
-                model.supports_function_calling,
-                model.supports_vision,
-                model.litellm_provider,
+                model.model_info.id,
+                model.model_name,
+                model.litellm_params.custom_llm_provider,
+                model.model_info.max_tokens,
+                model.model_info.supports_function_calling,
+                model.model_info.supports_vision,
+                model.litellm_params.custom_llm_provider,
                 true,
-              ]
+              ],
             );
           }
 
           results.synced++;
-          results.details.push({ id: model.id, success: true });
+          results.details.push({ id: model.model_info.id, success: true });
         } catch (error) {
           results.errors++;
-          results.details.push({ id: model.id, success: false, error: error.message });
-          this.fastify.log.error({ modelId: model.id, error }, 'Failed to sync model');
+          results.details.push({
+            id: model.model_info.id,
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          this.fastify.log.error({ modelId: model.model_info.id, error }, 'Failed to sync model');
         }
       }
 
@@ -390,17 +392,26 @@ export class LiteLLMIntegrationService {
         total: 0,
         synced: 0,
         errors: 1,
-        details: [{ id: 'global', success: false, error: error.message }],
+        details: [
+          {
+            id: 'global',
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        ],
       };
     }
   }
 
-  private async syncTeams(forceSync = false, teamId?: string): Promise<GlobalSyncResponse['results']['teams']> {
+  private async syncTeams(
+    forceSync = false,
+    teamId?: string,
+  ): Promise<GlobalSyncResponse['results']['teams']> {
     try {
       this.fastify.log.debug({ teamId }, 'Starting teams sync');
 
       let teams: TeamWithMembers[];
-      
+
       if (teamId) {
         const team = await this.teamService.getTeam(teamId);
         teams = team ? [team] : [];
@@ -424,7 +435,7 @@ export class LiteLLMIntegrationService {
             const syncResponse = await this.teamService.syncTeamWithLiteLLM(
               team.id,
               team.createdBy, // Use creator as admin for sync
-              { forceSync, syncBudget: true, syncMembers: true, syncUsage: true }
+              { forceSync, syncBudget: true, syncMembers: true, syncUsage: true },
             );
 
             if (syncResponse.success) {
@@ -436,15 +447,19 @@ export class LiteLLMIntegrationService {
             }
           } else {
             // Team not integrated with LiteLLM - skip or create integration
-            results.details.push({ 
-              id: team.id, 
-              success: false, 
-              error: 'Team not integrated with LiteLLM' 
+            results.details.push({
+              id: team.id,
+              success: false,
+              error: 'Team not integrated with LiteLLM',
             });
           }
         } catch (error) {
           results.errors++;
-          results.details.push({ id: team.id, success: false, error: error.message });
+          results.details.push({
+            id: team.id,
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          });
           this.fastify.log.error({ teamId: team.id, error }, 'Failed to sync team');
         }
       }
@@ -457,27 +472,36 @@ export class LiteLLMIntegrationService {
         total: 0,
         synced: 0,
         errors: 1,
-        details: [{ id: 'global', success: false, error: error.message }],
+        details: [
+          {
+            id: 'global',
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        ],
       };
     }
   }
 
-  private async syncUsers(forceSync = false, userId?: string): Promise<GlobalSyncResponse['results']['users']> {
+  private async syncUsers(
+    _forceSync = false,
+    userId?: string,
+  ): Promise<GlobalSyncResponse['results']['users']> {
     try {
       this.fastify.log.debug({ userId }, 'Starting users sync');
 
-      let users: any[];
+      let users: { id: string; username: string; email: string; [key: string]: unknown }[];
 
       if (userId) {
-        const user = await this.fastify.dbUtils.queryOne(
+        const user = (await this.fastify.dbUtils.queryOne(
           `SELECT * FROM users WHERE id = $1 AND is_active = true`,
-          [userId]
-        );
+          [userId],
+        )) as { id: string; username: string; email: string; [key: string]: unknown } | null;
         users = user ? [user] : [];
       } else {
-        users = await this.fastify.dbUtils.queryMany(
-          `SELECT * FROM users WHERE is_active = true LIMIT 1000`
-        );
+        users = (await this.fastify.dbUtils.queryMany(
+          `SELECT * FROM users WHERE is_active = true LIMIT 1000`,
+        )) as { id: string; username: string; email: string; [key: string]: unknown }[];
       }
 
       const results = {
@@ -515,19 +539,18 @@ export class LiteLLMIntegrationService {
                  last_sync_at = CURRENT_TIMESTAMP,
                  sync_status = 'synced'
              WHERE id = $4`,
-            [
-              liteLLMUser.user_id,
-              liteLLMUser.max_budget,
-              liteLLMUser.spend || 0,
-              user.id,
-            ]
+            [liteLLMUser.user_id, liteLLMUser.max_budget, liteLLMUser.spend || 0, user.id],
           );
 
           results.synced++;
           results.details.push({ id: user.id, success: true });
         } catch (error) {
           results.errors++;
-          results.details.push({ id: user.id, success: false, error: error.message });
+          results.details.push({
+            id: user.id,
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          });
           this.fastify.log.error({ userId: user.id, error }, 'Failed to sync user');
         }
       }
@@ -540,19 +563,30 @@ export class LiteLLMIntegrationService {
         total: 0,
         synced: 0,
         errors: 1,
-        details: [{ id: 'global', success: false, error: error.message }],
+        details: [
+          {
+            id: 'global',
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        ],
       };
     }
   }
 
-  private async syncSubscriptions(forceSync = false, userId?: string): Promise<GlobalSyncResponse['results']['subscriptions']> {
+  private async syncSubscriptions(
+    forceSync = false,
+    userId?: string,
+  ): Promise<GlobalSyncResponse['results']['subscriptions']> {
     try {
       this.fastify.log.debug({ userId }, 'Starting subscriptions sync');
 
       let subscriptions: EnhancedSubscription[];
 
       if (userId) {
-        const subsResult = await this.subscriptionService.getUserSubscriptions(userId, { limit: 1000 });
+        const subsResult = await this.subscriptionService.getUserSubscriptions(userId, {
+          limit: 1000,
+        });
         subscriptions = subsResult.data;
       } else {
         // Mock implementation - in real scenario would get all subscriptions
@@ -573,7 +607,7 @@ export class LiteLLMIntegrationService {
             const syncResponse = await this.subscriptionService.syncSubscriptionWithLiteLLM(
               subscription.id,
               subscription.userId,
-              { forceSync, syncBudget: true, syncUsage: true, syncRateLimits: true }
+              { forceSync, syncBudget: true, syncUsage: true, syncRateLimits: true },
             );
 
             if (syncResponse.success) {
@@ -581,19 +615,30 @@ export class LiteLLMIntegrationService {
               results.details.push({ id: subscription.id, success: true });
             } else {
               results.errors++;
-              results.details.push({ id: subscription.id, success: false, error: syncResponse.error });
+              results.details.push({
+                id: subscription.id,
+                success: false,
+                error: syncResponse.error,
+              });
             }
           } else {
-            results.details.push({ 
-              id: subscription.id, 
-              success: false, 
-              error: 'Subscription not integrated with LiteLLM' 
+            results.details.push({
+              id: subscription.id,
+              success: false,
+              error: 'Subscription not integrated with LiteLLM',
             });
           }
         } catch (error) {
           results.errors++;
-          results.details.push({ id: subscription.id, success: false, error: error.message });
-          this.fastify.log.error({ subscriptionId: subscription.id, error }, 'Failed to sync subscription');
+          results.details.push({
+            id: subscription.id,
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          });
+          this.fastify.log.error(
+            { subscriptionId: subscription.id, error },
+            'Failed to sync subscription',
+          );
         }
       }
 
@@ -605,12 +650,21 @@ export class LiteLLMIntegrationService {
         total: 0,
         synced: 0,
         errors: 1,
-        details: [{ id: 'global', success: false, error: error.message }],
+        details: [
+          {
+            id: 'global',
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        ],
       };
     }
   }
 
-  private async syncApiKeys(forceSync = false, userId?: string): Promise<GlobalSyncResponse['results']['apiKeys']> {
+  private async syncApiKeys(
+    _forceSync = false,
+    userId?: string,
+  ): Promise<GlobalSyncResponse['results']['apiKeys']> {
     try {
       this.fastify.log.debug({ userId }, 'Starting API keys sync');
 
@@ -635,23 +689,27 @@ export class LiteLLMIntegrationService {
         try {
           if (apiKey.liteLLMKeyId) {
             // Sync API key with LiteLLM
-            const syncedKey = await this.apiKeyService.syncApiKeyWithLiteLLM(
+            await this.apiKeyService.syncApiKeyWithLiteLLM(
               apiKey.id,
-              userId || apiKey.subscriptionId // Use subscription ID as fallback
+              userId || apiKey.userId, // Use API key owner as fallback
             );
 
             results.synced++;
             results.details.push({ id: apiKey.id, success: true });
           } else {
-            results.details.push({ 
-              id: apiKey.id, 
-              success: false, 
-              error: 'API key not integrated with LiteLLM' 
+            results.details.push({
+              id: apiKey.id,
+              success: false,
+              error: 'API key not integrated with LiteLLM',
             });
           }
         } catch (error) {
           results.errors++;
-          results.details.push({ id: apiKey.id, success: false, error: error.message });
+          results.details.push({
+            id: apiKey.id,
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          });
           this.fastify.log.error({ apiKeyId: apiKey.id, error }, 'Failed to sync API key');
         }
       }
@@ -664,21 +722,27 @@ export class LiteLLMIntegrationService {
         total: 0,
         synced: 0,
         errors: 1,
-        details: [{ id: 'global', success: false, error: error.message }],
+        details: [
+          {
+            id: 'global',
+            success: false,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        ],
       };
     }
   }
 
   async getIntegrationHealth(): Promise<IntegrationHealthCheck> {
     const startTime = Date.now();
-    
+
     try {
       // Check LiteLLM connection
       const health = await this.liteLLMService.getHealth();
       const responseTime = Date.now() - startTime;
 
       const liteLLMConnection = {
-        status: health.status === 'healthy' ? 'healthy' as const : 'unhealthy' as const,
+        status: health.status === 'healthy' ? ('healthy' as const) : ('unhealthy' as const),
         responseTime,
         lastChecked: new Date(),
       };
@@ -687,11 +751,11 @@ export class LiteLLMIntegrationService {
       const lastSync = this.syncHistory[0];
       const syncStatus = {
         lastGlobalSync: lastSync?.completedAt,
-        nextScheduledSync: this.autoSyncConfig.enabled 
+        nextScheduledSync: this.autoSyncConfig.enabled
           ? new Date(Date.now() + this.autoSyncConfig.interval * 60 * 1000)
           : undefined,
         pendingSyncs: this.syncInProgress ? 1 : 0,
-        failedSyncs: this.syncHistory.filter(s => !s.success).length,
+        failedSyncs: this.syncHistory.filter((s) => !s.success).length,
       };
 
       // Mock data consistency check (in real implementation, would query database)
@@ -727,17 +791,17 @@ export class LiteLLMIntegrationService {
       return healthCheck;
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      
+
       const healthCheck: IntegrationHealthCheck = {
         liteLLMConnection: {
           status: 'unhealthy',
           responseTime,
           lastChecked: new Date(),
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
         },
         syncStatus: {
           pendingSyncs: 0,
-          failedSyncs: this.syncHistory.filter(s => !s.success).length,
+          failedSyncs: this.syncHistory.filter((s) => !s.success).length,
         },
         dataConsistency: {
           usersInSync: 0,
@@ -769,15 +833,18 @@ export class LiteLLMIntegrationService {
     entity: ConflictResolution['entity'],
     entityId: string,
     resolution: ConflictResolution['resolution'],
-    resolvedBy?: string
+    resolvedBy?: string,
   ): Promise<ConflictResolution> {
     try {
-      this.fastify.log.info({
-        entity,
-        entityId,
-        resolution,
-        resolvedBy,
-      }, 'Resolving integration conflict');
+      this.fastify.log.info(
+        {
+          entity,
+          entityId,
+          resolution,
+          resolvedBy,
+        },
+        'Resolving integration conflict',
+      );
 
       // Mock conflict resolution - in real implementation would:
       // 1. Identify the specific conflict
@@ -806,8 +873,8 @@ export class LiteLLMIntegrationService {
           'CONFLICT_RESOLUTION',
           'INTEGRATION',
           entityId,
-          conflictResolution,
-        ]
+          JSON.stringify(conflictResolution),
+        ],
       );
 
       return conflictResolution;
@@ -827,11 +894,14 @@ export class LiteLLMIntegrationService {
 
   async updateAutoSyncConfig(config: Partial<AutoSyncConfig>): Promise<AutoSyncConfig> {
     this.autoSyncConfig = { ...this.autoSyncConfig, ...config };
-    
-    this.fastify.log.info({
-      oldConfig: this.autoSyncConfig,
-      newConfig: config,
-    }, 'Auto-sync configuration updated');
+
+    this.fastify.log.info(
+      {
+        oldConfig: this.autoSyncConfig,
+        newConfig: config,
+      },
+      'Auto-sync configuration updated',
+    );
 
     return this.autoSyncConfig;
   }
@@ -845,13 +915,15 @@ export class LiteLLMIntegrationService {
   }
 
   // Utility method for monitoring and alerting
-  async getSystemAlerts(): Promise<Array<{
-    type: 'sync_failure' | 'connection_issue' | 'data_inconsistency' | 'budget_alert';
-    severity: 'low' | 'medium' | 'high' | 'critical';
-    message: string;
-    createdAt: Date;
-    entityId?: string;
-  }>> {
+  async getSystemAlerts(): Promise<
+    Array<{
+      type: 'sync_failure' | 'connection_issue' | 'data_inconsistency' | 'budget_alert';
+      severity: 'low' | 'medium' | 'high' | 'critical';
+      message: string;
+      createdAt: Date;
+      entityId?: string;
+    }>
+  > {
     const alerts = [];
     const health = await this.getIntegrationHealth();
 
@@ -876,10 +948,11 @@ export class LiteLLMIntegrationService {
     }
 
     // Data inconsistency alerts
-    const totalInconsistent = health.dataConsistency.usersOutOfSync + 
-                             health.dataConsistency.teamsOutOfSync + 
-                             health.dataConsistency.subscriptionsOutOfSync + 
-                             health.dataConsistency.apiKeysOutOfSync;
+    const totalInconsistent =
+      health.dataConsistency.usersOutOfSync +
+      health.dataConsistency.teamsOutOfSync +
+      health.dataConsistency.subscriptionsOutOfSync +
+      health.dataConsistency.apiKeysOutOfSync;
 
     if (totalInconsistent > 10) {
       alerts.push({

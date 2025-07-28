@@ -1,5 +1,6 @@
-import { FastifyPluginAsync } from 'fastify';
+import { FastifyPluginAsync, FastifyInstance } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
+import { BaseMetadata } from '../types/common.types';
 
 export interface SubscriptionHookEvent {
   subscriptionId: string;
@@ -7,7 +8,7 @@ export interface SubscriptionHookEvent {
   modelId: string;
   previousStatus?: string;
   newStatus: string;
-  metadata?: Record<string, any>;
+  metadata?: BaseMetadata;
   timestamp: Date;
 }
 
@@ -17,15 +18,19 @@ export interface SubscriptionHooks {
   onSubscriptionSuspended?: (event: SubscriptionHookEvent) => Promise<void>;
   onSubscriptionCancelled?: (event: SubscriptionHookEvent) => Promise<void>;
   onSubscriptionExpired?: (event: SubscriptionHookEvent) => Promise<void>;
-  onQuotaExceeded?: (event: SubscriptionHookEvent & { quotaType: 'requests' | 'tokens' }) => Promise<void>;
-  onQuotaWarning?: (event: SubscriptionHookEvent & { quotaType: 'requests' | 'tokens'; threshold: number }) => Promise<void>;
+  onQuotaExceeded?: (
+    event: SubscriptionHookEvent & { quotaType: 'requests' | 'tokens' },
+  ) => Promise<void>;
+  onQuotaWarning?: (
+    event: SubscriptionHookEvent & { quotaType: 'requests' | 'tokens'; threshold: number },
+  ) => Promise<void>;
 }
 
 class SubscriptionHookManager {
   private hooks: SubscriptionHooks = {};
-  private fastify: any;
+  private fastify: FastifyInstance;
 
-  constructor(fastify: any) {
+  constructor(fastify: FastifyInstance) {
     this.fastify = fastify;
     this.setupDefaultHooks();
   }
@@ -36,24 +41,51 @@ class SubscriptionHookManager {
 
   async triggerHook(
     hookName: keyof SubscriptionHooks,
-    event: SubscriptionHookEvent | (SubscriptionHookEvent & { quotaType: 'requests' | 'tokens'; threshold?: number })
+    event:
+      | SubscriptionHookEvent
+      | (SubscriptionHookEvent & { quotaType: 'requests' | 'tokens'; threshold?: number }),
   ): Promise<void> {
     const hook = this.hooks[hookName];
     if (hook) {
       try {
-        await hook(event as any);
-        this.fastify.log.debug({
-          hookName,
-          subscriptionId: event.subscriptionId,
-          userId: event.userId,
-        }, 'Subscription hook executed successfully');
+        // Type assertion to handle the union type properly
+        if (hookName === 'onQuotaExceeded' || hookName === 'onQuotaWarning') {
+          await (
+            hook as (
+              event: SubscriptionHookEvent & {
+                quotaType: 'requests' | 'tokens';
+                threshold?: number;
+              },
+            ) => Promise<void>
+          )(
+            event as SubscriptionHookEvent & {
+              quotaType: 'requests' | 'tokens';
+              threshold?: number;
+            },
+          );
+        } else {
+          await (hook as (event: SubscriptionHookEvent) => Promise<void>)(
+            event as SubscriptionHookEvent,
+          );
+        }
+        this.fastify.log.debug(
+          {
+            hookName,
+            subscriptionId: event.subscriptionId,
+            userId: event.userId,
+          },
+          'Subscription hook executed successfully',
+        );
       } catch (error) {
-        this.fastify.log.error({
-          error,
-          hookName,
-          subscriptionId: event.subscriptionId,
-          userId: event.userId,
-        }, 'Subscription hook execution failed');
+        this.fastify.log.error(
+          {
+            error,
+            hookName,
+            subscriptionId: event.subscriptionId,
+            userId: event.userId,
+          },
+          'Subscription hook execution failed',
+        );
       }
     }
   }
@@ -96,9 +128,9 @@ class SubscriptionHookManager {
       },
 
       onQuotaWarning: async (event) => {
-        await this.logSubscriptionEvent(event, 'QUOTA_WARNING', { 
-          quotaType: event.quotaType, 
-          threshold: event.threshold 
+        await this.logSubscriptionEvent(event, 'QUOTA_WARNING', {
+          quotaType: event.quotaType,
+          threshold: event.threshold,
         });
         await this.sendNotification(event, 'quota_warning');
       },
@@ -108,7 +140,7 @@ class SubscriptionHookManager {
   private async logSubscriptionEvent(
     event: SubscriptionHookEvent,
     action: string,
-    additionalMetadata: Record<string, any> = {}
+    additionalMetadata: BaseMetadata = {},
   ): Promise<void> {
     try {
       await this.fastify.dbUtils.query(
@@ -126,7 +158,7 @@ class SubscriptionHookManager {
             previousStatus: event.previousStatus,
             newStatus: event.newStatus,
           },
-        ]
+        ],
       );
     } catch (error) {
       this.fastify.log.error(error, 'Failed to log subscription event');
@@ -135,18 +167,21 @@ class SubscriptionHookManager {
 
   private async sendNotification(
     event: SubscriptionHookEvent,
-    notificationType: string
+    notificationType: string,
   ): Promise<void> {
     try {
       // In a real implementation, this would integrate with a notification service
       // For now, we'll just log the notification
-      this.fastify.log.info({
-        userId: event.userId,
-        subscriptionId: event.subscriptionId,
-        modelId: event.modelId,
-        notificationType,
-        status: event.newStatus,
-      }, 'Subscription notification sent');
+      this.fastify.log.info(
+        {
+          userId: event.userId,
+          subscriptionId: event.subscriptionId,
+          modelId: event.modelId,
+          notificationType,
+          status: event.newStatus,
+        },
+        'Subscription notification sent',
+      );
 
       // Could integrate with email service, Slack, etc.
       // await this.emailService.send({
@@ -164,22 +199,25 @@ class SubscriptionHookManager {
       // Set up monitoring thresholds for quota warnings
       const subscription = await this.fastify.dbUtils.queryOne(
         'SELECT quota_requests, quota_tokens FROM subscriptions WHERE id = $1',
-        [event.subscriptionId]
+        [event.subscriptionId],
       );
 
       if (subscription) {
         // Schedule quota warning checks at 80% and 90% thresholds
         const warningThresholds = [0.8, 0.9];
-        
+
         for (const threshold of warningThresholds) {
           // In a real implementation, you might use a job queue or cron jobs
           // For now, we'll just log the monitoring setup
-          this.fastify.log.debug({
-            subscriptionId: event.subscriptionId,
-            threshold,
-            requestThreshold: Math.floor(subscription.quota_requests * threshold),
-            tokenThreshold: Math.floor(subscription.quota_tokens * threshold),
-          }, 'Usage monitoring threshold configured');
+          this.fastify.log.debug(
+            {
+              subscriptionId: event.subscriptionId,
+              threshold,
+              requestThreshold: Math.floor(subscription.quota_requests * threshold),
+              tokenThreshold: Math.floor(subscription.quota_tokens * threshold),
+            },
+            'Usage monitoring threshold configured',
+          );
         }
       }
     } catch (error) {
@@ -193,12 +231,15 @@ class SubscriptionHookManager {
         `UPDATE api_keys 
          SET is_active = false
          WHERE subscription_id = $1 AND is_active = true`,
-        [event.subscriptionId]
+        [event.subscriptionId],
       );
 
-      this.fastify.log.info({
-        subscriptionId: event.subscriptionId,
-      }, 'API keys disabled for suspended subscription');
+      this.fastify.log.info(
+        {
+          subscriptionId: event.subscriptionId,
+        },
+        'API keys disabled for suspended subscription',
+      );
     } catch (error) {
       this.fastify.log.error(error, 'Failed to disable API keys');
     }
@@ -216,16 +257,19 @@ class SubscriptionHookManager {
       // - Scheduled jobs
       // - External service registrations
 
-      this.fastify.log.info({
-        subscriptionId: event.subscriptionId,
-      }, 'Subscription resources cleaned up');
+      this.fastify.log.info(
+        {
+          subscriptionId: event.subscriptionId,
+        },
+        'Subscription resources cleaned up',
+      );
     } catch (error) {
       this.fastify.log.error(error, 'Failed to cleanup subscription resources');
     }
   }
 
   private async suspendSubscriptionForQuotaExceeded(
-    event: SubscriptionHookEvent & { quotaType: 'requests' | 'tokens' }
+    event: SubscriptionHookEvent & { quotaType: 'requests' | 'tokens' },
   ): Promise<void> {
     try {
       // Auto-suspend subscription when quota is exceeded
@@ -233,13 +277,16 @@ class SubscriptionHookManager {
         `UPDATE subscriptions 
          SET status = 'suspended', updated_at = CURRENT_TIMESTAMP
          WHERE id = $1 AND status = 'active'`,
-        [event.subscriptionId]
+        [event.subscriptionId],
       );
 
-      this.fastify.log.warn({
-        subscriptionId: event.subscriptionId,
-        quotaType: event.quotaType,
-      }, 'Subscription auto-suspended due to quota exceeded');
+      this.fastify.log.warn(
+        {
+          subscriptionId: event.subscriptionId,
+          quotaType: event.quotaType,
+        },
+        'Subscription auto-suspended due to quota exceeded',
+      );
     } catch (error) {
       this.fastify.log.error(error, 'Failed to suspend subscription for quota exceeded');
     }
@@ -247,13 +294,16 @@ class SubscriptionHookManager {
 
   async checkQuotaThresholds(subscriptionId: string): Promise<void> {
     try {
-      const subscription = await this.fastify.dbUtils.queryOne(`
+      const subscription = await this.fastify.dbUtils.queryOne(
+        `
         SELECT s.*, u.id as user_id, m.id as model_id
         FROM subscriptions s
         JOIN users u ON s.user_id = u.id
         JOIN models m ON s.model_id = m.id
         WHERE s.id = $1 AND s.status = 'active'
-      `, [subscriptionId]);
+      `,
+        [subscriptionId],
+      );
 
       if (!subscription) {
         return;
@@ -287,17 +337,20 @@ class SubscriptionHookManager {
 
       // Check for warning thresholds (80%, 90%)
       const warningThresholds = [0.8, 0.9];
-      
+
       for (const threshold of warningThresholds) {
         if (requestUtilization >= threshold && requestUtilization < 1.0) {
           // Check if we've already sent this warning
-          const existingWarning = await this.fastify.dbUtils.queryOne(`
+          const existingWarning = await this.fastify.dbUtils.queryOne(
+            `
             SELECT id FROM audit_logs
             WHERE user_id = $1 AND resource_id = $2 AND action = 'QUOTA_WARNING'
             AND metadata->>'quotaType' = 'requests'
             AND metadata->>'threshold' = $3
             AND created_at > NOW() - INTERVAL '1 hour'
-          `, [subscription.user_id, subscriptionId, threshold.toString()]);
+          `,
+            [subscription.user_id, subscriptionId, threshold.toString()],
+          );
 
           if (!existingWarning) {
             await this.triggerHook('onQuotaWarning', {
@@ -313,13 +366,16 @@ class SubscriptionHookManager {
         }
 
         if (tokenUtilization >= threshold && tokenUtilization < 1.0) {
-          const existingWarning = await this.fastify.dbUtils.queryOne(`
+          const existingWarning = await this.fastify.dbUtils.queryOne(
+            `
             SELECT id FROM audit_logs
             WHERE user_id = $1 AND resource_id = $2 AND action = 'QUOTA_WARNING'
             AND metadata->>'quotaType' = 'tokens'
             AND metadata->>'threshold' = $3
             AND created_at > NOW() - INTERVAL '1 hour'
-          `, [subscription.user_id, subscriptionId, threshold.toString()]);
+          `,
+            [subscription.user_id, subscriptionId, threshold.toString()],
+          );
 
           if (!existingWarning) {
             await this.triggerHook('onQuotaWarning', {
@@ -357,7 +413,7 @@ class SubscriptionHookManager {
           `UPDATE subscriptions 
            SET status = 'expired', updated_at = CURRENT_TIMESTAMP
            WHERE id = $1`,
-          [subscription.id]
+          [subscription.id],
         );
 
         // Trigger expired hook
@@ -374,9 +430,12 @@ class SubscriptionHookManager {
       }
 
       if (processedCount > 0) {
-        this.fastify.log.info({
-          processedCount,
-        }, 'Processed expired subscriptions');
+        this.fastify.log.info(
+          {
+            processedCount,
+          },
+          'Processed expired subscriptions',
+        );
       }
 
       return processedCount;
@@ -394,12 +453,17 @@ const subscriptionHooksPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorate('subscriptionHooks', hookManager);
 
   // Add a helper method for triggering hooks from services
-  fastify.decorateRequest('triggerSubscriptionHook', function(
-    hookName: keyof SubscriptionHooks,
-    event: SubscriptionHookEvent | (SubscriptionHookEvent & { quotaType: 'requests' | 'tokens'; threshold?: number })
-  ) {
-    return hookManager.triggerHook(hookName, event);
-  });
+  fastify.decorateRequest(
+    'triggerSubscriptionHook',
+    function (
+      hookName: keyof SubscriptionHooks,
+      event:
+        | SubscriptionHookEvent
+        | (SubscriptionHookEvent & { quotaType: 'requests' | 'tokens'; threshold?: number }),
+    ) {
+      return hookManager.triggerHook(hookName, event);
+    },
+  );
 
   // Background job to check for expired subscriptions (would be better as a cron job)
   if (process.env.NODE_ENV !== 'test') {
@@ -423,7 +487,9 @@ declare module 'fastify' {
   interface FastifyRequest {
     triggerSubscriptionHook(
       hookName: keyof SubscriptionHooks,
-      event: SubscriptionHookEvent | (SubscriptionHookEvent & { quotaType: 'requests' | 'tokens'; threshold?: number })
+      event:
+        | SubscriptionHookEvent
+        | (SubscriptionHookEvent & { quotaType: 'requests' | 'tokens'; threshold?: number }),
     ): Promise<void>;
   }
 }

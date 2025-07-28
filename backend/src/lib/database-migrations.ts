@@ -6,6 +6,7 @@
 // Import migration files
 import { addApiKeyModelsTable } from '../migrations/001-add-api-key-models';
 import { migrateApiKeySubscriptions } from '../migrations/002-migrate-api-key-subscriptions';
+import { DatabaseUtils } from '../types/common.types';
 
 // Users table
 export const usersTable = `
@@ -326,53 +327,53 @@ CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON subscriptions FO
 `;
 
 // Main migration function
-export const applyMigrations = async (dbUtils: any) => {
+export const applyMigrations = async (dbUtils: DatabaseUtils) => {
   console.log('🚀 Starting database migrations...');
-  
+
   try {
     // Apply all table creations in order (respecting foreign key dependencies)
     console.log('📊 Creating users table...');
     await dbUtils.query(usersTable);
-    
+
     console.log('👥 Creating teams table...');
     await dbUtils.query(teamsTable);
-    
+
     console.log('🔗 Creating team_members table...');
     await dbUtils.query(teamMembersTable);
-    
+
     console.log('🤖 Creating models table...');
     await dbUtils.query(modelsTable);
-    
+
     console.log('📝 Creating subscriptions table...');
     await dbUtils.query(subscriptionsTable);
-    
+
     console.log('🔑 Creating api_keys table...');
     await dbUtils.query(apiKeysTable);
-    
+
     console.log('🔑 Creating api_key_models table...');
     await dbUtils.query(addApiKeyModelsTable);
 
     console.log('📦 Migrating existing API key subscriptions...');
     await dbUtils.query(migrateApiKeySubscriptions);
-    
+
     console.log('📈 Creating usage_logs table...');
     await dbUtils.query(usageLogsTable);
-    
+
     console.log('📊 Creating usage_summaries table...');
     await dbUtils.query(usageSummariesTable);
-    
+
     console.log('📋 Creating audit_logs table...');
     await dbUtils.query(auditLogsTable);
-    
+
     console.log('🔄 Creating refresh_tokens table...');
     await dbUtils.query(refreshTokensTable);
-    
+
     console.log('🔐 Creating oauth_sessions table...');
     await dbUtils.query(oauthSessionsTable);
-    
+
     console.log('⚡ Creating triggers...');
     await dbUtils.query(updatedAtTriggers);
-    
+
     console.log('✅ Database migrations completed successfully!');
   } catch (error) {
     console.error('❌ Database migration failed:', error);

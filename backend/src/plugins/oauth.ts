@@ -5,7 +5,7 @@ import { OAuthService } from '../services/oauth.service';
 const oauthPlugin: FastifyPluginAsync = async (fastify) => {
   // Initialize OAuth service
   const oauthService = new OAuthService(fastify);
-  
+
   // Register OAuth service
   fastify.decorate('oauth', oauthService);
 
@@ -13,16 +13,19 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
   const sessionStore = new Map<string, { state: string; timestamp: number }>();
 
   // Clean up expired sessions every 5 minutes
-  setInterval(() => {
-    const now = Date.now();
-    const fiveMinutes = 5 * 60 * 1000;
-    
-    for (const [key, session] of sessionStore.entries()) {
-      if (now - session.timestamp > fiveMinutes) {
-        sessionStore.delete(key);
+  setInterval(
+    () => {
+      const now = Date.now();
+      const fiveMinutes = 5 * 60 * 1000;
+
+      for (const [key, session] of Array.from(sessionStore.entries())) {
+        if (now - session.timestamp > fiveMinutes) {
+          sessionStore.delete(key);
+        }
       }
-    }
-  }, 5 * 60 * 1000);
+    },
+    5 * 60 * 1000,
+  );
 
   // OAuth helper methods
   fastify.decorate('oauthHelpers', {
@@ -37,10 +40,10 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
       if (!session) {
         return false;
       }
-      
+
       // Remove used state
       sessionStore.delete(state);
-      
+
       // Check if state is not expired (5 minutes)
       const fiveMinutes = 5 * 60 * 1000;
       return Date.now() - session.timestamp <= fiveMinutes;
@@ -49,8 +52,8 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
     clearExpiredStates: (): void => {
       const now = Date.now();
       const fiveMinutes = 5 * 60 * 1000;
-      
-      for (const [key, session] of sessionStore.entries()) {
+
+      for (const [key, session] of Array.from(sessionStore.entries())) {
         if (now - session.timestamp > fiveMinutes) {
           sessionStore.delete(key);
         }
@@ -63,14 +66,18 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
     clientId: fastify.config.OAUTH_CLIENT_ID,
     issuer: fastify.config.OAUTH_ISSUER,
     callbackUrl: fastify.config.OAUTH_CALLBACK_URL,
-    isMockEnabled: process.env.OAUTH_MOCK_ENABLED === 'true' || process.env.NODE_ENV === 'development',
+    isMockEnabled:
+      process.env.OAUTH_MOCK_ENABLED === 'true' || process.env.NODE_ENV === 'development',
   });
 
-  fastify.log.info({
-    oauthEnabled: true,
-    mockMode: fastify.oauthConfig.isMockEnabled,
-    issuer: fastify.oauthConfig.issuer,
-  }, 'OAuth plugin initialized');
+  fastify.log.info(
+    {
+      oauthEnabled: true,
+      mockMode: fastify.oauthConfig.isMockEnabled,
+      issuer: fastify.oauthConfig.issuer,
+    },
+    'OAuth plugin initialized',
+  );
 };
 
 declare module 'fastify' {

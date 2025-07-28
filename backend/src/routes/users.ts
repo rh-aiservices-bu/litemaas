@@ -1,7 +1,37 @@
 import { FastifyPluginAsync } from 'fastify';
 import { Static } from '@sinclair/typebox';
-import { AuthenticatedRequest } from '../types';
-import { UserProfileSchema, PaginatedResponse, IdParamSchema } from '../schemas';
+import { AuthenticatedRequest, PaginatedResponse, DatabaseRow, QueryParameter } from '../types';
+import { UserProfileSchema, IdParamSchema } from '../schemas';
+
+interface UserHistoryQuery {
+  page?: number;
+  limit?: number;
+  action?: string;
+}
+
+interface UserListQuery {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+  isActive?: boolean;
+}
+
+interface UserRow extends DatabaseRow {
+  id: string;
+  username: string;
+  email: string;
+  full_name?: string;
+  roles: string[];
+  is_active: boolean;
+  last_login_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface FastifyError extends Error {
+  statusCode?: number;
+}
 
 const usersRoutes: FastifyPluginAsync = async (fastify) => {
   // Update user profile
@@ -26,7 +56,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticate,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { fullName } = request.body;
 
@@ -38,7 +68,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
            updated_at = NOW()
            WHERE id = $2
            RETURNING id, username, email, full_name, roles, created_at`,
-          [fullName, user.userId]
+          [fullName, user.userId],
         );
 
         if (!updatedUser) {
@@ -49,30 +79,24 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
            VALUES ($1, $2, $3, $4, $5)`,
-          [
-            user.userId,
-            'PROFILE_UPDATE',
-            'USER',
-            user.userId,
-            { changes: { fullName } },
-          ]
+          [user.userId, 'PROFILE_UPDATE', 'USER', user.userId, { changes: { fullName } }],
         );
 
         return {
-          id: updatedUser.id,
-          username: updatedUser.username,
-          email: updatedUser.email,
-          fullName: updatedUser.full_name,
-          roles: updatedUser.roles,
-          createdAt: updatedUser.created_at,
+          id: String(updatedUser.id),
+          username: String(updatedUser.username),
+          email: String(updatedUser.email),
+          fullName: updatedUser.full_name as string | undefined,
+          roles: updatedUser.roles as string[],
+          createdAt: String(updatedUser.created_at),
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to update user profile');
-        
-        if (error.statusCode) {
+
+        if ((error as FastifyError).statusCode) {
           throw error;
         }
-        
+
         throw fastify.createError(500, 'Failed to update user profile');
       }
     },
@@ -126,9 +150,9 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticate,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
-      const { page = 1, limit = 20, action } = request.query as any;
+      const { page = 1, limit = 20, action } = request.query as UserHistoryQuery;
 
       try {
         const offset = (page - 1) * limit;
@@ -139,7 +163,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
           FROM audit_logs
           WHERE user_id = $1
         `;
-        const params: any[] = [user.userId];
+        const params: QueryParameter[] = [user.userId];
 
         if (action) {
           query += ` AND action = $${params.length + 1}`;
@@ -163,11 +187,11 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
           fastify.dbUtils.queryOne(countQuery, countParams),
         ]);
 
-        const total = parseInt(countResult.count);
+        const total = parseInt(String(countResult?.count || '0'));
         const totalPages = Math.ceil(total / limit);
 
         return {
-          data: activities.map(activity => ({
+          data: activities.map((activity) => ({
             id: activity.id,
             action: activity.action,
             resourceType: activity.resource_type,
@@ -232,7 +256,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticate,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
 
       try {
@@ -244,7 +268,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
              COUNT(*) FILTER (WHERE status = 'suspended') as suspended
            FROM subscriptions 
            WHERE user_id = $1`,
-          [user.userId]
+          [user.userId],
         );
 
         // Get API key stats
@@ -255,7 +279,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
            FROM api_keys ak
            JOIN subscriptions s ON ak.subscription_id = s.id
            WHERE s.user_id = $1`,
-          [user.userId]
+          [user.userId],
         );
 
         // Get usage stats
@@ -268,33 +292,33 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
            FROM usage_logs ul
            JOIN subscriptions s ON ul.subscription_id = s.id
            WHERE s.user_id = $1`,
-          [user.userId]
+          [user.userId],
         );
 
         // Get user info
         const userInfo = await fastify.dbUtils.queryOne(
           'SELECT last_login_at, created_at FROM users WHERE id = $1',
-          [user.userId]
+          [user.userId],
         );
 
         return {
           subscriptions: {
-            total: parseInt(subscriptionStats.total) || 0,
-            active: parseInt(subscriptionStats.active) || 0,
-            suspended: parseInt(subscriptionStats.suspended) || 0,
+            total: parseInt(String(subscriptionStats?.total || '0')) || 0,
+            active: parseInt(String(subscriptionStats?.active || '0')) || 0,
+            suspended: parseInt(String(subscriptionStats?.suspended || '0')) || 0,
           },
           apiKeys: {
-            total: parseInt(apiKeyStats.total) || 0,
-            active: parseInt(apiKeyStats.active) || 0,
+            total: parseInt(String(apiKeyStats?.total || '0')) || 0,
+            active: parseInt(String(apiKeyStats?.active || '0')) || 0,
           },
           usage: {
-            totalRequests: parseInt(usageStats.total_requests) || 0,
-            totalTokens: parseInt(usageStats.total_tokens) || 0,
-            currentMonthRequests: parseInt(usageStats.current_month_requests) || 0,
-            currentMonthTokens: parseInt(usageStats.current_month_tokens) || 0,
+            totalRequests: parseInt(String(usageStats?.total_requests || '0')) || 0,
+            totalTokens: parseInt(String(usageStats?.total_tokens || '0')) || 0,
+            currentMonthRequests: parseInt(String(usageStats?.current_month_requests || '0')) || 0,
+            currentMonthTokens: parseInt(String(usageStats?.current_month_tokens || '0')) || 0,
           },
-          lastLogin: userInfo.last_login_at,
-          memberSince: userInfo.created_at,
+          lastLogin: userInfo?.last_login_at,
+          memberSince: userInfo?.created_at,
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to get user statistics');
@@ -305,7 +329,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
 
   // Admin endpoints for user management
   fastify.get<{
-    Reply: PaginatedResponse<any>;
+    Reply: PaginatedResponse<UserRow>;
   }>('/', {
     schema: {
       tags: ['Users'],
@@ -355,8 +379,8 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('users:read')],
-    handler: async (request, reply) => {
-      const { page = 1, limit = 20, search, role, isActive } = request.query as any;
+    handler: async (request, _reply) => {
+      const { page = 1, limit = 20, search, role, isActive } = request.query as UserListQuery;
 
       try {
         const offset = (page - 1) * limit;
@@ -367,7 +391,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
           FROM users
           WHERE 1=1
         `;
-        const params: any[] = [];
+        const params: QueryParameter[] = [];
 
         if (search) {
           query += ` AND (username ILIKE $${params.length + 1} OR email ILIKE $${params.length + 1} OR full_name ILIKE $${params.length + 1})`;
@@ -389,7 +413,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Get count
         let countQuery = 'SELECT COUNT(*) FROM users WHERE 1=1';
-        const countParams: any[] = [];
+        const countParams: QueryParameter[] = [];
 
         if (search) {
           countQuery += ` AND (username ILIKE $${countParams.length + 1} OR email ILIKE $${countParams.length + 1} OR full_name ILIKE $${countParams.length + 1})`;
@@ -411,11 +435,11 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
           fastify.dbUtils.queryOne(countQuery, countParams),
         ]);
 
-        const total = parseInt(countResult.count);
+        const total = parseInt(String(countResult?.count || '0'));
         const totalPages = Math.ceil(total / limit);
 
         return {
-          data: users.map(user => ({
+          data: users.map((user) => ({
             id: user.id,
             username: user.username,
             email: user.email,
@@ -464,7 +488,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('users:write')],
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const { id } = request.params;
       const { roles, isActive } = request.body;
       const currentUser = (request as AuthenticatedRequest).user;
@@ -482,7 +506,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
            updated_at = NOW()
            WHERE id = $3
            RETURNING id, username, email, full_name, roles, created_at`,
-          [roles, isActive, id]
+          [roles, isActive, id],
         );
 
         if (!updatedUser) {
@@ -493,13 +517,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
            VALUES ($1, $2, $3, $4, $5)`,
-          [
-            currentUser.userId,
-            'USER_UPDATE',
-            'USER',
-            id,
-            { changes: { roles, isActive } },
-          ]
+          [currentUser.userId, 'USER_UPDATE', 'USER', id, { changes: { roles, isActive } }],
         );
 
         return {
@@ -512,11 +530,11 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to update user');
-        
-        if (error.statusCode) {
+
+        if ((error as FastifyError).statusCode) {
           throw error;
         }
-        
+
         throw fastify.createError(500, 'Failed to update user');
       }
     },

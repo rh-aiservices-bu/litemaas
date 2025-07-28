@@ -66,7 +66,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, modelId, apiKeyId } = request.query;
 
@@ -88,38 +88,56 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
           averageResponseTime: stats.totalMetrics.averageLatency,
           successRate: stats.totalMetrics.successRate,
           activeModels: stats.modelBreakdown?.length || 0,
-          topModels: stats.modelBreakdown?.map(model => ({
-            name: model.modelName || model.modelId,
-            requests: model.totalRequests,
-            tokens: model.totalTokens,
-            cost: Math.round(model.totalTokens * 0.0015 * 100) / 100,
-          })) || [],
-          dailyUsage: stats.timeSeriesData?.map(period => ({
-            date: period.period,
-            requests: period.totalRequests,
-            tokens: period.totalTokens,
-            cost: Math.round(period.totalTokens * 0.0015 * 100) / 100,
-          })) || [],
-          hourlyUsage: stats.timeSeriesData?.slice(0, 24).map((period, index) => ({
-            hour: `${index}:00`,
-            requests: Math.round(period.totalRequests / 24),
-          })) || [],
+          topModels:
+            stats.modelBreakdown?.map((model) => ({
+              name: model.modelName || model.modelId,
+              requests: model.totalRequests,
+              tokens: model.totalTokens,
+              cost: Math.round(model.totalTokens * 0.0015 * 100) / 100,
+            })) || [],
+          dailyUsage:
+            stats.timeSeriesData?.map((period) => ({
+              date: period.period,
+              requests: period.totalRequests,
+              tokens: period.totalTokens,
+              cost: Math.round(period.totalTokens * 0.0015 * 100) / 100,
+            })) || [],
+          hourlyUsage:
+            stats.timeSeriesData?.slice(0, 24).map((period, index) => ({
+              hour: `${index}:00`,
+              requests: Math.round(period.totalRequests / 24),
+            })) || [],
           errorBreakdown: [
-            { type: 'Rate Limit', count: Math.round(stats.totalMetrics.totalRequests * 0.01), percentage: 1.0 },
-            { type: 'Authentication', count: Math.round(stats.totalMetrics.totalRequests * 0.005), percentage: 0.5 },
-            { type: 'Server Error', count: Math.round(stats.totalMetrics.totalRequests * 0.008), percentage: 0.8 },
-            { type: 'Invalid Request', count: Math.round(stats.totalMetrics.totalRequests * 0.007), percentage: 0.7 },
+            {
+              type: 'Rate Limit',
+              count: Math.round(stats.totalMetrics.totalRequests * 0.01),
+              percentage: 1.0,
+            },
+            {
+              type: 'Authentication',
+              count: Math.round(stats.totalMetrics.totalRequests * 0.005),
+              percentage: 0.5,
+            },
+            {
+              type: 'Server Error',
+              count: Math.round(stats.totalMetrics.totalRequests * 0.008),
+              percentage: 0.8,
+            },
+            {
+              type: 'Invalid Request',
+              count: Math.round(stats.totalMetrics.totalRequests * 0.007),
+              percentage: 0.7,
+            },
           ],
         };
 
         return response;
-      } catch (error) {
+      } catch (error: unknown) {
         fastify.log.error(error, 'Failed to get usage metrics');
         throw fastify.createError(500, 'Failed to get usage metrics');
       }
     },
   });
-
 
   // Get usage summary
   fastify.get<{
@@ -187,7 +205,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, modelId, subscriptionId, granularity } = request.query;
 
@@ -204,21 +222,28 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
 
         return {
           period: {
-            start: new Date(startDate).toISOString(),
-            end: new Date(endDate).toISOString(),
+            start: new Date(startDate),
+            end: new Date(endDate),
           },
           totals: {
             requests: stats.totalMetrics.totalRequests,
             tokens: stats.totalMetrics.totalTokens,
+            cost: Math.round(stats.totalMetrics.totalTokens * 0.0015 * 100) / 100,
             inputTokens: stats.totalMetrics.totalInputTokens,
             outputTokens: stats.totalMetrics.totalOutputTokens,
             averageLatency: stats.totalMetrics.averageLatency,
             errorRate: stats.totalMetrics.errorRate,
             successRate: stats.totalMetrics.successRate,
           },
-          byModel: stats.modelBreakdown || [],
+          byModel: (stats.modelBreakdown || []).map((model) => ({
+            modelId: model.modelId,
+            modelName: model.modelName || model.modelId,
+            requests: model.totalRequests,
+            tokens: model.totalTokens,
+            cost: Math.round(model.totalTokens * 0.0015 * 100) / 100,
+          })),
         };
-      } catch (error) {
+      } catch (error: unknown) {
         fastify.log.error(error, 'Failed to get usage summary');
         throw fastify.createError(500, 'Failed to get usage summary');
       }
@@ -273,7 +298,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, interval = 'day', modelId, subscriptionId } = request.query;
 
@@ -290,9 +315,24 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
 
         return {
           interval,
-          data: stats.timeSeriesData || [],
+          data: (stats.timeSeriesData || []).map((period) => ({
+            timestamp: period.startTime,
+            requests: period.totalRequests,
+            tokens: period.totalTokens,
+            cost: Math.round(period.totalTokens * 0.0015 * 100) / 100,
+            period: period.period,
+            startTime: period.startTime,
+            endTime: period.endTime,
+            totalRequests: period.totalRequests,
+            totalTokens: period.totalTokens,
+            totalInputTokens: period.totalInputTokens,
+            totalOutputTokens: period.totalOutputTokens,
+            averageLatency: period.averageLatency,
+            errorRate: period.errorRate,
+            successRate: period.successRate,
+          })),
         };
-      } catch (error) {
+      } catch (error: unknown) {
         fastify.log.error(error, 'Failed to get usage time series');
         throw fastify.createError(500, 'Failed to get usage time series');
       }
@@ -336,7 +376,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { timeRange = 'month' } = request.query as { timeRange?: 'day' | 'week' | 'month' };
 
@@ -353,7 +393,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
             recentActivity: topStats.recentActivity,
           },
         };
-      } catch (error) {
+      } catch (error: unknown) {
         fastify.log.error(error, 'Failed to get usage dashboard');
         throw fastify.createError(500, 'Failed to get usage dashboard');
       }
@@ -407,7 +447,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { timeRange = 'month', limit = 10 } = request.query as {
         timeRange?: 'day' | 'week' | 'month';
@@ -425,7 +465,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
           topModels: topStats.topModels,
           recentActivity: topStats.recentActivity,
         };
-      } catch (error) {
+      } catch (error: unknown) {
         fastify.log.error(error, 'Failed to get top statistics');
         throw fastify.createError(500, 'Failed to get top statistics');
       }
@@ -461,7 +501,14 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
     preHandler: fastify.authenticateWithDevBypass,
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
-      const { startDate, endDate, format = 'csv', modelId, subscriptionId, apiKeyId } = request.query;
+      const {
+        startDate,
+        endDate,
+        format = 'csv',
+        modelId,
+        subscriptionId,
+        apiKeyId,
+      } = request.query;
 
       try {
         // Get usage data
@@ -477,14 +524,15 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         });
 
         const filename = `usage-export-${startDate}-${endDate}.${format}`;
-        
+
         reply.header('Content-Type', format === 'csv' ? 'text/csv' : 'application/json');
         reply.header('Content-Disposition', `attachment; filename=${filename}`);
 
         if (format === 'csv') {
           // Generate CSV
-          const csvHeader = 'Date,Requests,Total Tokens,Input Tokens,Output Tokens,Avg Latency (ms),Error Rate (%),Success Rate (%)';
-          const csvRows = (stats.timeSeriesData || []).map(row => 
+          const csvHeader =
+            'Date,Requests,Total Tokens,Input Tokens,Output Tokens,Avg Latency (ms),Error Rate (%),Success Rate (%)';
+          const csvRows = (stats.timeSeriesData || []).map((row) =>
             [
               row.startTime.toISOString().split('T')[0],
               row.totalRequests,
@@ -494,24 +542,28 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
               row.averageLatency,
               row.errorRate,
               row.successRate,
-            ].join(',')
+            ].join(','),
           );
 
           return [csvHeader, ...csvRows].join('\n');
         } else {
           // Generate JSON
-          return JSON.stringify({
-            exportDate: new Date().toISOString(),
-            period: {
-              start: startDate,
-              end: endDate,
+          return JSON.stringify(
+            {
+              exportDate: new Date().toISOString(),
+              period: {
+                start: startDate,
+                end: endDate,
+              },
+              summary: stats.totalMetrics,
+              timeSeries: stats.timeSeriesData,
+              modelBreakdown: stats.modelBreakdown,
             },
-            summary: stats.totalMetrics,
-            timeSeries: stats.timeSeriesData,
-            modelBreakdown: stats.modelBreakdown,
-          }, null, 2);
+            null,
+            2,
+          );
         }
-      } catch (error) {
+      } catch (error: unknown) {
         fastify.log.error(error, 'Failed to export usage data');
         throw fastify.createError(500, 'Failed to export usage data');
       }
@@ -547,8 +599,15 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('usage:write')],
-    handler: async (request, reply) => {
-      const { subscriptionId, modelId, requestTokens, responseTokens, latencyMs = 0, statusCode } = request.body as {
+    handler: async (request, _reply) => {
+      const {
+        subscriptionId,
+        modelId,
+        requestTokens,
+        responseTokens,
+        latencyMs = 0,
+        statusCode,
+      } = request.body as {
         subscriptionId: string;
         modelId: string;
         requestTokens: number;
@@ -572,7 +631,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
           message: 'Usage tracked successfully',
           tracked: true,
         };
-      } catch (error) {
+      } catch (error: unknown) {
         fastify.log.error(error, 'Failed to track usage');
         throw fastify.createError(500, 'Failed to track usage');
       }
@@ -609,7 +668,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:usage')],
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const { startDate, endDate, granularity, aggregateBy } = request.query as {
         startDate?: string;
         endDate?: string;
@@ -634,7 +693,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
           modelBreakdown: stats.modelBreakdown,
           topStats,
         };
-      } catch (error) {
+      } catch (error: unknown) {
         fastify.log.error(error, 'Failed to get global usage statistics');
         throw fastify.createError(500, 'Failed to get global usage statistics');
       }
@@ -664,7 +723,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:usage')],
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { retentionDays = 90 } = request.body as { retentionDays?: number };
 
@@ -675,19 +734,14 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, metadata)
            VALUES ($1, $2, $3, $4)`,
-          [
-            user.userId,
-            'USAGE_DATA_CLEANUP',
-            'USAGE_LOG',
-            { retentionDays, deletedCount },
-          ]
+          [user.userId, 'USAGE_DATA_CLEANUP', 'USAGE_LOG', { retentionDays, deletedCount }],
         );
 
         return {
           message: 'Old usage data cleaned up successfully',
           deletedCount,
         };
-      } catch (error) {
+      } catch (error: unknown) {
         fastify.log.error(error, 'Failed to cleanup old usage data');
         throw fastify.createError(500, 'Failed to cleanup old usage data');
       }

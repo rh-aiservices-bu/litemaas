@@ -1,15 +1,15 @@
 import { FastifyInstance } from 'fastify';
 import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import { LiteLLMService } from './litellm.service.js';
-import { 
-  EnhancedApiKey, 
-  LiteLLMKeyGenerationResponse, 
+import {
+  EnhancedApiKey,
+  LiteLLMKeyGenerationResponse,
   LiteLLMKeyInfo,
   ApiKeyListParams,
   CreateApiKeyRequest,
   LegacyCreateApiKeyRequest,
   LiteLLMKeyGenerationRequest,
-  ApiKeyValidation
+  ApiKeyValidation,
 } from '../types/api-key.types.js';
 
 // Types moved to types/api-key.types.ts for consistency
@@ -18,7 +18,7 @@ export interface ServiceCreateApiKeyRequest {
   subscriptionId: string;
   name?: string;
   expiresAt?: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ApiKeyDetails {
@@ -32,7 +32,7 @@ export interface ApiKeyDetails {
   isActive: boolean;
   createdAt: Date;
   revokedAt?: Date;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ApiKeyWithSecret {
@@ -108,7 +108,7 @@ export class ApiKeyService {
       lastSyncAt: new Date(Date.now() - 30 * 60 * 1000),
       syncStatus: 'synced',
       maxBudget: 500,
-      currentSpend: 125.50,
+      currentSpend: 125.5,
       tpmLimit: 10000,
       rpmLimit: 100,
       metadata: {
@@ -119,11 +119,22 @@ export class ApiKeyService {
       },
       modelDetails: [
         { id: 'gpt-4o', name: 'GPT-4o', provider: 'openai', contextLength: 128000 },
-        { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', provider: 'anthropic', contextLength: 200000 }
+        {
+          id: 'claude-3-5-sonnet-20241022',
+          name: 'Claude 3.5 Sonnet',
+          provider: 'anthropic',
+          contextLength: 200000,
+        },
       ],
       subscriptionDetails: [
-        { subscriptionId: 'sub-mock-1', modelId: 'gpt-4o', status: 'active', quotaRequests: 1000, usedRequests: 250 }
-      ]
+        {
+          subscriptionId: 'sub-mock-1',
+          modelId: 'gpt-4o',
+          status: 'active',
+          quotaRequests: 1000,
+          usedRequests: 250,
+        },
+      ],
     },
     {
       id: 'key-mock-2',
@@ -149,12 +160,18 @@ export class ApiKeyService {
         soft_budget: 90,
       },
       modelDetails: [
-        { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'openai', contextLength: 128000 }
+        { id: 'gpt-4o-mini', name: 'GPT-4o Mini', provider: 'openai', contextLength: 128000 },
       ],
       subscriptionDetails: [
-        { subscriptionId: 'sub-mock-2', modelId: 'gpt-4o-mini', status: 'active', quotaRequests: 500, usedRequests: 50 }
-      ]
-    }
+        {
+          subscriptionId: 'sub-mock-2',
+          modelId: 'gpt-4o-mini',
+          status: 'active',
+          quotaRequests: 500,
+          usedRequests: 50,
+        },
+      ],
+    },
   ];
 
   constructor(fastify: FastifyInstance, liteLLMService: LiteLLMService) {
@@ -164,14 +181,17 @@ export class ApiKeyService {
 
   private shouldUseMockData(): boolean {
     const dbUnavailable = this.isDatabaseUnavailable();
-    
-    this.fastify.log.debug({ 
-      dbUnavailable, 
-      nodeEnv: process.env.NODE_ENV,
-      hasPg: !!this.fastify.pg,
-      mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined
-    }, 'API Key Service: Checking if should use mock data');
-    
+
+    this.fastify.log.debug(
+      {
+        dbUnavailable,
+        nodeEnv: process.env.NODE_ENV,
+        hasPg: !!this.fastify.pg,
+        mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined,
+      },
+      'API Key Service: Checking if should use mock data',
+    );
+
     return dbUnavailable;
   }
 
@@ -181,12 +201,12 @@ export class ApiKeyService {
         this.fastify.log.debug('API Key Service: PostgreSQL plugin not available');
         return true;
       }
-      
+
       if (this.fastify.isDatabaseMockMode && this.fastify.isDatabaseMockMode()) {
         this.fastify.log.debug('API Key Service: Database mock mode enabled');
         return true;
       }
-      
+
       return false;
     } catch (error) {
       this.fastify.log.debug({ error }, 'API Key Service: Error checking database availability');
@@ -196,46 +216,46 @@ export class ApiKeyService {
 
   private createMockResponse<T>(data: T): Promise<T> {
     const delay = Math.random() * 200 + 100; // 100-300ms
-    return new Promise(resolve => setTimeout(() => resolve(data), delay));
+    return new Promise((resolve) => setTimeout(() => resolve(data), delay));
   }
 
   async createApiKey(
     userId: string,
-    request: CreateApiKeyRequest | LegacyCreateApiKeyRequest
+    request: CreateApiKeyRequest | LegacyCreateApiKeyRequest,
   ): Promise<ApiKeyWithSecret> {
     try {
       // Handle backward compatibility
       let modelIds: string[];
       let isLegacyRequest = false;
-      
+
       if ('subscriptionId' in request) {
         // Legacy request - convert subscription to model
         isLegacyRequest = true;
         const subscription = await this.fastify.dbUtils.queryOne(
           `SELECT model_id, status FROM subscriptions WHERE id = $1 AND user_id = $2`,
-          [request.subscriptionId, userId]
+          [request.subscriptionId, userId],
         );
-        
+
         if (!subscription) {
           throw this.fastify.createNotFoundError('Subscription not found');
         }
-        
+
         if (subscription.status !== 'active') {
           throw this.fastify.createValidationError(
-            `Cannot create API key for ${subscription.status} subscription`
+            `Cannot create API key for ${subscription.status} subscription`,
           );
         }
-        
-        modelIds = [subscription.model_id];
-        
+
+        modelIds = [String(subscription.model_id)];
+
         this.fastify.log.warn({
           userId,
           subscriptionId: request.subscriptionId,
-          message: 'Using deprecated subscriptionId parameter. Please migrate to modelIds.'
+          message: 'Using deprecated subscriptionId parameter. Please migrate to modelIds.',
         });
       } else {
         modelIds = request.modelIds;
-        
+
         if (!modelIds || modelIds.length === 0) {
           throw this.fastify.createValidationError('At least one model must be selected');
         }
@@ -249,7 +269,9 @@ export class ApiKeyService {
         const mockKey = this.generateApiKey();
         const mockApiKey: ApiKeyWithSecret = {
           id: `key-${Date.now()}`,
-          subscriptionId: isLegacyRequest ? (request as LegacyCreateApiKeyRequest).subscriptionId : undefined,
+          subscriptionId: isLegacyRequest
+            ? (request as LegacyCreateApiKeyRequest).subscriptionId
+            : undefined,
           userId,
           name: request.name || 'New API Key',
           keyPrefix: mockKey.keyPrefix,
@@ -258,11 +280,11 @@ export class ApiKeyService {
           isActive: true,
           createdAt: new Date(),
           models: modelIds,
-          modelDetails: modelIds.map(id => ({
+          modelDetails: modelIds.map((id) => ({
             id,
             name: `Mock Model ${id}`,
             provider: 'mock',
-            context_length: 4096
+            context_length: 4096,
           })),
           key: mockKey.key,
         };
@@ -279,28 +301,28 @@ export class ApiKeyService {
          WHERE s.user_id = $1 
            AND s.status = 'active' 
            AND s.model_id = ANY($2::text[])`,
-        [userId, modelIds]
+        [userId, modelIds],
       );
 
-      const validModelIds = validModels.map(m => m.model_id);
-      const invalidModels = modelIds.filter(id => !validModelIds.includes(id));
-      
+      const validModelIds = validModels.map((m) => m.model_id);
+      const invalidModels = modelIds.filter((id) => !validModelIds.includes(id));
+
       if (invalidModels.length > 0) {
         throw this.fastify.createValidationError(
-          `You do not have active subscriptions for the following models: ${invalidModels.join(', ')}`
+          `You do not have active subscriptions for the following models: ${invalidModels.join(', ')}`,
         );
       }
 
       // Check API key limits per user
       const existingKeysCount = await this.fastify.dbUtils.queryOne(
         `SELECT COUNT(*) FROM api_keys WHERE user_id = $1 AND is_active = true`,
-        [userId]
+        [userId],
       );
 
       const maxKeysPerUser = 10;
-      if (parseInt(existingKeysCount.count) >= maxKeysPerUser) {
+      if (existingKeysCount && parseInt(String(existingKeysCount.count)) >= maxKeysPerUser) {
         throw this.fastify.createValidationError(
-          `Maximum ${maxKeysPerUser} active API keys allowed per user`
+          `Maximum ${maxKeysPerUser} active API keys allowed per user`,
         );
       }
 
@@ -311,18 +333,20 @@ export class ApiKeyService {
       const liteLLMRequest: LiteLLMKeyGenerationRequest = {
         key_alias: request.name || `key-${Date.now()}`,
         duration: request.expiresAt ? this.calculateDuration(request.expiresAt) : undefined,
-        models: modelIds,  // Pass all model IDs
+        models: modelIds, // Pass all model IDs
         max_budget: request.maxBudget,
         user_id: userId,
         team_id: request.teamId,
         tpm_limit: request.tpmLimit,
         rpm_limit: request.rpmLimit,
         budget_duration: request.budgetDuration,
-        permissions: request.permissions ? {
-          allow_chat_completions: request.permissions.allowChatCompletions,
-          allow_embeddings: request.permissions.allowEmbeddings,
-          allow_completions: request.permissions.allowCompletions,
-        } : undefined,
+        permissions: request.permissions
+          ? {
+              allow_chat_completions: request.permissions.allowChatCompletions,
+              allow_embeddings: request.permissions.allowEmbeddings,
+              allow_completions: request.permissions.allowCompletions,
+            }
+          : undefined,
         tags: request.tags,
         soft_budget: request.softBudget,
         guardrails: request.guardrails,
@@ -339,7 +363,7 @@ export class ApiKeyService {
 
       // Begin transaction for atomicity
       const client = await this.fastify.pg.connect();
-      
+
       try {
         await client.query('BEGIN');
 
@@ -368,16 +392,16 @@ export class ApiKeyService {
             new Date(),
             'synced',
             request.metadata || {},
-            ...(isLegacyRequest ? [(request as LegacyCreateApiKeyRequest).subscriptionId] : [])
-          ]
+            ...(isLegacyRequest ? [(request as LegacyCreateApiKeyRequest).subscriptionId] : []),
+          ],
         );
 
         // Insert model associations
         for (const modelId of modelIds) {
-          await client.query(
-            `INSERT INTO api_key_models (api_key_id, model_id) VALUES ($1, $2)`,
-            [apiKey.rows[0].id, modelId]
-          );
+          await client.query(`INSERT INTO api_key_models (api_key_id, model_id) VALUES ($1, $2)`, [
+            apiKey.rows[0].id,
+            modelId,
+          ]);
         }
 
         // Create audit log
@@ -389,27 +413,30 @@ export class ApiKeyService {
             'API_KEY_CREATE',
             'API_KEY',
             apiKey.rows[0].id,
-            { 
+            {
               name: request.name,
               keyPrefix,
               liteLLMKeyId: liteLLMResponse.key,
               models: modelIds,
               modelCount: modelIds.length,
-              legacy: isLegacyRequest
+              legacy: isLegacyRequest,
             },
-          ]
+          ],
         );
 
         await client.query('COMMIT');
 
-        this.fastify.log.info({
-          userId,
-          apiKeyId: apiKey.rows[0].id,
-          keyPrefix,
-          liteLLMKeyId: liteLLMResponse.key,
-          models: modelIds,
-          modelCount: modelIds.length,
-        }, 'API key created with multi-model support');
+        this.fastify.log.info(
+          {
+            userId,
+            apiKeyId: apiKey.rows[0].id,
+            keyPrefix,
+            liteLLMKeyId: liteLLMResponse.key,
+            models: modelIds,
+            modelCount: modelIds.length,
+          },
+          'API key created with multi-model support',
+        );
 
         const enhancedApiKey = this.mapToEnhancedApiKey(apiKey.rows[0], liteLLMResponse);
         return {
@@ -423,17 +450,19 @@ export class ApiKeyService {
           createdAt: enhancedApiKey.createdAt,
           key, // Only include the actual key on creation
           models: modelIds,
-          modelDetails: validModels.map(m => ({
-            id: m.model_id,
-            name: m.model_name,
-            provider: m.provider,
-            contextLength: m.context_length
+          modelDetails: validModels.map((m) => ({
+            id: String(m.model_id),
+            name: String(m.model_name),
+            provider: String(m.provider),
+            context_length: Number(m.context_length),
           })),
-          subscriptionId: isLegacyRequest ? (request as LegacyCreateApiKeyRequest).subscriptionId : undefined,
+          subscriptionId: isLegacyRequest
+            ? (request as LegacyCreateApiKeyRequest).subscriptionId
+            : undefined,
         };
       } catch (error) {
         await client.query('ROLLBACK');
-        
+
         // Try to clean up in LiteLLM if key was created
         if (liteLLMResponse?.key) {
           try {
@@ -442,7 +471,7 @@ export class ApiKeyService {
             this.fastify.log.error(cleanupError, 'Failed to cleanup LiteLLM key after error');
           }
         }
-        
+
         throw error;
       } finally {
         client.release();
@@ -455,17 +484,20 @@ export class ApiKeyService {
 
   async getApiKey(keyId: string, userId: string): Promise<EnhancedApiKey | null> {
     if (this.shouldUseMockData()) {
-      const mockKey = this.MOCK_API_KEYS.find(k => k.id === keyId);
+      const mockKey = this.MOCK_API_KEYS.find((k) => k.id === keyId);
       return mockKey ? this.createMockResponse(mockKey) : null;
     }
 
     try {
       // Updated query to handle both multi-model and legacy subscription-based keys
-      const apiKey = await this.fastify.dbUtils.queryOne(`
+      const apiKey = await this.fastify.dbUtils.queryOne(
+        `
         SELECT ak.*
         FROM api_keys ak
         WHERE ak.id = $1 AND ak.user_id = $2
-      `, [keyId, userId]);
+      `,
+        [keyId, userId],
+      );
 
       if (!apiKey) {
         return null;
@@ -473,13 +505,16 @@ export class ApiKeyService {
 
       // Get associated models for multi-model keys
       if (!apiKey.subscription_id) {
-        const models = await this.fastify.dbUtils.queryMany(`
+        const models = await this.fastify.dbUtils.queryMany(
+          `
           SELECT m.id as model_id, m.name as model_name, m.provider, m.context_length
           FROM api_key_models akm
           JOIN models m ON akm.model_id = m.id
           WHERE akm.api_key_id = $1
-        `, [keyId]);
-        
+        `,
+          [keyId],
+        );
+
         apiKey.models = models;
       }
 
@@ -492,33 +527,33 @@ export class ApiKeyService {
 
   async getUserApiKeys(
     userId: string,
-    options: ApiKeyListParams = {}
+    options: ApiKeyListParams = {},
   ): Promise<{ data: EnhancedApiKey[]; total: number }> {
     const { subscriptionId, modelIds, isActive, page = 1, limit = 20 } = options;
     const offset = (page - 1) * limit;
 
     if (this.shouldUseMockData()) {
       this.fastify.log.debug('Using mock API key data');
-      
+
       let filteredKeys = [...this.MOCK_API_KEYS];
-      
+
       if (subscriptionId) {
         // For backward compatibility, check subscriptionDetails
-        filteredKeys = filteredKeys.filter(key => 
-          key.subscriptionDetails?.some(sub => sub.subscriptionId === subscriptionId)
+        filteredKeys = filteredKeys.filter((key) =>
+          key.subscriptionDetails?.some((sub) => sub.subscriptionId === subscriptionId),
         );
       }
-      
+
       if (typeof isActive === 'boolean') {
-        filteredKeys = filteredKeys.filter(key => key.isActive === isActive);
+        filteredKeys = filteredKeys.filter((key) => key.isActive === isActive);
       }
-      
+
       const total = filteredKeys.length;
       const paginatedData = filteredKeys.slice(offset, offset + limit);
-      
+
       return this.createMockResponse({
         data: paginatedData,
-        total
+        total,
       });
     }
 
@@ -538,7 +573,7 @@ export class ApiKeyService {
          LEFT JOIN models m ON akm.model_id = m.id
          WHERE ak.user_id = $1
       `;
-      const params: any[] = [userId];
+      const params: (string | boolean | string[])[] = [userId];
 
       if (subscriptionId) {
         query += ` AND ak.subscription_id = $${params.length + 1}`;
@@ -574,11 +609,13 @@ export class ApiKeyService {
 
       if (modelIds && modelIds.length > 0) {
         countQuery += ` AND akm.model_id = ANY($${countParams.length + 1}::text[])`;
+        // @ts-expect-error: Array parameter required for PostgreSQL ANY() operation
         countParams.push(modelIds);
       }
 
       if (typeof isActive === 'boolean') {
         countQuery += ` AND ak.is_active = $${countParams.length + 1}`;
+        // @ts-expect-error: Boolean parameter valid for PostgreSQL
         countParams.push(isActive);
       }
 
@@ -589,30 +626,32 @@ export class ApiKeyService {
 
       // For backward compatibility, include model from subscription if no models in junction table
       for (const key of apiKeys) {
-        if ((!key.models || key.models.length === 0) && key.subscription_id) {
+        if ((!key.models || (key.models as string[]).length === 0) && key.subscription_id) {
           const subscription = await this.fastify.dbUtils.queryOne(
             `SELECT s.model_id, m.name, m.provider, m.context_length
              FROM subscriptions s
              JOIN models m ON s.model_id = m.id
              WHERE s.id = $1`,
-            [key.subscription_id]
+            [String(key.subscription_id)],
           );
-          
+
           if (subscription) {
             key.models = [subscription.model_id];
-            key.model_details = [{
-              id: subscription.model_id,
-              name: subscription.name,
-              provider: subscription.provider,
-              context_length: subscription.context_length
-            }];
+            key.model_details = [
+              {
+                id: subscription.model_id,
+                name: subscription.name,
+                provider: subscription.provider,
+                context_length: subscription.context_length,
+              },
+            ];
           }
         }
       }
 
       return {
-        data: apiKeys.map(key => this.mapToEnhancedApiKey(key)),
-        total: parseInt(countResult.count),
+        data: apiKeys.map((key) => this.mapToEnhancedApiKey(key)),
+        total: countResult ? parseInt(String(countResult.count)) : 0,
       };
     } catch (error) {
       this.fastify.log.error(error, 'Failed to get user API keys');
@@ -651,15 +690,18 @@ export class ApiKeyService {
           liteLLMInfo.tpm_limit,
           liteLLMInfo.rpm_limit,
           keyId,
-        ]
+        ],
       );
 
-      this.fastify.log.info({
-        keyId,
-        userId,
-        spend: liteLLMInfo.spend,
-        maxBudget: liteLLMInfo.max_budget,
-      }, 'API key synced with LiteLLM');
+      this.fastify.log.info(
+        {
+          keyId,
+          userId,
+          spend: liteLLMInfo.spend,
+          maxBudget: liteLLMInfo.max_budget,
+        },
+        'API key synced with LiteLLM',
+      );
 
       return this.mapToEnhancedApiKey(updatedApiKey, undefined, liteLLMInfo);
     } catch (error) {
@@ -670,7 +712,7 @@ export class ApiKeyService {
              sync_error = $1,
              last_sync_at = CURRENT_TIMESTAMP
          WHERE id = $2`,
-        [error.message, keyId]
+        [error instanceof Error ? error.message : String(error), keyId],
       );
 
       this.fastify.log.error(error, 'Failed to sync API key with LiteLLM');
@@ -718,14 +760,14 @@ export class ApiKeyService {
   }
 
   async updateApiKeyLimits(
-    keyId: string, 
-    userId: string, 
+    keyId: string,
+    userId: string,
     updates: {
       maxBudget?: number;
       tpmLimit?: number;
       rpmLimit?: number;
       allowedModels?: string[];
-    }
+    },
   ): Promise<EnhancedApiKey> {
     try {
       const apiKey = await this.getApiKey(keyId, userId);
@@ -756,27 +798,24 @@ export class ApiKeyService {
              last_sync_at = CURRENT_TIMESTAMP
          WHERE id = $4
          RETURNING *`,
-        [updates.maxBudget, updates.tpmLimit, updates.rpmLimit, keyId]
+        [updates.maxBudget, updates.tpmLimit, updates.rpmLimit, keyId],
       );
 
       // Create audit log
       await this.fastify.dbUtils.query(
         `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
          VALUES ($1, $2, $3, $4, $5)`,
-        [
-          userId,
-          'API_KEY_UPDATE',
-          'API_KEY',
-          keyId,
-          updates,
-        ]
+        [userId, 'API_KEY_UPDATE', 'API_KEY', keyId, updates],
       );
 
-      this.fastify.log.info({
-        keyId,
-        userId,
-        updates,
-      }, 'API key limits updated');
+      this.fastify.log.info(
+        {
+          keyId,
+          userId,
+          updates,
+        },
+        'API key limits updated',
+      );
 
       return this.mapToEnhancedApiKey(updatedApiKey);
     } catch (error) {
@@ -795,7 +834,7 @@ export class ApiKeyService {
       const keyHash = this.hashApiKey(key);
 
       if (this.shouldUseMockData()) {
-        const mockKey = this.MOCK_API_KEYS.find(k => k.keyPrefix === keyPrefix);
+        const mockKey = this.MOCK_API_KEYS.find((k) => k.keyPrefix === keyPrefix);
         if (mockKey && mockKey.isActive) {
           return {
             isValid: true,
@@ -833,7 +872,7 @@ export class ApiKeyService {
          LEFT JOIN api_key_models akm ON ak.id = akm.api_key_id
          WHERE ak.key_hash = $1 AND ak.is_active = true
          GROUP BY ak.id`,
-        [keyHash]
+        [keyHash],
       );
 
       if (!apiKey) {
@@ -841,17 +880,17 @@ export class ApiKeyService {
       }
 
       // Check if key is expired
-      if (apiKey.expires_at && new Date(apiKey.expires_at) < new Date()) {
+      if (apiKey.expires_at && new Date(String(apiKey.expires_at)) < new Date()) {
         return { isValid: false, error: 'API key expired' };
       }
 
       // For backward compatibility, load models from subscription if no models in junction table
-      if ((!apiKey.models || apiKey.models.length === 0) && apiKey.subscription_id) {
+      if ((!apiKey.models || (apiKey.models as string[]).length === 0) && apiKey.subscription_id) {
         const subscription = await this.fastify.dbUtils.queryOne(
           `SELECT s.model_id, s.status FROM subscriptions s WHERE s.id = $1`,
-          [apiKey.subscription_id]
+          [String(apiKey.subscription_id)],
         );
-        
+
         if (subscription) {
           if (subscription.status !== 'active') {
             return { isValid: false, error: `Subscription is ${subscription.status}` };
@@ -861,31 +900,31 @@ export class ApiKeyService {
       }
 
       // Update last used timestamp
-      await this.updateLastUsed(apiKey.id);
+      await this.updateLastUsed(String(apiKey.id));
 
       return {
         isValid: true,
         apiKey: {
-          id: apiKey.id,
-          userId: apiKey.user_id,
-          models: apiKey.models || [],
-          name: apiKey.name || '',
-          keyHash: apiKey.key_hash,
-          keyPrefix: apiKey.key_prefix,
-          isActive: apiKey.is_active,
-          createdAt: new Date(apiKey.created_at),
-          lastUsedAt: apiKey.last_used_at ? new Date(apiKey.last_used_at) : undefined,
-          expiresAt: apiKey.expires_at ? new Date(apiKey.expires_at) : undefined,
-          revokedAt: apiKey.revoked_at ? new Date(apiKey.revoked_at) : undefined,
-          liteLLMKeyId: apiKey.lite_llm_key_id,
-          lastSyncAt: apiKey.last_sync_at ? new Date(apiKey.last_sync_at) : undefined,
-          syncStatus: apiKey.sync_status,
-          syncError: apiKey.sync_error,
-          maxBudget: apiKey.max_budget,
-          currentSpend: apiKey.current_spend,
-          tpmLimit: apiKey.tpm_limit,
-          rpmLimit: apiKey.rpm_limit,
-          metadata: apiKey.metadata,
+          id: String(apiKey.id),
+          userId: String(apiKey.user_id),
+          models: (apiKey.models as string[]) || [],
+          name: String(apiKey.name || ''),
+          keyHash: String(apiKey.key_hash),
+          keyPrefix: String(apiKey.key_prefix),
+          isActive: Boolean(apiKey.is_active),
+          createdAt: new Date(String(apiKey.created_at)),
+          lastUsedAt: apiKey.last_used_at ? new Date(String(apiKey.last_used_at)) : undefined,
+          expiresAt: apiKey.expires_at ? new Date(String(apiKey.expires_at)) : undefined,
+          revokedAt: apiKey.revoked_at ? new Date(String(apiKey.revoked_at)) : undefined,
+          liteLLMKeyId: apiKey.lite_llm_key_id as string | undefined,
+          lastSyncAt: apiKey.last_sync_at ? new Date(String(apiKey.last_sync_at)) : undefined,
+          syncStatus: apiKey.sync_status as 'synced' | 'pending' | 'error' | undefined,
+          syncError: apiKey.sync_error as string | undefined,
+          maxBudget: apiKey.max_budget as number | undefined,
+          currentSpend: apiKey.current_spend as number | undefined,
+          tpmLimit: apiKey.tpm_limit as number | undefined,
+          rpmLimit: apiKey.rpm_limit as number | undefined,
+          metadata: apiKey.metadata as Record<string, unknown>,
         },
       };
     } catch (error) {
@@ -906,15 +945,15 @@ export class ApiKeyService {
         try {
           await this.liteLLMService.deleteKey(apiKey.liteLLMKeyId);
         } catch (error) {
-          this.fastify.log.warn(error, 'Failed to delete key from LiteLLM, proceeding with local deletion');
+          this.fastify.log.warn(
+            error,
+            'Failed to delete key from LiteLLM, proceeding with local deletion',
+          );
         }
       }
 
       // Delete from local database
-      await this.fastify.dbUtils.query(
-        'DELETE FROM api_keys WHERE id = $1',
-        [keyId]
-      );
+      await this.fastify.dbUtils.query('DELETE FROM api_keys WHERE id = $1', [keyId]);
 
       // Create audit log
       await this.fastify.dbUtils.query(
@@ -925,21 +964,342 @@ export class ApiKeyService {
           'API_KEY_DELETE',
           'API_KEY',
           keyId,
-          { 
+          {
             models: apiKey.models,
             keyName: apiKey.name,
-            keyPrefix: apiKey.keyPrefix
+            keyPrefix: apiKey.keyPrefix,
           },
-        ]
+        ],
       );
 
-      this.fastify.log.info({
-        userId,
-        apiKeyId: keyId,
-        models: apiKey.models,
-      }, 'API key deleted');
+      this.fastify.log.info(
+        {
+          userId,
+          apiKeyId: keyId,
+          models: apiKey.models,
+        },
+        'API key deleted',
+      );
     } catch (error) {
       this.fastify.log.error(error, 'Failed to delete API key');
+      throw error;
+    }
+  }
+
+  async rotateApiKey(
+    keyId: string,
+    userId: string,
+  ): Promise<{ id: string; key: string; keyPrefix: string }> {
+    try {
+      // Get existing API key
+      const existingKey = await this.getApiKey(keyId, userId);
+      if (!existingKey) {
+        throw this.fastify.createNotFoundError('API key');
+      }
+
+      // Generate new key
+      const newKey = this.generateApiKey();
+      const hashedKey = this.hashApiKey(newKey.key);
+      const keyPrefix = newKey.keyPrefix;
+
+      // Use transaction wrapper
+      return await this.fastify.dbUtils.withTransaction(async (client) => {
+        // Update the API key in database
+        await client.query(
+          `UPDATE api_keys 
+           SET key_hash = $1, key_prefix = $2, updated_at = CURRENT_TIMESTAMP
+           WHERE id = $3`,
+          [hashedKey, keyPrefix, keyId],
+        );
+
+        // If LiteLLM integration is enabled, rotate key there too
+        if (existingKey.liteLLMKeyId && !this.shouldUseMockData()) {
+          try {
+            // Delete old key from LiteLLM
+            await this.liteLLMService.deleteKey(existingKey.liteLLMKeyId);
+
+            // Create new key in LiteLLM
+            const liteLLMResponse = await this.liteLLMService.generateApiKey({
+              models: existingKey.models || [],
+              duration: existingKey.expiresAt
+                ? this.calculateDuration(existingKey.expiresAt)
+                : undefined,
+              max_budget: existingKey.maxBudget,
+              tpm_limit: existingKey.tpmLimit,
+              rpm_limit: existingKey.rpmLimit,
+              metadata: {
+                ...existingKey.metadata,
+                user_id: userId,
+                litemaas_key_id: keyId,
+                rotated_at: new Date().toISOString(),
+              },
+            });
+
+            // Update LiteLLM key ID
+            await client.query('UPDATE api_keys SET litellm_key_id = $1 WHERE id = $2', [
+              liteLLMResponse.key,
+              keyId,
+            ]);
+          } catch (error) {
+            this.fastify.log.warn(
+              error,
+              'Failed to rotate key in LiteLLM, proceeding with local rotation only',
+            );
+          }
+        }
+
+        // Create audit log
+        await client.query(
+          `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            userId,
+            'API_KEY_ROTATE',
+            'API_KEY',
+            keyId,
+            {
+              models: existingKey.models,
+              keyName: existingKey.name,
+              oldPrefix: existingKey.keyPrefix,
+              newPrefix: keyPrefix,
+            },
+          ],
+        );
+
+        this.fastify.log.info(
+          {
+            userId,
+            apiKeyId: keyId,
+            models: existingKey.models,
+            oldPrefix: existingKey.keyPrefix,
+            newPrefix: keyPrefix,
+          },
+          'API key rotated',
+        );
+
+        return {
+          id: keyId,
+          key: newKey.key,
+          keyPrefix,
+        };
+      });
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to rotate API key');
+      throw error;
+    }
+  }
+
+  async getApiKeyUsage(
+    keyId: string,
+    userId: string,
+  ): Promise<{
+    totalRequests: number;
+    requestsThisMonth: number;
+    lastUsedAt?: Date;
+    createdAt: Date;
+  }> {
+    try {
+      // First verify the API key belongs to the user
+      const apiKey = await this.getApiKey(keyId, userId);
+      if (!apiKey) {
+        throw this.fastify.createNotFoundError('API key');
+      }
+
+      // Get total requests
+      const totalResult = await this.fastify.dbUtils.query(
+        `SELECT COUNT(*) as total 
+         FROM usage_logs 
+         WHERE api_key_id = $1`,
+        [keyId],
+      );
+
+      // Get requests this month
+      const monthResult = await this.fastify.dbUtils.query(
+        `SELECT COUNT(*) as total 
+         FROM usage_logs 
+         WHERE api_key_id = $1 
+         AND created_at >= DATE_TRUNC('month', CURRENT_DATE)`,
+        [keyId],
+      );
+
+      // Get last used timestamp
+      const lastUsedResult = await this.fastify.dbUtils.query(
+        `SELECT MAX(created_at) as last_used 
+         FROM usage_logs 
+         WHERE api_key_id = $1`,
+        [keyId],
+      );
+
+      return {
+        totalRequests: Number(totalResult.rows[0]?.total || 0),
+        requestsThisMonth: Number(monthResult.rows[0]?.total || 0),
+        lastUsedAt: (() => {
+          const lastUsed = lastUsedResult.rows[0]?.last_used;
+          if (
+            lastUsed &&
+            (typeof lastUsed === 'string' ||
+              typeof lastUsed === 'number' ||
+              lastUsed instanceof Date)
+          ) {
+            return new Date(lastUsed);
+          }
+          return undefined;
+        })(),
+        createdAt: apiKey.createdAt,
+      };
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to get API key usage');
+      throw error;
+    }
+  }
+
+  async getApiKeyStats(userId: string): Promise<{
+    total: number;
+    active: number;
+    expired: number;
+    revoked: number;
+    bySubscription: Record<string, number>;
+    byModel: Record<string, number>;
+  }> {
+    try {
+      // Get counts by status
+      const statusResult = await this.fastify.dbUtils.query(
+        `SELECT 
+          COUNT(*) as total,
+          COUNT(CASE WHEN is_active = true AND (expires_at IS NULL OR expires_at > NOW()) THEN 1 END) as active,
+          COUNT(CASE WHEN expires_at IS NOT NULL AND expires_at <= NOW() THEN 1 END) as expired,
+          COUNT(CASE WHEN is_active = false THEN 1 END) as revoked
+         FROM api_keys 
+         WHERE user_id = $1`,
+        [userId],
+      );
+
+      // Get count by subscription (legacy)
+      const subscriptionResult = await this.fastify.dbUtils.query(
+        `SELECT subscription_id, COUNT(*) as count
+         FROM api_keys
+         WHERE user_id = $1 AND subscription_id IS NOT NULL
+         GROUP BY subscription_id`,
+        [userId],
+      );
+
+      // Get count by model (new multi-model support)
+      const modelResult = await this.fastify.dbUtils.query(
+        `SELECT akm.model_id, COUNT(DISTINCT ak.id) as count
+         FROM api_keys ak
+         JOIN api_key_models akm ON ak.id = akm.api_key_id
+         WHERE ak.user_id = $1
+         GROUP BY akm.model_id`,
+        [userId],
+      );
+
+      const stats = statusResult.rows[0];
+      const bySubscription: Record<string, number> = {};
+      const byModel: Record<string, number> = {};
+
+      // Build subscription map
+      subscriptionResult.rows.forEach(
+        (row: { subscription_id: string; count: string | number }) => {
+          bySubscription[row.subscription_id] = parseInt(row.count, 10);
+        },
+      );
+
+      // Build model map
+      modelResult.rows.forEach((row: { model_id: string; count: string | number }) => {
+        byModel[row.model_id] = parseInt(row.count, 10);
+      });
+
+      return {
+        total: Number(stats?.total || 0),
+        active: Number(stats?.active || 0),
+        expired: Number(stats?.expired || 0),
+        revoked: Number(stats?.revoked || 0),
+        bySubscription,
+        byModel,
+      };
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to get API key statistics');
+      throw error;
+    }
+  }
+
+  async cleanupExpiredKeys(): Promise<number> {
+    try {
+      // Use transaction wrapper
+      return await this.fastify.dbUtils.withTransaction(async (client) => {
+        // Get expired keys with their LiteLLM IDs
+        const expiredKeysResult = await client.query(
+          `SELECT id, litellm_key_id, user_id, name, key_prefix
+           FROM api_keys
+           WHERE expires_at IS NOT NULL 
+           AND expires_at <= NOW()
+           AND is_active = true`,
+        );
+
+        const expiredKeys = expiredKeysResult.rows;
+
+        if (expiredKeys.length === 0) {
+          return 0;
+        }
+
+        // Mark expired keys as inactive
+        const keyIds = expiredKeys.map((k) => k.id);
+        await client.query(
+          `UPDATE api_keys 
+           SET is_active = false, updated_at = CURRENT_TIMESTAMP
+           WHERE id = ANY($1)`,
+          [keyIds],
+        );
+
+        // Delete from LiteLLM if integrated
+        if (!this.shouldUseMockData()) {
+          for (const key of expiredKeys) {
+            if (key.litellm_key_id && typeof key.litellm_key_id === 'string') {
+              try {
+                await this.liteLLMService.deleteKey(key.litellm_key_id);
+              } catch (error) {
+                this.fastify.log.warn(
+                  { error, litellmKeyId: key.litellm_key_id },
+                  'Failed to delete expired key from LiteLLM',
+                );
+              }
+            }
+          }
+        }
+
+        // Create audit logs for each cleaned key
+        const auditValues = expiredKeys.map((key) => [
+          key.user_id,
+          'API_KEY_EXPIRED',
+          'API_KEY',
+          key.id,
+          JSON.stringify({
+            keyName: key.name,
+            keyPrefix: key.key_prefix,
+            cleanupReason: 'expired',
+          }),
+        ]);
+
+        if (auditValues.length > 0) {
+          const auditQuery = `
+            INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+            VALUES ${auditValues.map((_, i) => `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${i * 5 + 4}, $${i * 5 + 5})`).join(', ')}
+          `;
+          await client.query(auditQuery, auditValues.flat());
+        }
+
+        this.fastify.log.info(
+          {
+            cleanedCount: expiredKeys.length,
+            keyIds: keyIds,
+          },
+          'Cleaned up expired API keys',
+        );
+
+        return expiredKeys.length;
+      });
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to cleanup expired API keys');
       throw error;
     }
   }
@@ -969,7 +1329,7 @@ export class ApiKeyService {
   }
 
   private isValidKeyFormat(key: string): boolean {
-    const expectedLength = this.KEY_PREFIX.length + (this.KEY_LENGTH * 2);
+    const expectedLength = this.KEY_PREFIX.length + this.KEY_LENGTH * 2;
     return (
       typeof key === 'string' &&
       key.length === expectedLength &&
@@ -991,7 +1351,7 @@ export class ApiKeyService {
     try {
       await this.fastify.dbUtils.query(
         'UPDATE api_keys SET last_used_at = CURRENT_TIMESTAMP WHERE id = $1',
-        [keyId]
+        [keyId],
       );
     } catch (error) {
       this.fastify.log.warn(error, 'Failed to update last used timestamp');
@@ -999,9 +1359,32 @@ export class ApiKeyService {
   }
 
   private mapToEnhancedApiKey(
-    apiKey: any, 
+    apiKey: {
+      id: string;
+      user_id: string;
+      models?: string[];
+      name?: string;
+      key_hash: string;
+      key_prefix: string;
+      last_used_at?: Date | string;
+      expires_at?: Date | string;
+      is_active: boolean;
+      created_at: Date | string;
+      revoked_at?: Date | string;
+      lite_llm_key_id?: string;
+      last_sync_at?: Date | string;
+      sync_status?: string;
+      sync_error?: string;
+      max_budget?: number;
+      current_spend?: number;
+      tpm_limit?: number;
+      rpm_limit?: number;
+      metadata?: Record<string, unknown>;
+      model_details?: unknown[];
+      subscription_id?: string;
+    },
     liteLLMResponse?: LiteLLMKeyGenerationResponse,
-    liteLLMInfo?: LiteLLMKeyInfo
+    _liteLLMInfo?: LiteLLMKeyInfo,
   ): EnhancedApiKey {
     return {
       id: apiKey.id,
@@ -1027,13 +1410,17 @@ export class ApiKeyService {
       // Include model details if available
       modelDetails: apiKey.model_details || [],
       // Keep subscription info for backward compatibility
-      subscriptionDetails: apiKey.subscription_id ? [{
-        subscriptionId: apiKey.subscription_id,
-        modelId: apiKey.models?.[0] || '',
-        status: 'active',
-        quotaRequests: 0,
-        usedRequests: 0,
-      }] : undefined,
+      subscriptionDetails: apiKey.subscription_id
+        ? [
+            {
+              subscriptionId: apiKey.subscription_id,
+              modelId: apiKey.models?.[0] || '',
+              status: 'active',
+              quotaRequests: 0,
+              usedRequests: 0,
+            },
+          ]
+        : undefined,
     };
   }
 
@@ -1051,12 +1438,12 @@ export class ApiKeyService {
     } catch (error) {
       // User doesn't exist in LiteLLM, get user from database and create them
       this.fastify.log.info({ userId }, 'Creating user in LiteLLM for API key creation');
-      
+
       try {
         // Get user information from database
         const user = await this.fastify.dbUtils.queryOne(
           'SELECT id, username, email, full_name, roles, max_budget, tpm_limit, rpm_limit FROM users WHERE id = $1',
-          [userId]
+          [userId],
         );
 
         if (!user) {
@@ -1065,36 +1452,44 @@ export class ApiKeyService {
 
         // Create user in LiteLLM
         await this.liteLLMService.createUser({
-          user_id: user.id,
-          user_email: user.email,
-          user_alias: user.username,
-          user_role: user.roles?.includes('admin') ? 'proxy_admin' : 'internal_user',
-          max_budget: user.max_budget || 100, // Use user's budget or default
-          tpm_limit: user.tpm_limit || 1000,  // Use user's limit or default
-          rpm_limit: user.rpm_limit || 60,    // Use user's limit or default
+          user_id: String(user.id),
+          user_email: user.email as string,
+          user_alias: user.username as string,
+          user_role: (user.roles as string[])?.includes('admin') ? 'proxy_admin' : 'internal_user',
+          max_budget: Number(user.max_budget) || 100, // Use user's budget or default
+          tpm_limit: Number(user.tpm_limit) || 1000, // Use user's limit or default
+          rpm_limit: Number(user.rpm_limit) || 60, // Use user's limit or default
           auto_create_key: false, // Don't auto-create key during user creation
         });
 
         // Update user sync status in database
         await this.fastify.dbUtils.query(
           'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
-          ['synced', userId]
+          ['synced', userId],
         );
 
-        this.fastify.log.info({ userId }, 'Successfully created user in LiteLLM for API key creation');
+        this.fastify.log.info(
+          { userId },
+          'Successfully created user in LiteLLM for API key creation',
+        );
       } catch (createError) {
         // Update user sync status to error
         await this.fastify.dbUtils.query(
           'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
-          ['error', userId]
+          ['error', userId],
         );
 
-        this.fastify.log.error({
-          userId,
-          error: createError instanceof Error ? createError.message : 'Unknown error'
-        }, 'Failed to create user in LiteLLM for API key creation');
-        
-        throw new Error(`Failed to create user in LiteLLM: ${createError instanceof Error ? createError.message : 'Unknown error'}`);
+        this.fastify.log.error(
+          {
+            userId,
+            error: createError instanceof Error ? createError.message : 'Unknown error',
+          },
+          'Failed to create user in LiteLLM for API key creation',
+        );
+
+        throw new Error(
+          `Failed to create user in LiteLLM: ${createError instanceof Error ? createError.message : 'Unknown error'}`,
+        );
       }
     }
   }

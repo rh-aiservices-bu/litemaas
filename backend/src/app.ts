@@ -1,5 +1,7 @@
 import Fastify, { FastifyInstance } from 'fastify';
 import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
+// Load type extensions
+import './types';
 
 import {
   envPlugin,
@@ -18,15 +20,21 @@ import routes from './routes';
 
 export const createApp = async (opts: { logger?: boolean } = {}): Promise<FastifyInstance> => {
   const fastify = Fastify({
-    logger: opts.logger !== false ? {
-      level: process.env.LOG_LEVEL || 'info',
-      transport: process.env.NODE_ENV === 'development' ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-        },
-      } : undefined,
-    } : false,
+    logger:
+      opts.logger !== false
+        ? {
+            level: process.env.LOG_LEVEL || 'info',
+            transport:
+              process.env.NODE_ENV === 'development'
+                ? {
+                    target: 'pino-pretty',
+                    options: {
+                      colorize: true,
+                    },
+                  }
+                : undefined,
+          }
+        : false,
     genReqId: (req) => {
       return req.headers['x-request-id'] || Math.random().toString(36).substring(2, 15);
     },
@@ -41,7 +49,7 @@ export const createApp = async (opts: { logger?: boolean } = {}): Promise<Fastif
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         scriptSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https:"],
+        imgSrc: ["'self'", 'data:', 'https:'],
       },
     },
   });

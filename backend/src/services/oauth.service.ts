@@ -1,7 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { OAuthUserInfo, OAuthTokenResponse } from '../types';
 import { LiteLLMService } from './litellm.service';
-import { LiteLLMUserRequest } from '../types/user.types';
 
 export interface MockUser {
   id: string;
@@ -47,7 +46,8 @@ export class OAuthService {
 
   constructor(fastify: FastifyInstance, liteLLMService?: LiteLLMService) {
     this.fastify = fastify;
-    this.isMockEnabled = process.env.OAUTH_MOCK_ENABLED === 'true' || process.env.NODE_ENV === 'development';
+    this.isMockEnabled =
+      process.env.OAUTH_MOCK_ENABLED === 'true' || process.env.NODE_ENV === 'development';
     this.liteLLMService = liteLLMService || new LiteLLMService(fastify);
   }
 
@@ -67,19 +67,19 @@ export class OAuthService {
     return `${this.fastify.config.OAUTH_ISSUER}/oauth/authorize?${params.toString()}`;
   }
 
-  async exchangeCodeForToken(code: string, state: string): Promise<OAuthTokenResponse> {
+  async exchangeCodeForToken(code: string, _state: string): Promise<OAuthTokenResponse> {
     if (this.isMockEnabled) {
       return this.mockTokenExchange(code);
     }
 
     // Real OAuth implementation
     const tokenUrl = `${this.fastify.config.OAUTH_ISSUER}/oauth/token`;
-    
+
     const response = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
       body: new URLSearchParams({
         grant_type: 'authorization_code',
@@ -104,11 +104,11 @@ export class OAuthService {
 
     // Real OpenShift user info
     const userInfoUrl = `${this.fastify.config.OAUTH_ISSUER}/apis/user.openshift.io/v1/users/~`;
-    
+
     const response = await fetch(userInfoUrl, {
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
-        'Accept': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
       },
     });
 
@@ -117,7 +117,7 @@ export class OAuthService {
     }
 
     const userResponse = await response.json();
-    
+
     return {
       sub: userResponse.metadata.uid,
       preferred_username: userResponse.metadata.name,
@@ -144,7 +144,7 @@ export class OAuthService {
   private mockGetUserInfo(accessToken: string): OAuthUserInfo {
     // Extract user ID from mock token
     const userId = accessToken.replace('mock_token_', '');
-    const user = MOCK_USERS.find(u => u.id === userId) || MOCK_USERS[0];
+    const user = MOCK_USERS.find((u) => u.id === userId) || MOCK_USERS[0];
 
     return {
       sub: user.id,
@@ -157,7 +157,9 @@ export class OAuthService {
   }
 
   generateState(): string {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    return (
+      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    );
   }
 
   getMockUsers(): MockUser[] {
@@ -167,18 +169,18 @@ export class OAuthService {
   private mapGroupsToRoles(groups: string[]): string[] {
     const roleMapping: Record<string, string[]> = {
       'litemaas-admins': ['admin', 'user'],
-      'administrators': ['admin', 'user'],
+      administrators: ['admin', 'user'],
       'litemaas-users': ['user'],
-      'developers': ['user'],
+      developers: ['user'],
       'litemaas-readonly': ['readonly'],
-      'viewers': ['readonly'],
+      viewers: ['readonly'],
     };
 
     const roles = new Set<string>();
-    
+
     for (const group of groups) {
       const mappedRoles = roleMapping[group] || [];
-      mappedRoles.forEach(role => roles.add(role));
+      mappedRoles.forEach((role) => roles.add(role));
     }
 
     return roles.size > 0 ? Array.from(roles) : ['user'];
@@ -201,7 +203,7 @@ export class OAuthService {
     } catch (error) {
       // User doesn't exist in LiteLLM, create them
       this.fastify.log.info({ userId: user.id, email: user.email }, 'Creating user in LiteLLM');
-      
+
       try {
         await this.liteLLMService.createUser({
           user_id: user.id,
@@ -210,17 +212,20 @@ export class OAuthService {
           user_role: user.roles.includes('admin') ? 'proxy_admin' : 'internal_user',
           max_budget: 100, // Default budget - can be customized via environment
           tpm_limit: 1000, // Default TPM limit
-          rpm_limit: 60,   // Default RPM limit
+          rpm_limit: 60, // Default RPM limit
           auto_create_key: false, // Don't auto-create key during user creation
         });
 
         this.fastify.log.info({ userId: user.id }, 'Successfully created user in LiteLLM');
       } catch (createError) {
-        this.fastify.log.warn({
-          userId: user.id,
-          error: createError instanceof Error ? createError.message : 'Unknown error'
-        }, 'Failed to create user in LiteLLM - will retry during sync');
-        
+        this.fastify.log.warn(
+          {
+            userId: user.id,
+            error: createError instanceof Error ? createError.message : 'Unknown error',
+          },
+          'Failed to create user in LiteLLM - will retry during sync',
+        );
+
         // Don't throw here - let the user continue and sync will retry later
         throw createError;
       }
@@ -239,7 +244,7 @@ export class OAuthService {
     // Check if user exists in database
     const existingUser = await this.fastify.dbUtils.queryOne(
       'SELECT * FROM users WHERE oauth_id = $1 AND oauth_provider = $2',
-      [userInfo.sub, 'openshift']
+      [userInfo.sub, 'openshift'],
     );
 
     let user: {
@@ -256,7 +261,7 @@ export class OAuthService {
         `UPDATE users SET 
          username = $1, email = $2, full_name = $3, roles = $4, last_login_at = NOW(), updated_at = NOW()
          WHERE id = $5`,
-        [userInfo.preferred_username, userInfo.email, userInfo.name, roles, existingUser.id]
+        [userInfo.preferred_username, userInfo.email, userInfo.name, roles, existingUser.id],
       );
 
       user = {
@@ -279,7 +284,7 @@ export class OAuthService {
           'openshift',
           userInfo.sub,
           roles,
-        ]
+        ],
       );
 
       user = {
@@ -294,26 +299,32 @@ export class OAuthService {
     // NEW: Ensure user exists in LiteLLM
     try {
       await this.ensureLiteLLMUser(user);
-      
+
       // Update sync status to 'synced' if successful
       await this.fastify.dbUtils.query(
         'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
-        ['synced', user.id]
+        ['synced', user.id],
       );
-      
-      this.fastify.log.info({ userId: user.id }, 'User successfully synced to LiteLLM during authentication');
+
+      this.fastify.log.info(
+        { userId: user.id },
+        'User successfully synced to LiteLLM during authentication',
+      );
     } catch (error) {
       // Update sync status to 'error' but don't fail authentication
       await this.fastify.dbUtils.query(
         'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
-        ['error', user.id]
+        ['error', user.id],
       );
-      
-      this.fastify.log.warn({
-        userId: user.id,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }, 'Failed to sync user to LiteLLM during authentication - user can still proceed');
-      
+
+      this.fastify.log.warn(
+        {
+          userId: user.id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Failed to sync user to LiteLLM during authentication - user can still proceed',
+      );
+
       // Continue without throwing - user authentication should not fail due to LiteLLM issues
     }
 

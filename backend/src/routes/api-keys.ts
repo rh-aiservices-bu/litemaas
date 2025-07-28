@@ -9,14 +9,18 @@ import {
   AuthenticatedRequest,
 } from '../types';
 import {
-  CreateApiKeySchema,
-  LegacyCreateApiKeySchema,
   CreateApiKeyRequestSchema,
   ApiKeyResponseSchema,
   SingleApiKeyResponseSchema,
 } from '../schemas/api-keys';
 import { ApiKeyService } from '../services/api-key.service';
 import { LiteLLMService } from '../services/litellm.service';
+
+// Error type for proper error handling
+interface ErrorWithStatusCode extends Error {
+  statusCode?: number;
+  code?: string;
+}
 
 const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
   // Initialize services
@@ -38,10 +42,10 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           page: { type: 'number', minimum: 1, default: 1 },
           limit: { type: 'number', minimum: 1, maximum: 100, default: 20 },
           subscriptionId: { type: 'string', description: 'Legacy: Filter by subscription ID' },
-          modelIds: { 
-            type: 'array', 
+          modelIds: {
+            type: 'array',
             items: { type: 'string' },
-            description: 'New: Filter by model IDs'
+            description: 'New: Filter by model IDs',
           },
           isActive: { type: 'boolean' },
         },
@@ -51,7 +55,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { page = 1, limit = 20, subscriptionId, modelIds, isActive } = request.query;
 
@@ -67,7 +71,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         const totalPages = Math.ceil(result.total / limit);
 
         return {
-          data: result.data.map(apiKey => ({
+          data: result.data.map((apiKey) => ({
             ...apiKey,
             prefix: apiKey.keyPrefix, // Map keyPrefix to prefix for schema compatibility
           })),
@@ -106,13 +110,13 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
 
       try {
         const apiKey = await apiKeyService.getApiKey(id, user.userId);
-        
+
         if (!apiKey) {
           throw fastify.createNotFoundError('API key');
         }
@@ -123,11 +127,11 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to get API key');
-        
-        if (error.statusCode) {
+
+        if ((error as ErrorWithStatusCode).statusCode) {
           throw error;
         }
-        
+
         throw fastify.createError(500, 'Failed to get API key');
       }
     },
@@ -154,13 +158,17 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
 
       // Check if this is the new format or legacy format
       const isLegacyFormat = 'subscriptionId' in body && !('modelIds' in body);
-      
+
       if (isLegacyFormat) {
         // Add deprecation warning header
-        reply.header('X-API-Deprecation-Warning', 
-          'subscriptionId parameter is deprecated. Use modelIds array instead.');
-        reply.header('X-API-Migration-Guide', 
-          'See /docs/api/migration-guide for details on upgrading to multi-model API keys.');
+        reply.header(
+          'X-API-Deprecation-Warning',
+          'subscriptionId parameter is deprecated. Use modelIds array instead.',
+        );
+        reply.header(
+          'X-API-Migration-Guide',
+          'See /docs/api/migration-guide for details on upgrading to multi-model API keys.',
+        );
       }
 
       try {
@@ -172,21 +180,20 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           name: apiKey.name,
           key: apiKey.key, // Only returned on creation
           prefix: apiKey.keyPrefix, // Map keyPrefix to prefix for schema compatibility
-          models: apiKey.models,
+          models: apiKey.models || [],
           modelDetails: apiKey.modelDetails,
           subscriptionId: apiKey.subscriptionId, // For backward compatibility
           createdAt: apiKey.createdAt,
           expiresAt: apiKey.expiresAt,
           isActive: apiKey.isActive,
-          metadata: apiKey.metadata,
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to create API key');
-        
-        if (error.statusCode) {
+
+        if ((error as ErrorWithStatusCode).statusCode) {
           throw error;
         }
-        
+
         throw fastify.createError(500, 'Failed to create API key');
       }
     },
@@ -222,7 +229,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
 
@@ -239,16 +246,16 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           id: rotatedApiKey.id,
           key: rotatedApiKey.key, // New key
           keyPrefix: rotatedApiKey.keyPrefix,
-          rotatedAt: new Date().toISOString(),
+          rotatedAt: new Date(),
           oldPrefix: oldApiKey.keyPrefix,
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to rotate API key');
-        
-        if (error.statusCode) {
+
+        if ((error as ErrorWithStatusCode).statusCode) {
           throw error;
         }
-        
+
         throw fastify.createError(500, 'Failed to rotate API key');
       }
     },
@@ -281,7 +288,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
 
@@ -294,11 +301,11 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to delete API key');
-        
-        if (error.statusCode) {
+
+        if ((error as ErrorWithStatusCode).statusCode) {
           throw error;
         }
-        
+
         throw fastify.createError(500, 'Failed to delete API key');
       }
     },
@@ -338,7 +345,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
 
@@ -353,11 +360,11 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to get API key usage');
-        
-        if (error.statusCode) {
+
+        if ((error as ErrorWithStatusCode).statusCode) {
           throw error;
         }
-        
+
         throw fastify.createError(500, 'Failed to get API key usage');
       }
     },
@@ -380,19 +387,19 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             bySubscription: {
               type: 'object',
               additionalProperties: { type: 'number' },
-              description: 'Legacy: Count by subscription (for backward compatibility)'
+              description: 'Legacy: Count by subscription (for backward compatibility)',
             },
             byModel: {
               type: 'object',
               additionalProperties: { type: 'number' },
-              description: 'New: Count by model'
+              description: 'New: Count by model',
             },
           },
         },
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
 
       try {
@@ -423,14 +430,14 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           type: 'object',
           properties: {
             isValid: { type: 'boolean' },
-            subscriptionId: { 
+            subscriptionId: {
               type: 'string',
-              description: 'Legacy field for backward compatibility'
+              description: 'Legacy field for backward compatibility',
             },
             models: {
               type: 'array',
               items: { type: 'string' },
-              description: 'Array of model IDs this API key can access'
+              description: 'Array of model IDs this API key can access',
             },
             userId: { type: 'string' },
             keyId: { type: 'string' },
@@ -440,7 +447,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:api_keys')],
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const { key } = request.body as { key: string };
 
       try {
@@ -482,7 +489,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:api_keys')],
-    handler: async (request, reply) => {
+    handler: async (_request, _reply) => {
       // This would be implemented for admin use
       throw fastify.createError(501, 'Admin endpoint not implemented yet');
     },
@@ -505,22 +512,17 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:api_keys')],
-    handler: async (request, reply) => {
+    handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
 
       try {
         const cleanedCount = await apiKeyService.cleanupExpiredKeys();
-        
+
         // Create audit log
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, metadata)
            VALUES ($1, $2, $3, $4)`,
-          [
-            user.userId,
-            'API_KEYS_CLEANUP',
-            'API_KEY',
-            { cleanedCount },
-          ]
+          [user.userId, 'API_KEYS_CLEANUP', 'API_KEY', { cleanedCount }],
         );
 
         return {

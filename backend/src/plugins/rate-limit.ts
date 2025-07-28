@@ -1,29 +1,37 @@
-import { FastifyPluginAsync } from 'fastify';
+import { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
+import rateLimit from '@fastify/rate-limit';
+import { AuthenticatedRequest } from '../types/auth.types.js';
 
 const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
-  await fastify.register(import('@fastify/rate-limit'), {
-    max: parseInt(fastify.config.RATE_LIMIT_MAX),
-    timeWindow: fastify.config.RATE_LIMIT_TIME_WINDOW,
+  const rateLimitMax = parseInt(fastify.config.RATE_LIMIT_MAX);
+  const rateLimitTimeWindow = fastify.config.RATE_LIMIT_TIME_WINDOW;
+
+  await fastify.register(rateLimit, {
+    max: rateLimitMax,
+    timeWindow: rateLimitTimeWindow,
     addHeaders: {
       'x-ratelimit-limit': true,
       'x-ratelimit-remaining': true,
       'x-ratelimit-reset': true,
       'retry-after': true,
     },
-    keyGenerator: (request) => {
+    keyGenerator: (request: FastifyRequest) => {
       // Use user ID if authenticated, otherwise IP
-      const user = (request as any).user;
+      const user = (request as AuthenticatedRequest).user;
       return user ? `user:${user.userId}` : request.ip;
     },
-    errorResponseBuilder: (request, context) => {
+    errorResponseBuilder: (
+      request: FastifyRequest,
+      context: { ban: boolean; after: string; max: number; ttl: number },
+    ) => {
       return {
         error: {
           code: 'RATE_LIMITED',
-          message: `Too many requests. Limit: ${context.max} per ${context.timeWindow}`,
+          message: `Too many requests. Limit: ${context.max} per ${rateLimitTimeWindow}`,
           details: {
             limit: context.max,
-            timeWindow: context.timeWindow,
+            timeWindow: rateLimitTimeWindow,
             remaining: context.ttl,
           },
         },
@@ -31,51 +39,58 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
       };
     },
     skipOnError: false,
-    skipSuccessfulRequests: false,
   });
 
   // Custom rate limiting for API keys
-  fastify.decorate('apiKeyRateLimit', async (request: any, reply: any) => {
+  fastify.decorate('apiKeyRateLimit', async (request: FastifyRequest, _reply: FastifyReply) => {
     const apiKey = request.headers['x-api-key'];
-    
+
     if (!apiKey) {
       return;
     }
 
     // TODO: Implement API key specific rate limiting
     // This would check subscription limits and quotas
-    const keyPrefix = `api-key:${apiKey}`;
-    
+    const keyString = Array.isArray(apiKey) ? apiKey[0] : apiKey;
+    //const _keyPrefix = `api-key:${keyString}`;
+
     // For now, just log the API key usage
-    fastify.log.info({ apiKey: apiKey.substring(0, 8) + '...' }, 'API key request');
+    fastify.log.info({ apiKey: keyString.substring(0, 8) + '...' }, 'API key request');
   });
 
   // Rate limit configuration for different endpoints
-  fastify.decorate('createRateLimit', (options: {
-    max: number;
-    timeWindow: string;
-    skipSuccessfulRequests?: boolean;
-  }) => {
-    return {
-      config: {
-        rateLimit: {
-          max: options.max,
-          timeWindow: options.timeWindow,
-          skipSuccessfulRequests: options.skipSuccessfulRequests || false,
+  fastify.decorate(
+    'createRateLimit',
+    (options: { max: number; timeWindow: string; skipSuccessfulRequests?: boolean }) => {
+      return {
+        config: {
+          rateLimit: {
+            max: options.max,
+            timeWindow: options.timeWindow,
+            skipSuccessfulRequests: options.skipSuccessfulRequests || false,
+          },
         },
-      },
-    };
-  });
+      };
+    },
+  );
 };
 
 declare module 'fastify' {
   interface FastifyInstance {
-    apiKeyRateLimit: (request: any, reply: any) => Promise<void>;
+    apiKeyRateLimit: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     createRateLimit: (options: {
       max: number;
       timeWindow: string;
       skipSuccessfulRequests?: boolean;
-    }) => any;
+    }) => {
+      config: {
+        rateLimit: {
+          max: number;
+          timeWindow: string;
+          skipSuccessfulRequests: boolean;
+        };
+      };
+    };
   }
 }
 
