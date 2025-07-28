@@ -104,17 +104,34 @@ const ApiKeysPage: React.FC = () => {
     }
   };
 
-  // Load models for multi-select
+  // Load models from user subscriptions for multi-select
   const loadModels = async () => {
     try {
       setLoadingModels(true);
-      const response = await modelsService.getModels(1, 100); // Get all available models
-      setModels(response.models);
+      // Get user's active subscriptions to determine available models
+      const subscriptionsResponse = await subscriptionsService.getSubscriptions(1, 100);
+      const activeSubscriptions = subscriptionsResponse.data.filter(sub => sub.status === 'active');
+      
+      // Extract unique models from subscriptions
+      const uniqueModelIds = [...new Set(activeSubscriptions.map(sub => sub.modelId))];
+      
+      // Fetch detailed model information for each subscribed model
+      const modelPromises = uniqueModelIds.map(modelId => 
+        modelsService.getModel(modelId).catch(err => {
+          console.warn(`Failed to load model ${modelId}:`, err);
+          return null;
+        })
+      );
+      
+      const modelResults = await Promise.all(modelPromises);
+      const validModels = modelResults.filter(model => model !== null) as Model[];
+      
+      setModels(validModels);
     } catch (err) {
-      console.error('Failed to load models:', err);
+      console.error('Failed to load subscribed models:', err);
       addNotification({
         title: 'Error',
-        description: 'Failed to load models.',
+        description: 'Failed to load your subscribed models.',
         variant: 'danger'
       });
     } finally {
@@ -174,7 +191,7 @@ const ApiKeysPage: React.FC = () => {
     if (selectedModelIds.length === 0) {
       addNotification({
         title: 'Validation Error',
-        description: 'Please select at least one model for this API key',
+        description: 'Please select at least one model from your active subscriptions',
         variant: 'danger'
       });
       return;
@@ -543,9 +560,9 @@ const ApiKeysPage: React.FC = () => {
               >
                 <SelectList>
                   {loadingModels ? (
-                    <SelectOption isDisabled>Loading models...</SelectOption>
+                    <SelectOption isDisabled>Loading your subscribed models...</SelectOption>
                   ) : models.length === 0 ? (
-                    <SelectOption isDisabled>No models available</SelectOption>
+                    <SelectOption isDisabled>No subscribed models available</SelectOption>
                   ) : (
                     models.map((model) => (
                       <SelectOption
@@ -560,6 +577,11 @@ const ApiKeysPage: React.FC = () => {
                   )}
                 </SelectList>
               </Select>
+              {models.length === 0 && !loadingModels && (
+                <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--pf-v6-global--danger-color--100)' }}>
+                  No subscribed models found. You need an active subscription to a model before creating an API key.
+                </div>
+              )}
               {selectedModelIds.length > 0 && (
                 <LabelGroup categoryName="Selected models" style={{ marginTop: '0.5rem' }}>
                   {selectedModelIds.map(modelId => {
