@@ -32,6 +32,12 @@ import {
   ClipboardCopyVariant,
   Bullseye,
   Tooltip,
+  Select,
+  SelectList,
+  SelectOption,
+  MenuToggle,
+  Label,
+  LabelGroup,
 } from '@patternfly/react-core';
 import { 
   KeyIcon, 
@@ -47,6 +53,7 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
 import { apiKeysService, ApiKey, CreateApiKeyRequest } from '../services/apiKeys.service';
 import { subscriptionsService, Subscription } from '../services/subscriptions.service';
+import { modelsService, Model } from '../services/models.service';
 
 const ApiKeysPage: React.FC = () => {
   const { } = useTranslation();
@@ -70,10 +77,11 @@ const ApiKeysPage: React.FC = () => {
   const [keyToDelete, setKeyToDelete] = useState<ApiKey | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
-  // ✅ Added subscription-related state
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [loadingSubscriptions, setLoadingSubscriptions] = useState(false);
-  const [selectedSubscriptionId, setSelectedSubscriptionId] = useState('');
+  // ✅ Multi-model support state
+  const [models, setModels] = useState<Model[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
+  const [isModelSelectOpen, setIsModelSelectOpen] = useState(false);
 
   // Load API keys from backend
   const loadApiKeys = async () => {
@@ -96,29 +104,27 @@ const ApiKeysPage: React.FC = () => {
     }
   };
 
-  // Load subscriptions for dropdown
-  const loadSubscriptions = async () => {
+  // Load models for multi-select
+  const loadModels = async () => {
     try {
-      setLoadingSubscriptions(true);
-      const response = await subscriptionsService.getSubscriptions(1, 100); // Get all active subscriptions
-      // Filter only active subscriptions
-      const activeSubscriptions = response.data.filter(sub => sub.status === 'active');
-      setSubscriptions(activeSubscriptions);
+      setLoadingModels(true);
+      const response = await modelsService.getModels(1, 100); // Get all available models
+      setModels(response.models);
     } catch (err) {
-      console.error('Failed to load subscriptions:', err);
+      console.error('Failed to load models:', err);
       addNotification({
         title: 'Error',
-        description: 'Failed to load subscriptions.',
+        description: 'Failed to load models.',
         variant: 'danger'
       });
     } finally {
-      setLoadingSubscriptions(false);
+      setLoadingModels(false);
     }
   };
 
   useEffect(() => {
     loadApiKeys();
-    loadSubscriptions(); // ✅ Load subscriptions on component mount
+    loadModels(); // ✅ Load models on component mount
   }, []);
 
   const getStatusBadge = (status: string) => {
@@ -150,7 +156,7 @@ const ApiKeysPage: React.FC = () => {
     setNewKeyPermissions([]);
     setNewKeyRateLimit('1000');
     setNewKeyExpiration('never');
-    setSelectedSubscriptionId(''); // ✅ Reset subscription selection
+    setSelectedModelIds([]); // ✅ Reset model selection
     setIsCreateModalOpen(true);
   };
 
@@ -164,11 +170,11 @@ const ApiKeysPage: React.FC = () => {
       return;
     }
 
-    // ✅ Validate subscription selection
-    if (!selectedSubscriptionId) {
+    // ✅ Validate model selection
+    if (selectedModelIds.length === 0) {
       addNotification({
         title: 'Validation Error',
-        description: 'Please select a subscription for this API key',
+        description: 'Please select at least one model for this API key',
         variant: 'danger'
       });
       return;
@@ -178,7 +184,7 @@ const ApiKeysPage: React.FC = () => {
     
     try {
       const request: CreateApiKeyRequest = {
-        subscriptionId: selectedSubscriptionId, // ✅ Include required subscription ID
+        modelIds: selectedModelIds, // ✅ Use modelIds for multi-model support
         name: newKeyName,
         expiresAt: newKeyExpiration !== 'never' 
           ? new Date(Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000).toISOString()
@@ -366,6 +372,7 @@ const ApiKeysPage: React.FC = () => {
                   <Tr>
                     <Th>Name</Th>
                     <Th>Key</Th>
+                    <Th>Models</Th>
                     <Th>Status</Th>
                     <Th>Last Used</Th>
                     <Th>Actions</Th>
@@ -416,6 +423,29 @@ const ApiKeysPage: React.FC = () => {
                             </Tooltip>
                           </FlexItem>
                         </Flex>
+                      </Td>
+                      <Td>
+                        <LabelGroup>
+                          {apiKey.models && apiKey.models.length > 0 ? (
+                            apiKey.models.slice(0, 2).map((modelId) => {
+                              const modelDetail = apiKey.modelDetails?.find(m => m.id === modelId);
+                              return (
+                                <Label key={modelId} isCompact>
+                                  {modelDetail ? modelDetail.name : modelId}
+                                </Label>
+                              );
+                            })
+                          ) : (
+                            <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+                              No models
+                            </Content>
+                          )}
+                          {apiKey.models && apiKey.models.length > 2 && (
+                            <Label isCompact>
+                              +{apiKey.models.length - 2} more
+                            </Label>
+                          )}
+                        </LabelGroup>
                       </Td>
                       <Td>
                         {getStatusBadge(apiKey.status)}
@@ -484,29 +514,67 @@ const ApiKeysPage: React.FC = () => {
               />
             </FormGroup>
             
-            {/* ✅ Added subscription selection */}
-            <FormGroup label="Subscription" isRequired fieldId="key-subscription">
-              <FormSelect
-                isRequired
-                value={selectedSubscriptionId}
-                onChange={(_event, value) => setSelectedSubscriptionId(value)}
-                id="key-subscription"
-                placeholder="Select a subscription for this API key"
-                isDisabled={loadingSubscriptions || subscriptions.length === 0}
+            {/* ✅ Multi-model selection */}
+            <FormGroup label="Models" isRequired fieldId="key-models">
+              <Select
+                id="key-models"
+                isOpen={isModelSelectOpen}
+                onToggle={(_event, isOpen) => setIsModelSelectOpen(isOpen)}
+                onSelect={(_event, selection) => {
+                  const selectionString = selection as string;
+                  if (selectedModelIds.includes(selectionString)) {
+                    setSelectedModelIds(selectedModelIds.filter(id => id !== selectionString));
+                  } else {
+                    setSelectedModelIds([...selectedModelIds, selectionString]);
+                  }
+                }}
+                selections={selectedModelIds}
+                isCheckboxSelectionBadgeHidden
+                toggle={(toggleRef) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => setIsModelSelectOpen(!isModelSelectOpen)}
+                    isExpanded={isModelSelectOpen}
+                    isFullWidth
+                  >
+                    {selectedModelIds.length === 0 ? 'Select models...' : `${selectedModelIds.length} model(s) selected`}
+                  </MenuToggle>
+                )}
               >
-                <FormSelectOption value="" label="Select a subscription..." />
-                {subscriptions.map((subscription) => (
-                  <FormSelectOption
-                    key={subscription.id}
-                    value={subscription.id}
-                    label={`${subscription.modelName} (${subscription.provider})`}
-                  />
-                ))}
-              </FormSelect>
-              {subscriptions.length === 0 && !loadingSubscriptions && (
-                <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--pf-v6-global--danger-color--100)' }}>
-                  No active subscriptions found. You need an active subscription to create an API key.
-                </div>
+                <SelectList>
+                  {loadingModels ? (
+                    <SelectOption isDisabled>Loading models...</SelectOption>
+                  ) : models.length === 0 ? (
+                    <SelectOption isDisabled>No models available</SelectOption>
+                  ) : (
+                    models.map((model) => (
+                      <SelectOption
+                        key={model.id}
+                        value={model.id}
+                        hasCheckbox
+                        isSelected={selectedModelIds.includes(model.id)}
+                      >
+                        {model.name} ({model.provider})
+                      </SelectOption>
+                    ))
+                  )}
+                </SelectList>
+              </Select>
+              {selectedModelIds.length > 0 && (
+                <LabelGroup categoryName="Selected models" style={{ marginTop: '0.5rem' }}>
+                  {selectedModelIds.map(modelId => {
+                    const model = models.find(m => m.id === modelId);
+                    return model ? (
+                      <Label
+                        key={modelId}
+                        onClose={() => setSelectedModelIds(selectedModelIds.filter(id => id !== modelId))}
+                        isCompact
+                      >
+                        {model.name}
+                      </Label>
+                    ) : null;
+                  })}
+                </LabelGroup>
               )}
             </FormGroup>
             
@@ -619,6 +687,25 @@ const ApiKeysPage: React.FC = () => {
                 <Table aria-label="Key details" variant="compact">
                   <Tbody>
                     <Tr>
+                      <Td><strong>Models</strong></Td>
+                      <Td>
+                        {selectedApiKey.models && selectedApiKey.models.length > 0 ? (
+                          <LabelGroup>
+                            {selectedApiKey.models.map((modelId) => {
+                              const modelDetail = selectedApiKey.modelDetails?.find(m => m.id === modelId);
+                              return (
+                                <Label key={modelId} isCompact>
+                                  {modelDetail ? `${modelDetail.name} (${modelDetail.provider})` : modelId}
+                                </Label>
+                              );
+                            })}
+                          </LabelGroup>
+                        ) : (
+                          'No models assigned'
+                        )}
+                      </Td>
+                    </Tr>
+                    <Tr>
                       <Td><strong>Created</strong></Td>
                       <Td>{new Date(selectedApiKey.createdAt).toLocaleDateString()}</Td>
                     </Tr>
@@ -658,7 +745,7 @@ const ApiKeysPage: React.FC = () => {
   -H "Authorization: Bearer ${selectedApiKey.fullKey}" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "gpt-4",
+    "model": "${selectedApiKey.models && selectedApiKey.models.length > 0 ? selectedApiKey.models[0] : 'gpt-4'}",
     "messages": [
       {"role": "user", "content": "Hello, world!"}
     ]
@@ -721,6 +808,25 @@ const ApiKeysPage: React.FC = () => {
                     <Tr>
                       <Td><strong>Name</strong></Td>
                       <Td>{generatedKey.name}</Td>
+                    </Tr>
+                    <Tr>
+                      <Td><strong>Models</strong></Td>
+                      <Td>
+                        {generatedKey.models && generatedKey.models.length > 0 ? (
+                          <LabelGroup>
+                            {generatedKey.models.map((modelId) => {
+                              const modelDetail = generatedKey.modelDetails?.find(m => m.id === modelId);
+                              return (
+                                <Label key={modelId} isCompact>
+                                  {modelDetail ? modelDetail.name : modelId}
+                                </Label>
+                              );
+                            })}
+                          </LabelGroup>
+                        ) : (
+                          'No models assigned'
+                        )}
+                      </Td>
                     </Tr>
                     <Tr>
                       <Td><strong>Rate Limit</strong></Td>

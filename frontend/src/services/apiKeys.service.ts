@@ -13,15 +13,30 @@ export interface ApiKey {
   lastUsed?: string;
   expiresAt?: string;
   description?: string;
+  // Multi-model support
+  models?: string[];
+  modelDetails?: {
+    id: string;
+    name: string;
+    provider: string;
+    contextLength?: number;
+  }[];
 }
 
 // Backend response interface
 interface BackendApiKeyDetails {
   id: string;
-  subscriptionId: string;
+  subscriptionId?: string; // Now optional for backward compatibility
   userId: string;
   name?: string;
-  keyPrefix: string;
+  prefix: string; // Updated from keyPrefix to match backend response
+  models?: string[]; // New field for multi-model support
+  modelDetails?: {
+    id: string;
+    name: string;
+    provider: string;
+    contextLength?: number;
+  }[]; // New field for model details
   lastUsedAt?: string;
   expiresAt?: string;
   isActive: boolean;
@@ -40,7 +55,10 @@ interface BackendApiKeysResponse {
 }
 
 export interface CreateApiKeyRequest {
-  subscriptionId: string; // ✅ Required field
+  // Multi-model support - use modelIds for new keys
+  modelIds?: string[];
+  // Legacy support - deprecated
+  subscriptionId?: string;
   name?: string;
   expiresAt?: string;
   metadata?: {
@@ -72,22 +90,22 @@ class ApiKeysService {
       status = 'revoked';
     }
 
-    // Generate a demo full key based on the keyPrefix for demo purposes
-    const generateDemoFullKey = (keyPrefix: string): string => {
+    // Generate a demo full key based on the prefix for demo purposes
+    const generateDemoFullKey = (prefix: string): string => {
       // Generate a realistic-looking API key for demo
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       let suffix = '';
       for (let i = 0; i < 45; i++) {
         suffix += chars.charAt(Math.floor(Math.random() * chars.length));
       }
-      return `${keyPrefix}_${suffix}`;
+      return `${prefix}_${suffix}`;
     };
 
     return {
       id: backend.id,
       name: backend.name || 'Unnamed Key',
-      keyPreview: backend.keyPrefix + '...',
-      fullKey: generateDemoFullKey(backend.keyPrefix), // Always generate full key for demo
+      keyPreview: backend.prefix + '...',
+      fullKey: generateDemoFullKey(backend.prefix), // Always generate full key for demo
       status,
       permissions: backend.metadata?.permissions || ['read'],
       usageCount: Math.floor(Math.random() * 1000), // Mock usage count
@@ -96,6 +114,8 @@ class ApiKeysService {
       lastUsed: backend.lastUsedAt,
       expiresAt: backend.expiresAt,
       description: backend.metadata?.environment ? `${backend.metadata.environment} environment` : undefined,
+      models: backend.models,
+      modelDetails: backend.modelDetails,
     };
   }
 
