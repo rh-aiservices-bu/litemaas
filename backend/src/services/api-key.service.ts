@@ -460,15 +460,27 @@ export class ApiKeyService {
     }
 
     try {
+      // Updated query to handle both multi-model and legacy subscription-based keys
       const apiKey = await this.fastify.dbUtils.queryOne(`
-        SELECT ak.*, s.user_id
+        SELECT ak.*
         FROM api_keys ak
-        JOIN subscriptions s ON ak.subscription_id = s.id
-        WHERE ak.id = $1 AND s.user_id = $2
+        WHERE ak.id = $1 AND ak.user_id = $2
       `, [keyId, userId]);
 
       if (!apiKey) {
         return null;
+      }
+
+      // Get associated models for multi-model keys
+      if (!apiKey.subscription_id) {
+        const models = await this.fastify.dbUtils.queryMany(`
+          SELECT m.id as model_id, m.name as model_name, m.provider, m.context_length
+          FROM api_key_models akm
+          JOIN models m ON akm.model_id = m.id
+          WHERE akm.api_key_id = $1
+        `, [keyId]);
+        
+        apiKey.models = models;
       }
 
       return this.mapToEnhancedApiKey(apiKey);
