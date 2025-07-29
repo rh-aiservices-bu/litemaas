@@ -39,8 +39,8 @@ import {
   Label,
   LabelGroup,
 } from '@patternfly/react-core';
-import { 
-  KeyIcon, 
+import {
+  KeyIcon,
   PlusCircleIcon,
   CopyIcon,
   EyeIcon,
@@ -52,14 +52,14 @@ import {
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
 import { apiKeysService, ApiKey, CreateApiKeyRequest } from '../services/apiKeys.service';
-import { subscriptionsService, Subscription } from '../services/subscriptions.service';
+import { subscriptionsService } from '../services/subscriptions.service';
 import { modelsService, Model } from '../services/models.service';
-import { configService, ConfigResponse } from '../services/config.service';
+import { configService } from '../services/config.service';
 
 const ApiKeysPage: React.FC = () => {
   const { } = useTranslation();
   const { addNotification } = useNotifications();
-  
+
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,13 +77,13 @@ const ApiKeysPage: React.FC = () => {
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [keyToDelete, setKeyToDelete] = useState<ApiKey | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  
+
   // ✅ Multi-model support state
   const [models, setModels] = useState<Model[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
   const [isModelSelectOpen, setIsModelSelectOpen] = useState(false);
-  
+
   // Configuration state
   const [litellmApiUrl, setLitellmApiUrl] = useState<string>('https://api.litemaas.com');
 
@@ -92,7 +92,7 @@ const ApiKeysPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await apiKeysService.getApiKeys();
       setApiKeys(response.data);
     } catch (err) {
@@ -126,21 +126,21 @@ const ApiKeysPage: React.FC = () => {
       // Get user's active subscriptions to determine available models
       const subscriptionsResponse = await subscriptionsService.getSubscriptions(1, 100);
       const activeSubscriptions = subscriptionsResponse.data.filter(sub => sub.status === 'active');
-      
+
       // Extract unique models from subscriptions
       const uniqueModelIds = [...new Set(activeSubscriptions.map(sub => sub.modelId))];
-      
+
       // Fetch detailed model information for each subscribed model
-      const modelPromises = uniqueModelIds.map(modelId => 
+      const modelPromises = uniqueModelIds.map(modelId =>
         modelsService.getModel(modelId).catch(err => {
           console.warn(`Failed to load model ${modelId}:`, err);
           return null;
         })
       );
-      
+
       const modelResults = await Promise.all(modelPromises);
       const validModels = modelResults.filter(model => model !== null) as Model[];
-      
+
       setModels(validModels);
     } catch (err) {
       console.error('Failed to load subscribed models:', err);
@@ -163,7 +163,7 @@ const ApiKeysPage: React.FC = () => {
   const getStatusBadge = (status: string) => {
     const variants = {
       active: 'success',
-      revoked: 'warning', 
+      revoked: 'warning',
       expired: 'danger'
     } as const;
 
@@ -214,12 +214,12 @@ const ApiKeysPage: React.FC = () => {
     }
 
     setCreatingKey(true);
-    
+
     try {
       const request: CreateApiKeyRequest = {
         modelIds: selectedModelIds, // ✅ Use modelIds for multi-model support
         name: newKeyName,
-        expiresAt: newKeyExpiration !== 'never' 
+        expiresAt: newKeyExpiration !== 'never'
           ? new Date(Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000).toISOString()
           : undefined,
         // ✅ Put additional fields in metadata as backend expects
@@ -231,14 +231,14 @@ const ApiKeysPage: React.FC = () => {
       };
 
       const newKey = await apiKeysService.createApiKey(request);
-      
+
       // Refresh the API keys list
       await loadApiKeys();
-      
+
       setGeneratedKey(newKey);
       setShowGeneratedKey(true);
       setIsCreateModalOpen(false);
-      
+
       addNotification({
         title: 'API Key Created',
         description: `${newKeyName} has been created successfully`,
@@ -268,13 +268,13 @@ const ApiKeysPage: React.FC = () => {
 
   const confirmDeleteKey = async () => {
     if (!keyToDelete) return;
-    
+
     try {
       await apiKeysService.deleteApiKey(keyToDelete.id);
-      
+
       // Refresh the API keys list
       await loadApiKeys();
-      
+
       addNotification({
         title: 'API Key Deleted',
         description: `${keyToDelete.name} has been deleted`,
@@ -295,7 +295,7 @@ const ApiKeysPage: React.FC = () => {
 
   const toggleKeyVisibility = async (keyId: string) => {
     const newVisibleKeys = new Set(visibleKeys);
-    
+
     if (newVisibleKeys.has(keyId)) {
       // Hide the key
       newVisibleKeys.delete(keyId);
@@ -304,18 +304,18 @@ const ApiKeysPage: React.FC = () => {
       // Show the key - use secure retrieval
       try {
         const keyData = await apiKeysService.retrieveFullKey(keyId);
-        
+
         // Update the API key in our local state with the retrieved key
-        setApiKeys(prev => prev.map(key => 
-          key.id === keyId 
+        setApiKeys(prev => prev.map(key =>
+          key.id === keyId
             ? { ...key, fullKey: keyData.key, keyType: keyData.keyType }
             : key
         ));
-        
+
         // Show the key
         newVisibleKeys.add(keyId);
         setVisibleKeys(newVisibleKeys);
-        
+
         addNotification({
           title: 'API Key Retrieved',
           description: `Your LiteLLM API key has been retrieved securely. Retrieved at: ${new Date(keyData.retrievedAt).toLocaleString()}`,
@@ -393,7 +393,7 @@ const ApiKeysPage: React.FC = () => {
           </FlexItem>
         </Flex>
       </PageSection>
-      
+
       <PageSection>
         {error ? (
           <EmptyState variant={EmptyStateVariant.lg}>
@@ -434,7 +434,6 @@ const ApiKeysPage: React.FC = () => {
                     <Th>Name</Th>
                     <Th>Key</Th>
                     <Th>Models</Th>
-                    <Th>Status</Th>
                     <Th>Last Used</Th>
                     <Th>Actions</Th>
                   </Tr>
@@ -460,7 +459,7 @@ const ApiKeysPage: React.FC = () => {
                         <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
                           <FlexItem>
                             <code style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
-                              {visibleKeys.has(apiKey.id) && apiKey.fullKey 
+                              {visibleKeys.has(apiKey.id) && apiKey.fullKey
                                 ? `${apiKey.fullKey} (LiteLLM)`
                                 : apiKey.keyPreview || '************'}
                             </code>
@@ -511,9 +510,6 @@ const ApiKeysPage: React.FC = () => {
                         </LabelGroup>
                       </Td>
                       <Td>
-                        {getStatusBadge(apiKey.status)}
-                      </Td>
-                      <Td>
                         <Content component={ContentVariants.small}>
                           {apiKey.lastUsed ? new Date(apiKey.lastUsed).toLocaleDateString() : 'Never'}
                         </Content>
@@ -526,9 +522,9 @@ const ApiKeysPage: React.FC = () => {
                             </Button>
                           </FlexItem>
                           <FlexItem>
-                            <Button 
-                              variant="danger" 
-                              size="sm" 
+                            <Button
+                              variant="danger"
+                              size="sm"
                               onClick={() => handleDeleteKey(apiKey)}
                               isDisabled={apiKey.status !== 'active'}
                               icon={<TrashIcon />}
@@ -566,7 +562,7 @@ const ApiKeysPage: React.FC = () => {
                 placeholder="e.g., Production API Key"
               />
             </FormGroup>
-            
+
             <FormGroup label="Description" fieldId="key-description">
               <TextInput
                 type="text"
@@ -576,7 +572,7 @@ const ApiKeysPage: React.FC = () => {
                 placeholder="Optional description of this key's purpose"
               />
             </FormGroup>
-            
+
             {/* ✅ Multi-model selection */}
             <FormGroup label="Models" isRequired fieldId="key-models">
               <Select
@@ -645,7 +641,7 @@ const ApiKeysPage: React.FC = () => {
                 </LabelGroup>
               )}
             </FormGroup>
-            
+
             <FormGroup label="Rate Limit (requests per minute)" fieldId="key-rate-limit">
               <FormSelect
                 value={newKeyRateLimit}
@@ -658,7 +654,7 @@ const ApiKeysPage: React.FC = () => {
                 <FormSelectOption value="5000" label="5,000 req/min (Enterprise)" />
               </FormSelect>
             </FormGroup>
-            
+
             <FormGroup label="Expiration" fieldId="key-expiration">
               <FormSelect
                 value={newKeyExpiration}
@@ -672,8 +668,8 @@ const ApiKeysPage: React.FC = () => {
               </FormSelect>
             </FormGroup>
           </Form>
-          
-<div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+
+          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
             <Button
               variant="primary"
               onClick={handleSaveApiKey}
@@ -714,17 +710,17 @@ const ApiKeysPage: React.FC = () => {
               <FormGroup label="API Key" fieldId="view-key">
                 <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
                   <FlexItem flex={{ default: 'flex_1' }}>
-                    <code style={{ 
-                      fontFamily: 'monospace', 
-                      fontSize: '0.875rem', 
-                      padding: '0.5rem', 
+                    <code style={{
+                      fontFamily: 'monospace',
+                      fontSize: '0.875rem',
+                      padding: '0.5rem',
                       backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)',
                       border: '1px solid var(--pf-v6-global--BorderColor--100)',
                       borderRadius: '3px',
                       display: 'block',
                       wordBreak: 'break-all'
                     }}>
-                      {visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey 
+                      {visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey
                         ? `${selectedApiKey.fullKey} (LiteLLM)`
                         : selectedApiKey.keyPreview || '************'}
                     </code>
@@ -751,14 +747,14 @@ const ApiKeysPage: React.FC = () => {
                   </FlexItem>
                 </Flex>
               </FormGroup>
-              
+
               {!visibleKeys.has(selectedApiKey.id) && (
                 <Alert variant="info" title="Secure Key Retrieval" style={{ marginTop: '1rem' }}>
-                  Click the eye icon above to securely retrieve your full LiteLLM API key. For security reasons, 
+                  Click the eye icon above to securely retrieve your full LiteLLM API key. For security reasons,
                   this requires recent authentication and is rate-limited. All key retrievals are logged for audit purposes.
                 </Alert>
               )}
-              
+
               <div style={{ marginTop: '1rem' }}>
                 <Table aria-label="Key details" variant="compact">
                   <Tbody>
@@ -812,12 +808,12 @@ const ApiKeysPage: React.FC = () => {
                   </Tbody>
                 </Table>
               </div>
-              
+
               <div style={{ marginTop: '1rem' }}>
                 <Content component={ContentVariants.h3}>Usage Example</Content>
                 <CodeBlock>
                   <CodeBlockCode>
-{`# Using your secure LiteLLM API key
+                    {`# Using your secure LiteLLM API key
 curl -X POST ${litellmApiUrl}/v1/chat/completions \
   -H "Authorization: Bearer ${selectedApiKey.fullKey || '<click-show-key-to-reveal>'}" \
   -H "Content-Type: application/json" \
@@ -830,13 +826,13 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                   </CodeBlockCode>
                 </CodeBlock>
               </div>
-              
+
               {selectedApiKey.status === 'revoked' && (
                 <Alert variant="warning" title="Key Revoked" style={{ marginTop: '1rem' }}>
                   This API key has been revoked and can no longer be used.
                 </Alert>
               )}
-              
+
               {selectedApiKey.status === 'expired' && (
                 <Alert variant="danger" title="Key Expired" style={{ marginTop: '1rem' }}>
                   This API key has expired on {selectedApiKey.expiresAt && new Date(selectedApiKey.expiresAt).toLocaleDateString()}.
@@ -844,7 +840,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
               )}
             </>
           )}
-          
+
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
             <Button variant="link" onClick={() => setIsViewModalOpen(false)}>
               Close
@@ -866,18 +862,18 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
               <Alert variant="success" title="Success!" style={{ marginBottom: '1rem' }}>
                 Your API key has been created successfully.
               </Alert>
-              
-<FormGroup label="Your new API key" fieldId="generated-key">
+
+              <FormGroup label="Your new API key" fieldId="generated-key">
                 <ClipboardCopy
                   hoverTip="Copy"
                   clickTip="Copied"
                   variant={ClipboardCopyVariant.expansion}
                   isReadOnly
                 >
-                  {generatedKey.fullKey}
+                  {generatedKey.fullKey || ''}
                 </ClipboardCopy>
               </FormGroup>
-              
+
               <div style={{ marginTop: '1rem' }}>
                 <Content component={ContentVariants.h3}>Key Details</Content>
                 <Table aria-label="Generated key details" variant="compact">
@@ -920,7 +916,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
               </div>
             </>
           )}
-          
+
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
             <Button variant="primary" onClick={() => setShowGeneratedKey(false)}>
               Close
@@ -949,13 +945,13 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                   </Content>
                 </FlexItem>
               </Flex>
-              
+
               <Alert variant="danger" title="Warning" style={{ marginBottom: '1rem' }}>
                 This action cannot be undone. The API key will be permanently removed and applications using this key will lose access immediately.
               </Alert>
             </>
           )}
-          
+
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
             <Button variant="danger" onClick={confirmDeleteKey}>
               Delete Key

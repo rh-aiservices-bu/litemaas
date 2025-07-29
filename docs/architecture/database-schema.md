@@ -180,8 +180,8 @@ CREATE TABLE api_keys (
     tpm_limit INTEGER DEFAULT 1000,
     rpm_limit INTEGER DEFAULT 60,
     
-    -- LiteLLM Integration Fields
-    litellm_key_id VARCHAR(255),
+    -- LiteLLM Integration Fields (UPDATED)
+    lite_llm_key_value VARCHAR(255),       -- FIXED: Renamed from litellm_key_id, stores actual LiteLLM key value (e.g., "sk-litellm-xxxxx")
     litellm_key_alias VARCHAR(255),
     team_id UUID REFERENCES teams(id) ON DELETE SET NULL,
     last_sync_at TIMESTAMP WITH TIME ZONE,
@@ -200,7 +200,7 @@ CREATE INDEX idx_api_keys_user ON api_keys(user_id);
 CREATE INDEX idx_api_keys_hash ON api_keys(key_hash);
 CREATE INDEX idx_api_keys_prefix ON api_keys(key_prefix);
 CREATE INDEX idx_api_keys_active ON api_keys(is_active);
-CREATE INDEX idx_api_keys_litellm ON api_keys(litellm_key_id);
+CREATE INDEX idx_api_keys_litellm ON api_keys(lite_llm_key_value);  -- FIXED: Updated for renamed column
 CREATE INDEX idx_api_keys_team ON api_keys(team_id);
 ```
 
@@ -551,10 +551,47 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Run all CREATE VIEW statements above
 ```
 
+### API Key Fixes Migration (Session 2025-01-29)
+
+#### Migration 003: Fix API Key Column Naming
+This migration addresses the column naming confusion identified in the API key correction plan.
+
+```sql
+-- Rename column to accurately reflect its content
+ALTER TABLE api_keys 
+RENAME COLUMN litellm_key_id TO lite_llm_key_value;
+
+-- Update the index to match new column name  
+DROP INDEX IF EXISTS idx_api_keys_litellm;
+CREATE INDEX idx_api_keys_litellm ON api_keys(lite_llm_key_value);
+
+-- Add comment for clarity
+COMMENT ON COLUMN api_keys.lite_llm_key_value IS 'The actual LiteLLM API key value (e.g., sk-litellm-xxxxx) - FIXED from misleading column name';
+
+-- Add columns for enhanced key management and security
+ALTER TABLE api_keys 
+ADD COLUMN IF NOT EXISTS key_type VARCHAR(20) DEFAULT 'litellm',
+ADD COLUMN IF NOT EXISTS last_retrieved_at TIMESTAMP WITH TIME ZONE,
+ADD COLUMN IF NOT EXISTS retrieval_count INTEGER DEFAULT 0;
+
+-- Create indexes for new columns
+CREATE INDEX IF NOT EXISTS idx_api_keys_type ON api_keys(key_type);
+CREATE INDEX IF NOT EXISTS idx_api_keys_last_retrieved ON api_keys(last_retrieved_at);
+```
+
+**Key Changes:**
+- ✅ **Column Rename**: `litellm_key_id` → `lite_llm_key_value` for clarity
+- ✅ **Index Update**: Updated to reference the correct column name
+- ✅ **Security Enhancement**: Added tracking columns for key retrieval auditing
+- ✅ **Documentation**: Added clear comments explaining column purpose
+
 ### Multi-Model Migration Commands
 ```bash
 # Run multi-model API key migrations
 npm run db:migrate
+
+# Run API key fixes migration
+npm run db:migrate:api-key-fixes
 
 # Validate migration success
 npm run validate:migration

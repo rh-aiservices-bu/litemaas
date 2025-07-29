@@ -331,7 +331,7 @@ Response (Error - Active API Keys):
 
 ### API Keys
 
-> **🔄 UPDATED**: API Keys now support multi-model access. A single API key can be associated with multiple models instead of a single subscription.
+> **🔄 UPDATED**: API Keys now support multi-model access with proper LiteLLM compatibility. Keys use 'sk-' prefix format and display actual key values.
 
 #### GET /api-keys
 List user API keys with multi-model support
@@ -349,7 +349,8 @@ Response:
     {
       "id": "key_123",
       "name": "Production Key",
-      "prefix": "lm_1234",
+      "prefix": "sk-LaAy",                    // FIXED: Now shows actual LiteLLM key prefix
+      "keyPreview": "sk-LaAy...",            // FIXED: Shows real key preview, not fake
       "models": ["gpt-4", "gpt-3.5-turbo"],  // NEW: Array of model IDs
       "modelDetails": [                      // NEW: Detailed model information
         {
@@ -370,6 +371,7 @@ Response:
       "createdAt": "2024-01-01T00:00:00Z",
       "expiresAt": null,
       "isActive": true,
+      "isLiteLLMKey": true,                   // NEW: Indicates LiteLLM compatibility
       "metadata": {}
     }
   ],
@@ -413,7 +415,8 @@ Response:
 {
   "id": "key_456",
   "name": "Development Key",
-  "key": "lm_abcdef1234567890",            // Only returned on creation
+  "key": "sk-litellm-abcdef1234567890",      // FIXED: Returns actual LiteLLM key on creation
+  "keyPrefix": "sk-litellm",               // FIXED: Shows correct LiteLLM prefix
   "models": ["gpt-4", "gpt-3.5-turbo"],
   "modelDetails": [
     {
@@ -430,6 +433,7 @@ Response:
     }
   ],
   "subscriptionId": "sub_123",             // LEGACY: For backward compatibility
+  "isLiteLLMKey": true,                     // NEW: Indicates LiteLLM compatibility
   "createdAt": "2024-01-20T00:00:00Z",
   "expiresAt": "2024-12-31T23:59:59Z",
   "isActive": true,
@@ -506,16 +510,58 @@ Response:
 }
 ```
 
+#### POST /api-keys/:id/retrieve-key
+**NEW**: Securely retrieve full API key value
+
+**Security Features**:
+- Requires valid JWT authentication
+- Rate limited (5 requests per minute per user)
+- Audit logged with user ID, timestamp, and IP address
+- Only key owner can retrieve their keys
+
+```json
+Request:
+POST /api-keys/key_456/retrieve-key
+
+Response:
+{
+  "key": "sk-litellm-abcdef1234567890",      // The full LiteLLM API key
+  "keyType": "litellm",                      // Key type for reference
+  "retrievedAt": "2024-01-20T10:00:00Z"     // Timestamp of retrieval
+}
+
+Error Responses:
+// Rate limit exceeded
+{
+  "error": "Too Many Requests",
+  "message": "Rate limit exceeded. Try again in 60 seconds.",
+  "retryAfter": 60
+}
+
+// Key not found or access denied
+{
+  "error": "Not Found", 
+  "message": "API key not found or access denied"
+}
+```
+
+**Usage Example**:
+```bash
+curl -X POST "http://localhost:8080/api/api-keys/key_456/retrieve-key" \
+  -H "Authorization: Bearer <your-jwt-token>" \
+  -H "Content-Type: application/json"
+```
+
 #### POST /api-keys/:id/rotate
 Rotate API key
 ```json
 Response:
 {
   "id": "key_456",
-  "key": "lm_newkey1234567890",
-  "keyPrefix": "lm_newkey",
+  "key": "sk-litellm-newkey1234567890",      // FIXED: Returns new LiteLLM key
+  "keyPrefix": "sk-litellm",                 // FIXED: Shows correct LiteLLM prefix
   "rotatedAt": "2024-01-20T10:00:00Z",
-  "oldPrefix": "lm_oldkey"
+  "oldPrefix": "sk-litellm"                  // FIXED: Old prefix was also LiteLLM format
 }
 ```
 
@@ -576,7 +622,7 @@ Validate API key (admin endpoint)
 ```json
 Request:
 {
-  "key": "lm_abcdef1234567890"
+  "key": "sk-litellm-abcdef1234567890"      // FIXED: Uses actual LiteLLM key format
 }
 
 Response:

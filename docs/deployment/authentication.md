@@ -20,12 +20,18 @@ LiteMaaS implements a multi-layered authentication system that supports differen
 - **Header**: `Authorization: Bearer ltm_admin_<key>`
 - **Example**: `ltm_admin_dev123456789`
 
-### 3. User API Keys
-- **Purpose**: Programmatic access to LiteLLM through LiteMaaS
-- **Format**: `sk-<unique_identifier>` (LiteLLM compatible)
-- **Storage**: Hashed in database
-- **Header**: `Authorization: Bearer sk-<key>`
-- **Management**: Created/deleted through UI or API
+### 3. User API Keys (UPDATED - Session 2025-01-29)
+- **Purpose**: Direct programmatic access to LiteLLM endpoints
+- **Format**: `sk-litellm-<unique_identifier>` (Full LiteLLM compatible format)
+- **Storage**: Actual LiteLLM key value stored in `lite_llm_key_value` column (not hashed)
+- **Header**: `Authorization: Bearer sk-litellm-<key>`
+- **Management**: Created/deleted through UI or API with secure retrieval endpoint
+- **Key Features**:
+  - ✅ Multi-model support per key
+  - ✅ Rate limiting (TPM/RPM)
+  - ✅ Budget limits per key
+  - ✅ Secure retrieval with audit logging
+  - ✅ Direct LiteLLM compatibility
 
 ### 4. Development Bypass
 - **Purpose**: Frontend development without authentication setup
@@ -147,6 +153,74 @@ curl -s -H "Origin: http://localhost:3000" \
    - http://localhost:3000/usage
 
 3. Verify no authentication errors in console
+
+### 4. API Key Security Testing (NEW - Session 2025-01-29)
+
+#### Test API Key Creation and Retrieval
+```bash
+# Create a new API key via API (requires JWT token)
+curl -X POST "http://localhost:8080/api/api-keys" \
+  -H "Authorization: Bearer <your-jwt-token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "modelIds": ["gpt-4"],
+    "name": "Test Key"
+  }'
+
+# Expected response includes actual LiteLLM key
+# {
+#   "id": "key_123",
+#   "key": "sk-litellm-abcdef123456...",
+#   "keyPrefix": "sk-litellm",
+#   "isLiteLLMKey": true
+# }
+```
+
+#### Test Secure Key Retrieval Endpoint
+```bash
+# Retrieve full API key securely (rate limited)
+curl -X POST "http://localhost:8080/api/api-keys/key_123/retrieve-key" \
+  -H "Authorization: Bearer <your-jwt-token>" \
+  -H "Content-Type: application/json"
+
+# Expected response:
+# {
+#   "key": "sk-litellm-abcdef123456...",
+#   "keyType": "litellm",
+#   "retrievedAt": "2025-01-29T10:00:00Z"
+# }
+```
+
+#### Test Rate Limiting
+```bash
+# Test rate limiting (should fail after 5 requests/minute)
+for i in {1..6}; do
+  echo "Request $i:"
+  curl -X POST "http://localhost:8080/api/api-keys/key_123/retrieve-key" \
+    -H "Authorization: Bearer <your-jwt-token>" \
+    -H "Content-Type: application/json"
+  echo ""
+done
+
+# Requests 1-5 should succeed
+# Request 6 should return 429 Too Many Requests
+```
+
+#### Test LiteLLM Compatibility
+```bash
+# Test the retrieved key directly with LiteLLM endpoint
+LITELLM_KEY="sk-litellm-abcdef123456..."  # Use key from above
+curl -X POST "http://localhost:4000/v1/chat/completions" \
+  -H "Authorization: Bearer $LITELLM_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "gpt-4",
+    "messages": [{"role": "user", "content": "Hello, test!"}],
+    "max_tokens": 50
+  }'
+
+# Should return successful chat completion
+```
 
 ## Common Issues and Troubleshooting
 

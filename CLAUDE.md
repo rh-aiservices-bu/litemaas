@@ -79,6 +79,9 @@ litemaas/
 ### Database Tables
 `users`, `teams`, `models`, `subscriptions`, `api_keys`, `api_key_models`, `usage_logs`, `audit_logs`
 
+> **🔄 UPDATED**: Added `api_key_models` junction table for multi-model API key support  
+> **🔧 FIXED**: Renamed `api_keys.lite_llm_key_id` to `lite_llm_key_value` for clarity (Session 2025-01-29)
+
 ### API Routes
 Auth, user management, model registry, subscriptions, API keys, teams, LiteLLM integration, usage analytics
 
@@ -148,9 +151,9 @@ model_info.max_tokens → context_length
 model_info.input/output_cost_per_token → pricing
 ```
 
-### API Key Management
+### API Key Management (FIXED - Session 2025-01-29)
 ```typescript
-// NEW: Multi-model API key creation
+// ✅ CORRECTED: Multi-model API key creation with proper LiteLLM format
 {
   "modelIds": ["gpt-4", "gpt-3.5-turbo"],  // Multiple models per key
   "maxBudget": 500.00,                     // Per-key budget limits
@@ -159,11 +162,28 @@ model_info.input/output_cost_per_token → pricing
   "metadata": {...}                        // Custom metadata
 }
 
+// ✅ Response includes actual LiteLLM key
+{
+  "id": "key_123",
+  "key": "sk-litellm-abcdef1234567890",    // FIXED: Returns actual LiteLLM key
+  "keyPrefix": "sk-litellm",               // FIXED: Correct LiteLLM prefix  
+  "isLiteLLMKey": true,                    // NEW: Indicates LiteLLM compatibility
+  "models": ["gpt-4", "gpt-3.5-turbo"]
+}
+
 // LEGACY: Single subscription (still supported)
 {
   "subscriptionId": "sub_123"              // Deprecated with warnings
 }
 ```
+
+**Key Fixes Implemented:**
+- ✅ **Prefix Fix**: Changed from 'ltm_' to 'sk-' for LiteLLM compatibility
+- ✅ **Real Key Display**: Backend returns actual LiteLLM keys, not fake ones
+- ✅ **Database Schema**: Column renamed from `lite_llm_key_id` to `lite_llm_key_value`
+- ✅ **Frontend Enhancement**: Removed fake key generation, shows real key prefixes
+- ✅ **Secure Retrieval**: Added `POST /api-keys/:id/retrieve-key` endpoint with rate limiting
+- ✅ **Audit Logging**: All key retrievals logged for security
 
 ## 📚 Documentation Structure
 
