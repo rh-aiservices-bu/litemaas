@@ -7,6 +7,7 @@
 import { addApiKeyModelsTable } from '../migrations/001-add-api-key-models';
 import { migrateApiKeySubscriptions } from '../migrations/002-migrate-api-key-subscriptions';
 import { renameLiteLLMKeyColumn } from '../migrations/003-rename-lite-llm-key-column';
+import { fixApiKeyPrefix } from '../migrations/004-fix-api-key-prefix';
 import { DatabaseUtils } from '../types/common.types';
 
 // Users table
@@ -139,7 +140,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     tpm_limit INTEGER,
     rpm_limit INTEGER,
     allowed_models TEXT[],
-    lite_llm_key_id VARCHAR(255),
+    lite_llm_key_value VARCHAR(255),
     reset_at TIMESTAMP WITH TIME ZONE,
     expires_at TIMESTAMP WITH TIME ZONE,
     last_sync_at TIMESTAMP WITH TIME ZONE,
@@ -153,7 +154,7 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_model_id ON subscriptions(model_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_team_id ON subscriptions(team_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
-CREATE INDEX IF NOT EXISTS idx_subscriptions_lite_llm ON subscriptions(lite_llm_key_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_lite_llm_key_value ON subscriptions(lite_llm_key_value);
 `;;
 
 // API Keys table
@@ -165,7 +166,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
     name VARCHAR(255),
     key_hash VARCHAR(255) NOT NULL,
     key_prefix VARCHAR(20) NOT NULL,
-    lite_llm_key_id VARCHAR(255),
+    lite_llm_key_value VARCHAR(255),
     permissions JSONB DEFAULT '{}',
     max_budget DECIMAL(10,2),
     current_spend DECIMAL(10,2) DEFAULT 0,
@@ -187,7 +188,7 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_subscription_id ON api_keys(subscription
 CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);
 CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys(key_hash);
 CREATE INDEX IF NOT EXISTS idx_api_keys_key_prefix ON api_keys(key_prefix);
-CREATE INDEX IF NOT EXISTS idx_api_keys_lite_llm ON api_keys(lite_llm_key_id);
+CREATE INDEX IF NOT EXISTS idx_api_keys_lite_llm_key_value ON api_keys(lite_llm_key_value);
 CREATE INDEX IF NOT EXISTS idx_api_keys_is_active ON api_keys(is_active);
 `;;
 
@@ -357,8 +358,8 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
     console.log('📦 Migrating existing API key subscriptions...');
     await dbUtils.query(migrateApiKeySubscriptions);
 
-    console.log('🔄 Renaming LiteLLM key columns...');
-    await dbUtils.query(renameLiteLLMKeyColumn);
+    console.log('🔧 Fixing API key prefixes...');
+    await dbUtils.query(fixApiKeyPrefix);
 
     console.log('📈 Creating usage_logs table...');
     await dbUtils.query(usageLogsTable);

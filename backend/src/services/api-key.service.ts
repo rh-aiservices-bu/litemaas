@@ -326,8 +326,8 @@ export class ApiKeyService {
         );
       }
 
-      // Generate secure API key for local hashing and prefix (but we'll return the LiteLLM key)
-      const { keyHash, keyPrefix } = this.generateApiKey();
+      // Generate secure API key for local hashing (but we'll return the LiteLLM key)
+      const { keyHash } = this.generateApiKey();
 
       // Create API key in LiteLLM with multiple models
       const liteLLMRequest: LiteLLMKeyGenerationRequest = {
@@ -351,7 +351,6 @@ export class ApiKeyService {
         soft_budget: request.softBudget,
         guardrails: request.guardrails,
         metadata: {
-          litemaas_key_id: keyPrefix,
           created_by: 'litemaas',
           model_count: modelIds.length,
           legacy_request: isLegacyRequest,
@@ -361,10 +360,13 @@ export class ApiKeyService {
 
       const liteLLMResponse = await this.liteLLMService.generateApiKey(liteLLMRequest);
 
-      // PHASE 1 FIX: Validate that we got a proper LiteLLM key
+      // FIXED: Validate that we got a proper LiteLLM key and extract correct prefix
       if (!liteLLMResponse || !liteLLMResponse.key) {
         throw this.fastify.createError(500, 'Failed to generate LiteLLM API key - no key returned');
       }
+
+      // FIXED: Extract prefix from the actual LiteLLM key instead of local key
+      const keyPrefix = this.extractKeyPrefix(liteLLMResponse.key);
 
       // Begin transaction for atomicity
       const client = await this.fastify.pg.connect();
@@ -1159,29 +1161,22 @@ export class ApiKeyService {
         throw this.fastify.createNotFoundError('API key');
       }
 
-      // Generate new key
+      // Generate new key for local hashing
       const newKey = this.generateApiKey();
       const hashedKey = this.hashApiKey(newKey.key);
-      const keyPrefix = newKey.keyPrefix;
+      let keyPrefix = newKey.keyPrefix; // Default to local prefix, will be updated with LiteLLM key
 
       // Use transaction wrapper
       return await this.fastify.dbUtils.withTransaction(async (client) => {
-        // Update the API key in database
-        await client.query(
-          `UPDATE api_keys 
-           SET key_hash = $1, key_prefix = $2, updated_at = CURRENT_TIMESTAMP
-           WHERE id = $3`,
-          [hashedKey, keyPrefix, keyId],
-        );
-
-        // If LiteLLM integration is enabled, rotate key there too
+        // If LiteLLM integration is enabled, rotate key there first
+        let liteLLMResponse: { key: string } | undefined;
         if (existingKey.liteLLMKeyId && !this.shouldUseMockData()) {
           try {
             // Delete old key from LiteLLM
             await this.liteLLMService.deleteKey(existingKey.liteLLMKeyId);
 
             // Create new key in LiteLLM
-            const liteLLMResponse = await this.liteLLMService.generateApiKey({
+            liteLLMResponse = await this.liteLLMService.generateApiKey({
               models: existingKey.models || [],
               duration: existingKey.expiresAt
                 ? this.calculateDuration(existingKey.expiresAt)
@@ -1197,17 +1192,40 @@ export class ApiKeyService {
               },
             });
 
-            // Update LiteLLM key ID
-            await client.query('UPDATE api_keys SET litellm_key_id = $1 WHERE id = $2', [
-              liteLLMResponse.key,
-              keyId,
-            ]);
+            // FIXED: Extract prefix from the actual LiteLLM key
+            if (liteLLMResponse?.key) {
+              keyPrefix = this.extractKeyPrefix(liteLLMResponse.key);
+            }
+
+            // Update database with LiteLLM key and correct prefix
+            await client.query(
+              `UPDATE api_keys 
+               SET key_hash = $1, key_prefix = $2, lite_llm_key_value = $3, updated_at = CURRENT_TIMESTAMP
+               WHERE id = $4`,
+              [hashedKey, keyPrefix, liteLLMResponse.key, keyId],
+            );
           } catch (error) {
             this.fastify.log.warn(
               error,
               'Failed to rotate key in LiteLLM, proceeding with local rotation only',
             );
+            
+            // Fallback: Update database with local key only
+            await client.query(
+              `UPDATE api_keys 
+               SET key_hash = $1, key_prefix = $2, updated_at = CURRENT_TIMESTAMP
+               WHERE id = $3`,
+              [hashedKey, keyPrefix, keyId],
+            );
           }
+        } else {
+          // No LiteLLM integration - update with local key only
+          await client.query(
+            `UPDATE api_keys 
+             SET key_hash = $1, key_prefix = $2, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $3`,
+            [hashedKey, keyPrefix, keyId],
+          );
         }
 
         // Create audit log
@@ -1241,7 +1259,7 @@ export class ApiKeyService {
 
         return {
           id: keyId,
-          key: newKey.key,
+          key: liteLLMResponse?.key || newKey.key, // Return LiteLLM key if available, otherwise local key
           keyPrefix,
         };
       });

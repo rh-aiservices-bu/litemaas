@@ -29,7 +29,7 @@ interface BackendApiKeyDetails {
   subscriptionId?: string; // Now optional for backward compatibility
   userId: string;
   name?: string;
-  prefix: string; // Updated from keyPrefix to match backend response
+  keyPrefix: string; // Backend returns keyPrefix, not prefix
   liteLLMKey?: string; // Full LiteLLM key from backend (for newly created keys)
   liteLLMKeyId?: string; // LiteLLM key ID for internal use
   models?: string[]; // New field for multi-model support
@@ -96,7 +96,7 @@ class ApiKeysService {
     const fullKey = backend.liteLLMKey || backend.liteLLMKeyId;
     const keyPreview = fullKey && fullKey.length > 12
       ? `${fullKey.substring(0, 8)}...${fullKey.substring(fullKey.length - 4)}`
-      : backend.prefix + '...';
+      : backend.keyPrefix + '...';
 
     return {
       id: backend.id,
