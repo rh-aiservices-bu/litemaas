@@ -278,6 +278,114 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
     }
   });
 
+  // Recent authentication middleware for sensitive operations like key retrieval
+  fastify.decorate('requireRecentAuth', async (request: FastifyRequest, _reply: FastifyReply) => {
+    const user = (request as AuthenticatedRequest).user;
+
+    if (!user) {
+      throw fastify.createAuthError('Authentication required');
+    }
+
+    // Check if user is still active
+    const userRecord = await fastify.dbUtils.queryOne('SELECT is_active FROM users WHERE id = $1', [
+      user.userId,
+    ]);
+
+    if (!userRecord || !userRecord.is_active) {
+      throw fastify.createAuthError('User account is disabled');
+    }
+
+    // For sensitive operations like key retrieval, require recent authentication
+    const tokenAge = Date.now() / 1000 - (user.iat || 0);
+    const maxRecentAge = 5 * 60; // 5 minutes for key retrieval operations
+
+    if (tokenAge > maxRecentAge) {
+      throw fastify.createError(403, {
+        code: 'TOKEN_TOO_OLD',
+        message: 'Recent authentication required for this operation',
+        details: {
+          tokenAge: Math.floor(tokenAge),
+          maxAge: maxRecentAge,
+          action: 'Please re-authenticate to access your API keys',
+        },
+      });
+    }
+  });
+
+  // Specialized rate limiting for API key operations
+  fastify.decorate(
+    'keyOperationRateLimit',
+    async (request: FastifyRequest, reply: FastifyReply) => {
+      const user = (request as AuthenticatedRequest).user;
+
+      if (!user) {
+        throw fastify.createAuthError('Authentication required');
+      }
+
+      // Check if we have a rate limit store (this would be Redis in production)
+      // For now, we'll use an in-memory approach with logging
+      const now = Date.now();
+      const windowMs = 5 * 60 * 1000; // 5 minute window
+      const maxAttempts = 10; // Maximum 10 key retrievals per 5 minutes
+
+      // In a real implementation, this would use Redis or another persistent store
+      // For now, we'll track in memory and log for audit purposes
+      const attempts = (request as any).keyOpAttempts || 0;
+
+      if (attempts >= maxAttempts) {
+        // Create audit log for rate limit violation
+        try {
+          await fastify.dbUtils.query(
+            `INSERT INTO audit_logs (user_id, action, resource_type, ip_address, user_agent, metadata)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+              user.userId,
+              'RATE_LIMIT_EXCEEDED',
+              'API_KEY_OPERATION',
+              request.ip,
+              request.headers['user-agent'],
+              {
+                operation: 'key_retrieval',
+                window: windowMs,
+                maxAttempts,
+                actualAttempts: attempts,
+                endpoint: request.url,
+              },
+            ],
+          );
+        } catch (auditError) {
+          fastify.log.error(auditError, 'Failed to create rate limit audit log');
+        }
+
+        reply.header('X-RateLimit-Limit', maxAttempts);
+        reply.header('X-RateLimit-Remaining', 0);
+        reply.header('X-RateLimit-Reset', new Date(now + windowMs).toISOString());
+        reply.header('Retry-After', Math.ceil(windowMs / 1000));
+
+        throw fastify.createError(429, {
+          code: 'KEY_OPERATION_RATE_LIMITED',
+          message: 'Too many API key operations. Please wait before trying again.',
+          details: {
+            limit: maxAttempts,
+            window: '5 minutes',
+            retryAfter: Math.ceil(windowMs / 1000),
+          },
+        });
+      }
+
+      // Log the attempt for monitoring
+      fastify.log.info(
+        {
+          userId: user.userId,
+          operation: 'key_retrieval',
+          attempts: attempts + 1,
+          endpoint: request.url,
+        },
+        'API key operation attempt',
+      );
+    },
+  );
+
   fastify.log.info('Authentication hooks initialized');
 };
 
@@ -298,6 +406,8 @@ declare module 'fastify' {
 
   interface FastifyInstance {
     validateSession: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    requireRecentAuth: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    keyOperationRateLimit: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
 }
 

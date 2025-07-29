@@ -275,3 +275,236 @@ describe('ApiKeyService', () => {
     });
   });
 });
+
+  describe('retrieveFullKey', () => {
+    it('should retrieve full API key for valid request', async () => {
+      const mockApiKeyData = {
+        id: 'test-key-id',
+        user_id: 'user-123',
+        name: 'Test Key',
+        lite_llm_key_value: 'sk-litellm-abc123def456ghi789',
+        is_active: true,
+        expires_at: null,
+        created_at: new Date().toISOString(),
+        last_used_at: null,
+      };
+
+      const mockQuery = vi.fn()
+        .mockResolvedValueOnce({
+          rows: [mockApiKeyData],
+          rowCount: 1,
+        })
+        .mockResolvedValueOnce({
+          rows: [{ id: 'audit-log-id' }],
+          rowCount: 1,
+        })
+        .mockResolvedValueOnce({
+          rows: [{ id: 'test-key-id' }],
+          rowCount: 1,
+        });
+
+      mockFastify.dbUtils = {
+        queryOne: vi.fn().mockResolvedValue(mockApiKeyData),
+        query: mockQuery,
+      };
+
+      mockFastify.createNotFoundError = vi.fn().mockReturnValue(new Error('Not found'));
+      mockFastify.createError = vi.fn().mockReturnValue(new Error('Error'));
+
+      const result = await service.retrieveFullKey('test-key-id', 'user-123');
+
+      expect(result).toBe('sk-litellm-abc123def456ghi789');
+      
+      // Verify audit log was created
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO audit_logs'),
+        expect.arrayContaining([
+          'user-123',
+          'API_KEY_RETRIEVE_FULL',
+          'API_KEY',
+          'test-key-id',
+          expect.objectContaining({
+            timestamp: expect.any(String),
+            keyId: 'test-key-id',
+            keyName: 'Test Key',
+            retrievalMethod: 'secure_endpoint',
+            securityLevel: 'enhanced',
+          }),
+        ])
+      );
+
+      // Verify retrieval tracking was updated
+      expect(mockQuery).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE api_keys'),
+        ['test-key-id']
+      );
+    });
+
+    it('should throw error for non-existent API key', async () => {
+      mockFastify.dbUtils = {
+        queryOne: vi.fn().mockResolvedValue(null),
+        query: vi.fn(),
+      };
+
+      mockFastify.createNotFoundError = vi.fn().mockReturnValue(new Error('API key not found'));
+
+      await expect(service.retrieveFullKey('non-existent-id', 'user-123'))
+        .rejects.toThrow('API key not found');
+
+      expect(mockFastify.createNotFoundError).toHaveBeenCalledWith('API key not found');
+    });
+
+    it('should throw error for inactive API key', async () => {
+      const inactiveApiKey = {
+        id: 'test-key-id',
+        user_id: 'user-123',
+        name: 'Inactive Key',
+        lite_llm_key_value: 'sk-litellm-xyz789',
+        is_active: false,
+        expires_at: null,
+      };
+
+      mockFastify.dbUtils = {
+        queryOne: vi.fn().mockResolvedValue(inactiveApiKey),
+        query: vi.fn(),
+      };
+
+      mockFastify.createError = vi.fn().mockReturnValue(new Error('API key is inactive'));
+
+      await expect(service.retrieveFullKey('test-key-id', 'user-123'))
+        .rejects.toThrow('API key is inactive');
+
+      expect(mockFastify.createError).toHaveBeenCalledWith(403, 'API key is inactive');
+    });
+
+    it('should throw error for expired API key', async () => {
+      const expiredApiKey = {
+        id: 'test-key-id',
+        user_id: 'user-123',
+        name: 'Expired Key',
+        lite_llm_key_value: 'sk-litellm-expired123',
+        is_active: true,
+        expires_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // Yesterday
+      };
+
+      mockFastify.dbUtils = {
+        queryOne: vi.fn().mockResolvedValue(expiredApiKey),
+        query: vi.fn(),
+      };
+
+      mockFastify.createError = vi.fn().mockReturnValue(new Error('API key has expired'));
+
+      await expect(service.retrieveFullKey('test-key-id', 'user-123'))
+        .rejects.toThrow('API key has expired');
+
+      expect(mockFastify.createError).toHaveBeenCalledWith(403, 'API key has expired');
+    });
+
+    it('should throw error when no LiteLLM key is associated', async () => {
+      const apiKeyWithoutLiteLLM = {
+        id: 'test-key-id',
+        user_id: 'user-123',
+        name: 'Key Without LiteLLM',
+        lite_llm_key_value: null,
+        is_active: true,
+        expires_at: null,
+      };
+
+      mockFastify.dbUtils = {
+        queryOne: vi.fn().mockResolvedValue(apiKeyWithoutLiteLLM),
+        query: vi.fn(),
+      };
+
+      mockFastify.createError = vi.fn().mockReturnValue(new Error('No LiteLLM key associated'));
+
+      await expect(service.retrieveFullKey('test-key-id', 'user-123'))
+        .rejects.toThrow('No LiteLLM key associated');
+
+      expect(mockFastify.createError).toHaveBeenCalledWith(404, 'No LiteLLM key associated with this API key');
+    });
+
+    it('should handle mock data correctly', async () => {
+      // Mock the shouldUseMockData method to return true
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(true);
+      
+      const result = await service.retrieveFullKey('mock-key-1', 'user-123');
+
+      expect(result).toBe('sk-lm-mock-key-1-abcdef123456');
+    });
+
+    it('should handle mock data not found', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(true);
+      
+      mockFastify.createNotFoundError = vi.fn().mockReturnValue(new Error('API key not found'));
+
+      await expect(service.retrieveFullKey('non-existent-mock-key', 'user-123'))
+        .rejects.toThrow('API key not found');
+    });
+
+    it('should log security information on successful retrieval', async () => {
+      const mockApiKeyData = {
+        id: 'test-key-id',
+        user_id: 'user-123',
+        name: 'Security Test Key',
+        lite_llm_key_value: 'sk-litellm-security123',
+        is_active: true,
+        expires_at: null,
+        created_at: new Date().toISOString(),
+        last_used_at: new Date().toISOString(),
+      };
+
+      mockFastify.dbUtils = {
+        queryOne: vi.fn().mockResolvedValue(mockApiKeyData),
+        query: vi.fn().mockResolvedValue({ rows: [{}], rowCount: 1 }),
+      };
+
+      const mockLogInfo = vi.fn();
+      mockFastify.log = {
+        info: mockLogInfo,
+        error: vi.fn(),
+        warn: vi.fn(),
+        debug: vi.fn(),
+      };
+
+      await service.retrieveFullKey('test-key-id', 'user-123');
+
+      expect(mockLogInfo).toHaveBeenCalledWith(
+        {
+          userId: 'user-123',
+          keyId: 'test-key-id',
+          keyName: 'Security Test Key',
+          lastUsed: mockApiKeyData.last_used_at,
+        },
+        'API key full value retrieved securely'
+      );
+    });
+
+    it('should handle database errors gracefully', async () => {
+      const dbError = new Error('Database connection failed');
+      
+      mockFastify.dbUtils = {
+        queryOne: vi.fn().mockRejectedValue(dbError),
+        query: vi.fn(),
+      };
+
+      const mockLogError = vi.fn();
+      mockFastify.log = {
+        info: vi.fn(),
+        error: mockLogError,
+        warn: vi.fn(),
+        debug: vi.fn(),
+      };
+
+      await expect(service.retrieveFullKey('test-key-id', 'user-123'))
+        .rejects.toThrow('Database connection failed');
+
+      expect(mockLogError).toHaveBeenCalledWith(
+        {
+          error: 'Database connection failed',
+          userId: 'user-123',
+          keyId: 'test-key-id',
+        },
+        'Failed to retrieve full API key'
+      );
+    });
+  });

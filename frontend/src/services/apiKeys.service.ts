@@ -30,6 +30,8 @@ interface BackendApiKeyDetails {
   userId: string;
   name?: string;
   prefix: string; // Updated from keyPrefix to match backend response
+  liteLLMKey?: string; // Full LiteLLM key from backend (for newly created keys)
+  liteLLMKeyId?: string; // LiteLLM key ID for internal use
   models?: string[]; // New field for multi-model support
   modelDetails?: {
     id: string;
@@ -90,22 +92,17 @@ class ApiKeysService {
       status = 'revoked';
     }
 
-    // Generate a demo full key based on the prefix for demo purposes
-    const generateDemoFullKey = (prefix: string): string => {
-      // Generate a realistic-looking API key for demo
-      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-      let suffix = '';
-      for (let i = 0; i < 45; i++) {
-        suffix += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return `${prefix}_${suffix}`;
-    };
+    // Use the actual LiteLLM key if available, otherwise show a placeholder
+    const fullKey = backend.liteLLMKey || backend.liteLLMKeyId;
+    const keyPreview = fullKey && fullKey.length > 12
+      ? `${fullKey.substring(0, 8)}...${fullKey.substring(fullKey.length - 4)}`
+      : backend.prefix + '...';
 
     return {
       id: backend.id,
       name: backend.name || 'Unnamed Key',
-      keyPreview: backend.prefix + '...',
-      fullKey: generateDemoFullKey(backend.prefix), // Always generate full key for demo
+      keyPreview,
+      fullKey: fullKey || undefined, // Use actual key or undefined if not available
       status,
       permissions: backend.metadata?.permissions || ['read'],
       usageCount: Math.floor(Math.random() * 1000), // Mock usage count
@@ -147,9 +144,10 @@ class ApiKeysService {
     const response = await apiClient.post<BackendApiKeyDetails>('/api-keys', request);
     const mappedKey = this.mapBackendToFrontend(response);
     
-    // If this is a new key creation response, it might have the full key
-    if ((response as any).key) {
-      mappedKey.fullKey = (response as any).key;
+    // The backend should provide liteLLMKey or key field for newly created keys
+    // mapBackendToFrontend already handles this, but we can override if needed
+    if ((response as any).liteLLMKey || (response as any).key) {
+      mappedKey.fullKey = (response as any).liteLLMKey || (response as any).key;
     }
     
     return mappedKey;
@@ -162,6 +160,43 @@ class ApiKeysService {
   async updateApiKey(keyId: string, updates: Partial<CreateApiKeyRequest>): Promise<ApiKey> {
     const response = await apiClient.patch<BackendApiKeyDetails>(`/api-keys/${keyId}`, updates);
     return this.mapBackendToFrontend(response);
+  }
+
+  /**
+   * Securely retrieve the full API key value
+   * This method calls the secure endpoint that requires recent authentication
+   */
+  async retrieveFullKey(keyId: string): Promise<{
+    key: string;
+    keyType: string;
+    retrievedAt: string;
+  }> {
+    try {
+      const response = await apiClient.post<{
+        key: string;
+        keyType: string;
+        retrievedAt: string;
+      }>(`/api-keys/${keyId}/reveal`);
+      
+      return response;
+    } catch (error: any) {
+      // Handle specific error cases for better UX
+      if (error.status === 403 && error.response?.error?.code === 'TOKEN_TOO_OLD') {
+        throw new Error('Recent authentication required. Please refresh the page and try again.');
+      } else if (error.status === 429 && error.response?.error?.code === 'KEY_OPERATION_RATE_LIMITED') {
+        const details = error.response.error.details;
+        throw new Error(`Too many key retrieval attempts. Please wait ${details?.retryAfter || 300} seconds before trying again.`);
+      } else if (error.status === 404) {
+        throw new Error('API key not found or no LiteLLM key associated.');
+      } else if (error.status === 403 && error.message?.includes('inactive')) {
+        throw new Error('This API key is inactive and cannot be retrieved.');
+      } else if (error.status === 403 && error.message?.includes('expired')) {
+        throw new Error('This API key has expired and cannot be retrieved.');
+      }
+      
+      // Generic error fallback
+      throw new Error('Failed to retrieve API key. Please try again or contact support.');
+    }
   }
 }
 

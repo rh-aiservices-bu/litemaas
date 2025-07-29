@@ -356,6 +356,11 @@ export const EnhancedApiKeySchema = Type.Intersect([
   ApiKeySchema,
   Type.Object({
     liteLLMKeyId: Type.Optional(Type.String()),
+    liteLLMKey: Type.Optional(
+      Type.String({
+        description: 'Actual LiteLLM key (masked in list views, full in individual retrieval)',
+      }),
+    ), // PHASE 1 FIX
     liteLLMInfo: Type.Optional(
       Type.Object({
         key_name: Type.Optional(Type.String()),

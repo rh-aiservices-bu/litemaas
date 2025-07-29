@@ -293,14 +293,42 @@ const ApiKeysPage: React.FC = () => {
     }
   };
 
-  const toggleKeyVisibility = (keyId: string) => {
+  const toggleKeyVisibility = async (keyId: string) => {
     const newVisibleKeys = new Set(visibleKeys);
+    
     if (newVisibleKeys.has(keyId)) {
+      // Hide the key
       newVisibleKeys.delete(keyId);
+      setVisibleKeys(newVisibleKeys);
     } else {
-      newVisibleKeys.add(keyId);
+      // Show the key - use secure retrieval
+      try {
+        const keyData = await apiKeysService.retrieveFullKey(keyId);
+        
+        // Update the API key in our local state with the retrieved key
+        setApiKeys(prev => prev.map(key => 
+          key.id === keyId 
+            ? { ...key, fullKey: keyData.key, keyType: keyData.keyType }
+            : key
+        ));
+        
+        // Show the key
+        newVisibleKeys.add(keyId);
+        setVisibleKeys(newVisibleKeys);
+        
+        addNotification({
+          title: 'API Key Retrieved',
+          description: `Your LiteLLM API key has been retrieved securely. Retrieved at: ${new Date(keyData.retrievedAt).toLocaleString()}`,
+          variant: 'success'
+        });
+      } catch (error) {
+        addNotification({
+          title: 'Error Retrieving API Key',
+          description: error instanceof Error ? error.message : 'Failed to retrieve API key',
+          variant: 'danger'
+        });
+      }
     }
-    setVisibleKeys(newVisibleKeys);
   };
 
   const copyToClipboard = (text: string, label: string) => {
@@ -432,7 +460,9 @@ const ApiKeysPage: React.FC = () => {
                         <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
                           <FlexItem>
                             <code style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
-                              {visibleKeys.has(apiKey.id) ? apiKey.fullKey : '************'}
+                              {visibleKeys.has(apiKey.id) && apiKey.fullKey 
+                                ? `${apiKey.fullKey} (LiteLLM)`
+                                : apiKey.keyPreview || '************'}
                             </code>
                           </FlexItem>
                           <FlexItem>
@@ -694,7 +724,9 @@ const ApiKeysPage: React.FC = () => {
                       display: 'block',
                       wordBreak: 'break-all'
                     }}>
-                      {visibleKeys.has(selectedApiKey.id) ? selectedApiKey.fullKey : '************'}
+                      {visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey 
+                        ? `${selectedApiKey.fullKey} (LiteLLM)`
+                        : selectedApiKey.keyPreview || '************'}
                     </code>
                   </FlexItem>
                   <FlexItem>
@@ -720,8 +752,14 @@ const ApiKeysPage: React.FC = () => {
                 </Flex>
               </FormGroup>
               
+              {!visibleKeys.has(selectedApiKey.id) && (
+                <Alert variant="info" title="Secure Key Retrieval" style={{ marginTop: '1rem' }}>
+                  Click the eye icon above to securely retrieve your full LiteLLM API key. For security reasons, 
+                  this requires recent authentication and is rate-limited. All key retrievals are logged for audit purposes.
+                </Alert>
+              )}
+              
               <div style={{ marginTop: '1rem' }}>
-                <Content component={ContentVariants.h3}>Key Information</Content>
                 <Table aria-label="Key details" variant="compact">
                   <Tbody>
                     <Tr>
@@ -779,8 +817,9 @@ const ApiKeysPage: React.FC = () => {
                 <Content component={ContentVariants.h3}>Usage Example</Content>
                 <CodeBlock>
                   <CodeBlockCode>
-{`curl -X POST ${litellmApiUrl}/v1/chat/completions \
-  -H "Authorization: Bearer ${selectedApiKey.fullKey}" \
+{`# Using your secure LiteLLM API key
+curl -X POST ${litellmApiUrl}/v1/chat/completions \
+  -H "Authorization: Bearer ${selectedApiKey.fullKey || '<click-show-key-to-reveal>'}" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "${selectedApiKey.models && selectedApiKey.models.length > 0 ? selectedApiKey.models[0] : 'gpt-4'}",

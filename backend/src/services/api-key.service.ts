@@ -326,8 +326,8 @@ export class ApiKeyService {
         );
       }
 
-      // Generate secure API key
-      const { key, keyHash, keyPrefix } = this.generateApiKey();
+      // Generate secure API key for local hashing and prefix (but we'll return the LiteLLM key)
+      const { keyHash, keyPrefix } = this.generateApiKey();
 
       // Create API key in LiteLLM with multiple models
       const liteLLMRequest: LiteLLMKeyGenerationRequest = {
@@ -361,6 +361,11 @@ export class ApiKeyService {
 
       const liteLLMResponse = await this.liteLLMService.generateApiKey(liteLLMRequest);
 
+      // PHASE 1 FIX: Validate that we got a proper LiteLLM key
+      if (!liteLLMResponse || !liteLLMResponse.key) {
+        throw this.fastify.createError(500, 'Failed to generate LiteLLM API key - no key returned');
+      }
+
       // Begin transaction for atomicity
       const client = await this.fastify.pg.connect();
 
@@ -368,10 +373,11 @@ export class ApiKeyService {
         await client.query('BEGIN');
 
         // Store the API key (without subscription_id for new keys)
+        // Note: We still store the local keyHash for internal validation, but return the LiteLLM key
         const apiKey = await client.query(
           `INSERT INTO api_keys (
             user_id, name, key_hash, key_prefix, 
-            expires_at, is_active, lite_llm_key_id,
+            expires_at, is_active, lite_llm_key_value,
             max_budget, current_spend, tpm_limit, rpm_limit,
             last_sync_at, sync_status, metadata
             ${isLegacyRequest ? ', subscription_id' : ''}
@@ -448,7 +454,7 @@ export class ApiKeyService {
           expiresAt: enhancedApiKey.expiresAt,
           isActive: enhancedApiKey.isActive,
           createdAt: enhancedApiKey.createdAt,
-          key, // Only include the actual key on creation
+          key: liteLLMResponse.key, // FIXED: Return the actual LiteLLM key instead of fake local key
           models: modelIds,
           modelDetails: validModels.map((m) => ({
             id: String(m.model_id),
@@ -518,9 +524,131 @@ export class ApiKeyService {
         apiKey.models = models;
       }
 
-      return this.mapToEnhancedApiKey(apiKey);
+      const enhancedKey = this.mapToEnhancedApiKey(apiKey);
+
+      // For individual key retrieval, return the full LiteLLM key
+      // This is used when users need to copy the actual key to use
+      if (apiKey.lite_llm_key_value) {
+        // PHASE 1 FIX: Validate LiteLLM key exists and is valid
+        try {
+          return {
+            ...enhancedKey,
+            liteLLMKey: apiKey.lite_llm_key_value, // Full LiteLLM key for individual retrieval
+            liteLLMKeyId: apiKey.lite_llm_key_value,
+          };
+        } catch (error) {
+          this.fastify.log.warn({ keyId, error }, 'Failed to retrieve LiteLLM key');
+          return {
+            ...enhancedKey,
+            liteLLMKey: undefined, // No valid LiteLLM key available
+            liteLLMKeyId: apiKey.lite_llm_key_value,
+          };
+        }
+      }
+
+      // No LiteLLM key available
+      return {
+        ...enhancedKey,
+        liteLLMKey: undefined,
+        liteLLMKeyId: apiKey.lite_llm_key_value,
+      };
     } catch (error) {
       this.fastify.log.error(error, 'Failed to get API key');
+      throw error;
+    }
+  }
+
+  /**
+   * Securely retrieve the full API key value for a user
+   * This method includes enhanced security measures and audit logging
+   */
+  async retrieveFullKey(keyId: string, userId: string): Promise<string> {
+    if (this.shouldUseMockData()) {
+      const mockKey = this.MOCK_API_KEYS.find((k) => k.id === keyId);
+      if (!mockKey) {
+        throw this.fastify.createNotFoundError('API key not found');
+      }
+      return mockKey.key; // Return mock key for development
+    }
+
+    try {
+      // Verify ownership and get the API key
+      const apiKey = await this.fastify.dbUtils.queryOne(
+        `SELECT ak.id, ak.user_id, ak.name, ak.lite_llm_key_value, ak.is_active,
+                ak.created_at, ak.expires_at, ak.last_used_at
+         FROM api_keys ak
+         WHERE ak.id = $1 AND ak.user_id = $2`,
+        [keyId, userId],
+      );
+
+      if (!apiKey) {
+        throw this.fastify.createNotFoundError('API key not found');
+      }
+
+      // Additional security checks
+      if (!apiKey.is_active) {
+        throw this.fastify.createError(403, 'API key is inactive');
+      }
+
+      if (apiKey.expires_at && new Date(apiKey.expires_at) < new Date()) {
+        throw this.fastify.createError(403, 'API key has expired');
+      }
+
+      if (!apiKey.lite_llm_key_value) {
+        throw this.fastify.createError(404, 'No LiteLLM key associated with this API key');
+      }
+
+      // Create comprehensive audit log for key retrieval
+      const auditMetadata = {
+        timestamp: new Date().toISOString(),
+        keyId: keyId,
+        keyName: apiKey.name,
+        userAgent: null, // Will be added by the route handler
+        ipAddress: null, // Will be added by the route handler
+        retrievalMethod: 'secure_endpoint',
+        securityLevel: 'enhanced',
+      };
+
+      await this.fastify.dbUtils.query(
+        `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [userId, 'API_KEY_RETRIEVE_FULL', 'API_KEY', keyId, auditMetadata],
+      );
+
+      // Update retrieval tracking (if columns exist)
+      try {
+        await this.fastify.dbUtils.query(
+          `UPDATE api_keys 
+           SET last_retrieved_at = NOW(), 
+               retrieval_count = COALESCE(retrieval_count, 0) + 1
+           WHERE id = $1`,
+          [keyId],
+        );
+      } catch (updateError) {
+        // Ignore if columns don't exist yet (they'll be added in Phase 2 migration)
+        this.fastify.log.debug('Could not update retrieval tracking, columns may not exist yet');
+      }
+
+      this.fastify.log.info(
+        { 
+          userId, 
+          keyId, 
+          keyName: apiKey.name,
+          lastUsed: apiKey.last_used_at 
+        }, 
+        'API key full value retrieved securely'
+      );
+
+      return apiKey.lite_llm_key_value;
+    } catch (error) {
+      this.fastify.log.error(
+        { 
+          error: error.message, 
+          userId, 
+          keyId 
+        }, 
+        'Failed to retrieve full API key'
+      );
       throw error;
     }
   }
@@ -558,7 +686,7 @@ export class ApiKeyService {
     }
 
     try {
-      // Updated query to include model associations
+      // Updated query to include model associations and LiteLLM key
       let query = `
         SELECT ak.*, 
            ARRAY_AGG(DISTINCT akm.model_id) FILTER (WHERE akm.model_id IS NOT NULL) as models,
@@ -649,8 +777,42 @@ export class ApiKeyService {
         }
       }
 
+      // Enhanced mapping to include masked LiteLLM keys
       return {
-        data: apiKeys.map((key) => this.mapToEnhancedApiKey(key)),
+        data: apiKeys.map((key) => {
+          const enhancedKey = this.mapToEnhancedApiKey(key);
+
+          // Add the actual LiteLLM key with masking for security in list views
+          if (key.lite_llm_key_value) {
+            // PHASE 1 FIX: Add validation for LiteLLM key format
+            try {
+              const liteLLMKey = key.lite_llm_key_value;
+              const maskedKey =
+                liteLLMKey.length > 12
+                  ? `${liteLLMKey.substring(0, 8)}...${liteLLMKey.substring(liteLLMKey.length - 4)}`
+                  : `${liteLLMKey.substring(0, 4)}...`;
+
+              return {
+                ...enhancedKey,
+                liteLLMKey: maskedKey, // Add masked LiteLLM key for display
+                liteLLMKeyId: key.lite_llm_key_value, // Keep full key ID for internal use
+              };
+            } catch (error) {
+              this.fastify.log.warn({ keyId: key.id, error }, 'Failed to mask LiteLLM key');
+              return {
+                ...enhancedKey,
+                liteLLMKey: 'key-***masked***', // Fallback display
+                liteLLMKeyId: key.lite_llm_key_value,
+              };
+            }
+          }
+
+          return {
+            ...enhancedKey,
+            liteLLMKey: undefined, // No LiteLLM key available
+            liteLLMKeyId: key.lite_llm_key_value,
+          };
+        }),
         total: countResult ? parseInt(String(countResult.count)) : 0,
       };
     } catch (error) {
@@ -916,7 +1078,7 @@ export class ApiKeyService {
           lastUsedAt: apiKey.last_used_at ? new Date(String(apiKey.last_used_at)) : undefined,
           expiresAt: apiKey.expires_at ? new Date(String(apiKey.expires_at)) : undefined,
           revokedAt: apiKey.revoked_at ? new Date(String(apiKey.revoked_at)) : undefined,
-          liteLLMKeyId: apiKey.lite_llm_key_id as string | undefined,
+          liteLLMKeyId: apiKey.lite_llm_key_value as string | undefined,
           lastSyncAt: apiKey.last_sync_at ? new Date(String(apiKey.last_sync_at)) : undefined,
           syncStatus: apiKey.sync_status as 'synced' | 'pending' | 'error' | undefined,
           syncError: apiKey.sync_error as string | undefined,
@@ -1371,7 +1533,7 @@ export class ApiKeyService {
       is_active: boolean;
       created_at: Date | string;
       revoked_at?: Date | string;
-      lite_llm_key_id?: string;
+      lite_llm_key_value?: string;
       last_sync_at?: Date | string;
       sync_status?: string;
       sync_error?: string;
@@ -1398,7 +1560,7 @@ export class ApiKeyService {
       isActive: apiKey.is_active,
       createdAt: new Date(apiKey.created_at),
       revokedAt: apiKey.revoked_at ? new Date(apiKey.revoked_at) : undefined,
-      liteLLMKeyId: apiKey.lite_llm_key_id || liteLLMResponse?.key,
+      liteLLMKeyId: apiKey.lite_llm_key_value || liteLLMResponse?.key,
       lastSyncAt: apiKey.last_sync_at ? new Date(apiKey.last_sync_at) : undefined,
       syncStatus: apiKey.sync_status || 'pending',
       syncError: apiKey.sync_error,

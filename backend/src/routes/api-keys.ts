@@ -535,6 +535,183 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
   });
+
+  // Secure API key retrieval endpoint - Phase 2 implementation
+  fastify.post<{
+    Params: { id: string };
+    Reply: { key: string; keyType: string; retrievedAt: string };
+  }>('/:id/reveal', {
+    schema: {
+      tags: ['API Keys'],
+      description: 'Securely retrieve full API key value (requires recent authentication)',
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          id: { 
+            type: 'string',
+            description: 'API key ID to retrieve',
+          },
+        },
+        required: ['id'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            key: { 
+              type: 'string',
+              description: 'The full LiteLLM API key value',
+            },
+            keyType: { 
+              type: 'string',
+              enum: ['litellm'],
+              description: 'Type of API key returned',
+            },
+            retrievedAt: { 
+              type: 'string', 
+              format: 'date-time',
+              description: 'Timestamp when the key was retrieved',
+            },
+          },
+        },
+        403: {
+          type: 'object',
+          properties: {
+            error: {
+              type: 'object',
+              properties: {
+                code: { type: 'string' },
+                message: { type: 'string' },
+                details: { type: 'object' },
+              },
+            },
+          },
+        },
+        429: {
+          type: 'object',
+          properties: {
+            error: {
+              type: 'object',
+              properties: {
+                code: { type: 'string' },
+                message: { type: 'string' },
+                details: { type: 'object' },
+              },
+            },
+          },
+        },
+      },
+    },
+    preHandler: [
+      fastify.authenticateWithDevBypass,
+      fastify.requireRecentAuth,
+      fastify.keyOperationRateLimit,
+    ],
+    handler: async (request, reply) => {
+      const user = (request as AuthenticatedRequest).user;
+      const { id } = request.params;
+
+      try {
+        // Enhanced audit metadata with request details
+        const retrievalTimestamp = new Date();
+        
+        // Retrieve the full key securely
+        const fullKey = await apiKeyService.retrieveFullKey(id, user.userId);
+
+        // Update audit log with additional request context
+        try {
+          await fastify.dbUtils.query(
+            `UPDATE audit_logs 
+             SET metadata = metadata || $1
+             WHERE user_id = $2 
+               AND action = 'API_KEY_RETRIEVE_FULL' 
+               AND resource_id = $3
+               AND created_at > NOW() - INTERVAL '1 minute'
+             ORDER BY created_at DESC 
+             LIMIT 1`,
+            [
+              JSON.stringify({
+                userAgent: request.headers['user-agent'],
+                ipAddress: request.ip,
+                endpoint: request.url,
+                method: request.method,
+              }),
+              user.userId,
+              id,
+            ],
+          );
+        } catch (auditUpdateError) {
+          fastify.log.warn(auditUpdateError, 'Failed to update audit log with request context');
+        }
+
+        // Security headers
+        reply.header('X-Content-Type-Options', 'nosniff');
+        reply.header('X-Frame-Options', 'DENY');
+        reply.header('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+        reply.header('Pragma', 'no-cache');
+
+        fastify.log.info(
+          { 
+            userId: user.userId, 
+            keyId: id,
+            userAgent: request.headers['user-agent'],
+            ipAddress: request.ip,
+          }, 
+          'API key successfully retrieved via secure endpoint'
+        );
+
+        return {
+          key: fullKey,
+          keyType: 'litellm',
+          retrievedAt: retrievalTimestamp.toISOString(),
+        };
+      } catch (error) {
+        // Enhanced error logging with security context
+        fastify.log.error(
+          {
+            error: error.message,
+            statusCode: (error as ErrorWithStatusCode).statusCode,
+            userId: user.userId,
+            keyId: id,
+            userAgent: request.headers['user-agent'],
+            ipAddress: request.ip,
+          },
+          'Failed to retrieve API key via secure endpoint'
+        );
+
+        // Create security audit log for failed attempts
+        try {
+          await fastify.dbUtils.query(
+            `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, ip_address, user_agent, metadata)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [
+              user.userId,
+              'API_KEY_RETRIEVE_FAILED',
+              'API_KEY',
+              id,
+              request.ip,
+              request.headers['user-agent'],
+              {
+                error: error.message,
+                statusCode: (error as ErrorWithStatusCode).statusCode,
+                timestamp: new Date().toISOString(),
+                endpoint: request.url,
+              },
+            ],
+          );
+        } catch (auditError) {
+          fastify.log.error(auditError, 'Failed to create security audit log for failed key retrieval');
+        }
+
+        if ((error as ErrorWithStatusCode).statusCode) {
+          throw error;
+        }
+
+        throw fastify.createError(500, 'Failed to retrieve API key');
+      }
+    },
+  });
 };
 
 export default apiKeysRoutes;

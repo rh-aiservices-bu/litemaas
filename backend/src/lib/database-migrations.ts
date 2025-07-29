@@ -6,6 +6,7 @@
 // Import migration files
 import { addApiKeyModelsTable } from '../migrations/001-add-api-key-models';
 import { migrateApiKeySubscriptions } from '../migrations/002-migrate-api-key-subscriptions';
+import { renameLiteLLMKeyColumn } from '../migrations/003-rename-lite-llm-key-column';
 import { DatabaseUtils } from '../types/common.types';
 
 // Users table
@@ -153,7 +154,7 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_model_id ON subscriptions(model_id)
 CREATE INDEX IF NOT EXISTS idx_subscriptions_team_id ON subscriptions(team_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_lite_llm ON subscriptions(lite_llm_key_id);
-`;
+`;;
 
 // API Keys table
 export const apiKeysTable = `
@@ -188,7 +189,7 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys(key_hash);
 CREATE INDEX IF NOT EXISTS idx_api_keys_key_prefix ON api_keys(key_prefix);
 CREATE INDEX IF NOT EXISTS idx_api_keys_lite_llm ON api_keys(lite_llm_key_id);
 CREATE INDEX IF NOT EXISTS idx_api_keys_is_active ON api_keys(is_active);
-`;
+`;;
 
 // Usage logs table
 export const usageLogsTable = `
@@ -355,6 +356,9 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
 
     console.log('📦 Migrating existing API key subscriptions...');
     await dbUtils.query(migrateApiKeySubscriptions);
+
+    console.log('🔄 Renaming LiteLLM key columns...');
+    await dbUtils.query(renameLiteLLMKeyColumn);
 
     console.log('📈 Creating usage_logs table...');
     await dbUtils.query(usageLogsTable);
