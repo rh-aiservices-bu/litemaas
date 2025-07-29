@@ -94,11 +94,8 @@ createdb litemaas_dev
 ### 5. Initialize the Database
 
 ```bash
-# Run migrations (automatic on first start)
+# Database tables are created automatically on first start
 npm run dev:backend
-
-# Or manually run migrations
-cd backend && npm run db:migrate
 
 # Optional: Seed with test data
 cd backend && npm run db:seed

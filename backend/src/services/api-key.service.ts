@@ -1409,7 +1409,7 @@ export class ApiKeyService {
       return await this.fastify.dbUtils.withTransaction(async (client) => {
         // Get expired keys with their LiteLLM IDs
         const expiredKeysResult = await client.query(
-          `SELECT id, litellm_key_id, user_id, name, key_prefix
+          `SELECT id, lite_llm_key_value, user_id, name, key_prefix
            FROM api_keys
            WHERE expires_at IS NOT NULL 
            AND expires_at <= NOW()
@@ -1434,12 +1434,12 @@ export class ApiKeyService {
         // Delete from LiteLLM if integrated
         if (!this.shouldUseMockData()) {
           for (const key of expiredKeys) {
-            if (key.litellm_key_id && typeof key.litellm_key_id === 'string') {
+            if (key.lite_llm_key_value && typeof key.lite_llm_key_value === 'string') {
               try {
-                await this.liteLLMService.deleteKey(key.litellm_key_id);
+                await this.liteLLMService.deleteKey(key.lite_llm_key_value);
               } catch (error) {
                 this.fastify.log.warn(
-                  { error, litellmKeyId: key.litellm_key_id },
+                  { error, litellmKeyId: key.lite_llm_key_value },
                   'Failed to delete expired key from LiteLLM',
                 );
               }

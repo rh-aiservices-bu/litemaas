@@ -3,11 +3,6 @@
  * All tables required for the application functionality
  */
 
-// Import migration files
-import { addApiKeyModelsTable } from '../migrations/001-add-api-key-models';
-import { migrateApiKeySubscriptions } from '../migrations/002-migrate-api-key-subscriptions';
-import { renameLiteLLMKeyColumn } from '../migrations/003-rename-lite-llm-key-column';
-import { fixApiKeyPrefix } from '../migrations/004-fix-api-key-prefix';
 import { DatabaseUtils } from '../types/common.types';
 
 // Users table
@@ -28,7 +23,8 @@ CREATE TABLE IF NOT EXISTS users (
     sync_status VARCHAR(20) DEFAULT 'pending' CHECK (sync_status IN ('pending', 'synced', 'error')),
     last_login_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(oauth_provider, oauth_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
@@ -129,7 +125,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     model_id VARCHAR(255) NOT NULL REFERENCES models(id),
     team_id UUID REFERENCES teams(id),
-    status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'suspended', 'cancelled', 'expired')),
+    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended', 'cancelled', 'expired')),
     quota_requests INTEGER NOT NULL DEFAULT 0,
     quota_tokens INTEGER NOT NULL DEFAULT 0,
     used_requests INTEGER DEFAULT 0,
@@ -147,24 +143,29 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     sync_status VARCHAR(20) DEFAULT 'pending' CHECK (sync_status IN ('synced', 'pending', 'error')),
     sync_error TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT unique_user_model_subscription UNIQUE (user_id, model_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_subscriptions_user_id ON subscriptions(user_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_model_id ON subscriptions(model_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_team_id ON subscriptions(team_id);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user_model ON subscriptions(user_id, model_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_active ON subscriptions(status) WHERE status = 'active';
 CREATE INDEX IF NOT EXISTS idx_subscriptions_lite_llm_key_value ON subscriptions(lite_llm_key_value);
-`;;
+
+COMMENT ON COLUMN subscriptions.lite_llm_key_value IS 'The actual LiteLLM key value for this subscription';
+`;
 
 // API Keys table
 export const apiKeysTable = `
 CREATE TABLE IF NOT EXISTS api_keys (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+    subscription_id UUID REFERENCES subscriptions(id) ON DELETE CASCADE,  -- Nullable for multi-model support
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255),
-    key_hash VARCHAR(255) NOT NULL,
+    key_hash VARCHAR(255) UNIQUE NOT NULL,
     key_prefix VARCHAR(20) NOT NULL,
     lite_llm_key_value VARCHAR(255),
     permissions JSONB DEFAULT '{}',
@@ -181,16 +182,34 @@ CREATE TABLE IF NOT EXISTS api_keys (
     revoked_at TIMESTAMP WITH TIME ZONE,
     last_sync_at TIMESTAMP WITH TIME ZONE,
     sync_status VARCHAR(20) DEFAULT 'pending' CHECK (sync_status IN ('synced', 'pending', 'error')),
-    sync_error TEXT
+    sync_error TEXT,
+    migration_status VARCHAR(20) DEFAULT 'pending'
 );
 
+CREATE UNIQUE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys(key_hash);
 CREATE INDEX IF NOT EXISTS idx_api_keys_subscription_id ON api_keys(subscription_id);
 CREATE INDEX IF NOT EXISTS idx_api_keys_user_id ON api_keys(user_id);
-CREATE INDEX IF NOT EXISTS idx_api_keys_key_hash ON api_keys(key_hash);
 CREATE INDEX IF NOT EXISTS idx_api_keys_key_prefix ON api_keys(key_prefix);
 CREATE INDEX IF NOT EXISTS idx_api_keys_lite_llm_key_value ON api_keys(lite_llm_key_value);
 CREATE INDEX IF NOT EXISTS idx_api_keys_is_active ON api_keys(is_active);
-`;;
+
+COMMENT ON COLUMN api_keys.lite_llm_key_value IS 'The actual LiteLLM key value for this API key';
+`;
+
+// API Key Models junction table
+export const apiKeyModelsTable = `
+CREATE TABLE IF NOT EXISTS api_key_models (
+    api_key_id UUID NOT NULL REFERENCES api_keys(id) ON DELETE CASCADE,
+    model_id VARCHAR(255) NOT NULL REFERENCES models(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (api_key_id, model_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_api_key_models_api_key ON api_key_models(api_key_id);
+CREATE INDEX IF NOT EXISTS idx_api_key_models_model ON api_key_models(model_id);
+
+COMMENT ON TABLE api_key_models IS 'Junction table linking API keys to multiple models';
+`;
 
 // Usage logs table
 export const usageLogsTable = `
@@ -353,13 +372,7 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
     await dbUtils.query(apiKeysTable);
 
     console.log('🔑 Creating api_key_models table...');
-    await dbUtils.query(addApiKeyModelsTable);
-
-    console.log('📦 Migrating existing API key subscriptions...');
-    await dbUtils.query(migrateApiKeySubscriptions);
-
-    console.log('🔧 Fixing API key prefixes...');
-    await dbUtils.query(fixApiKeyPrefix);
+    await dbUtils.query(apiKeyModelsTable);
 
     console.log('📈 Creating usage_logs table...');
     await dbUtils.query(usageLogsTable);

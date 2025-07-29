@@ -81,3 +81,5 @@ data/litellm/
 
 # Serena
 .serena
+# Dev tools generated files
+dev-tools/schema-export.sql

@@ -274,10 +274,11 @@ LITELLM_SYNC_INTERVAL=60         # Sync interval in seconds (future use)
 
 ### Database Configuration
 
-Ensure proper database setup with required tables:
+The database tables are automatically created when the backend starts for the first time:
 
 ```bash
-npm run db:migrate  # Creates all required tables including models
+# Tables are created automatically on backend startup
+cd backend && npm run dev
 ```
 
 ## Best Practices

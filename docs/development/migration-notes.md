@@ -64,7 +64,7 @@ Verified the changes work by:
 - API clients expecting `revokedAt` field should update to use `deletedAt`
 - Frontend components expecting "revoke" terminology should update to "delete"
 
-## API Keys user_id Column Fix (July 2025)
+## API Keys user_id Column Fix (January 2025)
 
 ### Overview
 Fixed a critical issue where API keys were failing to create in the database due to a missing `user_id` value in the INSERT query, despite the column being NOT NULL in the database schema.

@@ -331,7 +331,7 @@ Response (Error - Active API Keys):
 
 ### API Keys
 
-> **🔄 UPDATED**: API Keys now support multi-model access with proper LiteLLM compatibility. Keys use 'sk-' prefix format and display actual key values.
+> API Keys support multi-model access with proper LiteLLM compatibility. Keys use 'sk-' prefix format and display actual key values.
 
 #### GET /api-keys
 List user API keys with multi-model support
@@ -349,10 +349,10 @@ Response:
     {
       "id": "key_123",
       "name": "Production Key",
-      "prefix": "sk-LaAy",                    // FIXED: Now shows actual LiteLLM key prefix
-      "keyPreview": "sk-LaAy...",            // FIXED: Shows real key preview, not fake
-      "models": ["gpt-4", "gpt-3.5-turbo"],  // NEW: Array of model IDs
-      "modelDetails": [                      // NEW: Detailed model information
+      "prefix": "sk-LaAy",                    // Shows actual LiteLLM key prefix
+      "keyPreview": "sk-LaAy...",            // Shows real key preview
+      "models": ["gpt-4", "gpt-3.5-turbo"],  // Array of model IDs
+      "modelDetails": [                      // Detailed model information
         {
           "id": "gpt-4",
           "name": "GPT-4",
@@ -366,12 +366,12 @@ Response:
           "contextLength": 4096
         }
       ],
-      "subscriptionId": "sub_123",           // LEGACY: For backward compatibility
+      "subscriptionId": "sub_123",           // For backward compatibility
       "lastUsedAt": "2024-01-15T10:30:00Z",
       "createdAt": "2024-01-01T00:00:00Z",
       "expiresAt": null,
       "isActive": true,
-      "isLiteLLMKey": true,                   // NEW: Indicates LiteLLM compatibility
+      "isLiteLLMKey": true,                   // Indicates LiteLLM compatibility
       "metadata": {}
     }
   ],
@@ -387,11 +387,11 @@ Response:
 #### POST /api-keys
 Generate new API key with multi-model support
 
-**NEW FORMAT** (Recommended):
+**Multi-Model Format** (Recommended):
 ```json
 Request:
 {
-  "modelIds": ["gpt-4", "gpt-3.5-turbo"],  // NEW: Array of model IDs
+  "modelIds": ["gpt-4", "gpt-3.5-turbo"],  // Array of model IDs
   "name": "Development Key",
   "expiresAt": "2024-12-31T23:59:59Z",     // Optional
   "maxBudget": 100.00,                     // Optional
@@ -415,8 +415,8 @@ Response:
 {
   "id": "key_456",
   "name": "Development Key",
-  "key": "sk-litellm-abcdef1234567890",      // FIXED: Returns actual LiteLLM key on creation
-  "keyPrefix": "sk-litellm",               // FIXED: Shows correct LiteLLM prefix
+  "key": "sk-litellm-abcdef1234567890",      // Returns actual LiteLLM key on creation
+  "keyPrefix": "sk-litellm",               // Shows correct LiteLLM prefix
   "models": ["gpt-4", "gpt-3.5-turbo"],
   "modelDetails": [
     {
@@ -444,7 +444,7 @@ Response:
 }
 ```
 
-**LEGACY FORMAT** (Deprecated but supported):
+**Legacy Subscription Format** (Deprecated but supported):
 ```json
 Request:
 {
@@ -454,7 +454,7 @@ Request:
 
 Response Headers:
 X-API-Deprecation-Warning: subscriptionId parameter is deprecated. Use modelIds array instead.
-X-API-Migration-Guide: See /docs/api/migration-guide for details on upgrading to multi-model API keys.
+X-API-Migration-Guide: See /docs/api/api-migration-guide for details on upgrading to multi-model API keys.
 
 Response:
 {
@@ -511,7 +511,7 @@ Response:
 ```
 
 #### POST /api-keys/:id/retrieve-key
-**NEW**: Securely retrieve full API key value
+Securely retrieve full API key value
 
 **Security Features**:
 - Requires valid JWT authentication
@@ -558,10 +558,10 @@ Rotate API key
 Response:
 {
   "id": "key_456",
-  "key": "sk-litellm-newkey1234567890",      // FIXED: Returns new LiteLLM key
-  "keyPrefix": "sk-litellm",                 // FIXED: Shows correct LiteLLM prefix
+  "key": "sk-litellm-newkey1234567890",      // Returns new LiteLLM key
+  "keyPrefix": "sk-litellm",                 // Shows correct LiteLLM prefix
   "rotatedAt": "2024-01-20T10:00:00Z",
-  "oldPrefix": "sk-litellm"                  // FIXED: Old prefix was also LiteLLM format
+  "oldPrefix": "sk-litellm"                  // Old prefix was also LiteLLM format
 }
 ```
 
@@ -605,11 +605,11 @@ Response:
   "active": 8,
   "expired": 1,
   "revoked": 1,
-  "bySubscription": {                    // LEGACY: For backward compatibility
+  "bySubscription": {                    // For backward compatibility
     "sub_123": 3,
     "sub_456": 2
   },
-  "byModel": {                           // NEW: Count by model
+  "byModel": {                           // Count by model
     "gpt-4": 5,
     "gpt-3.5-turbo": 7,
     "claude-3": 2
@@ -622,14 +622,14 @@ Validate API key (admin endpoint)
 ```json
 Request:
 {
-  "key": "sk-litellm-abcdef1234567890"      // FIXED: Uses actual LiteLLM key format
+  "key": "sk-litellm-abcdef1234567890"      // Uses actual LiteLLM key format
 }
 
 Response:
 {
   "isValid": true,
-  "subscriptionId": "sub_123",           // LEGACY: For backward compatibility  
-  "models": ["gpt-4", "gpt-3.5-turbo"], // NEW: Array of accessible models
+  "subscriptionId": "sub_123",           // For backward compatibility  
+  "models": ["gpt-4", "gpt-3.5-turbo"], // Array of accessible models
   "userId": "user_123",
   "keyId": "key_456",
   "reason": null
