@@ -177,7 +177,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
       }
 
       // Check if it's a user API key (for external API access)
-      if (token.startsWith('ltm_')) {
+      if (token.startsWith('sk-')) {
         const keyValidation = await fastify.validateUserApiKey(token);
         if (keyValidation.isValid) {
           // Create user context from API key

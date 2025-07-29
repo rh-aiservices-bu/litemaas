@@ -22,9 +22,9 @@ LiteMaaS implements a multi-layered authentication system that supports differen
 
 ### 3. User API Keys
 - **Purpose**: Programmatic access to LiteLLM through LiteMaaS
-- **Format**: `ltm_<unique_identifier>`
+- **Format**: `sk-<unique_identifier>` (LiteLLM compatible)
 - **Storage**: Hashed in database
-- **Header**: `Authorization: Bearer ltm_<key>`
+- **Header**: `Authorization: Bearer sk-<key>`
 - **Management**: Created/deleted through UI or API
 
 ### 4. Development Bypass

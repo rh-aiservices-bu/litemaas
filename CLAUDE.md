@@ -77,9 +77,7 @@ litemaas/
 - Team collaboration features
 
 ### Database Tables
-`users`, `teams`, `models`, `subscriptions`, `api_keys`, `api_key_models` (NEW), `usage_logs`, `audit_logs`
-
-> **🔄 UPDATED**: Added `api_key_models` junction table for multi-model API key support
+`users`, `teams`, `models`, `subscriptions`, `api_keys`, `api_key_models`, `usage_logs`, `audit_logs`
 
 ### API Routes
 Auth, user management, model registry, subscriptions, API keys, teams, LiteLLM integration, usage analytics

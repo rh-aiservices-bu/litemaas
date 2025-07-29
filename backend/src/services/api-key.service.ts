@@ -87,7 +87,7 @@ export interface ApiKeyStats {
 export class ApiKeyService {
   private fastify: FastifyInstance;
   private liteLLMService: LiteLLMService;
-  private readonly KEY_PREFIX = 'ltm_';
+  private readonly KEY_PREFIX = 'sk-';
   private readonly KEY_LENGTH = 32; // 32 bytes = 64 hex characters
   private readonly PREFIX_LENGTH = 4; // First 4 characters for display
 
@@ -99,7 +99,7 @@ export class ApiKeyService {
       models: ['gpt-4o', 'claude-3-5-sonnet-20241022'],
       name: 'Production API Key',
       keyHash: 'mock-hash-1',
-      keyPrefix: 'ltm_Ax7m',
+      keyPrefix: 'sk-Ax7m',
       lastUsedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
       expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000), // 1 year from now
       isActive: true,
@@ -142,7 +142,7 @@ export class ApiKeyService {
       models: ['gpt-4o-mini'],
       name: 'Development API Key',
       keyHash: 'mock-hash-2',
-      keyPrefix: 'ltm_Bk9n',
+      keyPrefix: 'sk-Bk9n',
       lastUsedAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
       expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), // 90 days from now
       isActive: true,

@@ -54,6 +54,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { apiKeysService, ApiKey, CreateApiKeyRequest } from '../services/apiKeys.service';
 import { subscriptionsService, Subscription } from '../services/subscriptions.service';
 import { modelsService, Model } from '../services/models.service';
+import { configService, ConfigResponse } from '../services/config.service';
 
 const ApiKeysPage: React.FC = () => {
   const { } = useTranslation();
@@ -82,6 +83,9 @@ const ApiKeysPage: React.FC = () => {
   const [loadingModels, setLoadingModels] = useState(false);
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
   const [isModelSelectOpen, setIsModelSelectOpen] = useState(false);
+  
+  // Configuration state
+  const [litellmApiUrl, setLitellmApiUrl] = useState<string>('https://api.litemaas.com');
 
   // Load API keys from backend
   const loadApiKeys = async () => {
@@ -101,6 +105,17 @@ const ApiKeysPage: React.FC = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Load configuration
+  const loadConfig = async () => {
+    try {
+      const config = await configService.getConfig();
+      setLitellmApiUrl(config.litellmApiUrl);
+    } catch (err) {
+      console.error('Failed to load configuration:', err);
+      // Keep default value if config load fails
     }
   };
 
@@ -142,6 +157,7 @@ const ApiKeysPage: React.FC = () => {
   useEffect(() => {
     loadApiKeys();
     loadModels(); // ✅ Load models on component mount
+    loadConfig(); // Load configuration including LiteLLM API URL
   }, []);
 
   const getStatusBadge = (status: string) => {
@@ -763,7 +779,7 @@ const ApiKeysPage: React.FC = () => {
                 <Content component={ContentVariants.h3}>Usage Example</Content>
                 <CodeBlock>
                   <CodeBlockCode>
-{`curl -X POST https://api.litemaas.com/v1/completions \
+{`curl -X POST ${litellmApiUrl}/v1/chat/completions \
   -H "Authorization: Bearer ${selectedApiKey.fullKey}" \
   -H "Content-Type: application/json" \
   -d '{
