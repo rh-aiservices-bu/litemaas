@@ -17,7 +17,7 @@ export const ApiKeySchema = Type.Object({
 export const ApiKeyDetailsSchema = Type.Object({
   id: Type.String(),
   name: Type.Optional(Type.String()),
-  prefix: Type.String(),
+  keyPrefix: Type.String(),
   subscriptionId: Type.String(),
   lastUsedAt: Type.Optional(TimestampSchema),
   createdAt: TimestampSchema,
@@ -213,7 +213,7 @@ export const ApiKeyResponseSchema = Type.Object({
     Type.Object({
       id: Type.String(),
       name: Type.Optional(Type.String()),
-      prefix: Type.String(),
+      keyPrefix: Type.String(),
       models: Type.Array(Type.String()),
       modelDetails: Type.Optional(
         Type.Array(
@@ -256,7 +256,7 @@ export const SingleApiKeyResponseSchema = Type.Object({
     ),
   ),
   name: Type.Optional(Type.String()),
-  prefix: Type.String(),
+  keyPrefix: Type.String(),
   key: Type.Optional(Type.String({ description: 'Only included on creation' })),
   expiresAt: Type.Optional(Type.String({ format: 'date-time' })),
   isActive: Type.Boolean(),

@@ -94,9 +94,7 @@ class ApiKeysService {
 
     // Use the actual LiteLLM key if available, otherwise show a placeholder
     const fullKey = backend.liteLLMKey || backend.liteLLMKeyId;
-    const keyPreview = fullKey && fullKey.length > 12
-      ? `${fullKey.substring(0, 8)}...${fullKey.substring(fullKey.length - 4)}`
-      : backend.keyPrefix + '...';
+    const keyPreview = backend.keyPrefix ? `${backend.keyPrefix}...` : 'sk-****...';
 
     return {
       id: backend.id,

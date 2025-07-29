@@ -136,6 +136,38 @@ describe('ApiKeysPage', () => {
     });
   });
 
+  it('should handle undefined keyPrefix gracefully', async () => {
+    // Mock API response with undefined keyPrefix
+    const { apiClient } = await import('../../services/api');
+    const mockResponse = {
+      data: [{
+        id: 'test-key-undefined-prefix',
+        name: 'Test Key with Undefined Prefix',
+        keyPrefix: undefined, // This simulates the bug scenario
+        liteLLMKey: null,
+        liteLLMKeyId: null,
+        isActive: true,
+        createdAt: '2024-01-01T00:00:00Z',
+        models: ['gpt-4'],
+        modelDetails: [{ id: 'gpt-4', name: 'GPT-4', provider: 'openai' }],
+        metadata: { permissions: ['read'] }
+      }],
+      total: 1
+    };
+    
+    vi.mocked(apiClient.get).mockResolvedValueOnce(mockResponse);
+    
+    render(<ApiKeysPage />);
+    
+    await waitFor(() => {
+      expect(screen.getByText('Test Key with Undefined Prefix')).toBeInTheDocument();
+    });
+    
+    // Should show fallback instead of "undefined..."
+    expect(screen.getByText('sk-****...')).toBeInTheDocument();
+    expect(screen.queryByText('undefined...')).not.toBeInTheDocument();
+  });
+  
   it('should copy API key to clipboard', async () => {
     const user = userEvent.setup();
     render(<ApiKeysPage />);

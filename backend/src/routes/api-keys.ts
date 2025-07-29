@@ -73,7 +73,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         return {
           data: result.data.map((apiKey) => ({
             ...apiKey,
-            prefix: apiKey.keyPrefix, // Map keyPrefix to prefix for schema compatibility
+            keyPrefix: apiKey.keyPrefix, // Consistent field name with frontend expectations
           })),
           pagination: {
             page,
@@ -123,7 +123,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
 
         return {
           ...apiKey,
-          prefix: apiKey.keyPrefix, // Map keyPrefix to prefix for schema compatibility
+          keyPrefix: apiKey.keyPrefix, // Consistent field name with frontend expectations
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to get API key');
@@ -179,7 +179,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           id: apiKey.id,
           name: apiKey.name,
           key: apiKey.key, // Only returned on creation
-          prefix: apiKey.keyPrefix, // Map keyPrefix to prefix for schema compatibility
+          keyPrefix: apiKey.keyPrefix, // Consistent field name with frontend expectations
           models: apiKey.models || [],
           modelDetails: apiKey.modelDetails,
           subscriptionId: apiKey.subscriptionId, // For backward compatibility
@@ -548,7 +548,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       params: {
         type: 'object',
         properties: {
-          id: { 
+          id: {
             type: 'string',
             description: 'API key ID to retrieve',
           },
@@ -559,17 +559,17 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         200: {
           type: 'object',
           properties: {
-            key: { 
+            key: {
               type: 'string',
               description: 'The full LiteLLM API key value',
             },
-            keyType: { 
+            keyType: {
               type: 'string',
               enum: ['litellm'],
               description: 'Type of API key returned',
             },
-            retrievedAt: { 
-              type: 'string', 
+            retrievedAt: {
+              type: 'string',
               format: 'date-time',
               description: 'Timestamp when the key was retrieved',
             },
@@ -615,7 +615,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         // Enhanced audit metadata with request details
         const retrievalTimestamp = new Date();
-        
+
         // Retrieve the full key securely
         const fullKey = await apiKeyService.retrieveFullKey(id, user.userId);
 
@@ -652,13 +652,13 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         reply.header('Pragma', 'no-cache');
 
         fastify.log.info(
-          { 
-            userId: user.userId, 
+          {
+            userId: user.userId,
             keyId: id,
             userAgent: request.headers['user-agent'],
             ipAddress: request.ip,
-          }, 
-          'API key successfully retrieved via secure endpoint'
+          },
+          'API key successfully retrieved via secure endpoint',
         );
 
         return {
@@ -677,7 +677,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             userAgent: request.headers['user-agent'],
             ipAddress: request.ip,
           },
-          'Failed to retrieve API key via secure endpoint'
+          'Failed to retrieve API key via secure endpoint',
         );
 
         // Create security audit log for failed attempts
@@ -701,7 +701,10 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             ],
           );
         } catch (auditError) {
-          fastify.log.error(auditError, 'Failed to create security audit log for failed key retrieval');
+          fastify.log.error(
+            auditError,
+            'Failed to create security audit log for failed key retrieval',
+          );
         }
 
         if ((error as ErrorWithStatusCode).statusCode) {
