@@ -108,10 +108,23 @@ npm run test:perf
 
 LiteMaaS supports multiple deployment methods:
 
-### Container Deployment (Recommended)
-Deploy using containers with Docker Compose for the complete stack:
+### OpenShift/Kubernetes Deployment (Recommended for Production)
+Deploy to OpenShift or Kubernetes using the provided manifests and Kustomize configuration:
 ```bash
-# Production deployment with containers
+# Deploy to OpenShift
+oc apply -k deployment/openshift/
+
+# Access at:
+# - LiteMaaS: https://litemaas-<namespace>.apps.<cluster-domain>
+# - LiteLLM UI: https://litellm-<namespace>.apps.<cluster-domain>
+```
+
+**📚 Complete Guide**: [OpenShift Deployment Guide](docs/deployment/openshift-deployment.md)
+
+### Container Deployment (Development/Testing)
+Deploy using containers with Docker Compose for local development:
+```bash
+# Local deployment with containers
 docker-compose up -d
 
 # Or with Podman

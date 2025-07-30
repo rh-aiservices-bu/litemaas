@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: litellm
+  labels:
+    app: litellm
+    component: ai-proxy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: litellm
+  template:
+    metadata:
+      labels:
+        app: litellm
+        component: ai-proxy
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        runAsGroup: 1000
+      containers:
+      - name: litellm
+        image: ghcr.io/berriai/litellm:main-stable
+        ports:
+        - containerPort: 4000
+          name: http
+        env:
+        # Database Configuration
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: litellm-secret
+              key: database-url
+        
+        # LiteLLM Configuration
+        - name: LITELLM_MASTER_KEY
+          valueFrom:
+            secretKeyRef:
+              name: litellm-secret
+              key: master-key
+        - name: UI_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: litellm-secret
+              key: ui-username
+        - name: UI_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: litellm-secret
+              key: ui-password
+        
+        # Application Configuration
+        - name: LITELLM_MODE
+          value: "PRODUCTION"
+        - name: STORE_MODEL_IN_DB
+          value: "True"
+        
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "200m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        
+        livenessProbe:
+          httpGet:
+            path: /health/livenessz
+            port: 4000
+          initialDelaySeconds: 60
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health/readiness
+            port: 4000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3

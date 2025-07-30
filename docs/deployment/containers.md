@@ -4,11 +4,20 @@ This document explains how to build and deploy LiteMaaS using containers based o
 
 ## Container Architecture
 
-The LiteMaaS application consists of three main containers:
+The LiteMaaS application consists of four main containers:
 
 1. **Backend API** (`backend/Containerfile`) - Multi-stage Node.js/Fastify API server
 2. **Frontend Web** (`frontend/Containerfile`) - Multi-stage React SPA served by nginx
 3. **PostgreSQL Database** - External database container
+4. **LiteLLM Service** - AI model proxy and management UI
+
+## Deployment Options
+
+LiteMaaS containers can be deployed in multiple ways:
+
+- **[OpenShift/Kubernetes](#openshift-kubernetes-deployment)** - Enterprise container orchestration (recommended for production)
+- **[Docker/Podman Compose](#dockerpodman-compose-deployment)** - Local development and small deployments
+- **[Manual Container Deployment](#manual-container-deployment)** - Individual container management
 
 Both the backend and frontend use optimized three-stage builds that share a common base image with updated packages, providing better caching and efficiency.
 
@@ -33,9 +42,9 @@ podman build -t litemaas-frontend:latest \
   -f frontend/Containerfile frontend/
 ```
 
-### Using Docker/Podman Compose
+## Docker/Podman Compose Deployment
 
-The easiest way to run the complete stack:
+The easiest way to run the complete stack locally or for development:
 
 ```bash
 # Start all services
@@ -126,50 +135,42 @@ podman run -d --name litemaas-frontend \
   litemaas-frontend:latest
 ```
 
-### Kubernetes/OpenShift Deployment
+## OpenShift/Kubernetes Deployment
 
-The containers are designed to work well in Kubernetes environments:
+**🚀 For production deployments, we strongly recommend using OpenShift or Kubernetes.**
 
-```yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: litemaas-backend
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: litemaas-backend
-  template:
-    metadata:
-      labels:
-        app: litemaas-backend
-    spec:
-      containers:
-      - name: backend
-        image: litemaas-backend:latest
-        ports:
-        - containerPort: 8080
-        env:
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: litemaas-secrets
-              key: database-url
-        # ... other environment variables
-        livenessProbe:
-          httpGet:
-            path: /api/v1/health
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /api/v1/health
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 5
+LiteMaaS includes comprehensive Kubernetes manifests and Kustomize configuration for enterprise deployments:
+
+### Quick OpenShift Deployment
+
+```bash
+# Deploy to OpenShift using Kustomize
+oc apply -k deployment/openshift/
+
+# Access applications at:
+# - LiteMaaS: https://litemaas-<namespace>.apps.<cluster-domain>
+# - LiteLLM UI: https://litellm-<namespace>.apps.<cluster-domain>
 ```
+
+### Features Included
+
+- ✅ **Production-ready configurations** with health checks and resource limits
+- ✅ **Kubernetes Secrets** for secure credential management
+- ✅ **OpenShift Routes** with TLS termination
+- ✅ **Persistent storage** for PostgreSQL database
+- ✅ **Horizontal scaling** support for backend and frontend
+- ✅ **OAuth integration** with OpenShift authentication
+- ✅ **Kustomize support** for environment-specific configurations
+
+### Complete Setup Guide
+
+For detailed OpenShift deployment instructions including:
+- OAuth client configuration
+- Secret preparation
+- Step-by-step deployment process
+- Troubleshooting guide
+
+**📚 See: [OpenShift Deployment Guide](openshift-deployment.md)**
 
 ## Health Checks
 

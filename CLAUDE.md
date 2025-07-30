@@ -122,9 +122,14 @@ npm install        # Install dependencies
 npm run dev        # Start both backend and frontend
 ```
 
-**Production (Container):**
+**Production (OpenShift):**
 ```bash
-docker-compose up -d  # Deploy complete stack with containers
+oc apply -k deployment/openshift/  # Deploy to OpenShift/Kubernetes
+```
+
+**Development (Container):**
+```bash
+docker-compose up -d  # Local development with containers
 ```
 
 *See `docs/development/` for detailed setup and `docs/deployment/configuration.md` for environment variables*
