@@ -74,12 +74,13 @@ litemaas/
 - PostgreSQL database with migration system
 - LiteLLM integration for model synchronization
 - Budget management and usage tracking
-- Team collaboration features
+- Team collaboration features with Default Team implementation
 
 ### Database Tables
 `users`, `teams`, `models`, `subscriptions`, `api_keys`, `api_key_models`, `usage_logs`, `audit_logs`
 
 > Added `api_key_models` junction table for multi-model API key support
+> Added Default Team (`a0000000-0000-4000-8000-000000000001`) for reliable user existence detection
 
 ### API Routes
 Auth, user management, model registry, subscriptions, API keys, teams, LiteLLM integration, usage analytics
@@ -125,6 +126,22 @@ npm run dev        # Start both backend and frontend
 *See `docs/architecture/litellm-integration.md` for details*
 
 ## 📝 Key Implementation Notes
+
+### Default Team Implementation
+> Solves LiteLLM user existence detection issue through team-based validation
+
+- **Core Problem**: LiteLLM `/user/info` endpoint always returns HTTP 200 for any user_id, even non-existent users
+- **Solution**: Use teams array as indicator - empty array means user doesn't exist in LiteLLM  
+- **Default Team UUID**: `a0000000-0000-4000-8000-000000000001`
+- **Empty Models Array**: `allowed_models: []` enables access to all models
+- **Auto-Assignment**: All users automatically assigned to default team during OAuth/API key creation
+- **Migration Support**: Orphaned users automatically migrated to default team
+
+**Key Components**:
+- `DefaultTeamService` utility class for team management
+- Database migration creating default team with proper UUID
+- Updated user creation flows (OAuth + API key services)
+- Team-based user existence validation in LiteLLM integration
 
 ### Multi-Model API Keys
 > API keys now support multi-model access instead of single subscription binding
@@ -193,6 +210,7 @@ docs/
 - `docs/api/api-migration-guide.md` - Multi-model API migration guide
 - `docs/architecture/database-schema.md` - Database schema with multi-model tables
 - `docs/features/multi-model-api-keys-implementation.md` - Implementation details
+- `docs/features/default-team-implementation.md` - Default Team implementation and user existence detection
 - `docs/api/subscriptions-api.md` - Subscription endpoints
 - `docs/api/model-sync-api.md` - Model synchronization
 - `docs/architecture/services.md` - Service layer details

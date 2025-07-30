@@ -14,11 +14,11 @@ export const options = {
     { duration: '5m', target: 10 }, // Stay at 10 users
     { duration: '2m', target: 20 }, // Ramp up to 20 users
     { duration: '5m', target: 20 }, // Stay at 20 users
-    { duration: '2m', target: 0 },  // Ramp down to 0 users
+    { duration: '2m', target: 0 }, // Ramp down to 0 users
   ],
   thresholds: {
     http_req_duration: ['p(95)<500'], // 95% of requests should be below 500ms
-    http_req_failed: ['rate<0.1'],    // Error rate should be less than 10%
+    http_req_failed: ['rate<0.1'], // Error rate should be less than 10%
     error_rate: ['rate<0.1'],
   },
 };
@@ -61,7 +61,7 @@ const scenarios = {
 // Authentication helper
 function getAuthHeaders() {
   return {
-    'Authorization': `Bearer ${API_KEY}`,
+    Authorization: `Bearer ${API_KEY}`,
     'Content-Type': 'application/json',
   };
 }
@@ -150,7 +150,7 @@ export function getUsage() {
     `${BASE_URL}/api/v1/usage?start=${startDate.toISOString()}&end=${endDate.toISOString()}`,
     {
       headers: getAuthHeaders(),
-    }
+    },
   );
 
   const success = check(response, {
@@ -209,7 +209,7 @@ export function createSubscription() {
 export function getSubscriptionPricing() {
   // Use a mock subscription ID for testing
   const subscriptionId = 'sub-test-123';
-  
+
   const response = http.get(`${BASE_URL}/api/v1/subscriptions/${subscriptionId}/pricing`, {
     headers: getAuthHeaders(),
   });
@@ -221,9 +221,11 @@ export function getSubscriptionPricing() {
       if (r.status === 404) return true; // 404 is expected for non-existent subscription
       try {
         const data = JSON.parse(r.body);
-        return data.subscriptionId && 
-               typeof data.inputCostPerToken === 'number' && 
-               typeof data.outputCostPerToken === 'number';
+        return (
+          data.subscriptionId &&
+          typeof data.inputCostPerToken === 'number' &&
+          typeof data.outputCostPerToken === 'number'
+        );
       } catch {
         return false;
       }
@@ -288,7 +290,7 @@ export default function () {
   // Randomly select a scenario based on weights
   const rand = Math.random() * 100;
   let cumulative = 0;
-  
+
   for (const [scenarioName, config] of Object.entries(scenarios)) {
     cumulative += config.weight;
     if (rand <= cumulative) {
@@ -326,13 +328,13 @@ export function setup() {
   console.log('Starting performance test...');
   console.log(`Base URL: ${BASE_URL}`);
   console.log('Test scenarios:', Object.keys(scenarios).join(', '));
-  
+
   // Verify the API is accessible
   const response = http.get(`${BASE_URL}/health`);
   if (response.status !== 200) {
     throw new Error(`API health check failed: ${response.status}`);
   }
-  
+
   return { timestamp: new Date().toISOString() };
 }
 

@@ -347,6 +347,70 @@ DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON subscriptions;
 CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON subscriptions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 `;
 
+// Default team creation
+export const defaultTeamMigration = `
+-- Create default team for all users (idempotent)
+INSERT INTO teams (
+    id, 
+    name, 
+    alias, 
+    description, 
+    max_budget, 
+    current_spend, 
+    budget_duration, 
+    tpm_limit, 
+    rpm_limit, 
+    allowed_models, 
+    metadata, 
+    is_active, 
+    created_at, 
+    updated_at
+) VALUES (
+    'a0000000-0000-4000-8000-000000000001'::UUID,
+    'Default Team',
+    'default-team',
+    'Default team for all users until team management is implemented',
+    10000.00,
+    0,
+    'monthly',
+    50000,
+    1000,
+    ARRAY[]::TEXT[],
+    '{"auto_created": true, "default_team": true, "created_by": "system"}',
+    true,
+    NOW(),
+    NOW()
+) ON CONFLICT (id) DO UPDATE SET
+    name = EXCLUDED.name,
+    alias = EXCLUDED.alias,
+    description = EXCLUDED.description,
+    max_budget = EXCLUDED.max_budget,
+    tpm_limit = EXCLUDED.tpm_limit,
+    rpm_limit = EXCLUDED.rpm_limit,
+    allowed_models = EXCLUDED.allowed_models,
+    metadata = EXCLUDED.metadata,
+    updated_at = NOW();
+
+-- Assign all existing users to default team who aren't already in a team
+INSERT INTO team_members (team_id, user_id, role, joined_at, added_by)
+SELECT 
+    'a0000000-0000-4000-8000-000000000001'::UUID,
+    u.id,
+    'member',
+    NOW(),
+    NULL -- System assignment
+FROM users u
+WHERE u.id NOT IN (
+    SELECT DISTINCT user_id 
+    FROM team_members 
+    WHERE team_id = '00000000-0000-0000-0000-000000000001'::UUID
+)
+ON CONFLICT (team_id, user_id) DO NOTHING;
+
+-- Create index for faster lookups
+CREATE INDEX IF NOT EXISTS idx_team_members_default_team ON team_members(team_id) WHERE team_id = '00000000-0000-0000-0000-000000000001'::UUID;
+`;
+
 // Main migration function
 export const applyMigrations = async (dbUtils: DatabaseUtils) => {
   console.log('🚀 Starting database migrations...');
@@ -391,6 +455,9 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
 
     console.log('⚡ Creating triggers...');
     await dbUtils.query(updatedAtTriggers);
+
+    console.log('👥 Creating default team and assigning users...');
+    await dbUtils.query(defaultTeamMigration);
 
     console.log('✅ Database migrations completed successfully!');
   } catch (error) {

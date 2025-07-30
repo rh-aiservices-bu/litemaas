@@ -103,6 +103,37 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ---
 
+### DefaultTeamService
+**Purpose**: Default team management and user existence detection
+
+**Responsibilities**:
+- Ensure default team exists in database and LiteLLM
+- Auto-assign users to default team during onboarding
+- Provide fallback team for users without explicit team membership
+- Solve LiteLLM user existence detection issue via teams array validation
+- Support orphaned user migration to default team
+
+**Dependencies**:
+- Database connection for team and membership operations
+- LiteLLMService for external team synchronization
+- Logging service for comprehensive audit trail
+
+**Key Operations**:
+- `ensureDefaultTeamExists()` - Create default team in DB and LiteLLM if missing
+- `assignUserToDefaultTeam()` - Add user to default team with proper role
+- `getUserPrimaryTeam()` - Get user's team with fallback to default team
+- `migrateOrphanedUsersToDefaultTeam()` - Migrate users without team membership
+- `getDefaultTeamStats()` - Return team statistics and budget utilization
+
+**Default Team Details**:
+- **UUID**: `a0000000-0000-4000-8000-000000000001` 
+- **Name**: "Default Team"
+- **Models**: Empty `allowed_models` array enables access to all models
+- **Budget**: $10,000 monthly budget with usage tracking
+- **Rate Limits**: 50K TPM, 1K RPM limits
+
+---
+
 ### TeamService
 **Purpose**: Team management with budget tracking
 
@@ -279,8 +310,9 @@ The LiteMaaS backend service layer implements the business logic and core functi
 1. OAuthService initiates OAuth flow
 2. SessionService manages OAuth state
 3. OAuthService exchanges code for token
-4. TokenService generates JWT
-5. RBACService assigns user permissions
+4. **DefaultTeamService ensures user belongs to default team**
+5. TokenService generates JWT
+6. RBACService assigns user permissions
 
 ### Subscription Creation
 1. SubscriptionService validates model availability
@@ -296,12 +328,26 @@ The LiteMaaS backend service layer implements the business logic and core functi
 4. If no active keys, SubscriptionService permanently deletes subscription
 5. Database record is removed completely
 
+### API Key Creation
+1. **DefaultTeamService gets user's primary team (fallback to default)**
+2. ApiKeyService validates user permissions
+3. **DefaultTeamService ensures user exists in LiteLLM with team assignment**
+4. ApiKeyService creates key with team context
+5. LiteLLMIntegrationService syncs key to external system
+
 ### API Key Usage
 1. ApiKeyService validates incoming key
 2. RBACService checks permissions
 3. UsageStatsService tracks request
 4. SubscriptionService verifies quotas
 5. TeamService enforces team limits
+
+### User Existence Detection (LiteLLM Integration)
+1. **LiteLLMService calls `/user/info` endpoint**
+2. **Service checks teams array in response**
+3. **Empty teams array = user doesn't exist**
+4. **Non-empty teams array = user exists and is integrated**
+5. **DefaultTeamService ensures all users have team membership**
 
 ### Model Synchronization
 1. LiteLLMIntegrationService triggers sync

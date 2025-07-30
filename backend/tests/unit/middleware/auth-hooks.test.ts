@@ -70,7 +70,7 @@ describe('Auth Hooks Middleware', () => {
   describe('requireRecentAuth middleware', () => {
     it('should pass for recent authentication', async () => {
       (mockRequest as AuthenticatedRequest).user = mockRecentUser;
-      
+
       mockFastify.dbUtils!.queryOne = vi.fn().mockResolvedValue({ is_active: true });
 
       const requireRecentAuth = async (request: FastifyRequest, _reply: FastifyReply) => {
@@ -80,9 +80,10 @@ describe('Auth Hooks Middleware', () => {
           throw mockFastify.createAuthError!('Authentication required');
         }
 
-        const userRecord = await mockFastify.dbUtils!.queryOne('SELECT is_active FROM users WHERE id = $1', [
-          user.userId,
-        ]);
+        const userRecord = await mockFastify.dbUtils!.queryOne(
+          'SELECT is_active FROM users WHERE id = $1',
+          [user.userId],
+        );
 
         if (!userRecord || !userRecord.is_active) {
           throw mockFastify.createAuthError!('User account is disabled');
@@ -104,18 +105,19 @@ describe('Auth Hooks Middleware', () => {
         }
       };
 
-      await expect(requireRecentAuth(mockRequest as FastifyRequest, mockReply as FastifyReply))
-        .resolves.not.toThrow();
+      await expect(
+        requireRecentAuth(mockRequest as FastifyRequest, mockReply as FastifyReply),
+      ).resolves.not.toThrow();
 
       expect(mockFastify.dbUtils!.queryOne).toHaveBeenCalledWith(
         'SELECT is_active FROM users WHERE id = $1',
-        ['user-123']
+        ['user-123'],
       );
     });
 
     it('should reject old authentication', async () => {
       (mockRequest as AuthenticatedRequest).user = mockOldUser;
-      
+
       mockFastify.dbUtils!.queryOne = vi.fn().mockResolvedValue({ is_active: true });
 
       const requireRecentAuth = async (request: FastifyRequest, _reply: FastifyReply) => {
@@ -125,9 +127,10 @@ describe('Auth Hooks Middleware', () => {
           throw mockFastify.createAuthError!('Authentication required');
         }
 
-        const userRecord = await mockFastify.dbUtils!.queryOne('SELECT is_active FROM users WHERE id = $1', [
-          user.userId,
-        ]);
+        const userRecord = await mockFastify.dbUtils!.queryOne(
+          'SELECT is_active FROM users WHERE id = $1',
+          [user.userId],
+        );
 
         if (!userRecord || !userRecord.is_active) {
           throw mockFastify.createAuthError!('User account is disabled');
@@ -149,13 +152,17 @@ describe('Auth Hooks Middleware', () => {
         }
       };
 
-      await expect(requireRecentAuth(mockRequest as FastifyRequest, mockReply as FastifyReply))
-        .rejects.toThrow();
+      await expect(
+        requireRecentAuth(mockRequest as FastifyRequest, mockReply as FastifyReply),
+      ).rejects.toThrow();
 
-      expect(mockFastify.createError).toHaveBeenCalledWith(403, expect.objectContaining({
-        code: 'TOKEN_TOO_OLD',
-        message: 'Recent authentication required for this operation',
-      }));
+      expect(mockFastify.createError).toHaveBeenCalledWith(
+        403,
+        expect.objectContaining({
+          code: 'TOKEN_TOO_OLD',
+          message: 'Recent authentication required for this operation',
+        }),
+      );
     });
 
     it('should reject unauthenticated requests', async () => {
@@ -169,8 +176,9 @@ describe('Auth Hooks Middleware', () => {
         }
       };
 
-      await expect(requireRecentAuth(mockRequest as FastifyRequest, mockReply as FastifyReply))
-        .rejects.toThrow('Authentication required');
+      await expect(
+        requireRecentAuth(mockRequest as FastifyRequest, mockReply as FastifyReply),
+      ).rejects.toThrow('Authentication required');
 
       expect(mockFastify.createAuthError).toHaveBeenCalledWith('Authentication required');
     });
@@ -185,17 +193,19 @@ describe('Auth Hooks Middleware', () => {
           throw mockFastify.createAuthError!('Authentication required');
         }
 
-        const userRecord = await mockFastify.dbUtils!.queryOne('SELECT is_active FROM users WHERE id = $1', [
-          user.userId,
-        ]);
+        const userRecord = await mockFastify.dbUtils!.queryOne(
+          'SELECT is_active FROM users WHERE id = $1',
+          [user.userId],
+        );
 
         if (!userRecord || !userRecord.is_active) {
           throw mockFastify.createAuthError!('User account is disabled');
         }
       };
 
-      await expect(requireRecentAuth(mockRequest as FastifyRequest, mockReply as FastifyReply))
-        .rejects.toThrow('User account is disabled');
+      await expect(
+        requireRecentAuth(mockRequest as FastifyRequest, mockReply as FastifyReply),
+      ).rejects.toThrow('User account is disabled');
     });
   });
 
@@ -203,14 +213,14 @@ describe('Auth Hooks Middleware', () => {
     it('should pass for normal usage', async () => {
       const keyOperationRateLimit = async (request: FastifyRequest, reply: FastifyReply) => {
         const user = (request as AuthenticatedRequest).user;
-        
+
         if (!user) {
           throw mockFastify.createAuthError!('Authentication required');
         }
 
         const attempts = (request as any).keyOpAttempts || 0;
         const maxAttempts = 10;
-        
+
         if (attempts >= maxAttempts) {
           throw mockFastify.createError!(429, {
             code: 'KEY_OPERATION_RATE_LIMITED',
@@ -219,18 +229,19 @@ describe('Auth Hooks Middleware', () => {
         }
 
         mockFastify.log!.info(
-          { 
-            userId: user.userId, 
-            operation: 'key_retrieval', 
+          {
+            userId: user.userId,
+            operation: 'key_retrieval',
             attempts: attempts + 1,
-            endpoint: request.url 
-          }, 
-          'API key operation attempt'
+            endpoint: request.url,
+          },
+          'API key operation attempt',
         );
       };
 
-      await expect(keyOperationRateLimit(mockRequest as FastifyRequest, mockReply as FastifyReply))
-        .resolves.not.toThrow();
+      await expect(
+        keyOperationRateLimit(mockRequest as FastifyRequest, mockReply as FastifyReply),
+      ).resolves.not.toThrow();
 
       expect(mockFastify.log!.info).toHaveBeenCalledWith(
         {
@@ -239,7 +250,7 @@ describe('Auth Hooks Middleware', () => {
           attempts: 1,
           endpoint: '/api/api-keys/test-key-id/reveal',
         },
-        'API key operation attempt'
+        'API key operation attempt',
       );
     });
 
@@ -250,7 +261,7 @@ describe('Auth Hooks Middleware', () => {
 
       const keyOperationRateLimit = async (request: FastifyRequest, reply: FastifyReply) => {
         const user = (request as AuthenticatedRequest).user;
-        
+
         if (!user) {
           throw mockFastify.createAuthError!('Authentication required');
         }
@@ -259,7 +270,7 @@ describe('Auth Hooks Middleware', () => {
         const windowMs = 5 * 60 * 1000; // 5 minute window
         const maxAttempts = 10;
         const attempts = (request as any).keyOpAttempts || 0;
-        
+
         if (attempts >= maxAttempts) {
           // Create audit log for rate limit violation
           try {
@@ -302,13 +313,17 @@ describe('Auth Hooks Middleware', () => {
         }
       };
 
-      await expect(keyOperationRateLimit(mockRequest as FastifyRequest, mockReply as FastifyReply))
-        .rejects.toThrow();
+      await expect(
+        keyOperationRateLimit(mockRequest as FastifyRequest, mockReply as FastifyReply),
+      ).rejects.toThrow();
 
-      expect(mockFastify.createError).toHaveBeenCalledWith(429, expect.objectContaining({
-        code: 'KEY_OPERATION_RATE_LIMITED',
-        message: 'Too many API key operations. Please wait before trying again.',
-      }));
+      expect(mockFastify.createError).toHaveBeenCalledWith(
+        429,
+        expect.objectContaining({
+          code: 'KEY_OPERATION_RATE_LIMITED',
+          message: 'Too many API key operations. Please wait before trying again.',
+        }),
+      );
 
       expect(mockReply.header).toHaveBeenCalledWith('X-RateLimit-Limit', 10);
       expect(mockReply.header).toHaveBeenCalledWith('X-RateLimit-Remaining', 0);
@@ -329,7 +344,7 @@ describe('Auth Hooks Middleware', () => {
             actualAttempts: 15,
             endpoint: '/api/api-keys/test-key-id/reveal',
           }),
-        ])
+        ]),
       );
     });
 
@@ -338,14 +353,15 @@ describe('Auth Hooks Middleware', () => {
 
       const keyOperationRateLimit = async (request: FastifyRequest, _reply: FastifyReply) => {
         const user = (request as AuthenticatedRequest).user;
-        
+
         if (!user) {
           throw mockFastify.createAuthError!('Authentication required');
         }
       };
 
-      await expect(keyOperationRateLimit(mockRequest as FastifyRequest, mockReply as FastifyReply))
-        .rejects.toThrow('Authentication required');
+      await expect(
+        keyOperationRateLimit(mockRequest as FastifyRequest, mockReply as FastifyReply),
+      ).rejects.toThrow('Authentication required');
     });
   });
 });

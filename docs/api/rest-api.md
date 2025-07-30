@@ -51,6 +51,14 @@ Response:
   "username": "user@example.com",
   "email": "user@example.com",
   "roles": ["user"],
+  "primaryTeamId": "a0000000-0000-4000-8000-000000000001", // Default Team UUID
+  "teams": [
+    {
+      "id": "a0000000-0000-4000-8000-000000000001",
+      "name": "Default Team", 
+      "role": "member"
+    }
+  ],
   "createdAt": "2024-01-01T00:00:00Z"
 }
 ```
@@ -703,6 +711,8 @@ Response: File download
 
 ### Teams
 
+> **Default Team**: All users are automatically assigned to the Default Team (`a0000000-0000-4000-8000-000000000001`) during registration or API key creation. This team has an empty `allowed_models` array which enables access to all available models.
+
 #### GET /teams
 List user teams
 ```json
@@ -714,19 +724,25 @@ Response:
 {
   "data": [
     {
-      "id": "team_123",
-      "name": "Development Team",
-      "description": "Main development team",
-      "maxBudget": 1000.00,
+      "id": "a0000000-0000-4000-8000-000000000001",
+      "name": "Default Team",
+      "description": "Default team for all users until team management is implemented",
+      "maxBudget": 10000.00,
       "currentSpend": 245.50,
+      "allowedModels": [], // Empty array enables all models
       "members": [
         {
           "userId": "user_123",
-          "role": "admin",
+          "role": "member",
           "joinedAt": "2024-01-01T00:00:00Z"
         }
       ],
-      "liteLLMTeamId": "litellm_team_456",
+      "liteLLMTeamId": "a0000000-0000-4000-8000-000000000001",
+      "metadata": {
+        "auto_created": true,
+        "default_team": true,
+        "created_by": "system"
+      },
       "createdAt": "2024-01-01T00:00:00Z"
     }
   ],

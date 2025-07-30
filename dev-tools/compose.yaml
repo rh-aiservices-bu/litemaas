@@ -63,7 +63,7 @@ services:
       - litemaas-network
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    command: [ "--config", "/app/config.yaml", "--detailed_debug" ]
+    command: [ "--config", "/app/config.yaml" ]
 
 networks:
   litemaas-network:

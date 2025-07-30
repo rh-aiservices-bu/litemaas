@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { createHash, randomBytes, timingSafeEqual } from 'crypto';
 import { LiteLLMService } from './litellm.service.js';
+import { DefaultTeamService } from './default-team.service.js';
 import {
   EnhancedApiKey,
   LiteLLMKeyGenerationResponse,
@@ -87,6 +88,7 @@ export interface ApiKeyStats {
 export class ApiKeyService {
   private fastify: FastifyInstance;
   private liteLLMService: LiteLLMService;
+  private defaultTeamService: DefaultTeamService;
   private readonly KEY_PREFIX = 'sk-';
   private readonly KEY_LENGTH = 32; // 32 bytes = 64 hex characters
   private readonly PREFIX_LENGTH = 4; // First 4 characters for display
@@ -177,6 +179,7 @@ export class ApiKeyService {
   constructor(fastify: FastifyInstance, liteLLMService: LiteLLMService) {
     this.fastify = fastify;
     this.liteLLMService = liteLLMService;
+    this.defaultTeamService = new DefaultTeamService(fastify, liteLLMService);
   }
 
   private shouldUseMockData(): boolean {
@@ -259,6 +262,11 @@ export class ApiKeyService {
         if (!modelIds || modelIds.length === 0) {
           throw this.fastify.createValidationError('At least one model must be selected');
         }
+      }
+
+      // Ensure team exists in LiteLLM if team_id is provided
+      if (request.teamId) {
+        await this.ensureTeamExistsInLiteLLM(request.teamId);
       }
 
       // Ensure user exists in LiteLLM
@@ -632,24 +640,24 @@ export class ApiKeyService {
       }
 
       this.fastify.log.info(
-        { 
-          userId, 
-          keyId, 
+        {
+          userId,
+          keyId,
           keyName: apiKey.name,
-          lastUsed: apiKey.last_used_at 
-        }, 
-        'API key full value retrieved securely'
+          lastUsed: apiKey.last_used_at,
+        },
+        'API key full value retrieved securely',
       );
 
       return apiKey.lite_llm_key_value;
     } catch (error) {
       this.fastify.log.error(
-        { 
-          error: error.message, 
-          userId, 
-          keyId 
-        }, 
-        'Failed to retrieve full API key'
+        {
+          error: error.message,
+          userId,
+          keyId,
+        },
+        'Failed to retrieve full API key',
       );
       throw error;
     }
@@ -1209,7 +1217,7 @@ export class ApiKeyService {
               error,
               'Failed to rotate key in LiteLLM, proceeding with local rotation only',
             );
-            
+
             // Fallback: Update database with local key only
             await client.query(
               `UPDATE api_keys 
@@ -1608,67 +1616,294 @@ export class ApiKeyService {
   // Main validateApiKey method has been updated above to handle multi-model support
 
   /**
+   * Gets user's primary team, defaults to 'default-team' if none found
+   */
+  private async getUserPrimaryTeam(userId: string): Promise<string> {
+    return await this.defaultTeamService.getUserPrimaryTeam(userId);
+  }
+
+  /**
    * Ensures user exists in LiteLLM backend, creating them if necessary
    */
   private async ensureUserExistsInLiteLLM(userId: string): Promise<void> {
     try {
-      // First check if user exists in LiteLLM
-      await this.liteLLMService.getUserInfo(userId);
-      this.fastify.log.debug({ userId }, 'User already exists in LiteLLM');
-    } catch (error) {
-      // User doesn't exist in LiteLLM, get user from database and create them
-      this.fastify.log.info({ userId }, 'Creating user in LiteLLM for API key creation');
+      // Log LiteLLM service configuration for debugging
+      const liteLLMMetrics = this.liteLLMService.getMetrics();
+      this.fastify.log.debug(
+        {
+          userId,
+          liteLLMConfig: {
+            enableMocking: liteLLMMetrics.config.enableMocking,
+            baseUrl: liteLLMMetrics.config.baseUrl,
+            timeout: liteLLMMetrics.config.timeout,
+          },
+        },
+        'Checking if user exists in LiteLLM',
+      );
 
-      try {
-        // Get user information from database
-        const user = await this.fastify.dbUtils.queryOne(
-          'SELECT id, username, email, full_name, roles, max_budget, tpm_limit, rpm_limit FROM users WHERE id = $1',
-          [userId],
-        );
-
-        if (!user) {
-          throw new Error(`User ${userId} not found in database`);
-        }
-
-        // Create user in LiteLLM
-        await this.liteLLMService.createUser({
-          user_id: String(user.id),
-          user_email: user.email as string,
-          user_alias: user.username as string,
-          user_role: (user.roles as string[])?.includes('admin') ? 'proxy_admin' : 'internal_user',
-          max_budget: Number(user.max_budget) || 100, // Use user's budget or default
-          tpm_limit: Number(user.tpm_limit) || 1000, // Use user's limit or default
-          rpm_limit: Number(user.rpm_limit) || 60, // Use user's limit or default
-          auto_create_key: false, // Don't auto-create key during user creation
-        });
-
-        // Update user sync status in database
-        await this.fastify.dbUtils.query(
-          'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
-          ['synced', userId],
-        );
-
+      // First check if user exists in LiteLLM (now returns null for non-existent users)
+      const existingUser = await this.liteLLMService.getUserInfo(userId);
+      if (existingUser) {
         this.fastify.log.info(
-          { userId },
-          'Successfully created user in LiteLLM for API key creation',
+          {
+            userId,
+            existingUser: {
+              user_id: existingUser.user_id,
+              user_alias: existingUser.user_alias,
+              spend: existingUser.spend,
+              max_budget: existingUser.max_budget,
+              teams: existingUser.teams,
+            },
+          },
+          'User already exists in LiteLLM',
         );
-      } catch (createError) {
-        // Update user sync status to error
-        await this.fastify.dbUtils.query(
-          'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
-          ['error', userId],
-        );
+        return; // User exists, nothing to do
+      }
 
+      // User doesn't exist in LiteLLM, create them
+      this.fastify.log.info(
+        {
+          userId,
+          isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+        },
+        'User not found in LiteLLM, attempting to create',
+      );
+
+      // Get user information from database
+      const user = await this.fastify.dbUtils.queryOne(
+        'SELECT id, username, email, full_name, roles, max_budget, tpm_limit, rpm_limit FROM users WHERE id = $1',
+        [userId],
+      );
+
+      if (!user) {
+        throw new Error(`User ${userId} not found in database`);
+      }
+
+      // Get user's team (fallback to default team)
+      const userTeam = await this.getUserPrimaryTeam(userId);
+
+      // Ensure the team exists in LiteLLM before creating user
+      await this.ensureTeamExistsInLiteLLM(userTeam);
+
+      const createUserRequest = {
+        user_id: String(user.id),
+        user_email: user.email as string,
+        user_alias: user.username as string,
+        user_role: (user.roles as string[])?.includes('admin') ? 'proxy_admin' : 'internal_user',
+        max_budget: Number(user.max_budget) || 100,
+        tpm_limit: Number(user.tpm_limit) || 1000,
+        rpm_limit: Number(user.rpm_limit) || 60,
+        auto_create_key: false,
+        teams: [userTeam], // CRITICAL: Always assign user to a team
+      };
+
+      this.fastify.log.info(
+        {
+          userId,
+          createUserRequest,
+          isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+        },
+        'Sending user creation request to LiteLLM',
+      );
+
+      // Create user in LiteLLM
+      const createdUser = await this.liteLLMService.createUser(createUserRequest);
+
+      this.fastify.log.info(
+        {
+          userId,
+          createdUser: {
+            user_id: createdUser.user_id,
+            user_alias: createdUser.user_alias,
+            max_budget: createdUser.max_budget,
+            spend: createdUser.spend,
+            created_at: createdUser.created_at,
+          },
+          isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+        },
+        'LiteLLM user creation response received',
+      );
+
+      // Verify user was actually created by attempting to fetch it
+      const verificationUser = await this.liteLLMService.getUserInfo(userId);
+      if (!verificationUser) {
         this.fastify.log.error(
           {
             userId,
-            error: createError instanceof Error ? createError.message : 'Unknown error',
+            isMocking: this.liteLLMService.getMetrics().config.enableMocking,
           },
-          'Failed to create user in LiteLLM for API key creation',
+          'CRITICAL: User creation appeared to succeed but verification failed',
+        );
+        throw new Error('User creation verification failed: user not found after creation');
+      }
+
+      this.fastify.log.info(
+        {
+          userId,
+          verificationUser: {
+            user_id: verificationUser.user_id,
+            user_alias: verificationUser.user_alias,
+            teams: verificationUser.teams,
+          },
+        },
+        'Verified user exists in LiteLLM after creation',
+      );
+
+      // Update user sync status in database
+      await this.fastify.dbUtils.query(
+        'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
+        ['synced', userId],
+      );
+
+      this.fastify.log.info(
+        { userId },
+        'Successfully created and verified user in LiteLLM for API key creation',
+      );
+    } catch (error) {
+      // Update user sync status to error
+      await this.fastify.dbUtils.query(
+        'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
+        ['error', userId],
+      );
+
+      this.fastify.log.error(
+        {
+          userId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          errorStack: error instanceof Error ? error.stack : undefined,
+          isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+        },
+        'Failed to create user in LiteLLM for API key creation',
+      );
+
+      throw new Error(
+        `Failed to create user in LiteLLM: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
+    }
+  }
+
+  /**
+   * Ensures team exists in LiteLLM backend, creating it if necessary
+   */
+  private async ensureTeamExistsInLiteLLM(teamId: string): Promise<void> {
+    try {
+      // First check if team exists in LiteLLM
+      const existingTeam = await this.liteLLMService.getTeamInfo(teamId);
+      this.fastify.log.info(
+        {
+          teamId,
+          existingTeam: {
+            team_id: existingTeam.team_id,
+            team_alias: existingTeam.team_alias,
+            spend: existingTeam.spend,
+            max_budget: existingTeam.max_budget,
+          },
+        },
+        'Team already exists in LiteLLM',
+      );
+    } catch (error) {
+      // Team doesn't exist in LiteLLM, get team from database and create it
+      this.fastify.log.info(
+        {
+          teamId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+        },
+        'Team not found in LiteLLM, attempting to create',
+      );
+
+      try {
+        // Get team information from database
+        const team = await this.fastify.dbUtils.queryOne(
+          'SELECT id, name, description, max_budget, tpm_limit, rpm_limit FROM teams WHERE id = $1',
+          [teamId],
+        );
+
+        if (!team) {
+          throw new Error(`Team ${teamId} not found in database`);
+        }
+
+        const createTeamRequest = {
+          team_id: String(team.id),
+          team_alias: team.name as string,
+          max_budget: Number(team.max_budget) || 1000, // Use team's budget or default
+          tpm_limit: Number(team.tpm_limit) || 10000, // Use team's limit or default
+          rpm_limit: Number(team.rpm_limit) || 500, // Use team's limit or default
+          admins: [], // Will be populated from team members
+          models: ['gpt-4o'], // Default models, can be updated later
+        };
+
+        this.fastify.log.info(
+          {
+            teamId,
+            createTeamRequest,
+            isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+          },
+          'Sending team creation request to LiteLLM',
+        );
+
+        // Create team in LiteLLM
+        const createdTeam = await this.liteLLMService.createTeam(createTeamRequest);
+
+        this.fastify.log.info(
+          {
+            teamId,
+            createdTeam: {
+              team_id: createdTeam.team_id,
+              team_alias: createdTeam.team_alias,
+              max_budget: createdTeam.max_budget,
+              spend: createdTeam.spend,
+              created_at: createdTeam.created_at,
+            },
+            isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+          },
+          'LiteLLM team creation response received',
+        );
+
+        // Verify team was actually created by attempting to fetch it
+        try {
+          const verificationTeam = await this.liteLLMService.getTeamInfo(teamId);
+          this.fastify.log.info(
+            {
+              teamId,
+              verificationTeam: {
+                team_id: verificationTeam.team_id,
+                team_alias: verificationTeam.team_alias,
+              },
+            },
+            'Verified team exists in LiteLLM after creation',
+          );
+        } catch (verifyError) {
+          this.fastify.log.error(
+            {
+              teamId,
+              verifyError: verifyError instanceof Error ? verifyError.message : 'Unknown error',
+              isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+            },
+            'CRITICAL: Team creation appeared to succeed but team cannot be retrieved from LiteLLM',
+          );
+          throw new Error(
+            `Team creation verification failed: ${verifyError instanceof Error ? verifyError.message : 'Unknown error'}`,
+          );
+        }
+
+        this.fastify.log.info(
+          { teamId },
+          'Successfully created and verified team in LiteLLM for API key creation',
+        );
+      } catch (createError) {
+        this.fastify.log.error(
+          {
+            teamId,
+            error: createError instanceof Error ? createError.message : 'Unknown error',
+            errorStack: createError instanceof Error ? createError.stack : undefined,
+            isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+          },
+          'Failed to create team in LiteLLM for API key creation',
         );
 
         throw new Error(
-          `Failed to create user in LiteLLM: ${createError instanceof Error ? createError.message : 'Unknown error'}`,
+          `Failed to create team in LiteLLM: ${createError instanceof Error ? createError.message : 'Unknown error'}`,
         );
       }
     }

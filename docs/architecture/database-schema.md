@@ -72,13 +72,14 @@ CREATE INDEX idx_models_litellm_provider ON models(litellm_provider);
 ```
 
 ### teams
-Team management with LiteLLM integration
+Team management with LiteLLM integration and Default Team support
 ```sql
 CREATE TABLE teams (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(255) NOT NULL,
+    alias VARCHAR(255),
     description TEXT,
-    created_by UUID NOT NULL REFERENCES users(id),
+    created_by UUID REFERENCES users(id), -- Nullable for system-created teams
     max_budget DECIMAL(10, 2) DEFAULT 1000.00,
     current_spend DECIMAL(10, 2) DEFAULT 0.00,
     
@@ -87,6 +88,8 @@ CREATE TABLE teams (
     budget_duration VARCHAR(20) DEFAULT 'monthly', -- monthly, yearly, lifetime
     tpm_limit INTEGER DEFAULT 10000,
     rpm_limit INTEGER DEFAULT 1000,
+    allowed_models JSONB DEFAULT '[]'::JSONB, -- Empty array enables all models
+    metadata JSONB DEFAULT '{}'::JSONB,
     last_sync_at TIMESTAMP WITH TIME ZONE,
     sync_status VARCHAR(20) DEFAULT 'pending', -- pending, synced, error
     
@@ -94,6 +97,10 @@ CREATE TABLE teams (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Default Team: a0000000-0000-4000-8000-000000000001
+-- Created automatically during migration with empty allowed_models array (enables all models)
+-- All users are automatically assigned to this team until team management is implemented
 
 CREATE INDEX idx_teams_created_by ON teams(created_by);
 CREATE INDEX idx_teams_litellm ON teams(litellm_team_id);
@@ -549,6 +556,38 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- Run all CREATE FUNCTION statements above
 -- Run all CREATE TRIGGER statements above
 -- Run all CREATE VIEW statements above
+```
+
+### Default Team Migration
+```sql
+-- Create Default Team (required for user existence detection)
+INSERT INTO teams (
+  id, name, alias, description, max_budget, current_spend, budget_duration,
+  tpm_limit, rpm_limit, allowed_models, metadata, is_active, created_at, updated_at
+) VALUES (
+  'a0000000-0000-4000-8000-000000000001'::UUID,
+  'Default Team',
+  'default-team',
+  'Default team for all users until team management is implemented',
+  10000.00,
+  0,
+  'monthly',
+  50000,
+  1000,
+  '[]'::JSONB, -- Empty array enables all models
+  '{"auto_created": true, "default_team": true, "created_by": "system"}'::JSONB,
+  true,
+  NOW(),
+  NOW()
+) ON CONFLICT (id) DO NOTHING;
+
+-- Assign all existing users to default team
+INSERT INTO team_members (team_id, user_id, role, joined_at)
+SELECT 'a0000000-0000-4000-8000-000000000001'::UUID, id, 'member', NOW()
+FROM users
+WHERE id NOT IN (
+  SELECT user_id FROM team_members WHERE team_id = 'a0000000-0000-4000-8000-000000000001'::UUID
+) ON CONFLICT (team_id, user_id) DO NOTHING;
 ```
 
 

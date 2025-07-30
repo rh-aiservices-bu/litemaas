@@ -482,7 +482,28 @@ export class LiteLLMService {
 
   // User Management
   async createUser(request: LiteLLMUserRequest): Promise<LiteLLMUserResponse> {
+    this.fastify.log.info(
+      {
+        request: {
+          user_id: request.user_id,
+          user_email: request.user_email,
+          user_alias: request.user_alias,
+          user_role: request.user_role,
+          max_budget: request.max_budget,
+          auto_create_key: request.auto_create_key,
+        },
+        enableMocking: this.config.enableMocking,
+        baseUrl: this.config.baseUrl,
+      },
+      'LiteLLM createUser called',
+    );
+
     if (this.config.enableMocking) {
+      this.fastify.log.warn(
+        { user_id: request.user_id },
+        'LiteLLM is in MOCK MODE - user will not be created in real LiteLLM instance',
+      );
+
       const mockResponse: LiteLLMUserResponse = {
         user_id: request.user_id || `user-${Date.now()}`,
         user_email: request.user_email,
@@ -500,26 +521,77 @@ export class LiteLLMService {
           : undefined,
       };
 
+      this.fastify.log.info(
+        { user_id: request.user_id, mockResponse },
+        'Returning mock user creation response',
+      );
+
       return this.createMockResponse(mockResponse);
     }
 
     try {
-      return await this.makeRequest<LiteLLMUserResponse>('/user/new', {
+      this.fastify.log.info(
+        {
+          user_id: request.user_id,
+          endpoint: '/user/new',
+          baseUrl: this.config.baseUrl,
+        },
+        'Sending real API request to LiteLLM to create user',
+      );
+
+      const response = await this.makeRequest<LiteLLMUserResponse>('/user/new', {
         method: 'POST',
         body: request,
       });
+
+      this.fastify.log.info(
+        {
+          user_id: request.user_id,
+          response: {
+            user_id: response.user_id,
+            user_alias: response.user_alias,
+            max_budget: response.max_budget,
+            spend: response.spend,
+            created_at: response.created_at,
+          },
+        },
+        'Successfully created user in LiteLLM',
+      );
+
+      return response;
     } catch (error) {
-      this.fastify.log.error(error, 'Failed to create user');
+      this.fastify.log.error(
+        {
+          user_id: request.user_id,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          errorStack: error instanceof Error ? error.stack : undefined,
+          baseUrl: this.config.baseUrl,
+          endpoint: '/user/new',
+        },
+        'Failed to create user in LiteLLM',
+      );
       throw error;
     }
   }
 
-  async getUserInfo(userId: string): Promise<LiteLLMUserResponse> {
+  async getUserInfo(userId: string): Promise<LiteLLMUserResponse | null> {
+    this.fastify.log.debug(
+      {
+        userId,
+        enableMocking: this.config.enableMocking,
+        baseUrl: this.config.baseUrl,
+      },
+      'LiteLLM getUserInfo called',
+    );
+
     if (this.config.enableMocking) {
+      this.fastify.log.debug({ userId }, 'LiteLLM is in MOCK MODE - returning mock user info');
+
       const mockResponse: LiteLLMUserResponse = {
         user_id: userId,
         user_alias: `User ${userId}`,
         user_role: 'internal_user',
+        teams: ['default-team'], // Mock users belong to default team
         max_budget: 100,
         spend: Math.random() * 50,
         models: ['gpt-4o', 'claude-3-5-sonnet-20241022'],
@@ -532,9 +604,60 @@ export class LiteLLMService {
     }
 
     try {
-      return await this.makeRequest<LiteLLMUserResponse>(`/user/info?user_id=${userId}`);
+      this.fastify.log.debug(
+        {
+          userId,
+          endpoint: `/user/info?user_id=${userId}`,
+          baseUrl: this.config.baseUrl,
+        },
+        'Sending real API request to LiteLLM to get user info',
+      );
+
+      const response = await this.makeRequest<LiteLLMUserResponse>(`/user/info?user_id=${userId}`);
+
+      // CRITICAL FIX: Check if user actually exists by examining teams array
+      // LiteLLM returns HTTP 200 for any user_id, but non-existent users have empty teams array
+      if (!response.teams || response.teams.length === 0) {
+        this.fastify.log.info(
+          {
+            userId,
+            response: {
+              user_id: response.user_id,
+              teams: response.teams,
+              keys: response.keys?.length || 0,
+            },
+          },
+          'User does not exist in LiteLLM (empty teams array)',
+        );
+        return null; // User doesn't actually exist
+      }
+
+      this.fastify.log.debug(
+        {
+          userId,
+          response: {
+            user_id: response.user_id,
+            user_alias: response.user_alias,
+            spend: response.spend,
+            max_budget: response.max_budget,
+            teams: response.teams,
+          },
+        },
+        'Successfully retrieved user info from LiteLLM',
+      );
+
+      return response;
     } catch (error) {
-      this.fastify.log.error(error, 'Failed to get user info');
+      this.fastify.log.error(
+        {
+          userId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          errorStack: error instanceof Error ? error.stack : undefined,
+          baseUrl: this.config.baseUrl,
+          endpoint: `/user/info?user_id=${userId}`,
+        },
+        'Failed to get user info from LiteLLM',
+      );
       throw error;
     }
   }

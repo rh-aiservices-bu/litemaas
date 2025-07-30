@@ -29,13 +29,13 @@ describe('Secure API Key Retrieval Endpoint', () => {
         method: 'POST',
         url: '/api-keys/test-key-123/reveal',
         headers: {
-          'Authorization': `Bearer ${recentTestToken}`,
+          Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-client/1.0',
         },
       });
 
       expect(response.statusCode).toBe(200);
-      
+
       const body = JSON.parse(response.body);
       expect(body).toHaveProperty('key');
       expect(body).toHaveProperty('keyType', 'litellm');
@@ -45,7 +45,9 @@ describe('Secure API Key Retrieval Endpoint', () => {
       // Check security headers
       expect(response.headers['x-content-type-options']).toBe('nosniff');
       expect(response.headers['x-frame-options']).toBe('DENY');
-      expect(response.headers['cache-control']).toBe('no-store, no-cache, must-revalidate, private');
+      expect(response.headers['cache-control']).toBe(
+        'no-store, no-cache, must-revalidate, private',
+      );
       expect(response.headers['pragma']).toBe('no-cache');
     });
 
@@ -54,17 +56,20 @@ describe('Secure API Key Retrieval Endpoint', () => {
         method: 'POST',
         url: '/api-keys/test-key-123/reveal',
         headers: {
-          'Authorization': `Bearer ${oldTestToken}`,
+          Authorization: `Bearer ${oldTestToken}`,
           'User-Agent': 'test-client/1.0',
         },
       });
 
       expect(response.statusCode).toBe(403);
-      
+
       const body = JSON.parse(response.body);
       expect(body.error.code).toBe('TOKEN_TOO_OLD');
       expect(body.error.message).toBe('Recent authentication required for this operation');
-      expect(body.error.details).toHaveProperty('action', 'Please re-authenticate to access your API keys');
+      expect(body.error.details).toHaveProperty(
+        'action',
+        'Please re-authenticate to access your API keys',
+      );
     });
 
     it('should reject unauthenticated requests', async () => {
@@ -84,7 +89,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
         method: 'POST',
         url: '/api-keys/test-key-123/reveal',
         headers: {
-          'Authorization': 'Bearer invalid-token',
+          Authorization: 'Bearer invalid-token',
           'User-Agent': 'test-client/1.0',
         },
       });
@@ -97,13 +102,13 @@ describe('Secure API Key Retrieval Endpoint', () => {
         method: 'POST',
         url: '/api-keys/non-existent-key/reveal',
         headers: {
-          'Authorization': `Bearer ${recentTestToken}`,
+          Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-client/1.0',
         },
       });
 
       expect(response.statusCode).toBe(404);
-      
+
       const body = JSON.parse(response.body);
       expect(body.error.message).toContain('API key not found');
     });
@@ -115,7 +120,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
         method: 'POST',
         url: '/api-keys/inactive-key-123/reveal',
         headers: {
-          'Authorization': `Bearer ${recentTestToken}`,
+          Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-client/1.0',
         },
       });
@@ -130,7 +135,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
         method: 'POST',
         url: '/api-keys/expired-key-123/reveal',
         headers: {
-          'Authorization': `Bearer ${recentTestToken}`,
+          Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-client/1.0',
         },
       });
@@ -150,23 +155,23 @@ describe('Secure API Key Retrieval Endpoint', () => {
             method: 'POST',
             url: `/api-keys/${keyId}/reveal`,
             headers: {
-              'Authorization': `Bearer ${recentTestToken}`,
+              Authorization: `Bearer ${recentTestToken}`,
               'User-Agent': 'test-client/1.0',
             },
-          })
+          }),
         );
       }
 
       const responses = await Promise.all(requests);
-      
+
       // At least some requests should be rate limited
-      const rateLimitedResponses = responses.filter(r => r.statusCode === 429);
+      const rateLimitedResponses = responses.filter((r) => r.statusCode === 429);
       expect(rateLimitedResponses.length).toBeGreaterThan(0);
 
       // Check rate limit headers on rate limited response
       const rateLimitedResponse = rateLimitedResponses[0];
       const rateLimitBody = JSON.parse(rateLimitedResponse.body);
-      
+
       expect(rateLimitBody.error.code).toBe('KEY_OPERATION_RATE_LIMITED');
       expect(rateLimitedResponse.headers['x-ratelimit-limit']).toBeDefined();
       expect(rateLimitedResponse.headers['x-ratelimit-remaining']).toBe('0');
@@ -183,7 +188,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
         method: 'POST',
         url: '/api-keys/audit-test-key/reveal',
         headers: {
-          'Authorization': `Bearer ${recentTestToken}`,
+          Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-security-client/1.0',
         },
       });
@@ -203,7 +208,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
             retrievalMethod: 'secure_endpoint',
             securityLevel: 'enhanced',
           }),
-        ])
+        ]),
       );
     });
 
@@ -213,7 +218,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
         method: 'POST',
         url: '/api-keys//reveal', // Missing key ID
         headers: {
-          'Authorization': `Bearer ${recentTestToken}`,
+          Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-client/1.0',
         },
       });
@@ -232,18 +237,18 @@ describe('Secure API Key Retrieval Endpoint', () => {
             method: 'POST',
             url: `/api-keys/${keyId}/reveal`,
             headers: {
-              'Authorization': `Bearer ${recentTestToken}`,
+              Authorization: `Bearer ${recentTestToken}`,
               'User-Agent': `concurrent-client-${i}/1.0`,
             },
-          })
+          }),
         );
       }
 
       const responses = await Promise.all(concurrentRequests);
-      
+
       // Should handle concurrent requests without issues
       // Some might succeed (200), some might be rate limited (429), some might be not found (404)
-      responses.forEach(response => {
+      responses.forEach((response) => {
         expect([200, 404, 429]).toContain(response.statusCode);
       });
     });
@@ -253,7 +258,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
         method: 'POST',
         url: '/api-keys/no-litellm-key-123/reveal',
         headers: {
-          'Authorization': `Bearer ${recentTestToken}`,
+          Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-client/1.0',
         },
       });

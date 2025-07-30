@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { OAuthUserInfo, OAuthTokenResponse } from '../types';
 import { LiteLLMService } from './litellm.service';
+import { DefaultTeamService } from './default-team.service';
 
 export interface MockUser {
   id: string;
@@ -43,12 +44,14 @@ export class OAuthService {
   private fastify: FastifyInstance;
   private isMockEnabled: boolean;
   private liteLLMService: LiteLLMService;
+  private defaultTeamService: DefaultTeamService;
 
   constructor(fastify: FastifyInstance, liteLLMService?: LiteLLMService) {
     this.fastify = fastify;
     this.isMockEnabled =
       process.env.OAUTH_MOCK_ENABLED === 'true' || process.env.NODE_ENV === 'development';
     this.liteLLMService = liteLLMService || new LiteLLMService(fastify);
+    this.defaultTeamService = new DefaultTeamService(fastify, this.liteLLMService);
   }
 
   generateAuthUrl(state: string): string {
@@ -187,6 +190,46 @@ export class OAuthService {
   }
 
   /**
+   * Ensures user is a member of the default team in the database
+   */
+  private async ensureUserTeamMembership(userId: string, teamId: string): Promise<void> {
+    // Use DefaultTeamService for team membership management
+    if (teamId === DefaultTeamService.DEFAULT_TEAM_ID) {
+      await this.defaultTeamService.assignUserToDefaultTeam(userId);
+    } else {
+      // For non-default teams, keep the original logic for now
+      try {
+        const existingMembership = await this.fastify.dbUtils.queryOne(
+          'SELECT id FROM team_members WHERE user_id = $1 AND team_id = $2',
+          [userId, teamId],
+        );
+
+        if (!existingMembership) {
+          await this.fastify.dbUtils.query(
+            'INSERT INTO team_members (team_id, user_id, role, joined_at) VALUES ($1, $2, $3, NOW()) ON CONFLICT (team_id, user_id) DO NOTHING',
+            [teamId, userId, 'member'],
+          );
+
+          this.fastify.log.info(
+            { userId, teamId },
+            'Successfully added user to team in database',
+          );
+        }
+      } catch (error) {
+        this.fastify.log.warn(
+          {
+            userId,
+            teamId,
+            error: error instanceof Error ? error.message : 'Unknown error',
+          },
+          'Failed to ensure user team membership in database',
+        );
+        throw error;
+      }
+    }
+  }
+
+  /**
    * Ensures user exists in LiteLLM backend, creating them if necessary
    */
   private async ensureLiteLLMUser(user: {
@@ -197,38 +240,43 @@ export class OAuthService {
     roles: string[];
   }): Promise<void> {
     try {
-      // First check if user exists in LiteLLM
-      await this.liteLLMService.getUserInfo(user.id);
-      this.fastify.log.debug({ userId: user.id }, 'User already exists in LiteLLM');
-    } catch (error) {
-      // User doesn't exist in LiteLLM, create them
-      this.fastify.log.info({ userId: user.id, email: user.email }, 'Creating user in LiteLLM');
-
-      try {
-        await this.liteLLMService.createUser({
-          user_id: user.id,
-          user_email: user.email,
-          user_alias: user.username,
-          user_role: user.roles.includes('admin') ? 'proxy_admin' : 'internal_user',
-          max_budget: 100, // Default budget - can be customized via environment
-          tpm_limit: 1000, // Default TPM limit
-          rpm_limit: 60, // Default RPM limit
-          auto_create_key: false, // Don't auto-create key during user creation
-        });
-
-        this.fastify.log.info({ userId: user.id }, 'Successfully created user in LiteLLM');
-      } catch (createError) {
-        this.fastify.log.warn(
-          {
-            userId: user.id,
-            error: createError instanceof Error ? createError.message : 'Unknown error',
-          },
-          'Failed to create user in LiteLLM - will retry during sync',
-        );
-
-        // Don't throw here - let the user continue and sync will retry later
-        throw createError;
+      // Check if user exists in LiteLLM (using fixed team-based detection)
+      const existingUser = await this.liteLLMService.getUserInfo(user.id);
+      if (existingUser) {
+        this.fastify.log.debug({ userId: user.id }, 'User already exists in LiteLLM');
+        return;
       }
+
+      // User doesn't exist in LiteLLM, create them with default team assignment
+      this.fastify.log.info({ userId: user.id, email: user.email }, 'Creating user in LiteLLM with default team');
+
+      // Ensure user is assigned to default team in database first
+      await this.ensureUserTeamMembership(user.id, DefaultTeamService.DEFAULT_TEAM_ID);
+
+      await this.liteLLMService.createUser({
+        user_id: user.id,
+        user_email: user.email,
+        user_alias: user.username,
+        user_role: user.roles.includes('admin') ? 'proxy_admin' : 'internal_user',
+        max_budget: 100, // Default budget - can be customized via environment
+        tpm_limit: 1000, // Default TPM limit
+        rpm_limit: 60, // Default RPM limit
+        auto_create_key: false, // Don't auto-create key during user creation
+        teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
+      });
+
+      this.fastify.log.info({ userId: user.id }, 'Successfully created user in LiteLLM with default team');
+    } catch (createError) {
+      this.fastify.log.warn(
+        {
+          userId: user.id,
+          error: createError instanceof Error ? createError.message : 'Unknown error',
+        },
+        'Failed to create user in LiteLLM - will retry during sync',
+      );
+
+      // Don't throw here - let the user continue and sync will retry later
+      throw createError;
     }
   }
 
