@@ -77,6 +77,12 @@ export class OAuthService {
 
     // Real OAuth implementation
     const tokenUrl = `${this.fastify.config.OAUTH_ISSUER}/oauth/token`;
+    
+    this.fastify.log.debug({ 
+      tokenUrl,
+      codePreview: code.substring(0, 20) + '...',
+      clientId: this.fastify.config.OAUTH_CLIENT_ID
+    }, 'Exchanging code for token');
 
     const response = await fetch(tokenUrl, {
       method: 'POST',
@@ -94,10 +100,25 @@ export class OAuthService {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      this.fastify.log.error({ 
+        status: response.status, 
+        statusText: response.statusText,
+        errorText,
+        tokenUrl 
+      }, 'Failed to exchange code for token');
       throw this.fastify.createError(400, 'Failed to exchange authorization code');
     }
 
-    return await response.json();
+    const tokenResponse = await response.json();
+    
+    this.fastify.log.debug({ 
+      hasAccessToken: !!tokenResponse.access_token,
+      tokenType: tokenResponse.token_type,
+      expiresIn: tokenResponse.expires_in 
+    }, 'Token received from OpenShift');
+
+    return tokenResponse;
   }
 
   async getUserInfo(accessToken: string): Promise<OAuthUserInfo> {
@@ -106,7 +127,30 @@ export class OAuthService {
     }
 
     // Real OpenShift user info
-    const userInfoUrl = `${this.fastify.config.OAUTH_ISSUER}/apis/user.openshift.io/v1/users/~`;
+    // Convert OAuth issuer URL to API server URL
+    // From: https://oauth-openshift.apps.dev.rhoai.rh-aiservices-bu.com
+    // To:   https://api.dev.rhoai.rh-aiservices-bu.com:6443
+    const oauthIssuer = this.fastify.config.OAUTH_ISSUER;
+    let apiServerUrl: string;
+    
+    if (oauthIssuer.includes('oauth-openshift.apps.')) {
+      // Standard OpenShift pattern
+      apiServerUrl = oauthIssuer
+        .replace('oauth-openshift.apps.', 'api.')
+        .replace(/\/$/, '') + ':6443';
+    } else {
+      // Fallback: assume the issuer is already the API server
+      apiServerUrl = oauthIssuer;
+    }
+    
+    const userInfoUrl = `${apiServerUrl}/apis/user.openshift.io/v1/users/~`;
+    
+    this.fastify.log.debug({ 
+      oauthIssuer,
+      apiServerUrl,
+      userInfoUrl, 
+      accessTokenPreview: accessToken.substring(0, 20) + '...' 
+    }, 'Fetching user info from OpenShift API server');
 
     const response = await fetch(userInfoUrl, {
       headers: {
@@ -116,10 +160,19 @@ export class OAuthService {
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      this.fastify.log.error({ 
+        status: response.status, 
+        statusText: response.statusText,
+        errorText,
+        userInfoUrl 
+      }, 'Failed to get user info from OpenShift');
       throw this.fastify.createError(401, 'Failed to get user information');
     }
 
     const userResponse = await response.json();
+    
+    this.fastify.log.debug({ userResponse }, 'OpenShift user info received');
 
     return {
       sub: userResponse.metadata.uid,
