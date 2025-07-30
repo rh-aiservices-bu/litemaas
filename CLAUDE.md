@@ -116,9 +116,15 @@ litemaas/
 
 ## 🚀 Quick Start
 
+**Development:**
 ```bash
 npm install        # Install dependencies
 npm run dev        # Start both backend and frontend
+```
+
+**Production (Container):**
+```bash
+docker-compose up -d  # Deploy complete stack with containers
 ```
 
 *See `docs/development/` for detailed setup and `docs/deployment/configuration.md` for environment variables*
@@ -253,7 +259,7 @@ model_info.input/output_cost_per_token → pricing
 docs/
 ├── api/                    # API endpoints, schemas, examples
 ├── architecture/           # System design, services, integration
-├── deployment/            # Configuration, environment setup
+├── deployment/            # Configuration, environment setup, container deployment
 ├── development/           # Setup guide, testing, conventions
 └── features/              # Feature-specific documentation
 ```
@@ -269,6 +275,7 @@ docs/
 - `docs/api/model-sync-api.md` - Model synchronization
 - `docs/architecture/services.md` - Service layer details with standardized error handling patterns
 - `docs/deployment/configuration.md` - Environment variables
+- `docs/deployment/containers.md` - Container deployment guide with Docker/Podman
 - `docs/development/README.md` - Development setup
 - `PATTERNFLY6_RULES.md` - PatternFly 6 migration rules
 

@@ -106,7 +106,22 @@ npm run test:perf
 
 ## 🚀 Deployment
 
-For production deployment instructions, see the [Production Guide](docs/deployment/production-guide.md).
+LiteMaaS supports multiple deployment methods:
+
+### Container Deployment (Recommended)
+Deploy using containers with Docker Compose for the complete stack:
+```bash
+# Production deployment with containers
+docker-compose up -d
+
+# Or with Podman
+podman-compose up -d
+```
+
+For detailed container deployment instructions, see [Container Deployment Guide](docs/deployment/containers.md).
+
+### Manual Deployment
+For traditional deployment instructions, see the [Production Guide](docs/deployment/production-guide.md).
 
 ### Quick Production Build
 ```bash

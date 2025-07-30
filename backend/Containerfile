@@ -1,0 +1,52 @@
+# Multi-stage build with shared base
+# Stage 1: Create base image with updated packages
+FROM registry.access.redhat.com/ubi9/nodejs-18:1 AS base
+
+# Switch to root to update packages
+USER root
+
+# Update system packages and clean up
+RUN dnf update -y && dnf clean all
+
+# Set working directory
+WORKDIR /app
+
+# Switch back to default user
+USER 1001
+
+# Stage 2: Build the application
+FROM base AS builder
+
+# Copy package files
+COPY --chown=1001:1001 package*.json ./
+
+# Install dependencies (including dev dependencies for build)
+RUN npm ci
+
+# Copy source code
+COPY --chown=1001:1001 . .
+
+# Build the application
+RUN npm run build
+
+# Stage 3: Production runtime
+FROM base AS runtime
+
+# Copy package files
+COPY --chown=1001:1001 package*.json ./
+
+# Install only production dependencies
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy built application from builder stage
+COPY --from=builder --chown=1001:1001 /app/dist ./dist
+
+# Expose the port the app runs on
+EXPOSE 8080
+
+# Add health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:8080/api/v1/health || exit 1
+
+# Start the application
+CMD ["npm", "start"] 
