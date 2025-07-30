@@ -26,9 +26,7 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
       <I18nextProvider i18n={i18n}>
         <BrowserRouter>
           <AuthProvider>
-            <NotificationProvider>
-              {children}
-            </NotificationProvider>
+            <NotificationProvider>{children}</NotificationProvider>
           </AuthProvider>
         </BrowserRouter>
       </I18nextProvider>
@@ -36,10 +34,8 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-const customRender = (
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) => render(ui, { wrapper: AllTheProviders, ...options });
+const customRender = (ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) =>
+  render(ui, { wrapper: AllTheProviders, ...options });
 
 export * from '@testing-library/react';
 export { customRender as render };
@@ -102,7 +98,7 @@ export const mockApiResponses = {
   usage: {
     totalRequests: 125430,
     totalTokens: 8950000,
-    totalCost: 1247.50,
+    totalCost: 1247.5,
     averageResponseTime: 1.2,
     successRate: 99.2,
     activeModels: 8,

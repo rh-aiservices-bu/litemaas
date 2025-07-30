@@ -176,7 +176,7 @@ const Layout: React.FC = () => {
                     width: '40px',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
                   }}
                 >
                   <GlobeIcon />
@@ -214,7 +214,7 @@ const Layout: React.FC = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '0'
+                    padding: '0',
                   }}
                 >
                   <Avatar src={AvatarPlaceholder} alt="User Avatar" size="sm" />
@@ -237,12 +237,12 @@ const Layout: React.FC = () => {
             variant="plain"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
             aria-label="Global navigation"
-            style={{ 
+            style={{
               height: '40px',
               width: '40px',
               display: 'flex',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
             }}
           >
             <BarsIcon />
@@ -250,10 +250,10 @@ const Layout: React.FC = () => {
           <img
             src={LogoTitle}
             alt={appConfig.appTitle}
-            style={{ 
-              height: '40px', 
+            style={{
+              height: '40px',
               maxWidth: '240px',
-              objectFit: 'contain'
+              objectFit: 'contain',
             }}
           />
         </MastheadBrand>

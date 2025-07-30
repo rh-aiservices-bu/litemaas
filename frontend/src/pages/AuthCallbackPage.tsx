@@ -20,13 +20,13 @@ const AuthCallbackPage: React.FC = () => {
         if (token) {
           // Store the token (use same token for both access and refresh)
           authService.setTokens(token, token);
-          
+
           // Refresh user context
           await refreshUser();
-          
+
           // Clear the hash from URL
           window.history.replaceState(null, '', window.location.pathname);
-          
+
           // Redirect to home
           navigate('/');
         } else {
@@ -43,12 +43,14 @@ const AuthCallbackPage: React.FC = () => {
   }, [navigate, refreshUser]);
 
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '100vh' 
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh',
+      }}
+    >
       <Spinner size="xl" />
     </div>
   );

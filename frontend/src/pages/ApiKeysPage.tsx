@@ -47,7 +47,7 @@ import {
   EyeSlashIcon,
   TrashIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
 } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -57,7 +57,7 @@ import { modelsService, Model } from '../services/models.service';
 import { configService } from '../services/config.service';
 
 const ApiKeysPage: React.FC = () => {
-  const { } = useTranslation();
+  const { t } = useTranslation();
   const { addNotification } = useNotifications();
 
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
@@ -101,7 +101,7 @@ const ApiKeysPage: React.FC = () => {
       addNotification({
         title: 'Error',
         description: 'Failed to load API keys from the server.',
-        variant: 'danger'
+        variant: 'danger',
       });
     } finally {
       setLoading(false);
@@ -125,21 +125,23 @@ const ApiKeysPage: React.FC = () => {
       setLoadingModels(true);
       // Get user's active subscriptions to determine available models
       const subscriptionsResponse = await subscriptionsService.getSubscriptions(1, 100);
-      const activeSubscriptions = subscriptionsResponse.data.filter(sub => sub.status === 'active');
+      const activeSubscriptions = subscriptionsResponse.data.filter(
+        (sub) => sub.status === 'active',
+      );
 
       // Extract unique models from subscriptions
-      const uniqueModelIds = [...new Set(activeSubscriptions.map(sub => sub.modelId))];
+      const uniqueModelIds = [...new Set(activeSubscriptions.map((sub) => sub.modelId))];
 
       // Fetch detailed model information for each subscribed model
-      const modelPromises = uniqueModelIds.map(modelId =>
-        modelsService.getModel(modelId).catch(err => {
+      const modelPromises = uniqueModelIds.map((modelId) =>
+        modelsService.getModel(modelId).catch((err) => {
           console.warn(`Failed to load model ${modelId}:`, err);
           return null;
-        })
+        }),
       );
 
       const modelResults = await Promise.all(modelPromises);
-      const validModels = modelResults.filter(model => model !== null) as Model[];
+      const validModels = modelResults.filter((model) => model !== null) as Model[];
 
       setModels(validModels);
     } catch (err) {
@@ -147,7 +149,7 @@ const ApiKeysPage: React.FC = () => {
       addNotification({
         title: 'Error',
         description: 'Failed to load your subscribed models.',
-        variant: 'danger'
+        variant: 'danger',
       });
     } finally {
       setLoadingModels(false);
@@ -164,13 +166,13 @@ const ApiKeysPage: React.FC = () => {
     const variants = {
       active: 'success',
       revoked: 'warning',
-      expired: 'danger'
+      expired: 'danger',
     } as const;
 
     const icons = {
       active: <CheckCircleIcon />,
       revoked: <ExclamationTriangleIcon />,
-      expired: <ExclamationTriangleIcon />
+      expired: <ExclamationTriangleIcon />,
     };
 
     return (
@@ -198,7 +200,7 @@ const ApiKeysPage: React.FC = () => {
       addNotification({
         title: 'Validation Error',
         description: 'API key name is required',
-        variant: 'danger'
+        variant: 'danger',
       });
       return;
     }
@@ -208,7 +210,7 @@ const ApiKeysPage: React.FC = () => {
       addNotification({
         title: 'Validation Error',
         description: 'Please select at least one model from your active subscriptions',
-        variant: 'danger'
+        variant: 'danger',
       });
       return;
     }
@@ -219,15 +221,16 @@ const ApiKeysPage: React.FC = () => {
       const request: CreateApiKeyRequest = {
         modelIds: selectedModelIds, // ✅ Use modelIds for multi-model support
         name: newKeyName,
-        expiresAt: newKeyExpiration !== 'never'
-          ? new Date(Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000).toISOString()
-          : undefined,
+        expiresAt:
+          newKeyExpiration !== 'never'
+            ? new Date(Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000).toISOString()
+            : undefined,
         // ✅ Put additional fields in metadata as backend expects
         metadata: {
           description: newKeyDescription || undefined,
           permissions: newKeyPermissions,
-          rateLimit: parseInt(newKeyRateLimit)
-        }
+          rateLimit: parseInt(newKeyRateLimit),
+        },
       };
 
       const newKey = await apiKeysService.createApiKey(request);
@@ -242,14 +245,14 @@ const ApiKeysPage: React.FC = () => {
       addNotification({
         title: 'API Key Created',
         description: `${newKeyName} has been created successfully`,
-        variant: 'success'
+        variant: 'success',
       });
     } catch (err) {
       console.error('Failed to create API key:', err);
       addNotification({
         title: 'Error',
         description: 'Failed to create API key. Please try again.',
-        variant: 'danger'
+        variant: 'danger',
       });
     } finally {
       setCreatingKey(false);
@@ -278,14 +281,14 @@ const ApiKeysPage: React.FC = () => {
       addNotification({
         title: 'API Key Deleted',
         description: `${keyToDelete.name} has been deleted`,
-        variant: 'success'
+        variant: 'success',
       });
     } catch (err) {
       console.error('Failed to delete API key:', err);
       addNotification({
         title: 'Error',
         description: 'Failed to delete API key. Please try again.',
-        variant: 'danger'
+        variant: 'danger',
       });
     } finally {
       setIsDeleteModalOpen(false);
@@ -306,11 +309,11 @@ const ApiKeysPage: React.FC = () => {
         const keyData = await apiKeysService.retrieveFullKey(keyId);
 
         // Update the API key in our local state with the retrieved key
-        setApiKeys(prev => prev.map(key =>
-          key.id === keyId
-            ? { ...key, fullKey: keyData.key, keyType: keyData.keyType }
-            : key
-        ));
+        setApiKeys((prev) =>
+          prev.map((key) =>
+            key.id === keyId ? { ...key, fullKey: keyData.key, keyType: keyData.keyType } : key,
+          ),
+        );
 
         // Show the key
         newVisibleKeys.add(keyId);
@@ -319,13 +322,13 @@ const ApiKeysPage: React.FC = () => {
         addNotification({
           title: 'API Key Retrieved',
           description: `Your LiteLLM API key has been retrieved securely. Retrieved at: ${new Date(keyData.retrievedAt).toLocaleString()}`,
-          variant: 'success'
+          variant: 'success',
         });
       } catch (error) {
         addNotification({
           title: 'Error Retrieving API Key',
           description: error instanceof Error ? error.message : 'Failed to retrieve API key',
-          variant: 'danger'
+          variant: 'danger',
         });
       }
     }
@@ -336,7 +339,7 @@ const ApiKeysPage: React.FC = () => {
     addNotification({
       title: 'Copied!',
       description: `${label} copied to clipboard`,
-      variant: 'info'
+      variant: 'info',
     });
   };
 
@@ -364,9 +367,7 @@ const ApiKeysPage: React.FC = () => {
               <Title headingLevel="h2" size="lg">
                 Loading API Keys...
               </Title>
-              <EmptyStateBody>
-                Retrieving your API key information
-              </EmptyStateBody>
+              <EmptyStateBody>Retrieving your API key information</EmptyStateBody>
             </EmptyState>
           </Bullseye>
         </PageSection>
@@ -377,7 +378,10 @@ const ApiKeysPage: React.FC = () => {
   return (
     <>
       <PageSection variant="secondary">
-        <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+        <Flex
+          justifyContent={{ default: 'justifyContentSpaceBetween' }}
+          alignItems={{ default: 'alignItemsCenter' }}
+        >
           <FlexItem>
             <Title headingLevel="h1" size="2xl">
               API Keys
@@ -401,9 +405,7 @@ const ApiKeysPage: React.FC = () => {
             <Title headingLevel="h2" size="lg">
               Error loading API keys
             </Title>
-            <EmptyStateBody>
-              {error}
-            </EmptyStateBody>
+            <EmptyStateBody>{error}</EmptyStateBody>
             <EmptyStateActions>
               <Button variant="primary" onClick={loadApiKeys}>
                 Retry
@@ -448,7 +450,10 @@ const ApiKeysPage: React.FC = () => {
                           </FlexItem>
                           {apiKey.description && (
                             <FlexItem>
-                              <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+                              <Content
+                                component={ContentVariants.small}
+                                style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                              >
                                 {apiKey.description}
                               </Content>
                             </FlexItem>
@@ -456,7 +461,10 @@ const ApiKeysPage: React.FC = () => {
                         </Flex>
                       </Td>
                       <Td>
-                        <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                        <Flex
+                          alignItems={{ default: 'alignItemsCenter' }}
+                          spaceItems={{ default: 'spaceItemsSm' }}
+                        >
                           <FlexItem>
                             <code style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
                               {visibleKeys.has(apiKey.id) && apiKey.fullKey
@@ -490,7 +498,9 @@ const ApiKeysPage: React.FC = () => {
                         <LabelGroup>
                           {apiKey.models && apiKey.models.length > 0 ? (
                             apiKey.models.slice(0, 2).map((modelId) => {
-                              const modelDetail = apiKey.modelDetails?.find(m => m.id === modelId);
+                              const modelDetail = apiKey.modelDetails?.find(
+                                (m) => m.id === modelId,
+                              );
                               return (
                                 <Label key={modelId} isCompact>
                                   {modelDetail ? modelDetail.name : modelId}
@@ -498,26 +508,33 @@ const ApiKeysPage: React.FC = () => {
                               );
                             })
                           ) : (
-                            <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+                            <Content
+                              component={ContentVariants.small}
+                              style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                            >
                               No models
                             </Content>
                           )}
                           {apiKey.models && apiKey.models.length > 2 && (
-                            <Label isCompact>
-                              +{apiKey.models.length - 2} more
-                            </Label>
+                            <Label isCompact>+{apiKey.models.length - 2} more</Label>
                           )}
                         </LabelGroup>
                       </Td>
                       <Td>
                         <Content component={ContentVariants.small}>
-                          {apiKey.lastUsed ? new Date(apiKey.lastUsed).toLocaleDateString() : 'Never'}
+                          {apiKey.lastUsed
+                            ? new Date(apiKey.lastUsed).toLocaleDateString()
+                            : 'Never'}
                         </Content>
                       </Td>
                       <Td>
                         <Flex spaceItems={{ default: 'spaceItemsSm' }}>
                           <FlexItem>
-                            <Button variant="secondary" size="sm" onClick={() => handleViewKey(apiKey)}>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleViewKey(apiKey)}
+                            >
                               View
                             </Button>
                           </FlexItem>
@@ -582,7 +599,7 @@ const ApiKeysPage: React.FC = () => {
                 onSelect={(_event, selection) => {
                   const selectionString = selection as string;
                   if (selectedModelIds.includes(selectionString)) {
-                    setSelectedModelIds(selectedModelIds.filter(id => id !== selectionString));
+                    setSelectedModelIds(selectedModelIds.filter((id) => id !== selectionString));
                   } else {
                     setSelectedModelIds([...selectedModelIds, selectionString]);
                   }
@@ -596,7 +613,9 @@ const ApiKeysPage: React.FC = () => {
                     isExpanded={isModelSelectOpen}
                     isFullWidth
                   >
-                    {selectedModelIds.length === 0 ? 'Select models...' : `${selectedModelIds.length} model(s) selected`}
+                    {selectedModelIds.length === 0
+                      ? 'Select models...'
+                      : `${selectedModelIds.length} model(s) selected`}
                   </MenuToggle>
                 )}
               >
@@ -620,18 +639,27 @@ const ApiKeysPage: React.FC = () => {
                 </SelectList>
               </Select>
               {models.length === 0 && !loadingModels && (
-                <div style={{ marginTop: '0.5rem', fontSize: '0.875rem', color: 'var(--pf-v6-global--danger-color--100)' }}>
-                  No subscribed models found. You need an active subscription to a model before creating an API key.
+                <div
+                  style={{
+                    marginTop: '0.5rem',
+                    fontSize: '0.875rem',
+                    color: 'var(--pf-v6-global--danger-color--100)',
+                  }}
+                >
+                  No subscribed models found. You need an active subscription to a model before
+                  creating an API key.
                 </div>
               )}
               {selectedModelIds.length > 0 && (
                 <LabelGroup categoryName="Selected models" style={{ marginTop: '0.5rem' }}>
-                  {selectedModelIds.map(modelId => {
-                    const model = models.find(m => m.id === modelId);
+                  {selectedModelIds.map((modelId) => {
+                    const model = models.find((m) => m.id === modelId);
                     return model ? (
                       <Label
                         key={modelId}
-                        onClose={() => setSelectedModelIds(selectedModelIds.filter(id => id !== modelId))}
+                        onClose={() =>
+                          setSelectedModelIds(selectedModelIds.filter((id) => id !== modelId))
+                        }
                         isCompact
                       >
                         {model.name}
@@ -669,12 +697,15 @@ const ApiKeysPage: React.FC = () => {
             </FormGroup>
           </Form>
 
-          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-            <Button
-              variant="primary"
-              onClick={handleSaveApiKey}
-              isLoading={creatingKey}
-            >
+          <div
+            style={{
+              marginTop: '1.5rem',
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <Button variant="primary" onClick={handleSaveApiKey} isLoading={creatingKey}>
               {creatingKey ? 'Creating...' : 'Create API Key'}
             </Button>
             <Button variant="link" onClick={() => setIsCreateModalOpen(false)}>
@@ -692,15 +723,21 @@ const ApiKeysPage: React.FC = () => {
         onClose={() => setIsViewModalOpen(false)}
       >
         <ModalHeader>
-          <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsMd' }}>
+          <Flex
+            alignItems={{ default: 'alignItemsCenter' }}
+            spaceItems={{ default: 'spaceItemsMd' }}
+          >
             <FlexItem>
-              <Title headingLevel="h2" size="xl">{selectedApiKey?.name}</Title>
+              <Title headingLevel="h2" size="xl">
+                {selectedApiKey?.name}
+              </Title>
             </FlexItem>
-            <FlexItem>
-              {selectedApiKey && getStatusBadge(selectedApiKey.status)}
-            </FlexItem>
+            <FlexItem>{selectedApiKey && getStatusBadge(selectedApiKey.status)}</FlexItem>
           </Flex>
-          <Content component={ContentVariants.p} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+          <Content
+            component={ContentVariants.p}
+            style={{ color: 'var(--pf-v6-global--Color--200)' }}
+          >
             API Key Details
           </Content>
         </ModalHeader>
@@ -708,18 +745,23 @@ const ApiKeysPage: React.FC = () => {
           {selectedApiKey && (
             <>
               <FormGroup label="API Key" fieldId="view-key">
-                <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                <Flex
+                  alignItems={{ default: 'alignItemsCenter' }}
+                  spaceItems={{ default: 'spaceItemsSm' }}
+                >
                   <FlexItem flex={{ default: 'flex_1' }}>
-                    <code style={{
-                      fontFamily: 'monospace',
-                      fontSize: '0.875rem',
-                      padding: '0.5rem',
-                      backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)',
-                      border: '1px solid var(--pf-v6-global--BorderColor--100)',
-                      borderRadius: '3px',
-                      display: 'block',
-                      wordBreak: 'break-all'
-                    }}>
+                    <code
+                      style={{
+                        fontFamily: 'monospace',
+                        fontSize: '0.875rem',
+                        padding: '0.5rem',
+                        backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)',
+                        border: '1px solid var(--pf-v6-global--BorderColor--100)',
+                        borderRadius: '3px',
+                        display: 'block',
+                        wordBreak: 'break-all',
+                      }}
+                    >
                       {visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey
                         ? `${selectedApiKey.fullKey}`
                         : selectedApiKey.keyPreview || '************'}
@@ -750,8 +792,9 @@ const ApiKeysPage: React.FC = () => {
 
               {!visibleKeys.has(selectedApiKey.id) && (
                 <Alert variant="info" title="Secure Key Retrieval" style={{ marginTop: '1rem' }}>
-                  Click the eye icon above to securely retrieve your full LiteLLM API key. For security reasons,
-                  this requires recent authentication and is rate-limited. All key retrievals are logged for audit purposes.
+                  Click the eye icon above to securely retrieve your full LiteLLM API key. For
+                  security reasons, this requires recent authentication and is rate-limited. All key
+                  retrievals are logged for audit purposes.
                 </Alert>
               )}
 
@@ -759,15 +802,21 @@ const ApiKeysPage: React.FC = () => {
                 <Table aria-label="Key details" variant="compact">
                   <Tbody>
                     <Tr>
-                      <Td><strong>Models</strong></Td>
+                      <Td>
+                        <strong>Models</strong>
+                      </Td>
                       <Td>
                         {selectedApiKey.models && selectedApiKey.models.length > 0 ? (
                           <LabelGroup>
                             {selectedApiKey.models.map((modelId) => {
-                              const modelDetail = selectedApiKey.modelDetails?.find(m => m.id === modelId);
+                              const modelDetail = selectedApiKey.modelDetails?.find(
+                                (m) => m.id === modelId,
+                              );
                               return (
                                 <Label key={modelId} isCompact>
-                                  {modelDetail ? `${modelDetail.name} (${modelDetail.provider})` : modelId}
+                                  {modelDetail
+                                    ? `${modelDetail.name} (${modelDetail.provider})`
+                                    : modelId}
                                 </Label>
                               );
                             })}
@@ -778,30 +827,46 @@ const ApiKeysPage: React.FC = () => {
                       </Td>
                     </Tr>
                     <Tr>
-                      <Td><strong>Created</strong></Td>
+                      <Td>
+                        <strong>Created</strong>
+                      </Td>
                       <Td>{new Date(selectedApiKey.createdAt).toLocaleDateString()}</Td>
                     </Tr>
                     <Tr>
-                      <Td><strong>Last Used</strong></Td>
-                      <Td>{selectedApiKey.lastUsed ? new Date(selectedApiKey.lastUsed).toLocaleDateString() : 'Never'}</Td>
+                      <Td>
+                        <strong>Last Used</strong>
+                      </Td>
+                      <Td>
+                        {selectedApiKey.lastUsed
+                          ? new Date(selectedApiKey.lastUsed).toLocaleDateString()
+                          : 'Never'}
+                      </Td>
                     </Tr>
                     <Tr>
-                      <Td><strong>Total Requests</strong></Td>
+                      <Td>
+                        <strong>Total Requests</strong>
+                      </Td>
                       <Td>{selectedApiKey.usageCount.toLocaleString()}</Td>
                     </Tr>
                     <Tr>
-                      <Td><strong>Rate Limit</strong></Td>
+                      <Td>
+                        <strong>Rate Limit</strong>
+                      </Td>
                       <Td>{selectedApiKey.rateLimit.toLocaleString()} requests/minute</Td>
                     </Tr>
                     {selectedApiKey.expiresAt && (
                       <Tr>
-                        <Td><strong>Expires</strong></Td>
+                        <Td>
+                          <strong>Expires</strong>
+                        </Td>
                         <Td>{new Date(selectedApiKey.expiresAt).toLocaleDateString()}</Td>
                       </Tr>
                     )}
                     {selectedApiKey.description && (
                       <Tr>
-                        <Td><strong>Description</strong></Td>
+                        <Td>
+                          <strong>Description</strong>
+                        </Td>
                         <Td>{selectedApiKey.description}</Td>
                       </Tr>
                     )}
@@ -835,13 +900,23 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
 
               {selectedApiKey.status === 'expired' && (
                 <Alert variant="danger" title="Key Expired" style={{ marginTop: '1rem' }}>
-                  This API key has expired on {selectedApiKey.expiresAt && new Date(selectedApiKey.expiresAt).toLocaleDateString()}.
+                  This API key has expired on{' '}
+                  {selectedApiKey.expiresAt &&
+                    new Date(selectedApiKey.expiresAt).toLocaleDateString()}
+                  .
                 </Alert>
               )}
             </>
           )}
 
-          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+          <div
+            style={{
+              marginTop: '1.5rem',
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end',
+            }}
+          >
             <Button variant="link" onClick={() => setIsViewModalOpen(false)}>
               Close
             </Button>
@@ -879,16 +954,22 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                 <Table aria-label="Generated key details" variant="compact">
                   <Tbody>
                     <Tr>
-                      <Td><strong>Name</strong></Td>
+                      <Td>
+                        <strong>Name</strong>
+                      </Td>
                       <Td>{generatedKey.name}</Td>
                     </Tr>
                     <Tr>
-                      <Td><strong>Models</strong></Td>
+                      <Td>
+                        <strong>Models</strong>
+                      </Td>
                       <Td>
                         {generatedKey.models && generatedKey.models.length > 0 ? (
                           <LabelGroup>
                             {generatedKey.models.map((modelId) => {
-                              const modelDetail = generatedKey.modelDetails?.find(m => m.id === modelId);
+                              const modelDetail = generatedKey.modelDetails?.find(
+                                (m) => m.id === modelId,
+                              );
                               return (
                                 <Label key={modelId} isCompact>
                                   {modelDetail ? modelDetail.name : modelId}
@@ -902,12 +983,16 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                       </Td>
                     </Tr>
                     <Tr>
-                      <Td><strong>Rate Limit</strong></Td>
+                      <Td>
+                        <strong>Rate Limit</strong>
+                      </Td>
                       <Td>{generatedKey.rateLimit.toLocaleString()} requests/minute</Td>
                     </Tr>
                     {generatedKey.expiresAt && (
                       <Tr>
-                        <Td><strong>Expires</strong></Td>
+                        <Td>
+                          <strong>Expires</strong>
+                        </Td>
                         <Td>{new Date(generatedKey.expiresAt).toLocaleDateString()}</Td>
                       </Tr>
                     )}
@@ -917,7 +1002,14 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
             </>
           )}
 
-          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+          <div
+            style={{
+              marginTop: '1.5rem',
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end',
+            }}
+          >
             <Button variant="primary" onClick={() => setShowGeneratedKey(false)}>
               Close
             </Button>
@@ -935,7 +1027,11 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
         <ModalBody>
           {keyToDelete && (
             <>
-              <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsMd' }} style={{ marginBottom: '1rem' }}>
+              <Flex
+                alignItems={{ default: 'alignItemsCenter' }}
+                spaceItems={{ default: 'spaceItemsMd' }}
+                style={{ marginBottom: '1rem' }}
+              >
                 <FlexItem>
                   <ExclamationTriangleIcon color="var(--pf-v6-global--danger--color--100)" />
                 </FlexItem>
@@ -947,12 +1043,20 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
               </Flex>
 
               <Alert variant="danger" title="Warning" style={{ marginBottom: '1rem' }}>
-                This action cannot be undone. The API key will be permanently removed and applications using this key will lose access immediately.
+                This action cannot be undone. The API key will be permanently removed and
+                applications using this key will lose access immediately.
               </Alert>
             </>
           )}
 
-          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+          <div
+            style={{
+              marginTop: '1.5rem',
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end',
+            }}
+          >
             <Button variant="danger" onClick={confirmDeleteKey}>
               Delete Key
             </Button>

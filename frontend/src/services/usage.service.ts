@@ -40,7 +40,7 @@ export interface UsageFilters {
 class UsageService {
   async getUsageMetrics(filters?: UsageFilters): Promise<UsageMetrics> {
     const params = new URLSearchParams();
-    
+
     if (filters?.startDate) params.append('startDate', filters.startDate);
     if (filters?.endDate) params.append('endDate', filters.endDate);
     if (filters?.modelId) params.append('modelId', filters.modelId);
@@ -51,7 +51,7 @@ class UsageService {
 
   async exportUsageData(filters?: UsageFilters, format: 'csv' | 'json' = 'csv'): Promise<Blob> {
     const params = new URLSearchParams({ format });
-    
+
     if (filters?.startDate) params.append('startDate', filters.startDate);
     if (filters?.endDate) params.append('endDate', filters.endDate);
     if (filters?.modelId) params.append('modelId', filters.modelId);
@@ -59,7 +59,7 @@ class UsageService {
 
     const response = await fetch(`/api/usage/export?${params}`, {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+        Authorization: `Bearer ${localStorage.getItem('access_token')}`,
       },
     });
 

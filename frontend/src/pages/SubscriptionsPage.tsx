@@ -36,21 +36,20 @@ import {
   Bullseye,
   Stack,
 } from '@patternfly/react-core';
-import { 
-  CubesIcon, 
+import {
+  CubesIcon,
   PlusCircleIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  TimesCircleIcon
+  TimesCircleIcon,
 } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
 import { subscriptionsService, Subscription } from '../services/subscriptions.service';
 
-
 const SubscriptionsPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const navigate = useNavigate();
-  
+
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
@@ -61,7 +60,7 @@ const SubscriptionsPage: React.FC = () => {
   const loadSubscriptions = async () => {
     try {
       setLoading(true);
-      
+
       const response = await subscriptionsService.getSubscriptions();
       setSubscriptions(response.data);
     } catch (err) {
@@ -69,7 +68,7 @@ const SubscriptionsPage: React.FC = () => {
       addNotification({
         title: 'Error',
         description: 'Failed to load subscriptions from the server.',
-        variant: 'danger'
+        variant: 'danger',
       });
     } finally {
       setLoading(false);
@@ -85,14 +84,14 @@ const SubscriptionsPage: React.FC = () => {
       active: 'success',
       suspended: 'warning',
       expired: 'danger',
-      pending: 'info'
+      pending: 'info',
     } as const;
 
     const icons = {
       active: <CheckCircleIcon />,
       suspended: <ExclamationTriangleIcon />,
       expired: <TimesCircleIcon />,
-      pending: <Spinner size="sm" />
+      pending: <Spinner size="sm" />,
     };
 
     return (
@@ -109,7 +108,7 @@ const SubscriptionsPage: React.FC = () => {
     if (!subscription.pricing) {
       return <Content component={ContentVariants.small}>Pricing information unavailable</Content>;
     }
-    
+
     return (
       <Stack hasGutter>
         <Content component={ContentVariants.small}>
@@ -140,28 +139,29 @@ const SubscriptionsPage: React.FC = () => {
   const handleCancelSubscription = async (subscription: Subscription) => {
     try {
       setIsCancelling(true);
-      
+
       // Call the backend API to cancel the subscription
       await subscriptionsService.cancelSubscription(subscription.id);
-      
+
       // If successful, show success notification and reload subscriptions
       addNotification({
         title: 'Subscription Cancelled',
         description: `${subscription.modelName} subscription has been cancelled and removed from your account.`,
-        variant: 'success'
+        variant: 'success',
       });
-      
+
       // Close the modal and reload subscriptions to reflect changes
       setIsDetailsModalOpen(false);
       await loadSubscriptions();
-      
     } catch (error: any) {
       // Handle API key validation error specifically
       if (error.statusCode === 400 || error.status === 400) {
         addNotification({
           title: 'Cannot Cancel Subscription',
-          description: error.message || 'There are active API keys linked to this subscription. Please delete all API keys first, then cancel the subscription.',
-          variant: 'warning'
+          description:
+            error.message ||
+            'There are active API keys linked to this subscription. Please delete all API keys first, then cancel the subscription.',
+          variant: 'warning',
         });
       } else {
         // Handle other errors
@@ -169,7 +169,7 @@ const SubscriptionsPage: React.FC = () => {
         addNotification({
           title: 'Error',
           description: error.message || 'Failed to cancel subscription. Please try again.',
-          variant: 'danger'
+          variant: 'danger',
         });
       }
     } finally {
@@ -192,9 +192,7 @@ const SubscriptionsPage: React.FC = () => {
               <Title headingLevel="h2" size="lg">
                 Loading Subscriptions...
               </Title>
-              <EmptyStateBody>
-                Retrieving your subscription information
-              </EmptyStateBody>
+              <EmptyStateBody>Retrieving your subscription information</EmptyStateBody>
             </EmptyState>
           </Bullseye>
         </PageSection>
@@ -205,7 +203,10 @@ const SubscriptionsPage: React.FC = () => {
   return (
     <>
       <PageSection variant="secondary">
-        <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+        <Flex
+          justifyContent={{ default: 'justifyContentSpaceBetween' }}
+          alignItems={{ default: 'alignItemsCenter' }}
+        >
           <FlexItem>
             <Title headingLevel="h1" size="2xl">
               My Subscriptions
@@ -215,17 +216,13 @@ const SubscriptionsPage: React.FC = () => {
             </Content>
           </FlexItem>
           <FlexItem>
-            <Button 
-              variant="primary" 
-              icon={<PlusCircleIcon />}
-              onClick={() => navigate('/models')}
-            >
+            <Button variant="primary" icon={<PlusCircleIcon />} onClick={() => navigate('/models')}>
               New Subscription
             </Button>
           </FlexItem>
         </Flex>
       </PageSection>
-      
+
       <PageSection>
         {subscriptions.length === 0 ? (
           <EmptyState variant={EmptyStateVariant.lg}>
@@ -237,8 +234,8 @@ const SubscriptionsPage: React.FC = () => {
               You don't have any active subscriptions. Start by subscribing to an AI model.
             </EmptyStateBody>
             <EmptyStateActions>
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 icon={<PlusCircleIcon />}
                 onClick={() => navigate('/models')}
               >
@@ -250,40 +247,59 @@ const SubscriptionsPage: React.FC = () => {
           <>
             <Grid hasGutter>
               {subscriptions.map((subscription) => {
-                
                 return (
                   <GridItem key={subscription.id} lg={6} xl={4}>
                     <Card style={{ height: '100%' }}>
                       <CardTitle>
-                        <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+                        <Flex
+                          justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                          alignItems={{ default: 'alignItemsCenter' }}
+                        >
                           <FlexItem>
-                            <Title headingLevel="h3" size="lg">{subscription.modelName}</Title>
+                            <Title headingLevel="h3" size="lg">
+                              {subscription.modelName}
+                            </Title>
                           </FlexItem>
-                          <FlexItem>
-                            {getStatusBadge(subscription.status)}
-                          </FlexItem>
+                          <FlexItem>{getStatusBadge(subscription.status)}</FlexItem>
                         </Flex>
-                        <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+                        <Content
+                          component={ContentVariants.small}
+                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                        >
                           by {subscription.provider}
                         </Content>
                       </CardTitle>
                       <CardBody>
-                        <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                        <Flex
+                          direction={{ default: 'column' }}
+                          spaceItems={{ default: 'spaceItemsSm' }}
+                        >
                           <FlexItem>{getPricingInfo(subscription)}</FlexItem>
-                          
+
                           <FlexItem>
-                            <Content component={ContentVariants.small}>Token usage this month</Content>
+                            <Content component={ContentVariants.small}>
+                              Token usage this month
+                            </Content>
                             <Progress
-                              value={getUsagePercentage(subscription.usedTokens, subscription.quotaTokens)}
+                              value={getUsagePercentage(
+                                subscription.usedTokens,
+                                subscription.quotaTokens,
+                              )}
                               title={`${subscription.usedTokens.toLocaleString()} / ${subscription.quotaTokens.toLocaleString()} tokens`}
-                              variant={getUsageVariant(getUsagePercentage(subscription.usedTokens, subscription.quotaTokens))}
+                              variant={getUsageVariant(
+                                getUsagePercentage(
+                                  subscription.usedTokens,
+                                  subscription.quotaTokens,
+                                ),
+                              )}
                               measureLocation={ProgressMeasureLocation.outside}
                             />
                           </FlexItem>
-                          
+
                           <FlexItem>
                             <Content component={ContentVariants.small}>
-                              Quota: {subscription.quotaRequests.toLocaleString()} requests, {subscription.quotaTokens.toLocaleString()} tokens
+                              Quota: {subscription.quotaRequests.toLocaleString()} requests,{' '}
+                              {subscription.quotaTokens.toLocaleString()} tokens
                             </Content>
                           </FlexItem>
                         </Flex>
@@ -291,8 +307,8 @@ const SubscriptionsPage: React.FC = () => {
                       <CardFooter>
                         <Flex spaceItems={{ default: 'spaceItemsSm' }}>
                           <FlexItem>
-                            <Button 
-                              variant="primary" 
+                            <Button
+                              variant="primary"
                               size="sm"
                               onClick={() => handleSubscriptionDetails(subscription)}
                             >
@@ -318,15 +334,23 @@ const SubscriptionsPage: React.FC = () => {
         onClose={() => setIsDetailsModalOpen(false)}
       >
         <ModalHeader>
-          <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsMd' }}>
+          <Flex
+            alignItems={{ default: 'alignItemsCenter' }}
+            spaceItems={{ default: 'spaceItemsMd' }}
+          >
             <FlexItem>
-              <Title headingLevel="h2" size="xl">{selectedSubscription?.modelName}</Title>
+              <Title headingLevel="h2" size="xl">
+                {selectedSubscription?.modelName}
+              </Title>
             </FlexItem>
             <FlexItem>
               {selectedSubscription && getStatusBadge(selectedSubscription.status)}
             </FlexItem>
           </Flex>
-          <Content component={ContentVariants.p} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+          <Content
+            component={ContentVariants.p}
+            style={{ color: 'var(--pf-v6-global--Color--200)' }}
+          >
             Subscription Details
           </Content>
         </ModalHeader>
@@ -336,80 +360,106 @@ const SubscriptionsPage: React.FC = () => {
               <DescriptionList isHorizontal>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Provider</DescriptionListTerm>
-                  <DescriptionListDescription>{selectedSubscription.provider}</DescriptionListDescription>
+                  <DescriptionListDescription>
+                    {selectedSubscription.provider}
+                  </DescriptionListDescription>
                 </DescriptionListGroup>
-                
+
                 <DescriptionListGroup>
                   <DescriptionListTerm>Pricing</DescriptionListTerm>
                   <DescriptionListDescription>
                     {getPricingInfo(selectedSubscription)}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-                
+
                 <DescriptionListGroup>
                   <DescriptionListTerm>Status</DescriptionListTerm>
                   <DescriptionListDescription>
                     {getStatusBadge(selectedSubscription.status)}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-                
+
                 <DescriptionListGroup>
                   <DescriptionListTerm>Request Quota</DescriptionListTerm>
                   <DescriptionListDescription>
                     {selectedSubscription.quotaRequests.toLocaleString()} per month
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-                
+
                 <DescriptionListGroup>
                   <DescriptionListTerm>Token Quota</DescriptionListTerm>
                   <DescriptionListDescription>
                     {selectedSubscription.quotaTokens.toLocaleString()} per month
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-                
+
                 <DescriptionListGroup>
                   <DescriptionListTerm>Requests Used</DescriptionListTerm>
                   <DescriptionListDescription>
-                    <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsXs' }}>
+                    <Flex
+                      direction={{ default: 'column' }}
+                      spaceItems={{ default: 'spaceItemsXs' }}
+                    >
                       <FlexItem>
-                        {selectedSubscription.usedRequests.toLocaleString()} / {selectedSubscription.quotaRequests.toLocaleString()} requests
+                        {selectedSubscription.usedRequests.toLocaleString()} /{' '}
+                        {selectedSubscription.quotaRequests.toLocaleString()} requests
                       </FlexItem>
                       <FlexItem>
                         <Progress
-                          value={getUsagePercentage(selectedSubscription.usedRequests, selectedSubscription.quotaRequests)}
-                          variant={getUsageVariant(getUsagePercentage(selectedSubscription.usedRequests, selectedSubscription.quotaRequests))}
+                          value={getUsagePercentage(
+                            selectedSubscription.usedRequests,
+                            selectedSubscription.quotaRequests,
+                          )}
+                          variant={getUsageVariant(
+                            getUsagePercentage(
+                              selectedSubscription.usedRequests,
+                              selectedSubscription.quotaRequests,
+                            ),
+                          )}
                           measureLocation={ProgressMeasureLocation.outside}
                         />
                       </FlexItem>
                     </Flex>
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-                
+
                 <DescriptionListGroup>
                   <DescriptionListTerm>Tokens Used</DescriptionListTerm>
                   <DescriptionListDescription>
-                    <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsXs' }}>
+                    <Flex
+                      direction={{ default: 'column' }}
+                      spaceItems={{ default: 'spaceItemsXs' }}
+                    >
                       <FlexItem>
-                        {selectedSubscription.usedTokens.toLocaleString()} / {selectedSubscription.quotaTokens.toLocaleString()} tokens
+                        {selectedSubscription.usedTokens.toLocaleString()} /{' '}
+                        {selectedSubscription.quotaTokens.toLocaleString()} tokens
                       </FlexItem>
                       <FlexItem>
                         <Progress
-                          value={getUsagePercentage(selectedSubscription.usedTokens, selectedSubscription.quotaTokens)}
-                          variant={getUsageVariant(getUsagePercentage(selectedSubscription.usedTokens, selectedSubscription.quotaTokens))}
+                          value={getUsagePercentage(
+                            selectedSubscription.usedTokens,
+                            selectedSubscription.quotaTokens,
+                          )}
+                          variant={getUsageVariant(
+                            getUsagePercentage(
+                              selectedSubscription.usedTokens,
+                              selectedSubscription.quotaTokens,
+                            ),
+                          )}
                           measureLocation={ProgressMeasureLocation.outside}
                         />
                       </FlexItem>
                     </Flex>
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-                
+
                 <DescriptionListGroup>
                   <DescriptionListTerm>Created</DescriptionListTerm>
                   <DescriptionListDescription>
                     {new Date(selectedSubscription.createdAt).toLocaleDateString()}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-                
+
                 <DescriptionListGroup>
                   <DescriptionListTerm>Features</DescriptionListTerm>
                   <DescriptionListDescription>
@@ -423,22 +473,37 @@ const SubscriptionsPage: React.FC = () => {
                   </DescriptionListDescription>
                 </DescriptionListGroup>
               </DescriptionList>
-              
+
               {selectedSubscription.status === 'suspended' && (
-                <Alert variant="warning" title="Subscription Suspended" style={{ marginTop: '1rem' }}>
-                  Your subscription has been suspended. Contact support or check your account status.
+                <Alert
+                  variant="warning"
+                  title="Subscription Suspended"
+                  style={{ marginTop: '1rem' }}
+                >
+                  Your subscription has been suspended. Contact support or check your account
+                  status.
                 </Alert>
               )}
-              
+
               {selectedSubscription.status === 'expired' && (
                 <Alert variant="danger" title="Subscription Expired" style={{ marginTop: '1rem' }}>
-                  Your subscription expired on {selectedSubscription.expiresAt && new Date(selectedSubscription.expiresAt).toLocaleDateString()}. Renew to continue using this model.
+                  Your subscription expired on{' '}
+                  {selectedSubscription.expiresAt &&
+                    new Date(selectedSubscription.expiresAt).toLocaleDateString()}
+                  . Renew to continue using this model.
                 </Alert>
               )}
             </>
           )}
-          
-          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+
+          <div
+            style={{
+              marginTop: '1.5rem',
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end',
+            }}
+          >
             <Button
               variant="danger"
               onClick={() => selectedSubscription && handleCancelSubscription(selectedSubscription)}
@@ -453,7 +518,6 @@ const SubscriptionsPage: React.FC = () => {
           </div>
         </ModalBody>
       </Modal>
-
     </>
   );
 };

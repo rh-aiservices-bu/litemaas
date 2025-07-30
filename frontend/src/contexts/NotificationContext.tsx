@@ -59,14 +59,14 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         }, 5000);
       }
     },
-    []
+    [],
   );
 
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
       prev.map((notification) =>
-        notification.id === id ? { ...notification, isRead: true } : notification
-      )
+        notification.id === id ? { ...notification, isRead: true } : notification,
+      ),
     );
   }, []);
 

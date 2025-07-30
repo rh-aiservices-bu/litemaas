@@ -31,7 +31,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = () => {
     useNotifications();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const onDropdownSelect = () => {
     setIsDropdownOpen(false);
@@ -69,9 +69,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = () => {
 
   return (
     <PFNotificationDrawer>
-      <NotificationDrawerHeader 
-        count={unreadCount}
-      >
+      <NotificationDrawerHeader count={unreadCount}>
         <Dropdown
           id="notification-drawer-0"
           isOpen={isDropdownOpen}
@@ -104,9 +102,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = () => {
             <Title headingLevel="h3" size="md">
               No notifications found
             </Title>
-            <EmptyStateBody>
-              There are currently no notifications.
-            </EmptyStateBody>
+            <EmptyStateBody>There are currently no notifications.</EmptyStateBody>
           </EmptyState>
         ) : (
           <NotificationDrawerList>
@@ -191,11 +187,5 @@ export const NotificationBadgeButton: React.FC<NotificationBadgeButtonProps> = (
   onClick,
   unreadCount,
 }) => {
-  return (
-    <NotificationBadge 
-      count={unreadCount}
-      onClick={onClick}
-      aria-label="Notifications"
-    />
-  );
+  return <NotificationBadge count={unreadCount} onClick={onClick} aria-label="Notifications" />;
 };

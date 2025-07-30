@@ -65,24 +65,28 @@ class ModelsService {
   private convertBackendModel(backendModel: BackendModel): Model {
     // Map capabilities to features
     const featureMap: Record<string, string> = {
-      'chat': 'Chat',
-      'function_calling': 'Function Calling',
-      'parallel_function_calling': 'Parallel Functions',
-      'vision': 'Vision',
+      chat: 'Chat',
+      function_calling: 'Function Calling',
+      parallel_function_calling: 'Parallel Functions',
+      vision: 'Vision',
     };
 
-    const features = backendModel.capabilities.map(cap => featureMap[cap] || cap);
+    const features = backendModel.capabilities.map((cap) => featureMap[cap] || cap);
 
     // Determine category based on capabilities
     let category = 'Language Model';
     if (backendModel.capabilities.includes('vision')) {
       category = 'Multimodal';
-    } else if (backendModel.name.toLowerCase().includes('image') || 
-               backendModel.name.toLowerCase().includes('dall') ||
-               backendModel.name.toLowerCase().includes('diffusion')) {
+    } else if (
+      backendModel.name.toLowerCase().includes('image') ||
+      backendModel.name.toLowerCase().includes('dall') ||
+      backendModel.name.toLowerCase().includes('diffusion')
+    ) {
       category = 'Image Generation';
-    } else if (backendModel.name.toLowerCase().includes('whisper') ||
-               backendModel.name.toLowerCase().includes('audio')) {
+    } else if (
+      backendModel.name.toLowerCase().includes('whisper') ||
+      backendModel.name.toLowerCase().includes('audio')
+    ) {
       category = 'Audio';
     }
 
@@ -110,7 +114,13 @@ class ModelsService {
     };
   }
 
-  async getModels(page = 1, limit = 20, search?: string, provider?: string, capability?: string): Promise<{ models: Model[]; pagination: ModelsResponse['pagination'] }> {
+  async getModels(
+    page = 1,
+    limit = 20,
+    search?: string,
+    provider?: string,
+    capability?: string,
+  ): Promise<{ models: Model[]; pagination: ModelsResponse['pagination'] }> {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
@@ -129,7 +139,7 @@ class ModelsService {
     }
 
     const response = await apiClient.get<ModelsResponse>(`/models?${params}`);
-    
+
     return {
       models: response.data.map(this.convertBackendModel),
       pagination: response.pagination,

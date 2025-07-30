@@ -83,7 +83,7 @@ export interface ApiKeysResponse {
 class ApiKeysService {
   private mapBackendToFrontend(backend: BackendApiKeyDetails): ApiKey {
     let status: 'active' | 'revoked' | 'expired' = 'active';
-    
+
     if (backend.revokedAt) {
       status = 'revoked';
     } else if (backend.expiresAt && new Date(backend.expiresAt) < new Date()) {
@@ -108,7 +108,9 @@ class ApiKeysService {
       createdAt: backend.createdAt,
       lastUsed: backend.lastUsedAt,
       expiresAt: backend.expiresAt,
-      description: backend.metadata?.environment ? `${backend.metadata.environment} environment` : undefined,
+      description: backend.metadata?.environment
+        ? `${backend.metadata.environment} environment`
+        : undefined,
       models: backend.models,
       modelDetails: backend.modelDetails,
     };
@@ -121,9 +123,9 @@ class ApiKeysService {
     });
 
     const response = await apiClient.get<BackendApiKeysResponse>(`/api-keys?${params}`);
-    
+
     return {
-      data: response.data.map(key => this.mapBackendToFrontend(key)),
+      data: response.data.map((key) => this.mapBackendToFrontend(key)),
       pagination: {
         page,
         limit,
@@ -141,13 +143,13 @@ class ApiKeysService {
   async createApiKey(request: CreateApiKeyRequest): Promise<ApiKey> {
     const response = await apiClient.post<BackendApiKeyDetails>('/api-keys', request);
     const mappedKey = this.mapBackendToFrontend(response);
-    
+
     // The backend should provide liteLLMKey or key field for newly created keys
     // mapBackendToFrontend already handles this, but we can override if needed
     if ((response as any).liteLLMKey || (response as any).key) {
       mappedKey.fullKey = (response as any).liteLLMKey || (response as any).key;
     }
-    
+
     return mappedKey;
   }
 
@@ -175,15 +177,20 @@ class ApiKeysService {
         keyType: string;
         retrievedAt: string;
       }>(`/api-keys/${keyId}/reveal`);
-      
+
       return response;
     } catch (error: any) {
       // Handle specific error cases for better UX
       if (error.status === 403 && error.response?.error?.code === 'TOKEN_TOO_OLD') {
         throw new Error('Recent authentication required. Please refresh the page and try again.');
-      } else if (error.status === 429 && error.response?.error?.code === 'KEY_OPERATION_RATE_LIMITED') {
+      } else if (
+        error.status === 429 &&
+        error.response?.error?.code === 'KEY_OPERATION_RATE_LIMITED'
+      ) {
         const details = error.response.error.details;
-        throw new Error(`Too many key retrieval attempts. Please wait ${details?.retryAfter || 300} seconds before trying again.`);
+        throw new Error(
+          `Too many key retrieval attempts. Please wait ${details?.retryAfter || 300} seconds before trying again.`,
+        );
       } else if (error.status === 404) {
         throw new Error('API key not found or no LiteLLM key associated.');
       } else if (error.status === 403 && error.message?.includes('inactive')) {
@@ -191,7 +198,7 @@ class ApiKeysService {
       } else if (error.status === 403 && error.message?.includes('expired')) {
         throw new Error('This API key has expired and cannot be retrieved.');
       }
-      
+
       // Generic error fallback
       throw new Error('Failed to retrieve API key. Please try again or contact support.');
     }

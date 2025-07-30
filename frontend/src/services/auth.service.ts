@@ -21,8 +21,8 @@ class AuthService {
     const token = this.getAccessToken();
     const response = await axios.get<User>('/api/v1/auth/me', {
       headers: {
-        Authorization: `Bearer ${token}`
-      }
+        Authorization: `Bearer ${token}`,
+      },
     });
     return response.data;
   }
@@ -30,11 +30,15 @@ class AuthService {
   async logout(): Promise<void> {
     // Logout endpoint remains at /api/auth for OAuth flow
     const token = this.getAccessToken();
-    await axios.post('/api/auth/logout', {}, {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    });
+    await axios.post(
+      '/api/auth/logout',
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      },
+    );
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
   }
@@ -62,7 +66,7 @@ class AuthService {
     if (adminUser) {
       return true;
     }
-    
+
     return !!this.getAccessToken();
   }
 }

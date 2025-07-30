@@ -42,11 +42,7 @@ import {
   Label,
   Stack,
 } from '@patternfly/react-core';
-import { 
-  CatalogIcon, 
-  FilterIcon, 
-  InfoCircleIcon 
-} from '@patternfly/react-icons';
+import { CatalogIcon, FilterIcon, InfoCircleIcon } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
 import { modelsService, Model } from '../services/models.service';
 import { subscriptionsService } from '../services/subscriptions.service';
@@ -55,7 +51,7 @@ const ModelsPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
-  
+
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchValue, setSearchValue] = useState('');
@@ -76,19 +72,19 @@ const ModelsPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const currentPage = resetPage ? 1 : page;
       const response = await modelsService.getModels(
         currentPage,
         perPage,
         searchValue || undefined,
         selectedProvider !== 'all' ? selectedProvider : undefined,
-        selectedCategory !== 'all' ? selectedCategory : undefined
+        selectedCategory !== 'all' ? selectedCategory : undefined,
       );
-      
+
       setModels(response.models);
       setTotal(response.pagination.total);
-      
+
       if (resetPage) {
         setPage(1);
       }
@@ -98,7 +94,7 @@ const ModelsPage: React.FC = () => {
       addNotification({
         title: 'Error',
         description: 'Failed to load models from the server.',
-        variant: 'danger'
+        variant: 'danger',
       });
     } finally {
       setLoading(false);
@@ -121,14 +117,15 @@ const ModelsPage: React.FC = () => {
 
   // Reload when page or perPage changes
   useEffect(() => {
-    if (page > 1 || perPage !== 12) { // Only reload if not initial state
+    if (page > 1 || perPage !== 12) {
+      // Only reload if not initial state
       loadModels();
     }
   }, [page, perPage]);
 
   // Get unique categories and providers from current models for filters
-  const categories = ['all', ...Array.from(new Set(models.map(m => m.category)))];
-  const providers = ['all', ...Array.from(new Set(models.map(m => m.provider)))];
+  const categories = ['all', ...Array.from(new Set(models.map((m) => m.category)))];
+  const providers = ['all', ...Array.from(new Set(models.map((m) => m.provider)))];
 
   const handleModelSelect = (model: Model) => {
     setSelectedModel(model);
@@ -138,7 +135,7 @@ const ModelsPage: React.FC = () => {
   const handleSubscribe = async () => {
     try {
       setIsSubscribing(true);
-      
+
       // Create subscription - expect immediate activation
       await subscriptionsService.createSubscription({
         modelId: selectedModel!.id,
@@ -146,25 +143,24 @@ const ModelsPage: React.FC = () => {
         quotaRequests: 10000,
         quotaTokens: 1000000,
       });
-      
+
       addNotification({
         variant: 'success',
         title: 'Successfully subscribed!',
         description: `You now have access to ${selectedModel!.name}. You can generate API keys from the Subscriptions page.`,
       });
-      
+
       setIsModalOpen(false);
-      
+
       // Refresh subscriptions to show new one
       queryClient.invalidateQueries('subscriptions');
-      
     } catch (error: any) {
       let errorMessage = 'Failed to subscribe to model';
-      
+
       if (error.message?.includes('already subscribed') || error.status === 409) {
         errorMessage = 'You are already subscribed to this model';
       }
-      
+
       addNotification({
         variant: 'danger',
         title: 'Subscription failed',
@@ -179,7 +175,7 @@ const ModelsPage: React.FC = () => {
     const variants = {
       available: 'success',
       limited: 'warning',
-      unavailable: 'danger'
+      unavailable: 'danger',
     } as const;
 
     return (
@@ -206,9 +202,7 @@ const ModelsPage: React.FC = () => {
             <Title headingLevel="h2" size="lg">
               Loading Models...
             </Title>
-            <EmptyStateBody>
-              Discovering available AI models from all providers
-            </EmptyStateBody>
+            <EmptyStateBody>Discovering available AI models from all providers</EmptyStateBody>
           </EmptyState>
         </PageSection>
       </>
@@ -225,7 +219,7 @@ const ModelsPage: React.FC = () => {
           Discover and subscribe to AI models from various providers
         </Content>
       </PageSection>
-      
+
       <PageSection>
         <Toolbar>
           <ToolbarContent>
@@ -238,7 +232,7 @@ const ModelsPage: React.FC = () => {
                 style={{ minWidth: '300px' }}
               />
             </ToolbarItem>
-            
+
             <ToolbarItem>
               <Select
                 id="provider-select"
@@ -250,13 +244,16 @@ const ModelsPage: React.FC = () => {
                 }}
                 onOpenChange={setIsProviderSelectOpen}
                 toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle ref={toggleRef} onClick={() => setIsProviderSelectOpen(!isProviderSelectOpen)}>
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => setIsProviderSelectOpen(!isProviderSelectOpen)}
+                  >
                     <FilterIcon /> {selectedProvider === 'all' ? 'All Providers' : selectedProvider}
                   </MenuToggle>
                 )}
               >
                 <SelectList>
-                  {providers.map(provider => (
+                  {providers.map((provider) => (
                     <SelectOption key={provider} value={provider}>
                       {provider === 'all' ? 'All Providers' : provider}
                     </SelectOption>
@@ -264,7 +261,7 @@ const ModelsPage: React.FC = () => {
                 </SelectList>
               </Select>
             </ToolbarItem>
-            
+
             <ToolbarItem>
               <Select
                 id="category-select"
@@ -276,13 +273,17 @@ const ModelsPage: React.FC = () => {
                 }}
                 onOpenChange={setIsCategorySelectOpen}
                 toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle ref={toggleRef} onClick={() => setIsCategorySelectOpen(!isCategorySelectOpen)}>
-                    <FilterIcon /> {selectedCategory === 'all' ? 'All Categories' : selectedCategory}
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => setIsCategorySelectOpen(!isCategorySelectOpen)}
+                  >
+                    <FilterIcon />{' '}
+                    {selectedCategory === 'all' ? 'All Categories' : selectedCategory}
                   </MenuToggle>
                 )}
               >
                 <SelectList>
-                  {categories.map(category => (
+                  {categories.map((category) => (
                     <SelectOption key={category} value={category}>
                       {category === 'all' ? 'All Categories' : category}
                     </SelectOption>
@@ -290,7 +291,7 @@ const ModelsPage: React.FC = () => {
                 </SelectList>
               </Select>
             </ToolbarItem>
-            
+
             <ToolbarItem variant="pagination">
               <Pagination
                 itemCount={total}
@@ -313,9 +314,7 @@ const ModelsPage: React.FC = () => {
             <Title headingLevel="h2" size="lg">
               Error loading models
             </Title>
-            <EmptyStateBody>
-              {error}
-            </EmptyStateBody>
+            <EmptyStateBody>{error}</EmptyStateBody>
             <EmptyStateActions>
               <Button variant="primary" onClick={() => loadModels(true)}>
                 Retry
@@ -332,11 +331,14 @@ const ModelsPage: React.FC = () => {
               Try adjusting your search criteria or filters to find models.
             </EmptyStateBody>
             <EmptyStateActions>
-              <Button variant="link" onClick={() => {
-                setSearchValue('');
-                setSelectedCategory('all');
-                setSelectedProvider('all');
-              }}>
+              <Button
+                variant="link"
+                onClick={() => {
+                  setSearchValue('');
+                  setSelectedCategory('all');
+                  setSelectedProvider('all');
+                }}
+              >
                 Clear all filters
               </Button>
             </EmptyStateActions>
@@ -346,22 +348,28 @@ const ModelsPage: React.FC = () => {
             <Grid hasGutter>
               {paginatedModels.map((model) => (
                 <GridItem key={model.id} lg={4} md={6} sm={12}>
-                  <Card 
+                  <Card
                     isSelectable
                     isSelected={false}
                     onClick={() => handleModelSelect(model)}
                     style={{ height: '100%', cursor: 'pointer' }}
                   >
                     <CardTitle>
-                      <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+                      <Flex
+                        justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                        alignItems={{ default: 'alignItemsCenter' }}
+                      >
                         <FlexItem>
-                          <Title headingLevel="h3" size="lg">{model.name}</Title>
+                          <Title headingLevel="h3" size="lg">
+                            {model.name}
+                          </Title>
                         </FlexItem>
-                        <FlexItem>
-                          {getAvailabilityBadge(model.availability)}
-                        </FlexItem>
+                        <FlexItem>{getAvailabilityBadge(model.availability)}</FlexItem>
                       </Flex>
-                      <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+                      <Content
+                        component={ContentVariants.small}
+                        style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                      >
                         by {model.provider}
                       </Content>
                     </CardTitle>
@@ -369,21 +377,25 @@ const ModelsPage: React.FC = () => {
                       <Content component={ContentVariants.p} style={{ marginBottom: '1rem' }}>
                         {model.description}
                       </Content>
-                      <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                      <Flex
+                        direction={{ default: 'column' }}
+                        spaceItems={{ default: 'spaceItemsSm' }}
+                      >
                         <FlexItem>
                           <Label color="blue">{model.category}</Label>
                         </FlexItem>
                         <FlexItem>
                           <Content component={ContentVariants.small}>
-                            Context: {model.contextLength ? model.contextLength.toLocaleString() : 'N/A'} tokens
+                            Context:{' '}
+                            {model.contextLength ? model.contextLength.toLocaleString() : 'N/A'}{' '}
+                            tokens
                           </Content>
                         </FlexItem>
                         <FlexItem>
                           <Content component={ContentVariants.small}>
-                            {model.pricing ? 
-                              `Input: $${model.pricing.input}/1K • Output: $${model.pricing.output}/1K` : 
-                              'Pricing: N/A'
-                            }
+                            {model.pricing
+                              ? `Input: $${model.pricing.input}/1K • Output: $${model.pricing.output}/1K`
+                              : 'Pricing: N/A'}
                           </Content>
                         </FlexItem>
                       </Flex>
@@ -406,7 +418,7 @@ const ModelsPage: React.FC = () => {
                 </GridItem>
               ))}
             </Grid>
-            
+
             <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'center' }}>
               <Pagination
                 itemCount={total}
@@ -431,15 +443,21 @@ const ModelsPage: React.FC = () => {
         onClose={() => setIsModalOpen(false)}
       >
         <ModalHeader>
-          <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsMd' }}>
+          <Flex
+            alignItems={{ default: 'alignItemsCenter' }}
+            spaceItems={{ default: 'spaceItemsMd' }}
+          >
             <FlexItem>
-              <Title headingLevel="h2" size="xl">{selectedModel?.name}</Title>
+              <Title headingLevel="h2" size="xl">
+                {selectedModel?.name}
+              </Title>
             </FlexItem>
-            <FlexItem>
-              {selectedModel && getAvailabilityBadge(selectedModel.availability)}
-            </FlexItem>
+            <FlexItem>{selectedModel && getAvailabilityBadge(selectedModel.availability)}</FlexItem>
           </Flex>
-          <Content component={ContentVariants.p} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+          <Content
+            component={ContentVariants.p}
+            style={{ color: 'var(--pf-v6-global--Color--200)' }}
+          >
             Provided by {selectedModel?.provider} • Version {selectedModel?.version}
           </Content>
         </ModalHeader>
@@ -449,24 +467,29 @@ const ModelsPage: React.FC = () => {
               <Content component={ContentVariants.p} style={{ marginBottom: '1.5rem' }}>
                 {selectedModel.description}
               </Content>
-              
+
               <Stack hasGutter style={{ marginBottom: '1.5rem' }}>
-                <Content><strong>Provider:</strong> {selectedModel.provider}</Content>
-                
+                <Content>
+                  <strong>Provider:</strong> {selectedModel.provider}
+                </Content>
+
                 {/* Show real pricing from LiteLLM */}
                 {selectedModel.pricing && (
                   <Stack hasGutter>
-                    <Content><strong>Pricing:</strong></Content>
+                    <Content>
+                      <strong>Pricing:</strong>
+                    </Content>
                     <Content>Input: ${selectedModel.pricing.input}/1K tokens</Content>
                     <Content>Output: ${selectedModel.pricing.output}/1K tokens</Content>
                   </Stack>
                 )}
-                
+
                 <Content>
-                  By subscribing, you'll get access to this model and can generate API keys to use it.
+                  By subscribing, you'll get access to this model and can generate API keys to use
+                  it.
                 </Content>
               </Stack>
-              
+
               <DescriptionList isHorizontal>
                 <DescriptionListGroup>
                   <DescriptionListTerm>Category</DescriptionListTerm>
@@ -474,14 +497,17 @@ const ModelsPage: React.FC = () => {
                     <Label color="blue">{selectedModel.category}</Label>
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-                
+
                 <DescriptionListGroup>
                   <DescriptionListTerm>Context Length</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {selectedModel.contextLength ? selectedModel.contextLength.toLocaleString() : 'N/A'} tokens
+                    {selectedModel.contextLength
+                      ? selectedModel.contextLength.toLocaleString()
+                      : 'N/A'}{' '}
+                    tokens
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-                
+
                 <DescriptionListGroup>
                   <DescriptionListTerm>Pricing</DescriptionListTerm>
                   <DescriptionListDescription>
@@ -495,7 +521,7 @@ const ModelsPage: React.FC = () => {
                     )}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-                
+
                 <DescriptionListGroup>
                   <DescriptionListTerm>Features</DescriptionListTerm>
                   <DescriptionListDescription>
@@ -509,10 +535,20 @@ const ModelsPage: React.FC = () => {
                   </DescriptionListDescription>
                 </DescriptionListGroup>
               </DescriptionList>
-              
+
               {selectedModel.availability === 'unavailable' && (
-                <div style={{ marginTop: '1rem', padding: '1rem', backgroundColor: 'var(--pf-v6-global--danger--color--100)', borderRadius: '4px' }}>
-                  <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                <div
+                  style={{
+                    marginTop: '1rem',
+                    padding: '1rem',
+                    backgroundColor: 'var(--pf-v6-global--danger--color--100)',
+                    borderRadius: '4px',
+                  }}
+                >
+                  <Flex
+                    alignItems={{ default: 'alignItemsCenter' }}
+                    spaceItems={{ default: 'spaceItemsSm' }}
+                  >
                     <FlexItem>
                       <InfoCircleIcon color="var(--pf-v6-global--danger--color--200)" />
                     </FlexItem>
@@ -524,10 +560,17 @@ const ModelsPage: React.FC = () => {
               )}
             </>
           )}
-          
-          <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
-            <Button 
-              variant="primary" 
+
+          <div
+            style={{
+              marginTop: '1.5rem',
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'flex-end',
+            }}
+          >
+            <Button
+              variant="primary"
               onClick={handleSubscribe}
               isLoading={isSubscribing}
               isDisabled={isSubscribing || selectedModel?.availability === 'unavailable'}

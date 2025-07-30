@@ -1,5 +1,11 @@
 import React from 'react';
-import { Button, LoginPage as PFLoginPage, Stack, StackItem, Divider } from '@patternfly/react-core';
+import {
+  Button,
+  LoginPage as PFLoginPage,
+  Stack,
+  StackItem,
+  Divider,
+} from '@patternfly/react-core';
 import { ExternalLinkAltIcon, UserIcon } from '@patternfly/react-icons';
 import { LogoTitle } from '../assets';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,9 +28,9 @@ const LoginPage: React.FC = () => {
     >
       <Stack hasGutter>
         <StackItem>
-          <Button 
-            variant="primary" 
-            onClick={handleLogin} 
+          <Button
+            variant="primary"
+            onClick={handleLogin}
             isBlock
             icon={<ExternalLinkAltIcon />}
             iconPosition="end"
@@ -32,7 +38,7 @@ const LoginPage: React.FC = () => {
             Login with OpenShift
           </Button>
         </StackItem>
-        
+
         <StackItem>
           <div className="pf-v6-u-text-align-center pf-v6-u-my-md">
             <Divider />
@@ -43,9 +49,9 @@ const LoginPage: React.FC = () => {
         </StackItem>
 
         <StackItem>
-          <Button 
-            variant="secondary" 
-            onClick={loginAsAdmin} 
+          <Button
+            variant="secondary"
+            onClick={loginAsAdmin}
             isBlock
             icon={<UserIcon />}
             iconPosition="start"

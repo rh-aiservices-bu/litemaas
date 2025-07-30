@@ -1,11 +1,7 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { 
-  Bullseye, 
-  Spinner, 
-  EmptyState
-} from '@patternfly/react-core';
+import { Bullseye, Spinner, EmptyState } from '@patternfly/react-core';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;

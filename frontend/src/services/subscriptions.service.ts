@@ -6,20 +6,20 @@ export interface Subscription {
   modelName: string;
   provider: string;
   status: 'active' | 'suspended' | 'expired'; // Remove 'pending'
-  
+
   // Real usage and pricing from LiteLLM
   quotaRequests: number;
   quotaTokens: number;
   usedRequests: number;
   usedTokens: number;
-  
+
   // LiteLLM pricing
   pricing?: {
     inputCostPer1kTokens: number;
     outputCostPer1kTokens: number;
     currency: string;
   };
-  
+
   // Legacy fields for compatibility
   usageLimit: number;
   usageUsed: number;
@@ -50,14 +50,14 @@ interface BackendSubscriptionDetails {
   expiresAt?: string;
   createdAt: string;
   updatedAt: string;
-  
+
   // LiteLLM pricing info
   pricing?: {
     inputCostPer1kTokens: number;
     outputCostPer1kTokens: number;
     currency: string;
   };
-  
+
   metadata?: {
     features?: string[];
   };
@@ -97,21 +97,23 @@ class SubscriptionsService {
       modelId: backend.modelId,
       modelName: backend.modelName || backend.modelId,
       provider: backend.provider || 'unknown',
-      status: backend.status === 'cancelled' ? 'expired' : backend.status as any,
-      
+      status: backend.status === 'cancelled' ? 'expired' : (backend.status as any),
+
       // Map quotas and usage
       quotaRequests: backend.quotaRequests || 0,
       quotaTokens: backend.quotaTokens || 0,
       usedRequests: backend.usedRequests || 0,
       usedTokens: backend.usedTokens || 0,
-      
+
       // Map pricing if available
-      pricing: backend.pricing ? {
-        inputCostPer1kTokens: backend.pricing.inputCostPer1kTokens,
-        outputCostPer1kTokens: backend.pricing.outputCostPer1kTokens,
-        currency: backend.pricing.currency || 'USD'
-      } : undefined,
-      
+      pricing: backend.pricing
+        ? {
+            inputCostPer1kTokens: backend.pricing.inputCostPer1kTokens,
+            outputCostPer1kTokens: backend.pricing.outputCostPer1kTokens,
+            currency: backend.pricing.currency || 'USD',
+          }
+        : undefined,
+
       // Legacy fields for compatibility
       usageLimit: backend.quotaTokens || 0,
       usageUsed: backend.usedTokens || 0,
@@ -128,9 +130,9 @@ class SubscriptionsService {
     });
 
     const response = await apiClient.get<BackendSubscriptionsResponse>(`/subscriptions?${params}`);
-    
+
     return {
-      data: response.data.map(sub => this.mapBackendToFrontend(sub)),
+      data: response.data.map((sub) => this.mapBackendToFrontend(sub)),
       pagination: {
         page,
         limit,
@@ -141,38 +143,52 @@ class SubscriptionsService {
   }
 
   async getSubscription(subscriptionId: string): Promise<Subscription> {
-    const response = await apiClient.get<BackendSubscriptionDetails>(`/subscriptions/${subscriptionId}`);
+    const response = await apiClient.get<BackendSubscriptionDetails>(
+      `/subscriptions/${subscriptionId}`,
+    );
     return this.mapBackendToFrontend(response);
   }
 
   async createSubscription(request: CreateSubscriptionRequest): Promise<Subscription> {
     const response = await apiClient.post<BackendSubscriptionDetails>('/subscriptions', request);
-    
+
     // Expect active status immediately
     if (response.status !== 'active') {
       throw new Error('Subscription creation failed - expected active status');
     }
-    
+
     return this.mapBackendToFrontend(response);
   }
 
-  async updateSubscription(subscriptionId: string, request: UpdateSubscriptionRequest): Promise<Subscription> {
-    const response = await apiClient.patch<BackendSubscriptionDetails>(`/subscriptions/${subscriptionId}`, request);
+  async updateSubscription(
+    subscriptionId: string,
+    request: UpdateSubscriptionRequest,
+  ): Promise<Subscription> {
+    const response = await apiClient.patch<BackendSubscriptionDetails>(
+      `/subscriptions/${subscriptionId}`,
+      request,
+    );
     return this.mapBackendToFrontend(response);
   }
 
   async cancelSubscription(subscriptionId: string): Promise<Subscription> {
-    const response = await apiClient.post<BackendSubscriptionDetails>(`/subscriptions/${subscriptionId}/cancel`);
+    const response = await apiClient.post<BackendSubscriptionDetails>(
+      `/subscriptions/${subscriptionId}/cancel`,
+    );
     return this.mapBackendToFrontend(response);
   }
 
   async suspendSubscription(subscriptionId: string): Promise<Subscription> {
-    const response = await apiClient.post<BackendSubscriptionDetails>(`/subscriptions/${subscriptionId}/suspend`);
+    const response = await apiClient.post<BackendSubscriptionDetails>(
+      `/subscriptions/${subscriptionId}/suspend`,
+    );
     return this.mapBackendToFrontend(response);
   }
 
   async resumeSubscription(subscriptionId: string): Promise<Subscription> {
-    const response = await apiClient.post<BackendSubscriptionDetails>(`/subscriptions/${subscriptionId}/resume`);
+    const response = await apiClient.post<BackendSubscriptionDetails>(
+      `/subscriptions/${subscriptionId}/resume`,
+    );
     return this.mapBackendToFrontend(response);
   }
 }

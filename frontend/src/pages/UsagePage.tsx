@@ -31,8 +31,8 @@ import {
   ProgressMeasureLocation,
   Bullseye,
 } from '@patternfly/react-core';
-import { 
-  ChartLineIcon, 
+import {
+  ChartLineIcon,
   DownloadIcon,
   FilterIcon,
   CalendarAltIcon,
@@ -40,50 +40,53 @@ import {
   TrendDownIcon,
   UsersIcon,
   CubeIcon,
-  ClockIcon
+  ClockIcon,
 } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
 import { usageService, UsageMetrics, UsageFilters } from '../services/usage.service';
 
 // Mock chart component since PatternFly charts require additional setup
-const MockLineChart = ({ data, title }: { data: any[], title: string }) => (
-  <div style={{ 
-    height: '200px', 
-    border: '1px solid var(--pf-v6-global--border--color)', 
-    borderRadius: '4px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'var(--pf-v6-global--background--color)'
-  }}>
+const MockLineChart = ({ data, title }: { data: any[]; title: string }) => (
+  <div
+    style={{
+      height: '200px',
+      border: '1px solid var(--pf-v6-global--border--color)',
+      borderRadius: '4px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'var(--pf-v6-global--background--color)',
+    }}
+  >
     <Content component={ContentVariants.p} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
       📊 {title} Chart
     </Content>
   </div>
 );
 
-const MockDonutChart = ({ data, title }: { data: any[], title: string }) => (
-  <div style={{ 
-    height: '200px', 
-    border: '1px solid var(--pf-v6-global--border--color)', 
-    borderRadius: '4px',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'var(--pf-v6-global--background--color)'
-  }}>
+const MockDonutChart = ({ data, title }: { data: any[]; title: string }) => (
+  <div
+    style={{
+      height: '200px',
+      border: '1px solid var(--pf-v6-global--border--color)',
+      borderRadius: '4px',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: 'var(--pf-v6-global--background--color)',
+    }}
+  >
     <Content component={ContentVariants.p} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
       🍩 {title} Chart
     </Content>
   </div>
 );
 
-
 const UsagePage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
-  
+
   const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -99,19 +102,19 @@ const UsagePage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Convert dateRange to actual dates
       const filters: UsageFilters = {};
       const now = new Date();
       const days = parseInt(dateRange.replace('d', ''));
-      
+
       if (!isNaN(days)) {
         const startDate = new Date(now);
         startDate.setDate(startDate.getDate() - days);
         filters.startDate = startDate.toISOString().split('T')[0];
         filters.endDate = now.toISOString().split('T')[0];
       }
-      
+
       const usageMetrics = await usageService.getUsageMetrics(filters);
       setMetrics(usageMetrics);
     } catch (err) {
@@ -120,7 +123,7 @@ const UsagePage: React.FC = () => {
       addNotification({
         title: 'Error',
         description: 'Failed to load usage metrics from the server.',
-        variant: 'danger'
+        variant: 'danger',
       });
     } finally {
       setLoading(false);
@@ -136,23 +139,23 @@ const UsagePage: React.FC = () => {
       addNotification({
         title: 'Export Started',
         description: 'Your usage data export is being prepared and will be downloaded shortly.',
-        variant: 'info'
+        variant: 'info',
       });
-      
+
       // Convert dateRange to actual dates for export
       const filters: UsageFilters = {};
       const now = new Date();
       const days = parseInt(dateRange.replace('d', ''));
-      
+
       if (!isNaN(days)) {
         const startDate = new Date(now);
         startDate.setDate(startDate.getDate() - days);
         filters.startDate = startDate.toISOString().split('T')[0];
         filters.endDate = now.toISOString().split('T')[0];
       }
-      
+
       const blob = await usageService.exportUsageData(filters, 'csv');
-      
+
       // Create download link
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -162,18 +165,18 @@ const UsagePage: React.FC = () => {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
-      
+
       addNotification({
         title: 'Export Complete',
         description: 'Usage data has been exported successfully.',
-        variant: 'success'
+        variant: 'success',
       });
     } catch (err) {
       console.error('Failed to export usage data:', err);
       addNotification({
         title: 'Export Failed',
         description: 'Failed to export usage data. Please try again.',
-        variant: 'danger'
+        variant: 'danger',
       });
     }
   };
@@ -187,24 +190,23 @@ const UsagePage: React.FC = () => {
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD'
+      currency: 'USD',
     }).format(amount);
   };
 
   const getChangeIndicator = (current: number, previous: number, isPositive = true) => {
     const change = ((current - previous) / previous) * 100;
     const icon = change > 0 ? <TrendUpIcon /> : <TrendDownIcon />;
-    const color = (change > 0 && isPositive) || (change < 0 && !isPositive) 
-      ? 'var(--pf-v6-global--success--color--100)' 
-      : 'var(--pf-v6-global--danger--color--100)';
-    
+    const color =
+      (change > 0 && isPositive) || (change < 0 && !isPositive)
+        ? 'var(--pf-v6-global--success--color--100)'
+        : 'var(--pf-v6-global--danger--color--100)';
+
     return (
       <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
         <FlexItem style={{ color }}>{icon}</FlexItem>
         <FlexItem style={{ color }}>
-          <Content component={ContentVariants.small}>
-            {Math.abs(change).toFixed(1)}%
-          </Content>
+          <Content component={ContentVariants.small}>{Math.abs(change).toFixed(1)}%</Content>
         </FlexItem>
       </Flex>
     );
@@ -225,9 +227,7 @@ const UsagePage: React.FC = () => {
               <Title headingLevel="h2" size="lg">
                 Loading Usage Data...
               </Title>
-              <EmptyStateBody>
-                Analyzing your API usage patterns and metrics
-              </EmptyStateBody>
+              <EmptyStateBody>Analyzing your API usage patterns and metrics</EmptyStateBody>
             </EmptyState>
           </Bullseye>
         </PageSection>
@@ -253,9 +253,7 @@ const UsagePage: React.FC = () => {
               Start making API requests to see your usage statistics here.
             </EmptyStateBody>
             <EmptyStateActions>
-              <Button variant="primary">
-                View API Documentation
-              </Button>
+              <Button variant="primary">View API Documentation</Button>
             </EmptyStateActions>
           </EmptyState>
         </PageSection>
@@ -266,7 +264,10 @@ const UsagePage: React.FC = () => {
   return (
     <>
       <PageSection variant="secondary">
-        <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+        <Flex
+          justifyContent={{ default: 'justifyContentSpaceBetween' }}
+          alignItems={{ default: 'alignItemsCenter' }}
+        >
           <FlexItem>
             <Title headingLevel="h1" size="2xl">
               Usage Dashboard
@@ -282,7 +283,7 @@ const UsagePage: React.FC = () => {
           </FlexItem>
         </Flex>
       </PageSection>
-      
+
       <PageSection>
         <Toolbar>
           <ToolbarContent>
@@ -298,9 +299,14 @@ const UsagePage: React.FC = () => {
                 onOpenChange={setIsDateRangeOpen}
                 toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                   <MenuToggle ref={toggleRef} onClick={() => setIsDateRangeOpen(!isDateRangeOpen)}>
-                    <CalendarAltIcon /> {dateRange === '7d' ? 'Last 7 days' : 
-                                          dateRange === '30d' ? 'Last 30 days' :
-                                          dateRange === '90d' ? 'Last 90 days' : 'Custom'}
+                    <CalendarAltIcon />{' '}
+                    {dateRange === '7d'
+                      ? 'Last 7 days'
+                      : dateRange === '30d'
+                        ? 'Last 30 days'
+                        : dateRange === '90d'
+                          ? 'Last 90 days'
+                          : 'Custom'}
                   </MenuToggle>
                 )}
               >
@@ -312,7 +318,7 @@ const UsagePage: React.FC = () => {
                 </SelectList>
               </Select>
             </ToolbarItem>
-            
+
             <ToolbarItem>
               <Select
                 id="view-type-select"
@@ -325,9 +331,14 @@ const UsagePage: React.FC = () => {
                 onOpenChange={setIsViewTypeOpen}
                 toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                   <MenuToggle ref={toggleRef} onClick={() => setIsViewTypeOpen(!isViewTypeOpen)}>
-                    <FilterIcon /> {viewType === 'overview' ? 'Overview' :
-                                    viewType === 'models' ? 'By Models' :
-                                    viewType === 'time' ? 'Time Analysis' : 'Errors'}
+                    <FilterIcon />{' '}
+                    {viewType === 'overview'
+                      ? 'Overview'
+                      : viewType === 'models'
+                        ? 'By Models'
+                        : viewType === 'time'
+                          ? 'Time Analysis'
+                          : 'Errors'}
                   </MenuToggle>
                 )}
               >
@@ -347,11 +358,17 @@ const UsagePage: React.FC = () => {
           <GridItem lg={3} md={6} sm={12}>
             <Card>
               <CardBody>
-                <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+                <Flex
+                  justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                  alignItems={{ default: 'alignItemsCenter' }}
+                >
                   <FlexItem>
                     <Flex direction={{ default: 'column' }}>
                       <FlexItem>
-                        <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+                        <Content
+                          component={ContentVariants.small}
+                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                        >
                           Total Requests
                         </Content>
                       </FlexItem>
@@ -360,27 +377,34 @@ const UsagePage: React.FC = () => {
                           {formatNumber(metrics.totalRequests)}
                         </Title>
                       </FlexItem>
-                      <FlexItem>
-                        {getChangeIndicator(metrics.totalRequests, 108200, true)}
-                      </FlexItem>
+                      <FlexItem>{getChangeIndicator(metrics.totalRequests, 108200, true)}</FlexItem>
                     </Flex>
                   </FlexItem>
                   <FlexItem>
-                    <CubeIcon size="lg" style={{ color: 'var(--pf-v6-global--primary--color--100)' }} />
+                    <CubeIcon
+                      size="lg"
+                      style={{ color: 'var(--pf-v6-global--primary--color--100)' }}
+                    />
                   </FlexItem>
                 </Flex>
               </CardBody>
             </Card>
           </GridItem>
-          
+
           <GridItem lg={3} md={6} sm={12}>
             <Card>
               <CardBody>
-                <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+                <Flex
+                  justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                  alignItems={{ default: 'alignItemsCenter' }}
+                >
                   <FlexItem>
                     <Flex direction={{ default: 'column' }}>
                       <FlexItem>
-                        <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+                        <Content
+                          component={ContentVariants.small}
+                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                        >
                           Total Tokens
                         </Content>
                       </FlexItem>
@@ -389,27 +413,34 @@ const UsagePage: React.FC = () => {
                           {formatNumber(metrics.totalTokens)}
                         </Title>
                       </FlexItem>
-                      <FlexItem>
-                        {getChangeIndicator(metrics.totalTokens, 7800000, true)}
-                      </FlexItem>
+                      <FlexItem>{getChangeIndicator(metrics.totalTokens, 7800000, true)}</FlexItem>
                     </Flex>
                   </FlexItem>
                   <FlexItem>
-                    <UsersIcon size="lg" style={{ color: 'var(--pf-v6-global--success--color--100)' }} />
+                    <UsersIcon
+                      size="lg"
+                      style={{ color: 'var(--pf-v6-global--success--color--100)' }}
+                    />
                   </FlexItem>
                 </Flex>
               </CardBody>
             </Card>
           </GridItem>
-          
+
           <GridItem lg={3} md={6} sm={12}>
             <Card>
               <CardBody>
-                <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+                <Flex
+                  justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                  alignItems={{ default: 'alignItemsCenter' }}
+                >
                   <FlexItem>
                     <Flex direction={{ default: 'column' }}>
                       <FlexItem>
-                        <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+                        <Content
+                          component={ContentVariants.small}
+                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                        >
                           Total Cost
                         </Content>
                       </FlexItem>
@@ -418,27 +449,34 @@ const UsagePage: React.FC = () => {
                           {formatCurrency(metrics.totalCost)}
                         </Title>
                       </FlexItem>
-                      <FlexItem>
-                        {getChangeIndicator(metrics.totalCost, 1150.20, false)}
-                      </FlexItem>
+                      <FlexItem>{getChangeIndicator(metrics.totalCost, 1150.2, false)}</FlexItem>
                     </Flex>
                   </FlexItem>
                   <FlexItem>
-                    <ChartLineIcon size="lg" style={{ color: 'var(--pf-v6-global--warning--color--100)' }} />
+                    <ChartLineIcon
+                      size="lg"
+                      style={{ color: 'var(--pf-v6-global--warning--color--100)' }}
+                    />
                   </FlexItem>
                 </Flex>
               </CardBody>
             </Card>
           </GridItem>
-          
+
           <GridItem lg={3} md={6} sm={12}>
             <Card>
               <CardBody>
-                <Flex justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+                <Flex
+                  justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                  alignItems={{ default: 'alignItemsCenter' }}
+                >
                   <FlexItem>
                     <Flex direction={{ default: 'column' }}>
                       <FlexItem>
-                        <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+                        <Content
+                          component={ContentVariants.small}
+                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                        >
                           Avg Response Time
                         </Content>
                       </FlexItem>
@@ -447,13 +485,14 @@ const UsagePage: React.FC = () => {
                           {metrics.averageResponseTime}s
                         </Title>
                       </FlexItem>
-                      <FlexItem>
-                        {getChangeIndicator(1.2, 1.45, false)}
-                      </FlexItem>
+                      <FlexItem>{getChangeIndicator(1.2, 1.45, false)}</FlexItem>
                     </Flex>
                   </FlexItem>
                   <FlexItem>
-                    <ClockIcon size="lg" style={{ color: 'var(--pf-v6-global--info--color--100)' }} />
+                    <ClockIcon
+                      size="lg"
+                      style={{ color: 'var(--pf-v6-global--info--color--100)' }}
+                    />
                   </FlexItem>
                 </Flex>
               </CardBody>
@@ -468,23 +507,34 @@ const UsagePage: React.FC = () => {
               <GridItem lg={8}>
                 <Card>
                   <CardTitle>
-                    <Title headingLevel="h3" size="lg">Usage Trends</Title>
+                    <Title headingLevel="h3" size="lg">
+                      Usage Trends
+                    </Title>
                   </CardTitle>
                   <CardBody>
                     <MockLineChart data={metrics.dailyUsage} title="Daily Usage" />
                   </CardBody>
                 </Card>
               </GridItem>
-              
+
               <GridItem lg={4}>
                 <Card>
                   <CardTitle>
-                    <Title headingLevel="h3" size="lg">Success Rate</Title>
+                    <Title headingLevel="h3" size="lg">
+                      Success Rate
+                    </Title>
                   </CardTitle>
                   <CardBody>
-                    <Flex direction={{ default: 'column' }} alignItems={{ default: 'alignItemsCenter' }}>
+                    <Flex
+                      direction={{ default: 'column' }}
+                      alignItems={{ default: 'alignItemsCenter' }}
+                    >
                       <FlexItem>
-                        <Title headingLevel="h2" size="3xl" style={{ color: 'var(--pf-v6-global--success--color--100)' }}>
+                        <Title
+                          headingLevel="h2"
+                          size="3xl"
+                          style={{ color: 'var(--pf-v6-global--success--color--100)' }}
+                        >
                           {metrics.successRate}%
                         </Title>
                       </FlexItem>
@@ -497,8 +547,12 @@ const UsagePage: React.FC = () => {
                         />
                       </FlexItem>
                       <FlexItem>
-                        <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
-                          {(metrics.totalRequests * metrics.successRate / 100).toFixed(0)} successful requests
+                        <Content
+                          component={ContentVariants.small}
+                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                        >
+                          {((metrics.totalRequests * metrics.successRate) / 100).toFixed(0)}{' '}
+                          successful requests
                         </Content>
                       </FlexItem>
                     </Flex>
@@ -510,7 +564,9 @@ const UsagePage: React.FC = () => {
             {/* Top Models */}
             <Card>
               <CardTitle>
-                <Title headingLevel="h3" size="lg">Top Models by Usage</Title>
+                <Title headingLevel="h3" size="lg">
+                  Top Models by Usage
+                </Title>
               </CardTitle>
               <CardBody>
                 <Table aria-label="Top models table" variant="compact">
@@ -535,12 +591,21 @@ const UsagePage: React.FC = () => {
                           <Td>{formatNumber(model.tokens)}</Td>
                           <Td>{formatCurrency(model.cost)}</Td>
                           <Td>
-                            <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                            <Flex
+                              alignItems={{ default: 'alignItemsCenter' }}
+                              spaceItems={{ default: 'spaceItemsSm' }}
+                            >
                               <FlexItem style={{ minWidth: '60px' }}>
                                 <Progress
                                   value={usagePercentage}
                                   measureLocation={ProgressMeasureLocation.none}
-                                  variant={usagePercentage > 30 ? 'success' : usagePercentage > 15 ? 'warning' : undefined}
+                                  variant={
+                                    usagePercentage > 30
+                                      ? 'success'
+                                      : usagePercentage > 15
+                                        ? 'warning'
+                                        : undefined
+                                  }
                                 />
                               </FlexItem>
                               <FlexItem>
@@ -563,7 +628,9 @@ const UsagePage: React.FC = () => {
         {viewType === 'models' && (
           <Card>
             <CardTitle>
-              <Title headingLevel="h3" size="lg">Usage by Model</Title>
+              <Title headingLevel="h3" size="lg">
+                Usage by Model
+              </Title>
             </CardTitle>
             <CardBody>
               <MockDonutChart data={metrics.topModels} title="Model Usage Distribution" />
@@ -574,7 +641,9 @@ const UsagePage: React.FC = () => {
         {viewType === 'time' && (
           <Card>
             <CardTitle>
-              <Title headingLevel="h3" size="lg">Hourly Usage Pattern</Title>
+              <Title headingLevel="h3" size="lg">
+                Hourly Usage Pattern
+              </Title>
             </CardTitle>
             <CardBody>
               <MockLineChart data={metrics.hourlyUsage} title="Hourly Requests" />
@@ -587,18 +656,22 @@ const UsagePage: React.FC = () => {
             <GridItem lg={6}>
               <Card>
                 <CardTitle>
-                  <Title headingLevel="h3" size="lg">Error Breakdown</Title>
+                  <Title headingLevel="h3" size="lg">
+                    Error Breakdown
+                  </Title>
                 </CardTitle>
                 <CardBody>
                   <MockDonutChart data={metrics.errorBreakdown} title="Error Types" />
                 </CardBody>
               </Card>
             </GridItem>
-            
+
             <GridItem lg={6}>
               <Card>
                 <CardTitle>
-                  <Title headingLevel="h3" size="lg">Error Details</Title>
+                  <Title headingLevel="h3" size="lg">
+                    Error Details
+                  </Title>
                 </CardTitle>
                 <CardBody>
                   <Table aria-label="Error breakdown table" variant="compact">
@@ -617,7 +690,10 @@ const UsagePage: React.FC = () => {
                           </Td>
                           <Td>{error.count}</Td>
                           <Td>
-                            <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsSm' }}>
+                            <Flex
+                              alignItems={{ default: 'alignItemsCenter' }}
+                              spaceItems={{ default: 'spaceItemsSm' }}
+                            >
                               <FlexItem style={{ minWidth: '60px' }}>
                                 <Progress
                                   value={error.percentage}

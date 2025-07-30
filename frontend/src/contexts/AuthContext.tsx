@@ -90,16 +90,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
         body: JSON.stringify({}), // Send empty JSON object
       });
-      
+
       console.log('Login response status:', response.status);
-      
+
       if (!response.ok) {
         throw new Error(`Failed to initiate login: ${response.status}`);
       }
-      
+
       const data = await response.json();
       console.log('Auth URL received:', data.authUrl);
-      
+
       // Redirect to the OAuth provider
       if (data.authUrl) {
         window.location.href = data.authUrl;
@@ -121,7 +121,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       name: 'Administrator (Test)',
       roles: ['admin', 'user'],
     };
-    
+
     setUser(adminUser);
     localStorage.setItem('litemaas_admin_user', JSON.stringify(adminUser));
     navigate('/');

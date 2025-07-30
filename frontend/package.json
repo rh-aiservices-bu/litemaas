@@ -15,6 +15,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:all": "npm run test:unit && npm run test:e2e",
     "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "clean": "rimraf dist coverage .tsbuildinfo test-results playwright-report"
   },
   "dependencies": {
