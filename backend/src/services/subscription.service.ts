@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { randomBytes } from 'crypto';
 import { LiteLLMService } from './litellm.service';
+import { DefaultTeamService } from './default-team.service.js';
 import {
   SubscriptionStatus,
   EnhancedSubscription,
@@ -1577,6 +1578,133 @@ export class SubscriptionService {
   /**
    * Ensures user exists in LiteLLM backend, creating them if necessary
    */
+  /**
+   * Ensures team exists in LiteLLM backend, creating it if necessary
+   */
+  private async ensureTeamExistsInLiteLLM(teamId: string): Promise<void> {
+    try {
+      // First check if team exists in LiteLLM
+      const existingTeam = await this.liteLLMService.getTeamInfo(teamId);
+      this.fastify.log.info(
+        {
+          teamId,
+          existingTeam: {
+            team_id: existingTeam.team_id,
+            team_alias: existingTeam.team_alias,
+            spend: existingTeam.spend,
+            max_budget: existingTeam.max_budget,
+          },
+        },
+        'Team already exists in LiteLLM',
+      );
+    } catch (error) {
+      // Team doesn't exist in LiteLLM, get team from database and create it
+      this.fastify.log.info(
+        {
+          teamId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+        },
+        'Team not found in LiteLLM, attempting to create',
+      );
+
+      try {
+        // Get team information from database
+        const team = await this.fastify.dbUtils.queryOne(
+          'SELECT id, name, description, max_budget, tpm_limit, rpm_limit FROM teams WHERE id = $1',
+          [teamId],
+        );
+
+        if (!team) {
+          throw new Error(`Team ${teamId} not found in database`);
+        }
+
+        const createTeamRequest = {
+          team_id: String(team.id),
+          team_alias: team.name as string,
+          max_budget: Number(team.max_budget) || 1000, // Use team's budget or default
+          tpm_limit: Number(team.tpm_limit) || 10000, // Use team's limit or default
+          rpm_limit: Number(team.rpm_limit) || 500, // Use team's limit or default
+          admins: [], // Will be populated from team members
+          models: [], // Empty array enables all models
+        };
+
+        this.fastify.log.info(
+          {
+            teamId,
+            createTeamRequest,
+            isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+          },
+          'Sending team creation request to LiteLLM',
+        );
+
+        // Create team in LiteLLM
+        const createdTeam = await this.liteLLMService.createTeam(createTeamRequest);
+
+        this.fastify.log.info(
+          {
+            teamId,
+            createdTeam: {
+              team_id: createdTeam.team_id,
+              team_alias: createdTeam.team_alias,
+              max_budget: createdTeam.max_budget,
+              spend: createdTeam.spend,
+              created_at: createdTeam.created_at,
+            },
+            isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+          },
+          'LiteLLM team creation response received',
+        );
+
+        // Verify team was actually created by attempting to fetch it
+        try {
+          const verificationTeam = await this.liteLLMService.getTeamInfo(teamId);
+          this.fastify.log.info(
+            {
+              teamId,
+              verificationTeam: {
+                team_id: verificationTeam.team_id,
+                team_alias: verificationTeam.team_alias,
+              },
+            },
+            'Verified team exists in LiteLLM after creation',
+          );
+        } catch (verifyError) {
+          this.fastify.log.error(
+            {
+              teamId,
+              verifyError: verifyError instanceof Error ? verifyError.message : 'Unknown error',
+              isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+            },
+            'CRITICAL: Team creation appeared to succeed but team cannot be retrieved from LiteLLM',
+          );
+          throw new Error(
+            `Team creation verification failed: ${verifyError instanceof Error ? verifyError.message : 'Unknown error'}`,
+          );
+        }
+
+        this.fastify.log.info(
+          { teamId },
+          'Successfully created and verified team in LiteLLM for subscription creation',
+        );
+      } catch (createError) {
+        this.fastify.log.error(
+          {
+            teamId,
+            error: createError instanceof Error ? createError.message : 'Unknown error',
+            errorStack: createError instanceof Error ? createError.stack : undefined,
+            isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+          },
+          'Failed to create team in LiteLLM for subscription creation',
+        );
+
+        throw new Error(
+          `Failed to create team in LiteLLM: ${createError instanceof Error ? createError.message : 'Unknown error'}`,
+        );
+      }
+    }
+  }
+
   private async ensureUserExistsInLiteLLM(userId: string): Promise<void> {
     try {
       // First check if user exists in LiteLLM (returns null for non-existent users)
@@ -1617,7 +1745,10 @@ export class SubscriptionService {
         throw new Error(`User ${userId} not found in database`);
       }
 
-      // Create user in LiteLLM
+      // Ensure the default team exists in LiteLLM before creating user
+      await this.ensureTeamExistsInLiteLLM(DefaultTeamService.DEFAULT_TEAM_ID);
+
+      // Create user in LiteLLM with default team assignment
       await this.liteLLMService.createUser({
         user_id: user.id,
         user_email: user.email,
@@ -1627,6 +1758,7 @@ export class SubscriptionService {
         tpm_limit: user.tpm_limit || 1000, // Use user's limit or default
         rpm_limit: user.rpm_limit || 60, // Use user's limit or default
         auto_create_key: false, // Don't auto-create key during user creation
+        teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
       });
 
       // Update user sync status in database
