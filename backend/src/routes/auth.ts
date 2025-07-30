@@ -13,6 +13,20 @@ interface DevTokenRequestBody {
   roles?: string[];
 }
 
+/**
+ * OAuth authentication flow routes
+ * These endpoints handle the OAuth flow and must remain at /api/auth
+ * for compatibility with OAuth provider configuration
+ * 
+ * Endpoints:
+ * - POST /login - Initiate OAuth flow
+ * - GET /callback - OAuth callback
+ * - POST /logout - Logout user
+ * - POST /validate - Validate JWT token
+ * - GET /mock-login - Development only
+ * - POST /dev-token - Development only
+ * - GET /mock-users - Development only
+ */
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   // OAuth login initiation
   fastify.post<{
@@ -290,100 +304,6 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       } catch (error) {
         fastify.log.error(error, 'Logout error');
         throw fastify.createError(500, 'Logout failed');
-      }
-    },
-  });
-
-  // Get current user (me endpoint for frontend compatibility)
-  fastify.get<{
-    Reply: Static<typeof UserProfileSchema>;
-  }>('/me', {
-    schema: {
-      tags: ['Authentication'],
-      description: 'Get current authenticated user',
-      security: [{ bearerAuth: [] }],
-      response: {
-        200: UserProfileSchema,
-      },
-    },
-    preHandler: fastify.authenticate,
-    handler: async (request, _reply) => {
-      const user = (request as AuthenticatedRequest).user;
-
-      try {
-        // Get user details from database
-        const userDetails = await fastify.dbUtils.queryOne(
-          'SELECT id, username, email, full_name, roles, created_at FROM users WHERE id = $1',
-          [user.userId],
-        );
-
-        if (!userDetails) {
-          throw fastify.createNotFoundError('User');
-        }
-
-        // Return user data in the format expected by frontend
-        return {
-          id: String(userDetails.id),
-          username: String(userDetails.username),
-          email: String(userDetails.email),
-          name: userDetails.full_name || userDetails.username, // Frontend expects 'name'
-          roles: userDetails.roles as string[],
-        };
-      } catch (error) {
-        fastify.log.error(error, 'Failed to get user profile');
-
-        if (error && typeof error === 'object' && 'statusCode' in error) {
-          throw error;
-        }
-
-        throw fastify.createError(500, 'Failed to get user profile');
-      }
-    },
-  });
-
-  // Get user profile
-  fastify.get<{
-    Reply: Static<typeof UserProfileSchema>;
-  }>('/profile', {
-    schema: {
-      tags: ['Authentication'],
-      description: 'Get current user profile',
-      security: [{ bearerAuth: [] }],
-      response: {
-        200: UserProfileSchema,
-      },
-    },
-    preHandler: fastify.authenticate,
-    handler: async (request, _reply) => {
-      const user = (request as AuthenticatedRequest).user;
-
-      try {
-        // Get user details from database
-        const userDetails = await fastify.dbUtils.queryOne(
-          'SELECT id, username, email, full_name, roles, created_at FROM users WHERE id = $1',
-          [user.userId],
-        );
-
-        if (!userDetails) {
-          throw fastify.createNotFoundError('User');
-        }
-
-        return {
-          id: String(userDetails.id),
-          username: String(userDetails.username),
-          email: String(userDetails.email),
-          fullName: userDetails.full_name as string | undefined,
-          roles: userDetails.roles as string[],
-          createdAt: String(userDetails.created_at),
-        };
-      } catch (error) {
-        fastify.log.error(error, 'Failed to get user profile');
-
-        if (error && typeof error === 'object' && 'statusCode' in error) {
-          throw error;
-        }
-
-        throw fastify.createError(500, 'Failed to get user profile');
       }
     },
   });

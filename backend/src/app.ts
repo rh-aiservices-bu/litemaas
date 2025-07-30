@@ -72,10 +72,10 @@ export const createApp = async (opts: { logger?: boolean } = {}): Promise<Fastif
   await fastify.register(swaggerPlugin);
 
   // Register routes
-  // Auth routes need to be at /api/auth for OAuth callback
+  // OAuth flow routes (login, callback, logout) at /api/auth - unversioned for OAuth provider compatibility
   await fastify.register(authRoutes, { prefix: '/api/auth' });
   
-  // All other routes under /api/v1
+  // All versioned API routes under /api/v1 (including user profile endpoints)
   await fastify.register(routes, { prefix: '/api/v1' });
 
   return fastify;

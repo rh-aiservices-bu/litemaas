@@ -21,6 +21,16 @@ export const TokenResponseSchema = Type.Object({
   }),
 });
 
+// Simple user info for /me endpoint (frontend compatibility)
+export const UserInfoSchema = Type.Object({
+  id: Type.String(),
+  username: Type.String(),
+  email: Type.String({ format: 'email' }),
+  name: Type.String(), // Frontend expects 'name' not 'fullName'
+  roles: Type.Array(Type.String()),
+});
+
+// Detailed user profile for /profile endpoint
 export const UserProfileSchema = Type.Object({
   id: Type.String(),
   username: Type.String(),

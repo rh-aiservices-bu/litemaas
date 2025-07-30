@@ -17,9 +17,9 @@ export interface LoginResponse {
 
 class AuthService {
   async getCurrentUser(): Promise<User> {
-    // Auth routes are at /api/auth, not /api/v1/auth
+    // User endpoints are now under /api/v1/auth
     const token = this.getAccessToken();
-    const response = await axios.get<User>('/api/auth/me', {
+    const response = await axios.get<User>('/api/v1/auth/me', {
       headers: {
         Authorization: `Bearer ${token}`
       }
@@ -28,7 +28,7 @@ class AuthService {
   }
 
   async logout(): Promise<void> {
-    // Auth routes are at /api/auth, not /api/v1/auth
+    // Logout endpoint remains at /api/auth for OAuth flow
     const token = this.getAccessToken();
     await axios.post('/api/auth/logout', {}, {
       headers: {
