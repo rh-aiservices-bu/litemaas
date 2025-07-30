@@ -80,8 +80,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = () => {
-    window.location.href = '/api/auth/login';
+  const login = async () => {
+    try {
+      console.log('Initiating OAuth login...');
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({}), // Send empty JSON object
+      });
+      
+      console.log('Login response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to initiate login: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('Auth URL received:', data.authUrl);
+      
+      // Redirect to the OAuth provider
+      if (data.authUrl) {
+        window.location.href = data.authUrl;
+      } else {
+        console.error('No authUrl in response:', data);
+        throw new Error('No authentication URL received');
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+      // You might want to show an error notification here
+    }
   };
 
   const loginAsAdmin = () => {

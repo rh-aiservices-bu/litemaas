@@ -11,7 +11,7 @@ import configRoutes from './config';
 
 const routes: FastifyPluginAsync = async (fastify) => {
   // Register all route handlers
-  await fastify.register(authRoutes, { prefix: '/auth' });
+  // Note: auth routes are registered separately at /api/auth in app.ts
   await fastify.register(usersRoutes, { prefix: '/users' });
   await fastify.register(modelsRoutes, { prefix: '/models' });
   await fastify.register(subscriptionsRoutes, { prefix: '/subscriptions' });

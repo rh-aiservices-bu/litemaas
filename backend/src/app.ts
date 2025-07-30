@@ -17,6 +17,7 @@ import rbacPlugin from './plugins/rbac';
 import errorHandlerPlugin from './middleware/error-handler';
 import authHooksPlugin from './middleware/auth-hooks';
 import routes from './routes';
+import authRoutes from './routes/auth';
 
 export const createApp = async (opts: { logger?: boolean } = {}): Promise<FastifyInstance> => {
   const fastify = Fastify({
@@ -71,6 +72,10 @@ export const createApp = async (opts: { logger?: boolean } = {}): Promise<Fastif
   await fastify.register(swaggerPlugin);
 
   // Register routes
+  // Auth routes need to be at /api/auth for OAuth callback
+  await fastify.register(authRoutes, { prefix: '/api/auth' });
+  
+  // All other routes under /api/v1
   await fastify.register(routes, { prefix: '/api/v1' });
 
   return fastify;

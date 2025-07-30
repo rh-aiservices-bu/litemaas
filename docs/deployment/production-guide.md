@@ -1,151 +1,227 @@
 # Production Mode Configuration Guide
 
-This guide explains how to run LiteMaaS in production mode while maintaining frontend functionality.
+This guide explains how to configure and run LiteMaaS in production mode with OpenShift OAuth authentication.
+
+## OpenShift OAuth Configuration
+
+### 1. Register OAuth Client in OpenShift
+
+Create an OAuth client in your OpenShift cluster:
+
+```yaml
+apiVersion: oauth.openshift.io/v1
+kind: OAuthClient
+metadata:
+  name: litemaas-client
+secret: <generate-secure-secret>
+redirectURIs:
+- https://<your-production-domain>/api/auth/callback
+- http://localhost:8080/api/auth/callback  # For local testing
+grantMethod: auto
+```
+
+Apply the configuration:
+```bash
+oc apply -f oauth-client.yaml
+```
+
+### 2. Configure Environment Variables
+
+Set the following environment variables for production:
+
+```bash
+# OpenShift OAuth Configuration (REQUIRED)
+OAUTH_CLIENT_ID=litemaas-client
+OAUTH_CLIENT_SECRET=<your-secure-secret>
+OAUTH_ISSUER=https://<your-openshift-api-server>:6443
+OAUTH_CALLBACK_URL=https://<your-production-domain>/api/auth/callback
+
+# Disable Mock Authentication (IMPORTANT)
+OAUTH_MOCK_ENABLED=false
+NODE_ENV=production
+
+# JWT Configuration
+JWT_SECRET=<generate-strong-secret>
+JWT_EXPIRES_IN=24h
+
+# Admin API Keys (for system access)
+ADMIN_API_KEYS=<comma-separated-strong-keys>
+```
+
+### 3. OpenShift Group to Role Mapping
+
+Configure how OpenShift groups map to application roles:
+
+- `litemaas-admins` → `admin` role
+- `litemaas-users` → `user` role  
+- `litemaas-readonly` → `readonly` role
+
+Users must be members of at least one of these groups to access the application.
 
 ## Running in Production Mode
 
 ```bash
-# Run in production mode
+# Run in production mode with proper OAuth
 NODE_ENV=production npm run dev
 ```
 
 ## Authentication Behavior
 
 ### Development Mode (`NODE_ENV=development`)
+- ✅ Mock OAuth authentication with test users
 - ✅ Frontend requests bypass authentication (localhost origins)
 - ✅ Swagger docs accessible with logging
 - ✅ Development endpoints available
 - 📝 All access logged for security monitoring
 
 ### Production Mode (`NODE_ENV=production`)
-- 🔒 Enhanced security with warnings for frontend bypass
+- 🔒 OpenShift OAuth authentication required
 - 🔒 Swagger docs require authentication (admin API key or JWT token)
-- ⚠️ Frontend bypass still works (for testing) but with security warnings
-- 🚫 Development endpoints hidden (unless `ALLOW_DEV_TOKENS=true`)
+- 🔒 No frontend bypass - proper OAuth flow required
+- 🚫 Mock authentication disabled
+- 🚫 Development endpoints hidden
 
-## Frontend Authentication Options
+## OAuth Authentication Flow
 
-### Option 1: Use Frontend Bypass (Current)
-The frontend will work automatically using the origin-based bypass:
+### 1. User Login Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant O as OpenShift OAuth
+    
+    U->>F: Click Login
+    F->>B: GET /api/auth/login
+    B->>F: Return OAuth authorize URL
+    F->>O: Redirect to OpenShift OAuth
+    O->>U: Show OpenShift login page
+    U->>O: Enter credentials
+    O->>B: Redirect to callback with code
+    B->>O: Exchange code for token
+    O->>B: Return access token
+    B->>B: Get user info from OpenShift
+    B->>B: Create/update user in database
+    B->>B: Generate JWT
+    B->>F: Redirect with JWT
+    F->>F: Store JWT for API calls
+```
+
+### 2. API Authentication
+
+All API requests in production must include a valid JWT token:
 
 ```typescript
-// Automatic - no changes needed in frontend
-// Backend detects localhost origins and allows access
+// Frontend API client configuration
+const apiClient = axios.create({
+  baseURL: '/api',
+  headers: {
+    'Authorization': `Bearer ${getStoredJWT()}`
+  }
+});
 ```
 
-### Option 2: Use JWT Tokens (Recommended for Production)
-Get a development JWT token for the frontend:
+### 3. Admin Access
+
+For system-level access without OAuth:
 
 ```bash
-# Get JWT token from backend
-curl -X POST http://localhost:8080/api/auth/dev-token \
-  -H "Content-Type: application/json" \
-  -d '{"username": "developer", "roles": ["admin", "user"]}'
+# Use admin API key for system operations
+curl -H "Authorization: Bearer ${ADMIN_API_KEY}" \
+  https://litemaas.example.com/api/models/sync
 ```
 
-Then use the token in frontend requests:
-```typescript
-// Add to frontend API client
-headers: {
-  'Authorization': `Bearer ${access_token}`
-}
-```
+## Security Considerations
 
-### Option 3: Use Admin API Keys
-For external API access or testing:
+### 1. Production Security Checklist
+
+- [ ] OpenShift OAuth client properly configured
+- [ ] Strong OAuth client secret generated
+- [ ] JWT secret is strong and unique
+- [ ] Admin API keys are strong and rotated regularly
+- [ ] HTTPS/TLS enabled for all connections
+- [ ] CORS configured for production domain only
+- [ ] Rate limiting enabled
+- [ ] Audit logging configured
+
+### 2. Required OpenShift Permissions
+
+Ensure the service account has permissions to:
+- Read user information: `user:info`
+- Check user access: `user:check-access`
+- List user groups: `user:list-scoped`
+
+### 3. Troubleshooting OAuth Issues
+
+#### Common Issues:
+
+**OAuth callback fails:**
+- Verify redirect URI matches exactly in OpenShift OAuth client
+- Check OAUTH_CALLBACK_URL environment variable
+- Ensure network connectivity between app and OpenShift API
+
+**User info retrieval fails:**
+- Verify OAUTH_ISSUER points to correct OpenShift API server
+- Check token has required scopes
+- Ensure user has proper OpenShift groups
+
+**JWT generation fails:**
+- Verify JWT_SECRET is set
+- Check user has required groups for role mapping
+- Review backend logs for specific errors
+
+## Testing Production Configuration
+
+### 1. Test OAuth Login Flow
 
 ```bash
-# Use admin API key
-curl -H "Authorization: Bearer ltm_admin_dev123456789" \
-  http://localhost:8080/api/subscriptions
+# Test OAuth login endpoint
+curl -i https://litemaas.example.com/api/auth/login
+
+# Should return redirect to OpenShift OAuth:
+# HTTP/302 Found
+# Location: https://oauth.openshift.com/oauth/authorize?client_id=...
 ```
 
-## Environment Configuration
-
-### Required Environment Variables
+### 2. Test API Authentication
 
 ```bash
-# Allow frontend origins (for bypass functionality)
-ALLOWED_FRONTEND_ORIGINS=localhost:3000,localhost:3001,127.0.0.1:3000,127.0.0.1:3001
+# Test without auth (should fail with 401)
+curl -i https://litemaas.example.com/api/subscriptions
 
-# Admin API keys for administrative access
-ADMIN_API_KEYS=ltm_admin_dev123456789,ltm_admin_test987654321
-
-# Allow development token endpoint in production (optional)
-ALLOW_DEV_TOKENS=true
-```
-
-### Security Warnings in Production Mode
-
-When running in production mode, you'll see warnings like:
-
-```log
-[WARN] Frontend bypass used in production mode - consider implementing proper authentication
-```
-
-This is intentional to remind you that the frontend bypass should be replaced with proper JWT authentication in a real production environment.
-
-## Migration Path to Full Production
-
-### Step 1: Implement Frontend Authentication
-1. Add login functionality to frontend
-2. Store JWT tokens in frontend (localStorage/sessionStorage)
-3. Include tokens in all API requests
-
-### Step 2: Disable Frontend Bypass
-1. Remove `ALLOWED_FRONTEND_ORIGINS` from environment
-2. Or modify the authentication logic to only allow JWT tokens
-
-### Step 3: Secure Environment Variables
-1. Use strong, randomly generated admin API keys
-2. Set `ALLOW_DEV_TOKENS=false` or remove it
-3. Implement proper secret management
-
-## Testing Production Security
-
-### Test Swagger Documentation
-```bash
-# Should require authentication in production (returns 401)
-curl -s -i http://localhost:8080/docs
-
-# Should work with admin API key (returns 302 redirect)
-curl -s -i -H "Authorization: Bearer ltm_admin_dev123456789" http://localhost:8080/docs
-```
-
-### Test API Endpoints
-```bash
-# Should work with admin key
-curl -H "Authorization: Bearer ltm_admin_dev123456789" \
-  http://localhost:8080/api/subscriptions
-
-# Should work with JWT token
+# Test with valid JWT (should succeed)
 curl -H "Authorization: Bearer ${JWT_TOKEN}" \
-  http://localhost:8080/api/subscriptions
+  https://litemaas.example.com/api/subscriptions
 
-# Should work with frontend origin
-curl -H "Origin: http://localhost:3000" \
-  http://localhost:8080/api/subscriptions
+# Test with admin API key (should succeed)
+curl -H "Authorization: Bearer ${ADMIN_API_KEY}" \
+  https://litemaas.example.com/api/subscriptions
 ```
 
-### Test Development Token Endpoint
+### 3. Verify Mock Mode is Disabled
+
 ```bash
-# Should work if ALLOW_DEV_TOKENS=true
-curl -X POST http://localhost:8080/api/auth/dev-token \
+# This should fail in production
+curl -X POST https://litemaas.example.com/api/auth/dev-token \
   -H "Content-Type: application/json" \
-  -d '{"username": "test-user"}'
+  -d '{"username": "test"}'
+# Expected: 404 Not Found
 ```
 
 ## Security Features by Mode
 
 | Feature | Development | Production | Notes |
 |---------|-------------|------------|-------|
-| Frontend Bypass | ✅ Silent | ⚠️ With warnings | Based on origin headers |
-| Swagger Access | ✅ Logged | 🔒 Admin/JWT required | Returns 401 without auth, 302 with admin key |
-| Dev Token Endpoint | ✅ Available | 🔒 Configurable | Controlled by `ALLOW_DEV_TOKENS` |
-| Admin API Keys | ✅ Full access | ✅ Full access | Always available |
-| User API Keys | ✅ Database validated | ✅ Database validated | Full validation |
-| Security Logging | 📝 Debug level | ⚠️ Warning level | Enhanced monitoring |
+| OAuth Provider | Mock users | OpenShift OAuth | Real authentication in production |
+| Frontend Bypass | ✅ Enabled | 🚫 Disabled | No bypass in production |
+| Mock Authentication | ✅ Enabled | 🚫 Disabled | `OAUTH_MOCK_ENABLED=false` |
+| Swagger Access | ✅ Open | 🔒 Admin/JWT required | Requires authentication |
+| Dev Token Endpoint | ✅ Available | 🚫 Hidden | Not available in production |
+| Admin API Keys | ✅ Full access | ✅ Full access | System operations only |
+| User API Keys | ✅ Validated | ✅ Validated | Full LiteLLM integration |
+| Security Logging | 📝 Debug | ⚠️ Warning | Enhanced monitoring |
 
 ---
 
-**Recommendation**: The current setup allows you to test production mode while maintaining frontend functionality. For actual production deployment, implement proper JWT authentication in the frontend and disable the origin-based bypass.
+**Important**: This guide ensures that LiteMaaS uses OpenShift OAuth authentication in production mode. The development mode provides mock authentication for easier testing, while production mode enforces real OpenShift authentication with no bypasses.
