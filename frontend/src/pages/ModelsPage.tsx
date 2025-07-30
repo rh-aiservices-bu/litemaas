@@ -393,7 +393,7 @@ const ModelsPage: React.FC = () => {
                         </FlexItem>
                         <FlexItem>
                           <Content component={ContentVariants.small}>
-                            Context:{' '}
+                            {t('pages.models.contextLabel')}{' '}
                             {model.contextLength ? model.contextLength.toLocaleString() : 'N/A'}{' '}
                             tokens
                           </Content>
@@ -402,7 +402,7 @@ const ModelsPage: React.FC = () => {
                           <Content component={ContentVariants.small}>
                             {model.pricing
                               ? `Input: $${model.pricing.input}/1K • Output: $${model.pricing.output}/1K`
-                              : 'Pricing: N/A'}
+                              : t('pages.models.pricingLabel')}
                           </Content>
                         </FlexItem>
                       </Flex>
@@ -416,7 +416,7 @@ const ModelsPage: React.FC = () => {
                         ))}
                         {model.features.length > 3 && (
                           <FlexItem>
-                            <Label color="grey">+{model.features.length - 3} more</Label>
+                            <Label color="grey">{t('pages.models.moreFeatures', { count: model.features.length - 3 })}</Label>
                           </FlexItem>
                         )}
                       </Flex>

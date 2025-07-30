@@ -22,12 +22,12 @@ const HomePage: React.FC = () => {
 
   const handleDemoNotification = () => {
     addNotification({
-      title: 'Welcome to LiteMaaS!',
-      description: 'This is a demo notification to showcase the notification system.',
+      title: t('pages.home.demoNotification.title'),
+      description: t('pages.home.demoNotification.description'),
       variant: 'success',
       actions: [
         {
-          label: 'View Tutorial',
+          label: t('pages.home.demoNotification.viewTutorial'),
           onClick: () => console.log('Tutorial clicked'),
         },
       ],
@@ -43,7 +43,7 @@ const HomePage: React.FC = () => {
           </Title>
           <Content component={ContentVariants.p}>{t('pages.home.subtitle')}</Content>
           <Button variant="primary" onClick={handleDemoNotification} style={{ marginTop: '1rem' }}>
-            Demo Notification
+            {t('pages.home.demoNotificationButton')}
           </Button>
         </Content>
       </PageSection>
@@ -65,7 +65,7 @@ const HomePage: React.FC = () => {
                     </Title>
                   </FlexItem>
                   <FlexItem>
-                    <Content>Browse available AI models</Content>
+                    <Content>{t('pages.home.cards.modelsDescription')}</Content>
                   </FlexItem>
                 </Flex>
               </CardBody>
@@ -87,7 +87,7 @@ const HomePage: React.FC = () => {
                     </Title>
                   </FlexItem>
                   <FlexItem>
-                    <Content>Manage your model subscriptions</Content>
+                    <Content>{t('pages.home.cards.subscriptionsDescription')}</Content>
                   </FlexItem>
                 </Flex>
               </CardBody>
@@ -109,7 +109,7 @@ const HomePage: React.FC = () => {
                     </Title>
                   </FlexItem>
                   <FlexItem>
-                    <Content>Generate and manage API keys</Content>
+                    <Content>{t('pages.home.cards.apiKeysDescription')}</Content>
                   </FlexItem>
                 </Flex>
               </CardBody>
@@ -131,7 +131,7 @@ const HomePage: React.FC = () => {
                     </Title>
                   </FlexItem>
                   <FlexItem>
-                    <Content>Monitor your API usage</Content>
+                    <Content>{t('pages.home.cards.usageDescription')}</Content>
                   </FlexItem>
                 </Flex>
               </CardBody>

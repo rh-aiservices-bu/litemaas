@@ -107,16 +107,16 @@ const SubscriptionsPage: React.FC = () => {
 
   const getPricingInfo = (subscription: Subscription) => {
     if (!subscription.pricing) {
-      return <Content component={ContentVariants.small}>Pricing information unavailable</Content>;
+      return <Content component={ContentVariants.small}>{t('pages.subscriptions.pricingUnavailable')}</Content>;
     }
 
     return (
       <Stack hasGutter>
         <Content component={ContentVariants.small}>
-          Input: ${subscription.pricing.inputCostPer1kTokens.toFixed(4)}/1K tokens
+          {t('pages.subscriptions.inputPricing', { cost: subscription.pricing.inputCostPer1kTokens.toFixed(4) })}
         </Content>
         <Content component={ContentVariants.small}>
-          Output: ${subscription.pricing.outputCostPer1kTokens.toFixed(4)}/1K tokens
+          {t('pages.subscriptions.outputPricing', { cost: subscription.pricing.outputCostPer1kTokens.toFixed(4) })}
         </Content>
       </Stack>
     );
@@ -147,7 +147,7 @@ const SubscriptionsPage: React.FC = () => {
       // If successful, show success notification and reload subscriptions
       addNotification({
         title: t('pages.subscriptions.notifications.cancelSuccess'),
-        description: `${subscription.modelName} subscription has been cancelled and removed from your account.`,
+        description: t('pages.subscriptions.cancelledMessage', { modelName: subscription.modelName }),
         variant: 'success',
       });
 
@@ -189,9 +189,9 @@ const SubscriptionsPage: React.FC = () => {
             <EmptyState variant={EmptyStateVariant.lg}>
               <Spinner size="xl" />
               <Title headingLevel="h2" size="lg">
-                Loading Subscriptions...
+                {t('pages.subscriptions.loadingTitle')}
               </Title>
-              <EmptyStateBody>Retrieving your subscription information</EmptyStateBody>
+              <EmptyStateBody>{t('pages.subscriptions.loadingDescription')}</EmptyStateBody>
             </EmptyState>
           </Bullseye>
         </PageSection>
@@ -208,15 +208,15 @@ const SubscriptionsPage: React.FC = () => {
         >
           <FlexItem>
             <Title headingLevel="h1" size="2xl">
-              My Subscriptions
+              {t('pages.subscriptions.pageTitle')}
             </Title>
             <Content component={ContentVariants.p}>
-              Manage your AI model subscriptions and usage
+              {t('pages.subscriptions.pageSubtitle')}
             </Content>
           </FlexItem>
           <FlexItem>
             <Button variant="primary" icon={<PlusCircleIcon />} onClick={() => navigate('/models')}>
-              New Subscription
+              {t('pages.subscriptions.newSubscription')}
             </Button>
           </FlexItem>
         </Flex>
@@ -227,10 +227,10 @@ const SubscriptionsPage: React.FC = () => {
           <EmptyState variant={EmptyStateVariant.lg}>
             <CubesIcon />
             <Title headingLevel="h2" size="lg">
-              No subscriptions found
+              {t('pages.subscriptions.noSubscriptionsTitle')}
             </Title>
             <EmptyStateBody>
-              You don't have any active subscriptions. Start by subscribing to an AI model.
+              {t('pages.subscriptions.noSubscriptionsDescription')}
             </EmptyStateBody>
             <EmptyStateActions>
               <Button
@@ -265,7 +265,7 @@ const SubscriptionsPage: React.FC = () => {
                           component={ContentVariants.small}
                           style={{ color: 'var(--pf-v6-global--Color--200)' }}
                         >
-                          by {subscription.provider}
+                          {t('pages.subscriptions.byProvider', { provider: subscription.provider })}
                         </Content>
                       </CardTitle>
                       <CardBody>
@@ -277,7 +277,7 @@ const SubscriptionsPage: React.FC = () => {
 
                           <FlexItem>
                             <Content component={ContentVariants.small}>
-                              Token usage this month
+                              {t('pages.subscriptions.tokenUsageThisMonth')}
                             </Content>
                             <Progress
                               value={getUsagePercentage(
@@ -297,8 +297,10 @@ const SubscriptionsPage: React.FC = () => {
 
                           <FlexItem>
                             <Content component={ContentVariants.small}>
-                              Quota: {subscription.quotaRequests.toLocaleString()} requests,{' '}
-                              {subscription.quotaTokens.toLocaleString()} tokens
+                              {t('pages.subscriptions.quotaFormat', { 
+                                requests: subscription.quotaRequests.toLocaleString(),
+                                tokens: subscription.quotaTokens.toLocaleString()
+                              })}
                             </Content>
                           </FlexItem>
                         </Flex>
@@ -311,7 +313,7 @@ const SubscriptionsPage: React.FC = () => {
                               size="sm"
                               onClick={() => handleSubscriptionDetails(subscription)}
                             >
-                              View Details
+                              {t('pages.subscriptions.viewDetails')}
                             </Button>
                           </FlexItem>
                         </Flex>
@@ -350,7 +352,7 @@ const SubscriptionsPage: React.FC = () => {
             component={ContentVariants.p}
             style={{ color: 'var(--pf-v6-global--Color--200)' }}
           >
-            Subscription Details
+            {t('pages.subscriptions.detailsTitle')}
           </Content>
         </ModalHeader>
         <ModalBody>
@@ -358,42 +360,42 @@ const SubscriptionsPage: React.FC = () => {
             <>
               <DescriptionList isHorizontal>
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Provider</DescriptionListTerm>
+                  <DescriptionListTerm>{t('pages.subscriptions.provider')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     {selectedSubscription.provider}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Pricing</DescriptionListTerm>
+                  <DescriptionListTerm>{t('pages.subscriptions.pricing')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     {getPricingInfo(selectedSubscription)}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Status</DescriptionListTerm>
+                  <DescriptionListTerm>{t('pages.subscriptions.status')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     {getStatusBadge(selectedSubscription.status)}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Request Quota</DescriptionListTerm>
+                  <DescriptionListTerm>{t('pages.subscriptions.requestQuota')}</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {selectedSubscription.quotaRequests.toLocaleString()} per month
+                    {selectedSubscription.quotaRequests.toLocaleString()} {t('pages.subscriptions.perMonth')}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Token Quota</DescriptionListTerm>
+                  <DescriptionListTerm>{t('pages.subscriptions.tokenQuota')}</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {selectedSubscription.quotaTokens.toLocaleString()} per month
+                    {selectedSubscription.quotaTokens.toLocaleString()} {t('pages.subscriptions.perMonth')}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Requests Used</DescriptionListTerm>
+                  <DescriptionListTerm>{t('pages.subscriptions.requestsUsed')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     <Flex
                       direction={{ default: 'column' }}
@@ -401,7 +403,7 @@ const SubscriptionsPage: React.FC = () => {
                     >
                       <FlexItem>
                         {selectedSubscription.usedRequests.toLocaleString()} /{' '}
-                        {selectedSubscription.quotaRequests.toLocaleString()} requests
+                        {selectedSubscription.quotaRequests.toLocaleString()} {t('pages.subscriptions.requests')}
                       </FlexItem>
                       <FlexItem>
                         <Progress
@@ -423,7 +425,7 @@ const SubscriptionsPage: React.FC = () => {
                 </DescriptionListGroup>
 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Tokens Used</DescriptionListTerm>
+                  <DescriptionListTerm>{t('pages.subscriptions.tokensUsed')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     <Flex
                       direction={{ default: 'column' }}
@@ -431,7 +433,7 @@ const SubscriptionsPage: React.FC = () => {
                     >
                       <FlexItem>
                         {selectedSubscription.usedTokens.toLocaleString()} /{' '}
-                        {selectedSubscription.quotaTokens.toLocaleString()} tokens
+                        {selectedSubscription.quotaTokens.toLocaleString()} {t('pages.subscriptions.tokens')}
                       </FlexItem>
                       <FlexItem>
                         <Progress
@@ -453,14 +455,14 @@ const SubscriptionsPage: React.FC = () => {
                 </DescriptionListGroup>
 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Created</DescriptionListTerm>
+                  <DescriptionListTerm>{t('pages.subscriptions.created')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     {new Date(selectedSubscription.createdAt).toLocaleDateString()}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>Features</DescriptionListTerm>
+                  <DescriptionListTerm>{t('pages.subscriptions.features')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     <Flex spaceItems={{ default: 'spaceItemsSm' }} flexWrap={{ default: 'wrap' }}>
                       {selectedSubscription.features.map((feature, index) => (
@@ -479,8 +481,7 @@ const SubscriptionsPage: React.FC = () => {
                   title={t('pages.subscriptions.alerts.suspended')}
                   style={{ marginTop: '1rem' }}
                 >
-                  Your subscription has been suspended. Contact support or check your account
-                  status.
+                  {t('pages.subscriptions.suspendedMessage')}
                 </Alert>
               )}
 
@@ -490,10 +491,10 @@ const SubscriptionsPage: React.FC = () => {
                   title={t('pages.subscriptions.alerts.expired')}
                   style={{ marginTop: '1rem' }}
                 >
-                  Your subscription expired on{' '}
-                  {selectedSubscription.expiresAt &&
-                    new Date(selectedSubscription.expiresAt).toLocaleDateString()}
-                  . Renew to continue using this model.
+                  {t('pages.subscriptions.expiredMessage', { 
+                    date: selectedSubscription.expiresAt && 
+                      new Date(selectedSubscription.expiresAt).toLocaleDateString()
+                  })}
                 </Alert>
               )}
             </>
@@ -518,7 +519,7 @@ const SubscriptionsPage: React.FC = () => {
                 : t('pages.subscriptions.cancelSubscription')}
             </Button>
             <Button variant="link" onClick={() => setIsDetailsModalOpen(false)}>
-              Close
+              {t('pages.subscriptions.close')}
             </Button>
           </div>
         </ModalBody>
