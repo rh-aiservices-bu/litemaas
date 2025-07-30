@@ -339,7 +339,7 @@ export class ApiKeyService {
 
       // Create API key in LiteLLM with multiple models
       const liteLLMRequest: LiteLLMKeyGenerationRequest = {
-        key_alias: request.name || `key-${Date.now()}`,
+        key_alias: this.generateUniqueKeyAlias(request.name || 'api-key'),
         duration: request.expiresAt ? this.calculateDuration(request.expiresAt) : undefined,
         models: modelIds, // Pass all model IDs
         max_budget: request.maxBudget,
@@ -450,6 +450,8 @@ export class ApiKeyService {
             liteLLMKeyId: liteLLMResponse.key,
             models: modelIds,
             modelCount: modelIds.length,
+            keyAlias: liteLLMRequest.key_alias,
+            originalName: request.name,
           },
           'API key created with multi-model support',
         );
@@ -1506,6 +1508,25 @@ export class ApiKeyService {
     const keyHash = this.hashApiKey(key);
     const keyPrefix = this.extractKeyPrefix(key);
     return { key, keyHash, keyPrefix };
+  }
+
+  /**
+   * Generates a unique key alias for LiteLLM that ensures global uniqueness
+   * while preserving the user's chosen name for display in LiteMaaS
+   */
+  private generateUniqueKeyAlias(baseName: string): string {
+    // Generate a short UUID suffix (8 characters) for uniqueness
+    const uuid = randomBytes(4).toString('hex'); // 4 bytes = 8 hex characters
+
+    // Sanitize the base name to remove any problematic characters
+    const sanitizedName = baseName
+      .replace(/[^a-zA-Z0-9-_]/g, '-') // Replace non-alphanumeric chars with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+      .substring(0, 50); // Limit length to keep alias reasonable
+
+    // Return the unique alias
+    return `${sanitizedName || 'api-key'}_${uuid}`;
   }
 
   private hashApiKey(key: string): string {

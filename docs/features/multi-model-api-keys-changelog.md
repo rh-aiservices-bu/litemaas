@@ -1,5 +1,18 @@
 # Multi-Model API Keys - Complete Changelog
 
+## Release Version: 2.0.1
+**Release Date**: January 30, 2025  
+**Type**: Bug Fix  
+**Breaking Changes**: None
+
+### 🐛 Bug Fixes
+
+#### LiteLLM Key Alias Uniqueness
+- **Issue**: LiteLLM requires global uniqueness for key_alias field, causing conflicts when different users use the same key name
+- **Solution**: Implemented UUID-based suffix generation for all key aliases
+- **Format**: `{sanitized_name}_{8_char_uuid}` (e.g., `production-key_a5f2b1c3`)
+- **Impact**: Prevents key creation failures due to duplicate aliases while preserving user-friendly names in the UI
+
 ## Release Version: 2.0.0
 **Release Date**: January 2024  
 **Type**: Major Feature Enhancement  

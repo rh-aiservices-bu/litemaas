@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { randomBytes } from 'crypto';
 import { LiteLLMService } from './litellm.service';
 import {
   SubscriptionStatus,
@@ -1004,7 +1005,9 @@ export class SubscriptionService {
       let liteLLMKeyId: string | undefined;
       if (generateApiKey) {
         const keyRequest: LiteLLMKeyGenerationRequest = {
-          key_alias: apiKeyAlias || `sub-${baseSubscription.id}`,
+          key_alias: this.generateUniqueKeyAlias(
+            apiKeyAlias || `subscription-${baseSubscription.id.substring(0, 8)}`,
+          ),
           duration: expiresAt ? this.calculateDuration(expiresAt) : undefined,
           models: allowedModels || [modelId],
           max_budget: maxBudget,
@@ -1056,6 +1059,8 @@ export class SubscriptionService {
           hasApiKey: !!liteLLMKeyId,
           maxBudget,
           teamId,
+          keyAlias: generateApiKey ? keyRequest.key_alias : undefined,
+          originalAlias: apiKeyAlias,
         },
         'Enhanced subscription created with LiteLLM integration',
       );
@@ -1434,6 +1439,25 @@ export class SubscriptionService {
     const diffMs = expiresAt.getTime() - Date.now();
     const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
     return `${diffDays}d`;
+  }
+
+  /**
+   * Generates a unique key alias for LiteLLM that ensures global uniqueness
+   * while preserving the user's chosen name for display in LiteMaaS
+   */
+  private generateUniqueKeyAlias(baseName: string): string {
+    // Generate a short UUID suffix (8 characters) for uniqueness
+    const uuid = randomBytes(4).toString('hex'); // 4 bytes = 8 hex characters
+
+    // Sanitize the base name to remove any problematic characters
+    const sanitizedName = baseName
+      .replace(/[^a-zA-Z0-9-_]/g, '-') // Replace non-alphanumeric chars with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+      .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+      .substring(0, 50); // Limit length to keep alias reasonable
+
+    // Return the unique alias
+    return `${sanitizedName || 'subscription'}_${uuid}`;
   }
 
   private mapToEnhancedSubscription(subscription: any): EnhancedSubscription {

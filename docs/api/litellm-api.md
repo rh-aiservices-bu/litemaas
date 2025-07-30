@@ -109,7 +109,7 @@ POST /key/generate
 Content-Type: application/json
 
 {
-  "key_alias": "user-john-production",
+  "key_alias": "production-key_a5f2b1c3", // Unique alias with UUID suffix
   "duration": "30d",
   "models": ["gpt-4o", "gpt-3.5-turbo"],
   "max_budget": 100.00,
@@ -408,7 +408,7 @@ async checkLiteLLMHealth(): Promise<boolean> {
 ```typescript
 async createLiteLLMKey(subscription: Subscription): Promise<string> {
   const keyRequest = {
-    key_alias: `${subscription.userId}-${subscription.id}`,
+    key_alias: generateUniqueKeyAlias(subscription.name), // e.g., "production-key_a5f2b1c3"
     duration: subscription.duration,
     models: subscription.allowedModels,
     max_budget: subscription.budget,

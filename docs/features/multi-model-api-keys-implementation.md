@@ -2285,3 +2285,91 @@ Update `docs/architecture/database-schema.md` to reflect the new many-to-many re
 This implementation guide provides a complete roadmap for adding multi-model support to API keys in LiteMaaS. The changes maintain backward compatibility while providing users with the flexibility to use a single API key across multiple models, aligning with LiteLLM's native capabilities and improving the user experience.
 
 The implementation is designed to be rolled out in phases, with careful attention to data migration, testing, and rollback procedures. Following this guide will ensure a smooth transition to the new multi-model API key system.
+
+## Key Alias Uniqueness Implementation
+
+### Problem Statement
+
+LiteLLM requires the `key_alias` field to be globally unique across all users and keys in the system. However, LiteMaaS only enforces key name uniqueness within each user's account. This mismatch causes conflicts when different users try to create API keys with the same name (e.g., "production-key").
+
+### Solution: UUID-based Suffix
+
+To ensure global uniqueness while preserving user-friendly names, we append an 8-character UUID suffix to each key alias.
+
+#### Implementation Details
+
+1. **Method**: Added `generateUniqueKeyAlias(baseName: string)` to both ApiKeyService and SubscriptionService
+2. **Format**: `${sanitizedName}_${uuid}`
+   - Example: `production-key_a5f2b1c3`
+3. **Sanitization Rules**:
+   - Replace non-alphanumeric characters (except `-` and `_`) with hyphens
+   - Collapse multiple consecutive hyphens to single hyphen
+   - Remove leading/trailing hyphens
+   - Truncate to 50 characters maximum
+   - Default to "api-key" or "subscription" if name becomes empty after sanitization
+
+#### Code Example
+
+```typescript
+private generateUniqueKeyAlias(baseName: string): string {
+  // Generate a short UUID suffix (8 characters) for uniqueness
+  const uuid = randomBytes(4).toString('hex'); // 4 bytes = 8 hex characters
+
+  // Sanitize the base name to remove any problematic characters
+  const sanitizedName = baseName
+    .replace(/[^a-zA-Z0-9-_]/g, '-') // Replace non-alphanumeric chars with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single hyphen
+    .replace(/^-|-$/g, '') // Remove leading/trailing hyphens
+    .substring(0, 50); // Limit length to keep alias reasonable
+
+  // Return the unique alias
+  return `${sanitizedName || 'api-key'}_${uuid}`;
+}
+```
+
+#### Usage in API Key Creation
+
+```typescript
+// In ApiKeyService.createApiKey()
+const liteLLMRequest: LiteLLMKeyGenerationRequest = {
+  key_alias: this.generateUniqueKeyAlias(request.name || 'api-key'),
+  // ... other fields
+};
+
+// In SubscriptionService.createEnhancedSubscription()
+const keyRequest: LiteLLMKeyGenerationRequest = {
+  key_alias: this.generateUniqueKeyAlias(
+    apiKeyAlias || `subscription-${baseSubscription.id.substring(0, 8)}`
+  ),
+  // ... other fields
+};
+```
+
+### Benefits
+
+1. **No Conflicts**: UUID suffix guarantees global uniqueness
+2. **User-Friendly**: Original name is preserved in LiteMaaS UI (stored in `name` field)
+3. **Privacy**: No user information (ID, email, etc.) exposed in LiteLLM
+4. **Backward Compatible**: Existing keys continue to work
+5. **Simple Implementation**: Minimal code changes required
+6. **Predictable Format**: Easy to identify LiteMaaS keys in LiteLLM dashboard
+
+### Examples
+
+| User Input | Generated key_alias | Notes |
+|------------|-------------------|--------|
+| `production-key` | `production-key_a5f2b1c3` | Standard case |
+| `my@special#key!` | `my-special-key_f71c5769` | Special chars sanitized |
+| `test key (main)` | `test-key-main_abf867a7` | Spaces replaced |
+| ` ` (empty) | `api-key_66532322` | Default fallback |
+| `@#$%^&*()` | `api-key_e2daa9b6` | All invalid chars |
+| Long name (95 chars) | `this-is-a-very-long-api-key-name-that-exceeds-the-_0e70476c` | Truncated to 50 + suffix |
+
+### Alternatives Considered
+
+1. **User ID Prefix**: `user_${userId}_${keyName}` - Rejected due to privacy concerns
+2. **Email Prefix**: `${email}_${keyName}` - Rejected due to privacy and mutability
+3. **Full UUID**: Replace name entirely - Rejected as not user-friendly
+4. **Timestamp**: `${keyName}_${timestamp}` - Rejected as not guaranteed unique
+
+The UUID suffix approach provides the best balance of uniqueness, privacy, and usability.

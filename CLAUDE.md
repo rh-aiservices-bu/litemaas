@@ -7,13 +7,14 @@
 > - Deployment Guide: `docs/deployment/`
 > - Configuration: `docs/deployment/configuration.md`
 
-**Last Updated**: 2025-07-30
+**Last Updated**: 2025-01-30
 - OAuth endpoints reorganized: `/api/auth` for flow, `/api/v1/auth` for user operations
 - Fixed OpenShift OAuth integration with proper API server endpoints
 - Enhanced user creation flow with Default Team assignment
 - **FIXED**: LiteLLM user creation "already exists" error in API Key and Subscription services
 - Standardized user existence checking pattern across all services
 - Improved error handling and schema validation
+- **FIXED**: LiteLLM key_alias uniqueness conflict - now generates unique aliases with UUID suffix
 
 ## 🚀 Project Overview
 
@@ -180,6 +181,20 @@ model_info.input/output_cost_per_token → pricing
 ```
 
 ### API Key Management
+
+#### Key Alias Uniqueness
+> Solves LiteLLM global key_alias uniqueness requirement
+
+- **Core Problem**: LiteLLM requires key_alias to be globally unique across all users
+- **Solution**: Append 8-character UUID suffix to user's chosen name
+- **Format**: `${sanitizedName}_${uuid}` (e.g., `production-key_a5f2b1c3`)
+- **Benefits**: 
+  - Preserves user's chosen name in LiteMaaS UI
+  - Guarantees uniqueness in LiteLLM
+  - No user information exposed
+  - Backward compatible
+
+### API Key Structure
 ```typescript
 // Multi-model API key creation with proper LiteLLM format
 {
