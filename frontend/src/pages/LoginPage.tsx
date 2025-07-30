@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Button,
   LoginPage as PFLoginPage,
@@ -11,6 +12,7 @@ import { LogoTitle } from '../assets';
 import { useAuth } from '../contexts/AuthContext';
 
 const LoginPage: React.FC = () => {
+  const { t } = useTranslation();
   const { login, loginAsAdmin } = useAuth();
 
   const handleLogin = () => {
@@ -20,11 +22,11 @@ const LoginPage: React.FC = () => {
   return (
     <PFLoginPage
       brandImgSrc={LogoTitle}
-      brandImgAlt="LiteMaaS logo"
+      brandImgAlt={t('pages.login.brandAlt')}
       backgroundImgSrc="/bg.jpg"
-      textContent="Sign in to your account"
-      loginTitle="Log in to LiteMaaS"
-      loginSubtitle="Use your OpenShift credentials or bypass for testing"
+      textContent={t('pages.login.signInText')}
+      loginTitle={t('pages.login.title')}
+      loginSubtitle={t('pages.login.subtitle')}
     >
       <Stack hasGutter>
         <StackItem>
@@ -35,7 +37,7 @@ const LoginPage: React.FC = () => {
             icon={<ExternalLinkAltIcon />}
             iconPosition="end"
           >
-            Login with OpenShift
+            {t('pages.login.loginWithOpenShift')}
           </Button>
         </StackItem>
 
@@ -43,7 +45,7 @@ const LoginPage: React.FC = () => {
           <div className="pf-v6-u-text-align-center pf-v6-u-my-md">
             <Divider />
             <div className="pf-v6-u-mt-sm">
-              <small className="pf-v6-u-color-400">Development Mode</small>
+              <small className="pf-v6-u-color-400">{t('pages.login.developmentMode')}</small>
             </div>
           </div>
         </StackItem>
@@ -56,12 +58,10 @@ const LoginPage: React.FC = () => {
             icon={<UserIcon />}
             iconPosition="start"
           >
-            Login as Admin (Test)
+            {t('pages.login.loginAsAdmin')}
           </Button>
           <div className="pf-v6-u-text-align-center pf-v6-u-mt-sm">
-            <small className="pf-v6-u-color-400">
-              Bypass authentication for development and testing purposes
-            </small>
+            <small className="pf-v6-u-color-400">{t('pages.login.bypassAuthentication')}</small>
           </div>
         </StackItem>
       </Stack>

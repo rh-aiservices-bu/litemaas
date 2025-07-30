@@ -119,10 +119,10 @@ const UsagePage: React.FC = () => {
       setMetrics(usageMetrics);
     } catch (err) {
       console.error('Failed to load usage metrics:', err);
-      setError('Failed to load usage metrics. Please try again.');
+      setError(t('pages.usage.notifications.loadFailed'));
       addNotification({
-        title: 'Error',
-        description: 'Failed to load usage metrics from the server.',
+        title: t('pages.usage.notifications.loadError'),
+        description: t('pages.usage.notifications.loadErrorDesc'),
         variant: 'danger',
       });
     } finally {
@@ -137,8 +137,8 @@ const UsagePage: React.FC = () => {
   const handleExportData = async () => {
     try {
       addNotification({
-        title: 'Export Started',
-        description: 'Your usage data export is being prepared and will be downloaded shortly.',
+        title: t('pages.usage.notifications.exportStarted'),
+        description: t('pages.usage.notifications.exportStartedDesc'),
         variant: 'info',
       });
 
@@ -167,15 +167,15 @@ const UsagePage: React.FC = () => {
       window.URL.revokeObjectURL(url);
 
       addNotification({
-        title: 'Export Complete',
-        description: 'Usage data has been exported successfully.',
+        title: t('pages.usage.notifications.exportComplete'),
+        description: t('pages.usage.notifications.exportCompleteDesc'),
         variant: 'success',
       });
     } catch (err) {
       console.error('Failed to export usage data:', err);
       addNotification({
-        title: 'Export Failed',
-        description: 'Failed to export usage data. Please try again.',
+        title: t('pages.usage.notifications.exportFailed'),
+        description: t('pages.usage.notifications.exportFailedDesc'),
         variant: 'danger',
       });
     }
@@ -217,7 +217,7 @@ const UsagePage: React.FC = () => {
       <>
         <PageSection variant="secondary">
           <Title headingLevel="h1" size="2xl">
-            Usage Dashboard
+            {t('pages.usage.title')}
           </Title>
         </PageSection>
         <PageSection>
@@ -225,9 +225,9 @@ const UsagePage: React.FC = () => {
             <EmptyState variant={EmptyStateVariant.lg}>
               <Spinner size="xl" />
               <Title headingLevel="h2" size="lg">
-                Loading Usage Data...
+                {t('pages.usage.loadingTitle')}
               </Title>
-              <EmptyStateBody>Analyzing your API usage patterns and metrics</EmptyStateBody>
+              <EmptyStateBody>{t('pages.usage.loadingDescription')}</EmptyStateBody>
             </EmptyState>
           </Bullseye>
         </PageSection>
@@ -240,20 +240,18 @@ const UsagePage: React.FC = () => {
       <>
         <PageSection variant="secondary">
           <Title headingLevel="h1" size="2xl">
-            Usage Dashboard
+            {t('pages.usage.title')}
           </Title>
         </PageSection>
         <PageSection>
           <EmptyState variant={EmptyStateVariant.lg}>
             <ChartLineIcon />
             <Title headingLevel="h2" size="lg">
-              No usage data available
+              {t('pages.usage.noDataTitle')}
             </Title>
-            <EmptyStateBody>
-              Start making API requests to see your usage statistics here.
-            </EmptyStateBody>
+            <EmptyStateBody>{t('pages.usage.noDataDescription')}</EmptyStateBody>
             <EmptyStateActions>
-              <Button variant="primary">View API Documentation</Button>
+              <Button variant="primary">{t('pages.usage.viewApiDocs')}</Button>
             </EmptyStateActions>
           </EmptyState>
         </PageSection>
@@ -270,15 +268,13 @@ const UsagePage: React.FC = () => {
         >
           <FlexItem>
             <Title headingLevel="h1" size="2xl">
-              Usage Dashboard
+              {t('pages.usage.title')}
             </Title>
-            <Content component={ContentVariants.p}>
-              Monitor your API usage, costs, and performance metrics
-            </Content>
+            <Content component={ContentVariants.p}>{t('pages.usage.subtitle')}</Content>
           </FlexItem>
           <FlexItem>
             <Button variant="secondary" icon={<DownloadIcon />} onClick={handleExportData}>
-              Export Data
+              {t('pages.usage.exportData')}
             </Button>
           </FlexItem>
         </Flex>
@@ -301,20 +297,22 @@ const UsagePage: React.FC = () => {
                   <MenuToggle ref={toggleRef} onClick={() => setIsDateRangeOpen(!isDateRangeOpen)}>
                     <CalendarAltIcon />{' '}
                     {dateRange === '7d'
-                      ? 'Last 7 days'
+                      ? t('pages.usage.dateRanges.last7Days')
                       : dateRange === '30d'
-                        ? 'Last 30 days'
+                        ? t('pages.usage.dateRanges.last30Days')
                         : dateRange === '90d'
-                          ? 'Last 90 days'
-                          : 'Custom'}
+                          ? t('pages.usage.dateRanges.last90Days')
+                          : t('pages.usage.filters.custom')}
                   </MenuToggle>
                 )}
               >
                 <SelectList>
-                  <SelectOption value="7d">Last 7 days</SelectOption>
-                  <SelectOption value="30d">Last 30 days</SelectOption>
-                  <SelectOption value="90d">Last 90 days</SelectOption>
-                  <SelectOption value="custom">Custom range</SelectOption>
+                  <SelectOption value="7d">{t('pages.usage.dateRanges.last7Days')}</SelectOption>
+                  <SelectOption value="30d">{t('pages.usage.dateRanges.last30Days')}</SelectOption>
+                  <SelectOption value="90d">{t('pages.usage.dateRanges.last90Days')}</SelectOption>
+                  <SelectOption value="custom">
+                    {t('pages.usage.dateRanges.customRange')}
+                  </SelectOption>
                 </SelectList>
               </Select>
             </ToolbarItem>
@@ -333,20 +331,22 @@ const UsagePage: React.FC = () => {
                   <MenuToggle ref={toggleRef} onClick={() => setIsViewTypeOpen(!isViewTypeOpen)}>
                     <FilterIcon />{' '}
                     {viewType === 'overview'
-                      ? 'Overview'
+                      ? t('pages.usage.filters.overview')
                       : viewType === 'models'
-                        ? 'By Models'
+                        ? t('pages.usage.filters.byModels')
                         : viewType === 'time'
-                          ? 'Time Analysis'
-                          : 'Errors'}
+                          ? t('pages.usage.filters.timeAnalysis')
+                          : t('pages.usage.filters.errors')}
                   </MenuToggle>
                 )}
               >
                 <SelectList>
-                  <SelectOption value="overview">Overview</SelectOption>
-                  <SelectOption value="models">By Models</SelectOption>
-                  <SelectOption value="time">Time Analysis</SelectOption>
-                  <SelectOption value="errors">Error Analysis</SelectOption>
+                  <SelectOption value="overview">{t('pages.usage.filters.overview')}</SelectOption>
+                  <SelectOption value="models">{t('pages.usage.filters.byModels')}</SelectOption>
+                  <SelectOption value="time">{t('pages.usage.filters.timeAnalysis')}</SelectOption>
+                  <SelectOption value="errors">
+                    {t('pages.usage.filters.errorAnalysis')}
+                  </SelectOption>
                 </SelectList>
               </Select>
             </ToolbarItem>
@@ -369,7 +369,7 @@ const UsagePage: React.FC = () => {
                           component={ContentVariants.small}
                           style={{ color: 'var(--pf-v6-global--Color--200)' }}
                         >
-                          Total Requests
+                          {t('pages.usage.metrics.totalRequests')}
                         </Content>
                       </FlexItem>
                       <FlexItem>
@@ -405,7 +405,7 @@ const UsagePage: React.FC = () => {
                           component={ContentVariants.small}
                           style={{ color: 'var(--pf-v6-global--Color--200)' }}
                         >
-                          Total Tokens
+                          {t('pages.usage.metrics.totalTokens')}
                         </Content>
                       </FlexItem>
                       <FlexItem>
@@ -441,7 +441,7 @@ const UsagePage: React.FC = () => {
                           component={ContentVariants.small}
                           style={{ color: 'var(--pf-v6-global--Color--200)' }}
                         >
-                          Total Cost
+                          {t('pages.usage.metrics.totalCost')}
                         </Content>
                       </FlexItem>
                       <FlexItem>
@@ -477,7 +477,7 @@ const UsagePage: React.FC = () => {
                           component={ContentVariants.small}
                           style={{ color: 'var(--pf-v6-global--Color--200)' }}
                         >
-                          Avg Response Time
+                          {t('pages.usage.metrics.avgResponseTime')}
                         </Content>
                       </FlexItem>
                       <FlexItem>
@@ -508,11 +508,14 @@ const UsagePage: React.FC = () => {
                 <Card>
                   <CardTitle>
                     <Title headingLevel="h3" size="lg">
-                      Usage Trends
+                      {t('pages.usage.charts.usageTrends')}
                     </Title>
                   </CardTitle>
                   <CardBody>
-                    <MockLineChart data={metrics.dailyUsage} title="Daily Usage" />
+                    <MockLineChart
+                      data={metrics.dailyUsage}
+                      title={t('pages.usage.charts.dailyUsage')}
+                    />
                   </CardBody>
                 </Card>
               </GridItem>
@@ -521,7 +524,7 @@ const UsagePage: React.FC = () => {
                 <Card>
                   <CardTitle>
                     <Title headingLevel="h3" size="lg">
-                      Success Rate
+                      {t('pages.usage.metrics.successRate')}
                     </Title>
                   </CardTitle>
                   <CardBody>
@@ -552,7 +555,7 @@ const UsagePage: React.FC = () => {
                           style={{ color: 'var(--pf-v6-global--Color--200)' }}
                         >
                           {((metrics.totalRequests * metrics.successRate) / 100).toFixed(0)}{' '}
-                          successful requests
+                          {t('pages.usage.metrics.successfulRequests')}
                         </Content>
                       </FlexItem>
                     </Flex>
@@ -565,18 +568,18 @@ const UsagePage: React.FC = () => {
             <Card>
               <CardTitle>
                 <Title headingLevel="h3" size="lg">
-                  Top Models by Usage
+                  {t('pages.usage.charts.topModelsByUsage')}
                 </Title>
               </CardTitle>
               <CardBody>
-                <Table aria-label="Top models table" variant="compact">
+                <Table aria-label={t('pages.usage.tables.topModels')} variant="compact">
                   <Thead>
                     <Tr>
-                      <Th>Model</Th>
-                      <Th>Requests</Th>
-                      <Th>Tokens</Th>
-                      <Th>Cost</Th>
-                      <Th>Usage %</Th>
+                      <Th>{t('pages.usage.tableHeaders.model')}</Th>
+                      <Th>{t('pages.usage.tableHeaders.requests')}</Th>
+                      <Th>{t('pages.usage.tableHeaders.tokens')}</Th>
+                      <Th>{t('pages.usage.tableHeaders.cost')}</Th>
+                      <Th>{t('pages.usage.tableHeaders.usagePercent')}</Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -629,11 +632,14 @@ const UsagePage: React.FC = () => {
           <Card>
             <CardTitle>
               <Title headingLevel="h3" size="lg">
-                Usage by Model
+                {t('pages.usage.charts.usageByModel')}
               </Title>
             </CardTitle>
             <CardBody>
-              <MockDonutChart data={metrics.topModels} title="Model Usage Distribution" />
+              <MockDonutChart
+                data={metrics.topModels}
+                title={t('pages.usage.charts.modelUsageDistribution')}
+              />
             </CardBody>
           </Card>
         )}
@@ -642,11 +648,14 @@ const UsagePage: React.FC = () => {
           <Card>
             <CardTitle>
               <Title headingLevel="h3" size="lg">
-                Hourly Usage Pattern
+                {t('pages.usage.charts.hourlyUsagePattern')}
               </Title>
             </CardTitle>
             <CardBody>
-              <MockLineChart data={metrics.hourlyUsage} title="Hourly Requests" />
+              <MockLineChart
+                data={metrics.hourlyUsage}
+                title={t('pages.usage.charts.hourlyRequests')}
+              />
             </CardBody>
           </Card>
         )}
@@ -657,11 +666,14 @@ const UsagePage: React.FC = () => {
               <Card>
                 <CardTitle>
                   <Title headingLevel="h3" size="lg">
-                    Error Breakdown
+                    {t('pages.usage.charts.errorBreakdown')}
                   </Title>
                 </CardTitle>
                 <CardBody>
-                  <MockDonutChart data={metrics.errorBreakdown} title="Error Types" />
+                  <MockDonutChart
+                    data={metrics.errorBreakdown}
+                    title={t('pages.usage.charts.errorTypes')}
+                  />
                 </CardBody>
               </Card>
             </GridItem>
@@ -670,16 +682,16 @@ const UsagePage: React.FC = () => {
               <Card>
                 <CardTitle>
                   <Title headingLevel="h3" size="lg">
-                    Error Details
+                    {t('pages.usage.charts.errorDetails')}
                   </Title>
                 </CardTitle>
                 <CardBody>
-                  <Table aria-label="Error breakdown table" variant="compact">
+                  <Table aria-label={t('pages.usage.tables.errorBreakdown')} variant="compact">
                     <Thead>
                       <Tr>
-                        <Th>Error Type</Th>
-                        <Th>Count</Th>
-                        <Th>Percentage</Th>
+                        <Th>{t('pages.usage.tableHeaders.errorType')}</Th>
+                        <Th>{t('pages.usage.tableHeaders.count')}</Th>
+                        <Th>{t('pages.usage.tableHeaders.percentage')}</Th>
                       </Tr>
                     </Thead>
                     <Tbody>

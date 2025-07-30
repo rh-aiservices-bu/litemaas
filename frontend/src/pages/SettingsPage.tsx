@@ -31,35 +31,41 @@ const SettingsPage: React.FC = () => {
             <Card>
               <CardBody>
                 <Title headingLevel="h2" size="lg">
-                  User Preferences
+                  {t('pages.settings.userPreferences')}
                 </Title>
                 <Divider style={{ margin: '1rem 0' }} />
                 <Form>
-                  <FormGroup label="Display Name" fieldId="display-name">
+                  <FormGroup label={t('pages.settings.forms.displayName')} fieldId="display-name">
                     <TextInput
                       type="text"
                       id="display-name"
                       name="display-name"
-                      placeholder="Enter your display name"
+                      placeholder={t('pages.settings.forms.displayNamePlaceholder')}
                     />
                   </FormGroup>
-                  <FormGroup label="Email Notifications" fieldId="email-notifications">
+                  <FormGroup
+                    label={t('pages.settings.forms.emailNotifications')}
+                    fieldId="email-notifications"
+                  >
                     <Switch
                       id="email-notifications"
-                      label="Enabled"
+                      label={t('pages.settings.forms.enabled')}
                       isChecked={true}
                       onChange={() => {}}
                     />
                   </FormGroup>
-                  <FormGroup label="Auto-refresh Dashboard" fieldId="auto-refresh">
+                  <FormGroup
+                    label={t('pages.settings.forms.autoRefreshDashboard')}
+                    fieldId="auto-refresh"
+                  >
                     <Switch
                       id="auto-refresh"
-                      label="Enabled"
+                      label={t('pages.settings.forms.enabled')}
                       isChecked={false}
                       onChange={() => {}}
                     />
                   </FormGroup>
-                  <Button variant="primary">Save Preferences</Button>
+                  <Button variant="primary">{t('pages.settings.buttons.savePreferences')}</Button>
                 </Form>
               </CardBody>
             </Card>
@@ -68,21 +74,24 @@ const SettingsPage: React.FC = () => {
             <Card>
               <CardBody>
                 <Title headingLevel="h2" size="lg">
-                  API Configuration
+                  {t('pages.settings.apiConfiguration')}
                 </Title>
                 <Divider style={{ margin: '1rem 0' }} />
                 <Form>
-                  <FormGroup label="Default Model Provider" fieldId="model-provider">
+                  <FormGroup
+                    label={t('pages.settings.forms.defaultModelProvider')}
+                    fieldId="model-provider"
+                  >
                     <TextInput
                       type="text"
                       id="model-provider"
                       name="model-provider"
-                      placeholder="OpenAI, Anthropic, etc."
+                      placeholder={t('pages.settings.forms.providerPlaceholder')}
                       readOnly
-                      value="OpenShift AI"
+                      value={t('pages.settings.forms.openShiftAI')}
                     />
                   </FormGroup>
-                  <FormGroup label="Rate Limit (requests/minute)" fieldId="rate-limit">
+                  <FormGroup label={t('pages.settings.forms.rateLimitLabel')} fieldId="rate-limit">
                     <TextInput
                       type="number"
                       id="rate-limit"
@@ -91,10 +100,12 @@ const SettingsPage: React.FC = () => {
                       readOnly
                     />
                   </FormGroup>
-                  <FormGroup label="Timeout (seconds)" fieldId="timeout">
+                  <FormGroup label={t('pages.settings.forms.timeoutLabel')} fieldId="timeout">
                     <TextInput type="number" id="timeout" name="timeout" value="30" />
                   </FormGroup>
-                  <Button variant="primary">Update Configuration</Button>
+                  <Button variant="primary">
+                    {t('pages.settings.buttons.updateConfiguration')}
+                  </Button>
                 </Form>
               </CardBody>
             </Card>

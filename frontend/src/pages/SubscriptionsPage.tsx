@@ -47,6 +47,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { subscriptionsService, Subscription } from '../services/subscriptions.service';
 
 const SubscriptionsPage: React.FC = () => {
+  const { t } = useTranslation();
   const { addNotification } = useNotifications();
   const navigate = useNavigate();
 
@@ -66,8 +67,8 @@ const SubscriptionsPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to load subscriptions:', err);
       addNotification({
-        title: 'Error',
-        description: 'Failed to load subscriptions from the server.',
+        title: t('pages.subscriptions.notifications.loadError'),
+        description: t('pages.subscriptions.notifications.loadErrorDesc'),
         variant: 'danger',
       });
     } finally {
@@ -145,7 +146,7 @@ const SubscriptionsPage: React.FC = () => {
 
       // If successful, show success notification and reload subscriptions
       addNotification({
-        title: 'Subscription Cancelled',
+        title: t('pages.subscriptions.notifications.cancelSuccess'),
         description: `${subscription.modelName} subscription has been cancelled and removed from your account.`,
         variant: 'success',
       });
@@ -157,18 +158,16 @@ const SubscriptionsPage: React.FC = () => {
       // Handle API key validation error specifically
       if (error.statusCode === 400 || error.status === 400) {
         addNotification({
-          title: 'Cannot Cancel Subscription',
-          description:
-            error.message ||
-            'There are active API keys linked to this subscription. Please delete all API keys first, then cancel the subscription.',
+          title: t('pages.subscriptions.notifications.cannotCancel'),
+          description: error.message || t('pages.subscriptions.notifications.cannotCancelDesc'),
           variant: 'warning',
         });
       } else {
         // Handle other errors
         console.error('Failed to cancel subscription:', error);
         addNotification({
-          title: 'Error',
-          description: error.message || 'Failed to cancel subscription. Please try again.',
+          title: t('pages.subscriptions.notifications.cancelError'),
+          description: error.message || t('pages.subscriptions.notifications.cancelErrorDesc'),
           variant: 'danger',
         });
       }
@@ -182,7 +181,7 @@ const SubscriptionsPage: React.FC = () => {
       <>
         <PageSection variant="secondary">
           <Title headingLevel="h1" size="2xl">
-            My Subscriptions
+            {t('pages.subscriptions.title')}
           </Title>
         </PageSection>
         <PageSection>
@@ -239,7 +238,7 @@ const SubscriptionsPage: React.FC = () => {
                 icon={<PlusCircleIcon />}
                 onClick={() => navigate('/models')}
               >
-                Browse Models
+                {t('ui.actions.browse')}
               </Button>
             </EmptyStateActions>
           </EmptyState>
@@ -477,7 +476,7 @@ const SubscriptionsPage: React.FC = () => {
               {selectedSubscription.status === 'suspended' && (
                 <Alert
                   variant="warning"
-                  title="Subscription Suspended"
+                  title={t('pages.subscriptions.alerts.suspended')}
                   style={{ marginTop: '1rem' }}
                 >
                   Your subscription has been suspended. Contact support or check your account
@@ -486,7 +485,11 @@ const SubscriptionsPage: React.FC = () => {
               )}
 
               {selectedSubscription.status === 'expired' && (
-                <Alert variant="danger" title="Subscription Expired" style={{ marginTop: '1rem' }}>
+                <Alert
+                  variant="danger"
+                  title={t('pages.subscriptions.alerts.expired')}
+                  style={{ marginTop: '1rem' }}
+                >
                   Your subscription expired on{' '}
                   {selectedSubscription.expiresAt &&
                     new Date(selectedSubscription.expiresAt).toLocaleDateString()}
@@ -510,7 +513,9 @@ const SubscriptionsPage: React.FC = () => {
               isDisabled={selectedSubscription?.status === 'expired' || isCancelling}
               isLoading={isCancelling}
             >
-              {isCancelling ? 'Cancelling...' : 'Cancel Subscription'}
+              {isCancelling
+                ? t('pages.subscriptions.cancelling')
+                : t('pages.subscriptions.cancelSubscription')}
             </Button>
             <Button variant="link" onClick={() => setIsDetailsModalOpen(false)}>
               Close

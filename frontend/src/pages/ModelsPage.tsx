@@ -90,10 +90,10 @@ const ModelsPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to load models:', err);
-      setError('Failed to load models. Please try again.');
+      setError(t('pages.models.notifications.loadFailed'));
       addNotification({
-        title: 'Error',
-        description: 'Failed to load models from the server.',
+        title: t('pages.models.notifications.loadError'),
+        description: t('pages.models.notifications.loadErrorDesc'),
         variant: 'danger',
       });
     } finally {
@@ -146,8 +146,10 @@ const ModelsPage: React.FC = () => {
 
       addNotification({
         variant: 'success',
-        title: 'Successfully subscribed!',
-        description: `You now have access to ${selectedModel!.name}. You can generate API keys from the Subscriptions page.`,
+        title: t('pages.models.notifications.subscribeSuccess'),
+        description: t('pages.models.notifications.subscribeSuccessDesc', {
+          modelName: selectedModel!.name,
+        }),
       });
 
       setIsModalOpen(false);
@@ -155,15 +157,15 @@ const ModelsPage: React.FC = () => {
       // Refresh subscriptions to show new one
       queryClient.invalidateQueries('subscriptions');
     } catch (error: any) {
-      let errorMessage = 'Failed to subscribe to model';
+      let errorMessage = t('pages.models.notifications.failedToSubscribe');
 
       if (error.message?.includes('already subscribed') || error.status === 409) {
-        errorMessage = 'You are already subscribed to this model';
+        errorMessage = t('pages.models.notifications.alreadySubscribed');
       }
 
       addNotification({
         variant: 'danger',
-        title: 'Subscription failed',
+        title: t('pages.models.notifications.subscribeFailed'),
         description: errorMessage,
       });
     } finally {
@@ -225,7 +227,7 @@ const ModelsPage: React.FC = () => {
           <ToolbarContent>
             <ToolbarItem>
               <SearchInput
-                placeholder="Search models..."
+                placeholder={t('pages.models.searchPlaceholder')}
                 value={searchValue}
                 onChange={(_event, value) => setSearchValue(value)}
                 onClear={() => setSearchValue('')}
@@ -248,14 +250,17 @@ const ModelsPage: React.FC = () => {
                     ref={toggleRef}
                     onClick={() => setIsProviderSelectOpen(!isProviderSelectOpen)}
                   >
-                    <FilterIcon /> {selectedProvider === 'all' ? 'All Providers' : selectedProvider}
+                    <FilterIcon />{' '}
+                    {selectedProvider === 'all'
+                      ? t('pages.models.filters.allProviders')
+                      : selectedProvider}
                   </MenuToggle>
                 )}
               >
                 <SelectList>
                   {providers.map((provider) => (
                     <SelectOption key={provider} value={provider}>
-                      {provider === 'all' ? 'All Providers' : provider}
+                      {provider === 'all' ? t('pages.models.filters.allProviders') : provider}
                     </SelectOption>
                   ))}
                 </SelectList>
@@ -278,14 +283,16 @@ const ModelsPage: React.FC = () => {
                     onClick={() => setIsCategorySelectOpen(!isCategorySelectOpen)}
                   >
                     <FilterIcon />{' '}
-                    {selectedCategory === 'all' ? 'All Categories' : selectedCategory}
+                    {selectedCategory === 'all'
+                      ? t('pages.models.filters.allCategories')
+                      : selectedCategory}
                   </MenuToggle>
                 )}
               >
                 <SelectList>
                   {categories.map((category) => (
                     <SelectOption key={category} value={category}>
-                      {category === 'all' ? 'All Categories' : category}
+                      {category === 'all' ? t('pages.models.filters.allCategories') : category}
                     </SelectOption>
                   ))}
                 </SelectList>
@@ -312,12 +319,12 @@ const ModelsPage: React.FC = () => {
           <EmptyState variant={EmptyStateVariant.lg}>
             <CatalogIcon />
             <Title headingLevel="h2" size="lg">
-              Error loading models
+              {t('pages.models.notifications.loadError')}
             </Title>
             <EmptyStateBody>{error}</EmptyStateBody>
             <EmptyStateActions>
               <Button variant="primary" onClick={() => loadModels(true)}>
-                Retry
+                {t('ui.actions.tryAgain')}
               </Button>
             </EmptyStateActions>
           </EmptyState>
@@ -325,7 +332,7 @@ const ModelsPage: React.FC = () => {
           <EmptyState variant={EmptyStateVariant.lg}>
             <CatalogIcon />
             <Title headingLevel="h2" size="lg">
-              No models found
+              {t('pages.models.noModels')}
             </Title>
             <EmptyStateBody>
               Try adjusting your search criteria or filters to find models.
@@ -575,7 +582,7 @@ const ModelsPage: React.FC = () => {
               isLoading={isSubscribing}
               isDisabled={isSubscribing || selectedModel?.availability === 'unavailable'}
             >
-              {isSubscribing ? 'Creating subscription...' : 'Subscribe'}
+              {isSubscribing ? t('pages.models.subscribing') : t('pages.models.subscribe')}
             </Button>
             <Button variant="link" onClick={() => setIsModalOpen(false)}>
               Close

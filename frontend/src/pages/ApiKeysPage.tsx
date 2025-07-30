@@ -97,10 +97,10 @@ const ApiKeysPage: React.FC = () => {
       setApiKeys(response.data);
     } catch (err) {
       console.error('Failed to load API keys:', err);
-      setError('Failed to load API keys. Please try again.');
+      setError(t('pages.apiKeys.notifications.loadErrorDesc'));
       addNotification({
-        title: 'Error',
-        description: 'Failed to load API keys from the server.',
+        title: t('pages.apiKeys.notifications.loadError'),
+        description: t('pages.apiKeys.notifications.loadErrorDesc'),
         variant: 'danger',
       });
     } finally {
@@ -147,8 +147,8 @@ const ApiKeysPage: React.FC = () => {
     } catch (err) {
       console.error('Failed to load subscribed models:', err);
       addNotification({
-        title: 'Error',
-        description: 'Failed to load your subscribed models.',
+        title: t('pages.apiKeys.notifications.loadModelError'),
+        description: t('pages.apiKeys.notifications.loadModelErrorDesc'),
         variant: 'danger',
       });
     } finally {
@@ -198,8 +198,8 @@ const ApiKeysPage: React.FC = () => {
   const handleSaveApiKey = async () => {
     if (!newKeyName.trim()) {
       addNotification({
-        title: 'Validation Error',
-        description: 'API key name is required',
+        title: t('pages.apiKeys.notifications.validationError'),
+        description: t('pages.apiKeys.notifications.nameRequired'),
         variant: 'danger',
       });
       return;
@@ -208,8 +208,8 @@ const ApiKeysPage: React.FC = () => {
     // ✅ Validate model selection
     if (selectedModelIds.length === 0) {
       addNotification({
-        title: 'Validation Error',
-        description: 'Please select at least one model from your active subscriptions',
+        title: t('pages.apiKeys.notifications.validationError'),
+        description: t('pages.apiKeys.notifications.modelsRequired'),
         variant: 'danger',
       });
       return;
@@ -243,15 +243,15 @@ const ApiKeysPage: React.FC = () => {
       setIsCreateModalOpen(false);
 
       addNotification({
-        title: 'API Key Created',
+        title: t('pages.apiKeys.notifications.createSuccess'),
         description: `${newKeyName} has been created successfully`,
         variant: 'success',
       });
     } catch (err) {
       console.error('Failed to create API key:', err);
       addNotification({
-        title: 'Error',
-        description: 'Failed to create API key. Please try again.',
+        title: t('pages.apiKeys.notifications.createError'),
+        description: t('pages.apiKeys.notifications.createErrorDesc'),
         variant: 'danger',
       });
     } finally {
@@ -279,15 +279,15 @@ const ApiKeysPage: React.FC = () => {
       await loadApiKeys();
 
       addNotification({
-        title: 'API Key Deleted',
+        title: t('pages.apiKeys.notifications.deleteSuccess'),
         description: `${keyToDelete.name} has been deleted`,
         variant: 'success',
       });
     } catch (err) {
       console.error('Failed to delete API key:', err);
       addNotification({
-        title: 'Error',
-        description: 'Failed to delete API key. Please try again.',
+        title: t('pages.apiKeys.notifications.deleteError'),
+        description: t('pages.apiKeys.notifications.deleteErrorDesc'),
         variant: 'danger',
       });
     } finally {
@@ -320,14 +320,17 @@ const ApiKeysPage: React.FC = () => {
         setVisibleKeys(newVisibleKeys);
 
         addNotification({
-          title: 'API Key Retrieved',
+          title: t('pages.apiKeys.notifications.retrieveSuccess'),
           description: `Your LiteLLM API key has been retrieved securely. Retrieved at: ${new Date(keyData.retrievedAt).toLocaleString()}`,
           variant: 'success',
         });
       } catch (error) {
         addNotification({
-          title: 'Error Retrieving API Key',
-          description: error instanceof Error ? error.message : 'Failed to retrieve API key',
+          title: t('pages.apiKeys.notifications.retrieveError'),
+          description:
+            error instanceof Error
+              ? error.message
+              : t('pages.apiKeys.notifications.retrieveErrorDesc'),
           variant: 'danger',
         });
       }
@@ -337,7 +340,7 @@ const ApiKeysPage: React.FC = () => {
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
     addNotification({
-      title: 'Copied!',
+      title: t('pages.apiKeys.copied'),
       description: `${label} copied to clipboard`,
       variant: 'info',
     });
@@ -392,7 +395,7 @@ const ApiKeysPage: React.FC = () => {
           </FlexItem>
           <FlexItem>
             <Button variant="primary" icon={<PlusCircleIcon />} onClick={handleCreateApiKey}>
-              Create API Key
+              {t('pages.apiKeys.createKey')}
             </Button>
           </FlexItem>
         </Flex>
@@ -408,7 +411,7 @@ const ApiKeysPage: React.FC = () => {
             <EmptyStateBody>{error}</EmptyStateBody>
             <EmptyStateActions>
               <Button variant="primary" onClick={loadApiKeys}>
-                Retry
+                {t('ui.actions.tryAgain')}
               </Button>
             </EmptyStateActions>
           </EmptyState>
@@ -423,19 +426,19 @@ const ApiKeysPage: React.FC = () => {
             </EmptyStateBody>
             <EmptyStateActions>
               <Button variant="primary" icon={<PlusCircleIcon />} onClick={handleCreateApiKey}>
-                Create API Key
+                {t('pages.apiKeys.createKey')}
               </Button>
             </EmptyStateActions>
           </EmptyState>
         ) : (
           <Card>
             <CardBody>
-              <Table aria-label="API Keys Table" variant="compact">
+              <Table aria-label={t('pages.apiKeys.tableHeaders.apiKeysTable')} variant="compact">
                 <Thead>
                   <Tr>
-                    <Th>Name</Th>
-                    <Th>Key</Th>
-                    <Th>Models</Th>
+                    <Th>{t('pages.apiKeys.forms.name')}</Th>
+                    <Th>{t('pages.apiKeys.forms.apiKey')}</Th>
+                    <Th>{t('pages.apiKeys.forms.models')}</Th>
                     <Th>Last Used</Th>
                     <Th>Actions</Th>
                   </Tr>
@@ -473,7 +476,13 @@ const ApiKeysPage: React.FC = () => {
                             </code>
                           </FlexItem>
                           <FlexItem>
-                            <Tooltip content={visibleKeys.has(apiKey.id) ? 'Hide key' : 'Show key'}>
+                            <Tooltip
+                              content={
+                                visibleKeys.has(apiKey.id)
+                                  ? t('pages.apiKeys.hideKey')
+                                  : t('pages.apiKeys.showKey')
+                              }
+                            >
                               <Button
                                 variant="plain"
                                 size="sm"
@@ -483,7 +492,7 @@ const ApiKeysPage: React.FC = () => {
                             </Tooltip>
                           </FlexItem>
                           <FlexItem>
-                            <Tooltip content="Copy to clipboard">
+                            <Tooltip content={t('pages.apiKeys.copyToClipboard')}>
                               <Button
                                 variant="plain"
                                 size="sm"
@@ -512,7 +521,7 @@ const ApiKeysPage: React.FC = () => {
                               component={ContentVariants.small}
                               style={{ color: 'var(--pf-v6-global--Color--200)' }}
                             >
-                              No models
+                              {t('pages.apiKeys.noModelsAssigned')}
                             </Content>
                           )}
                           {apiKey.models && apiKey.models.length > 2 && (
@@ -524,7 +533,7 @@ const ApiKeysPage: React.FC = () => {
                         <Content component={ContentVariants.small}>
                           {apiKey.lastUsed
                             ? new Date(apiKey.lastUsed).toLocaleDateString()
-                            : 'Never'}
+                            : t('pages.apiKeys.never')}
                         </Content>
                       </Td>
                       <Td>
@@ -535,7 +544,7 @@ const ApiKeysPage: React.FC = () => {
                               size="sm"
                               onClick={() => handleViewKey(apiKey)}
                             >
-                              View
+                              {t('pages.apiKeys.viewKey')}
                             </Button>
                           </FlexItem>
                           <FlexItem>
@@ -546,7 +555,7 @@ const ApiKeysPage: React.FC = () => {
                               isDisabled={apiKey.status !== 'active'}
                               icon={<TrashIcon />}
                             >
-                              Delete
+                              {t('pages.apiKeys.deleteKey')}
                             </Button>
                           </FlexItem>
                         </Flex>
@@ -563,13 +572,13 @@ const ApiKeysPage: React.FC = () => {
       {/* Create API Key Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title="Create API Key"
+        title={t('pages.apiKeys.modals.createTitle')}
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
       >
         <ModalBody>
           <Form>
-            <FormGroup label="Name" isRequired fieldId="key-name">
+            <FormGroup label={t('pages.apiKeys.forms.name')} isRequired fieldId="key-name">
               <TextInput
                 isRequired
                 type="text"
@@ -580,7 +589,7 @@ const ApiKeysPage: React.FC = () => {
               />
             </FormGroup>
 
-            <FormGroup label="Description" fieldId="key-description">
+            <FormGroup label={t('pages.apiKeys.forms.description')} fieldId="key-description">
               <TextInput
                 type="text"
                 id="key-description"
@@ -591,7 +600,7 @@ const ApiKeysPage: React.FC = () => {
             </FormGroup>
 
             {/* ✅ Multi-model selection */}
-            <FormGroup label="Models" isRequired fieldId="key-models">
+            <FormGroup label={t('pages.apiKeys.forms.models')} isRequired fieldId="key-models">
               <Select
                 id="key-models"
                 isOpen={isModelSelectOpen}
@@ -614,7 +623,7 @@ const ApiKeysPage: React.FC = () => {
                     isFullWidth
                   >
                     {selectedModelIds.length === 0
-                      ? 'Select models...'
+                      ? t('pages.apiKeys.selectModels')
                       : `${selectedModelIds.length} model(s) selected`}
                   </MenuToggle>
                 )}
@@ -683,13 +692,13 @@ const ApiKeysPage: React.FC = () => {
               </FormSelect>
             </FormGroup>
 
-            <FormGroup label="Expiration" fieldId="key-expiration">
+            <FormGroup label={t('pages.apiKeys.forms.expiration')} fieldId="key-expiration">
               <FormSelect
                 value={newKeyExpiration}
                 onChange={(_event, value) => setNewKeyExpiration(value)}
                 id="key-expiration"
               >
-                <FormSelectOption value="never" label="Never expires" />
+                <FormSelectOption value="never" label={t('pages.apiKeys.neverExpires')} />
                 <FormSelectOption value="30" label="30 days" />
                 <FormSelectOption value="90" label="90 days" />
                 <FormSelectOption value="365" label="1 year" />
@@ -706,7 +715,7 @@ const ApiKeysPage: React.FC = () => {
             }}
           >
             <Button variant="primary" onClick={handleSaveApiKey} isLoading={creatingKey}>
-              {creatingKey ? 'Creating...' : 'Create API Key'}
+              {creatingKey ? t('pages.apiKeys.creating') : t('pages.apiKeys.createKey')}
             </Button>
             <Button variant="link" onClick={() => setIsCreateModalOpen(false)}>
               Cancel
@@ -744,7 +753,7 @@ const ApiKeysPage: React.FC = () => {
         <ModalBody>
           {selectedApiKey && (
             <>
-              <FormGroup label="API Key" fieldId="view-key">
+              <FormGroup label={t('pages.apiKeys.forms.apiKey')} fieldId="view-key">
                 <Flex
                   alignItems={{ default: 'alignItemsCenter' }}
                   spaceItems={{ default: 'spaceItemsSm' }}
@@ -768,7 +777,13 @@ const ApiKeysPage: React.FC = () => {
                     </code>
                   </FlexItem>
                   <FlexItem>
-                    <Tooltip content={visibleKeys.has(selectedApiKey.id) ? 'Hide key' : 'Show key'}>
+                    <Tooltip
+                      content={
+                        visibleKeys.has(selectedApiKey.id)
+                          ? t('pages.apiKeys.hideKey')
+                          : t('pages.apiKeys.showKey')
+                      }
+                    >
                       <Button
                         variant="plain"
                         size="sm"
@@ -778,7 +793,7 @@ const ApiKeysPage: React.FC = () => {
                     </Tooltip>
                   </FlexItem>
                   <FlexItem>
-                    <Tooltip content="Copy to clipboard">
+                    <Tooltip content={t('pages.apiKeys.copyToClipboard')}>
                       <Button
                         variant="plain"
                         size="sm"
@@ -791,7 +806,11 @@ const ApiKeysPage: React.FC = () => {
               </FormGroup>
 
               {!visibleKeys.has(selectedApiKey.id) && (
-                <Alert variant="info" title="Secure Key Retrieval" style={{ marginTop: '1rem' }}>
+                <Alert
+                  variant="info"
+                  title={t('pages.apiKeys.modals.secureRetrieval')}
+                  style={{ marginTop: '1rem' }}
+                >
                   Click the eye icon above to securely retrieve your full LiteLLM API key. For
                   security reasons, this requires recent authentication and is rate-limited. All key
                   retrievals are logged for audit purposes.
@@ -799,11 +818,11 @@ const ApiKeysPage: React.FC = () => {
               )}
 
               <div style={{ marginTop: '1rem' }}>
-                <Table aria-label="Key details" variant="compact">
+                <Table aria-label={t('pages.apiKeys.tableHeaders.keyDetails')} variant="compact">
                   <Tbody>
                     <Tr>
                       <Td>
-                        <strong>Models</strong>
+                        <strong>{t('pages.apiKeys.forms.models')}</strong>
                       </Td>
                       <Td>
                         {selectedApiKey.models && selectedApiKey.models.length > 0 ? (
@@ -822,7 +841,7 @@ const ApiKeysPage: React.FC = () => {
                             })}
                           </LabelGroup>
                         ) : (
-                          'No models assigned'
+                          t('pages.apiKeys.noModelsAssigned')
                         )}
                       </Td>
                     </Tr>
@@ -893,13 +912,21 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
               </div>
 
               {selectedApiKey.status === 'revoked' && (
-                <Alert variant="warning" title="Key Revoked" style={{ marginTop: '1rem' }}>
+                <Alert
+                  variant="warning"
+                  title={t('pages.apiKeys.modals.keyRevoked')}
+                  style={{ marginTop: '1rem' }}
+                >
                   This API key has been revoked and can no longer be used.
                 </Alert>
               )}
 
               {selectedApiKey.status === 'expired' && (
-                <Alert variant="danger" title="Key Expired" style={{ marginTop: '1rem' }}>
+                <Alert
+                  variant="danger"
+                  title={t('pages.apiKeys.modals.keyExpired')}
+                  style={{ marginTop: '1rem' }}
+                >
                   This API key has expired on{' '}
                   {selectedApiKey.expiresAt &&
                     new Date(selectedApiKey.expiresAt).toLocaleDateString()}
@@ -927,18 +954,22 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
       {/* Generated Key Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title="API Key Created Successfully"
+        title={t('pages.apiKeys.modals.createdTitle')}
         isOpen={showGeneratedKey}
         onClose={() => setShowGeneratedKey(false)}
       >
         <ModalBody>
           {generatedKey && (
             <>
-              <Alert variant="success" title="Success!" style={{ marginBottom: '1rem' }}>
+              <Alert
+                variant="success"
+                title={t('pages.apiKeys.modals.success')}
+                style={{ marginBottom: '1rem' }}
+              >
                 Your API key has been created successfully.
               </Alert>
 
-              <FormGroup label="Your new API key" fieldId="generated-key">
+              <FormGroup label={t('pages.apiKeys.forms.yourNewApiKey')} fieldId="generated-key">
                 <ClipboardCopy
                   hoverTip="Copy"
                   clickTip="Copied"
@@ -951,7 +982,10 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
 
               <div style={{ marginTop: '1rem' }}>
                 <Content component={ContentVariants.h3}>Key Details</Content>
-                <Table aria-label="Generated key details" variant="compact">
+                <Table
+                  aria-label={t('pages.apiKeys.tableHeaders.generatedKeyDetails')}
+                  variant="compact"
+                >
                   <Tbody>
                     <Tr>
                       <Td>
@@ -961,7 +995,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                     </Tr>
                     <Tr>
                       <Td>
-                        <strong>Models</strong>
+                        <strong>{t('pages.apiKeys.forms.models')}</strong>
                       </Td>
                       <Td>
                         {generatedKey.models && generatedKey.models.length > 0 ? (
@@ -978,7 +1012,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                             })}
                           </LabelGroup>
                         ) : (
-                          'No models assigned'
+                          t('pages.apiKeys.noModelsAssigned')
                         )}
                       </Td>
                     </Tr>
@@ -1020,7 +1054,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
       {/* Delete Confirmation Modal */}
       <Modal
         variant={ModalVariant.small}
-        title="Delete API Key"
+        title={t('pages.apiKeys.modals.deleteTitle')}
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
       >
@@ -1042,7 +1076,11 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                 </FlexItem>
               </Flex>
 
-              <Alert variant="danger" title="Warning" style={{ marginBottom: '1rem' }}>
+              <Alert
+                variant="danger"
+                title={t('pages.apiKeys.modals.warning')}
+                style={{ marginBottom: '1rem' }}
+              >
                 This action cannot be undone. The API key will be permanently removed and
                 applications using this key will lose access immediately.
               </Alert>
@@ -1058,7 +1096,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
             }}
           >
             <Button variant="danger" onClick={confirmDeleteKey}>
-              Delete Key
+              {t('pages.apiKeys.deleteKey')}
             </Button>
             <Button variant="link" onClick={() => setIsDeleteModalOpen(false)}>
               Cancel
