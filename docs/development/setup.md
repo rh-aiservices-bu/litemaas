@@ -48,9 +48,11 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/litemaas_dev
 JWT_SECRET=development-secret-key-change-in-production
 
 # OAuth (for development)
-OAUTH_CLIENT_ID=dev-client
+OAUTH_CLIENT_ID=litemaas
 OAUTH_CLIENT_SECRET=dev-secret
-OAUTH_ISSUER=http://localhost:8080
+OAUTH_ISSUER=https://oauth-openshift.apps.your-cluster.com
+OAUTH_CALLBACK_URL=http://localhost:8080/api/auth/callback
+OAUTH_MOCK_ENABLED=true  # Use mock OAuth in development
 
 # Development mode
 NODE_ENV=development
@@ -163,6 +165,51 @@ Recommended extensions for the best development experience:
 - pgAdmin: Web-based PostgreSQL admin
 - TablePlus: Native PostgreSQL client
 - DBeaver: Universal database tool
+
+## Authentication in Development
+
+### Mock OAuth Mode
+By default, development uses mock OAuth to avoid needing a real OpenShift cluster:
+
+1. **Mock Users**: Three pre-configured test users are available:
+   - Admin: `admin@example.com` (admin role)
+   - User: `user@example.com` (user role)
+   - ReadOnly: `readonly@example.com` (readonly role)
+
+2. **Using Mock OAuth**:
+   - Click "Login with OpenShift" on the login page
+   - Select a mock user from the list
+   - You'll be automatically logged in with that user's permissions
+
+### Real OpenShift OAuth
+To test with a real OpenShift cluster:
+
+1. **Create OAuth Client** in OpenShift:
+   ```bash
+   oc create -f - <<EOF
+   apiVersion: oauth.openshift.io/v1
+   kind: OAuthClient
+   metadata:
+     name: litemaas
+   secret: your-secret-here
+   redirectURIs:
+   - http://localhost:8080/api/auth/callback
+   grantMethod: prompt
+   EOF
+   ```
+
+2. **Update Environment**:
+   ```env
+   OAUTH_MOCK_ENABLED=false
+   OAUTH_CLIENT_ID=litemaas
+   OAUTH_CLIENT_SECRET=your-secret-here
+   OAUTH_ISSUER=https://oauth-openshift.apps.your-cluster.com
+   ```
+
+3. **Test Login**:
+   - Click "Login with OpenShift"
+   - You'll be redirected to OpenShift login
+   - After authentication, you'll return to LiteMaaS
 
 ## Common Development Tasks
 

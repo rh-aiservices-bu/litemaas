@@ -7,6 +7,12 @@
 > - Deployment Guide: `docs/deployment/`
 > - Configuration: `docs/deployment/configuration.md`
 
+**Last Updated**: 2025-01-30
+- OAuth endpoints reorganized: `/api/auth` for flow, `/api/v1/auth` for user operations
+- Fixed OpenShift OAuth integration with proper API server endpoints
+- Enhanced user creation flow with Default Team assignment
+- Improved error handling and schema validation
+
 ## 🚀 Project Overview
 
 **LiteMaaS** is a model subscription and management platform that bridges users and AI model services through LiteLLM integration.
@@ -82,10 +88,12 @@ litemaas/
 > Added `api_key_models` junction table for multi-model API key support
 > Added Default Team (`a0000000-0000-4000-8000-000000000001`) for reliable user existence detection
 
-### API Routes
-Auth, user management, model registry, subscriptions, API keys, teams, LiteLLM integration, usage analytics
+### API Routes Structure
+- **OAuth Flow** (`/api/auth/*`): login, callback, logout - unversioned for provider compatibility
+- **User Profile** (`/api/v1/auth/*`): me, profile - versioned API endpoints
+- **Business API** (`/api/v1/*`): models, subscriptions, api-keys, teams, usage - all versioned
 
-*See `docs/api/` for detailed endpoint documentation*
+*See `docs/api/rest-api.md` for complete endpoint documentation*
 
 ## 🎨 Frontend
 - React Context API for state (Auth, Notifications)
@@ -109,7 +117,7 @@ npm run dev        # Start both backend and frontend
 
 ## 🔒 Security & Performance
 
-- **Auth**: OAuth2 (OpenShift) + JWT + API keys
+- **Auth**: OAuth2 (OpenShift) + JWT + API keys + Development mock mode
 - **Security**: Rate limiting, CORS, CSP, encrypted storage
 - **Performance**: <200ms API response, <3s frontend load
 - **i18n**: EN, ES, FR via react-i18next

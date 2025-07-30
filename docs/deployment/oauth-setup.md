@@ -1,5 +1,11 @@
 # OpenShift OAuth Integration
 
+**Updated**: 2025-01-30
+- Fixed OAuth callback to use correct OpenShift API endpoints
+- Added proper user info retrieval from OpenShift API server
+- Implemented Default Team assignment for all users
+- Enhanced error handling and logging
+
 ## Overview
 OpenShift provides OAuth 2.0 authentication through its built-in OAuth server. This document outlines the integration approach for LiteMaaS.
 
@@ -11,9 +17,11 @@ User → Frontend → OAuth Authorize → OpenShift → Callback → Backend →
 ```
 
 ### 2. Key Endpoints
-- **Authorization**: `https://{openshift-cluster}/oauth/authorize`
-- **Token**: `https://{openshift-cluster}/oauth/token`
-- **User Info**: `https://{openshift-cluster}/apis/user.openshift.io/v1/users/~`
+- **OAuth Server**: `https://oauth-openshift.apps.{cluster-domain}`
+  - Authorization: `/oauth/authorize`
+  - Token: `/oauth/token`
+- **API Server**: `https://api.{cluster-domain}:6443`
+  - User Info: `/apis/user.openshift.io/v1/users/~`
 
 ### 3. Required Parameters
 - `client_id`: OAuth application client ID
@@ -56,14 +64,13 @@ User → Frontend → OAuth Authorize → OpenShift → Callback → Backend →
 ### Environment Variables
 ```bash
 # OAuth Configuration
-OAUTH_CLIENT_ID=litemaas-client
-OAUTH_CLIENT_SECRET=super-secret-key
-OAUTH_ISSUER=https://api.cluster.example.com:6443
+OAUTH_CLIENT_ID=litemaas
+OAUTH_CLIENT_SECRET=your-secret-here
+OAUTH_ISSUER=https://oauth-openshift.apps.your-cluster.com
 OAUTH_CALLBACK_URL=http://localhost:8080/api/auth/callback
 
 # Development Mock
-OAUTH_MOCK_ENABLED=true
-OAUTH_MOCK_USERS=admin,user,readonly
+OAUTH_MOCK_ENABLED=true  # Set to false for production
 ```
 
 ### OAuth Client Registration
@@ -71,12 +78,12 @@ OAUTH_MOCK_USERS=admin,user,readonly
 apiVersion: oauth.openshift.io/v1
 kind: OAuthClient
 metadata:
-  name: litemaas-client
-secret: super-secret-key
+  name: litemaas
+secret: your-secret-here
 redirectURIs:
-- http://localhost:8080/api/auth/callback
-- https://litemaas.apps.cluster.example.com/api/auth/callback
-grantMethod: auto
+- http://localhost:8080/api/auth/callback              # Development
+- https://litemaas.apps.your-cluster.com/api/auth/callback  # Production
+grantMethod: prompt  # or 'auto' for automatic approval
 ```
 
 ## User Information Structure

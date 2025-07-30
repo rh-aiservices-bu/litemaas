@@ -4,6 +4,12 @@
 
 LiteMaaS implements a multi-layered authentication system that supports different access methods based on use case and environment. The system is designed to be secure in production while remaining developer-friendly during local development.
 
+**Updated**: 2025-01-30
+- OAuth endpoints reorganized: `/api/auth` for flow, `/api/v1/auth` for user operations
+- Fixed user profile schema issues
+- Enhanced OAuth integration with OpenShift
+- Improved error handling and user creation flow
+
 ## Authentication Methods
 
 ### 1. JWT Tokens (Frontend Sessions)
@@ -53,8 +59,8 @@ JWT_EXPIRES_IN=24h
 # OAuth2 (OpenShift SSO)
 OAUTH_CLIENT_ID=your-client-id
 OAUTH_CLIENT_SECRET=your-client-secret
-OAUTH_ISSUER_URL=https://your-openshift-instance
-OAUTH_REDIRECT_URI=http://localhost:8080/api/auth/callback
+OAUTH_ISSUER=https://oauth-openshift.apps.your-cluster.com
+OAUTH_CALLBACK_URL=http://localhost:8080/api/auth/callback
 
 # Admin API Keys (comma-separated)
 ADMIN_API_KEYS=ltm_admin_dev123456789,ltm_admin_test987654321
@@ -89,16 +95,31 @@ CORS_ORIGIN=https://your-production-domain
 ### 3. OAuth2/OpenShift SSO Setup
 
 1. Register application in OpenShift:
-   - Redirect URI: `<your-domain>/api/auth/callback`
-   - Grant Type: Authorization Code
-   - Scopes: openid, profile, email
+   ```yaml
+   kind: OAuthClient
+   apiVersion: oauth.openshift.io/v1
+   metadata:
+     name: litemaas
+   secret: your-client-secret-here
+   redirectURIs:
+     - "http://localhost:8080/api/auth/callback"  # Development
+     - "https://your-domain/api/auth/callback"    # Production
+   grantMethod: prompt
+   ```
 
-2. Configure environment variables with provided credentials
+2. Configure environment variables with provided credentials:
+   - `OAUTH_ISSUER`: OAuth server URL (e.g., `https://oauth-openshift.apps.cluster.com`)
+   - `OAUTH_CLIENT_ID`: Client name from OAuthClient
+   - `OAUTH_CLIENT_SECRET`: Secret from OAuthClient
+   - `OAUTH_CALLBACK_URL`: Must match redirectURIs
 
 3. Test OAuth flow:
    ```bash
-   # Navigate to login endpoint
-   curl http://localhost:8080/api/auth/login
+   # Initiate login - returns auth URL
+   curl -X POST http://localhost:8080/api/auth/login
+   
+   # Response:
+   # {"authUrl":"https://oauth-openshift.apps.cluster.com/oauth/authorize?..."}
    ```
 
 ## Testing Procedures
@@ -333,14 +354,26 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 - `GET /api/health` - Health check
 
 ### Protected Endpoints (Authentication Required)
-- `GET /api/subscriptions` - User subscriptions
-- `POST /api/subscriptions` - Create subscription
-- `GET /api/api-keys` - List API keys
-- `POST /api/api-keys` - Generate API key
-- `DELETE /api/api-keys/:id` - Delete API key
-- `GET /api/usage/*` - Usage metrics
-- `GET /api/teams/*` - Team management
-- `POST /api/models/sync` - Admin only
+
+#### OAuth Flow Endpoints (Unversioned at `/api/auth`)
+- `POST /api/auth/login` - Initiate OAuth flow
+- `GET /api/auth/callback` - OAuth callback
+- `POST /api/auth/logout` - Logout user
+- `POST /api/auth/validate` - Validate JWT token
+
+#### User Profile Endpoints (Versioned at `/api/v1/auth`)
+- `GET /api/v1/auth/me` - Get current user (simple format)
+- `GET /api/v1/auth/profile` - Get detailed user profile
+
+#### Other Protected Endpoints (Versioned at `/api/v1`)
+- `GET /api/v1/subscriptions` - User subscriptions
+- `POST /api/v1/subscriptions` - Create subscription
+- `GET /api/v1/api-keys` - List API keys
+- `POST /api/v1/api-keys` - Generate API key
+- `DELETE /api/v1/api-keys/:id` - Delete API key
+- `GET /api/v1/usage/*` - Usage metrics
+- `GET /api/v1/teams/*` - Team management
+- `POST /api/v1/models/sync` - Admin only
 
 ### Authentication Flow
 
@@ -420,6 +453,6 @@ ADMIN_API_KEYS=<strong-production-keys>
 
 ---
 
-**Last Updated**: 2025-01-26  
-**Version**: 1.0.0  
+**Last Updated**: 2025-01-30  
+**Version**: 1.1.0  
 **Status**: Production Ready
