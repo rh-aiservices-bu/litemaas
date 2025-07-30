@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import type { FastifyInstance, FastifyRequest, FastifyReply, FastifyError } from 'fastify';
+import type { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import type { AuthenticatedRequest } from '../../../src/types/auth.types';
 
 // Mock data
@@ -211,7 +211,7 @@ describe('Auth Hooks Middleware', () => {
 
   describe('keyOperationRateLimit middleware', () => {
     it('should pass for normal usage', async () => {
-      const keyOperationRateLimit = async (request: FastifyRequest, reply: FastifyReply) => {
+      const keyOperationRateLimit = async (request: FastifyRequest, _reply: FastifyReply) => {
         const user = (request as AuthenticatedRequest).user;
 
         if (!user) {

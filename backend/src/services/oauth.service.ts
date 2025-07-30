@@ -319,7 +319,7 @@ export class OAuthService {
 
       // Ensure default team exists in both database and LiteLLM first
       await this.defaultTeamService.ensureDefaultTeamExists();
-      
+
       // Ensure user is assigned to default team in database
       await this.ensureUserTeamMembership(user.id, DefaultTeamService.DEFAULT_TEAM_ID);
 

@@ -460,7 +460,7 @@ const ApiKeysPage: React.FC = () => {
                           <FlexItem>
                             <code style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>
                               {visibleKeys.has(apiKey.id) && apiKey.fullKey
-                                ? `${apiKey.fullKey} (LiteLLM)`
+                                ? `${apiKey.fullKey}`
                                 : apiKey.keyPreview || '************'}
                             </code>
                           </FlexItem>
@@ -721,7 +721,7 @@ const ApiKeysPage: React.FC = () => {
                       wordBreak: 'break-all'
                     }}>
                       {visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey
-                        ? `${selectedApiKey.fullKey} (LiteLLM)`
+                        ? `${selectedApiKey.fullKey}`
                         : selectedApiKey.keyPreview || '************'}
                     </code>
                   </FlexItem>

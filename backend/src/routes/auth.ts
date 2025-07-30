@@ -1,12 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import { Static } from '@sinclair/typebox';
 import { AuthenticatedRequest } from '../types';
-import {
-  LoginResponseSchema,
-  AuthCallbackQuerySchema,
-  TokenResponseSchema,
-  UserProfileSchema,
-} from '../schemas';
+import { LoginResponseSchema, AuthCallbackQuerySchema, TokenResponseSchema } from '../schemas';
 
 interface DevTokenRequestBody {
   username?: string;
@@ -17,7 +12,7 @@ interface DevTokenRequestBody {
  * OAuth authentication flow routes
  * These endpoints handle the OAuth flow and must remain at /api/auth
  * for compatibility with OAuth provider configuration
- * 
+ *
  * Endpoints:
  * - POST /login - Initiate OAuth flow
  * - GET /callback - OAuth callback
@@ -222,11 +217,11 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Redirect to frontend with token in URL fragment (SPA)
         const frontendUrl = new URL(process.env.FRONTEND_URL || 'http://localhost:3000');
-        
+
         // Create a callback page URL that will handle the token
         frontendUrl.pathname = '/auth/callback';
         frontendUrl.hash = `token=${token}&expires_in=${24 * 60 * 60}`;
-        
+
         return reply.redirect(frontendUrl.toString());
       } catch (error) {
         fastify.log.error(error, 'OAuth callback error');

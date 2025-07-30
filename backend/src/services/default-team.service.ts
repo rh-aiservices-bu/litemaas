@@ -4,7 +4,8 @@ import { LiteLLMService } from './litellm.service';
 export class DefaultTeamService {
   static readonly DEFAULT_TEAM_ID = 'a0000000-0000-4000-8000-000000000001';
   static readonly DEFAULT_TEAM_NAME = 'Default Team';
-  static readonly DEFAULT_TEAM_DESCRIPTION = 'Default team for all users until team management is implemented';
+  static readonly DEFAULT_TEAM_DESCRIPTION =
+    'Default team for all users until team management is implemented';
 
   private fastify: FastifyInstance;
   private liteLLMService: LiteLLMService;
@@ -37,7 +38,7 @@ export class DefaultTeamService {
             DefaultTeamService.DEFAULT_TEAM_NAME,
             'default-team',
             DefaultTeamService.DEFAULT_TEAM_DESCRIPTION,
-            10000.00, // max_budget
+            10000.0, // max_budget
             0, // current_spend
             'monthly', // budget_duration
             50000, // tpm_limit
@@ -208,15 +209,15 @@ export class DefaultTeamService {
       );
 
       if (orphanedUsers.rows.length === 0) {
-        this.fastify.log.info('No orphaned users found - all users already assigned to default team');
+        this.fastify.log.info(
+          'No orphaned users found - all users already assigned to default team',
+        );
         return 0;
       }
 
       // Assign all orphaned users to default team
       const userIds = orphanedUsers.rows.map((row) => row.id);
-      const values = userIds
-        .map((_, index) => `($1, $${index + 2}, 'member', NOW())`)
-        .join(', ');
+      const values = userIds.map((_, index) => `($1, $${index + 2}, 'member', NOW())`).join(', ');
 
       await this.fastify.dbUtils.query(
         `INSERT INTO team_members (team_id, user_id, role, joined_at)

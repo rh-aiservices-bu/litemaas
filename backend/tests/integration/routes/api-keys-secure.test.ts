@@ -5,7 +5,6 @@ import { generateTestToken } from '../setup';
 
 describe('Secure API Key Retrieval Endpoint', () => {
   let app: FastifyInstance;
-  let testToken: string;
   let recentTestToken: string;
   let oldTestToken: string;
 
@@ -14,7 +13,6 @@ describe('Secure API Key Retrieval Endpoint', () => {
     await app.ready();
 
     // Generate tokens with different ages
-    testToken = generateTestToken('user-123', ['user'], Math.floor(Date.now() / 1000) - 60); // 1 minute ago
     recentTestToken = generateTestToken('user-123', ['user'], Math.floor(Date.now() / 1000) - 30); // 30 seconds ago
     oldTestToken = generateTestToken('user-123', ['user'], Math.floor(Date.now() / 1000) - 600); // 10 minutes ago
   });
@@ -195,6 +193,9 @@ describe('Secure API Key Retrieval Endpoint', () => {
 
       // Restore original query function
       app.dbUtils.query = originalQuery;
+
+      // Verify response was handled (could be 200, 404, etc.)
+      expect(response.statusCode).toBeDefined();
 
       // Should have attempted to create audit logs
       expect(auditLogSpy).toHaveBeenCalledWith(
