@@ -7,10 +7,12 @@
 > - Deployment Guide: `docs/deployment/`
 > - Configuration: `docs/deployment/configuration.md`
 
-**Last Updated**: 2025-01-30
+**Last Updated**: 2025-07-30
 - OAuth endpoints reorganized: `/api/auth` for flow, `/api/v1/auth` for user operations
 - Fixed OpenShift OAuth integration with proper API server endpoints
 - Enhanced user creation flow with Default Team assignment
+- **FIXED**: LiteLLM user creation "already exists" error in API Key and Subscription services
+- Standardized user existence checking pattern across all services
 - Improved error handling and schema validation
 
 ## 🚀 Project Overview
@@ -130,6 +132,8 @@ npm run dev        # Start both backend and frontend
 - **Rate Limiting**: TPM/RPM limits with burst capacity
 - **Data Handling**: Graceful handling of missing data (returns `undefined`, UI shows "N/A")
 - **Circuit Breaker**: Resilient API communication with mock data fallback
+- **User Management**: Standardized user existence checking and creation across all services
+- **Error Handling**: Graceful handling of "already exists" errors in user creation flows
 
 *See `docs/architecture/litellm-integration.md` for details*
 
@@ -219,9 +223,10 @@ docs/
 - `docs/architecture/database-schema.md` - Database schema with multi-model tables
 - `docs/features/multi-model-api-keys-implementation.md` - Implementation details
 - `docs/features/default-team-implementation.md` - Default Team implementation and user existence detection
+- `docs/features/authentication-flow.md` - OAuth flow and user creation with error handling fixes
 - `docs/api/subscriptions-api.md` - Subscription endpoints
 - `docs/api/model-sync-api.md` - Model synchronization
-- `docs/architecture/services.md` - Service layer details
+- `docs/architecture/services.md` - Service layer details with standardized error handling patterns
 - `docs/deployment/configuration.md` - Environment variables
 - `docs/development/README.md` - Development setup
 - `PATTERNFLY6_RULES.md` - PatternFly 6 migration rules

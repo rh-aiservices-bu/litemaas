@@ -1555,65 +1555,99 @@ export class SubscriptionService {
    */
   private async ensureUserExistsInLiteLLM(userId: string): Promise<void> {
     try {
-      // First check if user exists in LiteLLM
-      await this.liteLLMService.getUserInfo(userId);
-      this.fastify.log.debug({ userId }, 'User already exists in LiteLLM');
-    } catch (error) {
-      // User doesn't exist in LiteLLM, get user from database and create them
-      this.fastify.log.info({ userId }, 'Creating user in LiteLLM for subscription creation');
-
-      try {
-        // Get user information from database
-        const user = await this.fastify.dbUtils.queryOne(
-          'SELECT id, username, email, full_name, roles, max_budget, tpm_limit, rpm_limit FROM users WHERE id = $1',
-          [userId],
+      // First check if user exists in LiteLLM (returns null for non-existent users)
+      const existingUser = await this.liteLLMService.getUserInfo(userId);
+      if (existingUser) {
+        this.fastify.log.info(
+          {
+            userId,
+            existingUser: {
+              user_id: existingUser.user_id,
+              user_alias: existingUser.user_alias,
+              spend: existingUser.spend,
+              max_budget: existingUser.max_budget,
+              teams: existingUser.teams,
+            },
+          },
+          'User already exists in LiteLLM',
         );
+        return; // User exists, nothing to do
+      }
 
-        if (!user) {
-          throw new Error(`User ${userId} not found in database`);
-        }
+      // User doesn't exist in LiteLLM, create them
+      this.fastify.log.info(
+        {
+          userId,
+          isMocking: this.liteLLMService.getMetrics().config.enableMocking,
+        },
+        'User not found in LiteLLM, attempting to create for subscription',
+      );
 
-        // Create user in LiteLLM
-        await this.liteLLMService.createUser({
-          user_id: user.id,
-          user_email: user.email,
-          user_alias: user.username,
-          user_role: user.roles?.includes('admin') ? 'proxy_admin' : 'internal_user',
-          max_budget: user.max_budget || 100, // Use user's budget or default
-          tpm_limit: user.tpm_limit || 1000, // Use user's limit or default
-          rpm_limit: user.rpm_limit || 60, // Use user's limit or default
-          auto_create_key: false, // Don't auto-create key during user creation
-        });
+      // Get user information from database
+      const user = await this.fastify.dbUtils.queryOne(
+        'SELECT id, username, email, full_name, roles, max_budget, tpm_limit, rpm_limit FROM users WHERE id = $1',
+        [userId],
+      );
 
-        // Update user sync status in database
+      if (!user) {
+        throw new Error(`User ${userId} not found in database`);
+      }
+
+      // Create user in LiteLLM
+      await this.liteLLMService.createUser({
+        user_id: user.id,
+        user_email: user.email,
+        user_alias: user.username,
+        user_role: user.roles?.includes('admin') ? 'proxy_admin' : 'internal_user',
+        max_budget: user.max_budget || 100, // Use user's budget or default
+        tpm_limit: user.tpm_limit || 1000, // Use user's limit or default
+        rpm_limit: user.rpm_limit || 60, // Use user's limit or default
+        auto_create_key: false, // Don't auto-create key during user creation
+      });
+
+      // Update user sync status in database
+      await this.fastify.dbUtils.query(
+        'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
+        ['synced', userId],
+      );
+
+      this.fastify.log.info(
+        { userId },
+        'Successfully created user in LiteLLM for subscription creation',
+      );
+    } catch (error) {
+      // Check if error is due to user already existing (by email)
+      if (error instanceof Error && error.message && error.message.includes('already exists')) {
+        this.fastify.log.info(
+          { userId, error: error.message },
+          'User already exists in LiteLLM (by email) - continuing with subscription creation',
+        );
+        // Don't throw - user exists, which is what we wanted
+        // Update sync status to success since user exists
         await this.fastify.dbUtils.query(
           'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
           ['synced', userId],
         );
-
-        this.fastify.log.info(
-          { userId },
-          'Successfully created user in LiteLLM for subscription creation',
-        );
-      } catch (createError) {
-        // Update user sync status to error
-        await this.fastify.dbUtils.query(
-          'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
-          ['error', userId],
-        );
-
-        this.fastify.log.error(
-          {
-            userId,
-            error: createError instanceof Error ? createError.message : 'Unknown error',
-          },
-          'Failed to create user in LiteLLM for subscription creation',
-        );
-
-        throw new Error(
-          `Failed to create user in LiteLLM: ${createError instanceof Error ? createError.message : 'Unknown error'}`,
-        );
+        return;
       }
+
+      // Update user sync status to error for other errors
+      await this.fastify.dbUtils.query(
+        'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
+        ['error', userId],
+      );
+
+      this.fastify.log.error(
+        {
+          userId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Failed to create user in LiteLLM for subscription creation',
+      );
+
+      throw new Error(
+        `Failed to create user in LiteLLM: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 }

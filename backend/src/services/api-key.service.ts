@@ -1760,7 +1760,22 @@ export class ApiKeyService {
         'Successfully created and verified user in LiteLLM for API key creation',
       );
     } catch (error) {
-      // Update user sync status to error
+      // Check if error is due to user already existing (by email)
+      if (error instanceof Error && error.message && error.message.includes('already exists')) {
+        this.fastify.log.info(
+          { userId, error: error.message },
+          'User already exists in LiteLLM (by email) - continuing with API key creation',
+        );
+        // Don't throw - user exists, which is what we wanted
+        // Update sync status to success since user exists
+        await this.fastify.dbUtils.query(
+          'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
+          ['synced', userId],
+        );
+        return;
+      }
+
+      // Update user sync status to error for other errors
       await this.fastify.dbUtils.query(
         'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
         ['error', userId],

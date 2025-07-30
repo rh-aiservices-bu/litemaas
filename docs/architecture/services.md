@@ -28,6 +28,7 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - `rotateApiKey()` - Rotate existing key for security
 - `revokeApiKey()` - Disable key and prevent further usage
 - `syncWithLiteLLM()` - Synchronize key data with LiteLLM
+- `ensureUserExistsInLiteLLM()` - Check/create user with graceful "already exists" handling
 
 ---
 
@@ -364,6 +365,32 @@ All services implement consistent error handling:
 - Graceful degradation where possible
 - Circuit breaker patterns for external calls
 - Automatic retry with exponential backoff
+
+### LiteLLM User Creation Pattern (Fixed 2025-07-30)
+
+**Issue**: Inconsistent handling of "already exists" errors across services led to API key creation failures.
+
+**Standardized Pattern**:
+```typescript
+// 1. Check existence first
+const existingUser = await this.liteLLMService.getUserInfo(userId);
+if (existingUser) {
+  return; // User exists, we're done
+}
+
+// 2. Create user if needed
+await this.liteLLMService.createUser(userRequest);
+
+// 3. Handle "already exists" as success (safety net)
+catch (error) {
+  if (error.message?.includes('already exists')) {
+    return; // Treat as success - user exists
+  }
+  throw error; // Re-throw other errors
+}
+```
+
+**Applied to**: ApiKeyService, SubscriptionService, OAuthService
 
 ## Performance Considerations
 

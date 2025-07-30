@@ -77,12 +77,15 @@ export class OAuthService {
 
     // Real OAuth implementation
     const tokenUrl = `${this.fastify.config.OAUTH_ISSUER}/oauth/token`;
-    
-    this.fastify.log.debug({ 
-      tokenUrl,
-      codePreview: code.substring(0, 20) + '...',
-      clientId: this.fastify.config.OAUTH_CLIENT_ID
-    }, 'Exchanging code for token');
+
+    this.fastify.log.debug(
+      {
+        tokenUrl,
+        codePreview: code.substring(0, 20) + '...',
+        clientId: this.fastify.config.OAUTH_CLIENT_ID,
+      },
+      'Exchanging code for token',
+    );
 
     const response = await fetch(tokenUrl, {
       method: 'POST',
@@ -101,22 +104,28 @@ export class OAuthService {
 
     if (!response.ok) {
       const errorText = await response.text();
-      this.fastify.log.error({ 
-        status: response.status, 
-        statusText: response.statusText,
-        errorText,
-        tokenUrl 
-      }, 'Failed to exchange code for token');
+      this.fastify.log.error(
+        {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          tokenUrl,
+        },
+        'Failed to exchange code for token',
+      );
       throw this.fastify.createError(400, 'Failed to exchange authorization code');
     }
 
     const tokenResponse = await response.json();
-    
-    this.fastify.log.debug({ 
-      hasAccessToken: !!tokenResponse.access_token,
-      tokenType: tokenResponse.token_type,
-      expiresIn: tokenResponse.expires_in 
-    }, 'Token received from OpenShift');
+
+    this.fastify.log.debug(
+      {
+        hasAccessToken: !!tokenResponse.access_token,
+        tokenType: tokenResponse.token_type,
+        expiresIn: tokenResponse.expires_in,
+      },
+      'Token received from OpenShift',
+    );
 
     return tokenResponse;
   }
@@ -132,25 +141,27 @@ export class OAuthService {
     // To:   https://api.dev.rhoai.rh-aiservices-bu.com:6443
     const oauthIssuer = this.fastify.config.OAUTH_ISSUER;
     let apiServerUrl: string;
-    
+
     if (oauthIssuer.includes('oauth-openshift.apps.')) {
       // Standard OpenShift pattern
-      apiServerUrl = oauthIssuer
-        .replace('oauth-openshift.apps.', 'api.')
-        .replace(/\/$/, '') + ':6443';
+      apiServerUrl =
+        oauthIssuer.replace('oauth-openshift.apps.', 'api.').replace(/\/$/, '') + ':6443';
     } else {
       // Fallback: assume the issuer is already the API server
       apiServerUrl = oauthIssuer;
     }
-    
+
     const userInfoUrl = `${apiServerUrl}/apis/user.openshift.io/v1/users/~`;
-    
-    this.fastify.log.debug({ 
-      oauthIssuer,
-      apiServerUrl,
-      userInfoUrl, 
-      accessTokenPreview: accessToken.substring(0, 20) + '...' 
-    }, 'Fetching user info from OpenShift API server');
+
+    this.fastify.log.debug(
+      {
+        oauthIssuer,
+        apiServerUrl,
+        userInfoUrl,
+        accessTokenPreview: accessToken.substring(0, 20) + '...',
+      },
+      'Fetching user info from OpenShift API server',
+    );
 
     const response = await fetch(userInfoUrl, {
       headers: {
@@ -161,17 +172,20 @@ export class OAuthService {
 
     if (!response.ok) {
       const errorText = await response.text();
-      this.fastify.log.error({ 
-        status: response.status, 
-        statusText: response.statusText,
-        errorText,
-        userInfoUrl 
-      }, 'Failed to get user info from OpenShift');
+      this.fastify.log.error(
+        {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          userInfoUrl,
+        },
+        'Failed to get user info from OpenShift',
+      );
       throw this.fastify.createError(401, 'Failed to get user information');
     }
 
     const userResponse = await response.json();
-    
+
     this.fastify.log.debug({ userResponse }, 'OpenShift user info received');
 
     return {
@@ -263,10 +277,7 @@ export class OAuthService {
             [teamId, userId, 'member'],
           );
 
-          this.fastify.log.info(
-            { userId, teamId },
-            'Successfully added user to team in database',
-          );
+          this.fastify.log.info({ userId, teamId }, 'Successfully added user to team in database');
         }
       } catch (error) {
         this.fastify.log.warn(
@@ -296,12 +307,15 @@ export class OAuthService {
       // Check if user exists in LiteLLM (using fixed team-based detection)
       const existingUser = await this.liteLLMService.getUserInfo(user.id);
       if (existingUser) {
-        this.fastify.log.debug({ userId: user.id }, 'User already exists in LiteLLM');
+        this.fastify.log.info({ userId: user.id }, 'User already exists in LiteLLM');
         return;
       }
 
       // User doesn't exist in LiteLLM, create them with default team assignment
-      this.fastify.log.info({ userId: user.id, email: user.email }, 'Creating user in LiteLLM with default team');
+      this.fastify.log.info(
+        { userId: user.id, email: user.email },
+        'Creating user in LiteLLM with default team',
+      );
 
       // Ensure user is assigned to default team in database first
       await this.ensureUserTeamMembership(user.id, DefaultTeamService.DEFAULT_TEAM_ID);
@@ -318,7 +332,10 @@ export class OAuthService {
         teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
       });
 
-      this.fastify.log.info({ userId: user.id }, 'Successfully created user in LiteLLM with default team');
+      this.fastify.log.info(
+        { userId: user.id },
+        'Successfully created user in LiteLLM with default team',
+      );
     } catch (createError: any) {
       // Check if error is due to user already existing (by email)
       if (createError.message && createError.message.includes('already exists')) {

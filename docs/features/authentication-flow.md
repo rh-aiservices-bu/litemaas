@@ -89,6 +89,17 @@ When a user logs in for the first time:
    - Ensure LiteLLM user exists
    - Verify Default Team membership
 
+#### Error Handling (Fixed 2025-07-30)
+
+**Issue**: API key and subscription creation was failing when users already existed in LiteLLM from OAuth flow.
+
+**Solution**: Standardized error handling across all services:
+- OAuth Service: Already handled "already exists" errors gracefully
+- API Key Service: Added proper error handling for existing users
+- Subscription Service: Fixed to use check-first pattern instead of try/catch
+
+**Pattern**: Check existence first, create if needed, handle "already exists" as success.
+
 ### 3. Schema Validation
 
 Different endpoints use different schemas to match frontend expectations:
