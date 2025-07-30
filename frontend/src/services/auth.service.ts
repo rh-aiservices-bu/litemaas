@@ -1,4 +1,5 @@
 import { apiClient } from './api';
+import axios from 'axios';
 
 export interface User {
   id: string;
@@ -16,11 +17,24 @@ export interface LoginResponse {
 
 class AuthService {
   async getCurrentUser(): Promise<User> {
-    return apiClient.get<User>('/auth/me');
+    // Auth routes are at /api/auth, not /api/v1/auth
+    const token = this.getAccessToken();
+    const response = await axios.get<User>('/api/auth/me', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    return response.data;
   }
 
   async logout(): Promise<void> {
-    await apiClient.post('/auth/logout');
+    // Auth routes are at /api/auth, not /api/v1/auth
+    const token = this.getAccessToken();
+    await axios.post('/api/auth/logout', {}, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
   }

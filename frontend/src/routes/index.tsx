@@ -11,6 +11,7 @@ import ApiKeysPage from '../pages/ApiKeysPage';
 import UsagePage from '../pages/UsagePage';
 import SettingsPage from '../pages/SettingsPage';
 import LoginPage from '../pages/LoginPage';
+import AuthCallbackPage from '../pages/AuthCallbackPage';
 
 // Create a client for React Query
 const queryClient = new QueryClient({
@@ -80,6 +81,10 @@ export const router = createBrowserRouter([
       {
         path: '/login',
         element: <LoginPage />,
+      },
+      {
+        path: '/auth/callback',
+        element: <AuthCallbackPage />,
       },
     ],
   },

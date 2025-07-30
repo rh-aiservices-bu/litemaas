@@ -206,24 +206,14 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         fastify.log.info({ userId: user.id, username: user.username }, 'User logged in');
 
-        // In production, consider redirecting to frontend with token
-        if (process.env.NODE_ENV === 'development') {
-          return {
-            token,
-            expiresIn: 24 * 60 * 60, // 24 hours in seconds
-            user: {
-              id: user.id,
-              username: user.username,
-              email: user.email,
-              roles: user.roles,
-            },
-          };
-        } else {
-          // Redirect to frontend with token in URL fragment (SPA)
-          const frontendUrl = new URL(process.env.FRONTEND_URL || 'http://localhost:3000');
-          frontendUrl.hash = `token=${token}&expires_in=${24 * 60 * 60}`;
-          return reply.redirect(frontendUrl.toString());
-        }
+        // Redirect to frontend with token in URL fragment (SPA)
+        const frontendUrl = new URL(process.env.FRONTEND_URL || 'http://localhost:3000');
+        
+        // Create a callback page URL that will handle the token
+        frontendUrl.pathname = '/auth/callback';
+        frontendUrl.hash = `token=${token}&expires_in=${24 * 60 * 60}`;
+        
+        return reply.redirect(frontendUrl.toString());
       } catch (error) {
         fastify.log.error(error, 'OAuth callback error');
 
@@ -300,6 +290,53 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       } catch (error) {
         fastify.log.error(error, 'Logout error');
         throw fastify.createError(500, 'Logout failed');
+      }
+    },
+  });
+
+  // Get current user (me endpoint for frontend compatibility)
+  fastify.get<{
+    Reply: Static<typeof UserProfileSchema>;
+  }>('/me', {
+    schema: {
+      tags: ['Authentication'],
+      description: 'Get current authenticated user',
+      security: [{ bearerAuth: [] }],
+      response: {
+        200: UserProfileSchema,
+      },
+    },
+    preHandler: fastify.authenticate,
+    handler: async (request, _reply) => {
+      const user = (request as AuthenticatedRequest).user;
+
+      try {
+        // Get user details from database
+        const userDetails = await fastify.dbUtils.queryOne(
+          'SELECT id, username, email, full_name, roles, created_at FROM users WHERE id = $1',
+          [user.userId],
+        );
+
+        if (!userDetails) {
+          throw fastify.createNotFoundError('User');
+        }
+
+        // Return user data in the format expected by frontend
+        return {
+          id: String(userDetails.id),
+          username: String(userDetails.username),
+          email: String(userDetails.email),
+          name: userDetails.full_name || userDetails.username, // Frontend expects 'name'
+          roles: userDetails.roles as string[],
+        };
+      } catch (error) {
+        fastify.log.error(error, 'Failed to get user profile');
+
+        if (error && typeof error === 'object' && 'statusCode' in error) {
+          throw error;
+        }
+
+        throw fastify.createError(500, 'Failed to get user profile');
       }
     },
   });

@@ -319,7 +319,17 @@ export class OAuthService {
       });
 
       this.fastify.log.info({ userId: user.id }, 'Successfully created user in LiteLLM with default team');
-    } catch (createError) {
+    } catch (createError: any) {
+      // Check if error is due to user already existing (by email)
+      if (createError.message && createError.message.includes('already exists')) {
+        this.fastify.log.info(
+          { userId: user.id, email: user.email },
+          'User already exists in LiteLLM (by email) - continuing',
+        );
+        // Don't throw - user exists, which is what we wanted
+        return;
+      }
+
       this.fastify.log.warn(
         {
           userId: user.id,
@@ -329,7 +339,7 @@ export class OAuthService {
       );
 
       // Don't throw here - let the user continue and sync will retry later
-      throw createError;
+      // The sync process will handle retries
     }
   }
 
