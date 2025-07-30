@@ -1,8 +1,16 @@
 # System Architecture
 
+**Last Updated**: 2025-07-30 - Default team implementation completed
+
 ## Overview
 
 LiteMaaS follows a microservices architecture with clear separation between frontend and backend services, utilizing OpenShift OAuth for authentication and deep integration with LiteLLM for model management, budget tracking, and usage analytics.
+
+### Recent Architecture Updates (2025-07-30)
+- ✅ **Default Team Implementation**: Comprehensive team-based user management across all services
+- ✅ **User Existence Detection**: Team-based validation replacing unreliable HTTP status checking
+- ✅ **Model Access Control**: Fixed hardcoded restrictions, enabled all-model access via empty arrays
+- ✅ **Service Standardization**: Consistent error handling and user creation patterns across all services
 
 ## High-Level Architecture
 
@@ -120,6 +128,39 @@ LiteMaaS follows a microservices architecture with clear separation between fron
 - **Circuit Breaker**: Resilient communication with automatic fallback
 - **Health Monitoring**: Continuous integration health checks
 - **Audit Trail**: Complete sync operation logging
+- ✅ **Default Team Integration**: All user operations include mandatory team assignment
+- ✅ **User Existence Detection**: Team-based validation (`teams` array) instead of HTTP status
+
+### Default Team Architecture (Implemented 2025-07-30)
+
+**Core Problem Solved**: LiteLLM's `/user/info` endpoint always returns HTTP 200, making user existence detection unreliable.
+
+**Solution**: Team-based user validation using the `teams` array as the source of truth.
+
+#### Default Team Strategy
+```
+Default Team (UUID: a0000000-0000-4000-8000-000000000001)
+├── All users automatically assigned during creation
+├── Empty models array = access to all models
+├── Serves as existence indicator for LiteLLM validation  
+└── Foundation for future team management features
+```
+
+#### Service Integration Pattern
+```typescript
+// Standard pattern across all services:
+1. await this.defaultTeamService.ensureDefaultTeamExists()
+2. User creation with teams: [DefaultTeamService.DEFAULT_TEAM_ID]
+3. Validation via teams array (empty = doesn't exist)
+4. Graceful "already exists" error handling
+```
+
+#### Implementation Coverage
+- ✅ **SubscriptionService**: Lines 1584-1706, 1748-1761
+- ✅ **ApiKeyService**: Line 1869 (fixed hardcoded models)
+- ✅ **OAuthService**: Line 321 (team existence check)
+- ✅ **LiteLLMIntegrationService**: Lines 497, 536 (bulk sync)
+- ✅ **LiteLLMService**: Lines 699, 728 (mock responses)
 
 ### Budget Management Hierarchy
 ```

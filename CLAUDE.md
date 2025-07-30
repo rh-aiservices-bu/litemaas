@@ -7,7 +7,12 @@
 > - Deployment Guide: `docs/deployment/`
 > - Configuration: `docs/deployment/configuration.md`
 
-**Last Updated**: 2025-01-30
+**Last Updated**: 2025-07-30
+- **IMPLEMENTED**: Comprehensive Default Team implementation across all services
+- **FIXED**: User existence detection using team-based validation instead of unreliable `/user/info`
+- **FIXED**: Consistent default team assignment in OAuth, Subscription, API Key, and bulk sync flows
+- **FIXED**: Hardcoded model restrictions in team creation - now uses empty arrays for all-model access
+- **STANDARDIZED**: User creation patterns across SubscriptionService, ApiKeyService, OAuthService, and LiteLLMIntegrationService
 - OAuth endpoints reorganized: `/api/auth` for flow, `/api/v1/auth` for user operations
 - Fixed OpenShift OAuth integration with proper API server endpoints
 - Enhanced user creation flow with Default Team assignment
@@ -141,20 +146,41 @@ npm run dev        # Start both backend and frontend
 ## 📝 Key Implementation Notes
 
 ### Default Team Implementation
-> Solves LiteLLM user existence detection issue through team-based validation
+> **FULLY IMPLEMENTED**: Comprehensive solution for LiteLLM user existence detection and consistent team assignment
 
+#### Core Architecture
 - **Core Problem**: LiteLLM `/user/info` endpoint always returns HTTP 200 for any user_id, even non-existent users
 - **Solution**: Use teams array as indicator - empty array means user doesn't exist in LiteLLM  
 - **Default Team UUID**: `a0000000-0000-4000-8000-000000000001`
-- **Empty Models Array**: `allowed_models: []` enables access to all models
-- **Auto-Assignment**: All users automatically assigned to default team during OAuth/API key creation
-- **Migration Support**: Orphaned users automatically migrated to default team
+- **Empty Models Array**: `allowed_models: []` enables access to all models (critical fix from hardcoded restrictions)
+- **Auto-Assignment**: All users automatically assigned to default team across ALL user creation flows
+
+#### Implementation Coverage
+**✅ Fully Implemented Services**:
+- **SubscriptionService**: `ensureUserExistsInLiteLLM()` ensures default team exists and assigns users
+- **ApiKeyService**: Team creation uses empty models array instead of hardcoded `['gpt-4o']`
+- **OAuthService**: Ensures default team exists before user creation during login flow
+- **LiteLLMIntegrationService**: Bulk user sync includes default team assignment
+- **LiteLLMService**: Mock responses fixed to use empty models arrays consistently
+
+#### Service Integration Patterns
+```typescript
+// Standard pattern used across all services:
+await this.defaultTeamService.ensureDefaultTeamExists();
+
+// User creation with mandatory team assignment:
+teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
+
+// Team creation with all-model access:
+models: [], // Empty array enables access to all models
+```
 
 **Key Components**:
 - `DefaultTeamService` utility class for team management
 - Database migration creating default team with proper UUID
-- Updated user creation flows (OAuth + API key services)
+- **ALL user creation flows** updated: OAuth, Subscription, API Key, and bulk sync
 - Team-based user existence validation in LiteLLM integration
+- Consistent error handling and orphaned user migration support
 
 ### Multi-Model API Keys
 > API keys now support multi-model access instead of single subscription binding

@@ -3,6 +3,7 @@ import { LiteLLMService } from './litellm.service.js';
 import { ApiKeyService } from './api-key.service.js';
 import { SubscriptionService } from './subscription.service.js';
 import { TeamService } from './team.service.js';
+import { DefaultTeamService } from './default-team.service.js';
 import { EnhancedSubscription } from '../types/subscription.types.js';
 import { EnhancedApiKey } from '../types/api-key.types.js';
 import { TeamWithMembers } from '../types/user.types.js';
@@ -123,6 +124,7 @@ export class LiteLLMIntegrationService {
   private apiKeyService: ApiKeyService;
   private subscriptionService: SubscriptionService;
   private teamService: TeamService;
+  private defaultTeamService: DefaultTeamService;
 
   private autoSyncConfig: AutoSyncConfig = {
     enabled: process.env.LITELLM_AUTO_SYNC === 'true',
@@ -160,6 +162,7 @@ export class LiteLLMIntegrationService {
     this.subscriptionService =
       subscriptionService || new SubscriptionService(fastify, this.liteLLMService);
     this.teamService = teamService || new TeamService(fastify, this.liteLLMService);
+    this.defaultTeamService = new DefaultTeamService(fastify, this.liteLLMService);
 
     // Initialize auto-sync if enabled
     if (this.autoSyncConfig.enabled) {
@@ -490,6 +493,9 @@ export class LiteLLMIntegrationService {
     try {
       this.fastify.log.debug({ userId }, 'Starting users sync');
 
+      // Ensure default team exists in both database and LiteLLM before syncing users
+      await this.defaultTeamService.ensureDefaultTeamExists();
+
       let users: { id: string; username: string; email: string; [key: string]: unknown }[];
 
       if (userId) {
@@ -518,7 +524,7 @@ export class LiteLLMIntegrationService {
           try {
             liteLLMUser = await this.liteLLMService.getUserInfo(user.id);
           } catch (error) {
-            // User doesn't exist in LiteLLM, create them
+            // User doesn't exist in LiteLLM, create them with default team assignment
             liteLLMUser = await this.liteLLMService.createUser({
               user_id: user.id,
               user_alias: user.username,
@@ -527,6 +533,7 @@ export class LiteLLMIntegrationService {
               max_budget: 100, // Default budget
               tpm_limit: 1000,
               rpm_limit: 60,
+              teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
             });
           }
 

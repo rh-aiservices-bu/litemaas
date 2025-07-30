@@ -1,12 +1,20 @@
 # Service Layer Architecture
 
+**Last Updated**: 2025-07-30 - Comprehensive default team implementation completed
+
 ## Overview
 
 The LiteMaaS backend service layer implements the business logic and core functionality of the application. Services are designed following the single responsibility principle, with clear separation of concerns between authentication, model management, subscription handling, and external integrations.
 
+### Recent Updates (2025-07-30)
+- ✅ **Comprehensive Default Team Implementation**: All services now consistently implement default team assignment
+- ✅ **User Existence Detection Fix**: Team-based validation instead of unreliable HTTP status codes
+- ✅ **Model Access Control Fix**: Removed hardcoded model restrictions, enabled all-model access
+- ✅ **Standardized Error Handling**: Consistent "already exists" error handling across all services
+
 ## Core Services
 
-### ApiKeyService
+### ApiKeyService ✅ **UPDATED 2025-07-30**
 **Purpose**: API key lifecycle management with LiteLLM integration
 
 **Responsibilities**:
@@ -15,12 +23,15 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - Manage API key rotation and expiration
 - Integrate with LiteLLM for key synchronization
 - Track API key usage and enforce budget limits
+- ✅ **Default team assignment for all API key operations**
+- ✅ **Fixed model access control** - removed hardcoded gpt-4o restriction
 
 **Dependencies**:
 - Database connection for key storage
 - LiteLLMService for external synchronization
 - TokenService for key generation
 - UsageStatsService for tracking
+- ✅ **DefaultTeamService** for team management
 
 **Key Operations**:
 - `createApiKey()` - Generate new API key with budget constraints
@@ -30,9 +41,13 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - `syncWithLiteLLM()` - Synchronize key data with LiteLLM
 - `ensureUserExistsInLiteLLM()` - Check/create user with graceful "already exists" handling
 
+**Default Team Integration**:
+- ✅ **Fixed team creation**: Line 1869 changed from `models: ['gpt-4o']` to `models: []`
+- ✅ **All-model access**: Empty models array enables access to all models instead of hardcoded restrictions
+
 ---
 
-### LiteLLMService
+### LiteLLMService ✅ **UPDATED 2025-07-30**
 **Purpose**: Core integration with LiteLLM instances
 
 **Responsibilities**:
@@ -41,6 +56,8 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - Handle API authentication with LiteLLM
 - Implement circuit breaker for resilient communication
 - Provide fallback to mock data in development mode
+- ✅ **Team-based user existence detection** - fixed unreliable `/user/info` validation
+- ✅ **Fixed mock responses** to use empty models arrays for all-model access
 
 **Dependencies**:
 - HTTP client for API communication
@@ -52,6 +69,13 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - `getModelInfo()` - Get detailed information for specific model
 - `testConnection()` - Verify LiteLLM connectivity
 - `executeWithFallback()` - Execute API calls with fallback strategy
+- ✅ **`getUserInfo()` with team validation** - checks teams array for actual user existence
+- ✅ **`createTeam()` and `getTeamInfo()`** - fixed mock responses to return `models: []`
+
+**User Existence Detection Fix**:
+- ✅ **Before**: HTTP 200 always returned, causing false positives
+- ✅ **After**: Empty teams array = user doesn't exist in LiteLLM
+- ✅ **Implementation**: Lines 699 and 728 fixed in mock responses
 
 ---
 
@@ -79,7 +103,7 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ---
 
-### LiteLLMIntegrationService
+### LiteLLMIntegrationService ✅ **UPDATED 2025-07-30**
 **Purpose**: Centralized synchronization and orchestration
 
 **Responsibilities**:
@@ -88,12 +112,15 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - Handle conflict resolution strategies
 - Monitor integration health
 - Provide admin API for manual sync operations
+- ✅ **Bulk user synchronization with default team assignment**
+- ✅ **Comprehensive default team integration in sync operations**
 
 **Dependencies**:
 - ModelSyncService for model operations
 - SubscriptionService for subscription sync
 - ApiKeyService for key synchronization
 - Audit logging for tracking
+- ✅ **DefaultTeamService** for team management
 
 **Key Operations**:
 - `performFullSync()` - Execute complete system synchronization
@@ -101,6 +128,13 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - `resolveConflicts()` - Handle data conflicts between systems
 - `getIntegrationHealth()` - Monitor sync status and health
 - `generateAuditLog()` - Create detailed sync audit trail
+- ✅ **`syncUsers()` with default team support** - ensures team exists before bulk user sync
+
+**Default Team Integration**:
+- ✅ **Line 6**: Added DefaultTeamService import
+- ✅ **Line 127, 165**: DefaultTeamService instance initialization
+- ✅ **Line 497**: `await this.defaultTeamService.ensureDefaultTeamExists()` before user sync
+- ✅ **Line 536**: User creation includes `teams: [DefaultTeamService.DEFAULT_TEAM_ID]`
 
 ---
 
@@ -160,7 +194,7 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ---
 
-### OAuthService
+### OAuthService ✅ **UPDATED 2025-07-30**
 **Purpose**: OAuth2 authentication flows
 
 **Responsibilities**:
@@ -169,12 +203,15 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - Exchange authorization codes for tokens
 - Handle token refresh and expiration
 - Integrate with user profile retrieval
+- ✅ **Default team assignment during OAuth login flow**
+- ✅ **Ensures default team exists before user creation**
 
 **Dependencies**:
 - OAuth2 provider configuration
 - SessionService for state management
 - TokenService for JWT generation
 - HTTP client for OAuth requests
+- ✅ **DefaultTeamService** for team management
 
 **Key Operations**:
 - `initiateOAuthFlow()` - Start OAuth authorization
@@ -182,6 +219,12 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - `exchangeCodeForToken()` - Get access token
 - `refreshAccessToken()` - Refresh expired tokens
 - `getUserProfile()` - Fetch user information
+- ✅ **User creation with default team assignment** - all OAuth users assigned to default team
+
+**Default Team Integration**:
+- ✅ **Line 321**: `await this.defaultTeamService.ensureDefaultTeamExists()` before user creation
+- ✅ **User creation**: Includes `teams: [DefaultTeamService.DEFAULT_TEAM_ID]` in LiteLLM user creation
+- ✅ **Fixed first-login flow**: Default team created before user, preventing team-related errors
 
 ---
 
@@ -233,7 +276,7 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ---
 
-### SubscriptionService
+### SubscriptionService ✅ **UPDATED 2025-07-30**
 **Purpose**: Model subscription logic with LiteLLM sync
 
 **Responsibilities**:
@@ -242,12 +285,15 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - Track subscription usage and costs
 - Handle subscription lifecycle (pending/active/deletion)
 - Synchronize subscriptions with LiteLLM
+- ✅ **Default team assignment for all subscription users**
+- ✅ **Team-based user existence detection and creation**
 
 **Dependencies**:
 - Database for subscription storage
 - ModelSyncService for model availability
 - UsageStatsService for tracking
 - LiteLLMService for external sync
+- ✅ **DefaultTeamService** for team management
 
 **Key Operations**:
 - `createSubscription()` - Initialize new subscription
@@ -256,6 +302,14 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - `checkQuotaUsage()` - Verify remaining quota
 - `cancelSubscription()` - Permanently delete subscription
 - `syncWithLiteLLM()` - Update LiteLLM configuration
+- ✅ **`ensureTeamExistsInLiteLLM()`** - comprehensive team management (lines 1584-1706)
+- ✅ **`ensureUserExistsInLiteLLM()`** - user creation with team assignment (lines 1748-1761)
+
+**Default Team Integration**:
+- ✅ **Added DefaultTeamService import and instance**
+- ✅ **Team existence check**: Ensures default team exists before user operations
+- ✅ **User creation**: Includes `teams: [DefaultTeamService.DEFAULT_TEAM_ID]` in all user creation
+- ✅ **Fixed error handling**: Graceful handling of "already exists" errors in user creation
 
 ---
 

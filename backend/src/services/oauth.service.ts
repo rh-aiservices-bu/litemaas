@@ -317,7 +317,10 @@ export class OAuthService {
         'Creating user in LiteLLM with default team',
       );
 
-      // Ensure user is assigned to default team in database first
+      // Ensure default team exists in both database and LiteLLM first
+      await this.defaultTeamService.ensureDefaultTeamExists();
+      
+      // Ensure user is assigned to default team in database
       await this.ensureUserTeamMembership(user.id, DefaultTeamService.DEFAULT_TEAM_ID);
 
       await this.liteLLMService.createUser({

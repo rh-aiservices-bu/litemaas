@@ -1,6 +1,6 @@
 # Authentication Flow Implementation
 
-**Last Updated**: 2025-01-30
+**Last Updated**: 2025-07-30 - Updated with comprehensive default team implementation
 
 ## Overview
 
@@ -49,8 +49,9 @@ sequenceDiagram
     OpenShift->>Backend: Return access token
     Backend->>OpenShift: GET user info (via API server)
     OpenShift->>Backend: Return user details
+    Backend->>Backend: Ensure Default Team exists
     Backend->>Database: Create/update user
-    Backend->>LiteLLM: Ensure user exists
+    Backend->>LiteLLM: Create user with Default Team assignment
     Backend->>Database: Assign to Default Team
     Backend->>Frontend: Redirect with JWT token
     Frontend->>Backend: GET /api/v1/auth/me
@@ -74,31 +75,83 @@ const apiServer = "https://api.cluster.com:6443"
 const userInfoUrl = `${apiServer}/apis/user.openshift.io/v1/users/~`
 ```
 
-### 2. User Creation Flow
+### 2. User Creation Flow (Updated 2025-07-30)
 
-When a user logs in for the first time:
+When a user logs in for the first time, the comprehensive default team implementation ensures proper integration:
 
-1. OAuth callback receives user information from OpenShift
-2. System checks if user exists in local database
-3. If new user:
-   - Create user in local database
-   - Create user in LiteLLM with Default Team
+#### Step-by-Step Process
+
+1. **OAuth callback receives user information from OpenShift**
+2. **Default Team Existence Check**: `await this.defaultTeamService.ensureDefaultTeamExists()`
+   - Creates default team in database if not exists
+   - Creates default team in LiteLLM if not exists
+   - Uses empty models array for all-model access
+3. **User Database Operations**:
+   - Check if user exists in local database
+   - Create or update user record
+4. **LiteLLM Integration**:
+   - Create user in LiteLLM with mandatory team assignment
+   - Uses team-based user existence detection
+   - Assigns `teams: [DefaultTeamService.DEFAULT_TEAM_ID]`
+5. **Team Membership**:
    - Assign user to Default Team in database
-4. If existing user:
-   - Update user information
-   - Ensure LiteLLM user exists
-   - Verify Default Team membership
+   - Verify team membership for future operations
 
-#### Error Handling (Fixed 2025-07-30)
+#### Default Team Implementation Details
+
+**OAuthService Implementation** (Line 321):
+```typescript
+// Ensure default team exists before user creation
+await this.defaultTeamService.ensureDefaultTeamExists();
+
+// User creation includes team assignment
+const liteLLMUser = await this.liteLLMService.createUser({
+  user_id: user.id,
+  user_alias: user.username,
+  user_email: user.email,
+  user_role: 'internal_user',
+  max_budget: DEFAULT_USER_BUDGET,
+  tpm_limit: DEFAULT_TPM_LIMIT,
+  rpm_limit: DEFAULT_RPM_LIMIT,
+  teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
+});
+```
+
+#### Error Handling (Fully Implemented 2025-07-30)
 
 **Issue**: API key and subscription creation was failing when users already existed in LiteLLM from OAuth flow.
 
-**Solution**: Standardized error handling across all services:
-- OAuth Service: Already handled "already exists" errors gracefully
-- API Key Service: Added proper error handling for existing users
-- Subscription Service: Fixed to use check-first pattern instead of try/catch
+**Comprehensive Solution**: Standardized error handling and user existence detection across ALL services:
 
-**Pattern**: Check existence first, create if needed, handle "already exists" as success.
+1. **OAuth Service**: ✅ Handles "already exists" errors gracefully
+2. **API Key Service**: ✅ Added proper error handling for existing users
+3. **Subscription Service**: ✅ Fixed to use check-first pattern instead of try/catch
+4. **LiteLLM Integration Service**: ✅ Added team-based user existence detection in bulk sync
+5. **LiteLLM Service**: ✅ Fixed mock responses to use empty models arrays
+
+**Standard Pattern**: 
+1. Ensure default team exists first
+2. Check user existence via team membership (not HTTP status)
+3. Create if needed with team assignment
+4. Handle "already exists" as success
+
+#### User Existence Detection Fix
+
+**Before**: Unreliable HTTP status checking
+```typescript
+// ❌ Always returned HTTP 200, even for non-existent users
+const response = await this.liteLLMService.getUserInfo(userId);
+// Would always succeed, causing false positives
+```
+
+**After**: Team-based validation
+```typescript
+// ✅ Check teams array for actual existence
+const response = await this.liteLLMService.getUserInfo(userId);
+if (!response.teams || response.teams.length === 0) {
+  return null; // User doesn't exist in LiteLLM
+}
+```
 
 ### 3. Schema Validation
 
