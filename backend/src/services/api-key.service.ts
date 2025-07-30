@@ -1866,7 +1866,7 @@ export class ApiKeyService {
           tpm_limit: Number(team.tpm_limit) || 10000, // Use team's limit or default
           rpm_limit: Number(team.rpm_limit) || 500, // Use team's limit or default
           admins: [], // Will be populated from team members
-          models: ['gpt-4o'], // Default models, can be updated later
+          models: [], // Empty array enables all models
         };
 
         this.fastify.log.info(

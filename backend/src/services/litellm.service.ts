@@ -696,7 +696,7 @@ export class LiteLLMService {
         team_alias: request.team_alias,
         max_budget: request.max_budget || 1000,
         spend: 0,
-        models: request.models || ['gpt-4o'],
+        models: request.models || [],
         tpm_limit: request.tpm_limit || 10000,
         rpm_limit: request.rpm_limit || 500,
         admins: request.admins || [],
@@ -725,7 +725,7 @@ export class LiteLLMService {
         team_alias: `Team ${teamId}`,
         max_budget: 1000,
         spend: Math.random() * 500,
-        models: ['gpt-4o', 'claude-3-5-sonnet-20241022'],
+        models: [], // Empty array enables all models
         tpm_limit: 10000,
         rpm_limit: 500,
         admins: ['admin-user'],
