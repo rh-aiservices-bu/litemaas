@@ -394,12 +394,12 @@ export class OAuthService {
     };
 
     if (existingUser) {
-      // Update existing user
+      // Update existing user - pass roles array directly for PostgreSQL array column
       await this.fastify.dbUtils.query(
         `UPDATE users SET 
          username = $1, email = $2, full_name = $3, roles = $4, last_login_at = NOW(), updated_at = NOW()
          WHERE id = $5`,
-        [userInfo.preferred_username, userInfo.email || null, userInfo.name || null, JSON.stringify(roles), existingUser.id as string],
+        [userInfo.preferred_username, userInfo.email || null, userInfo.name || null, roles, existingUser.id as string],
       );
 
       user = {
@@ -410,7 +410,7 @@ export class OAuthService {
         roles,
       };
     } else {
-      // Create new user
+      // Create new user - pass roles array directly for PostgreSQL array column
       const newUser = await this.fastify.dbUtils.queryOne<DatabaseUser>(
         `INSERT INTO users (username, email, full_name, oauth_provider, oauth_id, roles, last_login_at)
          VALUES ($1, $2, $3, $4, $5, $6, NOW())
@@ -421,7 +421,7 @@ export class OAuthService {
           userInfo.name || null,
           'openshift',
           userInfo.sub,
-          JSON.stringify(roles),
+          roles, // Pass array directly, PostgreSQL will handle the formatting
         ],
       );
 
