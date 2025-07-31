@@ -162,6 +162,16 @@ const ApiKeysPage: React.FC = () => {
     loadConfig(); // Load configuration including LiteLLM API URL
   }, []);
 
+  // Sync selectedApiKey with updated apiKeys state to reflect key visibility changes in modal
+  useEffect(() => {
+    if (selectedApiKey && apiKeys.length > 0) {
+      const updatedSelectedKey = apiKeys.find((key) => key.id === selectedApiKey.id);
+      if (updatedSelectedKey && updatedSelectedKey !== selectedApiKey) {
+        setSelectedApiKey(updatedSelectedKey);
+      }
+    }
+  }, [apiKeys, selectedApiKey]);
+
   const getStatusBadge = (status: string) => {
     const variants = {
       active: 'success',
@@ -921,7 +931,7 @@ const ApiKeysPage: React.FC = () => {
                   <CodeBlockCode>
                     {`# Using your secure LiteLLM API key
 curl -X POST ${litellmApiUrl}/v1/chat/completions \
-  -H "Authorization: Bearer ${selectedApiKey.fullKey || '<click-show-key-to-reveal>'}" \
+  -H "Authorization: Bearer ${visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey ? selectedApiKey.fullKey : '<click-show-key-to-reveal>'}" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "${selectedApiKey.models && selectedApiKey.models.length > 0 ? selectedApiKey.models[0] : 'gpt-4'}",

@@ -650,12 +650,15 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           await fastify.dbUtils.query(
             `UPDATE audit_logs 
              SET metadata = metadata || $1
-             WHERE user_id = $2 
-               AND action = 'API_KEY_RETRIEVE_FULL' 
-               AND resource_id = $3
-               AND created_at > NOW() - INTERVAL '1 minute'
-             ORDER BY created_at DESC 
-             LIMIT 1`,
+             WHERE id = (
+               SELECT id FROM audit_logs
+               WHERE user_id = $2 
+                 AND action = 'API_KEY_RETRIEVE_FULL' 
+                 AND resource_id = $3
+                 AND created_at > NOW() - INTERVAL '1 minute'
+               ORDER BY created_at DESC 
+               LIMIT 1
+             )`,
             [
               JSON.stringify({
                 userAgent: request.headers['user-agent'],
