@@ -399,7 +399,13 @@ export class OAuthService {
         `UPDATE users SET 
          username = $1, email = $2, full_name = $3, roles = $4, last_login_at = NOW(), updated_at = NOW()
          WHERE id = $5`,
-        [userInfo.preferred_username, userInfo.email || null, userInfo.name || null, roles, existingUser.id as string],
+        [
+          userInfo.preferred_username,
+          userInfo.email || null,
+          userInfo.name || null,
+          roles,
+          existingUser.id as string,
+        ],
       );
 
       user = {
