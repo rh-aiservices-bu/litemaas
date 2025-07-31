@@ -107,6 +107,21 @@ const Layout: React.FC = () => {
       <DropdownItem key="fr" onClick={() => handleLanguageChange('fr')}>
         🇫🇷 {t('ui.language.french')}
       </DropdownItem>
+      <DropdownItem key="de" onClick={() => handleLanguageChange('de')}>
+        🇩🇪 {t('ui.language.german')}
+      </DropdownItem>
+      <DropdownItem key="it" onClick={() => handleLanguageChange('it')}>
+        🇮🇹 {t('ui.language.italian')}
+      </DropdownItem>
+      <DropdownItem key="ko" onClick={() => handleLanguageChange('ko')}>
+        🇰🇷 {t('ui.language.korean')}
+      </DropdownItem>
+      <DropdownItem key="ja" onClick={() => handleLanguageChange('ja')}>
+        🇯🇵 {t('ui.language.japanese')}
+      </DropdownItem>
+      <DropdownItem key="zh" onClick={() => handleLanguageChange('zh')}>
+        🇨🇳 {t('ui.language.chinese')}
+      </DropdownItem>
     </DropdownList>
   );
 
