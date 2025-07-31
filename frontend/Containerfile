@@ -1,6 +1,6 @@
-# Multi-stage build with shared base
-# Stage 1: Create base Node.js image with updated packages
-FROM registry.access.redhat.com/ubi9/nodejs-18:1 AS nodejs-base
+# Multi-stage build
+# Stage 1: Create the Node.js builder image with updated packages
+FROM registry.access.redhat.com/ubi9/nodejs-22 AS builder
 
 # Switch to root to update packages
 USER root
@@ -14,80 +14,49 @@ WORKDIR /app
 # Switch back to default user
 USER 1001
 
-# Stage 2: Build the React application
-FROM nodejs-base AS builder
-
-# Copy package files
+# Copy workspace root package files first
 COPY --chown=1001:1001 package*.json ./
 
-# Install dependencies (including dev dependencies for build)
+# Copy TypeScript configuration from root
+COPY --chown=1001:1001 tsconfig.base.json ./
+
+# Copy workspace package files
+COPY --chown=1001:1001 frontend/package.json ./frontend/
+
+# Install all workspace dependencies
 RUN npm ci
 
-# Copy source code
-COPY --chown=1001:1001 . .
+# Copy frontend source code and configs
+COPY --chown=1001:1001 frontend/ ./frontend/
 
-# Accept build arguments for Vite environment variables
-ARG VITE_API_URL=http://localhost:8080
-ARG VITE_OAUTH_CLIENT_ID=litemaas-client
-ARG VITE_OAUTH_REDIRECT_URL=http://localhost:8080/auth/callback
-ARG VITE_APP_NAME=LiteMaaS
-ARG VITE_APP_VERSION=1.0.0
-
-# Set environment variables for build
-ENV VITE_API_URL=$VITE_API_URL
-ENV VITE_OAUTH_CLIENT_ID=$VITE_OAUTH_CLIENT_ID
-ENV VITE_OAUTH_REDIRECT_URL=$VITE_OAUTH_REDIRECT_URL
-ENV VITE_APP_NAME=$VITE_APP_NAME
-ENV VITE_APP_VERSION=$VITE_APP_VERSION
-
-# Build the application
-RUN npm run build
+# Build the frontend application
+RUN npm run build --workspace=frontend
 
 # Stage 3: Serve the application with nginx
-FROM registry.access.redhat.com/ubi9/nginx-120:1
+FROM registry.access.redhat.com/ubi9/nginx-124
 
-# Copy built files from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Install envsubst for runtime configuration
+USER root
 
-# Create nginx configuration for SPA
-RUN echo 'server { \
-    listen 8080; \
-    server_name localhost; \
-    root /usr/share/nginx/html; \
-    index index.html; \
-    \
-    # Handle client-side routing \
-    location / { \
-        try_files $uri $uri/ /index.html; \
-    } \
-    \
-    # API proxy to backend \
-    location /api { \
-        proxy_pass http://backend:8080; \
-        proxy_set_header Host $host; \
-        proxy_set_header X-Real-IP $remote_addr; \
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for; \
-        proxy_set_header X-Forwarded-Proto $scheme; \
-    } \
-    \
-    # Security headers \
-    add_header X-Frame-Options "SAMEORIGIN" always; \
-    add_header X-Content-Type-Options "nosniff" always; \
-    add_header X-XSS-Protection "1; mode=block" always; \
-    \
-    # Cache static assets \
-    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ { \
-        expires 1y; \
-        add_header Cache-Control "public, immutable"; \
-    } \
-}' > /etc/nginx/conf.d/default.conf
+RUN dnf update -y && \
+    dnf install -y gettext && \
+    dnf clean all
+
+USER 1001
+
+# Copy built files from builder stage to the nginx default document root
+COPY --from=builder /app/frontend/dist /opt/app-root/src
+
+# Copy nginx configuration template to the appropriate directory
+# Using /opt/app-root for APP_ROOT which is standard in Red Hat images
+COPY --chown=1001:1001 frontend/nginx.conf.template /tmp/nginx.conf.template
+
+# Copy entrypoint script
+COPY --chown=1001:1001 frontend/docker-entrypoint.sh /opt/app-root/docker-entrypoint.sh
+RUN chmod +x /opt/app-root/docker-entrypoint.sh
 
 # Expose port 8080 (nginx default for UBI)
 EXPOSE 8080
 
-# Add health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8080/ || exit 1
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"] 
+# Use the entrypoint script to configure nginx at runtime
+ENTRYPOINT ["/opt/app-root/docker-entrypoint.sh"] 

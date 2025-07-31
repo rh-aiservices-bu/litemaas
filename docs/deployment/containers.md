@@ -32,14 +32,10 @@ Both the backend and frontend use optimized three-stage builds that share a comm
 
 ```bash
 # Build backend container (launch from the root of the project)
-podman build -t litemaas-backend:latest -f backend/Containerfile -t litemaas-backend .
+podman build -f backend/Containerfile -t litemaas-backend:0.0.1 .
 
-# Build frontend container with custom configuration
-podman build -t litemaas-frontend:latest \
-  --build-arg VITE_API_URL=https://api.yourdomain.com \
-  --build-arg VITE_OAUTH_CLIENT_ID=your-oauth-client \
-  --build-arg VITE_OAUTH_REDIRECT_URL=https://yourdomain.com/auth/callback \
-  -f frontend/Containerfile frontend/
+# Build frontend container (no build arguments needed - fully environment-agnostic)
+podman build -f frontend/Containerfile -t litemaas-frontend:latest .
 ```
 
 ## Docker/Podman Compose Deployment
@@ -80,17 +76,15 @@ This will start:
 | `LOG_LEVEL` | Logging level | `info` | No |
 | `CORS_ORIGIN` | CORS allowed origins | - | No |
 
-### Frontend Build Arguments
+### Frontend Runtime Configuration
 
-These are set at **build time** for the frontend container:
+The frontend container is now fully environment-agnostic and configured at **runtime**:
 
-| Argument | Description | Default |
-|----------|-------------|---------|
-| `VITE_API_URL` | Backend API URL | `http://localhost:8080` |
-| `VITE_OAUTH_CLIENT_ID` | OAuth client ID | `litemaas-client` |
-| `VITE_OAUTH_REDIRECT_URL` | OAuth redirect URL | `http://localhost:8080/auth/callback` |
-| `VITE_APP_NAME` | Application name | `LiteMaaS` |
-| `VITE_APP_VERSION` | Application version | `1.0.0` |
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `BACKEND_URL` | Backend API URL for proxying `/api` requests | `http://backend:8080` | No |
+
+**Note**: No build-time configuration is needed. The container image can be built once and deployed to any environment by setting the `BACKEND_URL` environment variable at runtime.
 
 ## Production Deployment
 
@@ -129,8 +123,9 @@ podman run -d --name litemaas-backend \
   -p 8080:8080 \
   litemaas-backend:latest
 
-# Run frontend
+# Run frontend (with runtime configuration)
 podman run -d --name litemaas-frontend \
+  -e BACKEND_URL=https://yourdomain.com \
   -p 3000:8080 \
   litemaas-frontend:latest
 ```
@@ -190,8 +185,8 @@ Both containers use an optimized three-stage build approach:
 
 ### Frontend Build Stages:
 1. **Base stage**: UBI9 Node.js with updated system packages (for building)
-2. **Builder stage**: Inherits from base, builds React application
-3. **Runtime stage**: UBI9 nginx serves the built static files
+2. **Builder stage**: Inherits from base, builds React application without any environment-specific configuration
+3. **Runtime stage**: UBI9 nginx with envsubst for runtime configuration, serves the built static files
 
 ### Benefits of This Approach:
 
@@ -201,6 +196,7 @@ Both containers use an optimized three-stage build approach:
 4. **Improved caching**: Shared base image with updated packages reduces redundant work
 5. **Efficient builds**: System package updates happen once and are reused
 6. **Clean separation**: Build environment is completely separate from runtime environment
+7. **Environment-agnostic images**: Frontend container can be deployed to any environment without rebuilding
 
 ## Security Considerations
 
@@ -220,9 +216,10 @@ Both containers use an optimized three-stage build approach:
    - Verify database credentials
 
 2. **Frontend can't reach backend API:**
-   - Check CORS configuration (`CORS_ORIGIN`)
-   - Verify API URL in frontend build args
-   - Ensure backend is healthy
+   - Check CORS configuration (`CORS_ORIGIN`) in backend
+   - Verify `BACKEND_URL` environment variable is set correctly
+   - Ensure backend is healthy and accessible from the frontend container
+   - Check nginx logs for proxy errors
 
 3. **OAuth authentication fails:**
    - Verify OAuth client configuration
