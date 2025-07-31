@@ -122,6 +122,9 @@ const Layout: React.FC = () => {
       <DropdownItem key="zh" onClick={() => handleLanguageChange('zh')}>
         🇨🇳 {t('ui.language.chinese')}
       </DropdownItem>
+      <DropdownItem key="elv" onClick={() => handleLanguageChange('elv')}>
+        🧝‍♂️ {t('ui.language.elvish')}
+      </DropdownItem>
     </DropdownList>
   );
 
