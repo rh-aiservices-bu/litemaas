@@ -321,7 +321,9 @@ const ApiKeysPage: React.FC = () => {
 
         addNotification({
           title: t('pages.apiKeys.notifications.retrieveSuccess'),
-          description: t('pages.apiKeys.messages.retrievalMessage', { date: new Date(keyData.retrievedAt).toLocaleString() }),
+          description: t('pages.apiKeys.messages.retrievalMessage', {
+            date: new Date(keyData.retrievedAt).toLocaleString(),
+          }),
           variant: 'success',
         });
       } catch (error) {
@@ -421,9 +423,7 @@ const ApiKeysPage: React.FC = () => {
             <Title headingLevel="h2" size="lg">
               {t('pages.apiKeys.messages.noKeysTitle')}
             </Title>
-            <EmptyStateBody>
-              {t('pages.apiKeys.messages.noKeysDescription')}
-            </EmptyStateBody>
+            <EmptyStateBody>{t('pages.apiKeys.messages.noKeysDescription')}</EmptyStateBody>
             <EmptyStateActions>
               <Button variant="primary" icon={<PlusCircleIcon />} onClick={handleCreateApiKey}>
                 {t('pages.apiKeys.createKey')}
@@ -496,7 +496,12 @@ const ApiKeysPage: React.FC = () => {
                               <Button
                                 variant="plain"
                                 size="sm"
-                                onClick={() => copyToClipboard(apiKey.fullKey || '', t('pages.apiKeys.forms.apiKey'))}
+                                onClick={() =>
+                                  copyToClipboard(
+                                    apiKey.fullKey || '',
+                                    t('pages.apiKeys.forms.apiKey'),
+                                  )
+                                }
                                 icon={<CopyIcon />}
                               />
                             </Tooltip>
@@ -525,7 +530,11 @@ const ApiKeysPage: React.FC = () => {
                             </Content>
                           )}
                           {apiKey.models && apiKey.models.length > 2 && (
-                            <Label isCompact>{t('pages.apiKeys.messages.plusMore', { count: apiKey.models.length - 2 })}</Label>
+                            <Label isCompact>
+                              {t('pages.apiKeys.messages.plusMore', {
+                                count: apiKey.models.length - 2,
+                              })}
+                            </Label>
                           )}
                         </LabelGroup>
                       </Td>
@@ -604,7 +613,19 @@ const ApiKeysPage: React.FC = () => {
               <Select
                 id="key-models"
                 isOpen={isModelSelectOpen}
-                onToggle={(_event, isOpen) => setIsModelSelectOpen(isOpen)}
+                toggle={(toggleRef) => (
+                  <MenuToggle
+                    ref={toggleRef}
+                    onClick={() => setIsModelSelectOpen(!isModelSelectOpen)}
+                    isExpanded={isModelSelectOpen}
+                  >
+                    {selectedModelIds.length === 0
+                      ? t('pages.apiKeys.forms.selectModels')
+                      : t('pages.apiKeys.messages.modelsSelected', {
+                          count: selectedModelIds.length,
+                        })}
+                  </MenuToggle>
+                )}
                 onSelect={(_event, selection) => {
                   const selectionString = selection as string;
                   if (selectedModelIds.includes(selectionString)) {
@@ -613,26 +634,17 @@ const ApiKeysPage: React.FC = () => {
                     setSelectedModelIds([...selectedModelIds, selectionString]);
                   }
                 }}
-                selections={selectedModelIds}
-                isCheckboxSelectionBadgeHidden
-                toggle={(toggleRef) => (
-                  <MenuToggle
-                    ref={toggleRef}
-                    onClick={() => setIsModelSelectOpen(!isModelSelectOpen)}
-                    isExpanded={isModelSelectOpen}
-                    isFullWidth
-                  >
-                    {selectedModelIds.length === 0
-                      ? t('pages.apiKeys.selectModels')
-                      : t('pages.apiKeys.messages.modelsSelected', { count: selectedModelIds.length })}
-                  </MenuToggle>
-                )}
+                selected={selectedModelIds}
               >
                 <SelectList>
                   {loadingModels ? (
-                    <SelectOption isDisabled>{t('pages.apiKeys.messages.loadingModels')}</SelectOption>
+                    <SelectOption isDisabled>
+                      {t('pages.apiKeys.messages.loadingModels')}
+                    </SelectOption>
                   ) : models.length === 0 ? (
-                    <SelectOption isDisabled>{t('pages.apiKeys.messages.noSubscribedModels')}</SelectOption>
+                    <SelectOption isDisabled>
+                      {t('pages.apiKeys.messages.noSubscribedModels')}
+                    </SelectOption>
                   ) : (
                     models.map((model) => (
                       <SelectOption
@@ -659,7 +671,10 @@ const ApiKeysPage: React.FC = () => {
                 </div>
               )}
               {selectedModelIds.length > 0 && (
-                <LabelGroup categoryName={t('pages.apiKeys.messages.selectedModels')} style={{ marginTop: '0.5rem' }}>
+                <LabelGroup
+                  categoryName={t('pages.apiKeys.messages.selectedModels')}
+                  style={{ marginTop: '0.5rem' }}
+                >
                   {selectedModelIds.map((modelId) => {
                     const model = models.find((m) => m.id === modelId);
                     return model ? (
@@ -796,7 +811,12 @@ const ApiKeysPage: React.FC = () => {
                       <Button
                         variant="plain"
                         size="sm"
-                        onClick={() => copyToClipboard(selectedApiKey.fullKey || '', t('pages.apiKeys.forms.apiKey'))}
+                        onClick={() =>
+                          copyToClipboard(
+                            selectedApiKey.fullKey || '',
+                            t('pages.apiKeys.forms.apiKey'),
+                          )
+                        }
                         icon={<CopyIcon />}
                       />
                     </Tooltip>
@@ -868,7 +888,10 @@ const ApiKeysPage: React.FC = () => {
                       <Td>
                         <strong>{t('pages.apiKeys.labels.rateLimit')}</strong>
                       </Td>
-                      <Td>{selectedApiKey.rateLimit.toLocaleString()} {t('pages.apiKeys.messages.requestsPerMinute')}</Td>
+                      <Td>
+                        {selectedApiKey.rateLimit.toLocaleString()}{' '}
+                        {t('pages.apiKeys.messages.requestsPerMinute')}
+                      </Td>
                     </Tr>
                     {selectedApiKey.expiresAt && (
                       <Tr>
@@ -891,7 +914,9 @@ const ApiKeysPage: React.FC = () => {
               </div>
 
               <div style={{ marginTop: '1rem' }}>
-                <Content component={ContentVariants.h3}>{t('pages.apiKeys.labels.usageExample')}</Content>
+                <Content component={ContentVariants.h3}>
+                  {t('pages.apiKeys.labels.usageExample')}
+                </Content>
                 <CodeBlock>
                   <CodeBlockCode>
                     {`# Using your secure LiteLLM API key
@@ -924,8 +949,10 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                   title={t('pages.apiKeys.modals.keyExpired')}
                   style={{ marginTop: '1rem' }}
                 >
-                  {t('pages.apiKeys.messages.keyExpiredMessage', { 
-                    date: selectedApiKey.expiresAt && new Date(selectedApiKey.expiresAt).toLocaleDateString()
+                  {t('pages.apiKeys.messages.keyExpiredMessage', {
+                    date:
+                      selectedApiKey.expiresAt &&
+                      new Date(selectedApiKey.expiresAt).toLocaleDateString(),
                   })}
                 </Alert>
               )}
@@ -977,7 +1004,9 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
               </FormGroup>
 
               <div style={{ marginTop: '1rem' }}>
-                <Content component={ContentVariants.h3}>{t('pages.apiKeys.labels.keyDetails')}</Content>
+                <Content component={ContentVariants.h3}>
+                  {t('pages.apiKeys.labels.keyDetails')}
+                </Content>
                 <Table
                   aria-label={t('pages.apiKeys.tableHeaders.generatedKeyDetails')}
                   variant="compact"
@@ -1016,7 +1045,10 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                       <Td>
                         <strong>{t('pages.apiKeys.labels.rateLimit')}</strong>
                       </Td>
-                      <Td>{generatedKey.rateLimit.toLocaleString()} {t('pages.apiKeys.messages.requestsPerMinute')}</Td>
+                      <Td>
+                        {generatedKey.rateLimit.toLocaleString()}{' '}
+                        {t('pages.apiKeys.messages.requestsPerMinute')}
+                      </Td>
                     </Tr>
                     {generatedKey.expiresAt && (
                       <Tr>

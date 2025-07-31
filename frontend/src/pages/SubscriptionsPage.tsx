@@ -107,16 +107,24 @@ const SubscriptionsPage: React.FC = () => {
 
   const getPricingInfo = (subscription: Subscription) => {
     if (!subscription.pricing) {
-      return <Content component={ContentVariants.small}>{t('pages.subscriptions.pricingUnavailable')}</Content>;
+      return (
+        <Content component={ContentVariants.small}>
+          {t('pages.subscriptions.pricingUnavailable')}
+        </Content>
+      );
     }
 
     return (
       <Stack hasGutter>
         <Content component={ContentVariants.small}>
-          {t('pages.subscriptions.inputPricing', { cost: subscription.pricing.inputCostPer1kTokens.toFixed(4) })}
+          {t('pages.subscriptions.inputPricing', {
+            cost: subscription.pricing.inputCostPer1kTokens.toFixed(4),
+          })}
         </Content>
         <Content component={ContentVariants.small}>
-          {t('pages.subscriptions.outputPricing', { cost: subscription.pricing.outputCostPer1kTokens.toFixed(4) })}
+          {t('pages.subscriptions.outputPricing', {
+            cost: subscription.pricing.outputCostPer1kTokens.toFixed(4),
+          })}
         </Content>
       </Stack>
     );
@@ -147,7 +155,9 @@ const SubscriptionsPage: React.FC = () => {
       // If successful, show success notification and reload subscriptions
       addNotification({
         title: t('pages.subscriptions.notifications.cancelSuccess'),
-        description: t('pages.subscriptions.cancelledMessage', { modelName: subscription.modelName }),
+        description: t('pages.subscriptions.cancelledMessage', {
+          modelName: subscription.modelName,
+        }),
         variant: 'success',
       });
 
@@ -210,9 +220,7 @@ const SubscriptionsPage: React.FC = () => {
             <Title headingLevel="h1" size="2xl">
               {t('pages.subscriptions.pageTitle')}
             </Title>
-            <Content component={ContentVariants.p}>
-              {t('pages.subscriptions.pageSubtitle')}
-            </Content>
+            <Content component={ContentVariants.p}>{t('pages.subscriptions.pageSubtitle')}</Content>
           </FlexItem>
           <FlexItem>
             <Button variant="primary" icon={<PlusCircleIcon />} onClick={() => navigate('/models')}>
@@ -229,9 +237,7 @@ const SubscriptionsPage: React.FC = () => {
             <Title headingLevel="h2" size="lg">
               {t('pages.subscriptions.noSubscriptionsTitle')}
             </Title>
-            <EmptyStateBody>
-              {t('pages.subscriptions.noSubscriptionsDescription')}
-            </EmptyStateBody>
+            <EmptyStateBody>{t('pages.subscriptions.noSubscriptionsDescription')}</EmptyStateBody>
             <EmptyStateActions>
               <Button
                 variant="primary"
@@ -297,9 +303,9 @@ const SubscriptionsPage: React.FC = () => {
 
                           <FlexItem>
                             <Content component={ContentVariants.small}>
-                              {t('pages.subscriptions.quotaFormat', { 
+                              {t('pages.subscriptions.quotaFormat', {
                                 requests: subscription.quotaRequests.toLocaleString(),
-                                tokens: subscription.quotaTokens.toLocaleString()
+                                tokens: subscription.quotaTokens.toLocaleString(),
                               })}
                             </Content>
                           </FlexItem>
@@ -383,14 +389,16 @@ const SubscriptionsPage: React.FC = () => {
                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('pages.subscriptions.requestQuota')}</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {selectedSubscription.quotaRequests.toLocaleString()} {t('pages.subscriptions.perMonth')}
+                    {selectedSubscription.quotaRequests.toLocaleString()}{' '}
+                    {t('pages.subscriptions.perMonth')}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
 
                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('pages.subscriptions.tokenQuota')}</DescriptionListTerm>
                   <DescriptionListDescription>
-                    {selectedSubscription.quotaTokens.toLocaleString()} {t('pages.subscriptions.perMonth')}
+                    {selectedSubscription.quotaTokens.toLocaleString()}{' '}
+                    {t('pages.subscriptions.perMonth')}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
 
@@ -403,7 +411,8 @@ const SubscriptionsPage: React.FC = () => {
                     >
                       <FlexItem>
                         {selectedSubscription.usedRequests.toLocaleString()} /{' '}
-                        {selectedSubscription.quotaRequests.toLocaleString()} {t('pages.subscriptions.requests')}
+                        {selectedSubscription.quotaRequests.toLocaleString()}{' '}
+                        {t('pages.subscriptions.requests')}
                       </FlexItem>
                       <FlexItem>
                         <Progress
@@ -433,7 +442,8 @@ const SubscriptionsPage: React.FC = () => {
                     >
                       <FlexItem>
                         {selectedSubscription.usedTokens.toLocaleString()} /{' '}
-                        {selectedSubscription.quotaTokens.toLocaleString()} {t('pages.subscriptions.tokens')}
+                        {selectedSubscription.quotaTokens.toLocaleString()}{' '}
+                        {t('pages.subscriptions.tokens')}
                       </FlexItem>
                       <FlexItem>
                         <Progress
@@ -491,9 +501,10 @@ const SubscriptionsPage: React.FC = () => {
                   title={t('pages.subscriptions.alerts.expired')}
                   style={{ marginTop: '1rem' }}
                 >
-                  {t('pages.subscriptions.expiredMessage', { 
-                    date: selectedSubscription.expiresAt && 
-                      new Date(selectedSubscription.expiresAt).toLocaleDateString()
+                  {t('pages.subscriptions.expiredMessage', {
+                    date:
+                      selectedSubscription.expiresAt &&
+                      new Date(selectedSubscription.expiresAt).toLocaleDateString(),
                   })}
                 </Alert>
               )}

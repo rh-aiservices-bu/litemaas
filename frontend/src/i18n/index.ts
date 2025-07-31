@@ -77,7 +77,8 @@ const resources = {
           loadingTitle: 'Loading Subscriptions...',
           loadingDescription: 'Retrieving your subscription information',
           noSubscriptionsTitle: 'No subscriptions found',
-          noSubscriptionsDescription: 'You don\'t have any active subscriptions. Start by subscribing to an AI model.',
+          noSubscriptionsDescription:
+            "You don't have any active subscriptions. Start by subscribing to an AI model.",
           viewDetails: 'View Details',
           detailsTitle: 'Subscription Details',
           provider: 'Provider',
@@ -99,9 +100,12 @@ const resources = {
           pricingUnavailable: 'Pricing information unavailable',
           inputPricing: 'Input: ${{cost}}/1K tokens',
           outputPricing: 'Output: ${{cost}}/1K tokens',
-          suspendedMessage: 'Your subscription has been suspended. Contact support or check your account status.',
-          expiredMessage: 'Your subscription expired on {{date}}. Renew to continue using this model.',
-          cancelledMessage: '{{modelName}} subscription has been cancelled and removed from your account.',
+          suspendedMessage:
+            'Your subscription has been suspended. Contact support or check your account status.',
+          expiredMessage:
+            'Your subscription expired on {{date}}. Renew to continue using this model.',
+          cancelledMessage:
+            '{{modelName}} subscription has been cancelled and removed from your account.',
           cancelSubscription: 'Cancel Subscription',
           cancelling: 'Cancelling...',
           notifications: {
@@ -167,19 +171,23 @@ const resources = {
           messages: {
             loadingModels: 'Loading your subscribed models...',
             noSubscribedModels: 'No subscribed models available',
-            noSubscribedModelsError: 'No subscribed models found. You need an active subscription to a model before creating an API key.',
+            noSubscribedModelsError:
+              'No subscribed models found. You need an active subscription to a model before creating an API key.',
             selectedModels: 'Selected models',
             modelsSelected: '{{count}} model(s) selected',
             keyCreatedSuccess: '{{name}} has been created successfully',
             keyDeleted: '{{name}} has been deleted',
             copyToClipboard: '{{label}} copied to clipboard',
-            secureRetrievalMessage: 'Click the eye icon above to securely retrieve your full LiteLLM API key. For security reasons, this requires recent authentication and is rate-limited. All key retrievals are logged for audit purposes.',
+            secureRetrievalMessage:
+              'Click the eye icon above to securely retrieve your full LiteLLM API key. For security reasons, this requires recent authentication and is rate-limited. All key retrievals are logged for audit purposes.',
             keyCreatedMessage: 'Your API key has been created successfully.',
             deleteConfirmation: 'Are you sure you want to delete the API key {{name}}?',
-            deleteWarning: 'This action cannot be undone. The API key will be permanently removed and applications using this key will lose access immediately.',
+            deleteWarning:
+              'This action cannot be undone. The API key will be permanently removed and applications using this key will lose access immediately.',
             keyRevokedMessage: 'This API key has been revoked and can no longer be used.',
             keyExpiredMessage: 'This API key has expired on {{date}}.',
-            retrievalMessage: 'Your LiteLLM API key has been retrieved securely. Retrieved at: {{date}}',
+            retrievalMessage:
+              'Your LiteLLM API key has been retrieved securely. Retrieved at: {{date}}',
             plusMore: '+{{count}} more',
             requestsPerMinute: 'requests/minute',
             apiKeyDetails: 'API Key Details',
@@ -192,7 +200,7 @@ const resources = {
           },
           placeholders: {
             keyName: 'e.g., Production API Key',
-            keyDescription: 'Optional description of this key\'s purpose',
+            keyDescription: "Optional description of this key's purpose",
           },
           rateLimits: {
             basic: '100 req/min (Basic)',
@@ -454,7 +462,8 @@ const resources = {
           loadingTitle: 'Cargando Suscripciones...',
           loadingDescription: 'Obteniendo información de tus suscripciones',
           noSubscriptionsTitle: 'No se encontraron suscripciones',
-          noSubscriptionsDescription: 'No tienes suscripciones activas. Comienza suscribiéndote a un modelo de IA.',
+          noSubscriptionsDescription:
+            'No tienes suscripciones activas. Comienza suscribiéndote a un modelo de IA.',
           viewDetails: 'Ver Detalles',
           detailsTitle: 'Detalles de Suscripción',
           provider: 'Proveedor',
@@ -476,9 +485,12 @@ const resources = {
           pricingUnavailable: 'Información de precios no disponible',
           inputPricing: 'Entrada: ${{cost}}/1K tokens',
           outputPricing: 'Salida: ${{cost}}/1K tokens',
-          suspendedMessage: 'Tu suscripción ha sido suspendida. Contacta soporte o verifica el estado de tu cuenta.',
-          expiredMessage: 'Tu suscripción expiró el {{date}}. Renueva para continuar usando este modelo.',
-          cancelledMessage: 'La suscripción de {{modelName}} ha sido cancelada y eliminada de tu cuenta.',
+          suspendedMessage:
+            'Tu suscripción ha sido suspendida. Contacta soporte o verifica el estado de tu cuenta.',
+          expiredMessage:
+            'Tu suscripción expiró el {{date}}. Renueva para continuar usando este modelo.',
+          cancelledMessage:
+            'La suscripción de {{modelName}} ha sido cancelada y eliminada de tu cuenta.',
           cancelSubscription: 'Cancelar Suscripción',
           cancelling: 'Cancelando...',
           notifications: {
@@ -544,19 +556,23 @@ const resources = {
           messages: {
             loadingModels: 'Cargando tus modelos suscritos...',
             noSubscribedModels: 'No hay modelos suscritos disponibles',
-            noSubscribedModelsError: 'No se encontraron modelos suscritos. Necesitas una suscripción activa a un modelo antes de crear una clave API.',
+            noSubscribedModelsError:
+              'No se encontraron modelos suscritos. Necesitas una suscripción activa a un modelo antes de crear una clave API.',
             selectedModels: 'Modelos seleccionados',
             modelsSelected: '{{count}} modelo(s) seleccionado(s)',
             keyCreatedSuccess: '{{name}} ha sido creado exitosamente',
             keyDeleted: '{{name}} ha sido eliminado',
             copyToClipboard: '{{label}} copiado al portapapeles',
-            secureRetrievalMessage: 'Haz clic en el ícono del ojo arriba para recuperar de forma segura tu clave API completa de LiteLLM. Por razones de seguridad, esto requiere autenticación reciente y tiene límite de velocidad. Todas las recuperaciones de claves son registradas para auditoría.',
+            secureRetrievalMessage:
+              'Haz clic en el ícono del ojo arriba para recuperar de forma segura tu clave API completa de LiteLLM. Por razones de seguridad, esto requiere autenticación reciente y tiene límite de velocidad. Todas las recuperaciones de claves son registradas para auditoría.',
             keyCreatedMessage: 'Tu clave API ha sido creada exitosamente.',
             deleteConfirmation: '¿Estás seguro de que quieres eliminar la clave API {{name}}?',
-            deleteWarning: 'Esta acción no se puede deshacer. La clave API será eliminada permanentemente y las aplicaciones que usen esta clave perderán acceso inmediatamente.',
+            deleteWarning:
+              'Esta acción no se puede deshacer. La clave API será eliminada permanentemente y las aplicaciones que usen esta clave perderán acceso inmediatamente.',
             keyRevokedMessage: 'Esta clave API ha sido revocada y ya no se puede usar.',
             keyExpiredMessage: 'Esta clave API expiró el {{date}}.',
-            retrievalMessage: 'Tu clave API de LiteLLM ha sido recuperada de forma segura. Recuperada en: {{date}}',
+            retrievalMessage:
+              'Tu clave API de LiteLLM ha sido recuperada de forma segura. Recuperada en: {{date}}',
             plusMore: '+{{count}} más',
             requestsPerMinute: 'solicitudes/minuto',
             apiKeyDetails: 'Detalles de Clave API',
@@ -802,14 +818,14 @@ const resources = {
           title: 'Modèles Disponibles',
           noModels: 'Aucun modèle disponible pour le moment',
           description:
-            'La découverte de modèles et la fonctionnalité d\'abonnement arrivent bientôt.',
+            "La découverte de modèles et la fonctionnalité d'abonnement arrivent bientôt.",
           searchPlaceholder: 'Rechercher des modèles...',
           filters: {
             allProviders: 'Tous les Fournisseurs',
             allCategories: 'Toutes les Catégories',
           },
-          subscribe: 'S\'abonner',
-          subscribing: 'Création de l\'abonnement...',
+          subscribe: "S'abonner",
+          subscribing: "Création de l'abonnement...",
           contextLabel: 'Contexte:',
           pricingLabel: 'Tarification: N/A',
           moreFeatures: '+{{count}} de plus',
@@ -831,11 +847,12 @@ const resources = {
           pageSubtitle: 'Gérez vos abonnements et usage des modèles IA',
           newSubscription: 'Nouvel Abonnement',
           loadingTitle: 'Chargement des Abonnements...',
-          loadingDescription: 'Récupération de vos informations d\'abonnement',
+          loadingDescription: "Récupération de vos informations d'abonnement",
           noSubscriptionsTitle: 'Aucun abonnement trouvé',
-          noSubscriptionsDescription: 'Vous n\'avez aucun abonnement actif. Commencez par vous abonner à un modèle IA.',
+          noSubscriptionsDescription:
+            "Vous n'avez aucun abonnement actif. Commencez par vous abonner à un modèle IA.",
           viewDetails: 'Voir les Détails',
-          detailsTitle: 'Détails de l\'Abonnement',
+          detailsTitle: "Détails de l'Abonnement",
           provider: 'Fournisseur',
           pricing: 'Tarification',
           status: 'Statut',
@@ -855,20 +872,22 @@ const resources = {
           pricingUnavailable: 'Informations de tarification non disponibles',
           inputPricing: 'Entrée: ${{cost}}/1K tokens',
           outputPricing: 'Sortie: ${{cost}}/1K tokens',
-          suspendedMessage: 'Votre abonnement a été suspendu. Contactez le support ou vérifiez le statut de votre compte.',
-          expiredMessage: 'Votre abonnement a expiré le {{date}}. Renouvelez pour continuer à utiliser ce modèle.',
-          cancelledMessage: 'L\'abonnement {{modelName}} a été annulé et supprimé de votre compte.',
-          cancelSubscription: 'Annuler l\'Abonnement',
+          suspendedMessage:
+            'Votre abonnement a été suspendu. Contactez le support ou vérifiez le statut de votre compte.',
+          expiredMessage:
+            'Votre abonnement a expiré le {{date}}. Renouvelez pour continuer à utiliser ce modèle.',
+          cancelledMessage: "L'abonnement {{modelName}} a été annulé et supprimé de votre compte.",
+          cancelSubscription: "Annuler l'Abonnement",
           cancelling: 'Annulation...',
           notifications: {
             loadError: 'Erreur',
             loadErrorDesc: 'Échec du chargement des abonnements depuis le serveur.',
             cancelSuccess: 'Abonnement Annulé',
             cancelError: 'Erreur',
-            cancelErrorDesc: 'Échec de l\'annulation de l\'abonnement. Veuillez réessayer.',
-            cannotCancel: 'Impossible d\'Annuler l\'Abonnement',
+            cancelErrorDesc: "Échec de l'annulation de l'abonnement. Veuillez réessayer.",
+            cannotCancel: "Impossible d'Annuler l'Abonnement",
             cannotCancelDesc:
-              'Il y a des clés API actives liées à cet abonnement. Veuillez d\'abord supprimer toutes les clés API, puis annuler l\'abonnement.',
+              "Il y a des clés API actives liées à cet abonnement. Veuillez d'abord supprimer toutes les clés API, puis annuler l'abonnement.",
           },
           alerts: {
             suspended: 'Abonnement Suspendu',
@@ -901,7 +920,7 @@ const resources = {
             readModels: 'Lire les Modèles',
             writeModels: 'Écrire les Modèles',
             createCompletions: 'Créer des Complétions',
-            readUsage: 'Lire l\'Utilisation',
+            readUsage: "Lire l'Utilisation",
             readAnalytics: 'Lire les Analyses',
             adminAccess: 'Accès Administrateur',
           },
@@ -916,26 +935,30 @@ const resources = {
             expires: 'Expire',
             description: 'Description',
             keyDetails: 'Détails de la Clé',
-            usageExample: 'Exemple d\'Utilisation',
+            usageExample: "Exemple d'Utilisation",
             cancel: 'Annuler',
             close: 'Fermer',
           },
           messages: {
             loadingModels: 'Chargement de vos modèles abonnés...',
             noSubscribedModels: 'Aucun modèle abonné disponible',
-            noSubscribedModelsError: 'Aucun modèle abonné trouvé. Vous devez avoir un abonnement actif à un modèle avant de créer une clé API.',
+            noSubscribedModelsError:
+              'Aucun modèle abonné trouvé. Vous devez avoir un abonnement actif à un modèle avant de créer une clé API.',
             selectedModels: 'Modèles sélectionnés',
             modelsSelected: '{{count}} modèle(s) sélectionné(s)',
             keyCreatedSuccess: '{{name}} a été créé avec succès',
             keyDeleted: '{{name}} a été supprimé',
             copyToClipboard: '{{label}} copié dans le presse-papiers',
-            secureRetrievalMessage: 'Cliquez sur l\'icône œil ci-dessus pour récupérer en toute sécurité votre clé API LiteLLM complète. Pour des raisons de sécurité, cela nécessite une authentification récente et est limité en débit. Toutes les récupérations de clés sont enregistrées à des fins d\'audit.',
+            secureRetrievalMessage:
+              "Cliquez sur l'icône œil ci-dessus pour récupérer en toute sécurité votre clé API LiteLLM complète. Pour des raisons de sécurité, cela nécessite une authentification récente et est limité en débit. Toutes les récupérations de clés sont enregistrées à des fins d'audit.",
             keyCreatedMessage: 'Votre clé API a été créée avec succès.',
             deleteConfirmation: 'Êtes-vous sûr de vouloir supprimer la clé API {{name}} ?',
-            deleteWarning: 'Cette action ne peut pas être annulée. La clé API sera définitivement supprimée et les applications utilisant cette clé perdront immédiatement l\'accès.',
+            deleteWarning:
+              "Cette action ne peut pas être annulée. La clé API sera définitivement supprimée et les applications utilisant cette clé perdront immédiatement l'accès.",
             keyRevokedMessage: 'Cette clé API a été révoquée et ne peut plus être utilisée.',
             keyExpiredMessage: 'Cette clé API a expiré le {{date}}.',
-            retrievalMessage: 'Votre clé API LiteLLM a été récupérée en toute sécurité. Récupérée à : {{date}}',
+            retrievalMessage:
+              'Votre clé API LiteLLM a été récupérée en toute sécurité. Récupérée à : {{date}}',
             plusMore: '+{{count}} de plus',
             requestsPerMinute: 'requêtes/minute',
             apiKeyDetails: 'Détails de la Clé API',
@@ -944,7 +967,8 @@ const resources = {
             loadingDescription: 'Récupération de vos informations de clé API',
             errorLoadingTitle: 'Erreur lors du chargement des clés API',
             noKeysTitle: 'Aucune clé API trouvée',
-            noKeysDescription: 'Créez votre première clé API pour commencer à utiliser les services LiteMaaS.',
+            noKeysDescription:
+              'Créez votre première clé API pour commencer à utiliser les services LiteMaaS.',
           },
           placeholders: {
             keyName: 'ex., Clé API de Production',
@@ -1151,10 +1175,12 @@ const resources = {
       pages: {
         home: {
           title: 'Willkommen bei LiteMaaS',
-          subtitle: 'Ihre Model-as-a-Service-Plattform für den Zugriff und die Verwaltung von KI-Modellen.',
+          subtitle:
+            'Ihre Model-as-a-Service-Plattform für den Zugriff und die Verwaltung von KI-Modellen.',
           demoNotification: {
             title: 'Willkommen bei LiteMaaS!',
-            description: 'Dies ist eine Demo-Benachrichtigung zur Präsentation des Benachrichtigungssystems.',
+            description:
+              'Dies ist eine Demo-Benachrichtigung zur Präsentation des Benachrichtigungssystems.',
             viewTutorial: 'Tutorial ansehen',
           },
           demoNotificationButton: 'Demo-Benachrichtigung',
@@ -1209,7 +1235,8 @@ const resources = {
           loadingTitle: 'Abonnements werden geladen...',
           loadingDescription: 'Ihre Abonnementinformationen werden abgerufen',
           noSubscriptionsTitle: 'Keine Abonnements gefunden',
-          noSubscriptionsDescription: 'Sie haben keine aktiven Abonnements. Beginnen Sie mit dem Abonnieren eines KI-Modells.',
+          noSubscriptionsDescription:
+            'Sie haben keine aktiven Abonnements. Beginnen Sie mit dem Abonnieren eines KI-Modells.',
           viewDetails: 'Details anzeigen',
           detailsTitle: 'Abonnement-Details',
           provider: 'Anbieter',
@@ -1231,9 +1258,12 @@ const resources = {
           pricingUnavailable: 'Preisinformationen nicht verfügbar',
           inputPricing: 'Eingabe: ${{cost}}/1K Token',
           outputPricing: 'Ausgabe: ${{cost}}/1K Token',
-          suspendedMessage: 'Ihr Abonnement wurde ausgesetzt. Kontaktieren Sie den Support oder überprüfen Sie Ihren Kontostatus.',
-          expiredMessage: 'Ihr Abonnement ist am {{date}} abgelaufen. Erneuern Sie es, um dieses Modell weiter zu nutzen.',
-          cancelledMessage: '{{modelName}} Abonnement wurde gekündigt und von Ihrem Konto entfernt.',
+          suspendedMessage:
+            'Ihr Abonnement wurde ausgesetzt. Kontaktieren Sie den Support oder überprüfen Sie Ihren Kontostatus.',
+          expiredMessage:
+            'Ihr Abonnement ist am {{date}} abgelaufen. Erneuern Sie es, um dieses Modell weiter zu nutzen.',
+          cancelledMessage:
+            '{{modelName}} Abonnement wurde gekündigt und von Ihrem Konto entfernt.',
           cancelSubscription: 'Abonnement kündigen',
           cancelling: 'Wird gekündigt...',
           notifications: {
@@ -1299,19 +1329,25 @@ const resources = {
           messages: {
             loadingModels: 'Ihre abonnierten Modelle werden geladen...',
             noSubscribedModels: 'Keine abonnierten Modelle verfügbar',
-            noSubscribedModelsError: 'Keine abonnierten Modelle gefunden. Sie benötigen ein aktives Abonnement für ein Modell, bevor Sie einen API-Schlüssel erstellen.',
+            noSubscribedModelsError:
+              'Keine abonnierten Modelle gefunden. Sie benötigen ein aktives Abonnement für ein Modell, bevor Sie einen API-Schlüssel erstellen.',
             selectedModels: 'Ausgewählte Modelle',
             modelsSelected: '{{count}} Modell(e) ausgewählt',
             keyCreatedSuccess: '{{name}} wurde erfolgreich erstellt',
             keyDeleted: '{{name}} wurde gelöscht',
             copyToClipboard: '{{label}} in Zwischenablage kopiert',
-            secureRetrievalMessage: 'Klicken Sie auf das Augensymbol oben, um Ihren vollständigen LiteLLM API-Schlüssel sicher abzurufen. Aus Sicherheitsgründen erfordert dies eine kürzliche Authentifizierung und ist ratenbegrenzt. Alle Schlüsselabrufe werden zu Prüfzwecken protokolliert.',
+            secureRetrievalMessage:
+              'Klicken Sie auf das Augensymbol oben, um Ihren vollständigen LiteLLM API-Schlüssel sicher abzurufen. Aus Sicherheitsgründen erfordert dies eine kürzliche Authentifizierung und ist ratenbegrenzt. Alle Schlüsselabrufe werden zu Prüfzwecken protokolliert.',
             keyCreatedMessage: 'Ihr API-Schlüssel wurde erfolgreich erstellt.',
-            deleteConfirmation: 'Sind Sie sicher, dass Sie den API-Schlüssel {{name}} löschen möchten?',
-            deleteWarning: 'Diese Aktion kann nicht rückgängig gemacht werden. Der API-Schlüssel wird dauerhaft entfernt und Anwendungen, die diesen Schlüssel verwenden, verlieren sofort den Zugriff.',
-            keyRevokedMessage: 'Dieser API-Schlüssel wurde widerrufen und kann nicht mehr verwendet werden.',
+            deleteConfirmation:
+              'Sind Sie sicher, dass Sie den API-Schlüssel {{name}} löschen möchten?',
+            deleteWarning:
+              'Diese Aktion kann nicht rückgängig gemacht werden. Der API-Schlüssel wird dauerhaft entfernt und Anwendungen, die diesen Schlüssel verwenden, verlieren sofort den Zugriff.',
+            keyRevokedMessage:
+              'Dieser API-Schlüssel wurde widerrufen und kann nicht mehr verwendet werden.',
             keyExpiredMessage: 'Dieser API-Schlüssel ist am {{date}} abgelaufen.',
-            retrievalMessage: 'Ihr LiteLLM API-Schlüssel wurde sicher abgerufen. Abgerufen am: {{date}}',
+            retrievalMessage:
+              'Ihr LiteLLM API-Schlüssel wurde sicher abgerufen. Abgerufen am: {{date}}',
             plusMore: '+{{count}} weitere',
             requestsPerMinute: 'Anfragen/Minute',
             apiKeyDetails: 'API-Schlüssel-Details',
@@ -1320,7 +1356,8 @@ const resources = {
             loadingDescription: 'Ihre API-Schlüssel-Informationen werden abgerufen',
             errorLoadingTitle: 'Fehler beim Laden der API-Schlüssel',
             noKeysTitle: 'Keine API-Schlüssel gefunden',
-            noKeysDescription: 'Erstellen Sie Ihren ersten API-Schlüssel, um LiteMaaS-Dienste zu nutzen.',
+            noKeysDescription:
+              'Erstellen Sie Ihren ersten API-Schlüssel, um LiteMaaS-Dienste zu nutzen.',
           },
           placeholders: {
             keyName: 'z.B. Produktions-API-Schlüssel',
@@ -1348,10 +1385,12 @@ const resources = {
             loadModelErrorDesc: 'Fehler beim Laden Ihrer abonnierten Modelle.',
             createSuccess: 'API-Schlüssel erstellt',
             createError: 'Fehler',
-            createErrorDesc: 'Fehler beim Erstellen des API-Schlüssels. Bitte versuchen Sie es erneut.',
+            createErrorDesc:
+              'Fehler beim Erstellen des API-Schlüssels. Bitte versuchen Sie es erneut.',
             deleteSuccess: 'API-Schlüssel gelöscht',
             deleteError: 'Fehler',
-            deleteErrorDesc: 'Fehler beim Löschen des API-Schlüssels. Bitte versuchen Sie es erneut.',
+            deleteErrorDesc:
+              'Fehler beim Löschen des API-Schlüssels. Bitte versuchen Sie es erneut.',
             retrieveSuccess: 'API-Schlüssel abgerufen',
             retrieveError: 'Fehler beim Abrufen des API-Schlüssels',
             retrieveErrorDesc: 'Fehler beim Abrufen des API-Schlüssels',
@@ -1388,7 +1427,8 @@ const resources = {
           loadingTitle: 'Nutzungsdaten werden geladen...',
           loadingDescription: 'Ihre API-Nutzungsmuster und Metriken werden analysiert',
           noDataTitle: 'Keine Nutzungsdaten verfügbar',
-          noDataDescription: 'Beginnen Sie mit API-Anfragen, um Ihre Nutzungsstatistiken hier zu sehen.',
+          noDataDescription:
+            'Beginnen Sie mit API-Anfragen, um Ihre Nutzungsstatistiken hier zu sehen.',
           viewApiDocs: 'API-Dokumentation anzeigen',
           filters: {
             custom: 'Benutzerdefiniert',
@@ -1448,7 +1488,8 @@ const resources = {
             exportComplete: 'Export abgeschlossen',
             exportCompleteDesc: 'Nutzungsdaten wurden erfolgreich exportiert.',
             exportFailed: 'Export fehlgeschlagen',
-            exportFailedDesc: 'Fehler beim Exportieren der Nutzungsdaten. Bitte versuchen Sie es erneut.',
+            exportFailedDesc:
+              'Fehler beim Exportieren der Nutzungsdaten. Bitte versuchen Sie es erneut.',
           },
         },
         settings: {
@@ -1552,7 +1593,8 @@ const resources = {
         models: {
           title: 'Modelli Disponibili',
           noModels: 'Nessun modello ancora disponibile',
-          description: 'La scoperta dei modelli e la funzionalità di abbonamento arriveranno presto.',
+          description:
+            'La scoperta dei modelli e la funzionalità di abbonamento arriveranno presto.',
           searchPlaceholder: 'Cerca modelli...',
           filters: {
             allProviders: 'Tutti i Provider',
@@ -1583,7 +1625,8 @@ const resources = {
           loadingTitle: 'Caricamento Abbonamenti...',
           loadingDescription: 'Recupero informazioni abbonamenti',
           noSubscriptionsTitle: 'Nessun abbonamento trovato',
-          noSubscriptionsDescription: 'Non hai abbonamenti attivi. Inizia abbonandoti a un modello AI.',
+          noSubscriptionsDescription:
+            'Non hai abbonamenti attivi. Inizia abbonandoti a un modello AI.',
           viewDetails: 'Visualizza Dettagli',
           detailsTitle: 'Dettagli Abbonamento',
           provider: 'Provider',
@@ -1605,9 +1648,12 @@ const resources = {
           pricingUnavailable: 'Informazioni sui prezzi non disponibili',
           inputPricing: 'Input: ${{cost}}/1K token',
           outputPricing: 'Output: ${{cost}}/1K token',
-          suspendedMessage: 'Il tuo abbonamento è stato sospeso. Contatta il supporto o verifica lo stato del tuo account.',
-          expiredMessage: 'Il tuo abbonamento è scaduto il {{date}}. Rinnova per continuare a usare questo modello.',
-          cancelledMessage: 'L\'abbonamento {{modelName}} è stato cancellato e rimosso dal tuo account.',
+          suspendedMessage:
+            'Il tuo abbonamento è stato sospeso. Contatta il supporto o verifica lo stato del tuo account.',
+          expiredMessage:
+            'Il tuo abbonamento è scaduto il {{date}}. Rinnova per continuare a usare questo modello.',
+          cancelledMessage:
+            "L'abbonamento {{modelName}} è stato cancellato e rimosso dal tuo account.",
           cancelSubscription: 'Cancella Abbonamento',
           cancelling: 'Cancellazione...',
           notifications: {
@@ -1615,10 +1661,10 @@ const resources = {
             loadErrorDesc: 'Impossibile caricare gli abbonamenti dal server.',
             cancelSuccess: 'Abbonamento Cancellato',
             cancelError: 'Errore',
-            cancelErrorDesc: 'Impossibile cancellare l\'abbonamento. Riprova.',
+            cancelErrorDesc: "Impossibile cancellare l'abbonamento. Riprova.",
             cannotCancel: 'Impossibile Cancellare Abbonamento',
             cannotCancelDesc:
-              'Ci sono chiavi API attive collegate a questo abbonamento. Elimina prima tutte le chiavi API, poi cancella l\'abbonamento.',
+              "Ci sono chiavi API attive collegate a questo abbonamento. Elimina prima tutte le chiavi API, poi cancella l'abbonamento.",
           },
           alerts: {
             suspended: 'Abbonamento Sospeso',
@@ -1673,19 +1719,24 @@ const resources = {
           messages: {
             loadingModels: 'Caricamento modelli sottoscritti...',
             noSubscribedModels: 'Nessun modello sottoscritto disponibile',
-            noSubscribedModelsError: 'Nessun modello sottoscritto trovato. Devi avere un abbonamento attivo a un modello prima di creare una chiave API.',
+            noSubscribedModelsError:
+              'Nessun modello sottoscritto trovato. Devi avere un abbonamento attivo a un modello prima di creare una chiave API.',
             selectedModels: 'Modelli selezionati',
             modelsSelected: '{{count}} modello/i selezionato/i',
             keyCreatedSuccess: '{{name}} è stata creata con successo',
             keyDeleted: '{{name}} è stata eliminata',
             copyToClipboard: '{{label}} copiato negli appunti',
-            secureRetrievalMessage: 'Clicca sull\'icona occhio sopra per recuperare in modo sicuro la tua chiave API LiteLLM completa. Per motivi di sicurezza, questo richiede autenticazione recente ed è limitato nella frequenza. Tutti i recuperi di chiavi sono registrati per scopi di audit.',
+            secureRetrievalMessage:
+              "Clicca sull'icona occhio sopra per recuperare in modo sicuro la tua chiave API LiteLLM completa. Per motivi di sicurezza, questo richiede autenticazione recente ed è limitato nella frequenza. Tutti i recuperi di chiavi sono registrati per scopi di audit.",
             keyCreatedMessage: 'La tua chiave API è stata creata con successo.',
             deleteConfirmation: 'Sei sicuro di voler eliminare la chiave API {{name}}?',
-            deleteWarning: 'Questa azione non può essere annullata. La chiave API sarà rimossa permanentemente e le applicazioni che usano questa chiave perderanno immediatamente l\'accesso.',
-            keyRevokedMessage: 'Questa chiave API è stata revocata e non può più essere utilizzata.',
+            deleteWarning:
+              "Questa azione non può essere annullata. La chiave API sarà rimossa permanentemente e le applicazioni che usano questa chiave perderanno immediatamente l'accesso.",
+            keyRevokedMessage:
+              'Questa chiave API è stata revocata e non può più essere utilizzata.',
             keyExpiredMessage: 'Questa chiave API è scaduta il {{date}}.',
-            retrievalMessage: 'La tua chiave API LiteLLM è stata recuperata in modo sicuro. Recuperata il: {{date}}',
+            retrievalMessage:
+              'La tua chiave API LiteLLM è stata recuperata in modo sicuro. Recuperata il: {{date}}',
             plusMore: '+{{count}} altre',
             requestsPerMinute: 'richieste/minuto',
             apiKeyDetails: 'Dettagli Chiave API',
@@ -1694,7 +1745,8 @@ const resources = {
             loadingDescription: 'Recupero informazioni chiavi API',
             errorLoadingTitle: 'Errore caricamento chiavi API',
             noKeysTitle: 'Nessuna chiave API trovata',
-            noKeysDescription: 'Crea la tua prima chiave API per iniziare a usare i servizi LiteMaaS.',
+            noKeysDescription:
+              'Crea la tua prima chiave API per iniziare a usare i servizi LiteMaaS.',
           },
           placeholders: {
             keyName: 'es., Chiave API Produzione',
@@ -1762,7 +1814,8 @@ const resources = {
           loadingTitle: 'Caricamento Dati Utilizzo...',
           loadingDescription: 'Analisi pattern utilizzo API e metriche',
           noDataTitle: 'Nessun dato di utilizzo disponibile',
-          noDataDescription: 'Inizia a fare richieste API per vedere le tue statistiche di utilizzo qui.',
+          noDataDescription:
+            'Inizia a fare richieste API per vedere le tue statistiche di utilizzo qui.',
           viewApiDocs: 'Visualizza Documentazione API',
           filters: {
             custom: 'Personalizzato',
@@ -1818,7 +1871,7 @@ const resources = {
             loadFailed: 'Impossibile caricare le metriche di utilizzo. Riprova.',
             exportStarted: 'Export Avviato',
             exportStartedDesc:
-              'L\'export dei tuoi dati di utilizzo è in preparazione e sarà scaricato a breve.',
+              "L'export dei tuoi dati di utilizzo è in preparazione e sarà scaricato a breve.",
             exportComplete: 'Export Completato',
             exportCompleteDesc: 'I dati di utilizzo sono stati esportati con successo.',
             exportFailed: 'Export Fallito',
@@ -1979,7 +2032,8 @@ const resources = {
           pricingUnavailable: '가격 정보 없음',
           inputPricing: '입력: ${{cost}}/1K 토큰',
           outputPricing: '출력: ${{cost}}/1K 토큰',
-          suspendedMessage: '구독이 일시 중지되었습니다. 지원팀에 문의하거나 계정 상태를 확인하세요.',
+          suspendedMessage:
+            '구독이 일시 중지되었습니다. 지원팀에 문의하거나 계정 상태를 확인하세요.',
           expiredMessage: '구독이 {{date}}에 만료되었습니다. 이 모델을 계속 사용하려면 갱신하세요.',
           cancelledMessage: '{{modelName}} 구독이 취소되어 계정에서 제거되었습니다.',
           cancelSubscription: '구독 취소',
@@ -2047,16 +2101,19 @@ const resources = {
           messages: {
             loadingModels: '구독한 모델을 불러오는 중...',
             noSubscribedModels: '구독한 모델이 없습니다',
-            noSubscribedModelsError: '구독한 모델을 찾을 수 없습니다. API 키를 생성하기 전에 모델에 대한 활성 구독이 필요합니다.',
+            noSubscribedModelsError:
+              '구독한 모델을 찾을 수 없습니다. API 키를 생성하기 전에 모델에 대한 활성 구독이 필요합니다.',
             selectedModels: '선택된 모델',
             modelsSelected: '{{count}}개 모델 선택됨',
             keyCreatedSuccess: '{{name}}이(가) 성공적으로 생성되었습니다',
             keyDeleted: '{{name}}이(가) 삭제되었습니다',
             copyToClipboard: '{{label}}이(가) 클립보드에 복사되었습니다',
-            secureRetrievalMessage: '위의 눈 아이콘을 클릭하여 전체 LiteLLM API 키를 안전하게 검색하세요. 보안상의 이유로 최근 인증이 필요하며 속도가 제한됩니다. 모든 키 검색은 감사 목적으로 기록됩니다.',
+            secureRetrievalMessage:
+              '위의 눈 아이콘을 클릭하여 전체 LiteLLM API 키를 안전하게 검색하세요. 보안상의 이유로 최근 인증이 필요하며 속도가 제한됩니다. 모든 키 검색은 감사 목적으로 기록됩니다.',
             keyCreatedMessage: 'API 키가 성공적으로 생성되었습니다.',
             deleteConfirmation: '{{name}} API 키를 삭제하시겠습니까?',
-            deleteWarning: '이 작업은 되돌릴 수 없습니다. API 키가 영구적으로 제거되며 이 키를 사용하는 애플리케이션은 즉시 액세스를 잃게 됩니다.',
+            deleteWarning:
+              '이 작업은 되돌릴 수 없습니다. API 키가 영구적으로 제거되며 이 키를 사용하는 애플리케이션은 즉시 액세스를 잃게 됩니다.',
             keyRevokedMessage: '이 API 키는 취소되었으며 더 이상 사용할 수 없습니다.',
             keyExpiredMessage: '이 API 키는 {{date}}에 만료되었습니다.',
             retrievalMessage: 'LiteLLM API 키가 안전하게 검색되었습니다. 검색 시간: {{date}}',
@@ -2191,8 +2248,7 @@ const resources = {
             loadErrorDesc: '서버에서 사용량 메트릭을 불러오지 못했습니다.',
             loadFailed: '사용량 메트릭을 불러오지 못했습니다. 다시 시도하세요.',
             exportStarted: '내보내기 시작됨',
-            exportStartedDesc:
-              '사용량 데이터 내보내기가 준비 중이며 곧 다운로드됩니다.',
+            exportStartedDesc: '사용량 데이터 내보내기가 준비 중이며 곧 다운로드됩니다.',
             exportComplete: '내보내기 완료',
             exportCompleteDesc: '사용량 데이터가 성공적으로 내보내졌습니다.',
             exportFailed: '내보내기 실패',
@@ -2331,7 +2387,8 @@ const resources = {
           loadingTitle: 'サブスクリプションを読み込み中...',
           loadingDescription: 'サブスクリプション情報を取得中',
           noSubscriptionsTitle: 'サブスクリプションが見つかりません',
-          noSubscriptionsDescription: 'アクティブなサブスクリプションがありません。AIモデルのサブスクライブから始めましょう。',
+          noSubscriptionsDescription:
+            'アクティブなサブスクリプションがありません。AIモデルのサブスクライブから始めましょう。',
           viewDetails: '詳細を表示',
           detailsTitle: 'サブスクリプション詳細',
           provider: 'プロバイダー',
@@ -2353,9 +2410,12 @@ const resources = {
           pricingUnavailable: '価格情報なし',
           inputPricing: '入力：${{cost}}/1Kトークン',
           outputPricing: '出力：${{cost}}/1Kトークン',
-          suspendedMessage: 'サブスクリプションが一時停止されました。サポートに連絡するか、アカウントステータスを確認してください。',
-          expiredMessage: 'サブスクリプションは{{date}}に期限切れになりました。このモデルを使い続けるには更新してください。',
-          cancelledMessage: '{{modelName}}サブスクリプションはキャンセルされ、アカウントから削除されました。',
+          suspendedMessage:
+            'サブスクリプションが一時停止されました。サポートに連絡するか、アカウントステータスを確認してください。',
+          expiredMessage:
+            'サブスクリプションは{{date}}に期限切れになりました。このモデルを使い続けるには更新してください。',
+          cancelledMessage:
+            '{{modelName}}サブスクリプションはキャンセルされ、アカウントから削除されました。',
           cancelSubscription: 'サブスクリプションをキャンセル',
           cancelling: 'キャンセル中...',
           notifications: {
@@ -2363,7 +2423,8 @@ const resources = {
             loadErrorDesc: 'サーバーからサブスクリプションを読み込めませんでした。',
             cancelSuccess: 'サブスクリプションキャンセル済み',
             cancelError: 'エラー',
-            cancelErrorDesc: 'サブスクリプションのキャンセルに失敗しました。もう一度お試しください。',
+            cancelErrorDesc:
+              'サブスクリプションのキャンセルに失敗しました。もう一度お試しください。',
             cannotCancel: 'サブスクリプションをキャンセルできません',
             cannotCancelDesc:
               'このサブスクリプションにリンクされたアクティブなAPIキーがあります。まずすべてのAPIキーを削除してから、サブスクリプションをキャンセルしてください。',
@@ -2421,16 +2482,19 @@ const resources = {
           messages: {
             loadingModels: 'サブスクライブ済みモデルを読み込み中...',
             noSubscribedModels: 'サブスクライブ済みモデルがありません',
-            noSubscribedModelsError: 'サブスクライブ済みモデルが見つかりません。APIキーを作成する前に、モデルへのアクティブなサブスクリプションが必要です。',
+            noSubscribedModelsError:
+              'サブスクライブ済みモデルが見つかりません。APIキーを作成する前に、モデルへのアクティブなサブスクリプションが必要です。',
             selectedModels: '選択されたモデル',
             modelsSelected: '{{count}}個のモデルが選択されました',
             keyCreatedSuccess: '{{name}}が正常に作成されました',
             keyDeleted: '{{name}}が削除されました',
             copyToClipboard: '{{label}}をクリップボードにコピーしました',
-            secureRetrievalMessage: '上の目のアイコンをクリックして、完全なLiteLLM APIキーを安全に取得してください。セキュリティ上の理由から、最近の認証が必要で、レート制限されています。すべてのキー取得は監査目的で記録されます。',
+            secureRetrievalMessage:
+              '上の目のアイコンをクリックして、完全なLiteLLM APIキーを安全に取得してください。セキュリティ上の理由から、最近の認証が必要で、レート制限されています。すべてのキー取得は監査目的で記録されます。',
             keyCreatedMessage: 'APIキーが正常に作成されました。',
             deleteConfirmation: '{{name}} APIキーを削除してもよろしいですか？',
-            deleteWarning: 'この操作は元に戻せません。APIキーは永久に削除され、このキーを使用しているアプリケーションは即座にアクセスを失います。',
+            deleteWarning:
+              'この操作は元に戻せません。APIキーは永久に削除され、このキーを使用しているアプリケーションは即座にアクセスを失います。',
             keyRevokedMessage: 'このAPIキーは取り消され、使用できなくなりました。',
             keyExpiredMessage: 'このAPIキーは{{date}}に期限切れになりました。',
             retrievalMessage: 'LiteLLM APIキーが安全に取得されました。取得日時：{{date}}',
@@ -2479,7 +2543,8 @@ const resources = {
             retrieveErrorDesc: 'APIキーの取得に失敗しました',
             validationError: '検証エラー',
             nameRequired: 'APIキー名は必須です',
-            modelsRequired: 'アクティブなサブスクリプションから少なくとも1つのモデルを選択してください',
+            modelsRequired:
+              'アクティブなサブスクリプションから少なくとも1つのモデルを選択してください',
           },
           modals: {
             createTitle: 'APIキーを作成',
@@ -2570,7 +2635,8 @@ const resources = {
             exportComplete: 'エクスポート完了',
             exportCompleteDesc: '使用状況データが正常にエクスポートされました。',
             exportFailed: 'エクスポート失敗',
-            exportFailedDesc: '使用状況データのエクスポートに失敗しました。もう一度お試しください。',
+            exportFailedDesc:
+              '使用状況データのエクスポートに失敗しました。もう一度お試しください。',
           },
         },
         settings: {
@@ -2687,8 +2753,7 @@ const resources = {
           moreFeatures: '+{{count}}个更多',
           notifications: {
             subscribeSuccess: '订阅成功！',
-            subscribeSuccessDesc:
-              '您现在可以访问{{modelName}}。您可以从订阅页面生成API密钥。',
+            subscribeSuccessDesc: '您现在可以访问{{modelName}}。您可以从订阅页面生成API密钥。',
             subscribeFailed: '订阅失败',
             failedToSubscribe: '订阅模型失败',
             alreadySubscribed: '您已经订阅了此模型',
@@ -2739,8 +2804,7 @@ const resources = {
             cancelError: '错误',
             cancelErrorDesc: '取消订阅失败。请重试。',
             cannotCancel: '无法取消订阅',
-            cannotCancelDesc:
-              '有活动的API密钥链接到此订阅。请先删除所有API密钥，然后取消订阅。',
+            cannotCancelDesc: '有活动的API密钥链接到此订阅。请先删除所有API密钥，然后取消订阅。',
           },
           alerts: {
             suspended: '订阅已暂停',
@@ -2795,16 +2859,19 @@ const resources = {
           messages: {
             loadingModels: '正在加载您订阅的模型...',
             noSubscribedModels: '没有订阅的模型可用',
-            noSubscribedModelsError: '未找到订阅的模型。在创建API密钥之前，您需要对模型有活动订阅。',
+            noSubscribedModelsError:
+              '未找到订阅的模型。在创建API密钥之前，您需要对模型有活动订阅。',
             selectedModels: '选定的模型',
             modelsSelected: '已选择{{count}}个模型',
             keyCreatedSuccess: '{{name}}已成功创建',
             keyDeleted: '{{name}}已被删除',
             copyToClipboard: '{{label}}已复制到剪贴板',
-            secureRetrievalMessage: '点击上方的眼睛图标安全地检索您的完整LiteLLM API密钥。出于安全原因，这需要最近的身份验证并受速率限制。所有密钥检索都会被记录以供审计。',
+            secureRetrievalMessage:
+              '点击上方的眼睛图标安全地检索您的完整LiteLLM API密钥。出于安全原因，这需要最近的身份验证并受速率限制。所有密钥检索都会被记录以供审计。',
             keyCreatedMessage: '您的API密钥已成功创建。',
             deleteConfirmation: '您确定要删除API密钥{{name}}吗？',
-            deleteWarning: '此操作无法撤消。API密钥将被永久删除，使用此密钥的应用程序将立即失去访问权限。',
+            deleteWarning:
+              '此操作无法撤消。API密钥将被永久删除，使用此密钥的应用程序将立即失去访问权限。',
             keyRevokedMessage: '此API密钥已被撤销，无法再使用。',
             keyExpiredMessage: '此API密钥已于{{date}}过期。',
             retrievalMessage: '您的LiteLLM API密钥已安全检索。检索时间：{{date}}',
@@ -2939,8 +3006,7 @@ const resources = {
             loadErrorDesc: '无法从服务器加载使用指标。',
             loadFailed: '加载使用指标失败。请重试。',
             exportStarted: '导出已开始',
-            exportStartedDesc:
-              '您的使用数据导出正在准备中，即将下载。',
+            exportStartedDesc: '您的使用数据导出正在准备中，即将下载。',
             exportComplete: '导出完成',
             exportCompleteDesc: '使用数据已成功导出。',
             exportFailed: '导出失败',
@@ -3002,8 +3068,7 @@ const resources = {
         },
         errors: {
           somethingWrong: '出现问题',
-          tryRefresh:
-            '抱歉，发生了意外情况。请尝试刷新页面，如果问题仍然存在，请联系支持。',
+          tryRefresh: '抱歉，发生了意外情况。请尝试刷新页面，如果问题仍然存在，请联系支持。',
         },
       },
     },
@@ -3169,16 +3234,19 @@ const resources = {
           messages: {
             loadingModels: 'Tolthad nestadren erain...',
             noSubscribedModels: 'Uir nestadren erain saed',
-            noSubscribedModelsError: 'Uir nestadren erain hiraed. Belin nestadren hall na erain cyn erio anguil API.',
+            noSubscribedModelsError:
+              'Uir nestadren erain hiraed. Belin nestadren hall na erain cyn erio anguil API.',
             selectedModels: 'Erain gedelin',
             modelsSelected: '{{count}} erain gedelin',
             keyCreatedSuccess: '{{name}} eriel sui prestanneth',
             keyDeleted: '{{name}} aphaded',
             copyToClipboard: '{{label}} tegin na tegil',
-            secureRetrievalMessage: 'Dago sui rem hen na ernad ioreth vuin anguil API LiteLLM. Na thurin, benia nestanneth nuin a limmared. Ilya ernad anguil teithad na raen minlamad.',
+            secureRetrievalMessage:
+              'Dago sui rem hen na ernad ioreth vuin anguil API LiteLLM. Na thurin, benia nestanneth nuin a limmared. Ilya ernad anguil teithad na raen minlamad.',
             keyCreatedMessage: 'Vuin anguil API eriel sui prestanneth.',
             deleteConfirmation: 'Gelinnel aphado i anguil API {{name}}?',
-            deleteWarning: 'I galad hen uir hae ernad. I anguil API aphaed sui lúmenn a rhain adhon i anguil hen lossent minas suit.',
+            deleteWarning:
+              'I galad hen uir hae ernad. I anguil API aphaed sui lúmenn a rhain adhon i anguil hen lossent minas suit.',
             keyRevokedMessage: 'I anguil API hen revoked a uir adhon sui hen.',
             keyExpiredMessage: 'I anguil API hen methen sui {{date}}.',
             retrievalMessage: 'Vuin anguil API LiteLLM eraned sui thurin. Eraned sui: {{date}}',
@@ -3313,8 +3381,7 @@ const resources = {
             loadErrorDesc: 'Ur-dhant tolthad minlamad aduial uin tawar.',
             loadFailed: 'Ur-dhant tolthad minlamad aduial. Orthad hen.',
             exportStarted: 'Edhon Tuilin',
-            exportStartedDesc:
-              'Edhon gannad aduial prestannien a dhaved sui ring.',
+            exportStartedDesc: 'Edhon gannad aduial prestannien a dhaved sui ring.',
             exportComplete: 'Edhon Prestanniel',
             exportCompleteDesc: 'Gannad aduial edhoned sui prestanneth.',
             exportFailed: 'Edhon Ur-dhant',

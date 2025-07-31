@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '../test-utils';
+import { render, screen, waitFor } from '../test-utils';
 import userEvent from '@testing-library/user-event';
 import SubscriptionsPage from '../../pages/SubscriptionsPage';
 import { mockApiResponses } from '../test-utils';
@@ -275,7 +275,6 @@ describe('SubscriptionsPage', () => {
   });
 
   it('should provide quick actions for subscriptions', async () => {
-    const user = userEvent.setup();
     render(<SubscriptionsPage />);
 
     await waitFor(() => {

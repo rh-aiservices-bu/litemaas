@@ -15,7 +15,7 @@ const AuthCallbackPage: React.FC = () => {
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
         const token = params.get('token');
-        const expiresIn = params.get('expires_in');
+        params.get('expires_in'); // expires_in parameter not used
 
         if (token) {
           // Store the token (use same token for both access and refresh)

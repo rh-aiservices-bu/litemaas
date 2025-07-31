@@ -416,7 +416,9 @@ const ModelsPage: React.FC = () => {
                         ))}
                         {model.features.length > 3 && (
                           <FlexItem>
-                            <Label color="grey">{t('pages.models.moreFeatures', { count: model.features.length - 3 })}</Label>
+                            <Label color="grey">
+                              {t('pages.models.moreFeatures', { count: model.features.length - 3 })}
+                            </Label>
                           </FlexItem>
                         )}
                       </Flex>

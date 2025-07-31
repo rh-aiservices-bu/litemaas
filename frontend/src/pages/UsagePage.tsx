@@ -21,7 +21,6 @@ import {
   SelectList,
   MenuToggle,
   MenuToggleElement,
-  DatePicker,
   Spinner,
   EmptyState,
   EmptyStateVariant,
@@ -47,7 +46,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { usageService, UsageMetrics, UsageFilters } from '../services/usage.service';
 
 // Mock chart component since PatternFly charts require additional setup
-const MockLineChart = ({ data, title }: { data: any[]; title: string }) => (
+const MockLineChart = ({ title }: { data: any[]; title: string }) => (
   <div
     style={{
       height: '200px',
@@ -65,7 +64,7 @@ const MockLineChart = ({ data, title }: { data: any[]; title: string }) => (
   </div>
 );
 
-const MockDonutChart = ({ data, title }: { data: any[]; title: string }) => (
+const MockDonutChart = ({ title }: { data: any[]; title: string }) => (
   <div
     style={{
       height: '200px',
@@ -89,11 +88,11 @@ const UsagePage: React.FC = () => {
 
   const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [_error, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState('7d');
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
+  const [_startDate] = useState('');
+  const [_endDate] = useState('');
   const [viewType, setViewType] = useState('overview');
   const [isViewTypeOpen, setIsViewTypeOpen] = useState(false);
 
@@ -382,8 +381,10 @@ const UsagePage: React.FC = () => {
                   </FlexItem>
                   <FlexItem>
                     <CubeIcon
-                      size="lg"
-                      style={{ color: 'var(--pf-v6-global--primary--color--100)' }}
+                      style={{
+                        color: 'var(--pf-v6-global--primary--color--100)',
+                        fontSize: '1.5rem',
+                      }}
                     />
                   </FlexItem>
                 </Flex>
@@ -418,8 +419,10 @@ const UsagePage: React.FC = () => {
                   </FlexItem>
                   <FlexItem>
                     <UsersIcon
-                      size="lg"
-                      style={{ color: 'var(--pf-v6-global--success--color--100)' }}
+                      style={{
+                        color: 'var(--pf-v6-global--success--color--100)',
+                        fontSize: '1.5rem',
+                      }}
                     />
                   </FlexItem>
                 </Flex>
@@ -454,8 +457,10 @@ const UsagePage: React.FC = () => {
                   </FlexItem>
                   <FlexItem>
                     <ChartLineIcon
-                      size="lg"
-                      style={{ color: 'var(--pf-v6-global--warning--color--100)' }}
+                      style={{
+                        color: 'var(--pf-v6-global--warning--color--100)',
+                        fontSize: '1.5rem',
+                      }}
                     />
                   </FlexItem>
                 </Flex>
@@ -490,8 +495,7 @@ const UsagePage: React.FC = () => {
                   </FlexItem>
                   <FlexItem>
                     <ClockIcon
-                      size="lg"
-                      style={{ color: 'var(--pf-v6-global--info--color--100)' }}
+                      style={{ color: 'var(--pf-v6-global--info--color--100)', fontSize: '1.5rem' }}
                     />
                   </FlexItem>
                 </Flex>
