@@ -43,7 +43,7 @@ export class DefaultTeamService {
             'monthly', // budget_duration
             50000, // tpm_limit
             1000, // rpm_limit
-            [], // allowed_models - empty array enables all models
+            JSON.stringify([]), // allowed_models - empty array enables all models
             JSON.stringify({ auto_created: true, default_team: true, created_by: 'system' }), // metadata
             true, // is_active
           ],
@@ -216,7 +216,7 @@ export class DefaultTeamService {
       }
 
       // Assign all orphaned users to default team
-      const userIds = orphanedUsers.rows.map((row) => row.id);
+      const userIds = orphanedUsers.rows.map((row) => String(row.id));
       const values = userIds.map((_, index) => `($1, $${index + 2}, 'member', NOW())`).join(', ');
 
       await this.fastify.dbUtils.query(

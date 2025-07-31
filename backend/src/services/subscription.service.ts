@@ -27,6 +27,30 @@ export interface CreateSubscriptionRequest {
   metadata?: Record<string, any>;
 }
 
+interface DatabaseSubscription {
+  id: string;
+  user_id: string;
+  model_id: string;
+  status: SubscriptionStatus;
+  quota_requests: number;
+  quota_tokens: number;
+  used_requests: number;
+  used_tokens: number;
+  expires_at?: Date;
+  reset_at?: Date;
+  max_budget?: number;
+  budget_duration?: string;
+  tpm_limit?: number;
+  rpm_limit?: number;
+  team_id?: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface CountResult {
+  count: string;
+}
+
 export interface UpdateSubscriptionRequest {
   status?: 'active' | 'suspended' | 'cancelled';
   quotaRequests?: number;
@@ -337,7 +361,7 @@ export class SubscriptionService {
       }
 
       // Create subscription with enhanced fields
-      const subscription = await this.fastify.dbUtils.queryOne(
+      const subscription = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
         `INSERT INTO subscriptions (
           user_id, model_id, status, quota_requests, quota_tokens, 
           expires_at, reset_at, max_budget, budget_duration,
@@ -350,15 +374,19 @@ export class SubscriptionService {
           'active',
           quotaRequests,
           quotaTokens,
-          expiresAt,
+          expiresAt || null,
           this.calculateNextResetDate(),
-          maxBudget,
-          budgetDuration,
-          tpmLimit,
-          rpmLimit,
-          teamId,
+          maxBudget || null,
+          budgetDuration || null,
+          tpmLimit || null,
+          rpmLimit || null,
+          teamId || null,
         ],
       );
+
+      if (!subscription) {
+        throw new Error('Failed to create subscription');
+      }
 
       // Create audit log
       await this.fastify.dbUtils.query(
@@ -369,7 +397,7 @@ export class SubscriptionService {
           'SUBSCRIPTION_CREATE',
           'SUBSCRIPTION',
           subscription.id,
-          { modelId, quotaRequests, quotaTokens },
+          JSON.stringify({ modelId: subscription.model_id, quotaRequests, quotaTokens }),
         ],
       );
 
@@ -493,9 +521,13 @@ export class SubscriptionService {
       }
 
       const [subscriptions, countResult] = await Promise.all([
-        this.fastify.dbUtils.queryMany(query, params),
-        this.fastify.dbUtils.queryOne(countQuery, countParams),
+        this.fastify.dbUtils.queryMany<DatabaseSubscription>(query, params),
+        this.fastify.dbUtils.queryOne<CountResult>(countQuery, countParams),
       ]);
+
+      if (!countResult) {
+        throw new Error('Failed to get subscription count');
+      }
 
       return {
         data: subscriptions.map((sub) => this.mapToEnhancedSubscription(sub)),
@@ -582,7 +614,7 @@ export class SubscriptionService {
 
       if (allowedModels !== undefined) {
         updateFields.push(`allowed_models = $${paramIndex++}`);
-        params.push(JSON.stringify(allowedModels));
+        params.push(JSON.stringify(allowedModels) as any);
       }
 
       if (teamId !== undefined) {
@@ -611,7 +643,7 @@ export class SubscriptionService {
       await this.fastify.dbUtils.query(
         `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
          VALUES ($1, $2, $3, $4, $5)`,
-        [userId, 'SUBSCRIPTION_UPDATE', 'SUBSCRIPTION', subscriptionId, updates],
+        [userId, 'SUBSCRIPTION_UPDATE', 'SUBSCRIPTION', subscriptionId, JSON.stringify(updates)],
       );
 
       this.fastify.log.info(
@@ -741,15 +773,15 @@ export class SubscriptionService {
         return { canProceed: false, reason: `Subscription is ${subscription.status}` };
       }
 
-      if (subscription.expires_at && new Date(subscription.expires_at) < new Date()) {
+      if (subscription.expires_at && new Date(String(subscription.expires_at)) < new Date()) {
         return { canProceed: false, reason: 'Subscription has expired' };
       }
 
-      if (subscription.used_requests >= subscription.quota_requests) {
+      if (Number(subscription.used_requests) >= Number(subscription.quota_requests)) {
         return { canProceed: false, reason: 'Request quota exceeded' };
       }
 
-      if (subscription.used_tokens + requestTokens > subscription.quota_tokens) {
+      if (Number(subscription.used_tokens) + requestTokens > Number(subscription.quota_tokens)) {
         return { canProceed: false, reason: 'Token quota would be exceeded' };
       }
 
@@ -889,13 +921,13 @@ export class SubscriptionService {
       let total = 0;
 
       statusCounts.forEach((row) => {
-        byStatus[row.status] = parseInt(row.count);
-        total += parseInt(row.count);
+        byStatus[String(row.status)] = parseInt(String(row.count));
+        total += parseInt(String(row.count));
       });
 
       const byProvider: Record<string, number> = {};
       providerCounts.forEach((row) => {
-        byProvider[row.provider] = parseInt(row.count);
+        byProvider[String(row.provider)] = parseInt(String(row.count));
       });
 
       return {
@@ -904,12 +936,12 @@ export class SubscriptionService {
         byProvider,
         totalQuotaUsage: {
           requests: {
-            used: parseInt(quotaStats?.total_used_requests || '0'),
-            limit: parseInt(quotaStats?.total_quota_requests || '0'),
+            used: parseInt(String(quotaStats?.total_used_requests || '0')),
+            limit: parseInt(String(quotaStats?.total_quota_requests || '0')),
           },
           tokens: {
-            used: parseInt(quotaStats?.total_used_tokens || '0'),
-            limit: parseInt(quotaStats?.total_quota_tokens || '0'),
+            used: parseInt(String(quotaStats?.total_used_tokens || '0')),
+            limit: parseInt(String(quotaStats?.total_quota_tokens || '0')),
           },
         },
       };
@@ -1004,8 +1036,9 @@ export class SubscriptionService {
 
       // Create associated API key if requested
       let liteLLMKeyId: string | undefined;
+      let keyRequest: LiteLLMKeyGenerationRequest | undefined;
       if (generateApiKey) {
-        const keyRequest: LiteLLMKeyGenerationRequest = {
+        keyRequest = {
           key_alias: this.generateUniqueKeyAlias(
             apiKeyAlias || `subscription-${baseSubscription.id.substring(0, 8)}`,
           ),
@@ -1049,7 +1082,7 @@ export class SubscriptionService {
              sync_status = 'synced'
          WHERE id = $7
          RETURNING *`,
-        [maxBudget, budgetDuration, tpmLimit, rpmLimit, teamId, liteLLMKeyId, baseSubscription.id],
+        [maxBudget ?? null, budgetDuration ?? null, tpmLimit ?? null, rpmLimit ?? null, teamId ?? null, liteLLMKeyId ?? null, baseSubscription.id],
       );
 
       this.fastify.log.info(
@@ -1060,7 +1093,7 @@ export class SubscriptionService {
           hasApiKey: !!liteLLMKeyId,
           maxBudget,
           teamId,
-          keyAlias: generateApiKey ? keyRequest.key_alias : undefined,
+          keyAlias: generateApiKey && keyRequest ? keyRequest.key_alias : undefined,
           originalAlias: apiKeyAlias,
         },
         'Enhanced subscription created with LiteLLM integration',
@@ -1296,9 +1329,9 @@ export class SubscriptionService {
 
       const totalUsage = usageData.reduce(
         (acc, row) => ({
-          requestCount: acc.requestCount + parseInt(row.request_count),
-          tokenCount: acc.tokenCount + parseInt(row.token_count || '0'),
-          totalSpend: acc.totalSpend + parseFloat(row.total_spend || '0'),
+          requestCount: (acc.requestCount as number) + parseInt(String(row.request_count)),
+          tokenCount: (acc.tokenCount as number) + parseInt(String(row.token_count || '0')),
+          totalSpend: (acc.totalSpend as number) + parseFloat(String(row.total_spend || '0')),
           averageRequestCost: acc.averageRequestCost,
           averageTokenCost: acc.averageTokenCost,
         }),
@@ -1312,20 +1345,26 @@ export class SubscriptionService {
       );
 
       totalUsage.averageRequestCost =
-        totalUsage.requestCount > 0 ? totalUsage.totalSpend / totalUsage.requestCount : 0;
+        (totalUsage.requestCount as number) > 0 ? (totalUsage.totalSpend as number) / (totalUsage.requestCount as number) : 0;
       totalUsage.averageTokenCost =
-        totalUsage.tokenCount > 0 ? totalUsage.totalSpend / totalUsage.tokenCount : 0;
+        (totalUsage.tokenCount as number) > 0 ? (totalUsage.totalSpend as number) / (totalUsage.tokenCount as number) : 0;
 
       return {
         subscriptionId,
         period,
-        usage: totalUsage,
+        usage: totalUsage as {
+          requestCount: number;
+          tokenCount: number;
+          totalSpend: number;
+          averageRequestCost: number;
+          averageTokenCost: number;
+        },
         models: usageData.map((row) => ({
-          modelId: row.model_id,
-          modelName: row.model_id, // Would be joined from models table in real implementation
-          requestCount: parseInt(row.request_count),
-          tokenCount: parseInt(row.token_count || '0'),
-          spend: parseFloat(row.total_spend || '0'),
+          modelId: String(row.model_id),
+          modelName: String(row.model_id), // Would be joined from models table in real implementation
+          requestCount: parseInt(String(row.request_count)),
+          tokenCount: parseInt(String(row.token_count || '0')),
+          spend: parseFloat(String(row.total_spend || '0')),
         })),
       };
     } catch (error) {
@@ -1401,13 +1440,13 @@ export class SubscriptionService {
           adminUserId,
           'BULK_SUBSCRIPTION_UPDATE',
           'SUBSCRIPTION',
-          {
+          JSON.stringify({
             operation: operationType,
             params,
             totalCount: subscriptionIds.length,
             successCount,
             errorCount,
-          },
+          }),
         ],
       );
 
@@ -1462,36 +1501,42 @@ export class SubscriptionService {
   }
 
   private mapToEnhancedSubscription(subscription: any): EnhancedSubscription {
-    const remainingRequests = Math.max(0, subscription.quota_requests - subscription.used_requests);
-    const remainingTokens = Math.max(0, subscription.quota_tokens - subscription.used_tokens);
+    const remainingRequests = Math.max(
+      0,
+      (subscription.quota_requests as number) - (subscription.used_requests as number),
+    );
+    const remainingTokens = Math.max(
+      0,
+      (subscription.quota_tokens as number) - (subscription.used_tokens as number),
+    );
 
     const baseSubscription = {
-      id: subscription.id,
-      userId: subscription.user_id,
-      modelId: subscription.model_id,
-      modelName: subscription.model_name,
-      provider: subscription.provider,
-      status: subscription.status,
-      quotaRequests: subscription.quota_requests,
-      quotaTokens: subscription.quota_tokens,
-      usedRequests: subscription.used_requests,
-      usedTokens: subscription.used_tokens,
+      id: subscription.id as string,
+      userId: subscription.user_id as string,
+      modelId: subscription.model_id as string,
+      modelName: subscription.model_name as string,
+      provider: subscription.provider as string,
+      status: subscription.status as SubscriptionStatus,
+      quotaRequests: subscription.quota_requests as number,
+      quotaTokens: subscription.quota_tokens as number,
+      usedRequests: subscription.used_requests as number,
+      usedTokens: subscription.used_tokens as number,
       remainingRequests,
       remainingTokens,
       utilizationPercent: {
         requests:
-          subscription.quota_requests > 0
-            ? Math.round((subscription.used_requests / subscription.quota_requests) * 100)
+          (subscription.quota_requests as number) > 0
+            ? Math.round(((subscription.used_requests as number) / (subscription.quota_requests as number)) * 100)
             : 0,
         tokens:
-          subscription.quota_tokens > 0
-            ? Math.round((subscription.used_tokens / subscription.quota_tokens) * 100)
+          (subscription.quota_tokens as number) > 0
+            ? Math.round(((subscription.used_tokens as number) / (subscription.quota_tokens as number)) * 100)
             : 0,
       },
-      resetAt: subscription.reset_at ? new Date(subscription.reset_at) : undefined,
-      expiresAt: subscription.expires_at ? new Date(subscription.expires_at) : undefined,
-      createdAt: new Date(subscription.created_at),
-      updatedAt: new Date(subscription.updated_at),
+      resetAt: subscription.reset_at ? new Date(subscription.reset_at as string | Date) : undefined,
+      expiresAt: subscription.expires_at ? new Date(subscription.expires_at as string | Date) : undefined,
+      createdAt: new Date(subscription.created_at as string | Date | number),
+      updatedAt: new Date(subscription.updated_at as string | Date | number),
       metadata: {}, // metadata column doesn't exist in database
     };
 
@@ -1502,22 +1547,22 @@ export class SubscriptionService {
       // LiteLLM integration info
       liteLLMInfo: subscription.lite_llm_key_value
         ? {
-            keyId: subscription.lite_llm_key_value,
-            teamId: subscription.team_id,
-            maxBudget: subscription.max_budget,
-            currentSpend: subscription.current_spend || 0,
-            budgetDuration: subscription.budget_duration,
-            tpmLimit: subscription.tpm_limit,
-            rpmLimit: subscription.rpm_limit,
+            keyId: subscription.lite_llm_key_value as string,
+            teamId: subscription.team_id as string,
+            maxBudget: subscription.max_budget as number,
+            currentSpend: (subscription.current_spend as number) || 0,
+            budgetDuration: subscription.budget_duration as 'daily' | 'weekly' | 'monthly' | 'yearly',
+            tpmLimit: subscription.tpm_limit as number,
+            rpmLimit: subscription.rpm_limit as number,
             allowedModels: subscription.allowed_models
-              ? JSON.parse(subscription.allowed_models)
+              ? JSON.parse(subscription.allowed_models as string)
               : undefined,
             spendResetAt: subscription.spend_reset_at
-              ? new Date(subscription.spend_reset_at)
+              ? new Date(subscription.spend_reset_at as string | Date | number)
               : undefined,
             budgetUtilization:
               subscription.max_budget && subscription.current_spend
-                ? (subscription.current_spend / subscription.max_budget) * 100
+                ? ((subscription.current_spend as number) / (subscription.max_budget as number)) * 100
                 : 0,
           }
         : undefined,
@@ -1525,15 +1570,15 @@ export class SubscriptionService {
       // Budget information
       budgetInfo: subscription.max_budget
         ? {
-            maxBudget: subscription.max_budget,
-            currentSpend: subscription.current_spend || 0,
-            remainingBudget: subscription.max_budget - (subscription.current_spend || 0),
+            maxBudget: subscription.max_budget as number,
+            currentSpend: (subscription.current_spend as number) || 0,
+            remainingBudget: (subscription.max_budget as number) - ((subscription.current_spend as number) || 0),
             budgetUtilization:
               subscription.max_budget && subscription.current_spend
-                ? (subscription.current_spend / subscription.max_budget) * 100
+                ? ((subscription.current_spend as number) / (subscription.max_budget as number)) * 100
                 : 0,
             spendResetAt: subscription.spend_reset_at
-              ? new Date(subscription.spend_reset_at)
+              ? new Date(subscription.spend_reset_at as string | Date | number)
               : undefined,
           }
         : undefined,
@@ -1542,27 +1587,27 @@ export class SubscriptionService {
       rateLimits:
         subscription.tpm_limit || subscription.rpm_limit
           ? {
-              tpmLimit: subscription.tpm_limit,
-              rpmLimit: subscription.rpm_limit,
-              currentTpm: subscription.current_tpm || 0,
-              currentRpm: subscription.current_rpm || 0,
+              tpmLimit: subscription.tpm_limit as number,
+              rpmLimit: subscription.rpm_limit as number,
+              currentTpm: (subscription.current_tpm as number) || 0,
+              currentRpm: (subscription.current_rpm as number) || 0,
             }
           : undefined,
 
       // Team association
-      teamId: subscription.team_id,
+      teamId: subscription.team_id as string,
       teamInfo: subscription.team_name
         ? {
-            id: subscription.team_id,
-            name: subscription.team_name,
-            role: subscription.team_role || 'member',
+            id: subscription.team_id as string,
+            name: subscription.team_name as string,
+            role: (subscription.team_role as 'admin' | 'member' | 'viewer') || 'member',
           }
         : undefined,
 
       // Sync metadata
-      lastSyncAt: subscription.last_sync_at ? new Date(subscription.last_sync_at) : undefined,
-      syncStatus: subscription.sync_status || 'pending',
-      syncError: subscription.sync_error,
+      lastSyncAt: subscription.last_sync_at ? new Date(subscription.last_sync_at as string | Date | number) : undefined,
+      syncStatus: (subscription.sync_status as 'error' | 'synced' | 'pending') || 'pending',
+      syncError: subscription.sync_error as string,
     };
 
     return enhanced;
@@ -1750,13 +1795,13 @@ export class SubscriptionService {
 
       // Create user in LiteLLM with default team assignment
       await this.liteLLMService.createUser({
-        user_id: user.id,
-        user_email: user.email,
-        user_alias: user.username,
-        user_role: user.roles?.includes('admin') ? 'proxy_admin' : 'internal_user',
-        max_budget: user.max_budget || 100, // Use user's budget or default
-        tpm_limit: user.tpm_limit || 1000, // Use user's limit or default
-        rpm_limit: user.rpm_limit || 60, // Use user's limit or default
+        user_id: user.id as string,
+        user_email: user.email as string,
+        user_alias: user.username as string,
+        user_role: (user.roles as string[])?.includes('admin') ? 'proxy_admin' : 'internal_user',
+        max_budget: (user.max_budget as number) || 100, // Use user's budget or default
+        tpm_limit: (user.tpm_limit as number) || 1000, // Use user's limit or default
+        rpm_limit: (user.rpm_limit as number) || 60, // Use user's limit or default
         auto_create_key: false, // Don't auto-create key during user creation
         teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
       });

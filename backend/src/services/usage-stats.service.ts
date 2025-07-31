@@ -355,7 +355,7 @@ export class UsageStatsService {
           usage.responseTokens,
           usage.latencyMs,
           usage.statusCode,
-          {},
+          JSON.stringify({}),
           usage.timestamp,
         ],
       );
@@ -505,7 +505,7 @@ export class UsageStatsService {
 
       // Current period metrics
       const currentMetrics = await this.getTotalMetrics(`${timeCondition} AND s.user_id = $1`, [
-        { name: 'user_id', value: userId },
+        userId,
       ]);
 
       // Previous period metrics
@@ -617,7 +617,10 @@ export class UsageStatsService {
       WHERE ${whereClause}
     `;
 
-    const result = await this.fastify.dbUtils.queryOne(query, params);
+    const result = await this.fastify.dbUtils.queryOne(
+      query,
+      params.filter((p): p is Exclude<QueryParameter, undefined> => p !== undefined),
+    );
 
     if (!result) {
       return {
@@ -676,7 +679,10 @@ export class UsageStatsService {
       ORDER BY period
     `;
 
-    const results = await this.fastify.dbUtils.queryMany(query, params);
+    const results = await this.fastify.dbUtils.queryMany(
+      query,
+      params.filter((p): p is Exclude<QueryParameter, undefined> => p !== undefined),
+    );
 
     return results.map((row) => {
       const totalRequests = parseInt(String(row.total_requests)) || 0;
@@ -742,7 +748,10 @@ export class UsageStatsService {
       ORDER BY total_requests DESC
     `;
 
-    const results = await this.fastify.dbUtils.queryMany(query, params);
+    const results = await this.fastify.dbUtils.queryMany(
+      query,
+      params.filter((p): p is Exclude<QueryParameter, undefined> => p !== undefined),
+    );
 
     return results.map((row) => {
       const totalRequests = parseInt(String(row.total_requests)) || 0;

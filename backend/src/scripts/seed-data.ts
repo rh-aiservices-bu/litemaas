@@ -70,7 +70,7 @@ async function seedData() {
 
     // Check if data already exists
     const existingUsers = await app.dbUtils.query('SELECT COUNT(*) as count FROM users');
-    if (existingUsers.rows[0].count > 0) {
+    if (Number(existingUsers.rows[0].count) > 0) {
       console.log('⚠️  Database already contains data. Skipping seed.');
       await app.close();
       return;
@@ -92,7 +92,7 @@ async function seedData() {
           user.full_name,
           user.oauth_provider,
           user.oauth_id,
-          user.roles,
+          `{${user.roles.join(',')}}`,
           user.is_active,
         ],
       );
@@ -118,7 +118,7 @@ async function seedData() {
           team.budget_duration,
           team.tpm_limit,
           team.rpm_limit,
-          team.allowed_models,
+          team.allowed_models.length > 0 ? `{${team.allowed_models.join(',')}}` : `{}`,
           team.is_active,
           team.created_by,
         ],

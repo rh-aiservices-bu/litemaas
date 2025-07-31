@@ -31,8 +31,8 @@ Both the backend and frontend use optimized three-stage builds that share a comm
 ### Build Commands
 
 ```bash
-# Build backend container
-podman build -t litemaas-backend:latest -f backend/Containerfile backend/
+# Build backend container (launch from the root of the project)
+podman build -t litemaas-backend:latest -f backend/Containerfile -t litemaas-backend .
 
 # Build frontend container with custom configuration
 podman build -t litemaas-frontend:latest \

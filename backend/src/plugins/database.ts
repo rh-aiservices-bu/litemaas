@@ -2,13 +2,6 @@ import { FastifyPluginAsync } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
 import { DatabaseRow, QueryParameter, QueryResult, DatabaseClient } from '../types/common.types.js';
 
-interface Config {
-  DATABASE_URL: string;
-  NODE_ENV: string;
-  DB_MAX_CONNECTIONS?: string;
-  DB_IDLE_TIMEOUT?: string;
-  DB_CONNECTION_TIMEOUT?: string;
-}
 
 const databasePlugin: FastifyPluginAsync = async (fastify) => {
   let mockMode = false;
@@ -238,7 +231,6 @@ const databasePlugin: FastifyPluginAsync = async (fastify) => {
 
 declare module 'fastify' {
   interface FastifyInstance {
-    config: Config;
     checkDatabaseHealth: () => Promise<{ status: string; error?: string }>;
     isDatabaseMockMode: () => boolean;
     dbUtils: {

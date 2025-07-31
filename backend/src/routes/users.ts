@@ -1,6 +1,6 @@
 import { FastifyPluginAsync } from 'fastify';
 import { Static } from '@sinclair/typebox';
-import { AuthenticatedRequest, PaginatedResponse, DatabaseRow, QueryParameter } from '../types';
+import { AuthenticatedRequest, PaginatedResponse, QueryParameter } from '../types';
 import { UserProfileSchema, IdParamSchema } from '../schemas';
 
 interface UserHistoryQuery {
@@ -17,17 +17,6 @@ interface UserListQuery {
   isActive?: boolean;
 }
 
-interface UserRow extends DatabaseRow {
-  id: string;
-  username: string;
-  email: string;
-  full_name?: string;
-  roles: string[];
-  is_active: boolean;
-  last_login_at?: string;
-  created_at: string;
-  updated_at: string;
-}
 
 interface FastifyError extends Error {
   statusCode?: number;
@@ -68,7 +57,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
            updated_at = NOW()
            WHERE id = $2
            RETURNING id, username, email, full_name, roles, created_at`,
-          [fullName, user.userId],
+          [fullName ?? null, user.userId],
         );
 
         if (!updatedUser) {
@@ -79,7 +68,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
            VALUES ($1, $2, $3, $4, $5)`,
-          [user.userId, 'PROFILE_UPDATE', 'USER', user.userId, { changes: { fullName } }],
+          [user.userId, 'PROFILE_UPDATE', 'USER', user.userId, JSON.stringify({ changes: { fullName } })],
         );
 
         return {
@@ -328,8 +317,19 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // Admin endpoints for user management
+  interface UserListItem {
+    id: string;
+    username: string;
+    email: string;
+    fullName?: string;
+    roles: string[];
+    isActive: boolean;
+    lastLoginAt?: string;
+    createdAt: string;
+  }
+  
   fastify.get<{
-    Reply: PaginatedResponse<UserRow>;
+    Reply: PaginatedResponse<UserListItem>;
   }>('/', {
     schema: {
       tags: ['Users'],
@@ -440,14 +440,14 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
 
         return {
           data: users.map((user) => ({
-            id: user.id,
-            username: user.username,
-            email: user.email,
-            fullName: user.full_name,
-            roles: user.roles,
-            isActive: user.is_active,
-            lastLoginAt: user.last_login_at,
-            createdAt: user.created_at,
+            id: String(user.id),
+            username: String(user.username),
+            email: String(user.email),
+            fullName: user.full_name ? String(user.full_name) : undefined,
+            roles: user.roles as string[],
+            isActive: Boolean(user.is_active),
+            lastLoginAt: user.last_login_at ? String(user.last_login_at) : undefined,
+            createdAt: String(user.created_at),
           })),
           pagination: {
             page,
@@ -506,7 +506,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
            updated_at = NOW()
            WHERE id = $3
            RETURNING id, username, email, full_name, roles, created_at`,
-          [roles, isActive, id],
+          [roles ? `{${roles.join(',')}}` : null, isActive ?? null, id],
         );
 
         if (!updatedUser) {
@@ -517,7 +517,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
            VALUES ($1, $2, $3, $4, $5)`,
-          [currentUser.userId, 'USER_UPDATE', 'USER', id, { changes: { roles, isActive } }],
+          [currentUser.userId, 'USER_UPDATE', 'USER', id, JSON.stringify({ changes: { roles, isActive } })],
         );
 
         return {

@@ -72,8 +72,29 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
 
         return {
           data: result.data.map((apiKey) => ({
-            ...apiKey,
-            keyPrefix: apiKey.keyPrefix, // Consistent field name with frontend expectations
+            id: apiKey.id,
+            name: apiKey.name,
+            prefix: apiKey.keyPrefix, // Map keyPrefix to prefix for API response
+            models: apiKey.models,
+            subscriptionId: apiKey.subscriptionDetails?.[0]?.subscriptionId,
+            lastUsedAt: apiKey.lastUsedAt,
+            createdAt: apiKey.createdAt,
+            // Include additional fields from EnhancedApiKey
+            keyPrefix: apiKey.keyPrefix,
+            modelDetails: apiKey.modelDetails,
+            subscriptionDetails: apiKey.subscriptionDetails,
+            expiresAt: apiKey.expiresAt,
+            isActive: apiKey.isActive,
+            revokedAt: apiKey.revokedAt,
+            liteLLMKeyId: apiKey.liteLLMKeyId,
+            lastSyncAt: apiKey.lastSyncAt,
+            syncStatus: apiKey.syncStatus,
+            syncError: apiKey.syncError,
+            maxBudget: apiKey.maxBudget,
+            currentSpend: apiKey.currentSpend,
+            tpmLimit: apiKey.tpmLimit,
+            rpmLimit: apiKey.rpmLimit,
+            metadata: apiKey.metadata,
           })),
           pagination: {
             page,
@@ -122,8 +143,13 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         return {
-          ...apiKey,
-          keyPrefix: apiKey.keyPrefix, // Consistent field name with frontend expectations
+          id: apiKey.id,
+          name: apiKey.name,
+          prefix: apiKey.keyPrefix, // Map keyPrefix to prefix for API response
+          models: apiKey.models,
+          subscriptionId: apiKey.subscriptionDetails?.[0]?.subscriptionId,
+          lastUsedAt: apiKey.lastUsedAt,
+          createdAt: apiKey.createdAt,
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to get API key');
@@ -522,7 +548,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, metadata)
            VALUES ($1, $2, $3, $4)`,
-          [user.userId, 'API_KEYS_CLEANUP', 'API_KEY', { cleanedCount }],
+          [user.userId, 'API_KEYS_CLEANUP', 'API_KEY', JSON.stringify({ cleanedCount })],
         );
 
         return {
@@ -670,7 +696,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         // Enhanced error logging with security context
         fastify.log.error(
           {
-            error: error.message,
+            error: error instanceof Error ? error.message : String(error),
             statusCode: (error as ErrorWithStatusCode).statusCode,
             userId: user.userId,
             keyId: id,
@@ -691,13 +717,13 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
               'API_KEY',
               id,
               request.ip,
-              request.headers['user-agent'],
-              {
-                error: error.message,
+              request.headers['user-agent'] ?? null,
+              JSON.stringify({
+                error: error instanceof Error ? error.message : String(error),
                 statusCode: (error as ErrorWithStatusCode).statusCode,
                 timestamp: new Date().toISOString(),
                 endpoint: request.url,
-              },
+              }),
             ],
           );
         } catch (auditError) {

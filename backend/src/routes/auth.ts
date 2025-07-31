@@ -208,8 +208,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
             'LOGIN',
             'AUTH', // resource_type for authentication events
             request.ip,
-            request.headers['user-agent'],
-            { oauth_provider: 'openshift', method: 'oauth' },
+            request.headers['user-agent'] ?? null,
+            JSON.stringify({ oauth_provider: 'openshift', method: 'oauth' }),
           ],
         );
 
@@ -290,7 +290,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, ip_address, user_agent)
            VALUES ($1, $2, $3, $4, $5)`,
-          [user.userId, 'LOGOUT', 'AUTH', request.ip, request.headers['user-agent']],
+          [user.userId, 'LOGOUT', 'AUTH', request.ip, request.headers['user-agent'] ?? null],
         );
 
         fastify.log.info({ userId: user.userId, username: user.username }, 'User logged out');

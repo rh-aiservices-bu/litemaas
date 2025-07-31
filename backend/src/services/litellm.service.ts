@@ -624,7 +624,7 @@ export class LiteLLMService {
             response: {
               user_id: response.user_id,
               teams: response.teams,
-              keys: response.keys?.length || 0,
+              models: response.models?.length || 0,
             },
           },
           'User does not exist in LiteLLM (empty teams array)',

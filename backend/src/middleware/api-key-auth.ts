@@ -24,8 +24,7 @@ const apiKeyAuthPlugin: FastifyPluginAsync<ApiKeyAuthOptions> = async (fastify, 
   const { required = false, skipRoutes = [] } = options;
 
   // Initialize API key service
-  // @ts-expect-error: liteLLMService property added by plugin
-  const apiKeyService = new ApiKeyService(fastify, fastify.liteLLMService);
+  const apiKeyService = new ApiKeyService(fastify, (fastify as any).liteLLMService);
 
   // Helper function to extract API key from request
   const extractApiKey = (request: FastifyRequest): string | null => {
@@ -218,8 +217,7 @@ const apiKeyAuthPlugin: FastifyPluginAsync<ApiKeyAuthOptions> = async (fastify, 
 
 // Plugin for protecting specific routes with API key auth
 const apiKeyProtectedPlugin: FastifyPluginAsync = async (fastify) => {
-  // @ts-expect-error: liteLLMService property added by plugin
-  const apiKeyService = new ApiKeyService(fastify, fastify.liteLLMService);
+  const apiKeyService = new ApiKeyService(fastify, (fastify as any).liteLLMService);
 
   // Middleware specifically for API endpoints that require API key authentication
   fastify.addHook('preHandler', async (request: ApiKeyAuthRequest, _reply: FastifyReply) => {
@@ -249,8 +247,8 @@ const apiKeyProtectedPlugin: FastifyPluginAsync = async (fastify) => {
           'API_KEY_INVALID_ATTEMPT',
           'API_KEY',
           request.ip,
-          request.headers['user-agent'],
-          { error: validation.error, keyPrefix: apiKey.substring(0, 10) },
+          request.headers['user-agent'] || null,
+          JSON.stringify({ error: validation.error, keyPrefix: apiKey.substring(0, 10) }),
         ],
       );
 
@@ -324,11 +322,11 @@ const apiKeyUsagePlugin: FastifyPluginAsync = async (fastify) => {
           responseTokens,
           reply.elapsedTime || 0,
           reply.statusCode,
-          {
+          JSON.stringify({
             endpoint: request.url,
             method: request.method,
             userAgent: request.headers['user-agent'],
-          },
+          }),
         ],
       );
 

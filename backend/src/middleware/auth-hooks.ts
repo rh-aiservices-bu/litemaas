@@ -1,7 +1,6 @@
 import { FastifyPluginAsync, FastifyRequest, FastifyReply, FastifyError } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
 import { AuthenticatedRequest } from '../types/auth.types.js';
-import { QueryParameter } from '../types/common.types.js';
 
 const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
   // Pre-authentication hook for rate limiting by user
@@ -39,8 +38,10 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
         if (payload) {
           (request as AuthenticatedRequest).user = payload;
 
-          // Apply user-specific rate limiting
-          await fastify.apiKeyRateLimit(request, reply);
+          // Apply user-specific rate limiting (only for key operations)
+          if (request.url.includes('/api-keys') || request.url.includes('/keys')) {
+            await fastify.keyOperationRateLimit(request, reply);
+          }
         }
       }
     } catch (error) {
@@ -80,13 +81,13 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
           'API_ACCESS',
           null,
           request.ip,
-          request.headers['user-agent'],
-          {
+          request.headers['user-agent'] || null,
+          JSON.stringify({
             statusCode: reply.statusCode,
             responseTime: reply.elapsedTime,
             method: request.method,
             url: request.url,
-          },
+          }),
         ],
       );
     } catch (error) {
@@ -111,15 +112,15 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
               error.statusCode === 401 ? 'AUTH_FAILED' : 'AUTH_DENIED',
               'SECURITY',
               request.ip,
-              request.headers['user-agent'],
-              {
+              request.headers['user-agent'] || null,
+              JSON.stringify({
                 error: error.message,
                 statusCode: error.statusCode,
                 method: request.method,
                 url: request.url,
                 userId: user?.userId,
                 userRoles: user?.roles,
-              },
+              }),
             ],
           );
         } catch (auditError) {
@@ -195,7 +196,7 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
 
       // Check resource ownership based on type
       let query: string;
-      let params: QueryParameter[];
+      let params: (string | number | boolean | Date | null)[];
 
       switch (resourceType) {
         case 'subscription':
@@ -300,15 +301,16 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
     const maxRecentAge = 5 * 60; // 5 minutes for key retrieval operations
 
     if (tokenAge > maxRecentAge) {
-      throw fastify.createError(403, {
-        code: 'TOKEN_TOO_OLD',
-        message: 'Recent authentication required for this operation',
-        details: {
+      throw fastify.createError(
+        403,
+        'Recent authentication required for this operation',
+        {
+          code: 'TOKEN_TOO_OLD',
           tokenAge: Math.floor(tokenAge),
           maxAge: maxRecentAge,
           action: 'Please re-authenticate to access your API keys',
-        },
-      });
+        }
+      );
     }
   });
 
@@ -343,14 +345,14 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
               'RATE_LIMIT_EXCEEDED',
               'API_KEY_OPERATION',
               request.ip,
-              request.headers['user-agent'],
-              {
+              request.headers['user-agent'] || null,
+              JSON.stringify({
                 operation: 'key_retrieval',
                 window: windowMs,
                 maxAttempts,
                 actualAttempts: attempts,
                 endpoint: request.url,
-              },
+              }),
             ],
           );
         } catch (auditError) {
@@ -362,15 +364,16 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
         reply.header('X-RateLimit-Reset', new Date(now + windowMs).toISOString());
         reply.header('Retry-After', Math.ceil(windowMs / 1000));
 
-        throw fastify.createError(429, {
-          code: 'KEY_OPERATION_RATE_LIMITED',
-          message: 'Too many API key operations. Please wait before trying again.',
-          details: {
+        throw fastify.createError(
+          429,
+          'Too many API key operations. Please wait before trying again.',
+          {
+            code: 'KEY_OPERATION_RATE_LIMITED',
             limit: maxAttempts,
             window: '5 minutes',
             retryAfter: Math.ceil(windowMs / 1000),
-          },
-        });
+          }
+        );
       }
 
       // Log the attempt for monitoring

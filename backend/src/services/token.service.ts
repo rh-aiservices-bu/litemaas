@@ -59,19 +59,23 @@ export class TokenService {
     const expiresAt = new Date(Date.now() + this.refreshTokenExpiry);
 
     // Store refresh token in database
-    const refreshToken = await this.fastify.dbUtils.queryOne(
+    const refreshTokenResult = await this.fastify.dbUtils.queryOne(
       `INSERT INTO refresh_tokens (user_id, token, expires_at)
        VALUES ($1, $2, $3)
        RETURNING id, user_id, token, expires_at, created_at`,
       [userId, token, expiresAt],
     );
 
+    if (!refreshTokenResult) {
+      throw new Error('Failed to create refresh token');
+    }
+
     return {
-      id: refreshToken.id,
-      userId: refreshToken.user_id,
-      token: refreshToken.token,
-      expiresAt: refreshToken.expires_at,
-      createdAt: refreshToken.created_at,
+      id: String(refreshTokenResult.id),
+      userId: String(refreshTokenResult.user_id),
+      token: String(refreshTokenResult.token),
+      expiresAt: new Date(refreshTokenResult.expires_at as string),
+      createdAt: new Date(refreshTokenResult.created_at as string),
     };
   }
 
@@ -95,15 +99,17 @@ export class TokenService {
     // Update last used timestamp
     await this.fastify.dbUtils.query(
       'UPDATE refresh_tokens SET last_used_at = NOW() WHERE id = $1',
-      [tokenRecord.id],
+      [String(tokenRecord.id)],
     );
 
     // Generate new token pair
     return this.generateTokenPair({
-      id: tokenRecord.user_id,
-      username: tokenRecord.username,
-      email: tokenRecord.email,
-      roles: tokenRecord.roles,
+      id: String(tokenRecord.user_id),
+      username: String(tokenRecord.username),
+      email: String(tokenRecord.email),
+      roles: Array.isArray(tokenRecord.roles)
+        ? (tokenRecord.roles as string[])
+        : [String(tokenRecord.roles)],
     });
   }
 
@@ -164,13 +170,13 @@ export class TokenService {
     );
 
     return tokens.map((token) => ({
-      id: token.id,
-      userId: token.user_id,
-      token: token.token,
-      expiresAt: token.expires_at,
-      createdAt: token.created_at,
-      revokedAt: token.revoked_at,
-      lastUsedAt: token.last_used_at,
+      id: String(token.id),
+      userId: String(token.user_id),
+      token: String(token.token),
+      expiresAt: new Date(token.expires_at as string),
+      createdAt: new Date(token.created_at as string),
+      revokedAt: token.revoked_at ? new Date(token.revoked_at as string) : undefined,
+      lastUsedAt: token.last_used_at ? new Date(token.last_used_at as string) : undefined,
     }));
   }
 

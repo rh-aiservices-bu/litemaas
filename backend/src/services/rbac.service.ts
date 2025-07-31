@@ -23,6 +23,10 @@ export interface AccessPolicy {
   conditions?: Record<string, any>;
 }
 
+interface UserWithRoles {
+  roles: string[];
+}
+
 export class RBACService {
   private fastify: FastifyInstance;
 
@@ -217,7 +221,7 @@ export class RBACService {
   ): Promise<boolean> {
     try {
       // Get user roles
-      const user = await this.fastify.dbUtils.queryOne(
+      const user = await this.fastify.dbUtils.queryOne<UserWithRoles>(
         'SELECT roles FROM users WHERE id = $1 AND is_active = true',
         [userId],
       );
@@ -452,7 +456,7 @@ export class RBACService {
 
   // Get effective permissions for user
   async getEffectivePermissions(userId: string): Promise<string[]> {
-    const user = await this.fastify.dbUtils.queryOne(
+    const user = await this.fastify.dbUtils.queryOne<UserWithRoles>(
       'SELECT roles FROM users WHERE id = $1 AND is_active = true',
       [userId],
     );

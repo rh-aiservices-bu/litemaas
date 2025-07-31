@@ -1,4 +1,4 @@
-import { FastifyPluginAsync, FastifyReply } from 'fastify';
+import { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
 import { RBACService } from '../services/rbac.service';
 import { AuthenticatedRequest } from '../types/auth.types';
@@ -27,8 +27,9 @@ const rbacPlugin: FastifyPluginAsync = async (fastify) => {
 
   // Multiple permission checks
   fastify.decorate('requireAnyPermission', (permissions: string[]) => {
-    return async (request: AuthenticatedRequest, _reply: FastifyReply) => {
-      const user = request.user;
+    return async (request: FastifyRequest, _reply: FastifyReply) => {
+      const authenticatedRequest = request as AuthenticatedRequest;
+      const user = authenticatedRequest.user;
 
       if (!user) {
         throw fastify.createAuthError('Authentication required');
@@ -45,8 +46,9 @@ const rbacPlugin: FastifyPluginAsync = async (fastify) => {
   });
 
   fastify.decorate('requireAllPermissions', (permissions: string[]) => {
-    return async (request: AuthenticatedRequest, _reply: FastifyReply) => {
-      const user = request.user;
+    return async (request: FastifyRequest, _reply: FastifyReply) => {
+      const authenticatedRequest = request as AuthenticatedRequest;
+      const user = authenticatedRequest.user;
 
       if (!user) {
         throw fastify.createAuthError('Authentication required');
@@ -63,14 +65,15 @@ const rbacPlugin: FastifyPluginAsync = async (fastify) => {
   });
 
   // Admin-only access
-  fastify.decorate('requireAdmin', async (request: AuthenticatedRequest, _reply: FastifyReply) => {
-    const user = request.user;
+  fastify.decorate('requireAdmin', async (request: FastifyRequest, _reply: FastifyReply) => {
+    const authenticatedRequest = request as AuthenticatedRequest;
+    const user = authenticatedRequest.user;
 
     if (!user) {
       throw fastify.createAuthError('Authentication required');
     }
 
-    if (!user.roles.includes('admin')) {
+        if (!user.roles.includes('admin')) {
       throw fastify.createForbiddenError('Administrator access required');
     }
   });
@@ -79,7 +82,9 @@ const rbacPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorateRequest(
     'checkPermission',
     function (permission: string, resourceId?: string, context?: Record<string, unknown>) {
-      const user = (this as AuthenticatedRequest).user;
+      const request = this as FastifyRequest;
+      const authenticatedRequest = request as AuthenticatedRequest;
+      const user = authenticatedRequest.user;
 
       if (!user) {
         return Promise.resolve(false);
@@ -91,7 +96,9 @@ const rbacPlugin: FastifyPluginAsync = async (fastify) => {
 
   // Get user permissions
   fastify.decorateRequest('getUserPermissions', async function () {
-    const user = (this as AuthenticatedRequest).user;
+    const request = this as FastifyRequest;
+    const authenticatedRequest = request as AuthenticatedRequest;
+    const user = authenticatedRequest.user;
 
     if (!user) {
       return [];
@@ -125,10 +132,9 @@ const rbacPlugin: FastifyPluginAsync = async (fastify) => {
             },
           },
         },
-        preHandler: [fastify.authenticate, fastify.requirePermission('admin:users')],
-        handler: async (_request, _reply) => {
-          return rbacService.getSystemRoles();
-        },
+        preHandler: [fastify.authenticate, fastify.requirePermission('admin:users') as any],
+      }, async (_request, _reply) => {
+        return rbacService.getSystemRoles();
       });
 
       // Get system permissions
@@ -153,10 +159,9 @@ const rbacPlugin: FastifyPluginAsync = async (fastify) => {
             },
           },
         },
-        preHandler: [fastify.authenticate, fastify.requirePermission('admin:users')],
-        handler: async (_request, _reply) => {
-          return rbacService.getSystemPermissions();
-        },
+        preHandler: [fastify.authenticate, fastify.requirePermission('admin:users') as any],
+      }, async (_request, _reply) => {
+        return rbacService.getSystemPermissions();
       });
 
       // Get user effective permissions
@@ -175,16 +180,16 @@ const rbacPlugin: FastifyPluginAsync = async (fastify) => {
             },
           },
         },
-        preHandler: fastify.authenticate,
-        handler: async (request: AuthenticatedRequest, _reply) => {
-          const user = request.user;
-          const permissions = await rbacService.getEffectivePermissions(user.userId);
+        preHandler: fastify.authenticate as any,
+      }, async (request, _reply) => {
+        const authenticatedRequest = request as AuthenticatedRequest;
+        const user = authenticatedRequest.user;
+        const permissions = await rbacService.getEffectivePermissions(user.userId);
 
-          return {
-            roles: user.roles,
-            permissions,
-          };
-        },
+        return {
+          roles: user.roles,
+          permissions,
+        };
       });
 
       // Check permission
@@ -213,28 +218,28 @@ const rbacPlugin: FastifyPluginAsync = async (fastify) => {
             },
           },
         },
-        preHandler: fastify.authenticate,
-        handler: async (request: AuthenticatedRequest, _reply) => {
-          const user = request.user;
-          const { permission, resourceId, context } = request.body as {
-            permission: string;
-            resourceId?: string;
-            context?: Record<string, unknown>;
-          };
+        preHandler: fastify.authenticate as any,
+      }, async (request, _reply) => {
+        const authenticatedRequest = request as AuthenticatedRequest;
+        const user = authenticatedRequest.user;
+        const { permission, resourceId, context } = request.body as {
+          permission: string;
+          resourceId?: string;
+          context?: Record<string, unknown>;
+        };
 
-          const hasPermission = await rbacService.hasPermission(
-            user.userId,
-            permission,
-            resourceId,
-            context,
-          );
+        const hasPermission = await rbacService.hasPermission(
+          user.userId,
+          permission,
+          resourceId,
+          context,
+        );
 
-          return {
-            hasPermission,
-            permission,
-            resourceId,
-          };
-        },
+        return {
+          hasPermission,
+          permission,
+          resourceId,
+        };
       });
 
       // Bulk permission check
@@ -264,29 +269,29 @@ const rbacPlugin: FastifyPluginAsync = async (fastify) => {
             },
           },
         },
-        preHandler: fastify.authenticate,
-        handler: async (request: AuthenticatedRequest, _reply) => {
-          const user = request.user;
-          const { permissions, requireAll = false } = request.body as {
-            permissions: string[];
-            requireAll?: boolean;
-          };
+        preHandler: fastify.authenticate as any,
+      }, async (request, _reply) => {
+        const authenticatedRequest = request as AuthenticatedRequest;
+        const user = authenticatedRequest.user;
+        const { permissions, requireAll = false } = request.body as {
+          permissions: string[];
+          requireAll?: boolean;
+        };
 
-          const results: Record<string, boolean> = {};
+        const results: Record<string, boolean> = {};
 
-          for (const permission of permissions) {
-            results[permission] = await rbacService.hasPermission(user.userId, permission);
-          }
+        for (const permission of permissions) {
+          results[permission] = await rbacService.hasPermission(user.userId, permission);
+        }
 
-          const hasAccess = requireAll
-            ? Object.values(results).every((result) => result)
-            : Object.values(results).some((result) => result);
+        const hasAccess = requireAll
+          ? Object.values(results).every((result) => result)
+          : Object.values(results).some((result) => result);
 
-          return {
-            hasAccess,
-            results,
-          };
-        },
+        return {
+          hasAccess,
+          results,
+        };
       });
     },
     { prefix: '/api/rbac' },
@@ -305,14 +310,14 @@ declare module 'fastify' {
         ownershipCheck?: boolean;
         customCheck?: (request: AuthenticatedRequest) => Promise<boolean>;
       },
-    ) => (request: AuthenticatedRequest, reply: FastifyReply) => Promise<void>;
+    ) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     requireAnyPermission: (
       permissions: string[],
-    ) => (request: AuthenticatedRequest, reply: FastifyReply) => Promise<void>;
+    ) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     requireAllPermissions: (
       permissions: string[],
-    ) => (request: AuthenticatedRequest, reply: FastifyReply) => Promise<void>;
-    requireAdmin: (request: AuthenticatedRequest, reply: FastifyReply) => Promise<void>;
+    ) => (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
+    requireAdmin: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
   }
 
   interface FastifyRequest {

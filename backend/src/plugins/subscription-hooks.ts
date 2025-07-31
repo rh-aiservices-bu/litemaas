@@ -151,13 +151,13 @@ class SubscriptionHookManager {
           action,
           'SUBSCRIPTION',
           event.subscriptionId,
-          {
+          JSON.stringify({
             ...event.metadata,
             ...additionalMetadata,
             modelId: event.modelId,
             previousStatus: event.previousStatus,
             newStatus: event.newStatus,
-          },
+          }),
         ],
       );
     } catch (error) {
@@ -197,7 +197,10 @@ class SubscriptionHookManager {
   private async setupUsageMonitoring(event: SubscriptionHookEvent): Promise<void> {
     try {
       // Set up monitoring thresholds for quota warnings
-      const subscription = await this.fastify.dbUtils.queryOne(
+      const subscription = await this.fastify.dbUtils.queryOne<{
+        quota_requests: number;
+        quota_tokens: number;
+      }>(
         'SELECT quota_requests, quota_tokens FROM subscriptions WHERE id = $1',
         [event.subscriptionId],
       );
@@ -294,7 +297,15 @@ class SubscriptionHookManager {
 
   async checkQuotaThresholds(subscriptionId: string): Promise<void> {
     try {
-      const subscription = await this.fastify.dbUtils.queryOne(
+      const subscription = await this.fastify.dbUtils.queryOne<{
+        user_id: string;
+        model_id: string;
+        status: string;
+        used_requests: number;
+        quota_requests: number;
+        used_tokens: number;
+        quota_tokens: number;
+      }>(
         `
         SELECT s.*, u.id as user_id, m.id as model_id
         FROM subscriptions s
@@ -397,7 +408,12 @@ class SubscriptionHookManager {
 
   async processExpiredSubscriptions(): Promise<number> {
     try {
-      const expiredSubscriptions = await this.fastify.dbUtils.queryMany(`
+      const expiredSubscriptions = await this.fastify.dbUtils.queryMany<{
+        id: string;
+        user_id: string;
+        model_id: string;
+        status: string;
+      }>(`
         SELECT s.id, s.user_id, s.model_id, s.status
         FROM subscriptions s
         WHERE s.expires_at IS NOT NULL 

@@ -22,6 +22,18 @@ export interface SessionInfo {
   isCurrent: boolean;
 }
 
+interface DatabaseSession {
+  id: string;
+  ip_address: string;
+  user_agent: string;
+  created_at: Date;
+  last_activity_at: Date;
+}
+
+interface SessionId {
+  id: string;
+}
+
 export class SessionService {
   private fastify: FastifyInstance;
   private sessionStore: Map<string, UserSession> = new Map();
@@ -206,7 +218,7 @@ export class SessionService {
 
   async getUserSessions(userId: string): Promise<SessionInfo[]> {
     // Get sessions from database
-    const sessions = await this.fastify.dbUtils.queryMany(
+    const sessions = await this.fastify.dbUtils.queryMany<DatabaseSession>(
       `SELECT id, ip_address, user_agent, created_at, last_activity_at, is_active
        FROM user_sessions
        WHERE user_id = $1 AND is_active = true
@@ -214,7 +226,7 @@ export class SessionService {
       [userId],
     );
 
-    return sessions.map((session) => ({
+    return sessions.map((session): SessionInfo => ({
       sessionId: session.id,
       ipAddress: session.ip_address,
       userAgent: session.user_agent,
@@ -279,7 +291,7 @@ export class SessionService {
   }
 
   private async cleanupUserSessions(userId: string): Promise<void> {
-    const sessions = await this.fastify.dbUtils.queryMany(
+    const sessions = await this.fastify.dbUtils.queryMany<SessionId>(
       `SELECT id FROM user_sessions
        WHERE user_id = $1 AND is_active = true
        ORDER BY created_at DESC

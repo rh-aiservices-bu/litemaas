@@ -37,7 +37,10 @@ export const createApp = async (opts: { logger?: boolean } = {}): Promise<Fastif
           }
         : false,
     genReqId: (req) => {
-      return req.headers['x-request-id'] || Math.random().toString(36).substring(2, 15);
+      const requestId = req.headers['x-request-id'];
+      return Array.isArray(requestId)
+        ? requestId[0]
+        : requestId || Math.random().toString(36).substring(2, 15);
     },
   }).withTypeProvider<TypeBoxTypeProvider>();
 

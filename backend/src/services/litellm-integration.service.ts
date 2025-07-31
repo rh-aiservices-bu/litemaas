@@ -274,12 +274,12 @@ export class LiteLLMIntegrationService {
           'GLOBAL_SYNC',
           'INTEGRATION',
           syncId,
-          {
+          JSON.stringify({
             request,
             results: response.results,
             duration: response.duration,
             success: response.success,
-          },
+          }),
         ],
       );
 
@@ -345,12 +345,12 @@ export class LiteLLMIntegrationService {
                    litellm_provider = $6, updated_at = CURRENT_TIMESTAMP
                WHERE id = $7`,
               [
-                model.model_name,
-                model.litellm_params.custom_llm_provider,
-                model.model_info.max_tokens,
-                model.model_info.supports_function_calling,
-                model.model_info.supports_vision,
-                model.litellm_params.custom_llm_provider,
+                model.model_name ?? null,
+                model.litellm_params.custom_llm_provider ?? null,
+                model.model_info.max_tokens ?? null,
+                model.model_info.supports_function_calling ?? false,
+                model.model_info.supports_vision ?? false,
+                model.litellm_params.custom_llm_provider ?? null,
                 model.model_info.id,
               ],
             );
@@ -363,12 +363,12 @@ export class LiteLLMIntegrationService {
               ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
               [
                 model.model_info.id,
-                model.model_name,
-                model.litellm_params.custom_llm_provider,
-                model.model_info.max_tokens,
-                model.model_info.supports_function_calling,
-                model.model_info.supports_vision,
-                model.litellm_params.custom_llm_provider,
+                model.model_name ?? null,
+                model.litellm_params.custom_llm_provider ?? null,
+                model.model_info.max_tokens ?? null,
+                model.model_info.supports_function_calling ?? false,
+                model.model_info.supports_vision ?? false,
+                model.litellm_params.custom_llm_provider ?? null,
                 true,
               ],
             );
@@ -546,7 +546,12 @@ export class LiteLLMIntegrationService {
                  last_sync_at = CURRENT_TIMESTAMP,
                  sync_status = 'synced'
              WHERE id = $4`,
-            [liteLLMUser.user_id, liteLLMUser.max_budget, liteLLMUser.spend || 0, user.id],
+            [
+              liteLLMUser?.user_id ?? null,
+              liteLLMUser?.max_budget ?? null,
+              (liteLLMUser?.spend ?? 0),
+              user.id,
+            ],
           );
 
           results.synced++;

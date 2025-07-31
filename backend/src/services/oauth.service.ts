@@ -12,6 +12,13 @@ export interface MockUser {
   roles: string[];
 }
 
+interface DatabaseUser {
+  id: string;
+  username: string;
+  email: string;
+  full_name: string;
+}
+
 // Mock users for development
 const MOCK_USERS: MockUser[] = [
   {
@@ -392,11 +399,11 @@ export class OAuthService {
         `UPDATE users SET 
          username = $1, email = $2, full_name = $3, roles = $4, last_login_at = NOW(), updated_at = NOW()
          WHERE id = $5`,
-        [userInfo.preferred_username, userInfo.email, userInfo.name, roles, existingUser.id],
+        [userInfo.preferred_username, userInfo.email || null, userInfo.name || null, JSON.stringify(roles), existingUser.id as string],
       );
 
       user = {
-        id: existingUser.id,
+        id: String(existingUser.id),
         username: userInfo.preferred_username,
         email: userInfo.email || userInfo.preferred_username,
         fullName: userInfo.name,
@@ -404,19 +411,23 @@ export class OAuthService {
       };
     } else {
       // Create new user
-      const newUser = await this.fastify.dbUtils.queryOne(
+      const newUser = await this.fastify.dbUtils.queryOne<DatabaseUser>(
         `INSERT INTO users (username, email, full_name, oauth_provider, oauth_id, roles, last_login_at)
          VALUES ($1, $2, $3, $4, $5, $6, NOW())
          RETURNING id, username, email, full_name`,
         [
           userInfo.preferred_username,
           userInfo.email || userInfo.preferred_username,
-          userInfo.name,
+          userInfo.name || null,
           'openshift',
           userInfo.sub,
-          roles,
+          JSON.stringify(roles),
         ],
       );
+
+      if (!newUser) {
+        throw new Error('Failed to create user');
+      }
 
       user = {
         id: newUser.id,

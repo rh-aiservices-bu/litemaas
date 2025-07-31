@@ -1,6 +1,6 @@
 # Multi-stage build with shared base
 # Stage 1: Create base image with updated packages
-FROM registry.access.redhat.com/ubi9/nodejs-18:1 AS base
+FROM registry.access.redhat.com/ubi9/nodejs-22 AS base
 
 # Switch to root to update packages
 USER root
@@ -17,29 +17,37 @@ USER 1001
 # Stage 2: Build the application
 FROM base AS builder
 
-# Copy package files
+# Copy workspace root package files first
 COPY --chown=1001:1001 package*.json ./
 
-# Install dependencies (including dev dependencies for build)
+# Copy workspace package files
+COPY --chown=1001:1001 backend/package.json ./backend/
+COPY --chown=1001:1001 frontend/package.json ./frontend/
+
+# Install all workspace dependencies
 RUN npm ci
 
-# Copy source code
-COPY --chown=1001:1001 . .
+# Copy backend source code
+COPY --chown=1001:1001 backend/ ./backend/
 
-# Build the application
-RUN npm run build
+# Build the backend application
+RUN npm run build --workspace=backend
 
 # Stage 3: Production runtime
 FROM base AS runtime
 
-# Copy package files
+# Copy workspace root package files
 COPY --chown=1001:1001 package*.json ./
 
-# Install only production dependencies
+# Copy workspace package files
+COPY --chown=1001:1001 backend/package.json ./backend/
+COPY --chown=1001:1001 frontend/package.json ./frontend/
+
+# Install only production dependencies for the workspace
 RUN npm ci --only=production && npm cache clean --force
 
 # Copy built application from builder stage
-COPY --from=builder --chown=1001:1001 /app/dist ./dist
+COPY --from=builder --chown=1001:1001 /app/backend/dist ./backend/dist
 
 # Expose the port the app runs on
 EXPOSE 8080
@@ -49,4 +57,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/api/v1/health || exit 1
 
 # Start the application
-CMD ["npm", "start"] 
+CMD ["npm", "start", "--workspace=backend"] 

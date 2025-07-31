@@ -39,35 +39,13 @@ declare module 'fastify' {
       RATE_LIMIT_TIME_WINDOW: string;
     };
 
-    // Logger interface
-    log: {
-      info: (obj?: Record<string, unknown> | string, msg?: string) => void;
-      error: (obj?: Record<string, unknown> | string, msg?: string) => void;
-      warn: (obj?: Record<string, unknown> | string, msg?: string) => void;
-      debug: (obj?: Record<string, unknown> | string, msg?: string) => void;
-      trace: (obj?: Record<string, unknown> | string, msg?: string) => void;
-      fatal: (obj?: Record<string, unknown> | string, msg?: string) => void;
-    };
+    // Remove custom logger interface to avoid conflict with Fastify's built-in logger
 
-    // Database utilities
-    dbUtils: {
-      query: (
-        text: string,
-        params?: (string | number | boolean | Date | null)[],
-      ) => Promise<{ rows: Record<string, unknown>[]; rowCount: number }>;
-      queryOne: (
-        text: string,
-        params?: (string | number | boolean | Date | null)[],
-      ) => Promise<Record<string, unknown> | null>;
-      queryMany: (
-        text: string,
-        params?: (string | number | boolean | Date | null)[],
-      ) => Promise<Record<string, unknown>[]>;
-      withTransaction: <T>(callback: (client: Record<string, unknown>) => Promise<T>) => Promise<T>;
-    };
+    // Database utilities - remove to avoid conflict with database plugin
+    // dbUtils is provided by the database plugin
 
-    // Error creation
-    createError: (statusCode: number, message: string) => Error;
+    // Error creation - remove to avoid conflict with error handler plugin
+    // createError is provided by the error handler plugin
 
     // LiteLLM Service
     liteLLMService: import('../services/litellm.service').LiteLLMService;

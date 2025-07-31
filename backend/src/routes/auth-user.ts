@@ -41,7 +41,7 @@ const authUserRoutes: FastifyPluginAsync = async (fastify) => {
           id: String(userDetails.id),
           username: String(userDetails.username),
           email: String(userDetails.email),
-          name: userDetails.full_name || userDetails.username, // Frontend expects 'name'
+          name: String(userDetails.full_name || userDetails.username), // Frontend expects 'name'
           roles: userDetails.roles as string[],
         };
       } catch (error) {

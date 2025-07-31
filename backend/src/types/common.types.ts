@@ -43,14 +43,7 @@ export type TimeInterval = 'hour' | 'day' | 'week' | 'month';
 
 // Database-related types
 export type DatabaseRow = Record<string, unknown>;
-export type QueryParameter =
-  | string
-  | number
-  | boolean
-  | Date
-  | null
-  | undefined
-  | Record<string, unknown>;
+export type QueryParameter = string | number | boolean | Date | null;
 
 export interface QueryResult<T = DatabaseRow> {
   rows: T[];

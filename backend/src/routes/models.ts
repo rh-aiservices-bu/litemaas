@@ -359,7 +359,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, metadata)
            VALUES ($1, $2, $3, $4)`,
-          [user.userId, 'MODELS_REFRESH', 'MODEL', { modelsCount: models.length }],
+          [user.userId, 'MODELS_REFRESH', 'MODEL', JSON.stringify({ modelsCount: models.length })],
         );
 
         fastify.log.info(
