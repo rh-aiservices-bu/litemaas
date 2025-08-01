@@ -6,7 +6,7 @@ metadata:
     app: frontend
     component: web
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
@@ -16,16 +16,15 @@ spec:
         app: frontend
         component: web
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1001
-        runAsGroup: 1001
       containers:
       - name: frontend
-        image: quay.io/rh-aiservice-bu/litemaas-frontend:latest
+        image: quay.io/rh-aiservices-bu/litemaas-frontend:latest
         ports:
         - containerPort: 8080
           name: http
+        env:
+        - name: BACKEND_URL
+          value: "http://backend:8080"
         resources:
           requests:
             memory: "128Mi"

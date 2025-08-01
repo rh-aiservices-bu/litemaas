@@ -105,8 +105,8 @@ class ModelsService {
       category,
       contextLength: backendModel.contextLength,
       pricing: {
-        input: backendModel.pricing.input,
-        output: backendModel.pricing.output,
+        input: backendModel.pricing?.input || 0,
+        output: backendModel.pricing?.output || 0,
       },
       features,
       availability,
