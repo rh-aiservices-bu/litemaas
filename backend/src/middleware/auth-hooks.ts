@@ -13,6 +13,9 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
     // Skip for health checks and public endpoints
     const publicRoutes = [
       '/api/health',
+      '/api/v1/health',
+      '/api/v1/health/ready',
+      '/api/v1/health/live',
       '/api/auth/login',
       '/api/auth/callback',
       '/api/auth/mock-login',
@@ -22,7 +25,9 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
       '/openapi.json',
     ];
 
-    const isPublicRoute = publicRoutes.some((route) => request.url.startsWith(route));
+    // Check if the URL (without query params) matches any public route
+    const urlPath = request.url.split('?')[0];
+    const isPublicRoute = publicRoutes.some((route) => urlPath.startsWith(route));
     if (isPublicRoute) {
       return;
     }
@@ -62,10 +67,15 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
     // Skip logging for certain endpoints
     const skipLogging = [
       '/api/health',
+      '/api/v1/health',
+      '/api/v1/health/ready',
+      '/api/v1/health/live',
       '/api/auth/profile', // Too frequent
     ];
 
-    const shouldSkip = skipLogging.some((route) => request.url.startsWith(route));
+    // Check if the URL (without query params) should skip logging
+    const urlPath = request.url.split('?')[0];
+    const shouldSkip = skipLogging.some((route) => urlPath.startsWith(route));
     if (shouldSkip) {
       return;
     }
