@@ -226,14 +226,16 @@ export class SessionService {
       [userId],
     );
 
-    return sessions.map((session): SessionInfo => ({
-      sessionId: session.id,
-      ipAddress: session.ip_address,
-      userAgent: session.user_agent,
-      createdAt: session.created_at,
-      lastActivityAt: session.last_activity_at || session.created_at,
-      isCurrent: this.sessionStore.has(session.id),
-    }));
+    return sessions.map(
+      (session): SessionInfo => ({
+        sessionId: session.id,
+        ipAddress: session.ip_address,
+        userAgent: session.user_agent,
+        createdAt: session.created_at,
+        lastActivityAt: session.last_activity_at || session.created_at,
+        isCurrent: this.sessionStore.has(session.id),
+      }),
+    );
   }
 
   async invalidateAllUserSessions(userId: string, exceptSessionId?: string): Promise<number> {

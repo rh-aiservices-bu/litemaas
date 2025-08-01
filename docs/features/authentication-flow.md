@@ -30,33 +30,123 @@ The authentication endpoints are strategically split into two categories:
 
 ## OAuth Flow Sequence
 
+### Development Mode (Single Process)
+
+In development, both frontend and backend are served by the same Fastify process:
+
 ```mermaid
 sequenceDiagram
     participant User
-    participant Frontend
-    participant Backend
+    participant Browser
+    participant Fastify Dev Server
+    participant OpenShift/Mock
+    participant LiteLLM
+    participant Database
+
+    User->>Browser: Click "Login with OpenShift"
+    Browser->>Fastify Dev Server: POST /api/auth/login
+    Fastify Dev Server->>Browser: Return { authUrl }
+    Browser->>OpenShift/Mock: Redirect to authUrl
+    User->>OpenShift/Mock: Enter credentials
+    OpenShift/Mock->>Fastify Dev Server: Redirect to /api/auth/callback?code=xxx
+    Note over Fastify Dev Server: Backend processes OAuth
+    Fastify Dev Server->>OpenShift/Mock: Exchange code for token
+    OpenShift/Mock->>Fastify Dev Server: Return access token
+    Fastify Dev Server->>OpenShift/Mock: GET user info
+    OpenShift/Mock->>Fastify Dev Server: Return user details
+    Fastify Dev Server->>Database: Create/update user
+    Fastify Dev Server->>LiteLLM: Create user with Default Team
+    Fastify Dev Server->>Browser: Redirect to /auth/callback#token=xxx
+    Note over Browser: Same origin, so redirect works
+    Browser->>Browser: Frontend handles token
+    Browser->>Fastify Dev Server: GET /api/v1/auth/me
+    Fastify Dev Server->>Browser: Return user info
+```
+
+### Container/Production Mode (NGINX + Backend)
+
+In containerized deployments, NGINX serves as the single entry point:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Browser
+    participant NGINX (port 8080)
+    participant Backend (port 8081)
     participant OpenShift
     participant LiteLLM
     participant Database
 
-    User->>Frontend: Click "Login with OpenShift"
-    Frontend->>Backend: POST /api/auth/login
-    Backend->>Frontend: Return { authUrl }
-    Frontend->>OpenShift: Redirect to authUrl
+    User->>Browser: Click "Login with OpenShift"
+    Browser->>NGINX (port 8080): POST /api/auth/login
+    NGINX (port 8080)->>Backend (port 8081): Proxy /api/* request
+    Backend (port 8081)->>NGINX (port 8080): Return { authUrl }
+    NGINX (port 8080)->>Browser: Return { authUrl }
+    Browser->>OpenShift: Redirect to authUrl
     User->>OpenShift: Enter credentials
-    OpenShift->>Backend: Redirect to /api/auth/callback?code=xxx
-    Backend->>OpenShift: Exchange code for token
-    OpenShift->>Backend: Return access token
-    Backend->>OpenShift: GET user info (via API server)
-    OpenShift->>Backend: Return user details
-    Backend->>Backend: Ensure Default Team exists
-    Backend->>Database: Create/update user
-    Backend->>LiteLLM: Create user with Default Team assignment
-    Backend->>Database: Assign to Default Team
-    Backend->>Frontend: Redirect with JWT token
-    Frontend->>Backend: GET /api/v1/auth/me
-    Backend->>Frontend: Return user info
+    
+    Note over OpenShift: OAuth callback configured as<br/>http://localhost:8080/api/auth/callback
+    
+    OpenShift->>Browser: Redirect to callback URL
+    Browser->>NGINX (port 8080): GET /api/auth/callback?code=xxx
+    NGINX (port 8080)->>Backend (port 8081): Proxy to backend
+    Note over Backend (port 8081): Process OAuth callback
+    Backend (port 8081)->>OpenShift: Exchange code for token
+    OpenShift->>Backend (port 8081): Return access token
+    Backend (port 8081)->>OpenShift: GET user info (API server)
+    OpenShift->>Backend (port 8081): Return user details
+    Backend (port 8081)->>Database: Create/update user
+    Backend (port 8081)->>LiteLLM: Create user with Default Team
+    
+    Note over Backend (port 8081): Uses relative redirect:<br/>/auth/callback#token=xxx
+    
+    Backend (port 8081)->>NGINX (port 8080): 302 Redirect to /auth/callback
+    NGINX (port 8080)->>Browser: 302 Redirect
+    Browser->>NGINX (port 8080): GET /auth/callback
+    NGINX (port 8080)->>NGINX (port 8080): Serve frontend SPA
+    Note over Browser: Frontend handles token from URL hash
+    Browser->>NGINX (port 8080): GET /api/v1/auth/me
+    NGINX (port 8080)->>Backend (port 8081): Proxy request
+    Backend (port 8081)->>NGINX (port 8080): Return user info
+    NGINX (port 8080)->>Browser: Return user info
 ```
+
+### Key Differences Between Environments
+
+1. **Development Mode**:
+   - Single Fastify process serves both frontend and backend
+   - Direct communication, no proxy needed
+   - OAuth callback URL: `http://localhost:8080/api/auth/callback`
+
+2. **Container/Production Mode**:
+   - NGINX as single entry point (port 8080)
+   - Backend runs separately (port 8081)
+   - NGINX proxies `/api/*` requests to backend
+   - OAuth callback URL: `<base-url>/api/auth/callback`
+   - Backend uses relative redirects to work in any environment
+
+### OAuth Callback URL Configuration (Updated)
+
+As of the latest update, LiteMaaS implements intelligent OAuth callback URL handling:
+
+#### Automatic Detection and State Preservation
+
+1. **Authorization Phase**: The backend automatically detects the appropriate callback URL based on the request origin and stores it with the OAuth state parameter
+2. **Token Exchange Phase**: The stored callback URL is retrieved and reused to ensure OAuth 2.0 compliance (redirect_uri must match exactly)
+3. **Fallback Support**: The `OAUTH_CALLBACK_URL` environment variable serves as a fallback when automatic detection is not possible
+
+#### Multiple Callback URLs
+
+Register ALL possible callback URLs with your OAuth provider:
+
+| Environment | Callback URLs to Register | Notes |
+|-------------|--------------------------|--------|
+| Development (Vite) | `http://localhost:3000/api/auth/callback` | Vite dev server on port 3000 |
+| Development (Direct) | `http://localhost:8080/api/auth/callback`<br>`http://localhost:8081/api/auth/callback` | Direct backend access |
+| Container (NGINX) | `http://localhost:8080/api/auth/callback` | NGINX on port 8080 |
+| Production | `https://your-domain.com/api/auth/callback` | Through ingress/load balancer |
+
+The application will automatically select the correct callback URL based on the request origin. The backend's relative redirect (`/auth/callback`) ensures the browser is redirected to the correct frontend route regardless of the deployment environment.
 
 ## Key Implementation Details
 
@@ -234,6 +324,8 @@ JWT_EXPIRES_IN=24h
 
 ### OpenShift OAuth Client
 
+Register all possible callback URLs to support different environments:
+
 ```yaml
 apiVersion: oauth.openshift.io/v1
 kind: OAuthClient
@@ -241,10 +333,14 @@ metadata:
   name: litemaas
 secret: your-secret-here
 redirectURIs:
-- http://localhost:8080/api/auth/callback      # Development
+- http://localhost:3000/api/auth/callback      # Development (Vite)
+- http://localhost:8080/api/auth/callback      # Development (Direct) / Container
+- http://localhost:8081/api/auth/callback      # Backend Direct Access
 - https://your-domain/api/auth/callback        # Production
 grantMethod: prompt
 ```
+
+The application will automatically select the appropriate callback URL based on where the request originates from.
 
 ## Frontend Integration
 

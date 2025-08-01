@@ -734,7 +734,12 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, metadata)
            VALUES ($1, $2, $3, $4)`,
-          [user.userId, 'USAGE_DATA_CLEANUP', 'USAGE_LOG', JSON.stringify({ retentionDays, deletedCount })],
+          [
+            user.userId,
+            'USAGE_DATA_CLEANUP',
+            'USAGE_LOG',
+            JSON.stringify({ retentionDays, deletedCount }),
+          ],
         );
 
         return {

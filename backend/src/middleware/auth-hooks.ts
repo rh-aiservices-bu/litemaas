@@ -301,16 +301,12 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
     const maxRecentAge = 5 * 60; // 5 minutes for key retrieval operations
 
     if (tokenAge > maxRecentAge) {
-      throw fastify.createError(
-        403,
-        'Recent authentication required for this operation',
-        {
-          code: 'TOKEN_TOO_OLD',
-          tokenAge: Math.floor(tokenAge),
-          maxAge: maxRecentAge,
-          action: 'Please re-authenticate to access your API keys',
-        }
-      );
+      throw fastify.createError(403, 'Recent authentication required for this operation', {
+        code: 'TOKEN_TOO_OLD',
+        tokenAge: Math.floor(tokenAge),
+        maxAge: maxRecentAge,
+        action: 'Please re-authenticate to access your API keys',
+      });
     }
   });
 
@@ -372,7 +368,7 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
             limit: maxAttempts,
             window: '5 minutes',
             retryAfter: Math.ceil(windowMs / 1000),
-          }
+          },
         );
       }
 

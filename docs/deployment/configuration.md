@@ -38,13 +38,89 @@ DB_CONNECTION_TIMEOUT=10000
 | `OAUTH_ISSUER` | OAuth provider URL | - | Yes |
 | `OAUTH_CALLBACK_URL` | OAuth callback URL | `http://localhost:8080/api/auth/callback` | No |
 
+### OAuth Flow Architecture
+
+In containerized deployments, the OAuth flow works through NGINX as a reverse proxy:
+
+```mermaid
+graph LR
+    A[Browser] -->|1. Login Request| B[NGINX :8080]
+    B -->|2. Proxy /api/*| C[Backend :8081]
+    C -->|3. OAuth URL| A
+    A -->|4. Auth| D[OAuth Provider]
+    D -->|5. Callback| B
+    B -->|6. Proxy| C
+    C -->|7. Process & Redirect| B
+    B -->|8. Serve Frontend| A
+```
+
+### OAuth Callback URL Configuration
+
+The `OAUTH_CALLBACK_URL` must **always** point to `/api/auth/callback` through your public-facing URL:
+
+| Environment | Example Value | Notes |
+|-------------|--------------|--------|
+| Development (Vite) | `http://localhost:3000/api/auth/callback` | Vite dev server proxies to backend |
+| Development (Direct) | `http://localhost:8080/api/auth/callback` | Running backend directly |
+| Container Test | `http://localhost:8080/api/auth/callback` | NGINX proxies to backend |
+| Production | `https://app.example.com/api/auth/callback` | Through load balancer/ingress |
+
+**Dynamic Callback URL Detection (Enhanced)**: 
+As of the latest update, the backend implements intelligent OAuth callback URL handling:
+
+1. **Automatic Detection**: The backend detects the appropriate callback URL from the request origin
+2. **State Preservation**: The callback URL is stored with the OAuth state parameter during authorization
+3. **Exact Matching**: The same stored callback URL is reused during token exchange (OAuth 2.0 compliance)
+4. **Fallback Support**: `OAUTH_CALLBACK_URL` serves as a fallback when automatic detection isn't possible
+
+**How It Works**:
+```
+1. User initiates login → Backend detects origin (e.g., http://localhost:8080)
+2. Backend stores callback URL with state → Uses for authorization request
+3. OAuth provider redirects to callback → Backend retrieves stored URL
+4. Token exchange uses same URL → Ensures redirect_uri matches exactly
+```
+
+**Setting OAUTH_CALLBACK_URL**:
+- This is now primarily a fallback value
+- Set to your most common development URL
+- The automatic detection handles environment differences
+
+**Important**: 
+- Register ALL possible callback URLs with your OAuth provider
+- The backend uses relative redirects (`/auth/callback`) after processing
+- No `FRONTEND_URL` configuration needed
+
 ### Example
 ```bash
 OAUTH_CLIENT_ID=litemaas-oauth-client
 OAUTH_CLIENT_SECRET=super-secret-oauth-key
 OAUTH_ISSUER=https://oauth.openshift.example.com
-OAUTH_CALLBACK_URL=https://app.example.com/api/auth/callback
+# Fallback URL - automatic detection handles most cases
+OAUTH_CALLBACK_URL=http://localhost:3000/api/auth/callback
 ```
+
+### OAuth Provider Setup
+
+For OpenShift OAuth, register ALL possible callback URLs:
+
+```yaml
+apiVersion: oauth.openshift.io/v1
+kind: OAuthClient
+metadata:
+  name: litemaas
+secret: your-secret-here
+redirectURIs:
+  # Development environments
+  - http://localhost:3000/api/auth/callback    # Vite dev server
+  - http://localhost:8080/api/auth/callback    # Direct backend / Container
+  - http://localhost:8081/api/auth/callback    # Backend on alt port
+  # Production
+  - https://app.example.com/api/auth/callback  # Production domain
+grantMethod: prompt
+```
+
+**Note**: The application automatically selects the correct callback URL based on request origin. This allows the same deployment to work across different environments without configuration changes.
 
 ## JWT Configuration
 

@@ -32,6 +32,45 @@ LiteMaaS follows a microservices architecture with clear separation between fron
             └───────────┘  └───────────┘  └─────────────┘
 ```
 
+## Container Architecture
+
+In production and containerized deployments, NGINX serves as the single entry point:
+
+```mermaid
+graph TB
+    subgraph "External Traffic"
+        User[User Browser]
+        OAuth[OAuth Provider]
+    end
+    
+    subgraph "Container Stack"
+        NGINX[NGINX<br/>Port 8080<br/>Entry Point]
+        Backend[Backend API<br/>Port 8081<br/>Business Logic]
+        Frontend[Frontend SPA<br/>Static Files<br/>Served by NGINX]
+        DB[(PostgreSQL<br/>Database)]
+        LiteLLM[LiteLLM<br/>Service]
+    end
+    
+    User -->|HTTPS| NGINX
+    NGINX -->|/api/*| Backend
+    NGINX -->|/*| Frontend
+    Backend <--> DB
+    Backend <--> LiteLLM
+    Backend <--> OAuth
+    
+    style NGINX fill:#f9f,stroke:#333,stroke-width:4px
+    style Backend fill:#bbf,stroke:#333,stroke-width:2px
+    style Frontend fill:#bfb,stroke:#333,stroke-width:2px
+```
+
+### Key Architectural Principles
+
+1. **Single Entry Point**: NGINX handles all external traffic
+2. **API Separation**: `/api/*` routes proxied to backend
+3. **Static File Serving**: Frontend SPA served directly by NGINX
+4. **Environment Agnostic**: Relative redirects enable deployment flexibility
+5. **Secure by Default**: No direct backend exposure
+
 ## Component Details
 
 ### Frontend (React + PatternFly)
@@ -176,6 +215,77 @@ Organization Level
 2. **Sync Process** → LiteLLM API Updates → Bidirectional Synchronization
 3. **Usage Events** → LiteLLM → Usage Logs → Cost Calculation
 4. **Budget Monitoring** → Real-time Alerts → Automated Actions
+
+## OAuth Authentication Flow
+
+The OAuth flow is central to LiteMaaS security and works differently in development vs containerized environments:
+
+### Development Environment Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Browser
+    participant Fastify
+    participant OAuth
+    participant DB
+    
+    User->>Browser: Click Login
+    Browser->>Fastify: POST /api/auth/login
+    Fastify->>Browser: Return OAuth URL
+    Browser->>OAuth: Redirect to OAuth
+    User->>OAuth: Authenticate
+    OAuth->>Fastify: Callback with code
+    Fastify->>OAuth: Exchange code
+    OAuth->>Fastify: Return token
+    Fastify->>DB: Create/update user
+    Fastify->>Browser: Redirect /auth/callback
+    Note over Browser: Same origin redirect
+```
+
+### Container/Production Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Browser
+    participant NGINX
+    participant Backend
+    participant OAuth
+    participant DB
+    
+    User->>Browser: Click Login
+    Browser->>NGINX: POST /api/auth/login
+    NGINX->>Backend: Proxy request
+    Backend->>NGINX: Return OAuth URL
+    NGINX->>Browser: Return OAuth URL
+    Browser->>OAuth: Redirect to OAuth
+    User->>OAuth: Authenticate
+    
+    Note over OAuth: Callback configured as<br/>https://app.com/api/auth/callback
+    
+    OAuth->>Browser: Redirect to callback
+    Browser->>NGINX: GET /api/auth/callback
+    NGINX->>Backend: Proxy to backend
+    Backend->>OAuth: Exchange code
+    OAuth->>Backend: Return token
+    Backend->>DB: Create/update user
+    Backend->>NGINX: 302 /auth/callback
+    NGINX->>Browser: 302 Redirect
+    Browser->>NGINX: GET /auth/callback
+    NGINX->>Browser: Serve SPA
+    Note over Browser: Frontend extracts token
+```
+
+### OAuth Configuration Requirements
+
+| Component | Configuration | Purpose |
+|-----------|--------------|---------|
+| OAuth Provider | Redirect URI: `<base-url>/api/auth/callback` | Where to send user after auth |
+| Backend | `OAUTH_CALLBACK_URL` env var | Validate OAuth responses |
+| Backend | Relative redirect: `/auth/callback` | Environment-agnostic frontend redirect |
+| NGINX | Proxy `/api/*` to backend | Route OAuth callbacks correctly |
+| Frontend | Handle `/auth/callback` route | Extract and store JWT token |
 
 ## Security Architecture
 

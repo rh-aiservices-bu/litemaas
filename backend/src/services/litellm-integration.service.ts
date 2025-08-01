@@ -549,7 +549,7 @@ export class LiteLLMIntegrationService {
             [
               liteLLMUser?.user_id ?? null,
               liteLLMUser?.max_budget ?? null,
-              (liteLLMUser?.spend ?? 0),
+              liteLLMUser?.spend ?? 0,
               user.id,
             ],
           );

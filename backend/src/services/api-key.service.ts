@@ -580,7 +580,7 @@ export class ApiKeyService {
           [keyId],
         );
 
-        apiKey.models = modelRows.map(row => String(row.model_id));
+        apiKey.models = modelRows.map((row) => String(row.model_id));
       }
 
       const enhancedKey = this.mapToEnhancedApiKey(apiKey);
@@ -1092,12 +1092,7 @@ export class ApiKeyService {
              last_sync_at = CURRENT_TIMESTAMP
          WHERE id = $4
          RETURNING *`,
-        [
-          updates.maxBudget ?? null,
-          updates.tpmLimit ?? null,
-          updates.rpmLimit ?? null,
-          keyId,
-        ],
+        [updates.maxBudget ?? null, updates.tpmLimit ?? null, updates.rpmLimit ?? null, keyId],
       );
 
       // Create audit log
@@ -1587,17 +1582,19 @@ export class ApiKeyService {
         }
 
         // Create audit logs for each cleaned key
-        const auditValues: Array<[string, string, string, string, string]> = expiredKeys.map((key) => [
-          String(key.user_id),
-          'API_KEY_EXPIRED',
-          'API_KEY',
-          String(key.id),
-          JSON.stringify({
-            keyName: key.name,
-            keyPrefix: key.key_prefix,
-            cleanupReason: 'expired',
-          }),
-        ]);
+        const auditValues: Array<[string, string, string, string, string]> = expiredKeys.map(
+          (key) => [
+            String(key.user_id),
+            'API_KEY_EXPIRED',
+            'API_KEY',
+            String(key.id),
+            JSON.stringify({
+              keyName: key.name,
+              keyPrefix: key.key_prefix,
+              cleanupReason: 'expired',
+            }),
+          ],
+        );
 
         if (auditValues.length > 0) {
           const auditQuery = `
@@ -1677,7 +1674,6 @@ export class ApiKeyService {
     );
   }
 
-
   private async updateLastUsed(keyId: string): Promise<void> {
     try {
       await this.fastify.dbUtils.query(
@@ -1739,12 +1735,14 @@ export class ApiKeyService {
       rpmLimit: apiKey.rpm_limit,
       metadata: apiKey.metadata,
       // Include model details if available
-      modelDetails: apiKey.model_details as Array<{
-        id: string;
-        name: string;
-        provider: string;
-        contextLength?: number;
-      }> | undefined,
+      modelDetails: apiKey.model_details as
+        | Array<{
+            id: string;
+            name: string;
+            provider: string;
+            contextLength?: number;
+          }>
+        | undefined,
       // Keep subscription info for backward compatibility
       subscriptionDetails: apiKey.subscription_id
         ? [
@@ -1839,7 +1837,7 @@ export class ApiKeyService {
         user_alias: user.username as string,
         user_role: (user.roles as string[])?.includes('admin')
           ? 'proxy_admin'
-          : 'internal_user' as 'proxy_admin' | 'internal_user' | 'internal_user_viewer',
+          : ('internal_user' as 'proxy_admin' | 'internal_user' | 'internal_user_viewer'),
         max_budget: Number(user.max_budget) || 100,
         tpm_limit: Number(user.tpm_limit) || 1000,
         rpm_limit: Number(user.rpm_limit) || 60,

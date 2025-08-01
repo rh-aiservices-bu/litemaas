@@ -225,6 +225,7 @@ Both containers use an optimized three-stage build approach:
    - Verify OAuth client configuration
    - Check redirect URLs match exactly
    - Ensure OAuth provider is accessible
+   - See [OAuth Flow in Containerized Environments](#oauth-flow-in-containerized-environments) below
 
 ### Viewing Logs
 
@@ -257,4 +258,241 @@ podman tag litemaas-frontend:latest registry.example.com/litemaas/frontend:v1.0.
 # Push to registry
 podman push registry.example.com/litemaas/backend:v1.0.0
 podman push registry.example.com/litemaas/frontend:v1.0.0
-``` 
+```
+
+## OAuth Flow in Containerized Environments
+
+Understanding how OAuth authentication works in containerized deployments is crucial for proper configuration.
+
+### Architecture Overview
+
+In containerized deployments, NGINX serves as the single entry point for all traffic:
+
+```mermaid
+graph TB
+    subgraph "External"
+        Browser[Browser]
+        OAuth[OpenShift OAuth Provider]
+    end
+    
+    subgraph "Container Stack"
+        NGINX[NGINX<br/>Port 8080]
+        Backend[Backend API<br/>Port 8081]
+        Frontend[Frontend SPA<br/>Static Files]
+    end
+    
+    Browser -->|All requests| NGINX
+    NGINX -->|/api/*| Backend
+    NGINX -->|/*| Frontend
+    Backend <-->|OAuth flow| OAuth
+```
+
+### OAuth Flow Sequence
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Browser
+    participant NGINX
+    participant Backend
+    participant OAuth Provider
+    
+    Note over User,OAuth Provider: 1. Login Initiation
+    User->>Browser: Click "Login"
+    Browser->>NGINX: POST /api/auth/login
+    NGINX->>Backend: Proxy request
+    Backend->>NGINX: Return OAuth URL
+    NGINX->>Browser: Return OAuth URL
+    Browser->>OAuth Provider: Redirect to OAuth
+    
+    Note over User,OAuth Provider: 2. OAuth Authentication
+    User->>OAuth Provider: Enter credentials
+    OAuth Provider->>Browser: Redirect to callback
+    
+    Note over Browser,Backend: 3. OAuth Callback Processing
+    Browser->>NGINX: GET /api/auth/callback?code=xxx
+    Note right of Browser: OAuth provider redirects here
+    NGINX->>Backend: Proxy to backend
+    Backend->>OAuth Provider: Exchange code for token
+    OAuth Provider->>Backend: Return access token
+    Backend->>Backend: Create/update user
+    
+    Note over Backend,Browser: 4. Frontend Redirect
+    Backend->>NGINX: 302 Redirect to /auth/callback
+    Note right of Backend: Relative redirect works<br/>in any environment
+    NGINX->>Browser: 302 Redirect
+    Browser->>NGINX: GET /auth/callback
+    NGINX->>NGINX: Serve frontend SPA
+    Note over Browser: Frontend extracts token<br/>from URL hash
+```
+
+### Key Configuration Points
+
+#### 1. OAuth Callback URL (With Automatic Detection)
+
+As of the latest update, LiteMaaS implements **automatic OAuth callback URL detection** based on request origin. This eliminates many common configuration issues:
+
+##### How It Works
+
+1. **During Login**: The backend detects the request origin and stores the appropriate callback URL with the OAuth state
+2. **During Callback**: The stored callback URL is retrieved and used for token exchange (ensuring OAuth compliance)
+3. **Fallback**: The `OAUTH_CALLBACK_URL` environment variable serves as a fallback when automatic detection isn't possible
+
+##### Register Multiple Callback URLs
+
+Register ALL possible callback URLs with your OAuth provider:
+
+| Environment | Callback URLs to Register | Notes |
+|-------------|--------------------------|--------|
+| Development (Vite) | `http://localhost:3000/api/auth/callback` | Vite dev server on port 3000 |
+| Development (Direct) | `http://localhost:8080/api/auth/callback`<br>`http://localhost:8081/api/auth/callback` | Direct backend access |
+| Container (NGINX) | `http://localhost:8080/api/auth/callback` | NGINX on port 8080 |
+| Production | `https://your-domain.com/api/auth/callback` | Through ingress/load balancer |
+
+##### Example OAuth Provider Configuration
+
+```yaml
+# OpenShift OAuthClient
+apiVersion: oauth.openshift.io/v1
+kind: OAuthClient
+metadata:
+  name: litemaas
+secret: your-secret-here
+redirectURIs:
+  - http://localhost:3000/api/auth/callback    # Vite development
+  - http://localhost:8080/api/auth/callback    # Container/Direct
+  - http://localhost:8081/api/auth/callback    # Backend direct
+  - https://your-domain.com/api/auth/callback  # Production
+grantMethod: prompt
+```
+
+The application will automatically select the correct callback URL based on where the request originates.
+
+#### 2. NGINX Proxy Configuration
+
+The critical NGINX configuration that makes this work:
+
+```nginx
+# From nginx.conf.template
+location /api {
+    proxy_pass http://api_servers;  # Backend container
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+}
+
+# All other paths serve the frontend SPA
+location / {
+    try_files $uri $uri/ /index.html;
+}
+```
+
+#### 3. Backend Relative Redirects
+
+The backend uses relative redirects to ensure environment portability:
+
+```typescript
+// After OAuth callback processing
+const callbackPath = `/auth/callback#token=${token}&expires_in=${expiresIn}`;
+return reply.redirect(callbackPath);  // Relative redirect
+```
+
+This means:
+- No `FRONTEND_URL` configuration needed
+- Works regardless of domain or port
+- Browser maintains the current origin
+
+### Common OAuth Issues and Solutions
+
+#### Issue: "invalid_request" during token exchange
+
+**Symptom**: OAuth callback fails with 400 error: "The request is missing a required parameter"
+
+**Cause**: The `redirect_uri` parameter doesn't match between authorization and token exchange
+
+**Solution**: 
+1. Register all possible callback URLs with your OAuth provider
+2. The automatic detection ensures the same URL is used in both phases
+3. Check backend logs for "Token exchange callback URL" to see what's being used
+
+#### Issue: "Host can't be reached" after OAuth callback
+
+**Symptom**: After login, browser tries to reach wrong port (e.g., `http://localhost:3000/auth/callback`)
+
+**Cause**: Mismatch between where frontend is served and OAuth callback configuration
+
+**Solution**: 
+1. The backend now uses relative redirects (`/auth/callback`)
+2. Automatic callback URL detection handles port differences
+3. Ensure all possible URLs are registered with OAuth provider
+
+#### Issue: Different environments need different callback URLs
+
+**Symptom**: OAuth works in development but not in containers, or vice versa
+
+**Cause**: Hard-coded callback URLs don't match the deployment environment
+
+**Solution**: 
+1. Register multiple callback URLs with your OAuth provider
+2. Automatic detection selects the right one based on request origin
+3. No need to change configuration between environments
+
+#### Issue: OAuth callback fails with 404
+
+**Symptom**: OAuth provider redirects to callback URL but gets 404
+
+**Cause**: Wrong OAuth callback URL configuration or NGINX proxy issue
+
+**Solution**: 
+1. Verify OAuth callback URL includes `/api/auth/callback`
+2. Ensure NGINX is properly proxying `/api/*` to backend
+3. Check backend is running and healthy
+
+#### Issue: CORS errors during OAuth flow
+
+**Symptom**: Browser console shows CORS errors
+
+**Cause**: Backend CORS configuration doesn't match frontend origin
+
+**Solution**: Set `CORS_ORIGIN` environment variable to match your frontend URL
+
+### Testing OAuth Flow
+
+To test OAuth in containerized environment:
+
+1. **Start containers with proper configuration:**
+```bash
+# Backend with OAuth config
+podman run -d --name backend \
+  -e OAUTH_CLIENT_ID=your-client \
+  -e OAUTH_CLIENT_SECRET=your-secret \
+  -e OAUTH_ISSUER=https://oauth.provider \
+  -e OAUTH_CALLBACK_URL=http://localhost:8080/api/auth/callback \
+  -e CORS_ORIGIN=http://localhost:8080 \
+  -e LOG_LEVEL=debug \
+  -p 8081:8080 \
+  litemaas-backend
+
+# Note: Set LOG_LEVEL=debug to see OAuth callback URL detection in action
+
+# Frontend with NGINX
+podman run -d --name frontend \
+  -e BACKEND_URL=http://host.docker.internal:8081 \
+  -p 8080:8080 \
+  litemaas-frontend
+```
+
+2. **Verify OAuth flow:**
+   - Navigate to `http://localhost:8080`
+   - Click login
+   - Should redirect to OAuth provider
+   - After login, should return to `http://localhost:8080/home`
+
+### Security Considerations
+
+1. **Always use HTTPS in production** for OAuth flows
+2. **Validate OAuth state parameter** to prevent CSRF attacks
+3. **Use secure token storage** in frontend (httpOnly cookies or secure localStorage)
+4. **Implement proper CORS policies** to prevent unauthorized access
+5. **Regular token rotation** and expiration handling 

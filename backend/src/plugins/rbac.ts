@@ -73,7 +73,7 @@ const rbacPlugin: FastifyPluginAsync = async (fastify) => {
       throw fastify.createAuthError('Authentication required');
     }
 
-        if (!user.roles.includes('admin')) {
+    if (!user.roles.includes('admin')) {
       throw fastify.createForbiddenError('Administrator access required');
     }
   });
@@ -111,188 +111,208 @@ const rbacPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.register(
     async function rbacRoutes(fastify) {
       // Get system roles
-      fastify.get('/roles', {
-        schema: {
-          tags: ['RBAC'],
-          description: 'Get system roles',
-          security: [{ bearerAuth: [] }],
-          response: {
-            200: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  name: { type: 'string' },
-                  description: { type: 'string' },
-                  permissions: { type: 'array', items: { type: 'string' } },
-                  isSystem: { type: 'boolean' },
+      fastify.get(
+        '/roles',
+        {
+          schema: {
+            tags: ['RBAC'],
+            description: 'Get system roles',
+            security: [{ bearerAuth: [] }],
+            response: {
+              200: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' },
+                    description: { type: 'string' },
+                    permissions: { type: 'array', items: { type: 'string' } },
+                    isSystem: { type: 'boolean' },
+                  },
                 },
               },
             },
           },
+          preHandler: [fastify.authenticate, fastify.requirePermission('admin:users') as any],
         },
-        preHandler: [fastify.authenticate, fastify.requirePermission('admin:users') as any],
-      }, async (_request, _reply) => {
-        return rbacService.getSystemRoles();
-      });
+        async (_request, _reply) => {
+          return rbacService.getSystemRoles();
+        },
+      );
 
       // Get system permissions
-      fastify.get('/permissions', {
-        schema: {
-          tags: ['RBAC'],
-          description: 'Get system permissions',
-          security: [{ bearerAuth: [] }],
-          response: {
-            200: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  name: { type: 'string' },
-                  description: { type: 'string' },
-                  resource: { type: 'string' },
-                  action: { type: 'string' },
+      fastify.get(
+        '/permissions',
+        {
+          schema: {
+            tags: ['RBAC'],
+            description: 'Get system permissions',
+            security: [{ bearerAuth: [] }],
+            response: {
+              200: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    name: { type: 'string' },
+                    description: { type: 'string' },
+                    resource: { type: 'string' },
+                    action: { type: 'string' },
+                  },
                 },
               },
             },
           },
+          preHandler: [fastify.authenticate, fastify.requirePermission('admin:users') as any],
         },
-        preHandler: [fastify.authenticate, fastify.requirePermission('admin:users') as any],
-      }, async (_request, _reply) => {
-        return rbacService.getSystemPermissions();
-      });
+        async (_request, _reply) => {
+          return rbacService.getSystemPermissions();
+        },
+      );
 
       // Get user effective permissions
-      fastify.get('/permissions/me', {
-        schema: {
-          tags: ['RBAC'],
-          description: 'Get current user effective permissions',
-          security: [{ bearerAuth: [] }],
-          response: {
-            200: {
-              type: 'object',
-              properties: {
-                roles: { type: 'array', items: { type: 'string' } },
-                permissions: { type: 'array', items: { type: 'string' } },
-              },
-            },
-          },
-        },
-        preHandler: fastify.authenticate as any,
-      }, async (request, _reply) => {
-        const authenticatedRequest = request as AuthenticatedRequest;
-        const user = authenticatedRequest.user;
-        const permissions = await rbacService.getEffectivePermissions(user.userId);
-
-        return {
-          roles: user.roles,
-          permissions,
-        };
-      });
-
-      // Check permission
-      fastify.post('/permissions/check', {
-        schema: {
-          tags: ['RBAC'],
-          description: 'Check if user has specific permission',
-          security: [{ bearerAuth: [] }],
-          body: {
-            type: 'object',
-            properties: {
-              permission: { type: 'string' },
-              resourceId: { type: 'string' },
-              context: { type: 'object' },
-            },
-            required: ['permission'],
-          },
-          response: {
-            200: {
-              type: 'object',
-              properties: {
-                hasPermission: { type: 'boolean' },
-                permission: { type: 'string' },
-                resourceId: { type: 'string' },
-              },
-            },
-          },
-        },
-        preHandler: fastify.authenticate as any,
-      }, async (request, _reply) => {
-        const authenticatedRequest = request as AuthenticatedRequest;
-        const user = authenticatedRequest.user;
-        const { permission, resourceId, context } = request.body as {
-          permission: string;
-          resourceId?: string;
-          context?: Record<string, unknown>;
-        };
-
-        const hasPermission = await rbacService.hasPermission(
-          user.userId,
-          permission,
-          resourceId,
-          context,
-        );
-
-        return {
-          hasPermission,
-          permission,
-          resourceId,
-        };
-      });
-
-      // Bulk permission check
-      fastify.post('/permissions/check-bulk', {
-        schema: {
-          tags: ['RBAC'],
-          description: 'Check multiple permissions',
-          security: [{ bearerAuth: [] }],
-          body: {
-            type: 'object',
-            properties: {
-              permissions: { type: 'array', items: { type: 'string' } },
-              requireAll: { type: 'boolean', default: false },
-            },
-            required: ['permissions'],
-          },
-          response: {
-            200: {
-              type: 'object',
-              properties: {
-                hasAccess: { type: 'boolean' },
-                results: {
-                  type: 'object',
-                  additionalProperties: { type: 'boolean' },
+      fastify.get(
+        '/permissions/me',
+        {
+          schema: {
+            tags: ['RBAC'],
+            description: 'Get current user effective permissions',
+            security: [{ bearerAuth: [] }],
+            response: {
+              200: {
+                type: 'object',
+                properties: {
+                  roles: { type: 'array', items: { type: 'string' } },
+                  permissions: { type: 'array', items: { type: 'string' } },
                 },
               },
             },
           },
+          preHandler: fastify.authenticate as any,
         },
-        preHandler: fastify.authenticate as any,
-      }, async (request, _reply) => {
-        const authenticatedRequest = request as AuthenticatedRequest;
-        const user = authenticatedRequest.user;
-        const { permissions, requireAll = false } = request.body as {
-          permissions: string[];
-          requireAll?: boolean;
-        };
+        async (request, _reply) => {
+          const authenticatedRequest = request as AuthenticatedRequest;
+          const user = authenticatedRequest.user;
+          const permissions = await rbacService.getEffectivePermissions(user.userId);
 
-        const results: Record<string, boolean> = {};
+          return {
+            roles: user.roles,
+            permissions,
+          };
+        },
+      );
 
-        for (const permission of permissions) {
-          results[permission] = await rbacService.hasPermission(user.userId, permission);
-        }
+      // Check permission
+      fastify.post(
+        '/permissions/check',
+        {
+          schema: {
+            tags: ['RBAC'],
+            description: 'Check if user has specific permission',
+            security: [{ bearerAuth: [] }],
+            body: {
+              type: 'object',
+              properties: {
+                permission: { type: 'string' },
+                resourceId: { type: 'string' },
+                context: { type: 'object' },
+              },
+              required: ['permission'],
+            },
+            response: {
+              200: {
+                type: 'object',
+                properties: {
+                  hasPermission: { type: 'boolean' },
+                  permission: { type: 'string' },
+                  resourceId: { type: 'string' },
+                },
+              },
+            },
+          },
+          preHandler: fastify.authenticate as any,
+        },
+        async (request, _reply) => {
+          const authenticatedRequest = request as AuthenticatedRequest;
+          const user = authenticatedRequest.user;
+          const { permission, resourceId, context } = request.body as {
+            permission: string;
+            resourceId?: string;
+            context?: Record<string, unknown>;
+          };
 
-        const hasAccess = requireAll
-          ? Object.values(results).every((result) => result)
-          : Object.values(results).some((result) => result);
+          const hasPermission = await rbacService.hasPermission(
+            user.userId,
+            permission,
+            resourceId,
+            context,
+          );
 
-        return {
-          hasAccess,
-          results,
-        };
-      });
+          return {
+            hasPermission,
+            permission,
+            resourceId,
+          };
+        },
+      );
+
+      // Bulk permission check
+      fastify.post(
+        '/permissions/check-bulk',
+        {
+          schema: {
+            tags: ['RBAC'],
+            description: 'Check multiple permissions',
+            security: [{ bearerAuth: [] }],
+            body: {
+              type: 'object',
+              properties: {
+                permissions: { type: 'array', items: { type: 'string' } },
+                requireAll: { type: 'boolean', default: false },
+              },
+              required: ['permissions'],
+            },
+            response: {
+              200: {
+                type: 'object',
+                properties: {
+                  hasAccess: { type: 'boolean' },
+                  results: {
+                    type: 'object',
+                    additionalProperties: { type: 'boolean' },
+                  },
+                },
+              },
+            },
+          },
+          preHandler: fastify.authenticate as any,
+        },
+        async (request, _reply) => {
+          const authenticatedRequest = request as AuthenticatedRequest;
+          const user = authenticatedRequest.user;
+          const { permissions, requireAll = false } = request.body as {
+            permissions: string[];
+            requireAll?: boolean;
+          };
+
+          const results: Record<string, boolean> = {};
+
+          for (const permission of permissions) {
+            results[permission] = await rbacService.hasPermission(user.userId, permission);
+          }
+
+          const hasAccess = requireAll
+            ? Object.values(results).every((result) => result)
+            : Object.values(results).some((result) => result);
+
+          return {
+            hasAccess,
+            results,
+          };
+        },
+      );
     },
     { prefix: '/api/rbac' },
   );

@@ -2,7 +2,6 @@ import { FastifyPluginAsync } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
 import { DatabaseRow, QueryParameter, QueryResult, DatabaseClient } from '../types/common.types.js';
 
-
 const databasePlugin: FastifyPluginAsync = async (fastify) => {
   let mockMode = false;
 

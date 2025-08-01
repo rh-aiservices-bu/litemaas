@@ -635,7 +635,12 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, metadata)
            VALUES ($1, $2, $3, $4)`,
-          [user.userId, 'QUOTAS_RESET', 'SUBSCRIPTION', JSON.stringify({ targetUserId: userId, resetCount })],
+          [
+            user.userId,
+            'QUOTAS_RESET',
+            'SUBSCRIPTION',
+            JSON.stringify({ targetUserId: userId, resetCount }),
+          ],
         );
 
         return {

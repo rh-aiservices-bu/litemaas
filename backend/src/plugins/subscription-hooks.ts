@@ -200,10 +200,9 @@ class SubscriptionHookManager {
       const subscription = await this.fastify.dbUtils.queryOne<{
         quota_requests: number;
         quota_tokens: number;
-      }>(
-        'SELECT quota_requests, quota_tokens FROM subscriptions WHERE id = $1',
-        [event.subscriptionId],
-      );
+      }>('SELECT quota_requests, quota_tokens FROM subscriptions WHERE id = $1', [
+        event.subscriptionId,
+      ]);
 
       if (subscription) {
         // Schedule quota warning checks at 80% and 90% thresholds

@@ -17,7 +17,6 @@ interface UserListQuery {
   isActive?: boolean;
 }
 
-
 interface FastifyError extends Error {
   statusCode?: number;
 }
@@ -68,7 +67,13 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
            VALUES ($1, $2, $3, $4, $5)`,
-          [user.userId, 'PROFILE_UPDATE', 'USER', user.userId, JSON.stringify({ changes: { fullName } })],
+          [
+            user.userId,
+            'PROFILE_UPDATE',
+            'USER',
+            user.userId,
+            JSON.stringify({ changes: { fullName } }),
+          ],
         );
 
         return {
@@ -327,7 +332,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     lastLoginAt?: string;
     createdAt: string;
   }
-  
+
   fastify.get<{
     Reply: PaginatedResponse<UserListItem>;
   }>('/', {
@@ -517,7 +522,13 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
            VALUES ($1, $2, $3, $4, $5)`,
-          [currentUser.userId, 'USER_UPDATE', 'USER', id, JSON.stringify({ changes: { roles, isActive } })],
+          [
+            currentUser.userId,
+            'USER_UPDATE',
+            'USER',
+            id,
+            JSON.stringify({ changes: { roles, isActive } }),
+          ],
         );
 
         return {

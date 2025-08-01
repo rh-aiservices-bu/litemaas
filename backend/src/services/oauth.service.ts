@@ -61,15 +61,37 @@ export class OAuthService {
     this.defaultTeamService = new DefaultTeamService(fastify, this.liteLLMService);
   }
 
-  generateAuthUrl(state: string): string {
+  private getCallbackUrl(request?: any): string {
+    // If request is provided, try to infer the callback URL from the request
+    if (request) {
+      const origin =
+        request.headers.origin ||
+        (request.headers.host ? `${request.protocol}://${request.headers.host}` : null);
+
+      if (origin) {
+        // Use the origin from where the request came from
+        const callbackUrl = `${origin}/api/auth/callback`;
+        this.fastify.log.debug({ origin, callbackUrl }, 'Using dynamic OAuth callback URL');
+        return callbackUrl;
+      }
+    }
+
+    // Fall back to configured callback URL
+    return this.fastify.config.OAUTH_CALLBACK_URL;
+  }
+
+  generateAuthUrl(state: string, request?: any): string {
     if (this.isMockEnabled) {
       return `/api/auth/mock-login?state=${state}`;
     }
 
+    // Dynamically determine callback URL based on request origin
+    const callbackUrl = this.getCallbackUrl(request);
+
     const params = new URLSearchParams({
       response_type: 'code',
       client_id: this.fastify.config.OAUTH_CLIENT_ID,
-      redirect_uri: this.fastify.config.OAUTH_CALLBACK_URL,
+      redirect_uri: callbackUrl,
       scope: 'user:info user:check-access',
       state,
     });
@@ -77,7 +99,11 @@ export class OAuthService {
     return `${this.fastify.config.OAUTH_ISSUER}/oauth/authorize?${params.toString()}`;
   }
 
-  async exchangeCodeForToken(code: string, _state: string): Promise<OAuthTokenResponse> {
+  async exchangeCodeForToken(
+    code: string,
+    state: string,
+    request?: any,
+  ): Promise<OAuthTokenResponse> {
     if (this.isMockEnabled) {
       return this.mockTokenExchange(code);
     }
@@ -94,6 +120,22 @@ export class OAuthService {
       'Exchanging code for token',
     );
 
+    // Use the stored callback URL from the authorization phase
+    const storedCallbackUrl = (this.fastify as any).oauthHelpers.getStoredCallbackUrl(state);
+    const callbackUrl = storedCallbackUrl || this.getCallbackUrl(request);
+    
+    this.fastify.log.debug(
+      {
+        callbackUrl,
+        storedCallbackUrl,
+        requestHost: request?.headers?.host,
+        requestOrigin: request?.headers?.origin,
+        configuredCallback: this.fastify.config.OAUTH_CALLBACK_URL,
+        state,
+      },
+      'Token exchange callback URL',
+    );
+
     const response = await fetch(tokenUrl, {
       method: 'POST',
       headers: {
@@ -105,7 +147,7 @@ export class OAuthService {
         code,
         client_id: this.fastify.config.OAUTH_CLIENT_ID,
         client_secret: this.fastify.config.OAUTH_CLIENT_SECRET,
-        redirect_uri: this.fastify.config.OAUTH_CALLBACK_URL,
+        redirect_uri: callbackUrl,
       }),
     });
 

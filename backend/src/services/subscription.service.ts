@@ -1082,7 +1082,15 @@ export class SubscriptionService {
              sync_status = 'synced'
          WHERE id = $7
          RETURNING *`,
-        [maxBudget ?? null, budgetDuration ?? null, tpmLimit ?? null, rpmLimit ?? null, teamId ?? null, liteLLMKeyId ?? null, baseSubscription.id],
+        [
+          maxBudget ?? null,
+          budgetDuration ?? null,
+          tpmLimit ?? null,
+          rpmLimit ?? null,
+          teamId ?? null,
+          liteLLMKeyId ?? null,
+          baseSubscription.id,
+        ],
       );
 
       this.fastify.log.info(
@@ -1345,9 +1353,13 @@ export class SubscriptionService {
       );
 
       totalUsage.averageRequestCost =
-        (totalUsage.requestCount as number) > 0 ? (totalUsage.totalSpend as number) / (totalUsage.requestCount as number) : 0;
+        (totalUsage.requestCount as number) > 0
+          ? (totalUsage.totalSpend as number) / (totalUsage.requestCount as number)
+          : 0;
       totalUsage.averageTokenCost =
-        (totalUsage.tokenCount as number) > 0 ? (totalUsage.totalSpend as number) / (totalUsage.tokenCount as number) : 0;
+        (totalUsage.tokenCount as number) > 0
+          ? (totalUsage.totalSpend as number) / (totalUsage.tokenCount as number)
+          : 0;
 
       return {
         subscriptionId,
@@ -1526,15 +1538,23 @@ export class SubscriptionService {
       utilizationPercent: {
         requests:
           (subscription.quota_requests as number) > 0
-            ? Math.round(((subscription.used_requests as number) / (subscription.quota_requests as number)) * 100)
+            ? Math.round(
+                ((subscription.used_requests as number) / (subscription.quota_requests as number)) *
+                  100,
+              )
             : 0,
         tokens:
           (subscription.quota_tokens as number) > 0
-            ? Math.round(((subscription.used_tokens as number) / (subscription.quota_tokens as number)) * 100)
+            ? Math.round(
+                ((subscription.used_tokens as number) / (subscription.quota_tokens as number)) *
+                  100,
+              )
             : 0,
       },
       resetAt: subscription.reset_at ? new Date(subscription.reset_at as string | Date) : undefined,
-      expiresAt: subscription.expires_at ? new Date(subscription.expires_at as string | Date) : undefined,
+      expiresAt: subscription.expires_at
+        ? new Date(subscription.expires_at as string | Date)
+        : undefined,
       createdAt: new Date(subscription.created_at as string | Date | number),
       updatedAt: new Date(subscription.updated_at as string | Date | number),
       metadata: {}, // metadata column doesn't exist in database
@@ -1551,7 +1571,11 @@ export class SubscriptionService {
             teamId: subscription.team_id as string,
             maxBudget: subscription.max_budget as number,
             currentSpend: (subscription.current_spend as number) || 0,
-            budgetDuration: subscription.budget_duration as 'daily' | 'weekly' | 'monthly' | 'yearly',
+            budgetDuration: subscription.budget_duration as
+              | 'daily'
+              | 'weekly'
+              | 'monthly'
+              | 'yearly',
             tpmLimit: subscription.tpm_limit as number,
             rpmLimit: subscription.rpm_limit as number,
             allowedModels: subscription.allowed_models
@@ -1562,7 +1586,8 @@ export class SubscriptionService {
               : undefined,
             budgetUtilization:
               subscription.max_budget && subscription.current_spend
-                ? ((subscription.current_spend as number) / (subscription.max_budget as number)) * 100
+                ? ((subscription.current_spend as number) / (subscription.max_budget as number)) *
+                  100
                 : 0,
           }
         : undefined,
@@ -1572,10 +1597,12 @@ export class SubscriptionService {
         ? {
             maxBudget: subscription.max_budget as number,
             currentSpend: (subscription.current_spend as number) || 0,
-            remainingBudget: (subscription.max_budget as number) - ((subscription.current_spend as number) || 0),
+            remainingBudget:
+              (subscription.max_budget as number) - ((subscription.current_spend as number) || 0),
             budgetUtilization:
               subscription.max_budget && subscription.current_spend
-                ? ((subscription.current_spend as number) / (subscription.max_budget as number)) * 100
+                ? ((subscription.current_spend as number) / (subscription.max_budget as number)) *
+                  100
                 : 0,
             spendResetAt: subscription.spend_reset_at
               ? new Date(subscription.spend_reset_at as string | Date | number)
@@ -1605,7 +1632,9 @@ export class SubscriptionService {
         : undefined,
 
       // Sync metadata
-      lastSyncAt: subscription.last_sync_at ? new Date(subscription.last_sync_at as string | Date | number) : undefined,
+      lastSyncAt: subscription.last_sync_at
+        ? new Date(subscription.last_sync_at as string | Date | number)
+        : undefined,
       syncStatus: (subscription.sync_status as 'error' | 'synced' | 'pending') || 'pending',
       syncError: subscription.sync_error as string,
     };

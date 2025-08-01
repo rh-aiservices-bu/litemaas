@@ -10,7 +10,7 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorate('oauth', oauthService);
 
   // Session store for OAuth state (in production, use Redis)
-  const sessionStore = new Map<string, { state: string; timestamp: number }>();
+  const sessionStore = new Map<string, { state: string; timestamp: number; callbackUrl?: string }>();
 
   // Clean up expired sessions every 5 minutes
   setInterval(
@@ -29,9 +29,9 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
 
   // OAuth helper methods
   fastify.decorate('oauthHelpers', {
-    generateAndStoreState: (): string => {
+    generateAndStoreState: (callbackUrl?: string): string => {
       const state = oauthService.generateState();
-      sessionStore.set(state, { state, timestamp: Date.now() });
+      sessionStore.set(state, { state, timestamp: Date.now(), callbackUrl });
       return state;
     },
 
@@ -41,12 +41,21 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
         return false;
       }
 
-      // Remove used state
-      sessionStore.delete(state);
+      // Don't delete yet - we need to retrieve the callback URL in getStoredCallbackUrl
+      // The state will be deleted after successful token exchange
 
       // Check if state is not expired (5 minutes)
       const fiveMinutes = 5 * 60 * 1000;
       return Date.now() - session.timestamp <= fiveMinutes;
+    },
+
+    getStoredCallbackUrl: (state: string): string | undefined => {
+      const session = sessionStore.get(state);
+      return session?.callbackUrl;
+    },
+
+    clearState: (state: string): void => {
+      sessionStore.delete(state);
     },
 
     clearExpiredStates: (): void => {
@@ -90,8 +99,10 @@ declare module 'fastify' {
       isMockEnabled: boolean;
     };
     oauthHelpers: {
-      generateAndStoreState(): string;
+      generateAndStoreState(callbackUrl?: string): string;
       validateState(state: string): boolean;
+      getStoredCallbackUrl(state: string): string | undefined;
+      clearState(state: string): void;
       clearExpiredStates(): void;
     };
   }

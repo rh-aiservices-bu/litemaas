@@ -9,13 +9,12 @@ location / {
     try_files $uri $uri/ /index.html;
 }
 
-upstream api_servers {
-    ${BACKEND_URL};
-}
-
 # API proxy to backend
+# Critical for OAuth flow: This proxies all /api/* requests to the backend container
+# OAuth callback URL must be configured as <base-url>/api/auth/callback
+# The backend will process OAuth and redirect to /auth/callback (relative)
 location /api {
-    proxy_pass http://api_servers;
+    proxy_pass ${BACKEND_URL};
     proxy_set_header Host $host;
     proxy_set_header X-Real-IP $remote_addr;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

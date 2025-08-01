@@ -34,10 +34,18 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         200: LoginResponseSchema,
       },
     },
-    handler: async (_request, _reply) => {
+    handler: async (request, _reply) => {
       try {
-        const state = fastify.oauthHelpers.generateAndStoreState();
-        const authUrl = fastify.oauth.generateAuthUrl(state);
+        // Determine the callback URL that will be used
+        const origin = request.headers.origin || 
+                      (request.headers.host ? `${request.protocol}://${request.headers.host}` : null);
+        const callbackUrl = origin ? `${origin}/api/auth/callback` : fastify.config.OAUTH_CALLBACK_URL;
+        
+        // Store the callback URL with the state
+        const state = fastify.oauthHelpers.generateAndStoreState(callbackUrl);
+        const authUrl = fastify.oauth.generateAuthUrl(state, request);
+
+        fastify.log.debug({ callbackUrl, state }, 'Generated auth URL with stored callback');
 
         return { authUrl };
       } catch (error) {
@@ -141,7 +149,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       const { state, user = '0' } = request.query as { state: string; user?: string };
 
       // Redirect to callback with mock authorization code
-      const callbackUrl = new URL('/api/auth/callback', 'http://localhost:8080');
+      // Use the origin from the request to support different environments
+      const origin = request.headers.origin || `http://${request.headers.host}`;
+      const callbackUrl = new URL('/api/auth/callback', origin);
       callbackUrl.searchParams.set('code', user);
       callbackUrl.searchParams.set('state', state);
 
@@ -183,13 +193,16 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         // Exchange authorization code for access token
-        const tokenResponse = await fastify.oauth.exchangeCodeForToken(code, state);
+        const tokenResponse = await fastify.oauth.exchangeCodeForToken(code, state, request);
 
         // Get user information
         const userInfo = await fastify.oauth.getUserInfo(tokenResponse.access_token);
 
         // Process user (create or update in database)
         const user = await fastify.oauth.processOAuthUser(userInfo);
+        
+        // Clear the state now that authentication is successful
+        fastify.oauthHelpers.clearState(state);
 
         // Generate JWT token
         const token = fastify.generateToken({
@@ -215,14 +228,11 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         fastify.log.info({ userId: user.id, username: user.username }, 'User logged in');
 
-        // Redirect to frontend with token in URL fragment (SPA)
-        const frontendUrl = new URL(process.env.FRONTEND_URL || 'http://localhost:3000');
+        // Redirect to frontend callback page with token in URL fragment (SPA)
+        // Using relative redirect to work in any deployment environment
+        const callbackPath = `/auth/callback#token=${token}&expires_in=${24 * 60 * 60}`;
 
-        // Create a callback page URL that will handle the token
-        frontendUrl.pathname = '/auth/callback';
-        frontendUrl.hash = `token=${token}&expires_in=${24 * 60 * 60}`;
-
-        return reply.redirect(frontendUrl.toString());
+        return reply.redirect(callbackPath);
       } catch (error) {
         fastify.log.error(error, 'OAuth callback error');
 
