@@ -12,20 +12,38 @@ describe('Secure API Key Retrieval Endpoint', () => {
     app = await createApp();
     await app.ready();
 
-    // Generate tokens with different ages
-    recentTestToken = generateTestToken('user-123', ['user'], Math.floor(Date.now() / 1000) - 30); // 30 seconds ago
-    oldTestToken = generateTestToken('user-123', ['user'], Math.floor(Date.now() / 1000) - 600); // 10 minutes ago
+    // Generate real JWT tokens using the app's JWT functionality
+    const recentPayload = {
+      userId: 'user-123',
+      username: 'test-user',
+      email: 'test@example.com',
+      name: 'Test User',
+      roles: ['user'],
+      iat: Math.floor(Date.now() / 1000) - 30 // 30 seconds ago
+    };
+    
+    const oldPayload = {
+      userId: 'user-123', 
+      username: 'test-user',
+      email: 'test@example.com',
+      name: 'Test User',
+      roles: ['user'],
+      iat: Math.floor(Date.now() / 1000) - 600 // 10 minutes ago
+    };
+
+    recentTestToken = app.generateToken(recentPayload);
+    oldTestToken = app.generateToken(oldPayload);
   });
 
   afterEach(async () => {
     await app.close();
   });
 
-  describe('POST /api-keys/:id/reveal', () => {
+  describe('POST /api/v1/api-keys/:id/reveal', () => {
     it('should successfully retrieve API key with recent auth', async () => {
       const response = await app.inject({
         method: 'POST',
-        url: '/api-keys/test-key-123/reveal',
+        url: '/api/v1/api-keys/test-key-123/reveal',
         headers: {
           Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-client/1.0',
@@ -52,7 +70,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
     it('should reject request with old authentication token', async () => {
       const response = await app.inject({
         method: 'POST',
-        url: '/api-keys/test-key-123/reveal',
+        url: '/api/v1/api-keys/test-key-123/reveal',
         headers: {
           Authorization: `Bearer ${oldTestToken}`,
           'User-Agent': 'test-client/1.0',
@@ -73,7 +91,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
     it('should reject unauthenticated requests', async () => {
       const response = await app.inject({
         method: 'POST',
-        url: '/api-keys/test-key-123/reveal',
+        url: '/api/v1/api-keys/test-key-123/reveal',
         headers: {
           'User-Agent': 'test-client/1.0',
         },
@@ -85,7 +103,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
     it('should reject requests with invalid token', async () => {
       const response = await app.inject({
         method: 'POST',
-        url: '/api-keys/test-key-123/reveal',
+        url: '/api/v1/api-keys/test-key-123/reveal',
         headers: {
           Authorization: 'Bearer invalid-token',
           'User-Agent': 'test-client/1.0',
@@ -98,7 +116,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
     it('should return 404 for non-existent API key', async () => {
       const response = await app.inject({
         method: 'POST',
-        url: '/api-keys/non-existent-key/reveal',
+        url: '/api/v1/api-keys/non-existent-key/reveal',
         headers: {
           Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-client/1.0',
@@ -116,7 +134,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
       // For now, we'll simulate the response structure
       const response = await app.inject({
         method: 'POST',
-        url: '/api-keys/inactive-key-123/reveal',
+        url: '/api/v1/api-keys/inactive-key-123/reveal',
         headers: {
           Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-client/1.0',
@@ -131,7 +149,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
       // This would need a specific test key that's expired
       const response = await app.inject({
         method: 'POST',
-        url: '/api-keys/expired-key-123/reveal',
+        url: '/api/v1/api-keys/expired-key-123/reveal',
         headers: {
           Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-client/1.0',
@@ -151,7 +169,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
         requests.push(
           app.inject({
             method: 'POST',
-            url: `/api-keys/${keyId}/reveal`,
+            url: `/api/v1/api-keys/${keyId}/reveal`,
             headers: {
               Authorization: `Bearer ${recentTestToken}`,
               'User-Agent': 'test-client/1.0',
@@ -184,7 +202,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
 
       const response = await app.inject({
         method: 'POST',
-        url: '/api-keys/audit-test-key/reveal',
+        url: '/api/v1/api-keys/audit-test-key/reveal',
         headers: {
           Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-security-client/1.0',
@@ -217,7 +235,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
       // Test with missing key ID
       const response = await app.inject({
         method: 'POST',
-        url: '/api-keys//reveal', // Missing key ID
+        url: '/api/v1/api-keys//reveal', // Missing key ID
         headers: {
           Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-client/1.0',
@@ -236,7 +254,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
         concurrentRequests.push(
           app.inject({
             method: 'POST',
-            url: `/api-keys/${keyId}/reveal`,
+            url: `/api/v1/api-keys/${keyId}/reveal`,
             headers: {
               Authorization: `Bearer ${recentTestToken}`,
               'User-Agent': `concurrent-client-${i}/1.0`,
@@ -257,7 +275,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
     it('should return appropriate error for API key without LiteLLM association', async () => {
       const response = await app.inject({
         method: 'POST',
-        url: '/api-keys/no-litellm-key-123/reveal',
+        url: '/api/v1/api-keys/no-litellm-key-123/reveal',
         headers: {
           Authorization: `Bearer ${recentTestToken}`,
           'User-Agent': 'test-client/1.0',
