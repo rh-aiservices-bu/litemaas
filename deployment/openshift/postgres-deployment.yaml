@@ -17,11 +17,11 @@ spec:
         app: postgres
         component: database
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 999
-        runAsGroup: 999
-        fsGroup: 999
+      volumes:
+      - name: postgres-init-script
+        configMap:
+          name: postgres-init-script
+          defaultMode: 0755
       containers:
       - name: postgres
         image: postgres:16-alpine
@@ -53,14 +53,15 @@ spec:
         volumeMounts:
         - name: postgres-storage
           mountPath: /var/lib/postgresql/data
+        - name: postgres-init-script
+          mountPath: /docker-entrypoint-initdb.d
+          readOnly: true
         livenessProbe:
           exec:
             command:
-            - pg_isready
-            - -U
-            - $(POSTGRES_USER)
-            - -d
-            - $(POSTGRES_DB)
+            - /bin/sh
+            - -c
+            - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
           initialDelaySeconds: 30
           periodSeconds: 10
           timeoutSeconds: 5
@@ -68,11 +69,9 @@ spec:
         readinessProbe:
           exec:
             command:
-            - pg_isready
-            - -U
-            - $(POSTGRES_USER)
-            - -d
-            - $(POSTGRES_DB)
+            - /bin/sh
+            - -c
+            - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
           initialDelaySeconds: 5
           periodSeconds: 5
           timeoutSeconds: 3

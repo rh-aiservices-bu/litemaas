@@ -25,6 +25,7 @@ This guide provides step-by-step instructions for deploying LiteMaaS on OpenShif
    - Ability to create projects/namespaces
 
 2. **Command Line Tools**
+
    ```bash
    # Install OpenShift CLI (choose your platform)
    # For Linux:
@@ -38,6 +39,7 @@ This guide provides step-by-step instructions for deploying LiteMaaS on OpenShif
    ```
 
 3. **Verify CLI Installation**
+
    ```bash
    oc version
    # Should show both client and server versions
@@ -46,6 +48,7 @@ This guide provides step-by-step instructions for deploying LiteMaaS on OpenShif
 ### Required Information
 
 Before starting, gather the following information:
+
 - OpenShift cluster API endpoint
 - Your OpenShift login credentials
 - Desired namespace/project name (default: `litemaas`)
@@ -141,21 +144,14 @@ LiteMaaS uses OpenShift's built-in OAuth for authentication. Follow these steps 
 3. Fill in the OAuth client form:
 
    ```yaml
-   Name: litemaas-oauth-client
-   Secret: <leave empty - will be generated>
-   Redirect URIs:
-     - https://litemaas-<your-namespace>.apps.<your-cluster-domain>/api/auth/callback
-   Grant Types:
-     - authorization_code
-   Response Types:
-     - code
-   ```
-
-   **Example with actual values:**
-   ```yaml
-   Name: litemaas-oauth-client
-   Redirect URIs:
-     - https://litemaas-litemaas.apps.cluster.example.com/api/auth/callback
+   kind: OAuthClient
+   apiVersion: oauth.openshift.io/v1
+   metadata:
+      name: litemaas-oauth-client
+   secret: <your_secret>
+   redirectURIs:
+   - 'https://litemaas-<your-namespace>.apps.<your-cluster-domain>/api/auth/callback'
+   grantMethod: auto
    ```
 
 4. Click **Create**
@@ -166,11 +162,12 @@ After creating the OAuth client, you'll need several pieces of information:
 
 1. **OAuth Client ID**: The name you entered (e.g., `litemaas-oauth-client`)
 
-2. **OAuth Client Secret**: 
+2. **OAuth Client Secret**:
    - Click on your newly created OAuth client
    - Copy the **Secret** value shown
 
 3. **OAuth Issuer URL**:
+
    ```bash
    # Get the OAuth issuer URL
    oc get route oauth-openshift -n openshift-authentication -o jsonpath='{.spec.host}'
@@ -382,12 +379,14 @@ oc exec deployment/backend -- curl -f http://localhost:8080/api/v1/health
 ### Step 2: Access LiteLLM Administration UI
 
 1. Get the LiteLLM route URL:
+
    ```bash
    oc get route litellm -o jsonpath='{.spec.host}'
    # Example: litellm-litemaas.apps.cluster.example.com
    ```
 
 2. Open the LiteLLM UI in your browser:
+
    ```
    https://litellm-litemaas.apps.cluster.example.com
    ```
@@ -400,6 +399,7 @@ oc exec deployment/backend -- curl -f http://localhost:8080/api/v1/health
 
 1. In the LiteLLM UI, navigate to **Models**
 2. Add your first AI model (example for OpenAI):
+
    ```json
    {
      "model_name": "gpt-4",
@@ -415,12 +415,14 @@ oc exec deployment/backend -- curl -f http://localhost:8080/api/v1/health
 ### Step 4: Verify LiteMaaS Application
 
 1. Get the frontend route URL:
+
    ```bash
    oc get route litemaas -o jsonpath='{.spec.host}'
    # Example: litemaas-litemaas.apps.cluster.example.com
    ```
 
 2. Open LiteMaaS in your browser:
+
    ```
    https://litemaas-litemaas.apps.cluster.example.com
    ```
@@ -432,11 +434,13 @@ oc exec deployment/backend -- curl -f http://localhost:8080/api/v1/health
 After successful deployment, you can access:
 
 ### LiteMaaS Main Application
+
 - **URL**: `https://litemaas-<namespace>.apps.<cluster-domain>`
 - **Purpose**: Main user interface for model subscriptions and API key management
 - **Authentication**: OpenShift OAuth
 
 ### LiteLLM Administration UI
+
 - **URL**: `https://litellm-<namespace>.apps.<cluster-domain>`
 - **Purpose**: Model configuration and monitoring
 - **Authentication**: Username/password (admin UI)
@@ -444,6 +448,7 @@ After successful deployment, you can access:
 ### API Endpoints
 
 The backend API is accessible internally at:
+
 - **Service URL**: `http://backend:8080`
 - **Health Check**: `http://backend:8080/api/v1/health`
 - **Swagger Docs**: `http://backend:8080/docs`
@@ -457,6 +462,7 @@ The backend API is accessible internally at:
 **Symptoms**: Pods stuck in `Pending`, `CrashLoopBackOff`, or `ImagePullBackOff` state
 
 **Diagnosis**:
+
 ```bash
 # Check pod status and events
 oc describe pod <pod-name>
@@ -466,6 +472,7 @@ oc logs <pod-name>
 ```
 
 **Solutions**:
+
 - **ImagePullBackOff**: Verify image names and tags in deployment files
 - **Pending**: Check resource requests and cluster capacity
 - **CrashLoopBackOff**: Check application logs and environment variables
@@ -475,6 +482,7 @@ oc logs <pod-name>
 **Symptoms**: Backend pods failing with database connection errors
 
 **Diagnosis**:
+
 ```bash
 # Check PostgreSQL pod status
 oc get pods -l app=postgres
@@ -487,6 +495,7 @@ oc exec deployment/postgres -- pg_isready -U litemaas_admin -d litemaas
 ```
 
 **Solutions**:
+
 - Verify `postgres-secret` has correct credentials
 - Check if PostgreSQL service is accessible: `oc get svc postgres`
 - Ensure PostgreSQL is fully initialized before backend starts
@@ -496,6 +505,7 @@ oc exec deployment/postgres -- pg_isready -U litemaas_admin -d litemaas
 **Symptoms**: Login redirects fail or authentication loops
 
 **Diagnosis**:
+
 ```bash
 # Check backend logs for OAuth errors
 oc logs deployment/backend --tail=100 | grep -i oauth
@@ -505,6 +515,7 @@ oc get oauthclients litemaas-oauth-client -o yaml
 ```
 
 **Solutions**:
+
 - Verify OAuth redirect URLs match your route URLs exactly
 - Check OAuth client secret is correctly set in `backend-secret`
 - Ensure OAuth issuer URL is accessible from within the cluster
@@ -514,6 +525,7 @@ oc get oauthclients litemaas-oauth-client -o yaml
 **Symptoms**: Routes return 503 errors or timeouts
 
 **Diagnosis**:
+
 ```bash
 # Check route status
 oc get routes
@@ -526,6 +538,7 @@ oc exec deployment/backend -- curl -f http://frontend:8080/
 ```
 
 **Solutions**:
+
 - Verify services are properly selecting pods: `oc describe svc <service-name>`
 - Check if pods are ready and healthy
 - Verify route TLS configuration
@@ -535,6 +548,7 @@ oc exec deployment/backend -- curl -f http://frontend:8080/
 **Symptoms**: Pods failing with missing environment variable errors
 
 **Diagnosis**:
+
 ```bash
 # Check if secrets exist
 oc get secrets
@@ -544,6 +558,7 @@ oc get secret backend-secret -o jsonpath='{.data}' | jq keys
 ```
 
 **Solutions**:
+
 - Recreate secrets with correct base64 encoding
 - Verify all required secret keys are present
 - Check secret names match deployment references

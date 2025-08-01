@@ -22,8 +22,13 @@ resources:
   - litellm-secret.yaml
   
   # PostgreSQL Database
+  - postgres-init-configmap.yaml
   - postgres-deployment.yaml
   - postgres-service.yaml
+  
+  # LiteLLM AI Proxy
+  - litellm-deployment.yaml
+  - litellm-service.yaml
   
   # Backend API
   - backend-deployment.yaml
@@ -32,10 +37,6 @@ resources:
   # Frontend Web Application
   - frontend-deployment.yaml
   - frontend-service.yaml
-  
-  # LiteLLM AI Proxy
-  - litellm-deployment.yaml
-  - litellm-service.yaml
   
   # OpenShift Routes
   - frontend-route.yaml

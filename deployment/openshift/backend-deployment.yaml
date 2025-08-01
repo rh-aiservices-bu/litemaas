@@ -6,7 +6,7 @@ metadata:
     app: backend
     component: api
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: backend
@@ -16,115 +16,111 @@ spec:
         app: backend
         component: api
     spec:
-      securityContext:
-        runAsNonRoot: true
-        runAsUser: 1001
-        runAsGroup: 1001
       containers:
-      - name: backend
-        image: quay.io/rh-aiservice-bu/litemaas-backend:latest
-        ports:
-        - containerPort: 8080
-          name: http
-        env:
-        # Database Configuration
-        - name: DATABASE_URL
-          valueFrom:
-            secretKeyRef:
-              name: backend-secret
-              key: database-url
-        
-        # Server Configuration
-        - name: HOST
-          value: "0.0.0.0"
-        - name: PORT
-          value: "8080"
-        - name: NODE_ENV
-          value: "production"
-        - name: LOG_LEVEL
-          value: "info"
-        
-        # CORS Configuration
-        - name: CORS_ORIGIN
-          valueFrom:
-            secretKeyRef:
-              name: backend-secret
-              key: cors-origin
-        
-        # JWT Configuration
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: backend-secret
-              key: jwt-secret
-        - name: JWT_EXPIRES_IN
-          value: "24h"
-        
-        # OAuth Configuration
-        - name: OAUTH_CLIENT_ID
-          valueFrom:
-            secretKeyRef:
-              name: backend-secret
-              key: oauth-client-id
-        - name: OAUTH_CLIENT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: backend-secret
-              key: oauth-client-secret
-        - name: OAUTH_ISSUER
-          valueFrom:
-            secretKeyRef:
-              name: backend-secret
-              key: oauth-issuer
-        - name: OAUTH_CALLBACK_URL
-          valueFrom:
-            secretKeyRef:
-              name: backend-secret
-              key: oauth-callback-url
-        
-        # Admin Configuration
-        - name: ADMIN_API_KEYS
-          valueFrom:
-            secretKeyRef:
-              name: backend-secret
-              key: admin-api-keys
-        
-        # LiteLLM Integration
-        - name: LITELLM_API_URL
-          value: "http://litellm:4000"
-        - name: LITELLM_API_KEY
-          valueFrom:
-            secretKeyRef:
-              name: backend-secret
-              key: litellm-api-key
-        
-        # Rate Limiting
-        - name: RATE_LIMIT_MAX
-          value: "1000"
-        - name: RATE_LIMIT_TIME_WINDOW
-          value: "5m"
-        
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "100m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        
-        livenessProbe:
-          httpGet:
-            path: /api/v1/health
-            port: 8080
-          initialDelaySeconds: 30
-          periodSeconds: 10
-          timeoutSeconds: 5
-          failureThreshold: 3
-        readinessProbe:
-          httpGet:
-            path: /api/v1/health
-            port: 8080
-          initialDelaySeconds: 5
-          periodSeconds: 5
-          timeoutSeconds: 3
-          failureThreshold: 3
+        - name: backend
+          image: quay.io/rh-aiservices-bu/litemaas-backend:latest
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            # Database Configuration
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: database-url
+
+            # Server Configuration
+            - name: HOST
+              value: '0.0.0.0'
+            - name: PORT
+              value: '8080'
+            - name: NODE_ENV
+              value: 'production'
+            - name: LOG_LEVEL
+              value: 'info'
+
+            # CORS Configuration
+            - name: CORS_ORIGIN
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: cors-origin
+
+            # JWT Configuration
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: jwt-secret
+            - name: JWT_EXPIRES_IN
+              value: '24h'
+
+            # OAuth Configuration
+            - name: OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: oauth-client-id
+            - name: OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: oauth-client-secret
+            - name: OAUTH_ISSUER
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: oauth-issuer
+            - name: OAUTH_CALLBACK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: oauth-callback-url
+
+            # Admin Configuration
+            - name: ADMIN_API_KEYS
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: admin-api-keys
+
+            # LiteLLM Integration
+            - name: LITELLM_API_URL
+              value: 'http://litellm:4000'
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: litellm-api-key
+
+            # Rate Limiting
+            - name: RATE_LIMIT_MAX
+              value: '1000'
+            - name: RATE_LIMIT_TIME_WINDOW
+              value: '5m'
+
+          resources:
+            requests:
+              memory: '256Mi'
+              cpu: '100m'
+            limits:
+              memory: '512Mi'
+              cpu: '500m'
+
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
