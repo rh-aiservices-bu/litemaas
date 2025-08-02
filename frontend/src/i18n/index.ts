@@ -3418,7 +3418,6 @@ i18n
   .init({
     resources,
     fallbackLng: 'en',
-    lng: 'en', // Default language
     debug: process.env.NODE_ENV === 'development',
 
     interpolation: {
@@ -3426,8 +3425,12 @@ i18n
     },
 
     detection: {
+      // Check localStorage first for persisted language preference
       order: ['localStorage', 'navigator', 'htmlTag'],
+      // Cache the language in localStorage
       caches: ['localStorage'],
+      // Key used in localStorage
+      lookupLocalStorage: 'i18nextLng',
     },
   });
 
