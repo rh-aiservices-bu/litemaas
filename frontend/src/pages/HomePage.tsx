@@ -11,28 +11,11 @@ import {
   FlexItem,
   Content,
   ContentVariants,
-  Button,
 } from '@patternfly/react-core';
 import { CatalogIcon, KeyIcon, ChartLineIcon, CubesIcon } from '@patternfly/react-icons';
-import { useNotifications } from '../contexts/NotificationContext';
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
-  const { addNotification } = useNotifications();
-
-  const handleDemoNotification = () => {
-    addNotification({
-      title: t('pages.home.demoNotification.title'),
-      description: t('pages.home.demoNotification.description'),
-      variant: 'success',
-      actions: [
-        {
-          label: t('pages.home.demoNotification.viewTutorial'),
-          onClick: () => console.log('Tutorial clicked'),
-        },
-      ],
-    });
-  };
 
   return (
     <>
@@ -42,9 +25,6 @@ const HomePage: React.FC = () => {
             {t('pages.home.title')}
           </Title>
           <Content component={ContentVariants.p}>{t('pages.home.subtitle')}</Content>
-          <Button variant="primary" onClick={handleDemoNotification} style={{ marginTop: '1rem' }}>
-            {t('pages.home.demoNotificationButton')}
-          </Button>
         </Content>
       </PageSection>
       <PageSection>

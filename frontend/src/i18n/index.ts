@@ -20,12 +20,7 @@ const resources = {
         home: {
           title: 'Welcome to LiteMaaS',
           subtitle: 'Your Model as a Service platform for accessing and managing AI models.',
-          demoNotification: {
-            title: 'Welcome to LiteMaaS!',
-            description: 'This is a demo notification to showcase the notification system.',
-            viewTutorial: 'View Tutorial',
-          },
-          demoNotificationButton: 'Demo Notification',
+
           cards: {
             modelsDescription: 'Browse available AI models',
             subscriptionsDescription: 'Manage your model subscriptions',
@@ -403,13 +398,7 @@ const resources = {
         home: {
           title: 'Bienvenido a LiteMaaS',
           subtitle: 'Tu plataforma de Modelo como Servicio para acceder y gestionar modelos de IA.',
-          demoNotification: {
-            title: '¡Bienvenido a LiteMaaS!',
-            description:
-              'Esta es una notificación de demostración para mostrar el sistema de notificaciones.',
-            viewTutorial: 'Ver Tutorial',
-          },
-          demoNotificationButton: 'Notificación de Demostración',
+
           cards: {
             modelsDescription: 'Explorar modelos de IA disponibles',
             subscriptionsDescription: 'Gestionar tus suscripciones de modelos',
@@ -789,13 +778,7 @@ const resources = {
           title: 'Bienvenue dans LiteMaaS',
           subtitle:
             'Votre plateforme de Modèle en tant que Service pour accéder et gérer les modèles IA.',
-          demoNotification: {
-            title: 'Bienvenue dans LiteMaaS !',
-            description:
-              'Ceci est une notification de démonstration pour présenter le système de notifications.',
-            viewTutorial: 'Voir le Tutoriel',
-          },
-          demoNotificationButton: 'Notification de Démonstration',
+
           cards: {
             modelsDescription: 'Parcourir les modèles IA disponibles',
             subscriptionsDescription: 'Gérer vos abonnements aux modèles',
@@ -1177,13 +1160,7 @@ const resources = {
           title: 'Willkommen bei LiteMaaS',
           subtitle:
             'Ihre Model-as-a-Service-Plattform für den Zugriff und die Verwaltung von KI-Modellen.',
-          demoNotification: {
-            title: 'Willkommen bei LiteMaaS!',
-            description:
-              'Dies ist eine Demo-Benachrichtigung zur Präsentation des Benachrichtigungssystems.',
-            viewTutorial: 'Tutorial ansehen',
-          },
-          demoNotificationButton: 'Demo-Benachrichtigung',
+
           cards: {
             modelsDescription: 'Verfügbare KI-Modelle durchsuchen',
             subscriptionsDescription: 'Ihre Modell-Abonnements verwalten',
@@ -1567,12 +1544,7 @@ const resources = {
         home: {
           title: 'Benvenuti su LiteMaaS',
           subtitle: 'La tua piattaforma Model as a Service per accedere e gestire i modelli AI.',
-          demoNotification: {
-            title: 'Benvenuti su LiteMaaS!',
-            description: 'Questa è una notifica demo per mostrare il sistema di notifiche.',
-            viewTutorial: 'Visualizza Tutorial',
-          },
-          demoNotificationButton: 'Notifica Demo',
+
           cards: {
             modelsDescription: 'Sfoglia i modelli AI disponibili',
             subscriptionsDescription: 'Gestisci i tuoi abbonamenti ai modelli',
@@ -1953,12 +1925,7 @@ const resources = {
         home: {
           title: 'LiteMaaS에 오신 것을 환영합니다',
           subtitle: 'AI 모델에 액세스하고 관리하기 위한 Model as a Service 플랫폼입니다.',
-          demoNotification: {
-            title: 'LiteMaaS에 오신 것을 환영합니다!',
-            description: '알림 시스템을 보여주는 데모 알림입니다.',
-            viewTutorial: '튜토리얼 보기',
-          },
-          demoNotificationButton: '데모 알림',
+
           cards: {
             modelsDescription: '사용 가능한 AI 모델 찾아보기',
             subscriptionsDescription: '모델 구독 관리',
@@ -2330,12 +2297,7 @@ const resources = {
         home: {
           title: 'LiteMaaSへようこそ',
           subtitle: 'AIモデルへのアクセスと管理のためのModel as a Serviceプラットフォーム。',
-          demoNotification: {
-            title: 'LiteMaaSへようこそ！',
-            description: '通知システムを紹介するデモ通知です。',
-            viewTutorial: 'チュートリアルを見る',
-          },
-          demoNotificationButton: 'デモ通知',
+
           cards: {
             modelsDescription: '利用可能なAIモデルを閲覧',
             subscriptionsDescription: 'モデルサブスクリプションを管理',
@@ -2714,12 +2676,7 @@ const resources = {
         home: {
           title: '欢迎使用LiteMaaS',
           subtitle: '您的模型即服务平台，用于访问和管理AI模型。',
-          demoNotification: {
-            title: '欢迎使用LiteMaaS！',
-            description: '这是一个演示通知，展示通知系统。',
-            viewTutorial: '查看教程',
-          },
-          demoNotificationButton: '演示通知',
+
           cards: {
             modelsDescription: '浏览可用的AI模型',
             subscriptionsDescription: '管理您的模型订阅',
@@ -3087,12 +3044,7 @@ const resources = {
         home: {
           title: 'Suilad i LiteMaaS',
           subtitle: 'En waered erain sui prestanneth na gelynn a nestadren i vaain.',
-          demoNotification: {
-            title: 'Suilad i LiteMaaS!',
-            description: 'Si prestanneth thellein na dannen i prestanneth thelladren.',
-            viewTutorial: 'Tirno Tuilin',
-          },
-          demoNotificationButton: 'Thellein Prestanneth',
+
           cards: {
             modelsDescription: 'Tolthad erain saed',
             subscriptionsDescription: 'Nestadren erain prestanneth',
