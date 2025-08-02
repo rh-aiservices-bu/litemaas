@@ -180,23 +180,54 @@ class ApiKeysService {
 
       return response;
     } catch (error: any) {
+      // Extract the actual error message from the backend response
+      let errorMessage = '';
+      
+      // Log the error structure to understand it better
+      console.error('API Key retrieval error:', error.response?.data || error);
+      
+      // Try to get the error message from various possible locations
+      // Backend sends error in format: { message: "...", statusCode: 403, code: "HTTP_403" }
+      if (typeof error.response?.data?.message === 'string') {
+        errorMessage = error.response.data.message;
+      } else if (typeof error.response?.data?.error === 'string') {
+        errorMessage = error.response.data.error;
+      } else if (error.response?.data?.error?.message) {
+        errorMessage = error.response.data.error.message;
+      } else if (typeof error.message === 'string') {
+        errorMessage = error.message;
+      }
+      
       // Handle specific error cases for better UX
-      if (error.status === 403 && error.response?.error?.code === 'TOKEN_TOO_OLD') {
-        throw new Error('Recent authentication required. Please refresh the page and try again.');
-      } else if (
-        error.status === 429 &&
-        error.response?.error?.code === 'KEY_OPERATION_RATE_LIMITED'
-      ) {
-        const details = error.response.error.details;
-        throw new Error(
-          `Too many key retrieval attempts. Please wait ${details?.retryAfter || 300} seconds before trying again.`,
-        );
-      } else if (error.status === 404) {
-        throw new Error('API key not found or no LiteLLM key associated.');
-      } else if (error.status === 403 && error.message?.includes('inactive')) {
-        throw new Error('This API key is inactive and cannot be retrieved.');
-      } else if (error.status === 403 && error.message?.includes('expired')) {
-        throw new Error('This API key has expired and cannot be retrieved.');
+      if (error.response?.status === 403) {
+        // Check for specific error messages or codes
+        if (error.response?.data?.code === 'TOKEN_TOO_OLD' || 
+            (errorMessage && errorMessage.toLowerCase().includes('recent authentication required'))) {
+          throw new Error(errorMessage || 'Recent authentication required for this operation. Please refresh the page and try again.');
+        } else if (errorMessage && errorMessage.includes('inactive')) {
+          throw new Error(errorMessage);
+        } else if (errorMessage && errorMessage.includes('expired')) {
+          throw new Error(errorMessage);
+        } else if (errorMessage) {
+          // For any other 403 error, use the backend message
+          throw new Error(errorMessage);
+        }
+      } else if (error.response?.status === 429) {
+        if (error.response?.data?.code === 'KEY_OPERATION_RATE_LIMITED') {
+          const details = error.response.data.details;
+          throw new Error(
+            `Too many key retrieval attempts. Please wait ${details?.retryAfter || 300} seconds before trying again.`,
+          );
+        } else if (errorMessage) {
+          throw new Error(errorMessage);
+        }
+      } else if (error.response?.status === 404) {
+        throw new Error(errorMessage || 'API key not found or no LiteLLM key associated.');
+      }
+
+      // If we have a specific error message from the backend, use it
+      if (errorMessage) {
+        throw new Error(errorMessage);
       }
 
       // Generic error fallback

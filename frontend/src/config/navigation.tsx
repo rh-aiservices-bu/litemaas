@@ -100,11 +100,12 @@ export const appConfig: AppConfig = {
       path: '/usage',
       icon: ChartLineIcon,
     },
-    {
-      id: 'settings',
-      label: 'nav.settings',
-      path: '/settings',
-      icon: CogIcon,
-    },
+    // Settings menu item hidden for now - uncomment when needed
+    // {
+    //   id: 'settings',
+    //   label: 'nav.settings',
+    //   path: '/settings',
+    //   icon: CogIcon,
+    // },
   ],
 };

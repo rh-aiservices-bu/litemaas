@@ -95,12 +95,25 @@ const ApiKeysPage: React.FC = () => {
 
       const response = await apiKeysService.getApiKeys();
       setApiKeys(response.data);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load API keys:', err);
-      setError(t('pages.apiKeys.notifications.loadErrorDesc'));
+      let errorMessage = t('pages.apiKeys.notifications.loadErrorDesc');
+      
+      // Extract error message from Axios error response
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data?.error) {
+        errorMessage = typeof err.response.data.error === 'string' 
+          ? err.response.data.error 
+          : err.response.data.error.message || errorMessage;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
       addNotification({
         title: t('pages.apiKeys.notifications.loadError'),
-        description: t('pages.apiKeys.notifications.loadErrorDesc'),
+        description: errorMessage,
         variant: 'danger',
       });
     } finally {
@@ -144,11 +157,24 @@ const ApiKeysPage: React.FC = () => {
       const validModels = modelResults.filter((model) => model !== null) as Model[];
 
       setModels(validModels);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to load subscribed models:', err);
+      let errorMessage = t('pages.apiKeys.notifications.loadModelErrorDesc');
+      
+      // Extract error message from Axios error response
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data?.error) {
+        errorMessage = typeof err.response.data.error === 'string' 
+          ? err.response.data.error 
+          : err.response.data.error.message || errorMessage;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
       addNotification({
         title: t('pages.apiKeys.notifications.loadModelError'),
-        description: t('pages.apiKeys.notifications.loadModelErrorDesc'),
+        description: errorMessage,
         variant: 'danger',
       });
     } finally {
@@ -257,11 +283,24 @@ const ApiKeysPage: React.FC = () => {
         description: t('pages.apiKeys.messages.keyCreatedSuccess', { name: newKeyName }),
         variant: 'success',
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to create API key:', err);
+      let errorMessage = t('pages.apiKeys.notifications.createErrorDesc');
+      
+      // Extract error message from Axios error response
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data?.error) {
+        errorMessage = typeof err.response.data.error === 'string' 
+          ? err.response.data.error 
+          : err.response.data.error.message || errorMessage;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
       addNotification({
         title: t('pages.apiKeys.notifications.createError'),
-        description: t('pages.apiKeys.notifications.createErrorDesc'),
+        description: errorMessage,
         variant: 'danger',
       });
     } finally {
@@ -293,11 +332,24 @@ const ApiKeysPage: React.FC = () => {
         description: t('pages.apiKeys.messages.keyDeleted', { name: keyToDelete.name }),
         variant: 'success',
       });
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to delete API key:', err);
+      let errorMessage = t('pages.apiKeys.notifications.deleteErrorDesc');
+      
+      // Extract error message from Axios error response
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.response?.data?.error) {
+        errorMessage = typeof err.response.data.error === 'string' 
+          ? err.response.data.error 
+          : err.response.data.error.message || errorMessage;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
       addNotification({
         title: t('pages.apiKeys.notifications.deleteError'),
-        description: t('pages.apiKeys.notifications.deleteErrorDesc'),
+        description: errorMessage,
         variant: 'danger',
       });
     } finally {
