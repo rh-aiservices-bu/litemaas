@@ -36,8 +36,10 @@ import {
   SelectList,
   SelectOption,
   MenuToggle,
+  MenuToggleElement,
   Label,
   LabelGroup,
+  Divider,
 } from '@patternfly/react-core';
 import {
   KeyIcon,
@@ -98,18 +100,19 @@ const ApiKeysPage: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to load API keys:', err);
       let errorMessage = t('pages.apiKeys.notifications.loadErrorDesc');
-      
+
       // Extract error message from Axios error response
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       } else if (err.response?.data?.error) {
-        errorMessage = typeof err.response.data.error === 'string' 
-          ? err.response.data.error 
-          : err.response.data.error.message || errorMessage;
+        errorMessage =
+          typeof err.response.data.error === 'string'
+            ? err.response.data.error
+            : err.response.data.error.message || errorMessage;
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       setError(errorMessage);
       addNotification({
         title: t('pages.apiKeys.notifications.loadError'),
@@ -160,18 +163,19 @@ const ApiKeysPage: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to load subscribed models:', err);
       let errorMessage = t('pages.apiKeys.notifications.loadModelErrorDesc');
-      
+
       // Extract error message from Axios error response
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       } else if (err.response?.data?.error) {
-        errorMessage = typeof err.response.data.error === 'string' 
-          ? err.response.data.error 
-          : err.response.data.error.message || errorMessage;
+        errorMessage =
+          typeof err.response.data.error === 'string'
+            ? err.response.data.error
+            : err.response.data.error.message || errorMessage;
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       addNotification({
         title: t('pages.apiKeys.notifications.loadModelError'),
         description: errorMessage,
@@ -286,18 +290,19 @@ const ApiKeysPage: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to create API key:', err);
       let errorMessage = t('pages.apiKeys.notifications.createErrorDesc');
-      
+
       // Extract error message from Axios error response
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       } else if (err.response?.data?.error) {
-        errorMessage = typeof err.response.data.error === 'string' 
-          ? err.response.data.error 
-          : err.response.data.error.message || errorMessage;
+        errorMessage =
+          typeof err.response.data.error === 'string'
+            ? err.response.data.error
+            : err.response.data.error.message || errorMessage;
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       addNotification({
         title: t('pages.apiKeys.notifications.createError'),
         description: errorMessage,
@@ -335,18 +340,19 @@ const ApiKeysPage: React.FC = () => {
     } catch (err: any) {
       console.error('Failed to delete API key:', err);
       let errorMessage = t('pages.apiKeys.notifications.deleteErrorDesc');
-      
+
       // Extract error message from Axios error response
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       } else if (err.response?.data?.error) {
-        errorMessage = typeof err.response.data.error === 'string' 
-          ? err.response.data.error 
-          : err.response.data.error.message || errorMessage;
+        errorMessage =
+          typeof err.response.data.error === 'string'
+            ? err.response.data.error
+            : err.response.data.error.message || errorMessage;
       } else if (err.message) {
         errorMessage = err.message;
       }
-      
+
       addNotification({
         title: t('pages.apiKeys.notifications.deleteError'),
         description: errorMessage,
@@ -673,19 +679,18 @@ const ApiKeysPage: React.FC = () => {
             {/* ✅ Multi-model selection */}
             <FormGroup label={t('pages.apiKeys.forms.models')} isRequired fieldId="key-models">
               <Select
+                role="menu"
                 id="key-models"
                 isOpen={isModelSelectOpen}
-                toggle={(toggleRef) => (
+                onOpenChange={setIsModelSelectOpen}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                   <MenuToggle
                     ref={toggleRef}
                     onClick={() => setIsModelSelectOpen(!isModelSelectOpen)}
                     isExpanded={isModelSelectOpen}
                   >
-                    {selectedModelIds.length === 0
-                      ? t('pages.apiKeys.forms.selectModels')
-                      : t('pages.apiKeys.messages.modelsSelected', {
-                          count: selectedModelIds.length,
-                        })}
+                    {t('pages.apiKeys.selectModels')}
+                    {selectedModelIds.length > 0 && <Badge isRead>{selectedModelIds.length}</Badge>}
                   </MenuToggle>
                 )}
                 onSelect={(_event, selection) => {
@@ -708,16 +713,34 @@ const ApiKeysPage: React.FC = () => {
                       {t('pages.apiKeys.messages.noSubscribedModels')}
                     </SelectOption>
                   ) : (
-                    models.map((model) => (
+                    <>
                       <SelectOption
-                        key={model.id}
-                        value={model.id}
+                        key="select-all"
+                        value="select-all"
                         hasCheckbox
-                        isSelected={selectedModelIds.includes(model.id)}
+                        isSelected={selectedModelIds.length === models.length}
+                        onClick={() => {
+                          if (selectedModelIds.length === models.length) {
+                            setSelectedModelIds([]);
+                          } else {
+                            setSelectedModelIds(models.map((m) => m.id));
+                          }
+                        }}
                       >
-                        {model.name} ({model.provider})
+                        <strong>{t('pages.apiKeys.selectAll')}</strong>
                       </SelectOption>
-                    ))
+                      <Divider />
+                      {models.map((model) => (
+                        <SelectOption
+                          key={model.id}
+                          value={model.id}
+                          hasCheckbox
+                          isSelected={selectedModelIds.includes(model.id)}
+                        >
+                          {model.name} ({model.provider})
+                        </SelectOption>
+                      ))}
+                    </>
                   )}
                 </SelectList>
               </Select>
@@ -732,29 +755,25 @@ const ApiKeysPage: React.FC = () => {
                   {t('pages.apiKeys.messages.noSubscribedModelsError')}
                 </div>
               )}
-              {selectedModelIds.length > 0 && (
-                <LabelGroup
-                  categoryName={t('pages.apiKeys.messages.selectedModels')}
-                  style={{ marginTop: '0.5rem' }}
-                >
-                  {selectedModelIds.map((modelId) => {
-                    const model = models.find((m) => m.id === modelId);
-                    return model ? (
-                      <Label
-                        key={modelId}
-                        onClose={() =>
-                          setSelectedModelIds(selectedModelIds.filter((id) => id !== modelId))
-                        }
-                        isCompact
-                      >
-                        {model.name}
-                      </Label>
-                    ) : null;
-                  })}
-                </LabelGroup>
-              )}
             </FormGroup>
-
+            {selectedModelIds.length > 0 && (
+              <LabelGroup>
+                {selectedModelIds.map((modelId) => {
+                  const model = models.find((m) => m.id === modelId);
+                  return model ? (
+                    <Label
+                      key={modelId}
+                      onClose={() =>
+                        setSelectedModelIds(selectedModelIds.filter((id) => id !== modelId))
+                      }
+                      isCompact
+                    >
+                      {model.name}
+                    </Label>
+                  ) : null;
+                })}
+              </LabelGroup>
+            )}
             <FormGroup label={t('pages.apiKeys.labels.rateLimitLabel')} fieldId="key-rate-limit">
               <FormSelect
                 value={newKeyRateLimit}
