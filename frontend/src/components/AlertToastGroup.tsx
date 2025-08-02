@@ -1,17 +1,11 @@
 import React from 'react';
-import {
-  Alert,
-  AlertProps,
-  AlertGroup,
-  AlertActionCloseButton,
-  AlertVariant,
-} from '@patternfly/react-core';
+import { Alert, AlertProps, AlertGroup, AlertActionCloseButton } from '@patternfly/react-core';
 
 export interface ToastNotification {
   id: string;
   title: string;
   description?: string;
-  variant?: AlertVariant;
+  variant?: 'success' | 'danger' | 'warning' | 'info' | 'custom';
   timeout?: number;
 }
 
