@@ -8,6 +8,7 @@ import {
   CardBody,
   CardTitle,
   CardFooter,
+  CardHeader,
   Grid,
   GridItem,
   Toolbar,
@@ -355,31 +356,33 @@ const ModelsPage: React.FC = () => {
             <Grid hasGutter>
               {paginatedModels.map((model) => (
                 <GridItem key={model.id} lg={4} md={6} sm={12}>
-                  <Card
-                    isSelectable
-                    isSelected={false}
-                    onClick={() => handleModelSelect(model)}
-                    style={{ height: '100%', cursor: 'pointer' }}
-                  >
-                    <CardTitle>
-                      <Flex
-                        justifyContent={{ default: 'justifyContentSpaceBetween' }}
-                        alignItems={{ default: 'alignItemsCenter' }}
-                      >
-                        <FlexItem>
-                          <Title headingLevel="h3" size="lg">
-                            {model.name}
-                          </Title>
-                        </FlexItem>
-                        <FlexItem>{getAvailabilityBadge(model.availability)}</FlexItem>
-                      </Flex>
-                      <Content
-                        component={ContentVariants.small}
-                        style={{ color: 'var(--pf-v6-global--Color--200)' }}
-                      >
-                        by {model.provider}
-                      </Content>
-                    </CardTitle>
+                  <Card isClickable style={{ height: '100%' }}>
+                    <CardHeader
+                      selectableActions={{
+                        onClickAction: () => handleModelSelect(model),
+                        selectableActionAriaLabelledby: `clickable-model-${model.id}`,
+                      }}
+                    >
+                      <CardTitle id={`clickable-model-${model.id}`}>
+                        <Flex
+                          justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                          alignItems={{ default: 'alignItemsCenter' }}
+                        >
+                          <FlexItem>
+                            <Title headingLevel="h3" size="lg">
+                              {model.name}
+                            </Title>
+                          </FlexItem>
+                          <FlexItem>{getAvailabilityBadge(model.availability)}</FlexItem>
+                        </Flex>
+                        <Content
+                          component={ContentVariants.small}
+                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                        >
+                          by {model.provider}
+                        </Content>
+                      </CardTitle>
+                    </CardHeader>
                     <CardBody>
                       <Content component={ContentVariants.p} style={{ marginBottom: '1rem' }}>
                         {model.description}
