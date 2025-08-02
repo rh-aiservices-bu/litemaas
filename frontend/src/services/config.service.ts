@@ -2,6 +2,7 @@ import { apiClient } from './api';
 
 export interface ConfigResponse {
   litellmApiUrl: string;
+  authMode: 'oauth' | 'mock';
 }
 
 export class ConfigService {
