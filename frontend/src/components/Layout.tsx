@@ -39,10 +39,11 @@ import { appConfig } from '../config/navigation';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { NotificationDrawer, NotificationBadgeButton } from './NotificationDrawer';
+import { AlertToastGroup } from './AlertToastGroup';
 
 const Layout: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const { unreadCount } = useNotifications();
+  const { unreadCount, toastNotifications, removeToastNotification } = useNotifications();
   const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
@@ -293,28 +294,34 @@ const Layout: React.FC = () => {
   );
 
   return (
-    <Drawer
-      isExpanded={isNotificationDrawerOpen}
-      onExpand={() => setIsNotificationDrawerOpen(true)}
-    >
-      <DrawerContent
-        panelContent={
-          <DrawerPanelContent isResizable defaultSize="400px" minSize="300px">
-            <DrawerHead>
-              <DrawerActions>
-                <DrawerCloseButton onClick={() => setIsNotificationDrawerOpen(false)} />
-              </DrawerActions>
-            </DrawerHead>
-            <NotificationDrawer
-              isOpen={isNotificationDrawerOpen}
-              onClose={() => setIsNotificationDrawerOpen(false)}
-            />
-          </DrawerPanelContent>
-        }
+    <>
+      <AlertToastGroup
+        notifications={toastNotifications}
+        onRemove={removeToastNotification}
+      />
+      <Drawer
+        isExpanded={isNotificationDrawerOpen}
+        onExpand={() => setIsNotificationDrawerOpen(true)}
       >
-        <DrawerContentBody>{mainContent}</DrawerContentBody>
-      </DrawerContent>
-    </Drawer>
+        <DrawerContent
+          panelContent={
+            <DrawerPanelContent isResizable defaultSize="400px" minSize="300px">
+              <DrawerHead>
+                <DrawerActions>
+                  <DrawerCloseButton onClick={() => setIsNotificationDrawerOpen(false)} />
+                </DrawerActions>
+              </DrawerHead>
+              <NotificationDrawer
+                isOpen={isNotificationDrawerOpen}
+                onClose={() => setIsNotificationDrawerOpen(false)}
+              />
+            </DrawerPanelContent>
+          }
+        >
+          <DrawerContentBody>{mainContent}</DrawerContentBody>
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 };
 

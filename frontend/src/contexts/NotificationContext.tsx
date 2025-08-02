@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import { ToastNotification } from '../components/AlertToastGroup';
 
 export interface Notification {
   id: string;
@@ -16,11 +17,13 @@ export interface Notification {
 
 interface NotificationContextType {
   notifications: Notification[];
+  toastNotifications: ToastNotification[];
   unreadCount: number;
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'isRead'>) => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   removeNotification: (id: string) => void;
+  removeToastNotification: (id: string) => void;
   clearAll: () => void;
 }
 
@@ -40,6 +43,7 @@ interface NotificationProviderProps {
 
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [toastNotifications, setToastNotifications] = useState<ToastNotification[]>([]);
 
   const addNotification = useCallback(
     (notification: Omit<Notification, 'id' | 'timestamp' | 'isRead'>) => {
@@ -50,9 +54,21 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         isRead: false,
       };
 
+      // Add to drawer notifications
       setNotifications((prev) => [newNotification, ...prev]);
 
-      // Auto-remove success notifications after 5 seconds
+      // Also add to toast notifications (all types auto-hide)
+      const toastNotification: ToastNotification = {
+        id: newNotification.id,
+        title: newNotification.title,
+        description: newNotification.description,
+        variant: newNotification.variant === 'default' ? 'custom' : newNotification.variant,
+        timeout: 5000, // All notifications auto-hide after 5 seconds
+      };
+
+      setToastNotifications((prev) => [...prev, toastNotification]);
+
+      // Auto-remove success notifications from drawer after 5 seconds
       if (notification.variant === 'success') {
         setTimeout(() => {
           setNotifications((prev) => prev.filter((n) => n.id !== newNotification.id));
@@ -78,19 +94,26 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     setNotifications((prev) => prev.filter((notification) => notification.id !== id));
   }, []);
 
+  const removeToastNotification = useCallback((id: string) => {
+    setToastNotifications((prev) => prev.filter((notification) => notification.id !== id));
+  }, []);
+
   const clearAll = useCallback(() => {
     setNotifications([]);
+    setToastNotifications([]);
   }, []);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const value: NotificationContextType = {
     notifications,
+    toastNotifications,
     unreadCount,
     addNotification,
     markAsRead,
     markAllAsRead,
     removeNotification,
+    removeToastNotification,
     clearAll,
   };
 
