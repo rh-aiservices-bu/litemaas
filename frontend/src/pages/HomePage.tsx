@@ -1,5 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import {
   PageSection,
   Title,
@@ -16,6 +17,12 @@ import { CatalogIcon, KeyIcon, ChartLineIcon, CubesIcon } from '@patternfly/reac
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+
+  const cardStyle = {
+    border: '1px solid #8a8d90',
+    cursor: 'pointer',
+  };
 
   return (
     <>
@@ -30,7 +37,7 @@ const HomePage: React.FC = () => {
       <PageSection>
         <Grid hasGutter>
           <GridItem span={12} md={6} lg={3}>
-            <Card isCompact>
+            <Card isCompact isClickable onClick={() => navigate('/models')} style={cardStyle}>
               <CardBody>
                 <Flex
                   direction={{ default: 'column' }}
@@ -52,7 +59,7 @@ const HomePage: React.FC = () => {
             </Card>
           </GridItem>
           <GridItem span={12} md={6} lg={3}>
-            <Card isCompact>
+            <Card isCompact isClickable onClick={() => navigate('/subscriptions')} style={cardStyle}>
               <CardBody>
                 <Flex
                   direction={{ default: 'column' }}
@@ -74,7 +81,7 @@ const HomePage: React.FC = () => {
             </Card>
           </GridItem>
           <GridItem span={12} md={6} lg={3}>
-            <Card isCompact>
+            <Card isCompact isClickable onClick={() => navigate('/api-keys')} style={cardStyle}>
               <CardBody>
                 <Flex
                   direction={{ default: 'column' }}
@@ -96,7 +103,7 @@ const HomePage: React.FC = () => {
             </Card>
           </GridItem>
           <GridItem span={12} md={6} lg={3}>
-            <Card isCompact>
+            <Card isCompact isClickable onClick={() => navigate('/usage')} style={cardStyle}>
               <CardBody>
                 <Flex
                   direction={{ default: 'column' }}
