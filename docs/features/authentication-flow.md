@@ -302,6 +302,11 @@ OAUTH_MOCK_ENABLED=true
 3. **Secure Storage**: Tokens stored securely in frontend
 4. **HTTPS Required**: Production must use HTTPS for all endpoints
 5. **Audit Logging**: All authentication events are logged
+6. **Token Age for Sensitive Operations**: 
+   - Currently set to 24 hours for API key retrieval operations
+   - **TODO**: This is temporarily relaxed from 5 minutes for better UX
+   - Consider implementing a more granular approach based on operation sensitivity
+   - For example: 5 minutes for key retrieval, 1 hour for key creation, 24 hours for viewing
 
 ## Configuration
 

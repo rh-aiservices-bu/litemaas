@@ -308,7 +308,9 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
 
     // For sensitive operations like key retrieval, require recent authentication
     const tokenAge = Date.now() / 1000 - (user.iat || 0);
-    const maxRecentAge = 5 * 60; // 5 minutes for key retrieval operations
+    // TODO: Revisit this security measure - currently set to 24 hours for better UX
+    // Consider implementing a more granular approach based on operation sensitivity
+    const maxRecentAge = 24 * 60 * 60; // 24 hours for key retrieval operations (86400 seconds)
 
     if (tokenAge > maxRecentAge) {
       throw fastify.createError(403, 'Recent authentication required for this operation', {
