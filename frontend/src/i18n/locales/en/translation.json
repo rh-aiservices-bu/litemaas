@@ -249,6 +249,14 @@
       "noDataTitle": "No usage data available",
       "noDataDescription": "Start making API requests to see your usage statistics here.",
       "viewApiDocs": "View API Documentation",
+      "loadingApiKeys": "Loading API Keys...",
+      "noApiKeys": "No API Keys",
+      "selectApiKey": "Select API Key",
+      "noApiKeysTitle": "No API Keys Found",
+      "noApiKeysDescription": "Create an API key to start tracking your usage statistics.",
+      "selectApiKeyTitle": "Select an API Key",
+      "selectApiKeyDescription": "Please select an API key from the dropdown above to view its usage statistics.",
+      "createApiKey": "Create API Key",
       "filters": {
         "custom": "Custom",
         "overview": "Overview",
@@ -306,7 +314,9 @@
         "exportComplete": "Export Complete",
         "exportCompleteDesc": "Usage data has been exported successfully.",
         "exportFailed": "Export Failed",
-        "exportFailedDesc": "Failed to export usage data. Please try again."
+        "exportFailedDesc": "Failed to export usage data. Please try again.",
+        "apiKeysLoadError": "Failed to Load API Keys",
+        "apiKeysLoadErrorDesc": "Unable to retrieve your API keys. Please refresh the page or try again later."
       }
     },
     "settings": {

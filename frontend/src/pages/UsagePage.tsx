@@ -44,6 +44,7 @@ import {
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
 import { usageService, UsageMetrics, UsageFilters } from '../services/usage.service';
+import { apiKeysService, ApiKey } from '../services/apiKeys.service';
 
 // Mock chart component since PatternFly charts require additional setup
 const MockLineChart = ({ title }: { data: any[]; title: string }) => (
@@ -95,15 +96,53 @@ const UsagePage: React.FC = () => {
   const [_endDate] = useState('');
   const [viewType, setViewType] = useState('overview');
   const [isViewTypeOpen, setIsViewTypeOpen] = useState(false);
+  
+  // API Key states
+  const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [selectedApiKey, setSelectedApiKey] = useState<string>('');
+  const [isApiKeyOpen, setIsApiKeyOpen] = useState(false);
+  const [loadingApiKeys, setLoadingApiKeys] = useState(true);
+
+  // Load API keys
+  const loadApiKeys = async () => {
+    try {
+      setLoadingApiKeys(true);
+      const response = await apiKeysService.getApiKeys();
+      setApiKeys(response.data);
+      
+      // Auto-select first API key if available
+      if (response.data.length > 0 && !selectedApiKey) {
+        setSelectedApiKey(response.data[0].id);
+      }
+    } catch (err) {
+      console.error('Failed to load API keys:', err);
+      addNotification({
+        title: t('pages.usage.notifications.apiKeysLoadError'),
+        description: t('pages.usage.notifications.apiKeysLoadErrorDesc'),
+        variant: 'danger',
+      });
+    } finally {
+      setLoadingApiKeys(false);
+    }
+  };
 
   // Load usage metrics from API
   const loadUsageMetrics = async () => {
+    // Don't load metrics if no API key is selected
+    if (!selectedApiKey) {
+      setMetrics(null);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
 
       // Convert dateRange to actual dates
-      const filters: UsageFilters = {};
+      const filters: UsageFilters = {
+        apiKeyId: selectedApiKey, // Filter by selected API key
+      };
       const now = new Date();
       const days = parseInt(dateRange.replace('d', ''));
 
@@ -129,9 +168,17 @@ const UsagePage: React.FC = () => {
     }
   };
 
+  // Load API keys on component mount
   useEffect(() => {
-    loadUsageMetrics();
-  }, [dateRange]);
+    loadApiKeys();
+  }, []);
+
+  // Reload metrics when API key or date range changes
+  useEffect(() => {
+    if (selectedApiKey) {
+      loadUsageMetrics();
+    }
+  }, [selectedApiKey, dateRange]);
 
   const handleExportData = async () => {
     try {
@@ -142,7 +189,9 @@ const UsagePage: React.FC = () => {
       });
 
       // Convert dateRange to actual dates for export
-      const filters: UsageFilters = {};
+      const filters: UsageFilters = {
+        apiKeyId: selectedApiKey, // Include selected API key in export
+      };
       const now = new Date();
       const days = parseInt(dateRange.replace('d', ''));
 
@@ -234,6 +283,44 @@ const UsagePage: React.FC = () => {
     );
   }
 
+  if (!selectedApiKey && !loadingApiKeys) {
+    return (
+      <>
+        <PageSection variant="secondary">
+          <Title headingLevel="h1" size="2xl">
+            {t('pages.usage.title')}
+          </Title>
+        </PageSection>
+        <PageSection>
+          <EmptyState variant={EmptyStateVariant.lg}>
+            <ChartLineIcon />
+            <Title headingLevel="h2" size="lg">
+              {apiKeys.length === 0
+                ? t('pages.usage.noApiKeysTitle')
+                : t('pages.usage.selectApiKeyTitle')}
+            </Title>
+            <EmptyStateBody>
+              {apiKeys.length === 0
+                ? t('pages.usage.noApiKeysDescription')
+                : t('pages.usage.selectApiKeyDescription')}
+            </EmptyStateBody>
+            <EmptyStateActions>
+              {apiKeys.length === 0 ? (
+                <Button variant="primary" component="a" href="/api-keys">
+                  {t('pages.usage.createApiKey')}
+                </Button>
+              ) : (
+                <Button variant="primary" onClick={() => setIsApiKeyOpen(true)}>
+                  {t('pages.usage.selectApiKey')}
+                </Button>
+              )}
+            </EmptyStateActions>
+          </EmptyState>
+        </PageSection>
+      </>
+    );
+  }
+
   if (!metrics) {
     return (
       <>
@@ -282,6 +369,41 @@ const UsagePage: React.FC = () => {
       <PageSection>
         <Toolbar>
           <ToolbarContent>
+            <ToolbarItem>
+              <Select
+                id="api-key-select"
+                isOpen={isApiKeyOpen}
+                selected={selectedApiKey}
+                onSelect={(_event, value) => {
+                  setSelectedApiKey(value as string);
+                  setIsApiKeyOpen(false);
+                }}
+                onOpenChange={setIsApiKeyOpen}
+                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                  <MenuToggle 
+                    ref={toggleRef} 
+                    onClick={() => setIsApiKeyOpen(!isApiKeyOpen)}
+                    isDisabled={loadingApiKeys || apiKeys.length === 0}
+                  >
+                    {loadingApiKeys
+                      ? t('pages.usage.loadingApiKeys')
+                      : apiKeys.length === 0
+                        ? t('pages.usage.noApiKeys')
+                        : apiKeys.find((key) => key.id === selectedApiKey)?.name ||
+                          t('pages.usage.selectApiKey')}
+                  </MenuToggle>
+                )}
+              >
+                <SelectList>
+                  {apiKeys.map((apiKey) => (
+                    <SelectOption key={apiKey.id} value={apiKey.id}>
+                      {apiKey.name}
+                    </SelectOption>
+                  ))}
+                </SelectList>
+              </Select>
+            </ToolbarItem>
+
             <ToolbarItem>
               <Select
                 id="date-range-select"
