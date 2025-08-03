@@ -1,0 +1,370 @@
+{
+  "nav": {
+    "home": "Home",
+    "models": "Modelli",
+    "subscriptions": "Abbonamenti",
+    "apiKeys": "Chiavi API",
+    "usage": "Utilizzo",
+    "settings": "Impostazioni"
+  },
+  "pages": {
+    "home": {
+      "title": "Benvenuti su LiteMaaS",
+      "subtitle": "La tua piattaforma Model as a Service per accedere e gestire i modelli AI.",
+      "cards": {
+        "modelsDescription": "Sfoglia i modelli AI disponibili",
+        "subscriptionsDescription": "Gestisci i tuoi abbonamenti ai modelli",
+        "apiKeysDescription": "Genera e gestisci chiavi API",
+        "usageDescription": "Monitora il tuo utilizzo API"
+      }
+    },
+    "login": {
+      "brandAlt": "Logo LiteMaaS",
+      "signInText": "Accedi al tuo account",
+      "title": "Accedi a LiteMaaS",
+      "subtitle": "Usa le tue credenziali OpenShift",
+      "loginWithOpenShift": "Accedi con OpenShift",
+      "developmentMode": "Modalità Sviluppo",
+      "loginAsAdmin": "Accedi come Amministratore (Test)",
+      "bypassAuthentication": "Bypassa autenticazione per scopi di sviluppo e test"
+    },
+    "models": {
+      "title": "Modelli Disponibili",
+      "subtitle": "Scopri e abbonati ai modelli AI di vari fornitori",
+      "noModels": "Nessun modello ancora disponibile",
+      "description": "La scoperta dei modelli e la funzionalità di abbonamento arriveranno presto.",
+      "searchPlaceholder": "Cerca modelli...",
+      "filters": {
+        "allProviders": "Tutti i Provider",
+        "allCategories": "Tutte le Categorie"
+      },
+      "subscribe": "Abbonati",
+      "subscribing": "Creazione abbonamento...",
+      "contextLabel": "Contesto:",
+      "pricingLabel": "Prezzi: N/D",
+      "moreFeatures": "+{{count}} altre",
+      "loadingTitle": "Caricamento Modelli...",
+      "loadingDescription": "Scoperta dei modelli AI disponibili da tutti i fornitori",
+      "emptyStateMessage": "Prova ad aggiustare i tuoi criteri di ricerca o filtri per trovare modelli.",
+      "clearAllFilters": "Cancella tutti i filtri",
+      "modelUnavailable": "Questo modello non è attualmente disponibile per nuovi abbonamenti.",
+      "close": "Chiudi",
+      "notifications": {
+        "subscribeSuccess": "Abbonamento riuscito!",
+        "subscribeSuccessDesc": "Ora hai accesso a {{modelName}}. Puoi generare chiavi API dalla pagina Abbonamenti.",
+        "subscribeFailed": "Abbonamento fallito",
+        "failedToSubscribe": "Impossibile abbonarsi al modello",
+        "alreadySubscribed": "Sei già abbonato a questo modello",
+        "loadError": "Errore",
+        "loadErrorDesc": "Impossibile caricare i modelli dal server.",
+        "loadFailed": "Impossibile caricare i modelli. Riprova."
+      }
+    },
+    "subscriptions": {
+      "title": "Abbonamenti Modelli",
+      "pageTitle": "I Miei Abbonamenti",
+      "pageSubtitle": "Gestisci i tuoi abbonamenti e utilizzo dei modelli AI",
+      "newSubscription": "Nuovo Abbonamento",
+      "loadingTitle": "Caricamento Abbonamenti...",
+      "loadingDescription": "Recupero informazioni abbonamenti",
+      "noSubscriptionsTitle": "Nessun abbonamento trovato",
+      "noSubscriptionsDescription": "Non hai abbonamenti attivi. Inizia abbonandoti a un modello AI.",
+      "viewDetails": "Visualizza Dettagli",
+      "detailsTitle": "Dettagli Abbonamento",
+      "provider": "Provider",
+      "pricing": "Prezzi",
+      "status": "Stato",
+      "requestQuota": "Quota Richieste",
+      "tokenQuota": "Quota Token",
+      "requestsUsed": "Richieste Utilizzate",
+      "tokensUsed": "Token Utilizzati",
+      "created": "Creato",
+      "features": "Caratteristiche",
+      "close": "Chiudi",
+      "byProvider": "da {{provider}}",
+      "perMonth": "al mese",
+      "requests": "richieste",
+      "tokens": "token",
+      "tokenUsageThisMonth": "Utilizzo token questo mese",
+      "quotaFormat": "Quota: {{requests}} richieste, {{tokens}} token",
+      "pricingUnavailable": "Informazioni sui prezzi non disponibili",
+      "inputPricing": "Input: ${{cost}}/1K token",
+      "outputPricing": "Output: ${{cost}}/1K token",
+      "suspendedMessage": "Il tuo abbonamento è stato sospeso. Contatta il supporto o verifica lo stato del tuo account.",
+      "expiredMessage": "Il tuo abbonamento è scaduto il {{date}}. Rinnova per continuare a usare questo modello.",
+      "cancelledMessage": "L'abbonamento {{modelName}} è stato cancellato e rimosso dal tuo account.",
+      "cancelSubscription": "Cancella Abbonamento",
+      "cancelling": "Cancellazione...",
+      "notifications": {
+        "loadError": "Errore",
+        "loadErrorDesc": "Impossibile caricare gli abbonamenti dal server.",
+        "cancelSuccess": "Abbonamento Cancellato",
+        "cancelError": "Errore",
+        "cancelErrorDesc": "Impossibile cancellare l'abbonamento. Riprova.",
+        "cannotCancel": "Impossibile Cancellare Abbonamento",
+        "cannotCancelDesc": "Ci sono chiavi API attive collegate a questo abbonamento. Elimina prima tutte le chiavi API, poi cancella l'abbonamento."
+      },
+      "alerts": {
+        "suspended": "Abbonamento Sospeso",
+        "expired": "Abbonamento Scaduto"
+      }
+    },
+    "apiKeys": {
+      "title": "Chiavi API",
+      "createKey": "Crea Chiave API",
+      "creating": "Creazione...",
+      "deleteKey": "Elimina Chiave API",
+      "viewKey": "Visualizza Chiave",
+      "copyToClipboard": "Copia negli appunti",
+      "hideKey": "Nascondi chiave",
+      "showKey": "Mostra chiave",
+      "copied": "Copiato!",
+      "selectModels": "Seleziona modelli...",
+      "selectAll": "Seleziona tutto",
+      "noModelsAssigned": "Nessun modello assegnato",
+      "never": "Mai",
+      "neverExpires": "Non scade mai",
+      "forms": {
+        "name": "Nome",
+        "description": "Descrizione",
+        "models": "Modelli",
+        "expiration": "Scadenza",
+        "apiKey": "Chiave API",
+        "yourNewApiKey": "La tua nuova chiave API"
+      },
+      "permissions": {
+        "readModels": "Leggi Modelli",
+        "writeModels": "Scrivi Modelli",
+        "createCompletions": "Crea Completamenti",
+        "readUsage": "Leggi Utilizzo",
+        "readAnalytics": "Leggi Analitiche",
+        "adminAccess": "Accesso Admin"
+      },
+      "labels": {
+        "rateLimitLabel": "Limite di frequenza (richieste al minuto)",
+        "apiKeyLabel": "Chiave API",
+        "lastUsed": "Ultimo Utilizzo",
+        "actions": "Azioni",
+        "created": "Creato",
+        "totalRequests": "Richieste Totali",
+        "rateLimit": "Limite di Frequenza",
+        "expires": "Scade",
+        "description": "Descrizione",
+        "keyDetails": "Dettagli Chiave",
+        "usageExample": "Esempio di Utilizzo",
+        "cancel": "Annulla",
+        "close": "Chiudi"
+      },
+      "messages": {
+        "loadingModels": "Caricamento modelli sottoscritti...",
+        "noSubscribedModels": "Nessun modello sottoscritto disponibile",
+        "noSubscribedModelsError": "Nessun modello sottoscritto trovato. Devi avere un abbonamento attivo a un modello prima di creare una chiave API.",
+        "selectedModels": "Modelli selezionati",
+        "modelsSelected": "{{count}} modello/i selezionato/i",
+        "keyCreatedSuccess": "{{name}} è stata creata con successo",
+        "keyDeleted": "{{name}} è stata eliminata",
+        "copyToClipboard": "{{label}} copiato negli appunti",
+        "secureRetrievalMessage": "Clicca sull'icona occhio sopra per recuperare in modo sicuro la tua chiave API LiteLLM completa. Per motivi di sicurezza, questo richiede autenticazione recente ed è limitato nella frequenza. Tutti i recuperi di chiavi sono registrati per scopi di audit.",
+        "keyCreatedMessage": "La tua chiave API è stata creata con successo.",
+        "deleteConfirmation": "Sei sicuro di voler eliminare la chiave API {{name}}?",
+        "deleteWarning": "Questa azione non può essere annullata. La chiave API sarà rimossa permanentemente e le applicazioni che usano questa chiave perderanno immediatamente l'accesso.",
+        "keyRevokedMessage": "Questa chiave API è stata revocata e non può più essere utilizzata.",
+        "keyExpiredMessage": "Questa chiave API è scaduta il {{date}}.",
+        "retrievalMessage": "La tua chiave API LiteLLM è stata recuperata in modo sicuro. Recuperata il: {{date}}",
+        "plusMore": "+{{count}} altre",
+        "requestsPerMinute": "richieste/minuto",
+        "apiKeyDetails": "Dettagli Chiave API",
+        "managementDescription": "Gestisci chiavi API per accedere ai servizi LiteMaaS",
+        "loadingTitle": "Caricamento Chiavi API...",
+        "loadingDescription": "Recupero informazioni chiavi API",
+        "errorLoadingTitle": "Errore caricamento chiavi API",
+        "noKeysTitle": "Nessuna chiave API trovata",
+        "noKeysDescription": "Crea la tua prima chiave API per iniziare a usare i servizi LiteMaaS."
+      },
+      "placeholders": {
+        "keyName": "es., Chiave API Produzione",
+        "keyDescription": "Descrizione opzionale dello scopo di questa chiave"
+      },
+      "rateLimits": {
+        "basic": "100 rich/min (Base)",
+        "standard": "500 rich/min (Standard)",
+        "premium": "1.000 rich/min (Premium)",
+        "enterprise": "5.000 rich/min (Enterprise)"
+      },
+      "timeRanges": {
+        "thirtyDays": "30 giorni",
+        "ninetyDays": "90 giorni",
+        "oneYear": "1 anno"
+      },
+      "clipboard": {
+        "copy": "Copia",
+        "copied": "Copiato"
+      },
+      "notifications": {
+        "loadError": "Errore",
+        "loadErrorDesc": "Impossibile caricare le chiavi API dal server.",
+        "loadModelError": "Errore",
+        "loadModelErrorDesc": "Impossibile caricare i tuoi modelli sottoscritti.",
+        "createSuccess": "Chiave API Creata",
+        "createError": "Errore",
+        "createErrorDesc": "Impossibile creare la chiave API. Riprova.",
+        "deleteSuccess": "Chiave API Eliminata",
+        "deleteError": "Errore",
+        "deleteErrorDesc": "Impossibile eliminare la chiave API. Riprova.",
+        "retrieveSuccess": "Chiave API Recuperata",
+        "retrieveError": "Errore Recupero Chiave API",
+        "retrieveErrorDesc": "Impossibile recuperare la chiave API",
+        "validationError": "Errore di Validazione",
+        "nameRequired": "Il nome della chiave API è richiesto",
+        "modelsRequired": "Seleziona almeno un modello dai tuoi abbonamenti attivi"
+      },
+      "modals": {
+        "createTitle": "Crea Chiave API",
+        "viewTitle": "Dettagli Chiave API",
+        "deleteTitle": "Elimina Chiave API",
+        "createdTitle": "Chiave API Creata con Successo",
+        "success": "Successo!",
+        "warning": "Avviso",
+        "secureRetrieval": "Recupero Sicuro Chiave",
+        "keyRevoked": "Chiave Revocata",
+        "keyExpired": "Chiave Scaduta",
+        "selectedModels": "Modelli selezionati"
+      },
+      "tableHeaders": {
+        "apiKeysTable": "Tabella Chiavi API",
+        "keyDetails": "Dettagli chiave",
+        "generatedKeyDetails": "Dettagli chiave generata"
+      },
+      "codeExample": {
+        "role": "utente",
+        "content": "Ciao, mondo!"
+      }
+    },
+    "usage": {
+      "title": "Dashboard Utilizzo",
+      "subtitle": "Monitora il tuo utilizzo API, costi e metriche di prestazione",
+      "exportData": "Esporta Dati",
+      "loadingTitle": "Caricamento Dati Utilizzo...",
+      "loadingDescription": "Analisi pattern utilizzo API e metriche",
+      "noDataTitle": "Nessun dato di utilizzo disponibile",
+      "noDataDescription": "Inizia a fare richieste API per vedere le tue statistiche di utilizzo qui.",
+      "viewApiDocs": "Visualizza Documentazione API",
+      "filters": {
+        "custom": "Personalizzato",
+        "overview": "Panoramica",
+        "byModels": "Per Modelli",
+        "timeAnalysis": "Analisi Temporale",
+        "errors": "Errori",
+        "errorAnalysis": "Analisi Errori"
+      },
+      "dateRanges": {
+        "last7Days": "Ultimi 7 giorni",
+        "last30Days": "Ultimi 30 giorni",
+        "last90Days": "Ultimi 90 giorni",
+        "customRange": "Intervallo personalizzato"
+      },
+      "metrics": {
+        "totalRequests": "Richieste Totali",
+        "totalTokens": "Token Totali",
+        "totalCost": "Costo Totale",
+        "avgResponseTime": "Tempo Risposta Medio",
+        "successRate": "Tasso di Successo",
+        "successfulRequests": "richieste riuscite"
+      },
+      "charts": {
+        "dailyUsage": "Utilizzo Giornaliero",
+        "hourlyRequests": "Richieste Orarie",
+        "modelUsageDistribution": "Distribuzione Utilizzo Modelli",
+        "errorTypes": "Tipi di Errore",
+        "usageTrends": "Trend di Utilizzo",
+        "topModelsByUsage": "Top Modelli per Utilizzo",
+        "usageByModel": "Utilizzo per Modello",
+        "hourlyUsagePattern": "Pattern Utilizzo Orario",
+        "errorBreakdown": "Suddivisione Errori",
+        "errorDetails": "Dettagli Errori"
+      },
+      "tables": {
+        "topModels": "Tabella top modelli",
+        "errorBreakdown": "Tabella suddivisione errori"
+      },
+      "tableHeaders": {
+        "model": "Modello",
+        "requests": "Richieste",
+        "tokens": "Token",
+        "cost": "Costo",
+        "usagePercent": "Utilizzo %",
+        "errorType": "Tipo Errore",
+        "count": "Conteggio",
+        "percentage": "Percentuale"
+      },
+      "notifications": {
+        "loadError": "Errore",
+        "loadErrorDesc": "Impossibile caricare le metriche di utilizzo dal server.",
+        "loadFailed": "Impossibile caricare le metriche di utilizzo. Riprova.",
+        "exportStarted": "Export Avviato",
+        "exportStartedDesc": "L'export dei tuoi dati di utilizzo è in preparazione e sarà scaricato a breve.",
+        "exportComplete": "Export Completato",
+        "exportCompleteDesc": "I dati di utilizzo sono stati esportati con successo.",
+        "exportFailed": "Export Fallito",
+        "exportFailedDesc": "Impossibile esportare i dati di utilizzo. Riprova."
+      }
+    },
+    "settings": {
+      "title": "Impostazioni",
+      "userPreferences": "Preferenze Utente",
+      "apiConfiguration": "Configurazione API",
+      "forms": {
+        "displayName": "Nome Visualizzato",
+        "displayNamePlaceholder": "Inserisci il tuo nome visualizzato",
+        "emailNotifications": "Notifiche Email",
+        "autoRefreshDashboard": "Aggiornamento Automatico Dashboard",
+        "enabled": "Abilitato",
+        "defaultModelProvider": "Provider Modello Predefinito",
+        "rateLimitLabel": "Limite di Frequenza (richieste/minuto)",
+        "timeoutLabel": "Timeout (secondi)",
+        "providerPlaceholder": "OpenAI, Anthropic, ecc.",
+        "openShiftAI": "OpenShift AI"
+      },
+      "buttons": {
+        "savePreferences": "Salva Preferenze",
+        "updateConfiguration": "Aggiorna Configurazione"
+      }
+    }
+  },
+  "ui": {
+    "theme": {
+      "light": "Chiaro",
+      "dark": "Scuro",
+      "toggle": "Cambia tema"
+    },
+    "language": {
+      "selector": "Lingua",
+      "english": "English",
+      "spanish": "Español",
+      "french": "Français",
+      "german": "Deutsch",
+      "italian": "Italiano",
+      "korean": "한국어",
+      "japanese": "日本語",
+      "chinese": "中文",
+      "elvish": "Edhellen"
+    },
+    "notifications": {
+      "title": "Notifiche",
+      "markRead": "Segna come letto",
+      "clear": "Cancella tutto",
+      "empty": "Nessuna notifica"
+    },
+    "actions": {
+      "logout": "Esci",
+      "login": "Accedi con OpenShift",
+      "browse": "Sfoglia",
+      "refresh": "Aggiorna pagina",
+      "tryAgain": "Riprova"
+    },
+    "errors": {
+      "somethingWrong": "Qualcosa è andato storto",
+      "tryRefresh": "Ci dispiace, ma si è verificato qualcosa di inaspettato. Prova ad aggiornare la pagina o contatta il supporto se il problema persiste."
+    }
+  }
+}
