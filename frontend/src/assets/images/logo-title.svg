@@ -1,13 +1,36 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg
-   viewBox="0 0 166 27.225548"
+   viewBox="0 0 130.43547 26.486126"
    version="1.1"
    id="svg20"
-   width="166"
-   height="27.225548"
+   width="130.43547"
+   height="26.486126"
+   sodipodi:docname="logo-title.svg"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     showgrid="false"
+     inkscape:zoom="3.8251921"
+     inkscape:cx="66.924743"
+     inkscape:cy="35.03092"
+     inkscape:window-width="1920"
+     inkscape:window-height="1011"
+     inkscape:window-x="1920"
+     inkscape:window-y="32"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg20" />
   <defs
      id="defs6">
     <!-- Gradient for the cloud -->
@@ -51,7 +74,7 @@
        y1="15.24033"
        x2="60.205563"
        y2="15.24033"
-       gradientTransform="matrix(2.3994616,0,0,0.41676016,-15,-2.8721094)"
+       gradientTransform="matrix(2.3994616,0,0,0.41676016,-17.587973,-3.6115303)"
        gradientUnits="userSpaceOnUse">
       <stop
          offset="0%"
@@ -70,7 +93,7 @@
        x2="27.5"
        y2="17.5"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="translate(-15,-2.8721094)" />
+       gradientTransform="translate(9.0119977,-5.5068599)" />
     <linearGradient
        xlink:href="#nodeGradient"
        id="linearGradient21"
@@ -79,7 +102,7 @@
        x2="27.5"
        y2="23.5"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="translate(-15,-2.8721094)" />
+       gradientTransform="translate(8.5545047,-1.3894197)" />
     <linearGradient
        xlink:href="#nodeGradient"
        id="linearGradient22"
@@ -88,7 +111,7 @@
        x2="39.5"
        y2="15.5"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="translate(-15,-2.8721094)" />
+       gradientTransform="translate(-25.300003,-4.9186542)" />
     <linearGradient
        xlink:href="#nodeGradient"
        id="linearGradient23"
@@ -97,7 +120,7 @@
        x2="39.5"
        y2="20.5"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="translate(-15,-2.8721094)" />
+       gradientTransform="translate(-25.234647,-3.5461741)" />
     <linearGradient
        xlink:href="#nodeGradient"
        id="linearGradient24"
@@ -106,7 +129,7 @@
        x2="39.5"
        y2="25.5"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="translate(-15,-2.8721094)" />
+       gradientTransform="translate(-25.169291,-2.500475)" />
     <linearGradient
        xlink:href="#nodeGradient"
        id="linearGradient25"
@@ -115,129 +138,111 @@
        x2="52.5"
        y2="20.5"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="translate(-15,-2.8721094)" />
+       gradientTransform="translate(-28.11032,-3.6768865)" />
   </defs>
   <!-- Cloud shape representing "as-a-Service" -->
   <path
-     d="m 10,25.127891 c -5,0 -10,-5 -10,-10 0,-5 5,-10.0000004 10,-10.0000004 2,-3 7,-5.00000001 12,-3 5,-4 11,-2.00000001 13,3 5,0 10,5.0000004 10,10.0000004 0,5 -5,10 -10,10 z"
+     d="M 9.9999997,25.127891 C 5,25.127891 0,20.127891 0,15.127891 c 0,-5 5,-10.0000004 9.9999997,-10.0000004 2.0000003,-3 7.0000003,-5 12.0000003,-3 5,-4 11,-2 13,3 5,0 10,5.0000004 10,10.0000004 0,5 -5,10 -10,10 z"
      fill="url(#cloudGradient)"
      opacity="0.9"
      id="path6"
      style="fill:url(#cloudGradient)" />
+  <line
+     x1="23.731741"
+     y1="14.113114"
+     x2="32.797955"
+     y2="9.9059725"
+     stroke="#ff7043"
+     stroke-width="1.58917"
+     opacity="0.9"
+     id="line15" />
   <!-- Neural network representation inside cloud -->
   <!-- Input layer -->
+  <line
+     x1="31.710993"
+     y1="19.167927"
+     x2="23.380867"
+     y2="14.739724"
+     stroke="#ff7043"
+     stroke-width="1.5"
+     opacity="0.9"
+     id="line17" />
+  <line
+     x1="13.466147"
+     y1="8.8851852"
+     x2="19.893524"
+     y2="12.970381"
+     stroke="#ff7043"
+     stroke-width="1.5"
+     opacity="0.9"
+     id="line12" />
+  <line
+     x1="13.563787"
+     y1="14.466881"
+     x2="20.841587"
+     y2="14.283514"
+     stroke="#ff7043"
+     stroke-width="1.5"
+     opacity="0.9"
+     id="line11" />
+  <line
+     x1="13.517167"
+     y1="19.738306"
+     x2="19.973219"
+     y2="15.698579"
+     stroke="#ff7043"
+     stroke-width="1.5"
+     opacity="0.9"
+     id="line13" />
   <circle
-     cx="10"
-     cy="12.127891"
+     cx="34.011997"
+     cy="9.4931402"
      r="2.5"
      fill="url(#nodeGradient)"
      id="circle6"
      style="fill:url(#linearGradient20)" />
   <circle
-     cx="10"
-     cy="18.127892"
+     cx="33.554504"
+     cy="19.610582"
      r="2.5"
      fill="url(#nodeGradient)"
      id="circle7"
      style="fill:url(#linearGradient21)" />
   <!-- Hidden layer -->
   <circle
-     cx="22"
-     cy="10.127891"
+     cx="11.699996"
+     cy="8.0813456"
      r="2.5"
      fill="url(#nodeGradient)"
      id="circle8"
      style="fill:url(#linearGradient22)" />
   <circle
-     cx="22"
-     cy="15.127891"
+     cx="11.765352"
+     cy="14.453826"
      r="2.5"
      fill="url(#nodeGradient)"
      id="circle9"
      style="fill:url(#linearGradient23)" />
   <circle
-     cx="22"
-     cy="20.127892"
+     cx="11.830709"
+     cy="20.499523"
      r="2.5"
      fill="url(#nodeGradient)"
      id="circle10"
      style="fill:url(#linearGradient24)" />
   <!-- Output layer -->
   <circle
-     cx="35"
-     cy="15.127891"
+     cx="21.889681"
+     cy="14.323113"
      r="2.5"
      fill="url(#nodeGradient)"
      id="circle11"
      style="fill:url(#linearGradient25)" />
   <!-- Connections -->
-  <line
-     x1="12.5"
-     y1="12.127891"
-     x2="19.5"
-     y2="10.127891"
-     stroke="#ff7043"
-     stroke-width="1.5"
-     opacity="0.9"
-     id="line11" />
-  <line
-     x1="12.5"
-     y1="12.127891"
-     x2="19.5"
-     y2="15.127891"
-     stroke="#ff7043"
-     stroke-width="1.5"
-     opacity="0.9"
-     id="line12" />
-  <line
-     x1="12.5"
-     y1="18.127892"
-     x2="19.5"
-     y2="15.127891"
-     stroke="#ff7043"
-     stroke-width="1.5"
-     opacity="0.9"
-     id="line13" />
-  <line
-     x1="12.5"
-     y1="18.127892"
-     x2="19.5"
-     y2="20.127892"
-     stroke="#ff7043"
-     stroke-width="1.5"
-     opacity="0.9"
-     id="line14" />
-  <line
-     x1="24.5"
-     y1="10.127891"
-     x2="32.5"
-     y2="15.127891"
-     stroke="#ff7043"
-     stroke-width="1.5"
-     opacity="0.9"
-     id="line15" />
-  <line
-     x1="24.5"
-     y1="15.127891"
-     x2="32.5"
-     y2="15.127891"
-     stroke="#ff7043"
-     stroke-width="2"
-     opacity="1"
-     id="line16" />
-  <line
-     x1="24.5"
-     y1="20.127892"
-     x2="32.5"
-     y2="15.127891"
-     stroke="#ff7043"
-     stroke-width="1.5"
-     opacity="0.9"
-     id="line17" />
   <!-- Text -->
   <text
-     x="60"
-     y="15.127891"
+     x="57.412025"
+     y="14.38847"
      font-family="Arial, sans-serif"
      font-size="16px"
      font-weight="bold"
@@ -250,31 +255,12 @@
        id="tspan18"
        style="fill:url(#textGradient)">MaaS</tspan></text>
   <text
-     x="60"
-     y="27.127892"
+     x="57.412025"
+     y="26.38847"
      font-family="Arial, sans-serif"
      font-size="8px"
      fill="#78909c"
      opacity="0.8"
      id="text19">Models-as-a-Service</text>
   <!-- Subtle sparkles for "lite" feeling -->
-  <g
-     opacity="0.6"
-     id="g20"
-     transform="translate(-15,-2.8721094)">
-    <path
-       d="m 65,10 1,2 2,-1 -2,2 -1,2 -1,-2 -2,-2 2,1 z"
-       fill="#ffd54f"
-       id="path19" />
-    <circle
-       cx="180"
-       cy="15"
-       r="1"
-       fill="#ffd54f"
-       id="circle19" />
-    <path
-       d="m 175,25 0.5,1 1,-0.5 -1,1.5 -0.5,1 -0.5,-1 -1,-1.5 1,0.5 z"
-       fill="#ffd54f"
-       id="path20" />
-  </g>
 </svg>
