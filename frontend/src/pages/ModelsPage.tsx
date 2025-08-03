@@ -203,9 +203,9 @@ const ModelsPage: React.FC = () => {
           <EmptyState variant={EmptyStateVariant.lg}>
             <Spinner size="xl" />
             <Title headingLevel="h2" size="lg">
-              Loading Models...
+              {t('pages.models.loadingTitle')}
             </Title>
-            <EmptyStateBody>Discovering available AI models from all providers</EmptyStateBody>
+            <EmptyStateBody>{t('pages.models.loadingDescription')}</EmptyStateBody>
           </EmptyState>
         </PageSection>
       </>
@@ -218,9 +218,7 @@ const ModelsPage: React.FC = () => {
         <Title headingLevel="h1" size="2xl">
           {t('pages.models.title')}
         </Title>
-        <Content component={ContentVariants.p}>
-          Discover and subscribe to AI models from various providers
-        </Content>
+        <Content component={ContentVariants.p}>{t('pages.models.subtitle')}</Content>
       </PageSection>
 
       <PageSection>
@@ -335,9 +333,7 @@ const ModelsPage: React.FC = () => {
             <Title headingLevel="h2" size="lg">
               {t('pages.models.noModels')}
             </Title>
-            <EmptyStateBody>
-              Try adjusting your search criteria or filters to find models.
-            </EmptyStateBody>
+            <EmptyStateBody>{t('pages.models.emptyStateMessage')}</EmptyStateBody>
             <EmptyStateActions>
               <Button
                 variant="link"
@@ -347,7 +343,7 @@ const ModelsPage: React.FC = () => {
                   setSelectedProvider('all');
                 }}
               >
-                Clear all filters
+                {t('pages.models.clearAllFilters')}
               </Button>
             </EmptyStateActions>
           </EmptyState>
@@ -565,7 +561,7 @@ const ModelsPage: React.FC = () => {
                       <InfoCircleIcon color="var(--pf-v6-global--danger--color--200)" />
                     </FlexItem>
                     <FlexItem>
-                      <Content>This model is currently unavailable for new subscriptions.</Content>
+                      <Content>{t('pages.models.modelUnavailable')}</Content>
                     </FlexItem>
                   </Flex>
                 </div>
@@ -590,7 +586,7 @@ const ModelsPage: React.FC = () => {
               {isSubscribing ? t('pages.models.subscribing') : t('pages.models.subscribe')}
             </Button>
             <Button variant="link" onClick={() => setIsModalOpen(false)}>
-              Close
+              {t('pages.models.close')}
             </Button>
           </div>
         </ModalBody>

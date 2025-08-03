@@ -40,6 +40,7 @@ const resources = {
         },
         models: {
           title: 'Available Models',
+          subtitle: 'Discover and subscribe to AI models from various providers',
           noModels: 'No models available yet',
           description: 'Model discovery and subscription functionality coming soon.',
           searchPlaceholder: 'Search models...',
@@ -52,6 +53,13 @@ const resources = {
           contextLabel: 'Context:',
           pricingLabel: 'Pricing: N/A',
           moreFeatures: '+{{count}} more',
+          loadingTitle: 'Loading Models...',
+          loadingDescription: 'Discovering available AI models from all providers',
+          emptyStateMessage:
+            'Try adjusting your search criteria or filters to find models.',
+          clearAllFilters: 'Clear all filters',
+          modelUnavailable: 'This model is currently unavailable for new subscriptions.',
+          close: 'Close',
           notifications: {
             subscribeSuccess: 'Successfully subscribed!',
             subscribeSuccessDesc:
@@ -419,6 +427,7 @@ const resources = {
         },
         models: {
           title: 'Modelos Disponibles',
+          subtitle: 'Descubre y suscríbete a modelos de IA de varios proveedores',
           noModels: 'No hay modelos disponibles aún',
           description:
             'El descubrimiento de modelos y la funcionalidad de suscripción estarán disponibles pronto.',
@@ -432,6 +441,12 @@ const resources = {
           contextLabel: 'Contexto:',
           pricingLabel: 'Precios: N/A',
           moreFeatures: '+{{count}} más',
+          loadingTitle: 'Cargando Modelos...',
+          loadingDescription: 'Descubriendo modelos de IA disponibles de todos los proveedores',
+          emptyStateMessage: 'Intenta ajustar tus criterios de búsqueda o filtros para encontrar modelos.',
+          clearAllFilters: 'Limpiar todos los filtros',
+          modelUnavailable: 'Este modelo no está disponible actualmente para nuevas suscripciones.',
+          close: 'Cerrar',
           notifications: {
             subscribeSuccess: '¡Suscripción exitosa!',
             subscribeSuccessDesc:
@@ -801,6 +816,7 @@ const resources = {
         },
         models: {
           title: 'Modèles Disponibles',
+          subtitle: 'Découvrez et abonnez-vous à des modèles IA de divers fournisseurs',
           noModels: 'Aucun modèle disponible pour le moment',
           description:
             "La découverte de modèles et la fonctionnalité d'abonnement arrivent bientôt.",
@@ -814,6 +830,14 @@ const resources = {
           contextLabel: 'Contexte:',
           pricingLabel: 'Tarification: N/A',
           moreFeatures: '+{{count}} de plus',
+          loadingTitle: 'Chargement des Modèles...',
+          loadingDescription: 'Découverte des modèles IA disponibles de tous les fournisseurs',
+          emptyStateMessage:
+            "Essayez d'ajuster vos critères de recherche ou filtres pour trouver des modèles.",
+          clearAllFilters: 'Effacer tous les filtres',
+          modelUnavailable:
+            "Ce modèle n'est actuellement pas disponible pour de nouveaux abonnements.",
+          close: 'Fermer',
           notifications: {
             subscribeSuccess: 'Abonnement réussi !',
             subscribeSuccessDesc:
@@ -1183,6 +1207,7 @@ const resources = {
         },
         models: {
           title: 'Verfügbare Modelle',
+          subtitle: 'Entdecken und abonnieren Sie KI-Modelle verschiedener Anbieter',
           noModels: 'Noch keine Modelle verfügbar',
           description: 'Modellentdeckung und Abonnementfunktionalität kommen bald.',
           searchPlaceholder: 'Modelle suchen...',
@@ -1195,6 +1220,13 @@ const resources = {
           contextLabel: 'Kontext:',
           pricingLabel: 'Preisgestaltung: N/A',
           moreFeatures: '+{{count}} weitere',
+          loadingTitle: 'Modelle werden geladen...',
+          loadingDescription: 'Verfügbare KI-Modelle von allen Anbietern werden entdeckt',
+          emptyStateMessage:
+            'Versuchen Sie, Ihre Suchkriterien oder Filter anzupassen, um Modelle zu finden.',
+          clearAllFilters: 'Alle Filter löschen',
+          modelUnavailable: 'Dieses Modell ist derzeit nicht für neue Abonnements verfügbar.',
+          close: 'Schließen',
           notifications: {
             subscribeSuccess: 'Erfolgreich abonniert!',
             subscribeSuccessDesc:
@@ -1568,6 +1600,7 @@ const resources = {
         },
         models: {
           title: 'Modelli Disponibili',
+          subtitle: 'Scopri e abbonati ai modelli AI di vari fornitori',
           noModels: 'Nessun modello ancora disponibile',
           description:
             'La scoperta dei modelli e la funzionalità di abbonamento arriveranno presto.',
@@ -1581,6 +1614,12 @@ const resources = {
           contextLabel: 'Contesto:',
           pricingLabel: 'Prezzi: N/D',
           moreFeatures: '+{{count}} altre',
+          loadingTitle: 'Caricamento Modelli...',
+          loadingDescription: 'Scoperta dei modelli AI disponibili da tutti i fornitori',
+          emptyStateMessage: 'Prova ad aggiustare i tuoi criteri di ricerca o filtri per trovare modelli.',
+          clearAllFilters: 'Cancella tutti i filtri',
+          modelUnavailable: 'Questo modello non è attualmente disponibile per nuovi abbonamenti.',
+          close: 'Chiudi',
           notifications: {
             subscribeSuccess: 'Abbonamento riuscito!',
             subscribeSuccessDesc:
@@ -1950,6 +1989,7 @@ const resources = {
         },
         models: {
           title: '사용 가능한 모델',
+          subtitle: '다양한 공급자의 AI 모델을 발견하고 구독하세요',
           noModels: '아직 사용 가능한 모델이 없습니다',
           description: '모델 검색 및 구독 기능이 곧 제공됩니다.',
           searchPlaceholder: '모델 검색...',
@@ -1962,6 +2002,12 @@ const resources = {
           contextLabel: '컨텍스트:',
           pricingLabel: '가격: N/A',
           moreFeatures: '+{{count}}개 더',
+          loadingTitle: '모델 로딩 중...',
+          loadingDescription: '모든 공급자로부터 사용 가능한 AI 모델을 찾는 중',
+          emptyStateMessage: '모델을 찾으려면 검색 기준이나 필터를 조정해 보세요.',
+          clearAllFilters: '모든 필터 지우기',
+          modelUnavailable: '이 모델은 현재 신규 구독을 할 수 없습니다.',
+          close: '닫기',
           notifications: {
             subscribeSuccess: '구독 성공!',
             subscribeSuccessDesc:
@@ -2323,6 +2369,7 @@ const resources = {
         },
         models: {
           title: '利用可能なモデル',
+          subtitle: 'さまざまなプロバイダーのAIモデルを発見して購読する',
           noModels: 'まだ利用可能なモデルはありません',
           description: 'モデルの検出とサブスクリプション機能は近日公開予定です。',
           searchPlaceholder: 'モデルを検索...',
@@ -2335,6 +2382,13 @@ const resources = {
           contextLabel: 'コンテキスト：',
           pricingLabel: '価格：N/A',
           moreFeatures: '+{{count}}個の機能',
+          loadingTitle: 'モデルを読み込み中...',
+          loadingDescription: 'すべてのプロバイダーから利用可能なAIモデルを検出中',
+          emptyStateMessage:
+            'モデルを見つけるために検索条件やフィルターを調整してみてください。',
+          clearAllFilters: 'すべてのフィルターをクリア',
+          modelUnavailable: 'このモデルは現在新規サブスクリプションには利用できません。',
+          close: '閉じる',
           notifications: {
             subscribeSuccess: 'サブスクリプション成功！',
             subscribeSuccessDesc:
@@ -2703,6 +2757,7 @@ const resources = {
         },
         models: {
           title: '可用模型',
+          subtitle: '发现并订阅来自各种提供商的AI模型',
           noModels: '暂无可用模型',
           description: '模型发现和订阅功能即将推出。',
           searchPlaceholder: '搜索模型...',
@@ -2715,6 +2770,12 @@ const resources = {
           contextLabel: '上下文：',
           pricingLabel: '价格：不适用',
           moreFeatures: '+{{count}}个更多',
+          loadingTitle: '正在加载模型...',
+          loadingDescription: '正在从所有提供商发现可用的AI模型',
+          emptyStateMessage: '尝试调整您的搜索条件或过滤器以查找模型。',
+          clearAllFilters: '清除所有过滤器',
+          modelUnavailable: '此模型目前不可用于新订阅。',
+          close: '关闭',
           notifications: {
             subscribeSuccess: '订阅成功！',
             subscribeSuccessDesc: '您现在可以访问{{modelName}}。您可以从订阅页面生成API密钥。',
@@ -3072,6 +3133,7 @@ const resources = {
         },
         models: {
           title: 'Erain Saed',
+          subtitle: 'Thuil a nestadren erain AI o taedran uin',
           noModels: 'Uir erain saed sui hen',
           description: 'Thuil erain a nestadren prestanneth sui na tol sui hen.',
           searchPlaceholder: 'Thuil erain...',
@@ -3084,6 +3146,12 @@ const resources = {
           contextLabel: 'Ostelo:',
           pricingLabel: 'Prestanneth: Ú-vellon',
           moreFeatures: '+{{count}} en',
+          loadingTitle: 'Athrado Erain...',
+          loadingDescription: 'Thuil erain AI saed o taedran ilya',
+          emptyStateMessage: 'Orno prestanneth thuil na peleth a thinnadh erain.',
+          clearAllFilters: 'Gwedho ilya thinnadh',
+          modelUnavailable: 'I vain ú-vellon na nestadren edregol sui hen.',
+          close: 'Latho',
           notifications: {
             subscribeSuccess: 'Nestadren prestanniel!',
             subscribeSuccessDesc:
