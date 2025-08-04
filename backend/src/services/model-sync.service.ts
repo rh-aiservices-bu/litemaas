@@ -148,7 +148,7 @@ export class ModelSyncService {
         ? litellmModel.litellm_params.model.split('/')[0]
         : 'unknown');
 
-    const description = `${modelName} model from ${provider}`;
+    const description = `${modelName}`;
     const contextLength = litellmModel.model_info?.max_tokens;
     const inputCostPerToken =
       litellmModel.model_info?.input_cost_per_token ||

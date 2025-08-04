@@ -267,12 +267,14 @@ const SubscriptionsPage: React.FC = () => {
                           </FlexItem>
                           <FlexItem>{getStatusBadge(subscription.status)}</FlexItem>
                         </Flex>
+                        {/* 
                         <Content
                           component={ContentVariants.small}
                           style={{ color: 'var(--pf-v6-global--Color--200)' }}
                         >
                           {t('pages.subscriptions.byProvider', { provider: subscription.provider })}
                         </Content>
+                         */}
                       </CardTitle>
                       <CardBody>
                         <Flex
@@ -365,13 +367,14 @@ const SubscriptionsPage: React.FC = () => {
           {selectedSubscription && (
             <>
               <DescriptionList isHorizontal>
+                {/*                 
                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('pages.subscriptions.provider')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     {selectedSubscription.provider}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-
+ */}
                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('pages.subscriptions.pricing')}</DescriptionListTerm>
                   <DescriptionListDescription>

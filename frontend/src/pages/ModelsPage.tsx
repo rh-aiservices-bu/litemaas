@@ -404,18 +404,21 @@ const ModelsPage: React.FC = () => {
                           </FlexItem>
                           <FlexItem>{getAvailabilityBadge(model.availability)}</FlexItem>
                         </Flex>
-                        <Content
+                        {/* TODO: implement model description
+                         <Content
                           component={ContentVariants.small}
                           style={{ color: 'var(--pf-v6-global--Color--200)' }}
                         >
                           by {model.provider}
-                        </Content>
+                        </Content> 
+                        */}
                       </CardTitle>
                     </CardHeader>
                     <CardBody>
+                      {/*
                       <Content component={ContentVariants.p} style={{ marginBottom: '1rem' }}>
                         {model.description}
-                      </Content>
+                      </Content> */}
                       <Flex
                         direction={{ default: 'column' }}
                         spaceItems={{ default: 'spaceItemsSm' }}
@@ -495,24 +498,30 @@ const ModelsPage: React.FC = () => {
             </FlexItem>
             <FlexItem>{selectedModel && getAvailabilityBadge(selectedModel.availability)}</FlexItem>
           </Flex>
+          {/* TODO: Model Description
           <Content
             component={ContentVariants.p}
             style={{ color: 'var(--pf-v6-global--Color--200)' }}
           >
             Provided by {selectedModel?.provider} • Version {selectedModel?.version}
           </Content>
+          */}
         </ModalHeader>
         <ModalBody>
           {selectedModel && (
             <>
+              {/*               
               <Content component={ContentVariants.p} style={{ marginBottom: '1.5rem' }}>
                 {selectedModel.description}
               </Content>
+               */}
 
               <Stack hasGutter style={{ marginBottom: '1.5rem' }}>
+                {/* TODO: Fix provider source                 
                 <Content>
                   <strong>Provider:</strong> {selectedModel.provider}
                 </Content>
+                */}
 
                 {/* Show real pricing from LiteLLM */}
                 {selectedModel.pricing && (
