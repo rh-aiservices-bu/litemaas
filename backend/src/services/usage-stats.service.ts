@@ -7,6 +7,7 @@ export interface UsageMetrics {
   totalTokens: number;
   totalInputTokens: number;
   totalOutputTokens: number;
+  totalCost: number;
   averageLatency: number;
   errorRate: number;
   successRate: number;
@@ -88,6 +89,7 @@ export class UsageStatsService {
       totalTokens: 8456321,
       totalInputTokens: 3245678,
       totalOutputTokens: 5210643,
+      totalCost: 127.36,
       averageLatency: 1.2,
       errorRate: 2.3,
       successRate: 97.7,
@@ -101,6 +103,7 @@ export class UsageStatsService {
         totalTokens: 312456,
         totalInputTokens: 145623,
         totalOutputTokens: 166833,
+        totalCost: 31.25,
         averageLatency: 1.1,
         errorRate: 1.8,
         successRate: 98.2,
@@ -113,6 +116,7 @@ export class UsageStatsService {
         totalTokens: 387234,
         totalInputTokens: 178456,
         totalOutputTokens: 208778,
+        totalCost: 38.72,
         averageLatency: 1.3,
         errorRate: 2.1,
         successRate: 97.9,
@@ -125,6 +129,7 @@ export class UsageStatsService {
         totalTokens: 498765,
         totalInputTokens: 234567,
         totalOutputTokens: 264198,
+        totalCost: 49.88,
         averageLatency: 1.0,
         errorRate: 3.2,
         successRate: 96.8,
@@ -139,6 +144,7 @@ export class UsageStatsService {
         totalTokens: 5234567,
         totalInputTokens: 2123456,
         totalOutputTokens: 3111111,
+        totalCost: 78.52,
         averageLatency: 1.1,
         errorRate: 1.8,
         successRate: 98.2,
@@ -151,6 +157,7 @@ export class UsageStatsService {
         totalTokens: 2456789,
         totalInputTokens: 987654,
         totalOutputTokens: 1469135,
+        totalCost: 36.85,
         averageLatency: 1.4,
         errorRate: 2.1,
         successRate: 97.9,
@@ -163,6 +170,7 @@ export class UsageStatsService {
         totalTokens: 764965,
         totalInputTokens: 134568,
         totalOutputTokens: 630397,
+        totalCost: 11.47,
         averageLatency: 0.8,
         errorRate: 4.5,
         successRate: 95.5,
@@ -319,6 +327,7 @@ export class UsageStatsService {
                   totalTokens: liteLLMData.total_tokens,
                   totalInputTokens: liteLLMData.prompt_tokens,
                   totalOutputTokens: liteLLMData.completion_tokens,
+                  totalCost: liteLLMData.spend || 0, // Use actual spend from LiteLLM
                   averageLatency: 1200, // Default as LiteLLM doesn't provide this
                   errorRate: 0, // Default as LiteLLM doesn't provide this
                   successRate: 100, // Default as LiteLLM doesn't provide this
@@ -328,11 +337,12 @@ export class UsageStatsService {
                 const modelBreakdown: ModelUsageStats[] = liteLLMData.by_model.map((model) => ({
                   modelId: model.model,
                   modelName: model.model,
-                  provider: model.model.includes('gpt') ? 'openai' : 'unknown',
+                  provider: this.getProviderFromModel(model.model),
                   totalRequests: model.api_requests,
                   totalTokens: model.tokens,
                   totalInputTokens: Math.floor(model.tokens * 0.6), // Estimate
                   totalOutputTokens: Math.floor(model.tokens * 0.4), // Estimate
+                  totalCost: model.spend || 0, // Use actual spend from LiteLLM
                   averageLatency: 1200,
                   errorRate: 0,
                   successRate: 100,
@@ -349,6 +359,7 @@ export class UsageStatsService {
                     totalTokens: day.tokens,
                     totalInputTokens: Math.floor(day.tokens * 0.6),
                     totalOutputTokens: Math.floor(day.tokens * 0.4),
+                    totalCost: day.spend || 0, // Use actual spend from LiteLLM
                     averageLatency: 1200,
                     errorRate: 0,
                     successRate: 100,
@@ -375,6 +386,7 @@ export class UsageStatsService {
                       totalTokens: dailyTokens,
                       totalInputTokens: Math.floor(dailyTokens * 0.6),
                       totalOutputTokens: Math.floor(dailyTokens * 0.4),
+                      totalCost: Math.floor(((liteLLMData.spend || 0) / days) * 100) / 100, // Estimate daily cost
                       averageLatency: 1200,
                       errorRate: 0,
                       successRate: 100,
@@ -792,6 +804,7 @@ export class UsageStatsService {
         totalTokens: 0,
         totalInputTokens: 0,
         totalOutputTokens: 0,
+        totalCost: 0,
         averageLatency: 0,
         errorRate: 0,
         successRate: 0,
@@ -806,6 +819,7 @@ export class UsageStatsService {
       totalTokens: parseInt(String(result.total_tokens)) || 0,
       totalInputTokens: parseInt(String(result.total_input_tokens)) || 0,
       totalOutputTokens: parseInt(String(result.total_output_tokens)) || 0,
+      totalCost: 0, // Database doesn't have cost data, will be calculated from LiteLLM
       averageLatency: Math.round(parseFloat(String(result.average_latency)) || 0),
       errorRate: totalRequests > 0 ? Math.round((errorCount / totalRequests) * 100 * 100) / 100 : 0,
       successRate:
@@ -878,6 +892,7 @@ export class UsageStatsService {
         totalTokens: parseInt(String(row.total_tokens)) || 0,
         totalInputTokens: parseInt(String(row.total_input_tokens)) || 0,
         totalOutputTokens: parseInt(String(row.total_output_tokens)) || 0,
+        totalCost: 0, // Database doesn't have cost data, will be calculated from LiteLLM
         averageLatency: Math.round(parseFloat(String(row.average_latency)) || 0),
         errorRate:
           totalRequests > 0 ? Math.round((errorCount / totalRequests) * 100 * 100) / 100 : 0,
@@ -929,6 +944,7 @@ export class UsageStatsService {
         totalTokens: parseInt(String(row.total_tokens)) || 0,
         totalInputTokens: parseInt(String(row.total_input_tokens)) || 0,
         totalOutputTokens: parseInt(String(row.total_output_tokens)) || 0,
+        totalCost: 0, // Database doesn't have cost data, will be calculated from LiteLLM
         averageLatency: Math.round(parseFloat(String(row.average_latency)) || 0),
         errorRate:
           totalRequests > 0 ? Math.round((errorCount / totalRequests) * 100 * 100) / 100 : 0,
@@ -994,5 +1010,27 @@ export class UsageStatsService {
       // Clear all cache
       this.cache.clear();
     }
+  }
+
+  /**
+   * Get provider name from model name
+   */
+  private getProviderFromModel(modelName: string): string {
+    if (modelName.includes('gpt') || modelName.includes('openai')) {
+      return 'openai';
+    }
+    if (modelName.includes('claude') || modelName.includes('anthropic')) {
+      return 'anthropic';
+    }
+    if (modelName.includes('llama') || modelName.includes('groq')) {
+      return 'groq';
+    }
+    if (modelName.includes('gemini') || modelName.includes('google')) {
+      return 'google';
+    }
+    if (modelName.includes('mistral')) {
+      return 'mistral';
+    }
+    return 'unknown';
   }
 }

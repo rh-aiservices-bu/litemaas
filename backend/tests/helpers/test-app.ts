@@ -27,7 +27,10 @@ export async function createTestApp(options: TestAppOptions = {}): Promise<Fasti
     if (strictAuth) {
       // Override the authenticateWithDevBypass function to force strict auth
       const originalAuthenticate = app.authenticate;
-      (app as any).authenticateWithDevBypass = async (request: FastifyRequest, reply: FastifyReply) => {
+      (app as any).authenticateWithDevBypass = async (
+        request: FastifyRequest,
+        reply: FastifyReply,
+      ) => {
         // Force strict authentication - no dev bypass
         return originalAuthenticate(request, reply);
       };

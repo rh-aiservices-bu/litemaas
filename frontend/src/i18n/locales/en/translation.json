@@ -263,9 +263,7 @@
         "custom": "Custom",
         "overview": "Overview",
         "byModels": "By Models",
-        "timeAnalysis": "Time Analysis",
         "errors": "Errors",
-        "errorAnalysis": "Error Analysis",
         "startDate": "Start Date",
         "endDate": "End Date",
         "selectStartDate": "Select start date",
@@ -283,23 +281,31 @@
         "totalCost": "Total Cost",
         "avgResponseTime": "Avg Response Time",
         "successRate": "Success Rate",
-        "successfulRequests": "successful requests"
+        "successfulRequests": "successful requests",
+        "currency": "USD",
+        "tokens": "tokens",
+        "requests": "requests"
       },
       "charts": {
         "dailyUsage": "Daily Usage",
-        "hourlyRequests": "Hourly Requests",
         "modelUsageDistribution": "Model Usage Distribution",
         "errorTypes": "Error Types",
         "usageTrends": "Usage Trends",
         "topModelsByUsage": "Top Models by Usage",
         "usageByModel": "Usage by Model",
-        "hourlyUsagePattern": "Hourly Usage Pattern",
-        "errorBreakdown": "Error Breakdown",
-        "errorDetails": "Error Details"
+        "noDataTitle": "No Data Available",
+        "noDataDescription": "No usage data found for the selected time period.",
+        "noModelsTitle": "No Model Data",
+        "noModelsDescription": "No model usage data available for the selected period.",
+        "lineChartAriaLabel": "Line chart showing {{metric}} over time",
+        "modelDistributionAriaLabel": "Donut chart showing model usage distribution",
+        "requests": "Requests",
+        "percentage": "Percentage",
+        "modelBreakdown": "Model Breakdown",
+        "detailedBreakdown": "Detailed Breakdown"
       },
       "tables": {
-        "topModels": "Top models table",
-        "errorBreakdown": "Error breakdown table"
+        "topModels": "Top models table"
       },
       "tableHeaders": {
         "model": "Model",
@@ -307,7 +313,6 @@
         "tokens": "Tokens",
         "cost": "Cost",
         "usagePercent": "Usage %",
-        "errorType": "Error Type",
         "count": "Count",
         "percentage": "Percentage"
       },

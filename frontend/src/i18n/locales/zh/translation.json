@@ -255,9 +255,7 @@
         "custom": "自定义",
         "overview": "概览",
         "byModels": "按模型",
-        "timeAnalysis": "时间分析",
         "errors": "错误",
-        "errorAnalysis": "错误分析",
         "startDate": "开始日期",
         "endDate": "结束日期",
         "selectStartDate": "选择开始日期",
@@ -279,19 +277,14 @@
       },
       "charts": {
         "dailyUsage": "每日使用量",
-        "hourlyRequests": "每小时请求",
         "modelUsageDistribution": "模型使用分布",
         "errorTypes": "错误类型",
         "usageTrends": "使用趋势",
         "topModelsByUsage": "按使用量排名的顶级模型",
-        "usageByModel": "按模型使用量",
-        "hourlyUsagePattern": "每小时使用模式",
-        "errorBreakdown": "错误分解",
-        "errorDetails": "错误详情"
+        "usageByModel": "按模型使用量"
       },
       "tables": {
-        "topModels": "顶级模型表",
-        "errorBreakdown": "错误分解表"
+        "topModels": "顶级模型表"
       },
       "tableHeaders": {
         "model": "模型",
@@ -299,7 +292,6 @@
         "tokens": "令牌",
         "cost": "成本",
         "usagePercent": "使用率 %",
-        "errorType": "错误类型",
         "count": "计数",
         "percentage": "百分比"
       },

@@ -19,16 +19,16 @@ describe('Secure API Key Retrieval Endpoint', () => {
       email: 'test@example.com',
       name: 'Test User',
       roles: ['user'],
-      iat: Math.floor(Date.now() / 1000) - 30 // 30 seconds ago
+      iat: Math.floor(Date.now() / 1000) - 30, // 30 seconds ago
     };
-    
+
     const oldPayload = {
-      userId: 'user-123', 
+      userId: 'user-123',
       username: 'test-user',
       email: 'test@example.com',
       name: 'Test User',
       roles: ['user'],
-      iat: Math.floor(Date.now() / 1000) - 600 // 10 minutes ago
+      iat: Math.floor(Date.now() / 1000) - 600, // 10 minutes ago
     };
 
     recentTestToken = app.generateToken(recentPayload);

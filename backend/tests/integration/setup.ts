@@ -3,7 +3,7 @@ const jwt = {
   sign: (payload: any, secret: string) => {
     // Return a simple base64-encoded payload for testing
     return `mock-jwt-${Buffer.from(JSON.stringify(payload)).toString('base64')}`;
-  }
+  },
 };
 
 /**
@@ -16,7 +16,7 @@ const jwt = {
 export function generateTestToken(
   userId: string = 'user-123',
   roles: string[] = ['user'],
-  iat: number = Math.floor(Date.now() / 1000)
+  iat: number = Math.floor(Date.now() / 1000),
 ): string {
   const payload = {
     sub: userId,
@@ -40,7 +40,7 @@ export function generateTestToken(
  */
 export function generateExpiredToken(
   userId: string = 'user-123',
-  roles: string[] = ['user']
+  roles: string[] = ['user'],
 ): string {
   const payload = {
     sub: userId,

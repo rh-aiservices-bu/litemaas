@@ -1,7 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LiteLLMService } from '../../../src/services/litellm.service';
 import type { FastifyInstance } from 'fastify';
-import type { LiteLLMModel, LiteLLMHealth, ChatCompletionRequest } from '../../../src/types/model.types';
+import type {
+  LiteLLMModel,
+  LiteLLMHealth,
+  ChatCompletionRequest,
+} from '../../../src/types/model.types';
 
 // Mock fetch for HTTP requests
 global.fetch = vi.fn();
@@ -121,18 +125,20 @@ describe('LiteLLMService', () => {
         object: 'chat.completion',
         created: 1234567890,
         model: 'gpt-4',
-        choices: [{
-          index: 0,
-          message: { role: 'assistant', content: 'Hello! How can I help you?' },
-          finish_reason: 'stop',
-        }],
+        choices: [
+          {
+            index: 0,
+            message: { role: 'assistant', content: 'Hello! How can I help you?' },
+            finish_reason: 'stop',
+          },
+        ],
         usage: {
           prompt_tokens: 10,
           completion_tokens: 8,
           total_tokens: 18,
         },
       };
-      
+
       const mockResponse: MockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockCompletion),
@@ -172,7 +178,9 @@ describe('LiteLLMService', () => {
         messages: [{ role: 'user', content: 'Hello!' }],
       };
 
-      await expect(service.chatCompletion(requestData)).rejects.toThrow('LiteLLM API error: 400 - Invalid request');
+      await expect(service.chatCompletion(requestData)).rejects.toThrow(
+        'LiteLLM API error: 400 - Invalid request',
+      );
     });
   });
 
@@ -184,7 +192,7 @@ describe('LiteLLMService', () => {
         redis: 'connected',
         litellm_version: '1.74.3',
       };
-      
+
       const mockResponse: MockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockHealth),
@@ -215,7 +223,7 @@ describe('LiteLLMService', () => {
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getHealth();
-      
+
       expect(result).toEqual({
         status: 'unhealthy',
         db: 'unknown',
@@ -227,7 +235,7 @@ describe('LiteLLMService', () => {
         status: 'healthy',
         db: 'connected',
       };
-      
+
       const mockResponse: MockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockHealth),
@@ -359,7 +367,7 @@ describe('LiteLLMService', () => {
         spend: 0,
         created_at: new Date().toISOString(),
       };
-      
+
       const mockResponse: MockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockUserResponse),
@@ -382,7 +390,7 @@ describe('LiteLLMService', () => {
         max_budget: 100,
         spend: 25,
       };
-      
+
       const mockResponse: MockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockUserResponse),
@@ -399,7 +407,7 @@ describe('LiteLLMService', () => {
         user_id: 'user-123',
         teams: [], // Empty teams array indicates user doesn't exist
       };
-      
+
       const mockResponse: MockResponse = {
         ok: true,
         json: vi.fn().mockResolvedValue(mockUserResponse),

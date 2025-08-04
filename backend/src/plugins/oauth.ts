@@ -10,7 +10,10 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorate('oauth', oauthService);
 
   // Session store for OAuth state (in production, use Redis)
-  const sessionStore = new Map<string, { state: string; timestamp: number; callbackUrl?: string }>();
+  const sessionStore = new Map<
+    string,
+    { state: string; timestamp: number; callbackUrl?: string }
+  >();
 
   // Clean up expired sessions every 5 minutes
   setInterval(

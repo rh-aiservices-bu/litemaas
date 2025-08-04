@@ -253,9 +253,7 @@
         "custom": "Aderthad",
         "overview": "Tiradhren",
         "byModels": "E Erain",
-        "timeAnalysis": "Minlamad Lû",
-        "errors": "Goth",
-        "errorAnalysis": "Minlamad Goth"
+        "errors": "Goth"
       },
       "dateRanges": {
         "last7Days": "Methen 7 vaer",
@@ -273,19 +271,14 @@
       },
       "charts": {
         "dailyUsage": "Aduial Vaer",
-        "hourlyRequests": "Eruin Dú",
         "modelUsageDistribution": "Aduial Erain Dangen",
         "errorTypes": "Rhain Goth",
         "usageTrends": "Aduial Tiradhren",
         "topModelsByUsage": "Erain Arphent e Aduial",
-        "usageByModel": "Aduial e Erain",
-        "hourlyUsagePattern": "Rhain Aduial Dú",
-        "errorBreakdown": "Aphad Goth",
-        "errorDetails": "Annadhren Goth"
+        "usageByModel": "Aduial e Erain"
       },
       "tables": {
-        "topModels": "Thabent erain arphent",
-        "errorBreakdown": "Thabent aphad goth"
+        "topModels": "Thabent erain arphent"
       },
       "tableHeaders": {
         "model": "Erain",
@@ -293,7 +286,6 @@
         "tokens": "Anguin",
         "cost": "Cost",
         "usagePercent": "Aduial %",
-        "errorType": "Rhain Goth",
         "count": "Gaennad",
         "percentage": "Percentage"
       },

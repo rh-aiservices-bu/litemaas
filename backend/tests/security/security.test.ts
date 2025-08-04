@@ -20,11 +20,7 @@ describe('Security Tests', () => {
   describe('Authentication & Authorization', () => {
     it('should reject requests without authentication', async () => {
       // Note: /api/v1/models is intentionally public and doesn't require authentication
-      const protectedEndpoints = [
-        '/api/v1/subscriptions',
-        '/api/v1/api-keys',
-        '/api/v1/usage',
-      ];
+      const protectedEndpoints = ['/api/v1/subscriptions', '/api/v1/api-keys', '/api/v1/usage'];
 
       for (const endpoint of protectedEndpoints) {
         const response = await app.inject({
@@ -279,8 +275,10 @@ describe('Security Tests', () => {
       const rateLimitedResponses = responses.filter((r) => r.statusCode === 429);
       const unauthorizedResponses = responses.filter((r) => r.statusCode === 401);
       const successfulResponses = responses.filter((r) => r.statusCode === 200);
-      
-      expect(rateLimitedResponses.length + unauthorizedResponses.length + successfulResponses.length).toBeGreaterThan(0);
+
+      expect(
+        rateLimitedResponses.length + unauthorizedResponses.length + successfulResponses.length,
+      ).toBeGreaterThan(0);
     });
 
     it('should enforce global rate limits', async () => {
@@ -304,8 +302,10 @@ describe('Security Tests', () => {
       const rateLimitedResponses = responses.filter((r) => r.statusCode === 429);
       const unauthorizedResponses = responses.filter((r) => r.statusCode === 401);
       const successfulResponses = responses.filter((r) => r.statusCode === 200);
-      
-      expect(rateLimitedResponses.length + unauthorizedResponses.length + successfulResponses.length).toBeGreaterThan(0);
+
+      expect(
+        rateLimitedResponses.length + unauthorizedResponses.length + successfulResponses.length,
+      ).toBeGreaterThan(0);
     });
   });
 
@@ -430,5 +430,4 @@ describe('Security Tests', () => {
       }
     });
   });
-
 });

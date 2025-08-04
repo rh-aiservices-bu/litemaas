@@ -37,10 +37,13 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     handler: async (request, _reply) => {
       try {
         // Determine the callback URL that will be used
-        const origin = request.headers.origin || 
-                      (request.headers.host ? `${request.protocol}://${request.headers.host}` : null);
-        const callbackUrl = origin ? `${origin}/api/auth/callback` : fastify.config.OAUTH_CALLBACK_URL;
-        
+        const origin =
+          request.headers.origin ||
+          (request.headers.host ? `${request.protocol}://${request.headers.host}` : null);
+        const callbackUrl = origin
+          ? `${origin}/api/auth/callback`
+          : fastify.config.OAUTH_CALLBACK_URL;
+
         // Store the callback URL with the state
         const state = fastify.oauthHelpers.generateAndStoreState(callbackUrl);
         const authUrl = fastify.oauth.generateAuthUrl(state, request);
@@ -200,7 +203,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Process user (create or update in database)
         const user = await fastify.oauth.processOAuthUser(userInfo);
-        
+
         // Clear the state now that authentication is successful
         fastify.oauthHelpers.clearState(state);
 

@@ -44,43 +44,12 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
 import { usageService, UsageMetrics, UsageFilters } from '../services/usage.service';
 import { apiKeysService, ApiKey } from '../services/apiKeys.service';
-
-// Mock chart component since PatternFly charts require additional setup
-const MockLineChart = ({ title }: { data: any[]; title: string }) => (
-  <div
-    style={{
-      height: '200px',
-      border: '1px solid var(--pf-v6-global--border--color)',
-      borderRadius: '4px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'var(--pf-v6-global--background--color)',
-    }}
-  >
-    <Content component={ContentVariants.p} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
-      📊 {title} Chart
-    </Content>
-  </div>
-);
-
-const MockDonutChart = ({ title }: { data: any[]; title: string }) => (
-  <div
-    style={{
-      height: '200px',
-      border: '1px solid var(--pf-v6-global--border--color)',
-      borderRadius: '4px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: 'var(--pf-v6-global--background--color)',
-    }}
-  >
-    <Content component={ContentVariants.p} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
-      🍩 {title} Chart
-    </Content>
-  </div>
-);
+import { UsageLineChart, ModelDistributionChart } from '../components/charts';
+import {
+  transformDailyUsageToChartData,
+  transformModelBreakdownToChartData,
+} from '../utils/chartDataTransformers';
+import { maskApiKey } from '../utils/security.utils';
 
 const UsagePage: React.FC = () => {
   const { t } = useTranslation();
@@ -96,6 +65,8 @@ const UsagePage: React.FC = () => {
   const [showCustomDatePickers, setShowCustomDatePickers] = useState(false);
   const [viewType, setViewType] = useState('overview');
   const [isViewTypeOpen, setIsViewTypeOpen] = useState(false);
+  const [selectedMetric, setSelectedMetric] = useState<'requests' | 'tokens' | 'cost'>('requests');
+  const [isMetricSelectOpen, setIsMetricSelectOpen] = useState(false);
 
   // API Key states
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
@@ -413,15 +384,16 @@ const UsagePage: React.FC = () => {
                       ? t('pages.usage.loadingApiKeys')
                       : apiKeys.length === 0
                         ? t('pages.usage.noApiKeys')
-                        : apiKeys.find((key) => key.id === selectedApiKey)?.name ||
-                          t('pages.usage.selectApiKey')}
+                        : selectedApiKey
+                          ? `${apiKeys.find((key) => key.id === selectedApiKey)?.name || 'Unknown'} (${maskApiKey(apiKeys.find((key) => key.id === selectedApiKey)?.keyPreview || '')})`
+                          : t('pages.usage.selectApiKey')}
                   </MenuToggle>
                 )}
               >
                 <SelectList>
                   {apiKeys.map((apiKey) => (
                     <SelectOption key={apiKey.id} value={apiKey.id}>
-                      {apiKey.name}
+                      {apiKey.name} ({maskApiKey(apiKey.keyPreview || '')})
                     </SelectOption>
                   ))}
                 </SelectList>
@@ -515,19 +487,13 @@ const UsagePage: React.FC = () => {
                       ? t('pages.usage.filters.overview')
                       : viewType === 'models'
                         ? t('pages.usage.filters.byModels')
-                        : viewType === 'time'
-                          ? t('pages.usage.filters.timeAnalysis')
-                          : t('pages.usage.filters.errors')}
+                        : t('pages.usage.filters.overview')}
                   </MenuToggle>
                 )}
               >
                 <SelectList>
                   <SelectOption value="overview">{t('pages.usage.filters.overview')}</SelectOption>
                   <SelectOption value="models">{t('pages.usage.filters.byModels')}</SelectOption>
-                  <SelectOption value="time">{t('pages.usage.filters.timeAnalysis')}</SelectOption>
-                  <SelectOption value="errors">
-                    {t('pages.usage.filters.errorAnalysis')}
-                  </SelectOption>
                 </SelectList>
               </Select>
             </ToolbarItem>
@@ -673,14 +639,62 @@ const UsagePage: React.FC = () => {
               <GridItem lg={8}>
                 <Card>
                   <CardTitle>
-                    <Title headingLevel="h3" size="lg">
-                      {t('pages.usage.charts.usageTrends')}
-                    </Title>
+                    <Flex
+                      justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                      alignItems={{ default: 'alignItemsCenter' }}
+                    >
+                      <FlexItem>
+                        <Title headingLevel="h3" size="lg">
+                          {t('pages.usage.charts.usageTrends')}
+                        </Title>
+                      </FlexItem>
+                      <FlexItem>
+                        <Select
+                          id="metric-select"
+                          isOpen={isMetricSelectOpen}
+                          selected={selectedMetric}
+                          onSelect={(_event, value) => {
+                            setSelectedMetric(value as 'requests' | 'tokens' | 'cost');
+                            setIsMetricSelectOpen(false);
+                          }}
+                          onOpenChange={setIsMetricSelectOpen}
+                          toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
+                            <MenuToggle
+                              ref={toggleRef}
+                              onClick={() => setIsMetricSelectOpen(!isMetricSelectOpen)}
+                              variant="plainText"
+                            >
+                              {selectedMetric === 'requests'
+                                ? t('pages.usage.metrics.totalRequests')
+                                : selectedMetric === 'tokens'
+                                  ? t('pages.usage.metrics.totalTokens')
+                                  : t('pages.usage.metrics.totalCost')}
+                            </MenuToggle>
+                          )}
+                        >
+                          <SelectList>
+                            <SelectOption value="requests">
+                              {t('pages.usage.metrics.totalRequests')}
+                            </SelectOption>
+                            <SelectOption value="tokens">
+                              {t('pages.usage.metrics.totalTokens')}
+                            </SelectOption>
+                            <SelectOption value="cost">
+                              {t('pages.usage.metrics.totalCost')}
+                            </SelectOption>
+                          </SelectList>
+                        </Select>
+                      </FlexItem>
+                    </Flex>
                   </CardTitle>
                   <CardBody>
-                    <MockLineChart
-                      data={metrics.dailyUsage}
-                      title={t('pages.usage.charts.dailyUsage')}
+                    <UsageLineChart
+                      data={transformDailyUsageToChartData(metrics.dailyUsage)[selectedMetric]}
+                      metricType={selectedMetric}
+                      height={300}
+                      width="auto"
+                      showArea={true}
+                      ariaLabel={t('pages.usage.charts.dailyUsage')}
                     />
                   </CardBody>
                 </Card>
@@ -802,98 +816,25 @@ const UsagePage: React.FC = () => {
               </Title>
             </CardTitle>
             <CardBody>
-              <MockDonutChart
-                data={metrics.topModels}
-                title={t('pages.usage.charts.modelUsageDistribution')}
-              />
-            </CardBody>
-          </Card>
-        )}
-
-        {metrics && viewType === 'time' && (
-          <Card>
-            <CardTitle>
-              <Title headingLevel="h3" size="lg">
-                {t('pages.usage.charts.hourlyUsagePattern')}
-              </Title>
-            </CardTitle>
-            <CardBody>
-              <MockLineChart
-                data={metrics.hourlyUsage}
-                title={t('pages.usage.charts.hourlyRequests')}
-              />
-            </CardBody>
-          </Card>
-        )}
-
-        {metrics && viewType === 'errors' && (
-          <Grid hasGutter>
-            <GridItem lg={6}>
-              <Card>
-                <CardTitle>
-                  <Title headingLevel="h3" size="lg">
-                    {t('pages.usage.charts.errorBreakdown')}
-                  </Title>
-                </CardTitle>
-                <CardBody>
-                  <MockDonutChart
-                    data={metrics.errorBreakdown}
-                    title={t('pages.usage.charts.errorTypes')}
+              {(() => {
+                const transformedData = transformModelBreakdownToChartData(
+                  metrics.topModels,
+                  metrics.totalRequests,
+                );
+                return (
+                  <ModelDistributionChart
+                    data={transformedData.chartData}
+                    modelBreakdown={transformedData.modelBreakdown}
+                    size={300}
+                    width="auto"
+                    showLegend={true}
+                    showBreakdown={true}
+                    ariaLabel={t('pages.usage.charts.modelUsageDistribution')}
                   />
-                </CardBody>
-              </Card>
-            </GridItem>
-
-            <GridItem lg={6}>
-              <Card>
-                <CardTitle>
-                  <Title headingLevel="h3" size="lg">
-                    {t('pages.usage.charts.errorDetails')}
-                  </Title>
-                </CardTitle>
-                <CardBody>
-                  <Table aria-label={t('pages.usage.tables.errorBreakdown')} variant="compact">
-                    <Thead>
-                      <Tr>
-                        <Th>{t('pages.usage.tableHeaders.errorType')}</Th>
-                        <Th>{t('pages.usage.tableHeaders.count')}</Th>
-                        <Th>{t('pages.usage.tableHeaders.percentage')}</Th>
-                      </Tr>
-                    </Thead>
-                    <Tbody>
-                      {metrics.errorBreakdown.map((error, index) => (
-                        <Tr key={index}>
-                          <Td>
-                            <strong>{error.type}</strong>
-                          </Td>
-                          <Td>{error.count}</Td>
-                          <Td>
-                            <Flex
-                              alignItems={{ default: 'alignItemsCenter' }}
-                              spaceItems={{ default: 'spaceItemsSm' }}
-                            >
-                              <FlexItem style={{ minWidth: '60px' }}>
-                                <Progress
-                                  value={error.percentage}
-                                  measureLocation={ProgressMeasureLocation.none}
-                                  variant="warning"
-                                />
-                              </FlexItem>
-                              <FlexItem>
-                                <Content component={ContentVariants.small}>
-                                  {error.percentage}%
-                                </Content>
-                              </FlexItem>
-                            </Flex>
-                          </Td>
-                        </Tr>
-                      ))}
-                    </Tbody>
-                  </Table>
-                </CardBody>
-              </Card>
-            </GridItem>
-          </Grid>
+                );
+              })()}
+            </CardBody>
+          </Card>
         )}
       </PageSection>
     </>

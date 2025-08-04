@@ -8,6 +8,11 @@ import {
   AuthenticatedRequest,
 } from '../types';
 import { UsageStatsService } from '../services/usage-stats.service';
+import {
+  validateUsageMetricsQuery,
+  validateUsageSummaryQuery,
+  validateUsageExportQuery,
+} from '../validators/usage.validator';
 
 const usageRoutes: FastifyPluginAsync = async (fastify) => {
   // Initialize usage stats service
@@ -40,15 +45,6 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         tokens: number;
         cost: number;
       }>;
-      hourlyUsage: Array<{
-        hour: string;
-        requests: number;
-      }>;
-      errorBreakdown: Array<{
-        type: string;
-        count: number;
-        percentage: number;
-      }>;
     };
   }>('/metrics', {
     schema: {
@@ -61,21 +57,24 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
           startDate: { type: 'string', format: 'date' },
           endDate: { type: 'string', format: 'date' },
           modelId: { type: 'string' },
-          apiKeyId: { type: 'string' },
+          apiKeyId: { type: 'string', format: 'uuid' },
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: [fastify.authenticateWithDevBypass, validateUsageMetricsQuery],
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, modelId, apiKeyId } = request.query;
-      
-      fastify.log.info({ 
-        userId: user.userId, 
-        apiKeyId, 
-        startDate, 
-        endDate 
-      }, 'Usage metrics request received');
+
+      fastify.log.info(
+        {
+          userId: user.userId,
+          apiKeyId,
+          startDate,
+          endDate,
+        },
+        'Usage metrics request received',
+      );
 
       try {
         const stats = await usageStatsService.getUsageStats({
@@ -87,11 +86,11 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
           aggregateBy: 'model',
         });
 
-        // Transform backend response to frontend format
+        // Transform backend response to frontend format using real LiteLLM data
         const response = {
           totalRequests: stats.totalMetrics.totalRequests,
           totalTokens: stats.totalMetrics.totalTokens,
-          totalCost: Math.round(stats.totalMetrics.totalTokens * 0.0015 * 100) / 100, // Estimate cost
+          totalCost: stats.totalMetrics.totalCost || 0, // Use actual cost from LiteLLM
           averageResponseTime: stats.totalMetrics.averageLatency,
           successRate: stats.totalMetrics.successRate,
           activeModels: stats.modelBreakdown?.length || 0,
@@ -100,49 +99,25 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
               name: model.modelName || model.modelId,
               requests: model.totalRequests,
               tokens: model.totalTokens,
-              cost: Math.round(model.totalTokens * 0.0015 * 100) / 100,
+              cost: model.totalCost || 0, // Use actual model cost
             })) || [],
           dailyUsage:
             stats.timeSeriesData?.map((period) => ({
               date: period.period,
               requests: period.totalRequests,
               tokens: period.totalTokens,
-              cost: Math.round(period.totalTokens * 0.0015 * 100) / 100,
+              cost: period.totalCost || 0, // Use actual daily cost
             })) || [],
-          hourlyUsage:
-            stats.timeSeriesData?.slice(0, 24).map((period, index) => ({
-              hour: `${index}:00`,
-              requests: Math.round(period.totalRequests / 24),
-            })) || [],
-          errorBreakdown: [
-            {
-              type: 'Rate Limit',
-              count: Math.round(stats.totalMetrics.totalRequests * 0.01),
-              percentage: 1.0,
-            },
-            {
-              type: 'Authentication',
-              count: Math.round(stats.totalMetrics.totalRequests * 0.005),
-              percentage: 0.5,
-            },
-            {
-              type: 'Server Error',
-              count: Math.round(stats.totalMetrics.totalRequests * 0.008),
-              percentage: 0.8,
-            },
-            {
-              type: 'Invalid Request',
-              count: Math.round(stats.totalMetrics.totalRequests * 0.007),
-              percentage: 0.7,
-            },
-          ],
         };
-        
-        fastify.log.info({ 
-          totalRequests: response.totalRequests,
-          totalTokens: response.totalTokens,
-          modelCount: response.topModels.length 
-        }, 'Returning usage metrics response');
+
+        fastify.log.info(
+          {
+            totalRequests: response.totalRequests,
+            totalTokens: response.totalTokens,
+            modelCount: response.topModels.length,
+          },
+          'Returning usage metrics response',
+        );
 
         return response;
       } catch (error: unknown) {
@@ -217,7 +192,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: [fastify.authenticateWithDevBypass, validateUsageSummaryQuery],
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, modelId, subscriptionId, granularity } = request.query;
@@ -241,7 +216,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
           totals: {
             requests: stats.totalMetrics.totalRequests,
             tokens: stats.totalMetrics.totalTokens,
-            cost: Math.round(stats.totalMetrics.totalTokens * 0.0015 * 100) / 100,
+            cost: stats.totalMetrics.totalCost || 0,
             inputTokens: stats.totalMetrics.totalInputTokens,
             outputTokens: stats.totalMetrics.totalOutputTokens,
             averageLatency: stats.totalMetrics.averageLatency,
@@ -253,7 +228,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
             modelName: model.modelName || model.modelId,
             requests: model.totalRequests,
             tokens: model.totalTokens,
-            cost: Math.round(model.totalTokens * 0.0015 * 100) / 100,
+            cost: model.totalCost || 0,
           })),
         };
       } catch (error: unknown) {
@@ -332,7 +307,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
             timestamp: period.startTime,
             requests: period.totalRequests,
             tokens: period.totalTokens,
-            cost: Math.round(period.totalTokens * 0.0015 * 100) / 100,
+            cost: period.totalCost || 0,
             period: period.period,
             startTime: period.startTime,
             endTime: period.endTime,
@@ -511,7 +486,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: [fastify.authenticateWithDevBypass, validateUsageExportQuery],
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
       const {

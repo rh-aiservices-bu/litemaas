@@ -255,9 +255,7 @@
         "custom": "カスタム",
         "overview": "概要",
         "byModels": "モデル別",
-        "timeAnalysis": "時間分析",
         "errors": "エラー",
-        "errorAnalysis": "エラー分析",
         "startDate": "開始日",
         "endDate": "終了日",
         "selectStartDate": "開始日を選択",
@@ -279,19 +277,14 @@
       },
       "charts": {
         "dailyUsage": "日次使用量",
-        "hourlyRequests": "時間別リクエスト",
         "modelUsageDistribution": "モデル使用分布",
         "errorTypes": "エラータイプ",
         "usageTrends": "使用傾向",
         "topModelsByUsage": "使用量別上位モデル",
-        "usageByModel": "モデル別使用量",
-        "hourlyUsagePattern": "時間別使用パターン",
-        "errorBreakdown": "エラー内訳",
-        "errorDetails": "エラー詳細"
+        "usageByModel": "モデル別使用量"
       },
       "tables": {
-        "topModels": "上位モデルテーブル",
-        "errorBreakdown": "エラー内訳テーブル"
+        "topModels": "上位モデルテーブル"
       },
       "tableHeaders": {
         "model": "モデル",
@@ -299,7 +292,6 @@
         "tokens": "トークン",
         "cost": "コスト",
         "usagePercent": "使用率 %",
-        "errorType": "エラータイプ",
         "count": "カウント",
         "percentage": "パーセンテージ"
       },

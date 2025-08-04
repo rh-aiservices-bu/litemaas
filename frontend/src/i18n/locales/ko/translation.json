@@ -255,9 +255,7 @@
         "custom": "사용자 정의",
         "overview": "개요",
         "byModels": "모델별",
-        "timeAnalysis": "시간 분석",
         "errors": "오류",
-        "errorAnalysis": "오류 분석",
         "startDate": "시작일",
         "endDate": "종료일",
         "selectStartDate": "시작일 선택",
@@ -279,19 +277,14 @@
       },
       "charts": {
         "dailyUsage": "일일 사용량",
-        "hourlyRequests": "시간별 요청",
         "modelUsageDistribution": "모델 사용량 분포",
         "errorTypes": "오류 유형",
         "usageTrends": "사용량 추세",
         "topModelsByUsage": "사용량별 상위 모델",
-        "usageByModel": "모델별 사용량",
-        "hourlyUsagePattern": "시간별 사용 패턴",
-        "errorBreakdown": "오류 분석",
-        "errorDetails": "오류 상세 정보"
+        "usageByModel": "모델별 사용량"
       },
       "tables": {
-        "topModels": "상위 모델 테이블",
-        "errorBreakdown": "오류 분석 테이블"
+        "topModels": "상위 모델 테이블"
       },
       "tableHeaders": {
         "model": "모델",
@@ -299,7 +292,6 @@
         "tokens": "토큰",
         "cost": "비용",
         "usagePercent": "사용률 %",
-        "errorType": "오류 유형",
         "count": "개수",
         "percentage": "백분율"
       },

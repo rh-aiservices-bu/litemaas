@@ -253,9 +253,7 @@
         "custom": "Personalizzato",
         "overview": "Panoramica",
         "byModels": "Per Modelli",
-        "timeAnalysis": "Analisi Temporale",
-        "errors": "Errori",
-        "errorAnalysis": "Analisi Errori"
+        "errors": "Errori"
       },
       "dateRanges": {
         "last7Days": "Ultimi 7 giorni",
@@ -273,19 +271,14 @@
       },
       "charts": {
         "dailyUsage": "Utilizzo Giornaliero",
-        "hourlyRequests": "Richieste Orarie",
         "modelUsageDistribution": "Distribuzione Utilizzo Modelli",
         "errorTypes": "Tipi di Errore",
         "usageTrends": "Trend di Utilizzo",
         "topModelsByUsage": "Top Modelli per Utilizzo",
-        "usageByModel": "Utilizzo per Modello",
-        "hourlyUsagePattern": "Pattern Utilizzo Orario",
-        "errorBreakdown": "Suddivisione Errori",
-        "errorDetails": "Dettagli Errori"
+        "usageByModel": "Utilizzo per Modello"
       },
       "tables": {
-        "topModels": "Tabella top modelli",
-        "errorBreakdown": "Tabella suddivisione errori"
+        "topModels": "Tabella top modelli"
       },
       "tableHeaders": {
         "model": "Modello",
@@ -293,7 +286,6 @@
         "tokens": "Token",
         "cost": "Costo",
         "usagePercent": "Utilizzo %",
-        "errorType": "Tipo Errore",
         "count": "Conteggio",
         "percentage": "Percentuale"
       },

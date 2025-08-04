@@ -123,7 +123,7 @@ export class OAuthService {
     // Use the stored callback URL from the authorization phase
     const storedCallbackUrl = (this.fastify as any).oauthHelpers.getStoredCallbackUrl(state);
     const callbackUrl = storedCallbackUrl || this.getCallbackUrl(request);
-    
+
     this.fastify.log.debug(
       {
         callbackUrl,
