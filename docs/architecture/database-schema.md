@@ -6,25 +6,22 @@ PostgreSQL database schema for LiteMaaS application with focus on user managemen
 ## Tables
 
 ### users
-Stores user information from OpenShift OAuth with LiteLLM integration
+Stores user information from OAuth authentication with LiteLLM integration
 ```sql
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     username VARCHAR(255) UNIQUE NOT NULL,
     email VARCHAR(255) UNIQUE NOT NULL,
     full_name VARCHAR(255),
-    oauth_provider VARCHAR(50) DEFAULT 'openshift',
+    oauth_provider VARCHAR(50) NOT NULL,
     oauth_id VARCHAR(255) NOT NULL,
     roles TEXT[] DEFAULT ARRAY['user'],
     is_active BOOLEAN DEFAULT true,
     
-    -- LiteLLM Integration Fields
-    litellm_user_id VARCHAR(255),
+    -- Budget and Rate Limiting
     max_budget DECIMAL(10, 2) DEFAULT 100.00,
-    current_spend DECIMAL(10, 2) DEFAULT 0.00,
     tpm_limit INTEGER DEFAULT 1000,
     rpm_limit INTEGER DEFAULT 60,
-    last_sync_at TIMESTAMP WITH TIME ZONE,
     sync_status VARCHAR(20) DEFAULT 'pending', -- pending, synced, error
     
     last_login_at TIMESTAMP WITH TIME ZONE,
@@ -33,11 +30,11 @@ CREATE TABLE users (
     UNIQUE(oauth_provider, oauth_id)
 );
 
+-- Note: lite_llm_user_id column removed - user.id is used directly as LiteLLM user_id
+
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_oauth ON users(oauth_provider, oauth_id);
-CREATE INDEX idx_users_litellm ON users(litellm_user_id);
-CREATE INDEX idx_users_sync_status ON users(sync_status);
 ```
 
 ### models

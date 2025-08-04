@@ -1,12 +1,18 @@
 # Service Layer Architecture
 
-**Last Updated**: 2025-07-30 - Comprehensive default team implementation completed
+**Last Updated**: 2025-08-04 - Updated with simplified user ID management and correct LiteLLM usage tracking
 
 ## Overview
 
 The LiteMaaS backend service layer implements the business logic and core functionality of the application. Services are designed following the single responsibility principle, with clear separation of concerns between authentication, model management, subscription handling, and external integrations.
 
-### Recent Updates (2025-07-30)
+### Recent Updates
+**2025-08-04**:
+- ✅ **Simplified User ID Management**: Removed `lite_llm_user_id` column, using `user.id` directly
+- ✅ **Fixed LiteLLM Usage Tracking**: Correctly uses internal tokens instead of API key values
+- ✅ **Enhanced Token Resolution**: Multi-step process to match API keys and retrieve internal tokens
+
+**2025-07-30**:
 - ✅ **Comprehensive Default Team Implementation**: All services now consistently implement default team assignment
 - ✅ **User Existence Detection Fix**: Team-based validation instead of unreliable HTTP status codes
 - ✅ **Model Access Control Fix**: Removed hardcoded model restrictions, enabled all-model access
@@ -47,7 +53,7 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ---
 
-### LiteLLMService ✅ **UPDATED 2025-07-30**
+### LiteLLMService ✅ **UPDATED 2025-08-04**
 **Purpose**: Core integration with LiteLLM instances
 
 **Responsibilities**:
@@ -58,6 +64,7 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - Provide fallback to mock data in development mode
 - ✅ **Team-based user existence detection** - fixed unreliable `/user/info` validation
 - ✅ **Fixed mock responses** to use empty models arrays for all-model access
+- ✅ **Token resolution for usage tracking** - matches API keys to internal tokens
 
 **Dependencies**:
 - HTTP client for API communication
@@ -70,12 +77,24 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - `testConnection()` - Verify LiteLLM connectivity
 - `executeWithFallback()` - Execute API calls with fallback strategy
 - ✅ **`getUserInfo()` with team validation** - checks teams array for actual user existence
+- ✅ **`getUserInfoFull()`** - returns complete user info with API keys array
+- ✅ **`getApiKeyToken()`** - matches API key by last 4 chars and returns internal token
+- ✅ **`getDailyActivity()`** - fetches usage data using internal token (not API key value)
 - ✅ **`createTeam()` and `getTeamInfo()`** - fixed mock responses to return `models: []`
 
 **User Existence Detection Fix**:
 - ✅ **Before**: HTTP 200 always returned, causing false positives
 - ✅ **After**: Empty teams array = user doesn't exist in LiteLLM
 - ✅ **Implementation**: Lines 699 and 728 fixed in mock responses
+
+**Usage Tracking Fix (2025-08-04)**:
+- ✅ **Problem**: LiteLLM `/user/daily/activity` requires internal token, not API key value
+- ✅ **Solution**: Multi-step token resolution process
+- ✅ **Implementation**: 
+  1. Call `/user/info?user_id={userId}` to get all keys
+  2. Match API key by last 4 characters
+  3. Extract internal `token` field
+  4. Use token for usage queries
 
 ---
 
@@ -337,8 +356,8 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ---
 
-### UsageStatsService
-**Purpose**: Usage analytics and reporting
+### UsageStatsService ✅ **UPDATED 2025-08-04**
+**Purpose**: Usage analytics and reporting with LiteLLM integration
 
 **Responsibilities**:
 - Track API usage per user/team/model
@@ -346,11 +365,14 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - Generate usage reports and analytics
 - Monitor budget utilization
 - Provide real-time usage metrics
+- ✅ **Integrate with LiteLLM for real-time usage data**
+- ✅ **Handle token resolution for usage queries**
 
 **Dependencies**:
 - Database for usage storage
 - Model pricing information
 - Real-time aggregation engine
+- ✅ **LiteLLMService for token resolution and usage data**
 
 **Key Operations**:
 - `recordUsage()` - Log API usage event
@@ -358,6 +380,14 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - `generateReport()` - Create usage analytics
 - `getRealtimeMetrics()` - Fetch current usage
 - `alertOnThreshold()` - Trigger budget alerts
+- ✅ **`getUsageFromLiteLLM()`** - Fetches usage with proper token resolution
+- ✅ **`getUsageMetrics()`** - Main endpoint that tries LiteLLM first, falls back to DB
+
+**Usage Tracking Implementation (2025-08-04)**:
+- ✅ **SQL Query Fix**: Changed from `u.user_id` to `u.id` for LiteLLM user ID
+- ✅ **Token Resolution**: Gets internal token before calling LiteLLM usage endpoint
+- ✅ **Fallback Strategy**: Returns local database data if LiteLLM unavailable
+- ✅ **Mock Data**: Provides realistic mock data in development mode
 
 ## Service Interaction Patterns
 
@@ -410,6 +440,16 @@ The LiteMaaS backend service layer implements the business logic and core functi
 3. ModelSyncService updates database
 4. SubscriptionService handles unavailable models
 5. Audit log records sync operation
+
+### Usage Tracking Flow (Updated 2025-08-04)
+1. **Frontend requests usage metrics with API key ID**
+2. **UsageStatsService queries database for key metadata**
+3. **Service retrieves user ID and LiteLLM key value**
+4. **LiteLLMService.getUserInfoFull() fetches complete user info**
+5. **Service matches API key by last 4 characters**
+6. **Extracts internal token from matched key**
+7. **LiteLLMService.getDailyActivity() uses token for usage query**
+8. **Falls back to local database if LiteLLM unavailable**
 
 ## Error Handling
 

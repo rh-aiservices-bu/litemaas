@@ -1,10 +1,10 @@
 # Authentication Flow Implementation
 
-**Last Updated**: 2025-07-30 - Updated with comprehensive default team implementation
+**Last Updated**: 2025-08-04 - Updated with simplified user ID management and LiteLLM integration
 
 ## Overview
 
-LiteMaaS implements a comprehensive authentication system that supports OpenShift OAuth 2.0 for production environments while providing a convenient mock mode for development.
+LiteMaaS implements a comprehensive authentication system that supports OAuth 2.0 (primarily OpenShift) for production environments while providing a convenient mock mode for development. The system automatically provisions users in both the local database and LiteLLM proxy service.
 
 ## Architecture
 
