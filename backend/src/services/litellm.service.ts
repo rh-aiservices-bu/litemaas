@@ -15,6 +15,7 @@ import {
 import {
   LiteLLMUserRequest,
   LiteLLMUserResponse,
+  LiteLLMUserInfoResponse,
   LiteLLMTeamRequest,
   LiteLLMTeamResponse,
 } from '../types/user.types.js';
@@ -447,17 +448,16 @@ export class LiteLLMService {
         size: '100', // Get more keys to find the match
       });
 
-      const response = await this.makeRequest<any>(
-        `/key/list?${queryParams.toString()}`,
-        {
-          method: 'GET',
-        },
-      );
+      const response = await this.makeRequest<any>(`/key/list?${queryParams.toString()}`, {
+        method: 'GET',
+      });
 
       // Find the key with matching alias
       const keys = response.keys || response.data || [];
-      const matchingKey = keys.find((key: any) => key.key_alias === keyAlias || key.key_name === keyAlias);
-      
+      const matchingKey = keys.find(
+        (key: any) => key.key_alias === keyAlias || key.key_name === keyAlias,
+      );
+
       if (matchingKey && matchingKey.token) {
         this.setCache(cacheKey, matchingKey.token, 300); // Cache for 5 minutes
         return matchingKey.token;
@@ -737,6 +737,190 @@ export class LiteLLMService {
     }
   }
 
+  // Get full user info including keys
+  async getUserInfoFull(userId: string): Promise<LiteLLMUserInfoResponse | null> {
+    this.fastify.log.debug(
+      {
+        userId,
+        enableMocking: this.config.enableMocking,
+        baseUrl: this.config.baseUrl,
+      },
+      'LiteLLM getUserInfo (full) called',
+    );
+
+    if (this.config.enableMocking) {
+      this.fastify.log.debug({ userId }, 'LiteLLM is in MOCK MODE - returning mock full user info');
+
+      const mockResponse: LiteLLMUserInfoResponse = {
+        user_id: userId,
+        user_info: {
+          user_id: userId,
+          user_alias: `User ${userId}`,
+          user_email: `user-${userId}@example.com`,
+          user_role: 'internal_user',
+          teams: ['a0000000-0000-4000-8000-000000000001'],
+          max_budget: 100,
+          spend: Math.random() * 50,
+          models: [],
+          tpm_limit: 1000,
+          rpm_limit: 60,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        keys: [
+          {
+            token: 'mock-token-' + Math.random().toString(36).substring(7),
+            key_name: 'sk-...mock',
+            key_alias: 'mock-key-alias',
+            spend: 0,
+            models: ['gpt-4o'],
+            user_id: userId,
+            metadata: {},
+            created_at: new Date().toISOString(),
+          },
+        ],
+        teams: [
+          {
+            team_alias: 'Default Team',
+            team_id: 'a0000000-0000-4000-8000-000000000001',
+            models: [],
+            max_budget: 10000,
+            tpm_limit: 50000,
+            rpm_limit: 1000,
+            spend: 0,
+            created_at: new Date().toISOString(),
+          },
+        ],
+      };
+
+      return this.createMockResponse(mockResponse);
+    }
+
+    try {
+      this.fastify.log.debug(
+        {
+          userId,
+          endpoint: `/user/info?user_id=${userId}`,
+          baseUrl: this.config.baseUrl,
+        },
+        'Sending real API request to LiteLLM to get full user info',
+      );
+
+      const response = await this.makeRequest<LiteLLMUserInfoResponse>(
+        `/user/info?user_id=${userId}`,
+      );
+
+      // Check if user actually exists by examining teams in user_info
+      if (!response.user_info?.teams || response.user_info.teams.length === 0) {
+        this.fastify.log.info(
+          {
+            userId,
+            response: {
+              user_id: response.user_id,
+              teams: response.user_info?.teams,
+            },
+          },
+          'User does not exist in LiteLLM (empty teams array)',
+        );
+        return null;
+      }
+
+      this.fastify.log.debug(
+        {
+          userId,
+          keysCount: response.keys?.length || 0,
+          teamsCount: response.teams?.length || 0,
+        },
+        'Successfully retrieved full user info from LiteLLM',
+      );
+
+      return response;
+    } catch (error) {
+      this.fastify.log.error(
+        {
+          userId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          errorStack: error instanceof Error ? error.stack : undefined,
+          baseUrl: this.config.baseUrl,
+          endpoint: `/user/info?user_id=${userId}`,
+        },
+        'Failed to get full user info from LiteLLM',
+      );
+      throw error;
+    }
+  }
+
+  // Get the internal LiteLLM token for an API key
+  async getApiKeyToken(userId: string, liteLLMKeyValue: string): Promise<string | null> {
+    try {
+      this.fastify.log.debug(
+        {
+          userId,
+          keyValue: liteLLMKeyValue?.substring(0, 10) + '...',
+        },
+        'Getting API key token from LiteLLM',
+      );
+
+      // Get full user info including keys
+      const userInfo = await this.getUserInfoFull(userId);
+      if (!userInfo || !userInfo.keys) {
+        this.fastify.log.warn({ userId }, 'No user info or keys found for user');
+        return null;
+      }
+
+      // Extract last 4 characters of the liteLLMKeyValue
+      const last4Chars = liteLLMKeyValue.slice(-4);
+
+      this.fastify.log.debug(
+        {
+          userId,
+          last4Chars,
+          keysCount: userInfo.keys.length,
+        },
+        'Searching for matching key by last 4 characters',
+      );
+
+      // Find the key that matches the last 4 characters
+      const matchingKey = userInfo.keys.find((key) => {
+        // key_name format is "sk-...XXXX" where XXXX are last 4 chars
+        const keyNameLast4 = key.key_name?.slice(-4);
+        return keyNameLast4 === last4Chars;
+      });
+
+      if (!matchingKey) {
+        this.fastify.log.warn(
+          {
+            userId,
+            last4Chars,
+            availableKeys: userInfo.keys.map((k) => k.key_name),
+          },
+          'No matching key found by last 4 characters',
+        );
+        return null;
+      }
+
+      this.fastify.log.info(
+        {
+          userId,
+          keyAlias: matchingKey.key_alias,
+          keyName: matchingKey.key_name,
+        },
+        'Found matching key, returning token',
+      );
+
+      return matchingKey.token;
+    } catch (error) {
+      this.fastify.log.error(
+        {
+          userId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        },
+        'Failed to get API key token',
+      );
+      return null;
+    }
+  }
+
   // Team Management
   async createTeam(request: LiteLLMTeamRequest): Promise<LiteLLMTeamResponse> {
     if (this.config.enableMocking) {
@@ -882,7 +1066,10 @@ export class LiteLLMService {
 
     // Return mock data in development mode
     if (this.config.enableMocking) {
-      this.fastify.log.info({ apiKeyHash, startDate, endDate }, 'LiteLLM: Returning mock usage data');
+      this.fastify.log.info(
+        { apiKeyHash, startDate, endDate },
+        'LiteLLM: Returning mock usage data',
+      );
       const mockData = {
         spend: 12.45,
         total_tokens: 125000,
@@ -932,18 +1119,18 @@ export class LiteLLMService {
       // Parse the response according to the actual LiteLLM format
       const metadata = response.metadata || {};
       const results = response.results || [];
-      
+
       // Aggregate metrics from all dates
-      let totalSpend = metadata.total_spend || 0;
-      let totalTokens = metadata.total_tokens || 0;
-      let promptTokens = metadata.total_prompt_tokens || 0;
-      let completionTokens = metadata.total_completion_tokens || 0;
-      let apiRequests = metadata.total_api_requests || 0;
-      
+      const totalSpend = metadata.total_spend || 0;
+      const totalTokens = metadata.total_tokens || 0;
+      const promptTokens = metadata.total_prompt_tokens || 0;
+      const completionTokens = metadata.total_completion_tokens || 0;
+      const apiRequests = metadata.total_api_requests || 0;
+
       // Aggregate model breakdown
       const modelBreakdown: { [key: string]: any } = {};
       const dailyMetrics: any[] = [];
-      
+
       results.forEach((dayResult: any) => {
         // Add to daily metrics
         dailyMetrics.push({
@@ -952,22 +1139,24 @@ export class LiteLLMService {
           tokens: dayResult.metrics?.total_tokens || 0,
           requests: dayResult.metrics?.api_requests || 0,
         });
-        
+
         // Aggregate model breakdown
         if (dayResult.breakdown?.models) {
-          Object.entries(dayResult.breakdown.models).forEach(([modelName, modelData]: [string, any]) => {
-            if (!modelBreakdown[modelName]) {
-              modelBreakdown[modelName] = {
-                model: modelName,
-                spend: 0,
-                tokens: 0,
-                api_requests: 0,
-              };
-            }
-            modelBreakdown[modelName].spend += modelData.metrics?.spend || 0;
-            modelBreakdown[modelName].tokens += modelData.metrics?.total_tokens || 0;
-            modelBreakdown[modelName].api_requests += modelData.metrics?.api_requests || 0;
-          });
+          Object.entries(dayResult.breakdown.models).forEach(
+            ([modelName, modelData]: [string, any]) => {
+              if (!modelBreakdown[modelName]) {
+                modelBreakdown[modelName] = {
+                  model: modelName,
+                  spend: 0,
+                  tokens: 0,
+                  api_requests: 0,
+                };
+              }
+              modelBreakdown[modelName].spend += modelData.metrics?.spend || 0;
+              modelBreakdown[modelName].tokens += modelData.metrics?.total_tokens || 0;
+              modelBreakdown[modelName].api_requests += modelData.metrics?.api_requests || 0;
+            },
+          );
         }
       });
 

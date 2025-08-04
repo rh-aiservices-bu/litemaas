@@ -138,6 +138,98 @@ export interface LiteLLMUserResponse {
   budget_reset_at?: string;
 }
 
+// Full response from /user/info endpoint including keys
+export interface LiteLLMUserInfoResponse {
+  user_id: string;
+  user_info: LiteLLMUserResponse & {
+    team_id?: string | null;
+    sso_user_id?: string | null;
+    organization_id?: string | null;
+    object_permission_id?: string | null;
+    password?: string | null;
+    max_parallel_requests?: number | null;
+    budget_duration?: string | null;
+    allowed_cache_controls?: string[];
+    model_spend?: Record<string, number>;
+    model_max_budget?: Record<string, number>;
+    updated_at?: string;
+    litellm_organization_table?: any;
+    organization_memberships?: any[];
+    invitations_created?: any;
+    invitations_updated?: any;
+    invitations_user?: any;
+    object_permission?: any;
+  };
+  keys: Array<{
+    token: string; // Internal LiteLLM token for API usage tracking
+    key_name: string; // Format: "sk-...XXXX" (last 4 chars of actual key)
+    key_alias: string;
+    soft_budget_cooldown?: boolean;
+    spend?: number;
+    expires?: string | null;
+    models?: string[];
+    aliases?: Record<string, any>;
+    config?: Record<string, any>;
+    user_id?: string;
+    team_id?: string | null;
+    permissions?: Record<string, any>;
+    max_parallel_requests?: number | null;
+    metadata?: Record<string, any>;
+    blocked?: boolean | null;
+    tpm_limit?: number | null;
+    rpm_limit?: number | null;
+    max_budget?: number | null;
+    budget_duration?: string | null;
+    budget_reset_at?: string | null;
+    allowed_cache_controls?: string[];
+    allowed_routes?: string[];
+    model_spend?: Record<string, number>;
+    model_max_budget?: Record<string, number>;
+    budget_id?: string | null;
+    organization_id?: string | null;
+    object_permission_id?: string | null;
+    created_at?: string;
+    created_by?: string;
+    updated_at?: string;
+    updated_by?: string;
+    litellm_budget_table?: any;
+    litellm_organization_table?: any;
+    object_permission?: any;
+    team_alias?: string;
+  }>;
+  teams?: Array<{
+    team_alias?: string;
+    team_id?: string;
+    organization_id?: string | null;
+    admins?: string[];
+    members?: string[];
+    members_with_roles?: Array<{
+      user_id?: string;
+      user_email?: string | null;
+      role?: string;
+    }>;
+    team_member_permissions?: any[];
+    metadata?: Record<string, any>;
+    tpm_limit?: number;
+    rpm_limit?: number;
+    max_budget?: number;
+    budget_duration?: string | null;
+    models?: string[];
+    blocked?: boolean;
+    spend?: number;
+    max_parallel_requests?: number | null;
+    budget_reset_at?: string | null;
+    model_id?: string | null;
+    litellm_model_table?: any;
+    object_permission?: any;
+    updated_at?: string;
+    created_at?: string;
+    object_permission_id?: string | null;
+    team_memberships?: any[];
+    keys?: any[];
+  }>;
+}
+
 export interface LiteLLMTeamRequest {
   team_alias: string;
   team_id?: string;

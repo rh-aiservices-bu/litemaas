@@ -36,6 +36,8 @@
     "@fastify/swagger-ui": "^2.1.0",
     "@fastify/type-provider-typebox": "^4.0.0",
     "@sinclair/typebox": "^0.32.15",
+    "axios": "^1.11.0",
+    "dotenv": "^16.5.0",
     "fastify": "^4.26.1",
     "fastify-plugin": "^4.5.1",
     "pg": "^8.11.3",

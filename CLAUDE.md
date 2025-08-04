@@ -7,7 +7,13 @@
 > - Deployment Guide: `docs/deployment/`
 > - Configuration: `docs/deployment/configuration.md`
 
-**Last Updated**: 2025-07-30
+**Last Updated**: 2025-08-04
+- **FIXED**: LiteLLM usage tracking - now correctly retrieves internal token for API usage queries
+- **ENHANCED**: Added getApiKeyToken method to match API keys by last 4 characters with LiteLLM internal tokens
+- **IMPROVED**: Full user info retrieval with keys array from /user/info endpoint
+- **SIMPLIFIED**: Removed lite_llm_user_id column - using user.id directly as LiteLLM user ID (they are the same value)
+- **FIXED**: Usage stats SQL error - now uses u.id instead of u.lite_llm_user_id
+- **CLEANED**: Removed all lite_llm_user_id references from OAuth, Subscription, and API Key services
 - **IMPLEMENTED**: Comprehensive Default Team implementation across all services
 - **FIXED**: User existence detection using team-based validation instead of unreliable `/user/info`
 - **FIXED**: Consistent default team assignment in OAuth, Subscription, API Key, and bulk sync flows
@@ -20,6 +26,8 @@
 - Standardized user existence checking pattern across all services
 - Improved error handling and schema validation
 - **FIXED**: LiteLLM key_alias uniqueness conflict - now generates unique aliases with UUID suffix
+- **FIXED**: LiteLLM usage tracking integration - now correctly uses lite_llm_key_value for API key usage retrieval
+- **DEVELOPMENT NOTE**: Backend and frontend run in automatic reload mode - no need to restart servers for testing
 
 ## 🚀 Project Overview
 
