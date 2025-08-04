@@ -248,6 +248,8 @@
       "loadingDescription": "Analyzing your API usage patterns and metrics",
       "noDataTitle": "No usage data available",
       "noDataDescription": "Start making API requests to see your usage statistics here.",
+      "customDatePlaceholderTitle": "Select Date Range",
+      "customDatePlaceholderDescription": "Please select start and end dates above to view usage statistics for your custom date range.",
       "viewApiDocs": "View API Documentation",
       "loadingApiKeys": "Loading API Keys...",
       "noApiKeys": "No API Keys",
@@ -263,7 +265,11 @@
         "byModels": "By Models",
         "timeAnalysis": "Time Analysis",
         "errors": "Errors",
-        "errorAnalysis": "Error Analysis"
+        "errorAnalysis": "Error Analysis",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "selectStartDate": "Select start date",
+        "selectEndDate": "Select end date"
       },
       "dateRanges": {
         "last7Days": "Last 7 days",
@@ -315,6 +321,7 @@
         "exportCompleteDesc": "Usage data has been exported successfully.",
         "exportFailed": "Export Failed",
         "exportFailedDesc": "Failed to export usage data. Please try again.",
+        "customDatesRequired": "Please select both start and end dates for custom range export.",
         "apiKeysLoadError": "Failed to Load API Keys",
         "apiKeysLoadErrorDesc": "Unable to retrieve your API keys. Please refresh the page or try again later."
       }

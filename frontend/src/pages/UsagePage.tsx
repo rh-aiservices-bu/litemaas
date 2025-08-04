@@ -29,6 +29,8 @@ import {
   Progress,
   ProgressMeasureLocation,
   Bullseye,
+  DatePicker,
+  FormGroup,
 } from '@patternfly/react-core';
 import {
   ChartLineIcon,
@@ -89,14 +91,15 @@ const UsagePage: React.FC = () => {
 
   const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [_error, setError] = useState<string | null>(null);
+  const [, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState('7d');
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
-  const [_startDate] = useState('');
-  const [_endDate] = useState('');
+  const [customStartDate, setCustomStartDate] = useState('');
+  const [customEndDate, setCustomEndDate] = useState('');
+  const [showCustomDatePickers, setShowCustomDatePickers] = useState(false);
   const [viewType, setViewType] = useState('overview');
   const [isViewTypeOpen, setIsViewTypeOpen] = useState(false);
-  
+
   // API Key states
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [selectedApiKey, setSelectedApiKey] = useState<string>('');
@@ -109,7 +112,7 @@ const UsagePage: React.FC = () => {
       setLoadingApiKeys(true);
       const response = await apiKeysService.getApiKeys();
       setApiKeys(response.data);
-      
+
       // Auto-select first API key if available
       if (response.data.length > 0 && !selectedApiKey) {
         setSelectedApiKey(response.data[0].id);
@@ -143,14 +146,29 @@ const UsagePage: React.FC = () => {
       const filters: UsageFilters = {
         apiKeyId: selectedApiKey, // Filter by selected API key
       };
-      const now = new Date();
-      const days = parseInt(dateRange.replace('d', ''));
 
-      if (!isNaN(days)) {
-        const startDate = new Date(now);
-        startDate.setDate(startDate.getDate() - days);
-        filters.startDate = startDate.toISOString().split('T')[0];
-        filters.endDate = now.toISOString().split('T')[0];
+      if (dateRange === 'custom') {
+        // Use custom date range from date pickers
+        if (customStartDate && customEndDate) {
+          filters.startDate = customStartDate;
+          filters.endDate = customEndDate;
+        } else {
+          // Don't make API call if custom dates are not set
+          setMetrics(null);
+          setLoading(false);
+          return;
+        }
+      } else {
+        // Use predefined date ranges
+        const now = new Date();
+        const days = parseInt(dateRange.replace('d', ''));
+
+        if (!isNaN(days)) {
+          const startDate = new Date(now);
+          startDate.setDate(startDate.getDate() - days);
+          filters.startDate = startDate.toISOString().split('T')[0];
+          filters.endDate = now.toISOString().split('T')[0];
+        }
       }
 
       const usageMetrics = await usageService.getUsageMetrics(filters);
@@ -173,12 +191,20 @@ const UsagePage: React.FC = () => {
     loadApiKeys();
   }, []);
 
-  // Reload metrics when API key or date range changes
+  // Reload metrics when API key, date range, or custom dates change
   useEffect(() => {
     if (selectedApiKey) {
-      loadUsageMetrics();
+      // For custom date range, only load metrics when both dates are selected
+      if (dateRange === 'custom') {
+        if (customStartDate && customEndDate) {
+          loadUsageMetrics();
+        }
+      } else {
+        // For predefined ranges, load immediately
+        loadUsageMetrics();
+      }
     }
-  }, [selectedApiKey, dateRange]);
+  }, [selectedApiKey, dateRange, customStartDate, customEndDate]);
 
   const handleExportData = async () => {
     try {
@@ -192,14 +218,32 @@ const UsagePage: React.FC = () => {
       const filters: UsageFilters = {
         apiKeyId: selectedApiKey, // Include selected API key in export
       };
-      const now = new Date();
-      const days = parseInt(dateRange.replace('d', ''));
 
-      if (!isNaN(days)) {
-        const startDate = new Date(now);
-        startDate.setDate(startDate.getDate() - days);
-        filters.startDate = startDate.toISOString().split('T')[0];
-        filters.endDate = now.toISOString().split('T')[0];
+      if (dateRange === 'custom') {
+        // Use custom date range from date pickers
+        if (customStartDate && customEndDate) {
+          filters.startDate = customStartDate;
+          filters.endDate = customEndDate;
+        } else {
+          // Show error if custom dates are not set
+          addNotification({
+            title: t('pages.usage.notifications.exportFailed'),
+            description: t('pages.usage.notifications.customDatesRequired'),
+            variant: 'danger',
+          });
+          return;
+        }
+      } else {
+        // Use predefined date ranges
+        const now = new Date();
+        const days = parseInt(dateRange.replace('d', ''));
+
+        if (!isNaN(days)) {
+          const startDate = new Date(now);
+          startDate.setDate(startDate.getDate() - days);
+          filters.startDate = startDate.toISOString().split('T')[0];
+          filters.endDate = now.toISOString().split('T')[0];
+        }
       }
 
       const blob = await usageService.exportUsageData(filters, 'csv');
@@ -321,7 +365,8 @@ const UsagePage: React.FC = () => {
     );
   }
 
-  if (!metrics) {
+  // Don't show "No usage data available" when we're waiting for custom date selection
+  if (!metrics && !(dateRange === 'custom' && showCustomDatePickers)) {
     return (
       <>
         <PageSection variant="secondary">
@@ -380,8 +425,8 @@ const UsagePage: React.FC = () => {
                 }}
                 onOpenChange={setIsApiKeyOpen}
                 toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle 
-                    ref={toggleRef} 
+                  <MenuToggle
+                    ref={toggleRef}
                     onClick={() => setIsApiKeyOpen(!isApiKeyOpen)}
                     isDisabled={loadingApiKeys || apiKeys.length === 0}
                   >
@@ -410,8 +455,17 @@ const UsagePage: React.FC = () => {
                 isOpen={isDateRangeOpen}
                 selected={dateRange}
                 onSelect={(_event, value) => {
-                  setDateRange(value as string);
+                  const selectedValue = value as string;
+                  setDateRange(selectedValue);
                   setIsDateRangeOpen(false);
+
+                  if (selectedValue === 'custom') {
+                    setShowCustomDatePickers(true);
+                  } else {
+                    setShowCustomDatePickers(false);
+                    setCustomStartDate('');
+                    setCustomEndDate('');
+                  }
                 }}
                 onOpenChange={setIsDateRangeOpen}
                 toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
@@ -437,6 +491,33 @@ const UsagePage: React.FC = () => {
                 </SelectList>
               </Select>
             </ToolbarItem>
+
+            {showCustomDatePickers && (
+              <>
+                <ToolbarItem>
+                  <FormGroup fieldId="custom-start-date">
+                    <DatePicker
+                      id="custom-start-date"
+                      value={customStartDate}
+                      onChange={(_event, value) => setCustomStartDate(value)}
+                      placeholder={t('pages.usage.filters.selectStartDate')}
+                      aria-label={t('pages.usage.filters.startDate')}
+                    />
+                  </FormGroup>
+                </ToolbarItem>
+                <ToolbarItem>
+                  <FormGroup fieldId="custom-end-date">
+                    <DatePicker
+                      id="custom-end-date"
+                      value={customEndDate}
+                      onChange={(_event, value) => setCustomEndDate(value)}
+                      placeholder={t('pages.usage.filters.selectEndDate')}
+                      aria-label={t('pages.usage.filters.endDate')}
+                    />
+                  </FormGroup>
+                </ToolbarItem>
+              </>
+            )}
 
             <ToolbarItem>
               <Select
@@ -474,159 +555,184 @@ const UsagePage: React.FC = () => {
           </ToolbarContent>
         </Toolbar>
 
-        {/* Key Metrics Overview */}
-        <Grid hasGutter style={{ marginBottom: '2rem' }}>
-          <GridItem lg={3} md={6} sm={12}>
-            <Card>
-              <CardBody>
-                <Flex
-                  justifyContent={{ default: 'justifyContentSpaceBetween' }}
-                  alignItems={{ default: 'alignItemsCenter' }}
-                >
-                  <FlexItem>
-                    <Flex direction={{ default: 'column' }}>
-                      <FlexItem>
-                        <Content
-                          component={ContentVariants.small}
-                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
-                        >
-                          {t('pages.usage.metrics.totalRequests')}
-                        </Content>
-                      </FlexItem>
-                      <FlexItem>
-                        <Title headingLevel="h3" size="xl">
-                          {formatNumber(metrics.totalRequests)}
-                        </Title>
-                      </FlexItem>
-                      <FlexItem>{getChangeIndicator(metrics.totalRequests, 108200, true)}</FlexItem>
-                    </Flex>
-                  </FlexItem>
-                  <FlexItem>
-                    <CubeIcon
-                      style={{
-                        color: 'var(--pf-v6-global--primary--color--100)',
-                        fontSize: '1.5rem',
-                      }}
-                    />
-                  </FlexItem>
-                </Flex>
-              </CardBody>
-            </Card>
-          </GridItem>
+        {/* Show placeholder when in custom mode but no dates selected */}
+        {dateRange === 'custom' && showCustomDatePickers && !metrics && (
+          <Card style={{ marginBottom: '2rem' }}>
+            <CardBody>
+              <EmptyState variant={EmptyStateVariant.sm}>
+                <CalendarAltIcon />
+                <Title headingLevel="h3" size="md">
+                  {t('pages.usage.customDatePlaceholderTitle')}
+                </Title>
+                <EmptyStateBody>{t('pages.usage.customDatePlaceholderDescription')}</EmptyStateBody>
+              </EmptyState>
+            </CardBody>
+          </Card>
+        )}
 
-          <GridItem lg={3} md={6} sm={12}>
-            <Card>
-              <CardBody>
-                <Flex
-                  justifyContent={{ default: 'justifyContentSpaceBetween' }}
-                  alignItems={{ default: 'alignItemsCenter' }}
-                >
-                  <FlexItem>
-                    <Flex direction={{ default: 'column' }}>
-                      <FlexItem>
-                        <Content
-                          component={ContentVariants.small}
-                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
-                        >
-                          {t('pages.usage.metrics.totalTokens')}
-                        </Content>
-                      </FlexItem>
-                      <FlexItem>
-                        <Title headingLevel="h3" size="xl">
-                          {formatNumber(metrics.totalTokens)}
-                        </Title>
-                      </FlexItem>
-                      <FlexItem>{getChangeIndicator(metrics.totalTokens, 7800000, true)}</FlexItem>
-                    </Flex>
-                  </FlexItem>
-                  <FlexItem>
-                    <UsersIcon
-                      style={{
-                        color: 'var(--pf-v6-global--success--color--100)',
-                        fontSize: '1.5rem',
-                      }}
-                    />
-                  </FlexItem>
-                </Flex>
-              </CardBody>
-            </Card>
-          </GridItem>
+        {/* Key Metrics Overview - only show when we have metrics */}
+        {metrics && (
+          <Grid hasGutter style={{ marginBottom: '2rem' }}>
+            <GridItem lg={3} md={6} sm={12}>
+              <Card>
+                <CardBody>
+                  <Flex
+                    justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                    alignItems={{ default: 'alignItemsCenter' }}
+                  >
+                    <FlexItem>
+                      <Flex direction={{ default: 'column' }}>
+                        <FlexItem>
+                          <Content
+                            component={ContentVariants.small}
+                            style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                          >
+                            {t('pages.usage.metrics.totalRequests')}
+                          </Content>
+                        </FlexItem>
+                        <FlexItem>
+                          <Title headingLevel="h3" size="xl">
+                            {formatNumber(metrics.totalRequests)}
+                          </Title>
+                        </FlexItem>
+                        <FlexItem>
+                          {getChangeIndicator(metrics.totalRequests, 108200, true)}
+                        </FlexItem>
+                      </Flex>
+                    </FlexItem>
+                    <FlexItem>
+                      <CubeIcon
+                        style={{
+                          color: 'var(--pf-v6-global--primary--color--100)',
+                          fontSize: '1.5rem',
+                        }}
+                      />
+                    </FlexItem>
+                  </Flex>
+                </CardBody>
+              </Card>
+            </GridItem>
 
-          <GridItem lg={3} md={6} sm={12}>
-            <Card>
-              <CardBody>
-                <Flex
-                  justifyContent={{ default: 'justifyContentSpaceBetween' }}
-                  alignItems={{ default: 'alignItemsCenter' }}
-                >
-                  <FlexItem>
-                    <Flex direction={{ default: 'column' }}>
-                      <FlexItem>
-                        <Content
-                          component={ContentVariants.small}
-                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
-                        >
-                          {t('pages.usage.metrics.totalCost')}
-                        </Content>
-                      </FlexItem>
-                      <FlexItem>
-                        <Title headingLevel="h3" size="xl">
-                          {formatCurrency(metrics.totalCost)}
-                        </Title>
-                      </FlexItem>
-                      <FlexItem>{getChangeIndicator(metrics.totalCost, 1150.2, false)}</FlexItem>
-                    </Flex>
-                  </FlexItem>
-                  <FlexItem>
-                    <ChartLineIcon
-                      style={{
-                        color: 'var(--pf-v6-global--warning--color--100)',
-                        fontSize: '1.5rem',
-                      }}
-                    />
-                  </FlexItem>
-                </Flex>
-              </CardBody>
-            </Card>
-          </GridItem>
+            <GridItem lg={3} md={6} sm={12}>
+              <Card>
+                <CardBody>
+                  <Flex
+                    justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                    alignItems={{ default: 'alignItemsCenter' }}
+                  >
+                    <FlexItem>
+                      <Flex direction={{ default: 'column' }}>
+                        <FlexItem>
+                          <Content
+                            component={ContentVariants.small}
+                            style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                          >
+                            {t('pages.usage.metrics.totalTokens')}
+                          </Content>
+                        </FlexItem>
+                        <FlexItem>
+                          <Title headingLevel="h3" size="xl">
+                            {formatNumber(metrics.totalTokens)}
+                          </Title>
+                        </FlexItem>
+                        <FlexItem>
+                          {getChangeIndicator(metrics.totalTokens, 7800000, true)}
+                        </FlexItem>
+                      </Flex>
+                    </FlexItem>
+                    <FlexItem>
+                      <UsersIcon
+                        style={{
+                          color: 'var(--pf-v6-global--success--color--100)',
+                          fontSize: '1.5rem',
+                        }}
+                      />
+                    </FlexItem>
+                  </Flex>
+                </CardBody>
+              </Card>
+            </GridItem>
 
-          <GridItem lg={3} md={6} sm={12}>
-            <Card>
-              <CardBody>
-                <Flex
-                  justifyContent={{ default: 'justifyContentSpaceBetween' }}
-                  alignItems={{ default: 'alignItemsCenter' }}
-                >
-                  <FlexItem>
-                    <Flex direction={{ default: 'column' }}>
-                      <FlexItem>
-                        <Content
-                          component={ContentVariants.small}
-                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
-                        >
-                          {t('pages.usage.metrics.avgResponseTime')}
-                        </Content>
-                      </FlexItem>
-                      <FlexItem>
-                        <Title headingLevel="h3" size="xl">
-                          {metrics.averageResponseTime}s
-                        </Title>
-                      </FlexItem>
-                      <FlexItem>{getChangeIndicator(1.2, 1.45, false)}</FlexItem>
-                    </Flex>
-                  </FlexItem>
-                  <FlexItem>
-                    <ClockIcon
-                      style={{ color: 'var(--pf-v6-global--info--color--100)', fontSize: '1.5rem' }}
-                    />
-                  </FlexItem>
-                </Flex>
-              </CardBody>
-            </Card>
-          </GridItem>
-        </Grid>
+            <GridItem lg={3} md={6} sm={12}>
+              <Card>
+                <CardBody>
+                  <Flex
+                    justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                    alignItems={{ default: 'alignItemsCenter' }}
+                  >
+                    <FlexItem>
+                      <Flex direction={{ default: 'column' }}>
+                        <FlexItem>
+                          <Content
+                            component={ContentVariants.small}
+                            style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                          >
+                            {t('pages.usage.metrics.totalCost')}
+                          </Content>
+                        </FlexItem>
+                        <FlexItem>
+                          <Title headingLevel="h3" size="xl">
+                            {formatCurrency(metrics.totalCost)}
+                          </Title>
+                        </FlexItem>
+                        <FlexItem>{getChangeIndicator(metrics.totalCost, 1150.2, false)}</FlexItem>
+                      </Flex>
+                    </FlexItem>
+                    <FlexItem>
+                      <ChartLineIcon
+                        style={{
+                          color: 'var(--pf-v6-global--warning--color--100)',
+                          fontSize: '1.5rem',
+                        }}
+                      />
+                    </FlexItem>
+                  </Flex>
+                </CardBody>
+              </Card>
+            </GridItem>
 
-        {viewType === 'overview' && (
+            <GridItem lg={3} md={6} sm={12}>
+              <Card>
+                <CardBody>
+                  <Flex
+                    justifyContent={{ default: 'justifyContentSpaceBetween' }}
+                    alignItems={{ default: 'alignItemsCenter' }}
+                  >
+                    <FlexItem>
+                      <Flex direction={{ default: 'column' }}>
+                        <FlexItem>
+                          <Content
+                            component={ContentVariants.small}
+                            style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                          >
+                            {t('pages.usage.metrics.avgResponseTime')}
+                          </Content>
+                        </FlexItem>
+                        <FlexItem>
+                          <Title headingLevel="h3" size="xl">
+                            {metrics.averageResponseTime}s
+                          </Title>
+                        </FlexItem>
+                        <FlexItem>{getChangeIndicator(1.2, 1.45, false)}</FlexItem>
+                      </Flex>
+                    </FlexItem>
+                    <FlexItem>
+                      <ClockIcon
+                        style={{
+                          color: 'var(--pf-v6-global--info--color--100)',
+                          fontSize: '1.5rem',
+                        }}
+                      />
+                    </FlexItem>
+                  </Flex>
+                </CardBody>
+              </Card>
+            </GridItem>
+          </Grid>
+        )}
+
+        {/* Chart sections - only show when we have metrics */}
+        {metrics && viewType === 'overview' && (
           <>
             {/* Usage Trends */}
             <Grid hasGutter style={{ marginBottom: '2rem' }}>
@@ -754,7 +860,7 @@ const UsagePage: React.FC = () => {
           </>
         )}
 
-        {viewType === 'models' && (
+        {metrics && viewType === 'models' && (
           <Card>
             <CardTitle>
               <Title headingLevel="h3" size="lg">
@@ -770,7 +876,7 @@ const UsagePage: React.FC = () => {
           </Card>
         )}
 
-        {viewType === 'time' && (
+        {metrics && viewType === 'time' && (
           <Card>
             <CardTitle>
               <Title headingLevel="h3" size="lg">
@@ -786,7 +892,7 @@ const UsagePage: React.FC = () => {
           </Card>
         )}
 
-        {viewType === 'errors' && (
+        {metrics && viewType === 'errors' && (
           <Grid hasGutter>
             <GridItem lg={6}>
               <Card>

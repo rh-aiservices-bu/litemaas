@@ -75,15 +75,15 @@ const ModelsPage: React.FC = () => {
       setError(null);
 
       const currentPage = resetPage ? 1 : page;
-      
+
       // Convert category to capability filter for backend
       let capability = undefined;
-      
+
       // Only Multimodal category maps directly to a capability
       if (selectedCategory === 'Multimodal') {
         capability = 'vision';
       }
-      
+
       const response = await modelsService.getModels(
         currentPage,
         perPage,
@@ -95,9 +95,9 @@ const ModelsPage: React.FC = () => {
       // For categories that don't map to capabilities, filter client-side
       // This is a temporary solution - ideally the backend should support category filtering
       let filteredModels = response.models;
-      
+
       if (selectedCategory !== 'all' && selectedCategory !== 'Multimodal') {
-        filteredModels = response.models.filter(model => {
+        filteredModels = response.models.filter((model) => {
           if (selectedCategory === 'Language Model') {
             // Language Model includes all models except pure image/audio generation
             // (includes multimodal since they also have language capabilities)
@@ -108,7 +108,7 @@ const ModelsPage: React.FC = () => {
       }
 
       setModels(filteredModels);
-      
+
       // Adjust total count for client-side filtered results
       if (selectedCategory !== 'all' && selectedCategory !== 'Multimodal') {
         // This is approximate - we can't know the real total without fetching all pages
@@ -157,7 +157,7 @@ const ModelsPage: React.FC = () => {
 
   // Define all available categories (static list)
   const categories = ['all', 'Language Model', 'Multimodal', 'Image Generation', 'Audio'];
-  
+
   // Get unique providers from current models for filters
   const providers = ['all', ...Array.from(new Set(models.map((m) => m.provider)))];
 

@@ -295,10 +295,7 @@ const Layout: React.FC = () => {
 
   return (
     <>
-      <AlertToastGroup
-        notifications={toastNotifications}
-        onRemove={removeToastNotification}
-      />
+      <AlertToastGroup notifications={toastNotifications} onRemove={removeToastNotification} />
       <Drawer
         isExpanded={isNotificationDrawerOpen}
         onExpand={() => setIsNotificationDrawerOpen(true)}

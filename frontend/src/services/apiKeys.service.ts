@@ -182,10 +182,10 @@ class ApiKeysService {
     } catch (error: any) {
       // Extract the actual error message from the backend response
       let errorMessage = '';
-      
+
       // Log the error structure to understand it better
       console.error('API Key retrieval error:', error.response?.data || error);
-      
+
       // Try to get the error message from various possible locations
       // Backend sends error in format: { message: "...", statusCode: 403, code: "HTTP_403" }
       if (typeof error.response?.data?.message === 'string') {
@@ -197,13 +197,18 @@ class ApiKeysService {
       } else if (typeof error.message === 'string') {
         errorMessage = error.message;
       }
-      
+
       // Handle specific error cases for better UX
       if (error.response?.status === 403) {
         // Check for specific error messages or codes
-        if (error.response?.data?.code === 'TOKEN_TOO_OLD' || 
-            (errorMessage && errorMessage.toLowerCase().includes('recent authentication required'))) {
-          throw new Error(errorMessage || 'Recent authentication required for this operation. Please refresh the page and try again.');
+        if (
+          error.response?.data?.code === 'TOKEN_TOO_OLD' ||
+          (errorMessage && errorMessage.toLowerCase().includes('recent authentication required'))
+        ) {
+          throw new Error(
+            errorMessage ||
+              'Recent authentication required for this operation. Please refresh the page and try again.',
+          );
         } else if (errorMessage && errorMessage.includes('inactive')) {
           throw new Error(errorMessage);
         } else if (errorMessage && errorMessage.includes('expired')) {
