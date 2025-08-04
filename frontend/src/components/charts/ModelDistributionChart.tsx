@@ -1,6 +1,5 @@
 import React from 'react';
 import { ChartDonut, ChartThemeColor } from '@patternfly/react-charts/victory';
-import { Skeleton } from '@patternfly/react-core';
 import { useTranslation } from 'react-i18next';
 import { DonutChartDataPoint, ModelBreakdownData } from '../../utils/chartDataTransformers';
 
