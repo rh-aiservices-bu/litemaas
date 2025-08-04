@@ -167,8 +167,8 @@ const UsageLineChart: React.FC<UsageLineChartProps> = ({
           ariaTitle={getAriaLabel()}
           containerComponent={
             <ChartVoronoiContainer
-              labels={() => ' '} // Use custom tooltip instead
-              labelComponent={<ChartTooltip renderInPortal={false} />}
+              labels={({ datum }) => `${datum.label || `${datum.x}: ${datum.y}`}`}
+              labelComponent={<ChartTooltip />}
               voronoiDimension="x"
             />
           }
@@ -193,8 +193,8 @@ const UsageLineChart: React.FC<UsageLineChartProps> = ({
             }}
           />
 
-          <ChartGroup>
-            {showArea && (
+          {showArea ? (
+            <ChartGroup>
               <ChartArea
                 data={validatedData}
                 style={{
@@ -204,12 +204,18 @@ const UsageLineChart: React.FC<UsageLineChartProps> = ({
                     strokeWidth: 2,
                   },
                 }}
-                animate={{
-                  duration: 1000,
-                  onLoad: { duration: 500 },
+              />
+              <ChartLine
+                data={validatedData}
+                style={{
+                  data: {
+                    stroke: 'var(--pf-v6-global--primary--color--100)',
+                    strokeWidth: 2,
+                  },
                 }}
               />
-            )}
+            </ChartGroup>
+          ) : (
             <ChartLine
               data={validatedData}
               style={{
@@ -218,12 +224,8 @@ const UsageLineChart: React.FC<UsageLineChartProps> = ({
                   strokeWidth: 2,
                 },
               }}
-              animate={{
-                duration: 1000,
-                onLoad: { duration: 500 },
-              }}
             />
-          </ChartGroup>
+          )}
         </Chart>
       </div>
     </ComponentErrorBoundary>

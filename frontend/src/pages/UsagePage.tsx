@@ -44,7 +44,7 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
 import { usageService, UsageMetrics, UsageFilters } from '../services/usage.service';
 import { apiKeysService, ApiKey } from '../services/apiKeys.service';
-import { UsageLineChart, ModelDistributionChart } from '../components/charts';
+import { WorkingLineChart, ModelDistributionChart } from '../components/charts';
 import {
   transformDailyUsageToChartData,
   transformModelBreakdownToChartData,
@@ -688,13 +688,11 @@ const UsagePage: React.FC = () => {
                     </Flex>
                   </CardTitle>
                   <CardBody>
-                    <UsageLineChart
+                    <WorkingLineChart
                       data={transformDailyUsageToChartData(metrics.dailyUsage)[selectedMetric]}
                       metricType={selectedMetric}
-                      height={300}
-                      width="auto"
-                      showArea={true}
-                      ariaLabel={t('pages.usage.charts.dailyUsage')}
+                      height={250}
+                      loading={false}
                     />
                   </CardBody>
                 </Card>
@@ -727,6 +725,7 @@ const UsagePage: React.FC = () => {
                           variant="success"
                           measureLocation={ProgressMeasureLocation.none}
                           style={{ width: '200px' }}
+                          aria-label="successRate"
                         />
                       </FlexItem>
                       <FlexItem>
@@ -789,6 +788,7 @@ const UsagePage: React.FC = () => {
                                         ? 'warning'
                                         : undefined
                                   }
+                                  aria-label="usagePercentage"
                                 />
                               </FlexItem>
                               <FlexItem>

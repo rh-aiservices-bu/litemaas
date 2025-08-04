@@ -77,14 +77,32 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       );
 
       try {
-        const stats = await usageStatsService.getUsageStats({
-          userId: user.userId,
-          modelId,
-          apiKeyId,
-          startDate: startDate ? new Date(startDate) : undefined,
-          endDate: endDate ? new Date(endDate) : undefined,
-          aggregateBy: 'model',
-        });
+        // Get both model breakdown and time series data
+        const [statsWithModels, statsWithTime] = await Promise.all([
+          usageStatsService.getUsageStats({
+            userId: user.userId,
+            modelId,
+            apiKeyId,
+            startDate: startDate ? new Date(startDate) : undefined,
+            endDate: endDate ? new Date(endDate) : undefined,
+            aggregateBy: 'model',
+          }),
+          usageStatsService.getUsageStats({
+            userId: user.userId,
+            modelId,
+            apiKeyId,
+            startDate: startDate ? new Date(startDate) : undefined,
+            endDate: endDate ? new Date(endDate) : undefined,
+            aggregateBy: 'time',
+            granularity: 'day',
+          }),
+        ]);
+
+        // Combine the results
+        const stats = {
+          ...statsWithModels,
+          timeSeriesData: statsWithTime.timeSeriesData,
+        };
 
         // Transform backend response to frontend format using real LiteLLM data
         const response = {
@@ -115,6 +133,8 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
             totalRequests: response.totalRequests,
             totalTokens: response.totalTokens,
             modelCount: response.topModels.length,
+            dailyUsageCount: response.dailyUsage.length,
+            timeSeriesDataCount: stats.timeSeriesData?.length || 0,
           },
           'Returning usage metrics response',
         );
