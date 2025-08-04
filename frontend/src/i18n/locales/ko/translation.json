@@ -248,6 +248,8 @@
       "loadingDescription": "API 사용 패턴 및 메트릭 분석 중",
       "noDataTitle": "사용 가능한 사용량 데이터가 없습니다",
       "noDataDescription": "API 요청을 시작하여 여기에서 사용 통계를 확인하세요.",
+      "customDatePlaceholderTitle": "날짜 범위 선택",
+      "customDatePlaceholderDescription": "사용자 정의 날짜 범위의 사용 통계를 보려면 위에서 시작일과 종료일을 선택하세요.",
       "viewApiDocs": "API 문서 보기",
       "filters": {
         "custom": "사용자 정의",
@@ -255,7 +257,11 @@
         "byModels": "모델별",
         "timeAnalysis": "시간 분석",
         "errors": "오류",
-        "errorAnalysis": "오류 분석"
+        "errorAnalysis": "오류 분석",
+        "startDate": "시작일",
+        "endDate": "종료일",
+        "selectStartDate": "시작일 선택",
+        "selectEndDate": "종료일 선택"
       },
       "dateRanges": {
         "last7Days": "지난 7일",
@@ -306,7 +312,8 @@
         "exportComplete": "내보내기 완료",
         "exportCompleteDesc": "사용량 데이터가 성공적으로 내보내졌습니다.",
         "exportFailed": "내보내기 실패",
-        "exportFailedDesc": "사용량 데이터를 내보내지 못했습니다. 다시 시도하세요."
+        "exportFailedDesc": "사용량 데이터를 내보내지 못했습니다. 다시 시도하세요.",
+        "customDatesRequired": "사용자 정의 범위 내보내기에는 시작일과 종료일을 모두 선택해주세요."
       }
     },
     "settings": {

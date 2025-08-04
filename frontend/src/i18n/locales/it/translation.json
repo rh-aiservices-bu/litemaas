@@ -306,7 +306,8 @@
         "exportComplete": "Export Completato",
         "exportCompleteDesc": "I dati di utilizzo sono stati esportati con successo.",
         "exportFailed": "Export Fallito",
-        "exportFailedDesc": "Impossibile esportare i dati di utilizzo. Riprova."
+        "exportFailedDesc": "Impossibile esportare i dati di utilizzo. Riprova.",
+        "customDatesRequired": "Seleziona sia la data di inizio che quella di fine per l'esportazione dell'intervallo personalizzato."
       }
     },
     "settings": {

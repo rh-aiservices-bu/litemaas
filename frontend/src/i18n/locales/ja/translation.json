@@ -248,6 +248,8 @@
       "loadingDescription": "API使用パターンとメトリクスを分析中",
       "noDataTitle": "使用可能な使用状況データがありません",
       "noDataDescription": "APIリクエストを開始して、ここで使用統計を確認してください。",
+      "customDatePlaceholderTitle": "日付範囲を選択",
+      "customDatePlaceholderDescription": "カスタム日付範囲の使用統計を表示するには、上記で開始日と終了日を選択してください。",
       "viewApiDocs": "APIドキュメントを表示",
       "filters": {
         "custom": "カスタム",
@@ -255,7 +257,11 @@
         "byModels": "モデル別",
         "timeAnalysis": "時間分析",
         "errors": "エラー",
-        "errorAnalysis": "エラー分析"
+        "errorAnalysis": "エラー分析",
+        "startDate": "開始日",
+        "endDate": "終了日",
+        "selectStartDate": "開始日を選択",
+        "selectEndDate": "終了日を選択"
       },
       "dateRanges": {
         "last7Days": "過去7日間",
@@ -306,7 +312,8 @@
         "exportComplete": "エクスポート完了",
         "exportCompleteDesc": "使用状況データが正常にエクスポートされました。",
         "exportFailed": "エクスポート失敗",
-        "exportFailedDesc": "使用状況データのエクスポートに失敗しました。もう一度お試しください。"
+        "exportFailedDesc": "使用状況データのエクスポートに失敗しました。もう一度お試しください。",
+        "customDatesRequired": "カスタム範囲のエクスポートには開始日と終了日の両方を選択してください。"
       }
     },
     "settings": {

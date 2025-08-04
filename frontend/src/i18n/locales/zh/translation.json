@@ -248,6 +248,8 @@
       "loadingDescription": "分析您的API使用模式和指标",
       "noDataTitle": "没有可用的使用数据",
       "noDataDescription": "开始进行API请求以在此处查看您的使用统计信息。",
+      "customDatePlaceholderTitle": "选择日期范围",
+      "customDatePlaceholderDescription": "请在上方选择开始日期和结束日期，以查看您自定义日期范围的使用统计信息。",
       "viewApiDocs": "查看API文档",
       "filters": {
         "custom": "自定义",
@@ -255,7 +257,11 @@
         "byModels": "按模型",
         "timeAnalysis": "时间分析",
         "errors": "错误",
-        "errorAnalysis": "错误分析"
+        "errorAnalysis": "错误分析",
+        "startDate": "开始日期",
+        "endDate": "结束日期",
+        "selectStartDate": "选择开始日期",
+        "selectEndDate": "选择结束日期"
       },
       "dateRanges": {
         "last7Days": "过去7天",
@@ -306,7 +312,8 @@
         "exportComplete": "导出完成",
         "exportCompleteDesc": "使用数据已成功导出。",
         "exportFailed": "导出失败",
-        "exportFailedDesc": "无法导出使用数据。请重试。"
+        "exportFailedDesc": "无法导出使用数据。请重试。",
+        "customDatesRequired": "请选择开始日期和结束日期以导出自定义范围。"
       }
     },
     "settings": {

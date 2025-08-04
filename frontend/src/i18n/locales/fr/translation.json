@@ -248,6 +248,8 @@
       "loadingDescription": "Analyse de vos modèles d'utilisation d'API et métriques",
       "noDataTitle": "Aucune donnée d'utilisation disponible",
       "noDataDescription": "Commencez à faire des requêtes API pour voir vos statistiques d'utilisation ici.",
+      "customDatePlaceholderTitle": "Sélectionner la Plage de Dates",
+      "customDatePlaceholderDescription": "Veuillez sélectionner les dates de début et de fin ci-dessus pour afficher les statistiques d'utilisation de votre plage de dates personnalisée.",
       "viewApiDocs": "Voir la Documentation API",
       "filters": {
         "custom": "Personnalisé",
@@ -255,7 +257,11 @@
         "byModels": "Par Modèles",
         "timeAnalysis": "Analyse Temporelle",
         "errors": "Erreurs",
-        "errorAnalysis": "Analyse des Erreurs"
+        "errorAnalysis": "Analyse des Erreurs",
+        "startDate": "Date de Début",
+        "endDate": "Date de Fin",
+        "selectStartDate": "Sélectionner la date de début",
+        "selectEndDate": "Sélectionner la date de fin"
       },
       "dateRanges": {
         "last7Days": "7 derniers jours",
@@ -306,7 +312,8 @@
         "exportComplete": "Exportation Terminée",
         "exportCompleteDesc": "Les données d'utilisation ont été exportées avec succès.",
         "exportFailed": "Échec de l'Exportation",
-        "exportFailedDesc": "Échec de l'exportation des données d'utilisation. Veuillez réessayer."
+        "exportFailedDesc": "Échec de l'exportation des données d'utilisation. Veuillez réessayer.",
+        "customDatesRequired": "Veuillez sélectionner les dates de début et de fin pour l'exportation de plage personnalisée."
       }
     },
     "settings": {

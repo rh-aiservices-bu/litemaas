@@ -306,7 +306,8 @@
         "exportComplete": "Edhon Prestanniel",
         "exportCompleteDesc": "Gannad aduial edhoned sui prestanneth.",
         "exportFailed": "Edhon Ur-dhant",
-        "exportFailedDesc": "Ur-dhant edhon gannad aduial. Orthad hen."
+        "exportFailedDesc": "Ur-dhant edhon gannad aduial. Orthad hen.",
+        "customDatesRequired": "Delyo ha aur teg a aur methen edhon aderthad lúmenn."
       }
     },
     "settings": {

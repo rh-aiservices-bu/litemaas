@@ -248,6 +248,8 @@
       "loadingDescription": "Ihre API-Nutzungsmuster und Metriken werden analysiert",
       "noDataTitle": "Keine Nutzungsdaten verfügbar",
       "noDataDescription": "Beginnen Sie mit API-Anfragen, um Ihre Nutzungsstatistiken hier zu sehen.",
+      "customDatePlaceholderTitle": "Datumsbereich auswählen",
+      "customDatePlaceholderDescription": "Bitte wählen Sie oben Start- und Enddatum aus, um Nutzungsstatistiken für Ihren benutzerdefinierten Datumsbereich anzuzeigen.",
       "viewApiDocs": "API-Dokumentation anzeigen",
       "filters": {
         "custom": "Benutzerdefiniert",
@@ -255,7 +257,11 @@
         "byModels": "Nach Modellen",
         "timeAnalysis": "Zeitanalyse",
         "errors": "Fehler",
-        "errorAnalysis": "Fehleranalyse"
+        "errorAnalysis": "Fehleranalyse",
+        "startDate": "Startdatum",
+        "endDate": "Enddatum",
+        "selectStartDate": "Startdatum auswählen",
+        "selectEndDate": "Enddatum auswählen"
       },
       "dateRanges": {
         "last7Days": "Letzte 7 Tage",
@@ -306,7 +312,8 @@
         "exportComplete": "Export abgeschlossen",
         "exportCompleteDesc": "Nutzungsdaten wurden erfolgreich exportiert.",
         "exportFailed": "Export fehlgeschlagen",
-        "exportFailedDesc": "Fehler beim Exportieren der Nutzungsdaten. Bitte versuchen Sie es erneut."
+        "exportFailedDesc": "Fehler beim Exportieren der Nutzungsdaten. Bitte versuchen Sie es erneut.",
+        "customDatesRequired": "Bitte wählen Sie sowohl Start- als auch Enddatum für den Export des benutzerdefinierten Bereichs aus."
       }
     },
     "settings": {
