@@ -37,11 +37,8 @@ import {
   DownloadIcon,
   FilterIcon,
   CalendarAltIcon,
-  TrendUpIcon,
-  TrendDownIcon,
   UsersIcon,
   CubeIcon,
-  ClockIcon,
 } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -284,24 +281,6 @@ const UsagePage: React.FC = () => {
       style: 'currency',
       currency: 'USD',
     }).format(amount);
-  };
-
-  const getChangeIndicator = (current: number, previous: number, isPositive = true) => {
-    const change = ((current - previous) / previous) * 100;
-    const icon = change > 0 ? <TrendUpIcon /> : <TrendDownIcon />;
-    const color =
-      (change > 0 && isPositive) || (change < 0 && !isPositive)
-        ? 'var(--pf-v6-global--success--color--100)'
-        : 'var(--pf-v6-global--danger--color--100)';
-
-    return (
-      <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
-        <FlexItem style={{ color }}>{icon}</FlexItem>
-        <FlexItem style={{ color }}>
-          <Content component={ContentVariants.small}>{Math.abs(change).toFixed(1)}%</Content>
-        </FlexItem>
-      </Flex>
-    );
   };
 
   if (loading) {
@@ -595,9 +574,6 @@ const UsagePage: React.FC = () => {
                             {formatNumber(metrics.totalRequests)}
                           </Title>
                         </FlexItem>
-                        <FlexItem>
-                          {getChangeIndicator(metrics.totalRequests, 108200, true)}
-                        </FlexItem>
                       </Flex>
                     </FlexItem>
                     <FlexItem>
@@ -634,9 +610,6 @@ const UsagePage: React.FC = () => {
                           <Title headingLevel="h3" size="xl">
                             {formatNumber(metrics.totalTokens)}
                           </Title>
-                        </FlexItem>
-                        <FlexItem>
-                          {getChangeIndicator(metrics.totalTokens, 7800000, true)}
                         </FlexItem>
                       </Flex>
                     </FlexItem>
@@ -675,51 +648,12 @@ const UsagePage: React.FC = () => {
                             {formatCurrency(metrics.totalCost)}
                           </Title>
                         </FlexItem>
-                        <FlexItem>{getChangeIndicator(metrics.totalCost, 1150.2, false)}</FlexItem>
                       </Flex>
                     </FlexItem>
                     <FlexItem>
                       <ChartLineIcon
                         style={{
                           color: 'var(--pf-v6-global--warning--color--100)',
-                          fontSize: '1.5rem',
-                        }}
-                      />
-                    </FlexItem>
-                  </Flex>
-                </CardBody>
-              </Card>
-            </GridItem>
-
-            <GridItem lg={3} md={6} sm={12}>
-              <Card>
-                <CardBody>
-                  <Flex
-                    justifyContent={{ default: 'justifyContentSpaceBetween' }}
-                    alignItems={{ default: 'alignItemsCenter' }}
-                  >
-                    <FlexItem>
-                      <Flex direction={{ default: 'column' }}>
-                        <FlexItem>
-                          <Content
-                            component={ContentVariants.small}
-                            style={{ color: 'var(--pf-v6-global--Color--200)' }}
-                          >
-                            {t('pages.usage.metrics.avgResponseTime')}
-                          </Content>
-                        </FlexItem>
-                        <FlexItem>
-                          <Title headingLevel="h3" size="xl">
-                            {metrics.averageResponseTime}s
-                          </Title>
-                        </FlexItem>
-                        <FlexItem>{getChangeIndicator(1.2, 1.45, false)}</FlexItem>
-                      </Flex>
-                    </FlexItem>
-                    <FlexItem>
-                      <ClockIcon
-                        style={{
-                          color: 'var(--pf-v6-global--info--color--100)',
                           fontSize: '1.5rem',
                         }}
                       />
