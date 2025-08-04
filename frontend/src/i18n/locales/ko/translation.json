@@ -281,7 +281,17 @@
         "errorTypes": "오류 유형",
         "usageTrends": "사용량 추세",
         "topModelsByUsage": "사용량별 상위 모델",
-        "usageByModel": "모델별 사용량"
+        "usageByModel": "모델별 사용량",
+        "noDataTitle": "사용 가능한 데이터 없음",
+        "noDataDescription": "선택된 기간에 대한 사용량 데이터를 찾을 수 없습니다.",
+        "noModelsTitle": "모델 데이터 없음",
+        "noModelsDescription": "선택된 기간에 대한 모델 사용량 데이터가 없습니다.",
+        "lineChartAriaLabel": "시간에 따른 {{metric}}을 보여주는 선 차트",
+        "modelDistributionAriaLabel": "모델 사용량 분포를 보여주는 도넛 차트",
+        "requests": "요청",
+        "percentage": "백분율",
+        "modelBreakdown": "모델 분석",
+        "detailedBreakdown": "상세 분석"
       },
       "tables": {
         "topModels": "상위 모델 테이블"

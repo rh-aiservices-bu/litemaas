@@ -275,7 +275,17 @@
         "errorTypes": "Rhain Goth",
         "usageTrends": "Aduial Tiradhren",
         "topModelsByUsage": "Erain Arphent e Aduial",
-        "usageByModel": "Aduial e Erain"
+        "usageByModel": "Aduial e Erain",
+        "noDataTitle": "Uir Gannad Saed",
+        "noDataDescription": "Uir gannad aduial hiraed sui lúmenn gedelin.",
+        "noModelsTitle": "Uir Gannad Erain",
+        "noModelsDescription": "Uir gannad aduial erain saed sui lúmenn gedelin.",
+        "lineChartAriaLabel": "Maethor lain dannen {{metric}} sui lúmenn",
+        "modelDistributionAriaLabel": "Maethor rond dannen dangen aduial erain",
+        "requests": "Eruin",
+        "percentage": "Percentage",
+        "modelBreakdown": "Erain Aphadren",
+        "detailedBreakdown": "Aphadren Andanil"
       },
       "tables": {
         "topModels": "Thabent erain arphent"

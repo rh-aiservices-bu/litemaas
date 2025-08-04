@@ -275,7 +275,17 @@
         "errorTypes": "Tipi di Errore",
         "usageTrends": "Trend di Utilizzo",
         "topModelsByUsage": "Top Modelli per Utilizzo",
-        "usageByModel": "Utilizzo per Modello"
+        "usageByModel": "Utilizzo per Modello",
+        "noDataTitle": "Nessun Dato Disponibile",
+        "noDataDescription": "Nessun dato di utilizzo trovato per il periodo di tempo selezionato.",
+        "noModelsTitle": "Nessun Dato Modello",
+        "noModelsDescription": "Nessun dato di utilizzo modello disponibile per il periodo selezionato.",
+        "lineChartAriaLabel": "Grafico a linee che mostra {{metric}} nel tempo",
+        "modelDistributionAriaLabel": "Grafico a ciambella che mostra distribuzione utilizzo modelli",
+        "requests": "Richieste",
+        "percentage": "Percentuale",
+        "modelBreakdown": "Suddivisione Modello",
+        "detailedBreakdown": "Suddivisione Dettagliata"
       },
       "tables": {
         "topModels": "Tabella top modelli"

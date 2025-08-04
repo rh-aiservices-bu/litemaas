@@ -281,7 +281,17 @@
         "errorTypes": "Types d'Erreur",
         "usageTrends": "Tendances d'Utilisation",
         "topModelsByUsage": "Modèles Principaux par Utilisation",
-        "usageByModel": "Utilisation par Modèle"
+        "usageByModel": "Utilisation par Modèle",
+        "noDataTitle": "Aucune Donnée Disponible",
+        "noDataDescription": "Aucune donnée d'utilisation trouvée pour la période sélectionnée.",
+        "noModelsTitle": "Aucune Donnée de Modèle",
+        "noModelsDescription": "Aucune donnée d'utilisation de modèle disponible pour la période sélectionnée.",
+        "lineChartAriaLabel": "Graphique linéaire montrant {{metric}} dans le temps",
+        "modelDistributionAriaLabel": "Graphique en anneau montrant la distribution d'utilisation des modèles",
+        "requests": "Requêtes",
+        "percentage": "Pourcentage",
+        "modelBreakdown": "Répartition par Modèle",
+        "detailedBreakdown": "Répartition Détaillée"
       },
       "tables": {
         "topModels": "Tableau des modèles principaux"

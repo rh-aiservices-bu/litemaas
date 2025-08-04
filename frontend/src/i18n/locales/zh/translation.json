@@ -281,7 +281,17 @@
         "errorTypes": "错误类型",
         "usageTrends": "使用趋势",
         "topModelsByUsage": "按使用量排名的顶级模型",
-        "usageByModel": "按模型使用量"
+        "usageByModel": "按模型使用量",
+        "noDataTitle": "无可用数据",
+        "noDataDescription": "未找到所选时间段的使用数据。",
+        "noModelsTitle": "无模型数据",
+        "noModelsDescription": "所选时间段无可用的模型使用数据。",
+        "lineChartAriaLabel": "显示{{metric}}随时间变化的折线图",
+        "modelDistributionAriaLabel": "显示模型使用分布的环形图",
+        "requests": "请求",
+        "percentage": "百分比",
+        "modelBreakdown": "模型分解",
+        "detailedBreakdown": "详细分解"
       },
       "tables": {
         "topModels": "顶级模型表"

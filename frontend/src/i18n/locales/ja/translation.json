@@ -281,7 +281,17 @@
         "errorTypes": "エラータイプ",
         "usageTrends": "使用傾向",
         "topModelsByUsage": "使用量別上位モデル",
-        "usageByModel": "モデル別使用量"
+        "usageByModel": "モデル別使用量",
+        "noDataTitle": "データが利用できません",
+        "noDataDescription": "選択された期間の使用データが見つかりません。",
+        "noModelsTitle": "モデルデータなし",
+        "noModelsDescription": "選択された期間のモデル使用データが利用できません。",
+        "lineChartAriaLabel": "{{metric}}の時系列を示す線グラフ",
+        "modelDistributionAriaLabel": "モデル使用分布を示すドーナツグラフ",
+        "requests": "リクエスト",
+        "percentage": "パーセンテージ",
+        "modelBreakdown": "モデル内訳",
+        "detailedBreakdown": "詳細内訳"
       },
       "tables": {
         "topModels": "上位モデルテーブル"
