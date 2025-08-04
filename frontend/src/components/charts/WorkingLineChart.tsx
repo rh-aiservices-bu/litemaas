@@ -1,10 +1,5 @@
 import React from 'react';
-import {
-  Chart,
-  ChartAxis,
-  ChartGroup,
-  ChartLine,
-} from '@patternfly/react-charts/victory';
+import { Chart, ChartAxis, ChartGroup, ChartLine } from '@patternfly/react-charts/victory';
 import { Skeleton } from '@patternfly/react-core';
 import { LineChartDataPoint } from '../../utils/chartDataTransformers';
 
@@ -46,7 +41,7 @@ const WorkingLineChart: React.FC<WorkingLineChartProps> = ({
   };
 
   // Create x-axis labels from data
-  const xAxisLabels = data.map(d => extractDateFromLabel(d.label));
+  const xAxisLabels = data.map((d) => extractDateFromLabel(d.label));
 
   // Calculate Y domain
   const yValues = chartData.map((d) => d.y);
@@ -71,7 +66,7 @@ const WorkingLineChart: React.FC<WorkingLineChartProps> = ({
   const formatXTick = (value: number) => {
     const label = xAxisLabels[Math.round(value)];
     if (!label) return '';
-    
+
     // Show every nth label based on data length
     const dataLength = xAxisLabels.length;
     if (dataLength <= 7) return label;
@@ -85,17 +80,17 @@ const WorkingLineChart: React.FC<WorkingLineChartProps> = ({
     <div style={{ width: '100%', height }}>
       <Chart
         height={height}
-        padding={{ bottom: 60, left: 70, right: 40, top: 20 }}
+        padding={{ bottom: 30, left: 10, right: 10, top: 10 }}
         domain={{ y: [0, maxY * 1.1] }}
       >
-        <ChartAxis 
+        <ChartAxis
           tickFormat={formatXTick}
           style={{
             tickLabels: { fontSize: 10, angle: -30, textAnchor: 'end' },
           }}
         />
-        <ChartAxis 
-          dependentAxis 
+        <ChartAxis
+          dependentAxis
           showGrid
           tickFormat={formatYTick}
           style={{
@@ -104,7 +99,7 @@ const WorkingLineChart: React.FC<WorkingLineChartProps> = ({
           }}
         />
         <ChartGroup>
-          <ChartLine 
+          <ChartLine
             data={chartData}
             style={{
               data: { stroke: '#06c', strokeWidth: 2 },
