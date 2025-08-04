@@ -57,7 +57,7 @@ class UsageService {
     if (filters?.modelId) params.append('modelId', filters.modelId);
     if (filters?.apiKeyId) params.append('apiKeyId', filters.apiKeyId);
 
-    const response = await fetch(`/api/usage/export?${params}`, {
+    const response = await fetch(`/api/v1/usage/export?${params}`, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('access_token')}`,
       },

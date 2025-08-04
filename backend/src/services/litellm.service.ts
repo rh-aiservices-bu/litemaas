@@ -421,6 +421,55 @@ export class LiteLLMService {
     }
   }
 
+  /**
+   * Get the LiteLLM token ID for a key by its alias
+   */
+  async getKeyTokenByAlias(userId: string, keyAlias: string): Promise<string | null> {
+    const cacheKey = this.getCacheKey(`key_token:${userId}:${keyAlias}`);
+    const cached = this.getCache<string>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    if (this.config.enableMocking) {
+      // Return mock token ID
+      const mockToken = `mock-token-${keyAlias}`;
+      this.setCache(cacheKey, mockToken);
+      return mockToken;
+    }
+
+    try {
+      const queryParams = new URLSearchParams({
+        user_id: userId,
+        return_full_object: 'true',
+        include_team_keys: 'false',
+        page: '1',
+        size: '100', // Get more keys to find the match
+      });
+
+      const response = await this.makeRequest<any>(
+        `/key/list?${queryParams.toString()}`,
+        {
+          method: 'GET',
+        },
+      );
+
+      // Find the key with matching alias
+      const keys = response.keys || response.data || [];
+      const matchingKey = keys.find((key: any) => key.key_alias === keyAlias || key.key_name === keyAlias);
+      
+      if (matchingKey && matchingKey.token) {
+        this.setCache(cacheKey, matchingKey.token, 300); // Cache for 5 minutes
+        return matchingKey.token;
+      }
+
+      return null;
+    } catch (error) {
+      this.fastify.log.error(error, `Failed to get key token for alias ${keyAlias}`);
+      return null;
+    }
+  }
+
   async getKeyInfo(apiKey: string): Promise<LiteLLMKeyInfo> {
     if (this.config.enableMocking) {
       const mockInfo: LiteLLMKeyInfo = {
@@ -796,6 +845,147 @@ export class LiteLLMService {
       return true;
     } catch (error) {
       return false;
+    }
+  }
+
+  /**
+   * Get daily activity/usage from LiteLLM filtered by API key
+   */
+  async getDailyActivity(
+    apiKeyHash?: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<{
+    spend: number;
+    total_tokens: number;
+    prompt_tokens: number;
+    completion_tokens: number;
+    api_requests: number;
+    by_model: Array<{
+      model: string;
+      spend: number;
+      tokens: number;
+      api_requests: number;
+    }>;
+    daily_metrics?: Array<{
+      date: string;
+      spend: number;
+      tokens: number;
+      requests: number;
+    }>;
+  }> {
+    const cacheKey = this.getCacheKey(`activity:${apiKeyHash}:${startDate}:${endDate}`);
+    const cached = this.getCache<any>(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // Return mock data in development mode
+    if (this.config.enableMocking) {
+      this.fastify.log.info({ apiKeyHash, startDate, endDate }, 'LiteLLM: Returning mock usage data');
+      const mockData = {
+        spend: 12.45,
+        total_tokens: 125000,
+        prompt_tokens: 75000,
+        completion_tokens: 50000,
+        api_requests: 523,
+        by_model: [
+          {
+            model: 'gpt-4',
+            spend: 8.5,
+            tokens: 45000,
+            api_requests: 150,
+          },
+          {
+            model: 'gpt-3.5-turbo',
+            spend: 3.95,
+            tokens: 80000,
+            api_requests: 373,
+          },
+        ],
+        daily_metrics: [
+          {
+            date: new Date().toISOString().split('T')[0],
+            spend: 12.45,
+            tokens: 125000,
+            requests: 523,
+          },
+        ],
+      };
+      this.setCache(cacheKey, mockData);
+      return mockData;
+    }
+
+    try {
+      const queryParams = new URLSearchParams();
+      if (startDate) queryParams.append('start_date', startDate);
+      if (endDate) queryParams.append('end_date', endDate);
+      if (apiKeyHash) queryParams.append('api_key', apiKeyHash);
+
+      const response = await this.makeRequest<any>(
+        `/user/daily/activity?${queryParams.toString()}`,
+        {
+          method: 'GET',
+        },
+      );
+
+      // Parse the response according to the actual LiteLLM format
+      const metadata = response.metadata || {};
+      const results = response.results || [];
+      
+      // Aggregate metrics from all dates
+      let totalSpend = metadata.total_spend || 0;
+      let totalTokens = metadata.total_tokens || 0;
+      let promptTokens = metadata.total_prompt_tokens || 0;
+      let completionTokens = metadata.total_completion_tokens || 0;
+      let apiRequests = metadata.total_api_requests || 0;
+      
+      // Aggregate model breakdown
+      const modelBreakdown: { [key: string]: any } = {};
+      const dailyMetrics: any[] = [];
+      
+      results.forEach((dayResult: any) => {
+        // Add to daily metrics
+        dailyMetrics.push({
+          date: dayResult.date,
+          spend: dayResult.metrics?.spend || 0,
+          tokens: dayResult.metrics?.total_tokens || 0,
+          requests: dayResult.metrics?.api_requests || 0,
+        });
+        
+        // Aggregate model breakdown
+        if (dayResult.breakdown?.models) {
+          Object.entries(dayResult.breakdown.models).forEach(([modelName, modelData]: [string, any]) => {
+            if (!modelBreakdown[modelName]) {
+              modelBreakdown[modelName] = {
+                model: modelName,
+                spend: 0,
+                tokens: 0,
+                api_requests: 0,
+              };
+            }
+            modelBreakdown[modelName].spend += modelData.metrics?.spend || 0;
+            modelBreakdown[modelName].tokens += modelData.metrics?.total_tokens || 0;
+            modelBreakdown[modelName].api_requests += modelData.metrics?.api_requests || 0;
+          });
+        }
+      });
+
+      const result = {
+        spend: totalSpend,
+        total_tokens: totalTokens,
+        prompt_tokens: promptTokens,
+        completion_tokens: completionTokens,
+        api_requests: apiRequests,
+        by_model: Object.values(modelBreakdown),
+        daily_metrics: dailyMetrics,
+      };
+
+      this.setCache(cacheKey, result);
+      return result;
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to get user daily activity from LiteLLM');
+      throw error;
     }
   }
 

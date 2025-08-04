@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { QueryParameter } from '../types/common.types.js';
+import { LiteLLMService } from './litellm.service.js';
 
 export interface UsageMetrics {
   totalRequests: number;
@@ -231,36 +232,6 @@ export class UsageStatsService {
       return cached;
     }
 
-    // Use mock data if database is not available
-    if (this.shouldUseMockData()) {
-      this.fastify.log.debug('Using mock usage stats data');
-
-      // Filter and modify mock data based on query parameters
-      const response = JSON.parse(JSON.stringify(this.MOCK_USAGE_METRICS));
-
-      // Apply filters to model breakdown if specific modelId is requested
-      if (query.modelId) {
-        response.modelBreakdown =
-          response.modelBreakdown?.filter(
-            (model: ModelUsageStats) => model.modelId === query.modelId,
-          ) || [];
-      }
-
-      // Apply date range filtering to time series data if specified
-      if (query.startDate || query.endDate) {
-        response.timeSeriesData =
-          response.timeSeriesData?.filter((period: TimePeriodMetrics) => {
-            const periodDate = new Date(period.period);
-            if (query.startDate && periodDate < query.startDate) return false;
-            if (query.endDate && periodDate > query.endDate) return false;
-            return true;
-          }) || [];
-      }
-
-      this.setCache(cacheKey, response);
-      return this.createMockResponse(response);
-    }
-
     try {
       const {
         userId,
@@ -272,6 +243,144 @@ export class UsageStatsService {
         granularity = 'day',
         aggregateBy = 'time',
       } = query;
+
+      // If apiKeyId is provided, fetch data from LiteLLM
+      if (apiKeyId) {
+        this.fastify.log.info({ apiKeyId, userId }, 'Fetching usage data from LiteLLM for API key');
+        const liteLLMService = new LiteLLMService(this.fastify);
+
+        try {
+          // Get the API key to find the key alias and the correct LiteLLM user_id
+          const apiKeyResult = await this.fastify.dbUtils.queryOne(
+            `SELECT ak.name, u.user_id 
+             FROM api_keys ak 
+             JOIN users u ON ak.user_id = u.id 
+             WHERE ak.id = $1`,
+            [apiKeyId]
+          );
+          
+          if (!apiKeyResult || !apiKeyResult.name) {
+            this.fastify.log.warn({ apiKeyId }, 'API key not found or has no name/alias');
+            // Fall through to local database query
+          } else {
+            const keyAlias = apiKeyResult.name as string;
+            const liteLLMUserId = apiKeyResult.user_id as string; // This is now the LiteLLM user_id from users table
+            
+            // Get the LiteLLM token ID for this key
+            const tokenId = await liteLLMService.getKeyTokenByAlias(liteLLMUserId, keyAlias);
+            
+            if (!tokenId) {
+              this.fastify.log.warn({ apiKeyId, keyAlias }, 'Could not find LiteLLM token ID for key');
+              // Fall through to local database query
+            } else {
+              // Format dates for LiteLLM API
+              const formattedStartDate = startDate
+                ? startDate.toISOString().split('T')[0]
+                : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+              const formattedEndDate = endDate
+                ? endDate.toISOString().split('T')[0]
+                : new Date().toISOString().split('T')[0];
+
+              this.fastify.log.info(
+                { formattedStartDate, formattedEndDate, tokenId, keyAlias },
+                'Calling LiteLLM getDailyActivity',
+              );
+
+              const liteLLMData = await liteLLMService.getDailyActivity(
+                tokenId,
+                formattedStartDate,
+                formattedEndDate,
+              );
+
+              this.fastify.log.info({ liteLLMData }, 'Received data from LiteLLM');
+
+              // Transform LiteLLM data to our format
+              const totalMetrics: UsageMetrics = {
+                totalRequests: liteLLMData.api_requests,
+                totalTokens: liteLLMData.total_tokens,
+                totalInputTokens: liteLLMData.prompt_tokens,
+                totalOutputTokens: liteLLMData.completion_tokens,
+                averageLatency: 1200, // Default as LiteLLM doesn't provide this
+                errorRate: 0, // Default as LiteLLM doesn't provide this
+                successRate: 100, // Default as LiteLLM doesn't provide this
+              };
+
+              // Transform model breakdown
+              const modelBreakdown: ModelUsageStats[] = liteLLMData.by_model.map((model) => ({
+                modelId: model.model,
+                modelName: model.model,
+                provider: model.model.includes('gpt') ? 'openai' : 'unknown',
+                totalRequests: model.api_requests,
+                totalTokens: model.tokens,
+                totalInputTokens: Math.floor(model.tokens * 0.6), // Estimate
+                totalOutputTokens: Math.floor(model.tokens * 0.4), // Estimate
+                averageLatency: 1200,
+                errorRate: 0,
+                successRate: 100,
+              }));
+
+              // Use daily metrics from LiteLLM if available
+              let timeSeriesData: TimePeriodMetrics[] = [];
+              if (liteLLMData.daily_metrics && liteLLMData.daily_metrics.length > 0) {
+                timeSeriesData = liteLLMData.daily_metrics.map((day) => ({
+                  period: day.date,
+                  startTime: new Date(day.date),
+                  endTime: new Date(new Date(day.date).getTime() + 24 * 60 * 60 * 1000),
+                  totalRequests: day.requests,
+                  totalTokens: day.tokens,
+                  totalInputTokens: Math.floor(day.tokens * 0.6),
+                  totalOutputTokens: Math.floor(day.tokens * 0.4),
+                  averageLatency: 1200,
+                  errorRate: 0,
+                  successRate: 100,
+                }));
+              } else {
+                // Fallback: Create time series data (basic daily breakdown)
+                const days = Math.ceil(
+                  (new Date(formattedEndDate).getTime() - new Date(formattedStartDate).getTime()) /
+                    (1000 * 60 * 60 * 24),
+                );
+                const dailyRequests = Math.floor(liteLLMData.api_requests / days);
+                const dailyTokens = Math.floor(liteLLMData.total_tokens / days);
+
+                for (let i = 0; i < days; i++) {
+                  const date = new Date(formattedStartDate);
+                  date.setDate(date.getDate() + i);
+
+                  timeSeriesData.push({
+                    period: date.toISOString().split('T')[0],
+                    startTime: date,
+                    endTime: new Date(date.getTime() + 24 * 60 * 60 * 1000),
+                    totalRequests: dailyRequests,
+                    totalTokens: dailyTokens,
+                    totalInputTokens: Math.floor(dailyTokens * 0.6),
+                    totalOutputTokens: Math.floor(dailyTokens * 0.4),
+                    averageLatency: 1200,
+                    errorRate: 0,
+                    successRate: 100,
+                  });
+                }
+              }
+
+              const result: UsageStatsResponse = {
+                totalMetrics,
+                timeSeriesData: aggregateBy === 'time' ? timeSeriesData : undefined,
+                modelBreakdown: aggregateBy === 'model' ? modelBreakdown : undefined,
+              };
+
+              // Cache the result
+              this.setCache(cacheKey, result);
+              return result;
+            }
+          }
+        } catch (liteLLMError) {
+          this.fastify.log.warn(
+            liteLLMError,
+            'Failed to fetch usage from LiteLLM, falling back to local database',
+          );
+          // Fall through to local database query
+        }
+      }
 
       // Build base WHERE clause
       const whereConditions: string[] = ['1=1'];
@@ -336,6 +445,40 @@ export class UsageStatsService {
       return result;
     } catch (error) {
       this.fastify.log.error(error, 'Failed to get usage statistics');
+
+      // If database is unavailable, fall back to mock data
+      if (this.shouldUseMockData()) {
+        this.fastify.log.debug(
+          { query },
+          'Falling back to mock usage stats data (database unavailable)',
+        );
+
+        // Filter and modify mock data based on query parameters
+        const response = JSON.parse(JSON.stringify(this.MOCK_USAGE_METRICS));
+
+        // Apply filters to model breakdown if specific modelId is requested
+        if (query.modelId) {
+          response.modelBreakdown =
+            response.modelBreakdown?.filter(
+              (model: ModelUsageStats) => model.modelId === query.modelId,
+            ) || [];
+        }
+
+        // Apply date range filtering to time series data if specified
+        if (query.startDate || query.endDate) {
+          response.timeSeriesData =
+            response.timeSeriesData?.filter((period: TimePeriodMetrics) => {
+              const periodDate = new Date(period.period);
+              if (query.startDate && periodDate < query.startDate) return false;
+              if (query.endDate && periodDate > query.endDate) return false;
+              return true;
+            }) || [];
+        }
+
+        this.setCache(cacheKey, response);
+        return this.createMockResponse(response);
+      }
+
       throw error;
     }
   }

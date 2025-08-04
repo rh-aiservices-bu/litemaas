@@ -69,6 +69,13 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, modelId, apiKeyId } = request.query;
+      
+      fastify.log.info({ 
+        userId: user.userId, 
+        apiKeyId, 
+        startDate, 
+        endDate 
+      }, 'Usage metrics request received');
 
       try {
         const stats = await usageStatsService.getUsageStats({
@@ -130,6 +137,12 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
             },
           ],
         };
+        
+        fastify.log.info({ 
+          totalRequests: response.totalRequests,
+          totalTokens: response.totalTokens,
+          modelCount: response.topModels.length 
+        }, 'Returning usage metrics response');
 
         return response;
       } catch (error: unknown) {
