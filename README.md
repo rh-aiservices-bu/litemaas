@@ -1,6 +1,15 @@
-# LiteMaaS - LiteLLM User Application
+# LiteMaaS - AI Model Subscription Platform
 
-**LiteMaaS** is a comprehensive model subscription and management platform that provides a user-friendly interface for managing AI model subscriptions, API keys, and usage tracking. It's designed to work seamlessly with LiteLLM instances and serves as a bridge between users and AI model services.
+**LiteMaaS** is an enterprise-grade platform for managing AI model subscriptions, API keys, and usage tracking. It seamlessly integrates with LiteLLM to provide a unified interface for accessing multiple AI models with comprehensive budget management and team collaboration features.
+
+## 🎟️ Key Benefits
+
+- **Multi-Model Access**: One API key can access multiple AI models
+- **Budget Control**: Set spending limits at user, team, and API key levels
+- **Usage Analytics**: Real-time tracking of token usage and costs
+- **Team Collaboration**: Share budgets and manage access across teams
+- **Enterprise Security**: OAuth2 authentication with OpenShift support
+- **Self-Service**: Users can independently manage subscriptions and API keys
 
 ## 🚀 Quick Start
 
@@ -32,26 +41,47 @@ LiteMaaS is a **monorepo** using npm workspaces with two main packages:
 - **Backend** (`@litemaas/backend`): High-performance Fastify API server with PostgreSQL
 - **Frontend** (`@litemaas/frontend`): Modern React application with PatternFly 6 UI
 
-### Key Features
+## 🎯 System Architecture
 
-- 🔐 **OAuth2 Authentication** with OpenShift integration
-- 🤖 **LiteLLM Integration** for AI model management
-- 💳 **Subscription Management** with budget tracking
-- 🔑 **API Key Generation** for programmatic access
-- 📊 **Usage Analytics** and cost tracking
-- 👥 **Team Management** with shared budgets
-- 🌐 **Internationalization** (EN, ES, FR)
-- 📖 **Auto-generated API Documentation** via Swagger
+```mermaid
+graph TB
+    subgraph "Frontend"
+        UI[React + PatternFly 6]
+    end
+    
+    subgraph "Backend Services"
+        API[Fastify API Server]
+        Auth[OAuth2/JWT Auth]
+        DB[(PostgreSQL)]
+    end
+    
+    subgraph "External Services"
+        LiteLLM[LiteLLM Gateway]
+        OAuth[OpenShift OAuth]
+    end
+    
+    UI <--> API
+    API <--> Auth
+    API <--> DB
+    API <--> LiteLLM
+    Auth <--> OAuth
+    
+    style UI fill:#e3f2fd
+    style API fill:#fff3e0
+    style LiteLLM fill:#f3e5f5
+```
 
 ## 🛠️ Development Setup
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/your-org/litemaas.git
    cd litemaas
    ```
 
 2. **Set up environment variables**
+
    ```bash
    # Copy example environment files
    cp backend/.env.example backend/.env
@@ -63,11 +93,13 @@ LiteMaaS is a **monorepo** using npm workspaces with two main packages:
    - Minimum required: `DATABASE_URL`, `JWT_SECRET`, OAuth credentials
 
 4. **Start PostgreSQL** (using Docker)
+
    ```bash
    docker compose -f dev-tools/compose.yaml up -d postgres
    ```
 
 5. **Run the application**
+
    ```bash
    npm run dev
    ```
@@ -81,9 +113,11 @@ LiteMaaS is a **monorepo** using npm workspaces with two main packages:
 - [Production Deployment](docs/deployment/production-guide.md)
 - [UI Guidelines (PatternFly 6)](docs/development/ui-guidelines.md)
 
-### Project Planning
-- [Project Plan](PROJECT_PLAN.md) - Development roadmap and milestones
-- [Implementation Plan](IMPLEMENTATION_PLAN.md) - Detailed implementation phases
+### Quick Links
+
+- 📝 [Project Roadmap](PROJECT_PLAN.md) - Development phases and milestones
+- 🔧 [Contributing Guide](CONTRIBUTING.md) - How to contribute
+- 🔐 [Security Policy](docs/deployment/authentication.md) - Authentication and security
 
 ## 🧪 Testing
 
@@ -109,7 +143,9 @@ npm run test:perf
 LiteMaaS supports multiple deployment methods:
 
 ### OpenShift/Kubernetes Deployment (Recommended for Production)
+
 Deploy to OpenShift or Kubernetes using the provided manifests and Kustomize configuration:
+
 ```bash
 # Deploy to OpenShift
 oc apply -k deployment/openshift/
@@ -122,7 +158,9 @@ oc apply -k deployment/openshift/
 **📚 Complete Guide**: [OpenShift Deployment Guide](docs/deployment/openshift-deployment.md)
 
 ### Container Deployment (Development/Testing)
+
 Deploy using containers with Docker Compose for local development:
+
 ```bash
 # Local deployment with containers
 docker-compose up -d
@@ -134,9 +172,11 @@ podman-compose up -d
 For detailed container deployment instructions, see [Container Deployment Guide](docs/deployment/containers.md).
 
 ### Manual Deployment
+
 For traditional deployment instructions, see the [Production Guide](docs/deployment/production-guide.md).
 
 ### Quick Production Build
+
 ```bash
 # Build both packages
 npm run build
@@ -149,6 +189,7 @@ npm run build
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:
+
 - Code style and conventions
 - Development workflow
 - Submitting pull requests
@@ -163,12 +204,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [LiteLLM](https://github.com/BerriAI/litellm) - The AI model proxy that LiteMaaS integrates with
 - [PatternFly](https://www.patternfly.org/) - The UI framework used in the frontend
 
-## 💬 Support
+## 💬 Getting Help
 
-- 📧 Email: support@litemaas.example.com
-- 💬 Discord: [Join our community](https://discord.gg/litemaas)
-- 🐛 Issues: [GitHub Issues](https://github.com/your-org/litemaas/issues)
+- 📖 [Documentation](docs/) - Comprehensive guides and references
+- 🐛 [Issue Tracker](https://github.com/your-org/litemaas/issues) - Report bugs or request features
+- 🤝 [Contributing](CONTRIBUTING.md) - Join the development community
 
 ---
 
-Built with ❤️ by the LiteMaaS team
+Built with ❤️ by the [CAI Team](http://red.ht/cai-team)

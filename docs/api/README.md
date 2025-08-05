@@ -1,31 +1,38 @@
 # LiteMaaS API Documentation
 
-This directory contains comprehensive API documentation for the LiteMaaS platform.
+## Quick Start
 
-## API Documentation Structure
+```bash
+# Get your API token via OAuth login
+curl -X POST https://api.litemaas.com/api/auth/login
+
+# List available models
+curl -H "Authorization: Bearer $TOKEN" \
+  https://api.litemaas.com/api/v1/models
+
+# Create an API key for multiple models
+curl -X POST -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"modelIds": ["gpt-4", "claude-3"], "name": "My Key"}' \
+  https://api.litemaas.com/api/v1/api-keys
+```
+
+## API Documentation
 
 ### Core APIs
 
-- **[REST API Reference](rest-api.md)** - Main LiteMaaS REST API endpoints
-  - Authentication endpoints
-  - User management
-  - Subscription management
-  - API key operations
-  - Usage analytics
+- **[REST API Reference](rest-api.md)** - Complete API endpoint documentation
+  - Authentication & authorization flows
+  - User profile management
+  - Model browsing and subscription
+  - Multi-model API key management
+  - Usage analytics and reporting
 
-### Integration APIs
+### Specialized APIs
 
-- **[Model Sync API](model-sync-api.md)** - Model synchronization endpoints
-  - Manual sync triggers
-  - Sync status monitoring
-  - Model validation
-  - Health checks
-
-- **[LiteLLM Integration](litellm-api.md)** - LiteLLM service integration
-  - Model information retrieval
-  - Budget management
-  - Usage tracking
-  - Team synchronization
+- **[Model Sync API](model-sync-api.md)** - Model synchronization with LiteLLM
+- **[Usage API](usage-api.md)** - Detailed usage tracking and analytics
+- **[Migration Guide](api-migration-guide.md)** - Upgrading to multi-model API keys
 
 ## API Access
 

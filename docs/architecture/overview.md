@@ -1,35 +1,56 @@
 # System Architecture
 
-**Last Updated**: 2025-07-30 - Default team implementation completed
-
 ## Overview
 
-LiteMaaS follows a microservices architecture with clear separation between frontend and backend services, utilizing OpenShift OAuth for authentication and deep integration with LiteLLM for model management, budget tracking, and usage analytics.
-
-### Recent Architecture Updates (2025-07-30)
-- ✅ **Default Team Implementation**: Comprehensive team-based user management across all services
-- ✅ **User Existence Detection**: Team-based validation replacing unreliable HTTP status checking
-- ✅ **Model Access Control**: Fixed hardcoded restrictions, enabled all-model access via empty arrays
-- ✅ **Service Standardization**: Consistent error handling and user creation patterns across all services
+LiteMaaS follows a microservices architecture with clear separation between frontend and backend services, utilizing OAuth2 for authentication and deep integration with LiteLLM for model management, budget tracking, and usage analytics.
 
 ## High-Level Architecture
 
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│                 │     │                 │     │                 │
-│  React Frontend ├─────┤ Fastify Backend ├─────┤    LiteLLM      │
-│  (PatternFly 6) │     │   (Node.js)     │     │    Instance     │
-│                 │     │                 │     │                 │
-└─────────────────┘     └────────┬────────┘     └─────────────────┘
-                                 │
-                    ┌────────────┼────────────┐
-                    │            │            │
-            ┌───────▼───┐  ┌─────▼─────┐  ┌──▼──────────┐
-            │           │  │           │  │             │
-            │PostgreSQL │  │ OpenShift │  │   Redis     │
-            │ Database  │  │   OAuth   │  │   Cache     │
-            │           │  │           │  │             │
-            └───────────┘  └───────────┘  └─────────────┘
+```mermaid
+graph TB
+    subgraph "User Layer"
+        Browser[Web Browser]
+        API[API Clients]
+    end
+    
+    subgraph "Frontend Layer"
+        React[React SPA<br/>PatternFly 6 UI]
+        Static[Static Assets<br/>JS, CSS, Images]
+    end
+    
+    subgraph "Backend Services"
+        Fastify[Fastify API Server<br/>Node.js + TypeScript]
+        Auth[Auth Service<br/>OAuth2 + JWT]
+        Workers[Background Workers<br/>Sync & Cleanup]
+    end
+    
+    subgraph "Data Layer"
+        PG[(PostgreSQL<br/>Primary Database)]
+        Redis[(Redis<br/>Session Cache)]
+    end
+    
+    subgraph "External Services"
+        LiteLLM[LiteLLM Gateway<br/>Model Proxy]
+        OAuth[OAuth Provider<br/>OpenShift/Custom]
+        Models[AI Models<br/>GPT-4, Claude, etc.]
+    end
+    
+    Browser --> React
+    API --> Fastify
+    React --> Fastify
+    Fastify --> Auth
+    Fastify --> PG
+    Auth --> Redis
+    Auth --> OAuth
+    Fastify --> LiteLLM
+    LiteLLM --> Models
+    Workers --> PG
+    Workers --> LiteLLM
+    
+    style React fill:#61dafb,stroke:#333,stroke-width:2px
+    style Fastify fill:#000000,stroke:#333,stroke-width:2px,color:#fff
+    style PG fill:#336791,stroke:#333,stroke-width:2px,color:#fff
+    style LiteLLM fill:#7c3aed,stroke:#333,stroke-width:2px,color:#fff
 ```
 
 ## Container Architecture
@@ -130,76 +151,140 @@ graph TB
   - API key generation and management
   - Real-time usage analytics
 
-## LiteLLM Integration Architecture
+## Data Flow Architecture
 
-### Integration Layers
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    LiteMaaS Backend                         │
-├─────────────────┬─────────────────┬─────────────────────────┤
-│ LiteLLM         │ Team            │ LiteLLM Integration     │
-│ Service         │ Service         │ Service                 │
-├─────────────────┼─────────────────┼─────────────────────────┤
-│ API Key         │ Subscription    │ Enhanced Data Models    │
-│ Service         │ Service         │ with Sync Metadata     │
-└─────────────────┴─────────────────┴─────────────────────────┘
-                            │
-                    ┌───────┼───────┐
-                    │       │       │
-        ┌───────────▼───┐   │   ┌───▼─────────┐
-        │               │   │   │             │
-        │  PostgreSQL   │   │   │  LiteLLM    │
-        │  Database     │   │   │  Instance   │
-        │               │   │   │             │
-        └───────────────┘   │   └─────────────┘
-                            │
-                    ┌───────▼───────┐
-                    │               │
-                    │ Sync & Health │
-                    │  Monitoring   │
-                    │               │
-                    └───────────────┘
-```
-
-### Synchronization Strategy
-- **Bidirectional Sync**: Changes flow both directions between LiteMaaS and LiteLLM
-- **Conflict Resolution**: Configurable strategies (LiteLLM wins, LiteMaaS wins, merge)
-- **Circuit Breaker**: Resilient communication with automatic fallback
-- **Health Monitoring**: Continuous integration health checks
-- **Audit Trail**: Complete sync operation logging
-- ✅ **Default Team Integration**: All user operations include mandatory team assignment
-- ✅ **User Existence Detection**: Team-based validation (`teams` array) instead of HTTP status
-
-### Default Team Architecture (Implemented 2025-07-30)
-
-**Core Problem Solved**: LiteLLM's `/user/info` endpoint always returns HTTP 200, making user existence detection unreliable.
-
-**Solution**: Team-based user validation using the `teams` array as the source of truth.
-
-#### Default Team Strategy
-```
-Default Team (UUID: a0000000-0000-4000-8000-000000000001)
-├── All users automatically assigned during creation
-├── Empty models array = access to all models
-├── Serves as existence indicator for LiteLLM validation  
-└── Foundation for future team management features
+```mermaid
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant Backend
+    participant DB as PostgreSQL
+    participant LiteLLM
+    participant AI as AI Models
+    
+    User->>Frontend: Browse Models
+    Frontend->>Backend: GET /api/v1/models
+    Backend->>DB: Query models table
+    Backend->>Frontend: Return model list
+    
+    User->>Frontend: Subscribe to Model
+    Frontend->>Backend: POST /api/v1/subscriptions
+    Backend->>DB: Create subscription
+    Backend->>LiteLLM: Sync user/budget
+    Backend->>Frontend: Subscription created
+    
+    User->>Frontend: Create API Key
+    Frontend->>Backend: POST /api/v1/api-keys
+    Backend->>LiteLLM: Generate key
+    LiteLLM->>Backend: Return key + token
+    Backend->>DB: Store key metadata
+    Backend->>Frontend: Return API key
+    
+    User->>AI: Use API key
+    AI->>LiteLLM: Validate & track
+    LiteLLM->>LiteLLM: Update usage
+    
+    Backend->>LiteLLM: Sync usage (periodic)
+    LiteLLM->>Backend: Usage data
+    Backend->>DB: Update metrics
 ```
 
-#### Service Integration Pattern
-```typescript
-// Standard pattern across all services:
-1. await this.defaultTeamService.ensureDefaultTeamExists()
-2. User creation with teams: [DefaultTeamService.DEFAULT_TEAM_ID]
-3. Validation via teams array (empty = doesn't exist)
-4. Graceful "already exists" error handling
+## Service Layer Architecture
+
+```mermaid
+graph TB
+    subgraph "API Routes"
+        AuthRoute["/api/auth/*"]
+        UserRoute["/api/v1/users/*"]
+        ModelRoute["/api/v1/models/*"]
+        SubRoute["/api/v1/subscriptions/*"]
+        KeyRoute["/api/v1/api-keys/*"]
+        UsageRoute["/api/v1/usage/*"]
+    end
+    
+    subgraph "Service Layer"
+        AuthService[Auth Service]
+        UserService[User Service]
+        ModelService[Model Service]
+        SubService[Subscription Service]
+        KeyService[API Key Service]
+        UsageService[Usage Service]
+        LiteLLMService[LiteLLM Service]
+        TeamService[Default Team Service]
+    end
+    
+    subgraph "Data Access"
+        DB[(PostgreSQL)]
+        Cache[(Redis)]
+        LiteLLM[LiteLLM API]
+    end
+    
+    AuthRoute --> AuthService
+    UserRoute --> UserService
+    ModelRoute --> ModelService
+    SubRoute --> SubService
+    KeyRoute --> KeyService
+    UsageRoute --> UsageService
+    
+    AuthService --> Cache
+    UserService --> DB
+    ModelService --> DB
+    SubService --> DB
+    SubService --> LiteLLMService
+    KeyService --> DB
+    KeyService --> LiteLLMService
+    UsageService --> DB
+    UsageService --> LiteLLMService
+    LiteLLMService --> LiteLLM
+    
+    UserService --> TeamService
+    SubService --> TeamService
+    KeyService --> TeamService
+    
+    style LiteLLMService fill:#e1bee7
+    style TeamService fill:#c5e1a5
 ```
 
-#### Implementation Coverage
-- ✅ **SubscriptionService**: Lines 1584-1706, 1748-1761
-- ✅ **ApiKeyService**: Line 1869 (fixed hardcoded models)
-- ✅ **OAuthService**: Line 321 (team existence check)
-- ✅ **LiteLLMIntegrationService**: Lines 497, 536 (bulk sync)
-- ✅ **LiteLLMService**: Lines 699, 728 (mock responses)
+## Security Architecture
+
+```mermaid
+graph TB
+    subgraph "Authentication Flow"
+        User[User]
+        OAuth[OAuth Provider]
+        JWT[JWT Token]
+        Session[Session Store]
+    end
+    
+    subgraph "Authorization Layers"
+        RouteAuth[Route Guards]
+        ServiceAuth[Service Layer Auth]
+        DataAuth[Data Access Control]
+    end
+    
+    subgraph "API Security"
+        RateLimit[Rate Limiting]
+        CORS[CORS Policy]
+        CSP[Content Security]
+        Audit[Audit Logging]
+    end
+    
+    User --> OAuth
+    OAuth --> JWT
+    JWT --> Session
+    JWT --> RouteAuth
+    RouteAuth --> ServiceAuth
+    ServiceAuth --> DataAuth
+    
+    RouteAuth --> RateLimit
+    RouteAuth --> CORS
+    RouteAuth --> CSP
+    ServiceAuth --> Audit
+    
+    style OAuth fill:#ffccbc
+    style JWT fill:#d7ccc8
+    style Audit fill:#b0bec5
+```
 
 ### Budget Management Hierarchy
 ```

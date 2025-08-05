@@ -1,34 +1,22 @@
-# Multi-Model API Keys Implementation Guide
+# Multi-Model API Keys
 
-## Executive Summary
+## Overview
 
-This document provides a complete implementation guide for modifying the LiteMaaS API key system to support associating a single API key with multiple models. Currently, API keys are tied to a single subscription (and thus a single model). This change will allow users to create API keys that can access multiple models they have subscribed to, aligning with LiteLLM's native capabilities.
+LiteMaaS supports multi-model API keys, allowing a single key to access multiple AI models. This feature improves key management efficiency and aligns with LiteLLM's native capabilities.
 
-## Current Architecture Analysis
+## Architecture
 
-### Database Schema
-- **api_keys** table has a foreign key `subscription_id` referencing the subscriptions table
-- This creates a 1:1 relationship between API keys and subscriptions
-- Each subscription is tied to a single model
-- LiteLLM integration already supports multiple models via the `models[]` array
+### Database Design
+- **api_keys** table: Stores key metadata and settings
+- **api_key_models** junction table: Many-to-many relationship between keys and models
+- **Backward Compatibility**: Legacy `subscription_id` column maintained for existing keys
 
-### Current Flow
-1. User subscribes to models (one subscription per model)
-2. User creates an API key by selecting a subscription
-3. API key is tied to that single subscription/model
-4. LiteLLM receives the model information from the subscription
-
-### Key Files to Modify
-- Backend:
-  - `backend/src/lib/database-migrations.ts` - Database schema
-  - `backend/src/types/api-key.types.ts` - TypeScript interfaces
-  - `backend/src/services/api-key.service.ts` - Business logic
-  - `backend/src/schemas/api-keys.ts` - API validation schemas
-  - `backend/src/routes/api-keys.ts` - API endpoints
-- Frontend:
-  - `frontend/src/pages/ApiKeysPage.tsx` - UI component
-  - `frontend/src/services/apiKeys.service.ts` - API client
-  - `frontend/src/types/api.types.ts` - TypeScript types
+### Key Features
+1. **Multi-Model Access**: One key can access multiple models
+2. **Per-Key Budgets**: Set spending limits per API key
+3. **Rate Limiting**: TPM/RPM limits per key
+4. **Team Support**: Keys can be shared within teams
+5. **Metadata & Permissions**: Custom metadata and fine-grained permissions
 
 ## Implementation Plan
 

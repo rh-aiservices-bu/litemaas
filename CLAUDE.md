@@ -1,33 +1,10 @@
 # CLAUDE.md - LiteMaaS AI Context File
 
-> **Note for AI Assistants**: This is a condensed context file for AI-powered development tools. For detailed documentation, see:
-> - API Documentation: `docs/api/`
-> - Architecture Details: `docs/architecture/`
-> - Development Guide: `docs/development/`
-> - Deployment Guide: `docs/deployment/`
-> - Configuration: `docs/deployment/configuration.md`
-
-**Last Updated**: 2025-08-04
-- **FIXED**: LiteLLM usage tracking - now correctly retrieves internal token for API usage queries
-- **ENHANCED**: Added getApiKeyToken method to match API keys by last 4 characters with LiteLLM internal tokens
-- **IMPROVED**: Full user info retrieval with keys array from /user/info endpoint
-- **SIMPLIFIED**: Removed lite_llm_user_id column - using user.id directly as LiteLLM user ID (they are the same value)
-- **FIXED**: Usage stats SQL error - now uses u.id instead of u.lite_llm_user_id
-- **CLEANED**: Removed all lite_llm_user_id references from OAuth, Subscription, and API Key services
-- **IMPLEMENTED**: Comprehensive Default Team implementation across all services
-- **FIXED**: User existence detection using team-based validation instead of unreliable `/user/info`
-- **FIXED**: Consistent default team assignment in OAuth, Subscription, API Key, and bulk sync flows
-- **FIXED**: Hardcoded model restrictions in team creation - now uses empty arrays for all-model access
-- **STANDARDIZED**: User creation patterns across SubscriptionService, ApiKeyService, OAuthService, and LiteLLMIntegrationService
-- OAuth endpoints reorganized: `/api/auth` for flow, `/api/v1/auth` for user operations
-- Fixed OpenShift OAuth integration with proper API server endpoints
-- Enhanced user creation flow with Default Team assignment
-- **FIXED**: LiteLLM user creation "already exists" error in API Key and Subscription services
-- Standardized user existence checking pattern across all services
-- Improved error handling and schema validation
-- **FIXED**: LiteLLM key_alias uniqueness conflict - now generates unique aliases with UUID suffix
-- **FIXED**: LiteLLM usage tracking integration - now correctly uses lite_llm_key_value for API key usage retrieval
-- **DEVELOPMENT NOTE**: Backend and frontend run in automatic reload mode - no need to restart servers for testing
+> **Note for AI Assistants**: This is a condensed context file for AI-powered development tools. For comprehensive documentation, see:
+> - **API Documentation**: `docs/api/`
+> - **Architecture**: `docs/architecture/`
+> - **Development**: `docs/development/`
+> - **Deployment**: `docs/deployment/`
 
 ## 🚀 Project Overview
 
@@ -165,41 +142,10 @@ docker-compose up -d  # Local development with containers
 ## 📝 Key Implementation Notes
 
 ### Default Team Implementation
-> **FULLY IMPLEMENTED**: Comprehensive solution for LiteLLM user existence detection and consistent team assignment
-
-#### Core Architecture
-- **Core Problem**: LiteLLM `/user/info` endpoint always returns HTTP 200 for any user_id, even non-existent users
-- **Solution**: Use teams array as indicator - empty array means user doesn't exist in LiteLLM  
+- **Purpose**: Ensures all users belong to at least one team for proper LiteLLM integration
 - **Default Team UUID**: `a0000000-0000-4000-8000-000000000001`
-- **Empty Models Array**: `allowed_models: []` enables access to all models (critical fix from hardcoded restrictions)
-- **Auto-Assignment**: All users automatically assigned to default team across ALL user creation flows
-
-#### Implementation Coverage
-**✅ Fully Implemented Services**:
-- **SubscriptionService**: `ensureUserExistsInLiteLLM()` ensures default team exists and assigns users
-- **ApiKeyService**: Team creation uses empty models array instead of hardcoded `['gpt-4o']`
-- **OAuthService**: Ensures default team exists before user creation during login flow
-- **LiteLLMIntegrationService**: Bulk user sync includes default team assignment
-- **LiteLLMService**: Mock responses fixed to use empty models arrays consistently
-
-#### Service Integration Patterns
-```typescript
-// Standard pattern used across all services:
-await this.defaultTeamService.ensureDefaultTeamExists();
-
-// User creation with mandatory team assignment:
-teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
-
-// Team creation with all-model access:
-models: [], // Empty array enables access to all models
-```
-
-**Key Components**:
-- `DefaultTeamService` utility class for team management
-- Database migration creating default team with proper UUID
-- **ALL user creation flows** updated: OAuth, Subscription, API Key, and bulk sync
-- Team-based user existence validation in LiteLLM integration
-- Consistent error handling and orphaned user migration support
+- **Key Feature**: Empty `allowed_models: []` array enables access to all models
+- **Usage**: Automatically assigned to all new users during creation
 
 ### Multi-Model API Keys
 > API keys now support multi-model access instead of single subscription binding
@@ -214,7 +160,6 @@ models: [], // Empty array enables access to all models
 - Self-service model: No approval workflow required
 - Default quotas: 10K requests/month, 1M tokens/month
 - Unique constraint: One subscription per user-model pair
-- ⚠️ Database limitation: No `metadata` or `soft_budget` columns in `subscriptions` table
 
 ### Model Data Mapping
 ```typescript
@@ -228,16 +173,8 @@ model_info.input/output_cost_per_token → pricing
 ### API Key Management
 
 #### Key Alias Uniqueness
-> Solves LiteLLM global key_alias uniqueness requirement
-
-- **Core Problem**: LiteLLM requires key_alias to be globally unique across all users
-- **Solution**: Append 8-character UUID suffix to user's chosen name
-- **Format**: `${sanitizedName}_${uuid}` (e.g., `production-key_a5f2b1c3`)
-- **Benefits**: 
-  - Preserves user's chosen name in LiteMaaS UI
-  - Guarantees uniqueness in LiteLLM
-  - No user information exposed
-  - Backward compatible
+- **Format**: `${userChosenName}_${8charUUID}` (e.g., `production-key_a5f2b1c3`)
+- **Purpose**: Ensures global uniqueness for LiteLLM while preserving user-friendly names
 
 ### API Key Structure
 ```typescript
