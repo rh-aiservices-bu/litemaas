@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   aria-hidden="true"
+   height="16"
+   viewBox="0 0 16 16"
+   version="1.1"
+   width="16"
+   data-view-component="true"
+   class="octicon octicon-repo-forked mr-2"
+   id="svg1"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs1" />
+  <path
+     d="M 5,5.372 V 6.25 C 5,6.664 5.336,7 5.75,7 h 4.5 A 0.75,0.75 0 0 0 11,6.25 V 5.372 a 2.25,2.25 0 1 1 1.5,0 V 6.25 A 2.25,2.25 0 0 1 10.25,8.5 h -1.5 v 2.128 a 2.251,2.251 0 1 1 -1.5,0 V 8.5 H 5.75 A 2.25,2.25 0 0 1 3.5,6.25 V 5.372 a 2.25,2.25 0 1 1 1.5,0 z M 5,3.25 a 0.75,0.75 0 1 0 -1.5,0 0.75,0.75 0 0 0 1.5,0 z M 11.75,4 a 0.75,0.75 0 1 0 0,-1.5 0.75,0.75 0 0 0 0,1.5 z m -3,8.75 a 0.75,0.75 0 1 0 -1.5,0 0.75,0.75 0 0 0 1.5,0 z"
+     id="path1"
+     style="fill:#ffffff" />
+</svg>

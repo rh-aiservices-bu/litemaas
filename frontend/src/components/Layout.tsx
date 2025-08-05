@@ -32,14 +32,28 @@ import {
   DrawerCloseButton,
   ToggleGroup,
   ToggleGroupItem,
+  Flex,
+  FlexItem,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { BarsIcon, MoonIcon, SunIcon, GlobeIcon } from '@patternfly/react-icons';
-import { AvatarPlaceholder, LogoTitle } from '../assets';
+import {
+  AvatarPlaceholder,
+  LogoTitle,
+  starLogo,
+  githubLogo,
+  forkLogo,
+  starLogoWhite,
+  forkLogoWhite,
+  githubLogoWhite,
+} from '../assets';
 import { appConfig } from '../config/navigation';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { NotificationDrawer, NotificationBadgeButton } from './NotificationDrawer';
 import { AlertToastGroup } from './AlertToastGroup';
+import axios from 'axios';
 
 const Layout: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -50,7 +64,23 @@ const Layout: React.FC = () => {
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] = useState(false);
+  const [repoStars, setRepoStars] = React.useState<number | null>(null);
+  const [repoForks, setRepoForks] = React.useState<number | null>(null);
   const location = useLocation();
+
+  // Fetch GitHub stars and forks
+  React.useEffect(() => {
+    axios
+      .get('https://api.github.com/repos/rh-aiservices-bu/litemaas')
+      .then((response) => {
+        setRepoStars(response.data.stargazers_count);
+        setRepoForks(response.data.forks_count);
+      })
+      .catch((error) => {
+        // eslint-disable-next-line no-console
+        console.error('Failed to fetch GitHub stars:', error);
+      });
+  }, []);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
@@ -283,7 +313,73 @@ const Layout: React.FC = () => {
 
   const Sidebar = (
     <PageSidebar open={isSidebarOpen}>
-      <PageSidebarBody>{PageNav}</PageSidebarBody>
+      <PageSidebarBody
+        isFilled
+        style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
+      >
+        {PageNav}
+        <div style={{ marginTop: 'auto', padding: '1rem', textAlign: 'center' }}>
+          <Content component={ContentVariants.small}>
+            App by{' '}
+            <a href="http://red.ht/cai-team" target="_blank" rel="noreferrer">
+              red.ht/cai-team
+            </a>
+            <br />
+            <Flex direction={{ default: 'column' }} style={{ width: '100%', alignItems: 'center' }}>
+              <FlexItem style={{ marginBottom: '0rem' }}>
+                <Flex direction={{ default: 'row' }} alignItems={{ default: 'alignItemsCenter' }}>
+                  <a
+                    href="https://github.com/rh-aiservices-bu/litemaas"
+                    target="_blank"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      marginTop: '0.5rem',
+                    }}
+                    rel="noreferrer"
+                  >
+                    <FlexItem>
+                      <img
+                        src={isDarkTheme ? githubLogoWhite : githubLogo}
+                        alt="GitHub Logo"
+                        style={{ height: '20px', marginRight: '0.5rem' }}
+                      />
+                    </FlexItem>
+                    <FlexItem>
+                      <Content component={ContentVariants.a}>Source on GitHub</Content>
+                    </FlexItem>
+                  </a>
+                </Flex>
+              </FlexItem>
+              <FlexItem>
+                <Flex direction={{ default: 'row' }}>
+                  <FlexItem style={{ alignmentBaseline: 'middle' }}>
+                    {repoStars !== null && (
+                      <img
+                        src={isDarkTheme ? starLogoWhite : starLogo}
+                        alt="Star Logo"
+                        style={{ height: '15px', marginRight: '0.5rem', verticalAlign: 'text-top' }}
+                      />
+                    )}
+                    {repoStars !== null ? `${repoStars}` : ''}
+                  </FlexItem>
+                  <FlexItem>
+                    {repoStars !== null && (
+                      <img
+                        src={isDarkTheme ? forkLogoWhite : forkLogo}
+                        alt="Fork Logo"
+                        style={{ height: '15px', marginRight: '0.5rem', verticalAlign: 'text-top' }}
+                      />
+                    )}
+                    {repoForks !== null ? `${repoForks}` : ''}
+                  </FlexItem>
+                </Flex>
+              </FlexItem>
+            </Flex>
+          </Content>
+        </div>
+      </PageSidebarBody>
     </PageSidebar>
   );
 
