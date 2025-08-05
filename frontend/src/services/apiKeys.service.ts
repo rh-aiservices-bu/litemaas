@@ -46,8 +46,8 @@ interface BackendApiKeyDetails {
   revokedAt?: string;
   metadata?: {
     permissions?: string[];
-    environment?: string;
-    revokedReason?: string;
+    ratelimit?: number;
+    description?: string;
   };
 }
 
@@ -108,9 +108,7 @@ class ApiKeysService {
       createdAt: backend.createdAt,
       lastUsed: backend.lastUsedAt,
       expiresAt: backend.expiresAt,
-      description: backend.metadata?.environment
-        ? `${backend.metadata.environment} environment`
-        : undefined,
+      description: backend.metadata?.description ? `${backend.metadata.description}` : undefined,
       models: backend.models,
       modelDetails: backend.modelDetails,
     };

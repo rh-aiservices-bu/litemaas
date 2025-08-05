@@ -18,8 +18,6 @@ import {
   Form,
   FormGroup,
   TextInput,
-  FormSelect,
-  FormSelectOption,
   CodeBlock,
   CodeBlockCode,
   Spinner,
@@ -504,11 +502,11 @@ const ApiKeysPage: React.FC = () => {
               <Table aria-label={t('pages.apiKeys.tableHeaders.apiKeysTable')} variant="compact">
                 <Thead>
                   <Tr>
-                    <Th>{t('pages.apiKeys.forms.name')}</Th>
-                    <Th>{t('pages.apiKeys.forms.apiKey')}</Th>
-                    <Th>{t('pages.apiKeys.forms.models')}</Th>
-                    <Th>{t('pages.apiKeys.labels.lastUsed')}</Th>
-                    <Th>{t('pages.apiKeys.labels.actions')}</Th>
+                    <Th style={{ width: '15%' }}>{t('pages.apiKeys.forms.name')}</Th>
+                    <Th style={{ width: '40%' }}>{t('pages.apiKeys.forms.apiKey')}</Th>
+                    <Th style={{ width: '15%' }}>{t('pages.apiKeys.forms.models')}</Th>
+                    {/* <Th>{t('pages.apiKeys.labels.lastUsed')}</Th> */}
+                    <Th style={{ width: '30%' }}>{t('pages.apiKeys.labels.actions')}</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
@@ -559,7 +557,7 @@ const ApiKeysPage: React.FC = () => {
                               />
                             </Tooltip>
                           </FlexItem>
-                          <FlexItem>
+                          <FlexItem hidden={!visibleKeys.has(apiKey.id)}>
                             <Tooltip content={t('pages.apiKeys.copyToClipboard')}>
                               <Button
                                 variant="plain"
@@ -606,6 +604,7 @@ const ApiKeysPage: React.FC = () => {
                           )}
                         </LabelGroup>
                       </Td>
+                      {/* 
                       <Td>
                         <Content component={ContentVariants.small}>
                           {apiKey.lastUsed
@@ -613,6 +612,7 @@ const ApiKeysPage: React.FC = () => {
                             : t('pages.apiKeys.never')}
                         </Content>
                       </Td>
+                       */}
                       <Td>
                         <Flex spaceItems={{ default: 'spaceItemsSm' }}>
                           <FlexItem>
@@ -774,6 +774,8 @@ const ApiKeysPage: React.FC = () => {
                 })}
               </LabelGroup>
             )}
+
+            {/* TODO: Not selectable by user. Needed?
             <FormGroup label={t('pages.apiKeys.labels.rateLimitLabel')} fieldId="key-rate-limit">
               <FormSelect
                 value={newKeyRateLimit}
@@ -798,7 +800,7 @@ const ApiKeysPage: React.FC = () => {
                 <FormSelectOption value="90" label={t('pages.apiKeys.timeRanges.ninetyDays')} />
                 <FormSelectOption value="365" label={t('pages.apiKeys.timeRanges.oneYear')} />
               </FormSelect>
-            </FormGroup>
+            </FormGroup> */}
           </Form>
 
           <div
@@ -881,7 +883,7 @@ const ApiKeysPage: React.FC = () => {
                       />
                     </Tooltip>
                   </FlexItem>
-                  <FlexItem>
+                  <FlexItem hidden={!visibleKeys.has(selectedApiKey.id)}>
                     <Tooltip content={t('pages.apiKeys.copyToClipboard')}>
                       <Button
                         variant="plain"
@@ -1102,6 +1104,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                         )}
                       </Td>
                     </Tr>
+                    {/*                     
                     <Tr>
                       <Td>
                         <strong>{t('pages.apiKeys.labels.rateLimit')}</strong>
@@ -1111,6 +1114,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                         {t('pages.apiKeys.messages.requestsPerMinute')}
                       </Td>
                     </Tr>
+                     */}
                     {generatedKey.expiresAt && (
                       <Tr>
                         <Td>

@@ -99,8 +99,6 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
           page,
           limit,
         });
-        console.log('result');
-        console.log(JSON.stringify(result.data as SubscriptionDetails[], null, 2));
         const totalPages = Math.ceil(result.total / limit);
         return {
           data: result.data as SubscriptionDetails[],

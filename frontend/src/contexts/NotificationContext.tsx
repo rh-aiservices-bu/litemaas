@@ -63,7 +63,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
         title: newNotification.title,
         description: newNotification.description,
         variant: newNotification.variant === 'default' ? 'custom' : newNotification.variant,
-        timeout: 5000, // All notifications auto-hide after 5 seconds
+        timeout: 2000, // All notifications auto-hide after 2 seconds
       };
 
       setToastNotifications((prev) => [...prev, toastNotification]);
@@ -72,7 +72,7 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
       if (notification.variant === 'success') {
         setTimeout(() => {
           setNotifications((prev) => prev.filter((n) => n.id !== newNotification.id));
-        }, 5000);
+        }, 2000);
       }
     },
     [],

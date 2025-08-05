@@ -38,7 +38,7 @@ export const AlertToastGroup: React.FC<AlertToastGroupProps> = ({ notifications,
           key={notification.id}
           variant={getAlertVariant(notification.variant)}
           title={notification.title}
-          timeout={notification.timeout || 5000}
+          timeout={notification.timeout || 2000}
           onTimeout={() => onRemove(notification.id)}
           actionClose={
             <AlertActionCloseButton

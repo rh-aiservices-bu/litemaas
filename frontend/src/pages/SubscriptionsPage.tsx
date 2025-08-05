@@ -122,8 +122,7 @@ const SubscriptionsPage: React.FC = () => {
       <Stack hasGutter>
         <Content component={ContentVariants.small}>
           Input: ${inputCostPerMillion}/1M {t('pages.usage.metrics.tokens')}
-        </Content>
-        <Content component={ContentVariants.small}>
+          <br />
           Output: ${outputCostPerMillion}/1M {t('pages.usage.metrics.tokens')}
         </Content>
       </Stack>
@@ -282,17 +281,13 @@ const SubscriptionsPage: React.FC = () => {
                           spaceItems={{ default: 'spaceItemsSm' }}
                         >
                           <FlexItem>{getPricingInfo(subscription)}</FlexItem>
-
                           <FlexItem>
-                            <Content component={ContentVariants.small}>
-                              {t('pages.subscriptions.tokenUsageThisMonth')}
-                            </Content>
                             <Progress
                               value={getUsagePercentage(
                                 subscription.usedTokens,
                                 subscription.quotaTokens,
                               )}
-                              title={`${subscription.usedTokens.toLocaleString()} / ${subscription.quotaTokens.toLocaleString()} tokens`}
+                              title={`${t('pages.subscriptions.tokenUsageThisMonth')}: ${subscription.usedTokens.toLocaleString()} / ${subscription.quotaTokens.toLocaleString()} tokens`}
                               variant={getUsageVariant(
                                 getUsagePercentage(
                                   subscription.usedTokens,
@@ -474,7 +469,8 @@ const SubscriptionsPage: React.FC = () => {
                   </DescriptionListDescription>
                 </DescriptionListGroup>
 
-                <DescriptionListGroup>
+                {/*
+                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('pages.subscriptions.features')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     <Flex spaceItems={{ default: 'spaceItemsSm' }} flexWrap={{ default: 'wrap' }}>
@@ -485,7 +481,8 @@ const SubscriptionsPage: React.FC = () => {
                       ))}
                     </Flex>
                   </DescriptionListDescription>
-                </DescriptionListGroup>
+                </DescriptionListGroup> 
+                */}
               </DescriptionList>
 
               {selectedSubscription.status === 'suspended' && (

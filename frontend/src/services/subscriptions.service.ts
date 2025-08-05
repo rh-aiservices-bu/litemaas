@@ -106,8 +106,7 @@ class SubscriptionsService {
       usedTokens: backend.usedTokens || 0,
 
       // Map pricing if available
-      pricing: backend.pricing
-        ? {
+      pricing: backend.pricing? {
             inputCostPerToken: backend.pricing.inputCostPerToken,
             outputCostPerToken: backend.pricing.outputCostPerToken,
             currency: backend.pricing.currency || 'USD',
@@ -129,7 +128,6 @@ class SubscriptionsService {
       limit: limit.toString(),
     });
     const response = await apiClient.get<BackendSubscriptionsResponse>(`/subscriptions?${params}`);
-    console.log(JSON.stringify(response.data));
     return {
       data: response.data.map((sub) => this.mapBackendToFrontend(sub)),
       pagination: {
