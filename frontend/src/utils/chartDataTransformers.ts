@@ -76,6 +76,7 @@ export const transformDailyUsageToChartData = (
     y: item.cost || 0,
     label: `${formatDate(item.date)}: $${(item.cost || 0).toFixed(2)}`,
   }));
+  console.log(requests, tokens, cost);
   return { requests, tokens, cost };
 };
 

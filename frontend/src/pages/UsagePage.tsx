@@ -44,7 +44,7 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
 import { usageService, UsageMetrics, UsageFilters } from '../services/usage.service';
 import { apiKeysService, ApiKey } from '../services/apiKeys.service';
-import { WorkingLineChart, ModelDistributionChart } from '../components/charts';
+import { UsageTrends, ModelDistributionChart } from '../components/charts';
 import {
   transformDailyUsageToChartData,
   transformModelBreakdownToChartData,
@@ -688,7 +688,7 @@ const UsagePage: React.FC = () => {
                     </Flex>
                   </CardTitle>
                   <CardBody>
-                    <WorkingLineChart
+                    <UsageTrends
                       data={transformDailyUsageToChartData(metrics.dailyUsage)[selectedMetric]}
                       metricType={selectedMetric}
                       height={250}
