@@ -436,7 +436,7 @@ const ModelsPage: React.FC = () => {
                         <FlexItem>
                           <Content component={ContentVariants.small}>
                             {model.pricing
-                              ? `Input: $${model.pricing.input}/1K • Output: $${model.pricing.output}/1K`
+                              ? `Input: $${model.pricing.input * 1000000}/1M ${t('pages.usage.metrics.tokens')} • Output: $${model.pricing.output * 1000000}/1M ${t('pages.usage.metrics.tokens')}`
                               : t('pages.models.pricingLabel')}
                           </Content>
                         </FlexItem>
@@ -523,17 +523,6 @@ const ModelsPage: React.FC = () => {
                 </Content>
                 */}
 
-                {/* Show real pricing from LiteLLM */}
-                {selectedModel.pricing && (
-                  <Stack hasGutter>
-                    <Content>
-                      <strong>Pricing:</strong>
-                    </Content>
-                    <Content>Input: ${selectedModel.pricing.input}/1K tokens</Content>
-                    <Content>Output: ${selectedModel.pricing.output}/1K tokens</Content>
-                  </Stack>
-                )}
-
                 <Content>
                   By subscribing, you'll get access to this model and can generate API keys to use
                   it.
@@ -563,8 +552,14 @@ const ModelsPage: React.FC = () => {
                   <DescriptionListDescription>
                     {selectedModel.pricing ? (
                       <Stack hasGutter>
-                        <Content>Input: ${selectedModel.pricing.input}/1K tokens</Content>
-                        <Content>Output: ${selectedModel.pricing.output}/1K tokens</Content>
+                        <Content>
+                          Input: ${selectedModel.pricing.input * 1000000}/1M{' '}
+                          {t('pages.usage.metrics.tokens')}
+                        </Content>
+                        <Content>
+                          Output: ${selectedModel.pricing.output * 1000000}/1M{' '}
+                          {t('pages.usage.metrics.tokens')}
+                        </Content>
                       </Stack>
                     ) : (
                       <Content>Pricing information unavailable</Content>
