@@ -114,17 +114,17 @@ const SubscriptionsPage: React.FC = () => {
       );
     }
 
+    // Convert from per-token to per-million-tokens for display
+    const inputCostPerMillion = subscription.pricing.inputCostPerToken * 1000000;
+    const outputCostPerMillion = subscription.pricing.outputCostPerToken * 1000000;
+
     return (
       <Stack hasGutter>
         <Content component={ContentVariants.small}>
-          {t('pages.subscriptions.inputPricing', {
-            cost: subscription.pricing.inputCostPer1kTokens.toFixed(4),
-          })}
+          Input: ${inputCostPerMillion}/1M {t('pages.usage.metrics.tokens')}
         </Content>
         <Content component={ContentVariants.small}>
-          {t('pages.subscriptions.outputPricing', {
-            cost: subscription.pricing.outputCostPer1kTokens.toFixed(4),
-          })}
+          Output: ${outputCostPerMillion}/1M {t('pages.usage.metrics.tokens')}
         </Content>
       </Stack>
     );

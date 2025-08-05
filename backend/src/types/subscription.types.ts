@@ -95,6 +95,11 @@ export interface SubscriptionDetails extends Subscription {
   };
   remainingRequests: number;
   remainingTokens: number;
+  pricing?: {
+    inputCostPerToken: number;
+    outputCostPerToken: number;
+    currency: string;
+  };
 }
 
 export interface SubscriptionWithApiKey extends SubscriptionDetails {
@@ -139,10 +144,10 @@ export interface EnhancedSubscription extends Subscription {
     currentRpm?: number;
   };
 
-  // LiteLLM pricing info
+  // Model pricing info (per token)
   pricing?: {
-    inputCostPer1kTokens: number;
-    outputCostPer1kTokens: number;
+    inputCostPerToken: number;
+    outputCostPerToken: number;
     currency: string;
   };
 

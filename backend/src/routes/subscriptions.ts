@@ -59,6 +59,13 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
                       tokens: { type: 'number' },
                     },
                   },
+                  pricing: {
+                    type: 'object',
+                    properties: {
+                      inputCostPerToken: { type: 'number' },
+                      outputCostPerToken: { type: 'number' },
+                    },
+                  },
                   resetAt: { type: 'string', format: 'date-time' },
                   expiresAt: { type: 'string', format: 'date-time' },
                   createdAt: { type: 'string', format: 'date-time' },
@@ -92,9 +99,9 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
           page,
           limit,
         });
-
+        console.log('result');
+        console.log(JSON.stringify(result.data as SubscriptionDetails[], null, 2));
         const totalPages = Math.ceil(result.total / limit);
-
         return {
           data: result.data as SubscriptionDetails[],
           pagination: {

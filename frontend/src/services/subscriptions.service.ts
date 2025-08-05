@@ -13,10 +13,10 @@ export interface Subscription {
   usedRequests: number;
   usedTokens: number;
 
-  // LiteLLM pricing
-  pricing?: {
-    inputCostPer1kTokens: number;
-    outputCostPer1kTokens: number;
+  // Model pricing (per token)
+  pricing: {
+    inputCostPerToken: number;
+    outputCostPerToken: number;
     currency: string;
   };
 
@@ -52,9 +52,9 @@ interface BackendSubscriptionDetails {
   updatedAt: string;
 
   // LiteLLM pricing info
-  pricing?: {
-    inputCostPer1kTokens: number;
-    outputCostPer1kTokens: number;
+  pricing: {
+    inputCostPerToken: number;
+    outputCostPerToken: number;
     currency: string;
   };
 
@@ -108,8 +108,8 @@ class SubscriptionsService {
       // Map pricing if available
       pricing: backend.pricing
         ? {
-            inputCostPer1kTokens: backend.pricing.inputCostPer1kTokens,
-            outputCostPer1kTokens: backend.pricing.outputCostPer1kTokens,
+            inputCostPerToken: backend.pricing.inputCostPerToken,
+            outputCostPerToken: backend.pricing.outputCostPerToken,
             currency: backend.pricing.currency || 'USD',
           }
         : undefined,
@@ -128,9 +128,8 @@ class SubscriptionsService {
       page: page.toString(),
       limit: limit.toString(),
     });
-
     const response = await apiClient.get<BackendSubscriptionsResponse>(`/subscriptions?${params}`);
-
+    console.log(JSON.stringify(response.data));
     return {
       data: response.data.map((sub) => this.mapBackendToFrontend(sub)),
       pagination: {

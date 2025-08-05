@@ -19,7 +19,7 @@ const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
           url: 'https://opensource.org/licenses/MIT',
         },
       },
-      host: process.env.NODE_ENV === 'production' ? 'api.litemaas.com' : 'localhost:8080',
+      host: process.env.NODE_ENV === 'production' ? 'api.litemaas.com' : 'localhost:8081',
       schemes: process.env.NODE_ENV === 'production' ? ['https'] : ['http'],
       consumes: ['application/json'],
       produces: ['application/json'],

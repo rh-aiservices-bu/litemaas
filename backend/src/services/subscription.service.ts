@@ -45,6 +45,11 @@ interface DatabaseSubscription {
   team_id?: string;
   created_at: Date;
   updated_at: Date;
+  // Additional fields from JOIN with models table
+  model_name?: string;
+  provider?: string;
+  input_cost_per_token?: number;
+  output_cost_per_token?: number;
 }
 
 interface CountResult {
@@ -423,7 +428,8 @@ export class SubscriptionService {
   ): Promise<EnhancedSubscription | null> {
     try {
       let query = `
-        SELECT s.*, m.name as model_name, m.provider
+        SELECT s.*, m.name as model_name, m.provider,
+               m.input_cost_per_token, m.output_cost_per_token
         FROM subscriptions s
         LEFT JOIN models m ON s.model_id = m.id
         WHERE s.id = $1
@@ -486,7 +492,8 @@ export class SubscriptionService {
 
     try {
       let query = `
-        SELECT s.*, m.name as model_name, m.provider
+        SELECT s.*, m.name as model_name, m.provider, 
+               m.input_cost_per_token, m.output_cost_per_token
         FROM subscriptions s
         LEFT JOIN models m ON s.model_id = m.id
         WHERE s.user_id = $1
@@ -528,7 +535,6 @@ export class SubscriptionService {
       if (!countResult) {
         throw new Error('Failed to get subscription count');
       }
-
       return {
         data: subscriptions.map((sub) => this.mapToEnhancedSubscription(sub)),
         total: parseInt(countResult.count),
@@ -1560,6 +1566,16 @@ export class SubscriptionService {
       metadata: {}, // metadata column doesn't exist in database
     };
 
+    // Add model pricing if available (keep in per-token format)
+    const modelPricing =
+      subscription.input_cost_per_token && subscription.output_cost_per_token
+        ? {
+            inputCostPerToken: parseFloat(subscription.input_cost_per_token) as number,
+            outputCostPerToken: parseFloat(subscription.output_cost_per_token) as number,
+            currency: 'USD',
+          }
+        : undefined;
+
     // Add enhanced LiteLLM integration fields
     const enhanced: EnhancedSubscription = {
       ...baseSubscription,
@@ -1620,6 +1636,9 @@ export class SubscriptionService {
               currentRpm: (subscription.current_rpm as number) || 0,
             }
           : undefined,
+
+      // Pricing from model
+      pricing: modelPricing,
 
       // Team association
       teamId: subscription.team_id as string,
