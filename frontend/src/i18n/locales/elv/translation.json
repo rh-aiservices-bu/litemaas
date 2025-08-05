@@ -1,0 +1,373 @@
+{
+  "nav": {
+    "home": "Barad",
+    "models": "Erain",
+    "subscriptions": "Nestadren",
+    "apiKeys": "Anguin API",
+    "usage": "Aduial",
+    "settings": "Prestanneth"
+  },
+  "pages": {
+    "home": {
+      "title": "Suilad i LiteMaaS",
+      "subtitle": "En waered erain sui prestanneth na gelynn a nestadren i vaain.",
+      "cards": {
+        "modelsDescription": "Tolthad erain saed",
+        "subscriptionsDescription": "Nestadren erain prestanneth",
+        "apiKeysDescription": "Erio ar prestanneth anguin API",
+        "usageDescription": "Tirno en aduial API"
+      }
+    },
+    "login": {
+      "brandAlt": "Sigil LiteMaaS",
+      "signInText": "Minno na vuin nestanneth",
+      "title": "Minno na LiteMaaS",
+      "subtitle": "Adhano prestanneth OpenShift",
+      "loginWithOpenShift": "Minno na OpenShift",
+      "developmentMode": "Maethor Aduial",
+      "loginAsAdmin": "Minno sui Condir (Estel)",
+      "bypassAuthentication": "Bauglo prestanneth na estel a tirno"
+    },
+    "models": {
+      "title": "Erain Saed",
+      "subtitle": "Thuil a nestadren erain AI o taedran uin",
+      "noModels": "Uir erain saed sui hen",
+      "description": "Thuil erain a nestadren prestanneth sui na tol sui hen.",
+      "searchPlaceholder": "Thuil erain...",
+      "filters": {
+        "allProviders": "Ilya Taedran",
+        "allCategories": "Ilya Rhain"
+      },
+      "subscribe": "Nestadren",
+      "subscribing": "Erion nestadren...",
+      "contextLabel": "Ostelo:",
+      "pricingLabel": "Prestanneth: Ú-vellon",
+      "moreFeatures": "+{{count}} en",
+      "loadingTitle": "Athrado Erain...",
+      "loadingDescription": "Thuil erain AI saed o taedran ilya",
+      "emptyStateMessage": "Orno prestanneth thuil na peleth a thinnadh erain.",
+      "clearAllFilters": "Gwedho ilya thinnadh",
+      "modelUnavailable": "I vain ú-vellon na nestadren edregol sui hen.",
+      "close": "Latho",
+      "notifications": {
+        "subscribeSuccess": "Nestadren prestanniel!",
+        "subscribeSuccessDesc": "Sí gelinnel na {{modelName}}. Erion anguin API uin fuin Nestadren.",
+        "subscribeFailed": "Nestadren ur-dhant",
+        "failedToSubscribe": "Ur-dhant nestadren i erain",
+        "alreadySubscribed": "Sí nestadr i erain hen",
+        "loadError": "Goth",
+        "loadErrorDesc": "Ur-dhant tolthad erain uin tawar.",
+        "loadFailed": "Ur-dhant tolthad erain. Orthad hen."
+      }
+    },
+    "subscriptions": {
+      "title": "Nestadren Erain",
+      "pageTitle": "Nin Nestadren",
+      "pageSubtitle": "Prestanneth nestadren a aduial erain vaain",
+      "newSubscription": "Sin Nestadren",
+      "loadingTitle": "Tolthad Nestadren...",
+      "loadingDescription": "Tolthad gannad nestadren",
+      "noSubscriptionsTitle": "Uir nestadren hiraed",
+      "noSubscriptionsDescription": "Ú-belinnel nestadren hall. Togo na nestadren erain vaain.",
+      "viewDetails": "Tirno Annadhren",
+      "detailsTitle": "Annadhren Nestadren",
+      "provider": "Taedrer",
+      "pricing": "Prestanneth",
+      "status": "Hall",
+      "requestQuota": "Ernil Eruin",
+      "tokenQuota": "Ernil Anguin",
+      "requestsUsed": "Eruin Aduial",
+      "tokensUsed": "Anguin Aduial",
+      "created": "Eriel",
+      "features": "Galad",
+      "close": "Edren",
+      "byProvider": "e {{provider}}",
+      "perMonth": "sui ithil",
+      "requests": "eruin",
+      "tokens": "anguin",
+      "tokenUsageThisMonth": "Anguin aduial sui ithil hen",
+      "quotaFormat": "Ernil: {{requests}} eruin, {{tokens}} anguin",
+      "pricingUnavailable": "Prestanneth annadhren uir",
+      "inputPricing": "Tolthad: ${{cost}}/1K anguin",
+      "outputPricing": "Edhellen: ${{cost}}/1K anguin",
+      "suspendedMessage": "En nestadren dharest. Orthad na naneth edo tirno hall nestanneth.",
+      "expiredMessage": "En nestadren methen sui {{date}}. Ernad na aduial i erain hen.",
+      "cancelledMessage": "{{modelName}} nestadren dhaved a orthad uin nestanneth.",
+      "cancelSubscription": "Havo Nestadren",
+      "cancelling": "Havon...",
+      "notifications": {
+        "loadError": "Goth",
+        "loadErrorDesc": "Ur-dhant tolthad nestadren uin tawar.",
+        "cancelSuccess": "Nestadren Dhaved",
+        "cancelError": "Goth",
+        "cancelErrorDesc": "Ur-dhant havon nestadren. Orthad hen.",
+        "cannotCancel": "Uir Havon Nestadren",
+        "cannotCancelDesc": "Elinnel anguin API hall a gelad na nestadren hen. Aphado ilya anguin API raen, a havo nestadren."
+      },
+      "alerts": {
+        "suspended": "Nestadren Dharest",
+        "expired": "Nestadren Methen"
+      }
+    },
+    "apiKeys": {
+      "title": "Anguin API",
+      "createKey": "Erio Anguil API",
+      "creating": "Erion...",
+      "deleteKey": "Aphado Anguil API",
+      "viewKey": "Tirno Anguil",
+      "copyToClipboard": "Tego na tegil",
+      "hideKey": "Thuio anguil",
+      "showKey": "Dannen anguil",
+      "copied": "Tegin!",
+      "selectModels": "Gedelo erain...",
+      "selectAll": "Pedi ilya",
+      "noModelsAssigned": "Uir erain ernuin",
+      "never": "Uir lû",
+      "neverExpires": "Uir methen",
+      "forms": {
+        "name": "Eneth",
+        "description": "Annadhren",
+        "models": "Erain",
+        "expiration": "Methen",
+        "apiKey": "Anguil API",
+        "yourNewApiKey": "Vuin sin anguil API"
+      },
+      "permissions": {
+        "readModels": "Redh Erain",
+        "writeModels": "Teith Erain",
+        "createCompletions": "Erio Vuin",
+        "readUsage": "Redh Aduial",
+        "readAnalytics": "Redh Minlamad",
+        "adminAccess": "Condir Minas"
+      },
+      "labels": {
+        "rateLimitLabel": "Dangen Limmared (eruin sui mineth)",
+        "apiKeyLabel": "Anguil API",
+        "lastUsed": "Aduial Methen",
+        "actions": "Galad",
+        "created": "Eriel",
+        "totalRequests": "Ilya Eruin",
+        "rateLimit": "Dangen Limmared",
+        "expires": "Methen",
+        "description": "Annadhren",
+        "keyDetails": "Annadhren Anguil",
+        "usageExample": "Aduial Estel",
+        "cancel": "Havo",
+        "close": "Edren"
+      },
+      "messages": {
+        "loadingModels": "Tolthad nestadren erain...",
+        "noSubscribedModels": "Uir nestadren erain saed",
+        "noSubscribedModelsError": "Uir nestadren erain hiraed. Belin nestadren hall na erain cyn erio anguil API.",
+        "selectedModels": "Erain gedelin",
+        "modelsSelected": "{{count}} erain gedelin",
+        "keyCreatedSuccess": "{{name}} eriel sui prestanneth",
+        "keyDeleted": "{{name}} aphaded",
+        "copyToClipboard": "{{label}} tegin na tegil",
+        "secureRetrievalMessage": "Dago sui rem hen na ernad ioreth vuin anguil API LiteLLM. Na thurin, benia nestanneth nuin a limmared. Ilya ernad anguil teithad na raen minlamad.",
+        "keyCreatedMessage": "Vuin anguil API eriel sui prestanneth.",
+        "deleteConfirmation": "Gelinnel aphado i anguil API {{name}}?",
+        "deleteWarning": "I galad hen uir hae ernad. I anguil API aphaed sui lúmenn a rhain adhon i anguil hen lossent minas suit.",
+        "keyRevokedMessage": "I anguil API hen revoked a uir adhon sui hen.",
+        "keyExpiredMessage": "I anguil API hen methen sui {{date}}.",
+        "retrievalMessage": "Vuin anguil API LiteLLM eraned sui thurin. Eraned sui: {{date}}",
+        "plusMore": "+{{count}} en",
+        "requestsPerMinute": "eruin/mineth",
+        "apiKeyDetails": "Annadhren Anguil API",
+        "managementDescription": "Prestanneth anguin API na minas prestanneth LiteMaaS",
+        "loadingTitle": "Tolthad Anguin API...",
+        "loadingDescription": "Tolthad gannad anguil API",
+        "errorLoadingTitle": "Goth tolthad anguin API",
+        "noKeysTitle": "Uir anguin API hiraed",
+        "noKeysDescription": "Erio vuin anguil API cyntaf na togo adhon prestanneth LiteMaaS."
+      },
+      "placeholders": {
+        "keyName": "sui: Anguil API Prestanneth",
+        "keyDescription": "Annadhren delu sui orth i anguil hen"
+      },
+      "rateLimits": {
+        "basic": "100 eruin/min (Orthad)",
+        "standard": "500 eruin/min (Prestanneth)",
+        "premium": "1,000 eruin/min (Arphent)",
+        "enterprise": "5,000 eruin/min (Prestanneth Uir)"
+      },
+      "timeRanges": {
+        "thirtyDays": "30 vaer",
+        "ninetyDays": "90 vaer",
+        "oneYear": "1 yén"
+      },
+      "clipboard": {
+        "copy": "Tego",
+        "copied": "Tegin"
+      },
+      "notifications": {
+        "loadError": "Goth",
+        "loadErrorDesc": "Ur-dhant tolthad anguin API uin tawar.",
+        "loadModelError": "Goth",
+        "loadModelErrorDesc": "Ur-dhant tolthad nestadren erain.",
+        "createSuccess": "Anguil API Eriel",
+        "createError": "Goth",
+        "createErrorDesc": "Ur-dhant erio anguil API. Orthad hen.",
+        "deleteSuccess": "Anguil API Aphaded",
+        "deleteError": "Goth",
+        "deleteErrorDesc": "Ur-dhant aphado anguil API. Orthad hen.",
+        "retrieveSuccess": "Anguil API Eraned",
+        "retrieveError": "Goth Ernad Anguil API",
+        "retrieveErrorDesc": "Ur-dhant ernad anguil API",
+        "validationError": "Goth Tuilin",
+        "nameRequired": "Eneth anguil API benia",
+        "modelsRequired": "Gedelo minui mineth erain uin nestadren hall"
+      },
+      "modals": {
+        "createTitle": "Erio Anguil API",
+        "viewTitle": "Annadhren Anguil API",
+        "deleteTitle": "Aphado Anguil API",
+        "createdTitle": "Anguil API Eriel sui Prestanneth",
+        "success": "Prestanneth!",
+        "warning": "Balch",
+        "secureRetrieval": "Ernad Anguil Thurin",
+        "keyRevoked": "Anguil Revoked",
+        "keyExpired": "Anguil Methen",
+        "selectedModels": "Erain gedelin"
+      },
+      "tableHeaders": {
+        "apiKeysTable": "Thabent Anguin API",
+        "keyDetails": "Annadhren anguil",
+        "generatedKeyDetails": "Annadhren anguil eriel"
+      },
+      "codeExample": {
+        "role": "aduiant",
+        "content": "Suilad, ennor!"
+      }
+    },
+    "usage": {
+      "title": "Maethor Aduial",
+      "subtitle": "Tirno aduial API, cost a minlamad prestanneth",
+      "exportData": "Edhon Gannad",
+      "loadingTitle": "Tolthad Gannad Aduial...",
+      "loadingDescription": "Minlamad rhain aduial API a minlamad",
+      "noDataTitle": "Uir gannad aduial saed",
+      "noDataDescription": "Togo eruin API na tirno minlamad aduial sí.",
+      "viewApiDocs": "Tirno Teithad API",
+      "filters": {
+        "custom": "Aderthad",
+        "overview": "Tiradhren",
+        "byModels": "E Erain",
+        "errors": "Goth"
+      },
+      "dateRanges": {
+        "last7Days": "Methen 7 vaer",
+        "last30Days": "Methen 30 vaer",
+        "last90Days": "Methen 90 vaer",
+        "customRange": "Aderthad lúmenn"
+      },
+      "metrics": {
+        "totalRequests": "Ilya Eruin",
+        "totalTokens": "Ilya Anguin",
+        "totalCost": "Ilya Cost",
+        "avgResponseTime": "Minlamad Lû Dannen",
+        "successRate": "Prestanneth Limmared",
+        "successfulRequests": "eruin prestanniel"
+      },
+      "charts": {
+        "dailyUsage": "Aduial Vaer",
+        "modelUsageDistribution": "Aduial Erain Dangen",
+        "errorTypes": "Rhain Goth",
+        "usageTrends": "Aduial Tiradhren",
+        "topModelsByUsage": "Erain Arphent e Aduial",
+        "usageByModel": "Aduial e Erain",
+        "noDataTitle": "Uir Gannad Saed",
+        "noDataDescription": "Uir gannad aduial hiraed sui lúmenn gedelin.",
+        "noModelsTitle": "Uir Gannad Erain",
+        "noModelsDescription": "Uir gannad aduial erain saed sui lúmenn gedelin.",
+        "lineChartAriaLabel": "Maethor lain dannen {{metric}} sui lúmenn",
+        "modelDistributionAriaLabel": "Maethor rond dannen dangen aduial erain",
+        "requests": "Eruin",
+        "percentage": "Percentage",
+        "modelBreakdown": "Erain Aphadren",
+        "detailedBreakdown": "Aphadren Andanil"
+      },
+      "tables": {
+        "topModels": "Thabent erain arphent"
+      },
+      "tableHeaders": {
+        "model": "Erain",
+        "requests": "Eruin",
+        "tokens": "Anguin",
+        "cost": "Cost",
+        "usagePercent": "Aduial %",
+        "count": "Gaennad",
+        "percentage": "Percentage"
+      },
+      "notifications": {
+        "loadError": "Goth",
+        "loadErrorDesc": "Ur-dhant tolthad minlamad aduial uin tawar.",
+        "loadFailed": "Ur-dhant tolthad minlamad aduial. Orthad hen.",
+        "exportStarted": "Edhon Tuilin",
+        "exportStartedDesc": "Edhon gannad aduial prestannien a dhaved sui ring.",
+        "exportComplete": "Edhon Prestanniel",
+        "exportCompleteDesc": "Gannad aduial edhoned sui prestanneth.",
+        "exportFailed": "Edhon Ur-dhant",
+        "exportFailedDesc": "Ur-dhant edhon gannad aduial. Orthad hen.",
+        "customDatesRequired": "Delyo ha aur teg a aur methen edhon aderthad lúmenn."
+      }
+    },
+    "settings": {
+      "title": "Prestanneth",
+      "userPreferences": "Aduiant Delu",
+      "apiConfiguration": "API Prestanneth",
+      "forms": {
+        "displayName": "Eneth Dannen",
+        "displayNamePlaceholder": "Teithad eneth dannen",
+        "emailNotifications": "Nestanneth Thellein",
+        "autoRefreshDashboard": "Auto-ernad Maethor",
+        "enabled": "Prestanniel",
+        "defaultModelProvider": "Taedrer Erain Orthad",
+        "rateLimitLabel": "Dangen Limmared (eruin/mineth)",
+        "timeoutLabel": "Lû-angen (eilenion)",
+        "providerPlaceholder": "OpenAI, Anthropic, sui hen",
+        "openShiftAI": "OpenShift AI"
+      },
+      "buttons": {
+        "savePreferences": "Delu Prestanneth",
+        "updateConfiguration": "Prestanneth Ernad"
+      }
+    }
+  },
+  "ui": {
+    "theme": {
+      "light": "Gelion",
+      "dark": "Morn",
+      "toggle": "Prestanneth hwind"
+    },
+    "language": {
+      "selector": "Lammath",
+      "english": "English",
+      "spanish": "Español",
+      "french": "Français",
+      "german": "Deutsch",
+      "italian": "Italiano",
+      "korean": "한국어",
+      "japanese": "日本語",
+      "chinese": "中文",
+      "elvish": "Edhellen"
+    },
+    "notifications": {
+      "title": "Thellein",
+      "markRead": "Sigil sui redhin",
+      "clear": "Glaed ilya",
+      "empty": "Uir thellein"
+    },
+    "actions": {
+      "logout": "Elo",
+      "login": "Minno na OpenShift",
+      "browse": "Tolthad",
+      "refresh": "Ernad Fuin",
+      "tryAgain": "Orthad Hen"
+    },
+    "errors": {
+      "somethingWrong": "Im goth fuiniel",
+      "tryRefresh": "Goheno, dan im goth úgerth tuil. Orthad ernad i fuin edo orthad na naneth na berian nín."
+    }
+  }
+}

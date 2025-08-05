@@ -1,0 +1,71 @@
+# This configuration exposes services on your host machine's network
+# PostgreSQL: localhost:5432
+# LiteLLM: http://localhost:4000
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_MULTIPLE_DATABASES: litellm, litemaas
+      POSTGRES_USER: ${POSTGRES_USER:-litemaas_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-litemaas_password}
+      PGDATA: /var/lib/postgresql/data/pgdata
+      # Allow connections from any host (development only!)
+      POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
+    ports:
+      - "5432:5432"  # PostgreSQL accessible at localhost:5432
+    userns_mode: keep-id
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data:Z
+      - ./entrypoint.sh:/docker-entrypoint-initdb.d/entrypoint.sh:ro
+    networks:
+      - litemaas-network
+    # Make PostgreSQL listen on all interfaces (not just localhost)
+    command: postgres -c listen_addresses='*'
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-litellm_user} -d ${POSTGRES_DB:-litellm_db}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # LiteLLM Service
+  litellm:
+    image: ghcr.io/berriai/litellm:main-stable
+    container_name: litellm-service
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # Database configuration
+      DATABASE_URL: "postgresql://${POSTGRES_USER:-litellm_user}:${POSTGRES_PASSWORD:-litellm_password}@postgres:5432/${POSTGRES_DB:-litellm_db}"
+      
+      # LiteLLM configuration
+      LITELLM_MASTER_KEY: ${LITELLM_MASTER_KEY:-sk-1234}
+      UI_USERNAME: ${UI_USERNAME:-admin}
+      UI_PASSWORD: ${UI_PASSWORD:-admin}
+    
+      # Other configurations
+      LITELLM_MODE: "PRODUCTION"
+      STORE_MODEL_IN_DB: "True"
+    ports:
+      - "4000:4000"  # LiteLLM UI accessible at http://localhost:4000
+    userns_mode: keep-id
+    volumes:
+      - ./data/litellm:/app/data:Z
+      - ./litellm-config.yaml:/app/config.yaml:ro  # Optional: mount config file
+    networks:
+      - litemaas-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: [ "--config", "/app/config.yaml" ]
+
+networks:
+  litemaas-network:
+    driver: bridge
+    name: litemaas-network

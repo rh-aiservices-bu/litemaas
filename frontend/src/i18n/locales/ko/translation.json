@@ -1,0 +1,379 @@
+{
+  "nav": {
+    "home": "홈",
+    "models": "모델",
+    "subscriptions": "구독",
+    "apiKeys": "API 키",
+    "usage": "사용량",
+    "settings": "설정"
+  },
+  "pages": {
+    "home": {
+      "title": "LiteMaaS에 오신 것을 환영합니다",
+      "subtitle": "AI 모델에 액세스하고 관리하기 위한 Model as a Service 플랫폼입니다.",
+      "cards": {
+        "modelsDescription": "사용 가능한 AI 모델 찾아보기",
+        "subscriptionsDescription": "모델 구독 관리",
+        "apiKeysDescription": "API 키 생성 및 관리",
+        "usageDescription": "API 사용량 모니터링"
+      }
+    },
+    "login": {
+      "brandAlt": "LiteMaaS 로고",
+      "signInText": "계정에 로그인",
+      "title": "LiteMaaS 로그인",
+      "subtitle": "OpenShift 자격 증명을 사용하세요",
+      "loginWithOpenShift": "OpenShift로 로그인",
+      "developmentMode": "개발 모드",
+      "loginAsAdmin": "관리자로 로그인 (테스트)",
+      "bypassAuthentication": "개발 및 테스트 목적으로 인증 우회"
+    },
+    "models": {
+      "title": "사용 가능한 모델",
+      "subtitle": "다양한 공급자의 AI 모델을 발견하고 구독하세요",
+      "noModels": "아직 사용 가능한 모델이 없습니다",
+      "description": "모델 검색 및 구독 기능이 곧 제공됩니다.",
+      "searchPlaceholder": "모델 검색...",
+      "filters": {
+        "allProviders": "모든 공급자",
+        "allCategories": "모든 카테고리"
+      },
+      "subscribe": "구독",
+      "subscribing": "구독 생성 중...",
+      "contextLabel": "컨텍스트:",
+      "pricingLabel": "가격: N/A",
+      "moreFeatures": "+{{count}}개 더",
+      "loadingTitle": "모델 로딩 중...",
+      "loadingDescription": "모든 공급자로부터 사용 가능한 AI 모델을 찾는 중",
+      "emptyStateMessage": "모델을 찾으려면 검색 기준이나 필터를 조정해 보세요.",
+      "clearAllFilters": "모든 필터 지우기",
+      "modelUnavailable": "이 모델은 현재 신규 구독을 할 수 없습니다.",
+      "close": "닫기",
+      "notifications": {
+        "subscribeSuccess": "구독 성공!",
+        "subscribeSuccessDesc": "이제 {{modelName}}에 액세스할 수 있습니다. 구독 페이지에서 API 키를 생성할 수 있습니다.",
+        "subscribeFailed": "구독 실패",
+        "failedToSubscribe": "모델 구독 실패",
+        "alreadySubscribed": "이미 이 모델을 구독하고 있습니다",
+        "loadError": "오류",
+        "loadErrorDesc": "서버에서 모델을 불러오지 못했습니다.",
+        "loadFailed": "모델을 불러오지 못했습니다. 다시 시도하세요."
+      }
+    },
+    "subscriptions": {
+      "title": "모델 구독",
+      "pageTitle": "내 구독",
+      "pageSubtitle": "AI 모델 구독 및 사용량 관리",
+      "newSubscription": "새 구독",
+      "loadingTitle": "구독 불러오는 중...",
+      "loadingDescription": "구독 정보를 가져오는 중",
+      "noSubscriptionsTitle": "구독을 찾을 수 없습니다",
+      "noSubscriptionsDescription": "활성 구독이 없습니다. AI 모델 구독으로 시작하세요.",
+      "viewDetails": "상세 정보 보기",
+      "detailsTitle": "구독 상세 정보",
+      "provider": "공급자",
+      "pricing": "가격",
+      "status": "상태",
+      "requestQuota": "요청 할당량",
+      "tokenQuota": "토큰 할당량",
+      "requestsUsed": "사용된 요청",
+      "tokensUsed": "사용된 토큰",
+      "created": "생성됨",
+      "features": "기능",
+      "close": "닫기",
+      "byProvider": "{{provider}} 제공",
+      "perMonth": "월간",
+      "requests": "요청",
+      "tokens": "토큰",
+      "tokenUsageThisMonth": "이번 달 토큰 사용량",
+      "quotaFormat": "할당량: {{requests}} 요청, {{tokens}} 토큰",
+      "pricingUnavailable": "가격 정보 없음",
+      "inputPricing": "입력: ${{cost}}/1K 토큰",
+      "outputPricing": "출력: ${{cost}}/1K 토큰",
+      "suspendedMessage": "구독이 일시 중지되었습니다. 지원팀에 문의하거나 계정 상태를 확인하세요.",
+      "expiredMessage": "구독이 {{date}}에 만료되었습니다. 이 모델을 계속 사용하려면 갱신하세요.",
+      "cancelledMessage": "{{modelName}} 구독이 취소되어 계정에서 제거되었습니다.",
+      "cancelSubscription": "구독 취소",
+      "cancelling": "취소 중...",
+      "notifications": {
+        "loadError": "오류",
+        "loadErrorDesc": "서버에서 구독을 불러오지 못했습니다.",
+        "cancelSuccess": "구독 취소됨",
+        "cancelError": "오류",
+        "cancelErrorDesc": "구독을 취소하지 못했습니다. 다시 시도하세요.",
+        "cannotCancel": "구독을 취소할 수 없습니다",
+        "cannotCancelDesc": "이 구독에 연결된 활성 API 키가 있습니다. 먼저 모든 API 키를 삭제한 다음 구독을 취소하세요."
+      },
+      "alerts": {
+        "suspended": "구독 일시 중지",
+        "expired": "구독 만료"
+      }
+    },
+    "apiKeys": {
+      "title": "API 키",
+      "createKey": "API 키 생성",
+      "creating": "생성 중...",
+      "deleteKey": "API 키 삭제",
+      "viewKey": "키 보기",
+      "copyToClipboard": "클립보드에 복사",
+      "hideKey": "키 숨기기",
+      "showKey": "키 표시",
+      "copied": "복사됨!",
+      "selectModels": "모델 선택...",
+      "selectAll": "모두 선택",
+      "noModelsAssigned": "할당된 모델 없음",
+      "never": "없음",
+      "neverExpires": "만료되지 않음",
+      "forms": {
+        "name": "이름",
+        "description": "설명",
+        "models": "모델",
+        "expiration": "만료",
+        "apiKey": "API 키",
+        "yourNewApiKey": "새 API 키"
+      },
+      "permissions": {
+        "readModels": "모델 읽기",
+        "writeModels": "모델 쓰기",
+        "createCompletions": "완성 생성",
+        "readUsage": "사용량 읽기",
+        "readAnalytics": "분석 읽기",
+        "adminAccess": "관리자 액세스"
+      },
+      "labels": {
+        "rateLimitLabel": "속도 제한 (분당 요청)",
+        "apiKeyLabel": "API 키",
+        "lastUsed": "마지막 사용",
+        "actions": "작업",
+        "created": "생성됨",
+        "totalRequests": "총 요청",
+        "rateLimit": "속도 제한",
+        "expires": "만료",
+        "description": "설명",
+        "keyDetails": "키 상세 정보",
+        "usageExample": "사용 예시",
+        "cancel": "취소",
+        "close": "닫기"
+      },
+      "messages": {
+        "loadingModels": "구독한 모델을 불러오는 중...",
+        "noSubscribedModels": "구독한 모델이 없습니다",
+        "noSubscribedModelsError": "구독한 모델을 찾을 수 없습니다. API 키를 생성하기 전에 모델에 대한 활성 구독이 필요합니다.",
+        "selectedModels": "선택된 모델",
+        "modelsSelected": "{{count}}개 모델 선택됨",
+        "keyCreatedSuccess": "{{name}}이(가) 성공적으로 생성되었습니다",
+        "keyDeleted": "{{name}}이(가) 삭제되었습니다",
+        "copyToClipboard": "{{label}}이(가) 클립보드에 복사되었습니다",
+        "secureRetrievalMessage": "위의 눈 아이콘을 클릭하여 전체 LiteLLM API 키를 안전하게 검색하세요. 보안상의 이유로 최근 인증이 필요하며 속도가 제한됩니다. 모든 키 검색은 감사 목적으로 기록됩니다.",
+        "keyCreatedMessage": "API 키가 성공적으로 생성되었습니다.",
+        "deleteConfirmation": "{{name}} API 키를 삭제하시겠습니까?",
+        "deleteWarning": "이 작업은 되돌릴 수 없습니다. API 키가 영구적으로 제거되며 이 키를 사용하는 애플리케이션은 즉시 액세스를 잃게 됩니다.",
+        "keyRevokedMessage": "이 API 키는 취소되었으며 더 이상 사용할 수 없습니다.",
+        "keyExpiredMessage": "이 API 키는 {{date}}에 만료되었습니다.",
+        "retrievalMessage": "LiteLLM API 키가 안전하게 검색되었습니다. 검색 시간: {{date}}",
+        "plusMore": "+{{count}}개 더",
+        "requestsPerMinute": "요청/분",
+        "apiKeyDetails": "API 키 상세 정보",
+        "managementDescription": "LiteMaaS 서비스에 액세스하기 위한 API 키 관리",
+        "loadingTitle": "API 키 불러오는 중...",
+        "loadingDescription": "API 키 정보를 가져오는 중",
+        "errorLoadingTitle": "API 키 불러오기 오류",
+        "noKeysTitle": "API 키를 찾을 수 없습니다",
+        "noKeysDescription": "LiteMaaS 서비스를 사용하려면 첫 번째 API 키를 생성하세요."
+      },
+      "placeholders": {
+        "keyName": "예: 프로덕션 API 키",
+        "keyDescription": "이 키의 용도에 대한 선택적 설명"
+      },
+      "rateLimits": {
+        "basic": "100 요청/분 (기본)",
+        "standard": "500 요청/분 (표준)",
+        "premium": "1,000 요청/분 (프리미엄)",
+        "enterprise": "5,000 요청/분 (엔터프라이즈)"
+      },
+      "timeRanges": {
+        "thirtyDays": "30일",
+        "ninetyDays": "90일",
+        "oneYear": "1년"
+      },
+      "clipboard": {
+        "copy": "복사",
+        "copied": "복사됨"
+      },
+      "notifications": {
+        "loadError": "오류",
+        "loadErrorDesc": "서버에서 API 키를 불러오지 못했습니다.",
+        "loadModelError": "오류",
+        "loadModelErrorDesc": "구독한 모델을 불러오지 못했습니다.",
+        "createSuccess": "API 키 생성됨",
+        "createError": "오류",
+        "createErrorDesc": "API 키를 생성하지 못했습니다. 다시 시도하세요.",
+        "deleteSuccess": "API 키 삭제됨",
+        "deleteError": "오류",
+        "deleteErrorDesc": "API 키를 삭제하지 못했습니다. 다시 시도하세요.",
+        "retrieveSuccess": "API 키 검색됨",
+        "retrieveError": "API 키 검색 오류",
+        "retrieveErrorDesc": "API 키를 검색하지 못했습니다",
+        "validationError": "유효성 검사 오류",
+        "nameRequired": "API 키 이름이 필요합니다",
+        "modelsRequired": "활성 구독에서 최소한 하나의 모델을 선택하세요"
+      },
+      "modals": {
+        "createTitle": "API 키 생성",
+        "viewTitle": "API 키 상세 정보",
+        "deleteTitle": "API 키 삭제",
+        "createdTitle": "API 키가 성공적으로 생성되었습니다",
+        "success": "성공!",
+        "warning": "경고",
+        "secureRetrieval": "안전한 키 검색",
+        "keyRevoked": "키 취소됨",
+        "keyExpired": "키 만료됨",
+        "selectedModels": "선택된 모델"
+      },
+      "tableHeaders": {
+        "apiKeysTable": "API 키 테이블",
+        "keyDetails": "키 상세 정보",
+        "generatedKeyDetails": "생성된 키 상세 정보"
+      },
+      "codeExample": {
+        "role": "사용자",
+        "content": "안녕하세요, 세계!"
+      }
+    },
+    "usage": {
+      "title": "사용량 대시보드",
+      "subtitle": "API 사용량, 비용 및 성능 메트릭 모니터링",
+      "exportData": "데이터 내보내기",
+      "loadingTitle": "사용량 데이터 불러오는 중...",
+      "loadingDescription": "API 사용 패턴 및 메트릭 분석 중",
+      "noDataTitle": "사용 가능한 사용량 데이터가 없습니다",
+      "noDataDescription": "API 요청을 시작하여 여기에서 사용 통계를 확인하세요.",
+      "customDatePlaceholderTitle": "날짜 범위 선택",
+      "customDatePlaceholderDescription": "사용자 정의 날짜 범위의 사용 통계를 보려면 위에서 시작일과 종료일을 선택하세요.",
+      "viewApiDocs": "API 문서 보기",
+      "filters": {
+        "custom": "사용자 정의",
+        "overview": "개요",
+        "byModels": "모델별",
+        "errors": "오류",
+        "startDate": "시작일",
+        "endDate": "종료일",
+        "selectStartDate": "시작일 선택",
+        "selectEndDate": "종료일 선택"
+      },
+      "dateRanges": {
+        "last7Days": "지난 7일",
+        "last30Days": "지난 30일",
+        "last90Days": "지난 90일",
+        "customRange": "사용자 정의 범위"
+      },
+      "metrics": {
+        "totalRequests": "총 요청",
+        "totalTokens": "총 토큰",
+        "totalCost": "총 비용",
+        "avgResponseTime": "평균 응답 시간",
+        "successRate": "성공률",
+        "successfulRequests": "성공적인 요청"
+      },
+      "charts": {
+        "dailyUsage": "일일 사용량",
+        "modelUsageDistribution": "모델 사용량 분포",
+        "errorTypes": "오류 유형",
+        "usageTrends": "사용량 추세",
+        "topModelsByUsage": "사용량별 상위 모델",
+        "usageByModel": "모델별 사용량",
+        "noDataTitle": "사용 가능한 데이터 없음",
+        "noDataDescription": "선택된 기간에 대한 사용량 데이터를 찾을 수 없습니다.",
+        "noModelsTitle": "모델 데이터 없음",
+        "noModelsDescription": "선택된 기간에 대한 모델 사용량 데이터가 없습니다.",
+        "lineChartAriaLabel": "시간에 따른 {{metric}}을 보여주는 선 차트",
+        "modelDistributionAriaLabel": "모델 사용량 분포를 보여주는 도넛 차트",
+        "requests": "요청",
+        "percentage": "백분율",
+        "modelBreakdown": "모델 분석",
+        "detailedBreakdown": "상세 분석"
+      },
+      "tables": {
+        "topModels": "상위 모델 테이블"
+      },
+      "tableHeaders": {
+        "model": "모델",
+        "requests": "요청",
+        "tokens": "토큰",
+        "cost": "비용",
+        "usagePercent": "사용률 %",
+        "count": "개수",
+        "percentage": "백분율"
+      },
+      "notifications": {
+        "loadError": "오류",
+        "loadErrorDesc": "서버에서 사용량 메트릭을 불러오지 못했습니다.",
+        "loadFailed": "사용량 메트릭을 불러오지 못했습니다. 다시 시도하세요.",
+        "exportStarted": "내보내기 시작됨",
+        "exportStartedDesc": "사용량 데이터 내보내기가 준비 중이며 곧 다운로드됩니다.",
+        "exportComplete": "내보내기 완료",
+        "exportCompleteDesc": "사용량 데이터가 성공적으로 내보내졌습니다.",
+        "exportFailed": "내보내기 실패",
+        "exportFailedDesc": "사용량 데이터를 내보내지 못했습니다. 다시 시도하세요.",
+        "customDatesRequired": "사용자 정의 범위 내보내기에는 시작일과 종료일을 모두 선택해주세요."
+      }
+    },
+    "settings": {
+      "title": "설정",
+      "userPreferences": "사용자 환경설정",
+      "apiConfiguration": "API 구성",
+      "forms": {
+        "displayName": "표시 이름",
+        "displayNamePlaceholder": "표시 이름을 입력하세요",
+        "emailNotifications": "이메일 알림",
+        "autoRefreshDashboard": "대시보드 자동 새로고침",
+        "enabled": "활성화됨",
+        "defaultModelProvider": "기본 모델 공급자",
+        "rateLimitLabel": "속도 제한 (요청/분)",
+        "timeoutLabel": "시간 제한 (초)",
+        "providerPlaceholder": "OpenAI, Anthropic 등",
+        "openShiftAI": "OpenShift AI"
+      },
+      "buttons": {
+        "savePreferences": "환경설정 저장",
+        "updateConfiguration": "구성 업데이트"
+      }
+    }
+  },
+  "ui": {
+    "theme": {
+      "light": "라이트",
+      "dark": "다크",
+      "toggle": "테마 전환"
+    },
+    "language": {
+      "selector": "언어",
+      "english": "English",
+      "spanish": "Español",
+      "french": "Français",
+      "german": "Deutsch",
+      "italian": "Italiano",
+      "korean": "한국어",
+      "japanese": "日本語",
+      "chinese": "中文",
+      "elvish": "Edhellen"
+    },
+    "notifications": {
+      "title": "알림",
+      "markRead": "읽음으로 표시",
+      "clear": "모두 지우기",
+      "empty": "알림 없음"
+    },
+    "actions": {
+      "logout": "로그아웃",
+      "login": "OpenShift로 로그인",
+      "browse": "찾아보기",
+      "refresh": "페이지 새로고침",
+      "tryAgain": "다시 시도"
+    },
+    "errors": {
+      "somethingWrong": "문제가 발생했습니다",
+      "tryRefresh": "죄송합니다만 예기치 않은 문제가 발생했습니다. 페이지를 새로고침하거나 문제가 지속되면 지원팀에 문의하세요."
+    }
+  }
+}

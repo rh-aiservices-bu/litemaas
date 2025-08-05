@@ -1,0 +1,379 @@
+{
+  "nav": {
+    "home": "首页",
+    "models": "模型",
+    "subscriptions": "订阅",
+    "apiKeys": "API密钥",
+    "usage": "使用情况",
+    "settings": "设置"
+  },
+  "pages": {
+    "home": {
+      "title": "欢迎使用LiteMaaS",
+      "subtitle": "您的模型即服务平台，用于访问和管理AI模型。",
+      "cards": {
+        "modelsDescription": "浏览可用的AI模型",
+        "subscriptionsDescription": "管理您的模型订阅",
+        "apiKeysDescription": "生成和管理API密钥",
+        "usageDescription": "监控您的API使用情况"
+      }
+    },
+    "login": {
+      "brandAlt": "LiteMaaS标志",
+      "signInText": "登录到您的账户",
+      "title": "登录LiteMaaS",
+      "subtitle": "使用您的OpenShift凭据",
+      "loginWithOpenShift": "使用OpenShift登录",
+      "developmentMode": "开发模式",
+      "loginAsAdmin": "以管理员身份登录（测试）",
+      "bypassAuthentication": "为开发和测试目的绕过身份验证"
+    },
+    "models": {
+      "title": "可用模型",
+      "subtitle": "发现并订阅来自各种提供商的AI模型",
+      "noModels": "暂无可用模型",
+      "description": "模型发现和订阅功能即将推出。",
+      "searchPlaceholder": "搜索模型...",
+      "filters": {
+        "allProviders": "所有提供商",
+        "allCategories": "所有类别"
+      },
+      "subscribe": "订阅",
+      "subscribing": "创建订阅中...",
+      "contextLabel": "上下文：",
+      "pricingLabel": "价格：不适用",
+      "moreFeatures": "+{{count}}个更多",
+      "loadingTitle": "正在加载模型...",
+      "loadingDescription": "正在从所有提供商发现可用的AI模型",
+      "emptyStateMessage": "尝试调整您的搜索条件或过滤器以查找模型。",
+      "clearAllFilters": "清除所有过滤器",
+      "modelUnavailable": "此模型目前不可用于新订阅。",
+      "close": "关闭",
+      "notifications": {
+        "subscribeSuccess": "订阅成功！",
+        "subscribeSuccessDesc": "您现在可以访问{{modelName}}。您可以从订阅页面生成API密钥。",
+        "subscribeFailed": "订阅失败",
+        "failedToSubscribe": "订阅模型失败",
+        "alreadySubscribed": "您已经订阅了此模型",
+        "loadError": "错误",
+        "loadErrorDesc": "无法从服务器加载模型。",
+        "loadFailed": "加载模型失败。请重试。"
+      }
+    },
+    "subscriptions": {
+      "title": "模型订阅",
+      "pageTitle": "我的订阅",
+      "pageSubtitle": "管理您的AI模型订阅和使用情况",
+      "newSubscription": "新订阅",
+      "loadingTitle": "正在加载订阅...",
+      "loadingDescription": "正在获取您的订阅信息",
+      "noSubscriptionsTitle": "未找到订阅",
+      "noSubscriptionsDescription": "您没有活动订阅。开始订阅AI模型。",
+      "viewDetails": "查看详情",
+      "detailsTitle": "订阅详情",
+      "provider": "提供商",
+      "pricing": "价格",
+      "status": "状态",
+      "requestQuota": "请求配额",
+      "tokenQuota": "令牌配额",
+      "requestsUsed": "已使用请求",
+      "tokensUsed": "已使用令牌",
+      "created": "创建时间",
+      "features": "功能",
+      "close": "关闭",
+      "byProvider": "由{{provider}}提供",
+      "perMonth": "每月",
+      "requests": "请求",
+      "tokens": "令牌",
+      "tokenUsageThisMonth": "本月令牌使用量",
+      "quotaFormat": "配额：{{requests}}个请求，{{tokens}}个令牌",
+      "pricingUnavailable": "价格信息不可用",
+      "inputPricing": "输入：${{cost}}/1K令牌",
+      "outputPricing": "输出：${{cost}}/1K令牌",
+      "suspendedMessage": "您的订阅已被暂停。请联系支持或检查您的账户状态。",
+      "expiredMessage": "您的订阅已于{{date}}到期。续订以继续使用此模型。",
+      "cancelledMessage": "{{modelName}}订阅已被取消并从您的账户中删除。",
+      "cancelSubscription": "取消订阅",
+      "cancelling": "正在取消...",
+      "notifications": {
+        "loadError": "错误",
+        "loadErrorDesc": "无法从服务器加载订阅。",
+        "cancelSuccess": "订阅已取消",
+        "cancelError": "错误",
+        "cancelErrorDesc": "取消订阅失败。请重试。",
+        "cannotCancel": "无法取消订阅",
+        "cannotCancelDesc": "有活动的API密钥链接到此订阅。请先删除所有API密钥，然后取消订阅。"
+      },
+      "alerts": {
+        "suspended": "订阅已暂停",
+        "expired": "订阅已过期"
+      }
+    },
+    "apiKeys": {
+      "title": "API密钥",
+      "createKey": "创建API密钥",
+      "creating": "创建中...",
+      "deleteKey": "删除API密钥",
+      "viewKey": "查看密钥",
+      "copyToClipboard": "复制到剪贴板",
+      "hideKey": "隐藏密钥",
+      "showKey": "显示密钥",
+      "copied": "已复制！",
+      "selectModels": "选择模型...",
+      "selectAll": "全部选择",
+      "noModelsAssigned": "未分配模型",
+      "never": "从不",
+      "neverExpires": "永不过期",
+      "forms": {
+        "name": "名称",
+        "description": "描述",
+        "models": "模型",
+        "expiration": "过期时间",
+        "apiKey": "API密钥",
+        "yourNewApiKey": "您的新API密钥"
+      },
+      "permissions": {
+        "readModels": "读取模型",
+        "writeModels": "写入模型",
+        "createCompletions": "创建完成",
+        "readUsage": "读取使用情况",
+        "readAnalytics": "读取分析",
+        "adminAccess": "管理员访问"
+      },
+      "labels": {
+        "rateLimitLabel": "速率限制（每分钟请求数）",
+        "apiKeyLabel": "API密钥",
+        "lastUsed": "最后使用",
+        "actions": "操作",
+        "created": "创建时间",
+        "totalRequests": "总请求数",
+        "rateLimit": "速率限制",
+        "expires": "过期时间",
+        "description": "描述",
+        "keyDetails": "密钥详情",
+        "usageExample": "使用示例",
+        "cancel": "取消",
+        "close": "关闭"
+      },
+      "messages": {
+        "loadingModels": "正在加载您订阅的模型...",
+        "noSubscribedModels": "没有订阅的模型可用",
+        "noSubscribedModelsError": "未找到订阅的模型。在创建API密钥之前，您需要对模型有活动订阅。",
+        "selectedModels": "选定的模型",
+        "modelsSelected": "已选择{{count}}个模型",
+        "keyCreatedSuccess": "{{name}}已成功创建",
+        "keyDeleted": "{{name}}已被删除",
+        "copyToClipboard": "{{label}}已复制到剪贴板",
+        "secureRetrievalMessage": "点击上方的眼睛图标安全地检索您的完整LiteLLM API密钥。出于安全原因，这需要最近的身份验证并受速率限制。所有密钥检索都会被记录以供审计。",
+        "keyCreatedMessage": "您的API密钥已成功创建。",
+        "deleteConfirmation": "您确定要删除API密钥{{name}}吗？",
+        "deleteWarning": "此操作无法撤消。API密钥将被永久删除，使用此密钥的应用程序将立即失去访问权限。",
+        "keyRevokedMessage": "此API密钥已被撤销，无法再使用。",
+        "keyExpiredMessage": "此API密钥已于{{date}}过期。",
+        "retrievalMessage": "您的LiteLLM API密钥已安全检索。检索时间：{{date}}",
+        "plusMore": "+{{count}}个更多",
+        "requestsPerMinute": "请求/分钟",
+        "apiKeyDetails": "API密钥详情",
+        "managementDescription": "管理用于访问LiteMaaS服务的API密钥",
+        "loadingTitle": "正在加载API密钥...",
+        "loadingDescription": "正在检索您的API密钥信息",
+        "errorLoadingTitle": "加载API密钥时出错",
+        "noKeysTitle": "未找到API密钥",
+        "noKeysDescription": "创建您的第一个API密钥以开始使用LiteMaaS服务。"
+      },
+      "placeholders": {
+        "keyName": "例如，生产API密钥",
+        "keyDescription": "此密钥用途的可选描述"
+      },
+      "rateLimits": {
+        "basic": "100请求/分钟（基础）",
+        "standard": "500请求/分钟（标准）",
+        "premium": "1,000请求/分钟（高级）",
+        "enterprise": "5,000请求/分钟（企业）"
+      },
+      "timeRanges": {
+        "thirtyDays": "30天",
+        "ninetyDays": "90天",
+        "oneYear": "1年"
+      },
+      "clipboard": {
+        "copy": "复制",
+        "copied": "已复制"
+      },
+      "notifications": {
+        "loadError": "错误",
+        "loadErrorDesc": "无法从服务器加载API密钥。",
+        "loadModelError": "错误",
+        "loadModelErrorDesc": "无法加载您订阅的模型。",
+        "createSuccess": "API密钥已创建",
+        "createError": "错误",
+        "createErrorDesc": "创建API密钥失败。请重试。",
+        "deleteSuccess": "API密钥已删除",
+        "deleteError": "错误",
+        "deleteErrorDesc": "删除API密钥失败。请重试。",
+        "retrieveSuccess": "API密钥已检索",
+        "retrieveError": "检索API密钥时出错",
+        "retrieveErrorDesc": "无法检索API密钥",
+        "validationError": "验证错误",
+        "nameRequired": "API密钥名称是必需的",
+        "modelsRequired": "请从您的活动订阅中选择至少一个模型"
+      },
+      "modals": {
+        "createTitle": "创建API密钥",
+        "viewTitle": "API密钥详情",
+        "deleteTitle": "删除API密钥",
+        "createdTitle": "API密钥创建成功",
+        "success": "成功！",
+        "warning": "警告",
+        "secureRetrieval": "安全密钥检索",
+        "keyRevoked": "密钥已撤销",
+        "keyExpired": "密钥已过期",
+        "selectedModels": "选定的模型"
+      },
+      "tableHeaders": {
+        "apiKeysTable": "API密钥表",
+        "keyDetails": "密钥详情",
+        "generatedKeyDetails": "生成的密钥详情"
+      },
+      "codeExample": {
+        "role": "用户",
+        "content": "你好，世界！"
+      }
+    },
+    "usage": {
+      "title": "使用情况仪表板",
+      "subtitle": "监控您的API使用情况、成本和性能指标",
+      "exportData": "导出数据",
+      "loadingTitle": "正在加载使用数据...",
+      "loadingDescription": "分析您的API使用模式和指标",
+      "noDataTitle": "没有可用的使用数据",
+      "noDataDescription": "开始进行API请求以在此处查看您的使用统计信息。",
+      "customDatePlaceholderTitle": "选择日期范围",
+      "customDatePlaceholderDescription": "请在上方选择开始日期和结束日期，以查看您自定义日期范围的使用统计信息。",
+      "viewApiDocs": "查看API文档",
+      "filters": {
+        "custom": "自定义",
+        "overview": "概览",
+        "byModels": "按模型",
+        "errors": "错误",
+        "startDate": "开始日期",
+        "endDate": "结束日期",
+        "selectStartDate": "选择开始日期",
+        "selectEndDate": "选择结束日期"
+      },
+      "dateRanges": {
+        "last7Days": "过去7天",
+        "last30Days": "过去30天",
+        "last90Days": "过去90天",
+        "customRange": "自定义范围"
+      },
+      "metrics": {
+        "totalRequests": "总请求数",
+        "totalTokens": "总令牌数",
+        "totalCost": "总成本",
+        "avgResponseTime": "平均响应时间",
+        "successRate": "成功率",
+        "successfulRequests": "成功的请求"
+      },
+      "charts": {
+        "dailyUsage": "每日使用量",
+        "modelUsageDistribution": "模型使用分布",
+        "errorTypes": "错误类型",
+        "usageTrends": "使用趋势",
+        "topModelsByUsage": "按使用量排名的顶级模型",
+        "usageByModel": "按模型使用量",
+        "noDataTitle": "无可用数据",
+        "noDataDescription": "未找到所选时间段的使用数据。",
+        "noModelsTitle": "无模型数据",
+        "noModelsDescription": "所选时间段无可用的模型使用数据。",
+        "lineChartAriaLabel": "显示{{metric}}随时间变化的折线图",
+        "modelDistributionAriaLabel": "显示模型使用分布的环形图",
+        "requests": "请求",
+        "percentage": "百分比",
+        "modelBreakdown": "模型分解",
+        "detailedBreakdown": "详细分解"
+      },
+      "tables": {
+        "topModels": "顶级模型表"
+      },
+      "tableHeaders": {
+        "model": "模型",
+        "requests": "请求",
+        "tokens": "令牌",
+        "cost": "成本",
+        "usagePercent": "使用率 %",
+        "count": "计数",
+        "percentage": "百分比"
+      },
+      "notifications": {
+        "loadError": "错误",
+        "loadErrorDesc": "无法从服务器加载使用指标。",
+        "loadFailed": "加载使用指标失败。请重试。",
+        "exportStarted": "导出已开始",
+        "exportStartedDesc": "您的使用数据导出正在准备中，即将下载。",
+        "exportComplete": "导出完成",
+        "exportCompleteDesc": "使用数据已成功导出。",
+        "exportFailed": "导出失败",
+        "exportFailedDesc": "无法导出使用数据。请重试。",
+        "customDatesRequired": "请选择开始日期和结束日期以导出自定义范围。"
+      }
+    },
+    "settings": {
+      "title": "设置",
+      "userPreferences": "用户偏好",
+      "apiConfiguration": "API配置",
+      "forms": {
+        "displayName": "显示名称",
+        "displayNamePlaceholder": "输入您的显示名称",
+        "emailNotifications": "电子邮件通知",
+        "autoRefreshDashboard": "自动刷新仪表板",
+        "enabled": "已启用",
+        "defaultModelProvider": "默认模型提供商",
+        "rateLimitLabel": "速率限制（请求/分钟）",
+        "timeoutLabel": "超时（秒）",
+        "providerPlaceholder": "OpenAI、Anthropic等",
+        "openShiftAI": "OpenShift AI"
+      },
+      "buttons": {
+        "savePreferences": "保存偏好",
+        "updateConfiguration": "更新配置"
+      }
+    }
+  },
+  "ui": {
+    "theme": {
+      "light": "浅色",
+      "dark": "深色",
+      "toggle": "切换主题"
+    },
+    "language": {
+      "selector": "语言",
+      "english": "English",
+      "spanish": "Español",
+      "french": "Français",
+      "german": "Deutsch",
+      "italian": "Italiano",
+      "korean": "한국어",
+      "japanese": "日本語",
+      "chinese": "中文",
+      "elvish": "Edhellen"
+    },
+    "notifications": {
+      "title": "通知",
+      "markRead": "标记为已读",
+      "clear": "清除所有",
+      "empty": "没有通知"
+    },
+    "actions": {
+      "logout": "退出",
+      "login": "使用OpenShift登录",
+      "browse": "浏览",
+      "refresh": "刷新页面",
+      "tryAgain": "重试"
+    },
+    "errors": {
+      "somethingWrong": "出现问题",
+      "tryRefresh": "抱歉，发生了意外情况。请尝试刷新页面，如果问题仍然存在，请联系支持。"
+    }
+  }
+}

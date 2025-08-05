@@ -1,0 +1,62 @@
+/* PatternFly 6 includes Red Hat fonts automatically */
+
+/* Root styles with PatternFly 6 design tokens */
+:root {
+  /* Use PatternFly 6 semantic tokens for typography */
+  font-family: var(--pf-t--global--font--family--body);
+  font-size: 18px; /* Increased base font size to match ODH appearance */
+  color: var(--pf-t--global--text--color--regular);
+  background-color: var(--pf-t--global--background--color--primary--default);
+}
+
+/* Ensure html has proper font size - matches ODH sizing */
+html {
+  font-size: 18px;
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-size: 18px; /* Ensure body inherits larger font size */
+  line-height: 1.5; /* Better line height for readability */
+}
+
+code {
+  font-family: var(--pf-t--global--font--family--mono);
+}
+
+/* Ensure PatternFly components scale properly */
+.pf-v6-c-page,
+.pf-v6-c-masthead,
+.pf-v6-c-page__sidebar,
+.pf-v6-c-nav,
+.pf-v6-c-toolbar {
+  font-size: 1rem; /* Use relative units based on our 18px base */
+}
+
+/* Make buttons slightly larger to match ODH */
+.pf-v6-c-button {
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+/* Adjust navigation item sizing */
+.pf-v6-c-nav__link {
+  font-size: 1rem;
+  padding: 0.75rem 1rem;
+}
+
+/* Reduce all padding/margin for tighter layout */
+.pf-v6-c-page__main {
+  padding: 0 !important;
+}
+
+.pf-v6-c-page__main-section {
+  padding-top: 1rem !important;
+}
+
+/* Dark theme support - add class to html element */
+.pf-v6-theme-dark {
+  color-scheme: dark;
+}

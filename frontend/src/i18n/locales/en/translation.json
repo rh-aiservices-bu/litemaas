@@ -1,0 +1,392 @@
+{
+  "nav": {
+    "home": "Home",
+    "models": "Models",
+    "subscriptions": "Subscriptions",
+    "apiKeys": "API Keys",
+    "usage": "Usage",
+    "settings": "Settings"
+  },
+  "pages": {
+    "home": {
+      "title": "Welcome to LiteMaaS",
+      "subtitle": "Your Model as a Service platform for accessing and managing AI models.",
+      "cards": {
+        "modelsDescription": "Browse available AI models",
+        "subscriptionsDescription": "Manage your model subscriptions",
+        "apiKeysDescription": "Generate and manage API keys",
+        "usageDescription": "Monitor your API usage"
+      }
+    },
+    "login": {
+      "brandAlt": "LiteMaaS logo",
+      "signInText": "Sign in to your account",
+      "title": "Log in to LiteMaaS",
+      "subtitle": "Use your OpenShift credentials",
+      "loginWithOpenShift": "Login with OpenShift",
+      "developmentMode": "Development Mode",
+      "loginAsAdmin": "Login as Admin (Test)",
+      "bypassAuthentication": "Bypass authentication for development and testing purposes"
+    },
+    "models": {
+      "title": "Available Models",
+      "subtitle": "Discover and subscribe to AI models from various providers",
+      "noModels": "No models available yet",
+      "description": "Model discovery and subscription functionality coming soon.",
+      "searchPlaceholder": "Search models...",
+      "filters": {
+        "allProviders": "All Providers",
+        "allCategories": "All Categories"
+      },
+      "subscribe": "Subscribe",
+      "subscribing": "Creating subscription...",
+      "contextLabel": "Context:",
+      "pricingLabel": "Pricing: N/A",
+      "moreFeatures": "+{{count}} more",
+      "loadingTitle": "Loading Models...",
+      "loadingDescription": "Discovering available AI models from all providers",
+      "emptyStateMessage": "Try adjusting your search criteria or filters to find models.",
+      "clearAllFilters": "Clear all filters",
+      "modelUnavailable": "This model is currently unavailable for new subscriptions.",
+      "close": "Close",
+      "notifications": {
+        "subscribeSuccess": "Successfully subscribed!",
+        "subscribeSuccessDesc": "You now have access to {{modelName}}. You can generate API keys from the Subscriptions page.",
+        "subscribeFailed": "Subscription failed",
+        "failedToSubscribe": "Failed to subscribe to model",
+        "alreadySubscribed": "You are already subscribed to this model",
+        "loadError": "Error",
+        "loadErrorDesc": "Failed to load models from the server.",
+        "loadFailed": "Failed to load models. Please try again."
+      }
+    },
+    "subscriptions": {
+      "title": "Model Subscriptions",
+      "pageTitle": "My Subscriptions",
+      "pageSubtitle": "Manage your AI model subscriptions and usage",
+      "newSubscription": "New Subscription",
+      "loadingTitle": "Loading Subscriptions...",
+      "loadingDescription": "Retrieving your subscription information",
+      "noSubscriptionsTitle": "No subscriptions found",
+      "noSubscriptionsDescription": "You don't have any active subscriptions. Start by subscribing to an AI model.",
+      "viewDetails": "View Details",
+      "detailsTitle": "Subscription Details",
+      "provider": "Provider",
+      "pricing": "Pricing",
+      "status": "Status",
+      "requestQuota": "Request Quota",
+      "tokenQuota": "Token Quota",
+      "requestsUsed": "Requests Used",
+      "tokensUsed": "Tokens Used",
+      "created": "Created",
+      "features": "Features",
+      "close": "Close",
+      "byProvider": "by {{provider}}",
+      "perMonth": "per month",
+      "requests": "requests",
+      "tokens": "tokens",
+      "tokenUsageThisMonth": "Token usage this month",
+      "quotaFormat": "Quota: {{requests}} requests, {{tokens}} tokens",
+      "pricingUnavailable": "Pricing information unavailable",
+      "inputPricing": "Input: ${{cost}}/1K tokens",
+      "outputPricing": "Output: ${{cost}}/1K tokens",
+      "suspendedMessage": "Your subscription has been suspended. Contact support or check your account status.",
+      "expiredMessage": "Your subscription expired on {{date}}. Renew to continue using this model.",
+      "cancelledMessage": "{{modelName}} subscription has been cancelled and removed from your account.",
+      "cancelSubscription": "Cancel Subscription",
+      "cancelling": "Cancelling...",
+      "notifications": {
+        "loadError": "Error",
+        "loadErrorDesc": "Failed to load subscriptions from the server.",
+        "cancelSuccess": "Subscription Cancelled",
+        "cancelError": "Error",
+        "cancelErrorDesc": "Failed to cancel subscription. Please try again.",
+        "cannotCancel": "Cannot Cancel Subscription",
+        "cannotCancelDesc": "There are active API keys linked to this subscription. Please delete all API keys first, then cancel the subscription."
+      },
+      "alerts": {
+        "suspended": "Subscription Suspended",
+        "expired": "Subscription Expired"
+      }
+    },
+    "apiKeys": {
+      "title": "API Keys",
+      "createKey": "Create API Key",
+      "creating": "Creating...",
+      "deleteKey": "Delete API Key",
+      "viewKey": "View Key",
+      "copyToClipboard": "Copy to clipboard",
+      "hideKey": "Hide key",
+      "showKey": "Show key",
+      "copied": "Copied!",
+      "selectModels": "Select models...",
+      "selectAll": "Select all",
+      "noModelsAssigned": "No models assigned",
+      "never": "Never",
+      "neverExpires": "Never expires",
+      "forms": {
+        "name": "Name",
+        "description": "Description",
+        "models": "Models",
+        "expiration": "Expiration",
+        "apiKey": "API Key",
+        "yourNewApiKey": "Your new API key"
+      },
+      "permissions": {
+        "readModels": "Read Models",
+        "writeModels": "Write Models",
+        "createCompletions": "Create Completions",
+        "readUsage": "Read Usage",
+        "readAnalytics": "Read Analytics",
+        "adminAccess": "Admin Access"
+      },
+      "labels": {
+        "rateLimitLabel": "Rate Limit (requests per minute)",
+        "apiKeyLabel": "API key",
+        "lastUsed": "Last Used",
+        "actions": "Actions",
+        "created": "Created",
+        "totalRequests": "Total Requests",
+        "rateLimit": "Rate Limit",
+        "expires": "Expires",
+        "description": "Description",
+        "keyDetails": "Key Details",
+        "usageExample": "Usage Example",
+        "cancel": "Cancel",
+        "close": "Close"
+      },
+      "messages": {
+        "loadingModels": "Loading your subscribed models...",
+        "noSubscribedModels": "No subscribed models available",
+        "noSubscribedModelsError": "No subscribed models found. You need an active subscription to a model before creating an API key.",
+        "selectedModels": "Selected models",
+        "modelsSelected": "{{count}} model(s) selected",
+        "keyCreatedSuccess": "{{name}} has been created successfully",
+        "keyDeleted": "{{name}} has been deleted",
+        "copyToClipboard": "{{label}} copied to clipboard",
+        "secureRetrievalMessage": "Click the eye icon above to securely retrieve your full LiteLLM API key. For security reasons, this requires recent authentication and is rate-limited. All key retrievals are logged for audit purposes.",
+        "keyCreatedMessage": "Your API key has been created successfully.",
+        "deleteConfirmation": "Are you sure you want to delete the API key {{name}}?",
+        "deleteWarning": "This action cannot be undone. The API key will be permanently removed and applications using this key will lose access immediately.",
+        "keyRevokedMessage": "This API key has been revoked and can no longer be used.",
+        "keyExpiredMessage": "This API key has expired on {{date}}.",
+        "retrievalMessage": "Your LiteLLM API key has been retrieved securely. Retrieved at: {{date}}",
+        "plusMore": "+{{count}} more",
+        "requestsPerMinute": "requests/minute",
+        "apiKeyDetails": "API Key Details",
+        "managementDescription": "Manage API keys for accessing LiteMaaS services",
+        "loadingTitle": "Loading API Keys...",
+        "loadingDescription": "Retrieving your API key information",
+        "errorLoadingTitle": "Error loading API keys",
+        "noKeysTitle": "No API keys found",
+        "noKeysDescription": "Create your first API key to start using LiteMaaS services."
+      },
+      "placeholders": {
+        "keyName": "e.g., Production API Key",
+        "keyDescription": "Optional description of this key's purpose"
+      },
+      "rateLimits": {
+        "basic": "100 req/min (Basic)",
+        "standard": "500 req/min (Standard)",
+        "premium": "1,000 req/min (Premium)",
+        "enterprise": "5,000 req/min (Enterprise)"
+      },
+      "timeRanges": {
+        "thirtyDays": "30 days",
+        "ninetyDays": "90 days",
+        "oneYear": "1 year"
+      },
+      "clipboard": {
+        "copy": "Copy",
+        "copied": "Copied"
+      },
+      "notifications": {
+        "loadError": "Error",
+        "loadErrorDesc": "Failed to load API keys from the server.",
+        "loadModelError": "Error",
+        "loadModelErrorDesc": "Failed to load your subscribed models.",
+        "createSuccess": "API Key Created",
+        "createError": "Error",
+        "createErrorDesc": "Failed to create API key. Please try again.",
+        "deleteSuccess": "API Key Deleted",
+        "deleteError": "Error",
+        "deleteErrorDesc": "Failed to delete API key. Please try again.",
+        "retrieveSuccess": "API Key Retrieved",
+        "retrieveError": "Error Retrieving API Key",
+        "retrieveErrorDesc": "Failed to retrieve API key",
+        "validationError": "Validation Error",
+        "nameRequired": "API key name is required",
+        "modelsRequired": "Please select at least one model from your active subscriptions"
+      },
+      "modals": {
+        "createTitle": "Create API Key",
+        "viewTitle": "API Key Details",
+        "deleteTitle": "Delete API Key",
+        "createdTitle": "API Key Created Successfully",
+        "success": "Success!",
+        "warning": "Warning",
+        "secureRetrieval": "Secure Key Retrieval",
+        "keyRevoked": "Key Revoked",
+        "keyExpired": "Key Expired",
+        "selectedModels": "Selected models"
+      },
+      "tableHeaders": {
+        "apiKeysTable": "API Keys Table",
+        "keyDetails": "Key details",
+        "generatedKeyDetails": "Generated key details"
+      },
+      "codeExample": {
+        "role": "user",
+        "content": "Hello, world!"
+      }
+    },
+    "usage": {
+      "title": "Usage Dashboard",
+      "subtitle": "Monitor your API usage, costs, and performance metrics",
+      "exportData": "Export Data",
+      "loadingTitle": "Loading Usage Data...",
+      "loadingDescription": "Analyzing your API usage patterns and metrics",
+      "noDataTitle": "No usage data available",
+      "noDataDescription": "Start making API requests to see your usage statistics here.",
+      "customDatePlaceholderTitle": "Select Date Range",
+      "customDatePlaceholderDescription": "Please select start and end dates above to view usage statistics for your custom date range.",
+      "viewApiDocs": "View API Documentation",
+      "loadingApiKeys": "Loading API Keys...",
+      "noApiKeys": "No API Keys",
+      "selectApiKey": "Select API Key",
+      "noApiKeysTitle": "No API Keys Found",
+      "noApiKeysDescription": "Create an API key to start tracking your usage statistics.",
+      "selectApiKeyTitle": "Select an API Key",
+      "selectApiKeyDescription": "Please select an API key from the dropdown above to view its usage statistics.",
+      "createApiKey": "Create API Key",
+      "filters": {
+        "custom": "Custom",
+        "overview": "Overview",
+        "byModels": "By Models",
+        "errors": "Errors",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "selectStartDate": "Select start date",
+        "selectEndDate": "Select end date"
+      },
+      "dateRanges": {
+        "last7Days": "Last 7 days",
+        "last30Days": "Last 30 days",
+        "last90Days": "Last 90 days",
+        "customRange": "Custom range"
+      },
+      "metrics": {
+        "totalRequests": "Total Requests",
+        "totalTokens": "Total Tokens",
+        "totalCost": "Total Cost",
+        "avgResponseTime": "Avg Response Time",
+        "successRate": "Success Rate",
+        "successfulRequests": "successful requests",
+        "currency": "USD",
+        "tokens": "tokens",
+        "requests": "requests"
+      },
+      "charts": {
+        "dailyUsage": "Daily Usage",
+        "modelUsageDistribution": "Model Usage Distribution",
+        "errorTypes": "Error Types",
+        "usageTrends": "Usage Trends",
+        "topModelsByUsage": "Top Models by Usage",
+        "usageByModel": "Usage by Model",
+        "noDataTitle": "No Data Available",
+        "noDataDescription": "No usage data found for the selected time period.",
+        "noModelsTitle": "No Model Data",
+        "noModelsDescription": "No model usage data available for the selected period.",
+        "lineChartAriaLabel": "Line chart showing {{metric}} over time",
+        "modelDistributionAriaLabel": "Donut chart showing model usage distribution",
+        "requests": "Requests",
+        "percentage": "Percentage",
+        "modelBreakdown": "Model Breakdown",
+        "detailedBreakdown": "Detailed Breakdown"
+      },
+      "tables": {
+        "topModels": "Top models table"
+      },
+      "tableHeaders": {
+        "model": "Model",
+        "requests": "Requests",
+        "tokens": "Tokens",
+        "cost": "Cost",
+        "usagePercent": "Usage %",
+        "count": "Count",
+        "percentage": "Percentage"
+      },
+      "notifications": {
+        "loadError": "Error",
+        "loadErrorDesc": "Failed to load usage metrics from the server.",
+        "loadFailed": "Failed to load usage metrics. Please try again.",
+        "exportStarted": "Export Started",
+        "exportStartedDesc": "Your usage data export is being prepared and will be downloaded shortly.",
+        "exportComplete": "Export Complete",
+        "exportCompleteDesc": "Usage data has been exported successfully.",
+        "exportFailed": "Export Failed",
+        "exportFailedDesc": "Failed to export usage data. Please try again.",
+        "customDatesRequired": "Please select both start and end dates for custom range export.",
+        "apiKeysLoadError": "Failed to Load API Keys",
+        "apiKeysLoadErrorDesc": "Unable to retrieve your API keys. Please refresh the page or try again later."
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "userPreferences": "User Preferences",
+      "apiConfiguration": "API Configuration",
+      "forms": {
+        "displayName": "Display Name",
+        "displayNamePlaceholder": "Enter your display name",
+        "emailNotifications": "Email Notifications",
+        "autoRefreshDashboard": "Auto-refresh Dashboard",
+        "enabled": "Enabled",
+        "defaultModelProvider": "Default Model Provider",
+        "rateLimitLabel": "Rate Limit (requests/minute)",
+        "timeoutLabel": "Timeout (seconds)",
+        "providerPlaceholder": "OpenAI, Anthropic, etc.",
+        "openShiftAI": "OpenShift AI"
+      },
+      "buttons": {
+        "savePreferences": "Save Preferences",
+        "updateConfiguration": "Update Configuration"
+      }
+    }
+  },
+  "ui": {
+    "theme": {
+      "light": "Light",
+      "dark": "Dark",
+      "toggle": "Toggle theme"
+    },
+    "language": {
+      "selector": "Language",
+      "english": "English",
+      "spanish": "Español",
+      "french": "Français",
+      "german": "Deutsch",
+      "italian": "Italiano",
+      "korean": "한국어",
+      "japanese": "日本語",
+      "chinese": "中文",
+      "elvish": "Edhellen"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "markRead": "Mark as read",
+      "clear": "Clear all",
+      "empty": "No notifications"
+    },
+    "actions": {
+      "logout": "Logout",
+      "login": "Login with OpenShift",
+      "browse": "Browse",
+      "refresh": "Refresh Page",
+      "tryAgain": "Try Again"
+    },
+    "errors": {
+      "somethingWrong": "Something went wrong",
+      "tryRefresh": "We're sorry, but something unexpected happened. Please try refreshing the page or contact support if the problem persists."
+    }
+  }
+}

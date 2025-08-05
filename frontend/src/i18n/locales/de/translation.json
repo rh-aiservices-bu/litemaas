@@ -1,0 +1,379 @@
+{
+  "nav": {
+    "home": "Startseite",
+    "models": "Modelle",
+    "subscriptions": "Abonnements",
+    "apiKeys": "API-Schlüssel",
+    "usage": "Nutzung",
+    "settings": "Einstellungen"
+  },
+  "pages": {
+    "home": {
+      "title": "Willkommen bei LiteMaaS",
+      "subtitle": "Ihre Model-as-a-Service-Plattform für den Zugriff und die Verwaltung von KI-Modellen.",
+      "cards": {
+        "modelsDescription": "Verfügbare KI-Modelle durchsuchen",
+        "subscriptionsDescription": "Ihre Modell-Abonnements verwalten",
+        "apiKeysDescription": "API-Schlüssel generieren und verwalten",
+        "usageDescription": "Ihre API-Nutzung überwachen"
+      }
+    },
+    "login": {
+      "brandAlt": "LiteMaaS-Logo",
+      "signInText": "Melden Sie sich bei Ihrem Konto an",
+      "title": "Bei LiteMaaS anmelden",
+      "subtitle": "Verwenden Sie Ihre OpenShift-Anmeldedaten",
+      "loginWithOpenShift": "Mit OpenShift anmelden",
+      "developmentMode": "Entwicklungsmodus",
+      "loginAsAdmin": "Als Administrator anmelden (Test)",
+      "bypassAuthentication": "Authentifizierung für Entwicklungs- und Testzwecke umgehen"
+    },
+    "models": {
+      "title": "Verfügbare Modelle",
+      "subtitle": "Entdecken und abonnieren Sie KI-Modelle verschiedener Anbieter",
+      "noModels": "Noch keine Modelle verfügbar",
+      "description": "Modellentdeckung und Abonnementfunktionalität kommen bald.",
+      "searchPlaceholder": "Modelle suchen...",
+      "filters": {
+        "allProviders": "Alle Anbieter",
+        "allCategories": "Alle Kategorien"
+      },
+      "subscribe": "Abonnieren",
+      "subscribing": "Abonnement wird erstellt...",
+      "contextLabel": "Kontext:",
+      "pricingLabel": "Preisgestaltung: N/A",
+      "moreFeatures": "+{{count}} weitere",
+      "loadingTitle": "Modelle werden geladen...",
+      "loadingDescription": "Verfügbare KI-Modelle von allen Anbietern werden entdeckt",
+      "emptyStateMessage": "Versuchen Sie, Ihre Suchkriterien oder Filter anzupassen, um Modelle zu finden.",
+      "clearAllFilters": "Alle Filter löschen",
+      "modelUnavailable": "Dieses Modell ist derzeit nicht für neue Abonnements verfügbar.",
+      "close": "Schließen",
+      "notifications": {
+        "subscribeSuccess": "Erfolgreich abonniert!",
+        "subscribeSuccessDesc": "Sie haben jetzt Zugriff auf {{modelName}}. Sie können API-Schlüssel auf der Abonnements-Seite generieren.",
+        "subscribeFailed": "Abonnement fehlgeschlagen",
+        "failedToSubscribe": "Fehler beim Abonnieren des Modells",
+        "alreadySubscribed": "Sie haben dieses Modell bereits abonniert",
+        "loadError": "Fehler",
+        "loadErrorDesc": "Fehler beim Laden der Modelle vom Server.",
+        "loadFailed": "Fehler beim Laden der Modelle. Bitte versuchen Sie es erneut."
+      }
+    },
+    "subscriptions": {
+      "title": "Modell-Abonnements",
+      "pageTitle": "Meine Abonnements",
+      "pageSubtitle": "Verwalten Sie Ihre KI-Modell-Abonnements und Nutzung",
+      "newSubscription": "Neues Abonnement",
+      "loadingTitle": "Abonnements werden geladen...",
+      "loadingDescription": "Ihre Abonnementinformationen werden abgerufen",
+      "noSubscriptionsTitle": "Keine Abonnements gefunden",
+      "noSubscriptionsDescription": "Sie haben keine aktiven Abonnements. Beginnen Sie mit dem Abonnieren eines KI-Modells.",
+      "viewDetails": "Details anzeigen",
+      "detailsTitle": "Abonnement-Details",
+      "provider": "Anbieter",
+      "pricing": "Preisgestaltung",
+      "status": "Status",
+      "requestQuota": "Anfrage-Kontingent",
+      "tokenQuota": "Token-Kontingent",
+      "requestsUsed": "Verwendete Anfragen",
+      "tokensUsed": "Verwendete Token",
+      "created": "Erstellt",
+      "features": "Funktionen",
+      "close": "Schließen",
+      "byProvider": "von {{provider}}",
+      "perMonth": "pro Monat",
+      "requests": "Anfragen",
+      "tokens": "Token",
+      "tokenUsageThisMonth": "Token-Nutzung diesen Monat",
+      "quotaFormat": "Kontingent: {{requests}} Anfragen, {{tokens}} Token",
+      "pricingUnavailable": "Preisinformationen nicht verfügbar",
+      "inputPricing": "Eingabe: ${{cost}}/1K Token",
+      "outputPricing": "Ausgabe: ${{cost}}/1K Token",
+      "suspendedMessage": "Ihr Abonnement wurde ausgesetzt. Kontaktieren Sie den Support oder überprüfen Sie Ihren Kontostatus.",
+      "expiredMessage": "Ihr Abonnement ist am {{date}} abgelaufen. Erneuern Sie es, um dieses Modell weiter zu nutzen.",
+      "cancelledMessage": "{{modelName}} Abonnement wurde gekündigt und von Ihrem Konto entfernt.",
+      "cancelSubscription": "Abonnement kündigen",
+      "cancelling": "Wird gekündigt...",
+      "notifications": {
+        "loadError": "Fehler",
+        "loadErrorDesc": "Fehler beim Laden der Abonnements vom Server.",
+        "cancelSuccess": "Abonnement gekündigt",
+        "cancelError": "Fehler",
+        "cancelErrorDesc": "Fehler beim Kündigen des Abonnements. Bitte versuchen Sie es erneut.",
+        "cannotCancel": "Abonnement kann nicht gekündigt werden",
+        "cannotCancelDesc": "Es gibt aktive API-Schlüssel, die mit diesem Abonnement verknüpft sind. Bitte löschen Sie zuerst alle API-Schlüssel und kündigen Sie dann das Abonnement."
+      },
+      "alerts": {
+        "suspended": "Abonnement ausgesetzt",
+        "expired": "Abonnement abgelaufen"
+      }
+    },
+    "apiKeys": {
+      "title": "API-Schlüssel",
+      "createKey": "API-Schlüssel erstellen",
+      "creating": "Wird erstellt...",
+      "deleteKey": "API-Schlüssel löschen",
+      "viewKey": "Schlüssel anzeigen",
+      "copyToClipboard": "In Zwischenablage kopieren",
+      "hideKey": "Schlüssel verbergen",
+      "showKey": "Schlüssel anzeigen",
+      "copied": "Kopiert!",
+      "selectModels": "Modelle auswählen...",
+      "selectAll": "Alle auswählen",
+      "noModelsAssigned": "Keine Modelle zugewiesen",
+      "never": "Nie",
+      "neverExpires": "Läuft nie ab",
+      "forms": {
+        "name": "Name",
+        "description": "Beschreibung",
+        "models": "Modelle",
+        "expiration": "Ablauf",
+        "apiKey": "API-Schlüssel",
+        "yourNewApiKey": "Ihr neuer API-Schlüssel"
+      },
+      "permissions": {
+        "readModels": "Modelle lesen",
+        "writeModels": "Modelle schreiben",
+        "createCompletions": "Vervollständigungen erstellen",
+        "readUsage": "Nutzung lesen",
+        "readAnalytics": "Analysen lesen",
+        "adminAccess": "Admin-Zugriff"
+      },
+      "labels": {
+        "rateLimitLabel": "Ratenlimit (Anfragen pro Minute)",
+        "apiKeyLabel": "API-Schlüssel",
+        "lastUsed": "Zuletzt verwendet",
+        "actions": "Aktionen",
+        "created": "Erstellt",
+        "totalRequests": "Gesamtanfragen",
+        "rateLimit": "Ratenlimit",
+        "expires": "Läuft ab",
+        "description": "Beschreibung",
+        "keyDetails": "Schlüssel-Details",
+        "usageExample": "Verwendungsbeispiel",
+        "cancel": "Abbrechen",
+        "close": "Schließen"
+      },
+      "messages": {
+        "loadingModels": "Ihre abonnierten Modelle werden geladen...",
+        "noSubscribedModels": "Keine abonnierten Modelle verfügbar",
+        "noSubscribedModelsError": "Keine abonnierten Modelle gefunden. Sie benötigen ein aktives Abonnement für ein Modell, bevor Sie einen API-Schlüssel erstellen.",
+        "selectedModels": "Ausgewählte Modelle",
+        "modelsSelected": "{{count}} Modell(e) ausgewählt",
+        "keyCreatedSuccess": "{{name}} wurde erfolgreich erstellt",
+        "keyDeleted": "{{name}} wurde gelöscht",
+        "copyToClipboard": "{{label}} in Zwischenablage kopiert",
+        "secureRetrievalMessage": "Klicken Sie auf das Augensymbol oben, um Ihren vollständigen LiteLLM API-Schlüssel sicher abzurufen. Aus Sicherheitsgründen erfordert dies eine kürzliche Authentifizierung und ist ratenbegrenzt. Alle Schlüsselabrufe werden zu Prüfzwecken protokolliert.",
+        "keyCreatedMessage": "Ihr API-Schlüssel wurde erfolgreich erstellt.",
+        "deleteConfirmation": "Sind Sie sicher, dass Sie den API-Schlüssel {{name}} löschen möchten?",
+        "deleteWarning": "Diese Aktion kann nicht rückgängig gemacht werden. Der API-Schlüssel wird dauerhaft entfernt und Anwendungen, die diesen Schlüssel verwenden, verlieren sofort den Zugriff.",
+        "keyRevokedMessage": "Dieser API-Schlüssel wurde widerrufen und kann nicht mehr verwendet werden.",
+        "keyExpiredMessage": "Dieser API-Schlüssel ist am {{date}} abgelaufen.",
+        "retrievalMessage": "Ihr LiteLLM API-Schlüssel wurde sicher abgerufen. Abgerufen am: {{date}}",
+        "plusMore": "+{{count}} weitere",
+        "requestsPerMinute": "Anfragen/Minute",
+        "apiKeyDetails": "API-Schlüssel-Details",
+        "managementDescription": "API-Schlüssel für den Zugriff auf LiteMaaS-Dienste verwalten",
+        "loadingTitle": "API-Schlüssel werden geladen...",
+        "loadingDescription": "Ihre API-Schlüssel-Informationen werden abgerufen",
+        "errorLoadingTitle": "Fehler beim Laden der API-Schlüssel",
+        "noKeysTitle": "Keine API-Schlüssel gefunden",
+        "noKeysDescription": "Erstellen Sie Ihren ersten API-Schlüssel, um LiteMaaS-Dienste zu nutzen."
+      },
+      "placeholders": {
+        "keyName": "z.B. Produktions-API-Schlüssel",
+        "keyDescription": "Optionale Beschreibung des Zwecks dieses Schlüssels"
+      },
+      "rateLimits": {
+        "basic": "100 Anf/Min (Basis)",
+        "standard": "500 Anf/Min (Standard)",
+        "premium": "1.000 Anf/Min (Premium)",
+        "enterprise": "5.000 Anf/Min (Enterprise)"
+      },
+      "timeRanges": {
+        "thirtyDays": "30 Tage",
+        "ninetyDays": "90 Tage",
+        "oneYear": "1 Jahr"
+      },
+      "clipboard": {
+        "copy": "Kopieren",
+        "copied": "Kopiert"
+      },
+      "notifications": {
+        "loadError": "Fehler",
+        "loadErrorDesc": "Fehler beim Laden der API-Schlüssel vom Server.",
+        "loadModelError": "Fehler",
+        "loadModelErrorDesc": "Fehler beim Laden Ihrer abonnierten Modelle.",
+        "createSuccess": "API-Schlüssel erstellt",
+        "createError": "Fehler",
+        "createErrorDesc": "Fehler beim Erstellen des API-Schlüssels. Bitte versuchen Sie es erneut.",
+        "deleteSuccess": "API-Schlüssel gelöscht",
+        "deleteError": "Fehler",
+        "deleteErrorDesc": "Fehler beim Löschen des API-Schlüssels. Bitte versuchen Sie es erneut.",
+        "retrieveSuccess": "API-Schlüssel abgerufen",
+        "retrieveError": "Fehler beim Abrufen des API-Schlüssels",
+        "retrieveErrorDesc": "Fehler beim Abrufen des API-Schlüssels",
+        "validationError": "Validierungsfehler",
+        "nameRequired": "API-Schlüsselname ist erforderlich",
+        "modelsRequired": "Bitte wählen Sie mindestens ein Modell aus Ihren aktiven Abonnements"
+      },
+      "modals": {
+        "createTitle": "API-Schlüssel erstellen",
+        "viewTitle": "API-Schlüssel-Details",
+        "deleteTitle": "API-Schlüssel löschen",
+        "createdTitle": "API-Schlüssel erfolgreich erstellt",
+        "success": "Erfolg!",
+        "warning": "Warnung",
+        "secureRetrieval": "Sichere Schlüsselabfrage",
+        "keyRevoked": "Schlüssel widerrufen",
+        "keyExpired": "Schlüssel abgelaufen",
+        "selectedModels": "Ausgewählte Modelle"
+      },
+      "tableHeaders": {
+        "apiKeysTable": "API-Schlüssel-Tabelle",
+        "keyDetails": "Schlüssel-Details",
+        "generatedKeyDetails": "Generierte Schlüssel-Details"
+      },
+      "codeExample": {
+        "role": "Benutzer",
+        "content": "Hallo, Welt!"
+      }
+    },
+    "usage": {
+      "title": "Nutzungs-Dashboard",
+      "subtitle": "Überwachen Sie Ihre API-Nutzung, Kosten und Leistungsmetriken",
+      "exportData": "Daten exportieren",
+      "loadingTitle": "Nutzungsdaten werden geladen...",
+      "loadingDescription": "Ihre API-Nutzungsmuster und Metriken werden analysiert",
+      "noDataTitle": "Keine Nutzungsdaten verfügbar",
+      "noDataDescription": "Beginnen Sie mit API-Anfragen, um Ihre Nutzungsstatistiken hier zu sehen.",
+      "customDatePlaceholderTitle": "Datumsbereich auswählen",
+      "customDatePlaceholderDescription": "Bitte wählen Sie oben Start- und Enddatum aus, um Nutzungsstatistiken für Ihren benutzerdefinierten Datumsbereich anzuzeigen.",
+      "viewApiDocs": "API-Dokumentation anzeigen",
+      "filters": {
+        "custom": "Benutzerdefiniert",
+        "overview": "Übersicht",
+        "byModels": "Nach Modellen",
+        "errors": "Fehler",
+        "startDate": "Startdatum",
+        "endDate": "Enddatum",
+        "selectStartDate": "Startdatum auswählen",
+        "selectEndDate": "Enddatum auswählen"
+      },
+      "dateRanges": {
+        "last7Days": "Letzte 7 Tage",
+        "last30Days": "Letzte 30 Tage",
+        "last90Days": "Letzte 90 Tage",
+        "customRange": "Benutzerdefinierter Bereich"
+      },
+      "metrics": {
+        "totalRequests": "Gesamtanfragen",
+        "totalTokens": "Gesamt-Token",
+        "totalCost": "Gesamtkosten",
+        "avgResponseTime": "Durchschn. Antwortzeit",
+        "successRate": "Erfolgsrate",
+        "successfulRequests": "erfolgreiche Anfragen"
+      },
+      "charts": {
+        "dailyUsage": "Tägliche Nutzung",
+        "modelUsageDistribution": "Modellnutzungsverteilung",
+        "errorTypes": "Fehlertypen",
+        "usageTrends": "Nutzungstrends",
+        "topModelsByUsage": "Top-Modelle nach Nutzung",
+        "usageByModel": "Nutzung nach Modell",
+        "noDataTitle": "Keine Daten Verfügbar",
+        "noDataDescription": "Keine Nutzungsdaten für den ausgewählten Zeitraum gefunden.",
+        "noModelsTitle": "Keine Modelldaten",
+        "noModelsDescription": "Keine Modellnutzungsdaten für den ausgewählten Zeitraum verfügbar.",
+        "lineChartAriaLabel": "Liniendiagramm zeigt {{metric}} über die Zeit",
+        "modelDistributionAriaLabel": "Donut-Diagramm zeigt Modellnutzungsverteilung",
+        "requests": "Anfragen",
+        "percentage": "Prozentsatz",
+        "modelBreakdown": "Modell-Aufschlüsselung",
+        "detailedBreakdown": "Detaillierte Aufschlüsselung"
+      },
+      "tables": {
+        "topModels": "Top-Modelle-Tabelle"
+      },
+      "tableHeaders": {
+        "model": "Modell",
+        "requests": "Anfragen",
+        "tokens": "Token",
+        "cost": "Kosten",
+        "usagePercent": "Nutzung %",
+        "count": "Anzahl",
+        "percentage": "Prozentsatz"
+      },
+      "notifications": {
+        "loadError": "Fehler",
+        "loadErrorDesc": "Fehler beim Laden der Nutzungsmetriken vom Server.",
+        "loadFailed": "Fehler beim Laden der Nutzungsmetriken. Bitte versuchen Sie es erneut.",
+        "exportStarted": "Export gestartet",
+        "exportStartedDesc": "Ihre Nutzungsdatenexport wird vorbereitet und wird in Kürze heruntergeladen.",
+        "exportComplete": "Export abgeschlossen",
+        "exportCompleteDesc": "Nutzungsdaten wurden erfolgreich exportiert.",
+        "exportFailed": "Export fehlgeschlagen",
+        "exportFailedDesc": "Fehler beim Exportieren der Nutzungsdaten. Bitte versuchen Sie es erneut.",
+        "customDatesRequired": "Bitte wählen Sie sowohl Start- als auch Enddatum für den Export des benutzerdefinierten Bereichs aus."
+      }
+    },
+    "settings": {
+      "title": "Einstellungen",
+      "userPreferences": "Benutzereinstellungen",
+      "apiConfiguration": "API-Konfiguration",
+      "forms": {
+        "displayName": "Anzeigename",
+        "displayNamePlaceholder": "Geben Sie Ihren Anzeigenamen ein",
+        "emailNotifications": "E-Mail-Benachrichtigungen",
+        "autoRefreshDashboard": "Dashboard automatisch aktualisieren",
+        "enabled": "Aktiviert",
+        "defaultModelProvider": "Standard-Modellanbieter",
+        "rateLimitLabel": "Ratenlimit (Anfragen/Minute)",
+        "timeoutLabel": "Zeitüberschreitung (Sekunden)",
+        "providerPlaceholder": "OpenAI, Anthropic, usw.",
+        "openShiftAI": "OpenShift AI"
+      },
+      "buttons": {
+        "savePreferences": "Einstellungen speichern",
+        "updateConfiguration": "Konfiguration aktualisieren"
+      }
+    }
+  },
+  "ui": {
+    "theme": {
+      "light": "Hell",
+      "dark": "Dunkel",
+      "toggle": "Thema umschalten"
+    },
+    "language": {
+      "selector": "Sprache",
+      "english": "English",
+      "spanish": "Español",
+      "french": "Français",
+      "german": "Deutsch",
+      "italian": "Italiano",
+      "korean": "한국어",
+      "japanese": "日本語",
+      "chinese": "中文",
+      "elvish": "Edhellen"
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "markRead": "Als gelesen markieren",
+      "clear": "Alle löschen",
+      "empty": "Keine Benachrichtigungen"
+    },
+    "actions": {
+      "logout": "Abmelden",
+      "login": "Mit OpenShift anmelden",
+      "browse": "Durchsuchen",
+      "refresh": "Seite aktualisieren",
+      "tryAgain": "Erneut versuchen"
+    },
+    "errors": {
+      "somethingWrong": "Etwas ist schief gelaufen",
+      "tryRefresh": "Es tut uns leid, aber etwas Unerwartetes ist passiert. Bitte versuchen Sie, die Seite zu aktualisieren oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht."
+    }
+  }
+}

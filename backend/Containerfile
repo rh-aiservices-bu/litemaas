@@ -1,0 +1,57 @@
+# Multi-stage build with shared base
+# Stage 1: Create base image with updated packages
+FROM registry.access.redhat.com/ubi9/nodejs-22 AS base
+
+# Switch to root to update packages
+USER root
+
+# Update system packages and clean up
+RUN dnf update -y && dnf clean all
+
+# Set working directory
+WORKDIR /app
+
+# Switch back to default user
+USER 1001
+
+# Stage 2: Build the application
+FROM base AS builder
+
+# Copy workspace root package files first
+COPY --chown=1001:1001 package*.json ./
+
+# Copy TypeScript configuration from root
+COPY --chown=1001:1001 tsconfig.base.json ./
+
+# Copy workspace package files
+COPY --chown=1001:1001 backend/package.json ./backend/
+
+# Install all workspace dependencies
+RUN npm ci
+
+# Copy backend source code
+COPY --chown=1001:1001 backend/ ./backend/
+
+# Build the backend application
+RUN npm run build --workspace=backend
+
+# Stage 3: Production runtime
+FROM base AS runtime
+
+# Copy workspace root package files
+COPY --chown=1001:1001 package*.json ./
+
+# Copy workspace package files
+COPY --chown=1001:1001 backend/package.json ./backend/
+
+# Install only production dependencies for the workspace
+RUN npm ci --omit=dev && npm cache clean --force
+
+# Copy built application from builder stage
+COPY --from=builder --chown=1001:1001 /app/backend/dist ./backend/dist
+
+# Expose the port the app runs on
+EXPOSE 8080
+
+# Start the application
+CMD ["npm", "start", "--workspace=backend"] 

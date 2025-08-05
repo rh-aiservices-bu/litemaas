@@ -1,0 +1,21 @@
+-- LiteMaaS Database Initialization Script
+-- 
+-- NOTE: The database schema is automatically initialized by the backend on first startup.
+-- This script is provided for manual database setup or reference only.
+--
+-- The actual schema is defined in:
+--   backend/src/lib/database-migrations.ts
+--
+-- To initialize the database manually:
+-- 1. Ensure PostgreSQL is running
+-- 2. Create the database: CREATE DATABASE litemaas;
+-- 3. The backend will automatically create all tables on first startup
+--
+-- Alternatively, you can run the backend migrations directly:
+--   cd backend && npm run db:migrate
+--
+-- For development with mock data:
+--   cd backend && npm run db:setup
+--
+-- This approach ensures there's no duplication between the backend's
+-- migration system and standalone SQL scripts.

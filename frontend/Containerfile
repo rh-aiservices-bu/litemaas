@@ -1,0 +1,62 @@
+# Multi-stage build
+# Stage 1: Create the Node.js builder image with updated packages
+FROM registry.access.redhat.com/ubi9/nodejs-22 AS builder
+
+# Switch to root to update packages
+USER root
+
+# Update system packages and clean up
+RUN dnf update -y && dnf clean all
+
+# Set working directory
+WORKDIR /app
+
+# Switch back to default user
+USER 1001
+
+# Copy workspace root package files first
+COPY --chown=1001:1001 package*.json ./
+
+# Copy TypeScript configuration from root
+COPY --chown=1001:1001 tsconfig.base.json ./
+
+# Copy workspace package files
+COPY --chown=1001:1001 frontend/package.json ./frontend/
+
+# Install all workspace dependencies
+RUN npm ci
+
+# Copy frontend source code and configs
+COPY --chown=1001:1001 frontend/ ./frontend/
+
+# Build the frontend application
+RUN npm run build --workspace=frontend
+
+# Stage 3: Serve the application with nginx
+FROM registry.access.redhat.com/ubi9/nginx-124
+
+# Install envsubst for runtime configuration
+USER root
+
+RUN dnf update -y && \
+    dnf install -y gettext && \
+    dnf clean all
+
+USER 1001
+
+# Copy built files from builder stage to the nginx default document root
+COPY --from=builder /app/frontend/dist /opt/app-root/src
+
+# Copy nginx configuration template to the appropriate directory
+# Using /opt/app-root for APP_ROOT which is standard in Red Hat images
+COPY --chown=1001:1001 frontend/nginx.conf.template /tmp/nginx.conf.template
+
+# Copy entrypoint script
+COPY --chown=1001:1001 frontend/docker-entrypoint.sh /opt/app-root/docker-entrypoint.sh
+RUN chmod +x /opt/app-root/docker-entrypoint.sh
+
+# Expose port 8080 (nginx default for UBI)
+EXPOSE 8080
+
+# Use the entrypoint script to configure nginx at runtime
+ENTRYPOINT ["/opt/app-root/docker-entrypoint.sh"] 

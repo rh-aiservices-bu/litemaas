@@ -1,0 +1,100 @@
+#!/bin/bash
+
+# LiteMaaS Development Tools
+# Script to manage podman compose services
+
+set -e
+
+COMPOSE_FILE="compose.yaml"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+show_help() {
+    echo -e "${BLUE}LiteMaaS Development Tools${NC}"
+    echo
+    echo "Usage: $0 [COMMAND]"
+    echo
+    echo "Commands:"
+    echo -e "  ${GREEN}start${NC}    Start all services using podman compose"
+    echo -e "  ${GREEN}stop${NC}     Stop all services using podman compose"
+    echo -e "  ${GREEN}help${NC}     Show this help message"
+    echo
+    echo "Examples:"
+    echo "  $0 start    # Start services in detached mode"
+    echo "  $0 stop     # Stop all services"
+    echo
+}
+
+start_services() {
+    echo -e "${BLUE}Starting LiteMaaS services...${NC}"
+    cd "$SCRIPT_DIR"
+    
+    if ! command -v podman &> /dev/null; then
+        echo -e "${RED}Error: podman is not installed or not in PATH${NC}"
+        exit 1
+    fi
+    
+    if [ ! -f "$COMPOSE_FILE" ]; then
+        echo -e "${RED}Error: $COMPOSE_FILE not found in $SCRIPT_DIR${NC}"
+        exit 1
+    fi
+    
+    echo -e "${YELLOW}Running: podman compose --file $COMPOSE_FILE up --detach${NC}"
+    podman compose --file "$COMPOSE_FILE" up --detach
+    
+    echo -e "${GREEN}✓ Services started successfully!${NC}"
+    echo
+    echo "To view logs: podman compose --file $COMPOSE_FILE logs -f"
+    echo "To check status: podman compose --file $COMPOSE_FILE ps"
+}
+
+stop_services() {
+    echo -e "${BLUE}Stopping LiteMaaS services...${NC}"
+    cd "$SCRIPT_DIR"
+    
+    if ! command -v podman &> /dev/null; then
+        echo -e "${RED}Error: podman is not installed or not in PATH${NC}"
+        exit 1
+    fi
+    
+    if [ ! -f "$COMPOSE_FILE" ]; then
+        echo -e "${RED}Error: $COMPOSE_FILE not found in $SCRIPT_DIR${NC}"
+        exit 1
+    fi
+    
+    echo -e "${YELLOW}Running: podman compose --file $COMPOSE_FILE down${NC}"
+    podman compose --file "$COMPOSE_FILE" down
+    
+    echo -e "${GREEN}✓ Services stopped successfully!${NC}"
+}
+
+# Main script logic
+case "${1:-}" in
+    start)
+        start_services
+        ;;
+    stop)
+        stop_services
+        ;;
+    help|--help|-h)
+        show_help
+        ;;
+    "")
+        echo -e "${RED}Error: No command specified${NC}"
+        echo
+        show_help
+        exit 1
+        ;;
+    *)
+        echo -e "${RED}Error: Unknown command '$1'${NC}"
+        echo
+        show_help
+        exit 1
+        ;;
+esac 

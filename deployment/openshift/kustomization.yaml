@@ -1,0 +1,70 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Namespace configuration - change this to deploy to a different namespace
+namespace: litemaas
+
+# Metadata labels applied to all resources
+commonLabels:
+  app.kubernetes.io/name: litemaas
+  app.kubernetes.io/instance: litemaas
+  app.kubernetes.io/version: "1.0.0"
+  app.kubernetes.io/part-of: litemaas
+
+# Resources to deploy
+resources:
+  # Namespace
+  - namespace.yaml
+  
+  # Secrets (must be created/customized before deployment)
+  - postgres-secret.yaml
+  - backend-secret.yaml
+  - litellm-secret.yaml
+  
+  # PostgreSQL Database
+  - postgres-init-configmap.yaml
+  - postgres-deployment.yaml
+  - postgres-service.yaml
+  
+  # LiteLLM AI Proxy
+  - litellm-deployment.yaml
+  - litellm-service.yaml
+  
+  # Backend API
+  - backend-deployment.yaml
+  - backend-service.yaml
+  
+  # Frontend Web Application
+  - frontend-deployment.yaml
+  - frontend-service.yaml
+  
+  # OpenShift Routes
+  - frontend-route.yaml
+  - litellm-route.yaml
+
+# Images - can be overridden for different environments
+images:
+  - name: quay.io/rh-aiservice-bu/litemaas-backend
+    newTag: latest
+  - name: quay.io/rh-aiservice-bu/litemaas-frontend
+    newTag: latest
+
+# Resource patches - can be uncommented and customized as needed
+# patches:
+#   # Example: Increase backend replicas for production
+#   - patch: |-
+#       - op: replace
+#         path: /spec/replicas
+#         value: 3
+#     target:
+#       kind: Deployment
+#       name: backend
+#   
+#   # Example: Set custom storage class for PostgreSQL
+#   - patch: |-
+#       - op: add
+#         path: /spec/volumeClaimTemplates/0/spec/storageClassName
+#         value: "fast-ssd"
+#     target:
+#       kind: StatefulSet
+#       name: postgres

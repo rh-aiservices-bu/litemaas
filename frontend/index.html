@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en" class="">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#29B6F6" />
+    <meta name="msapplication-TileColor" content="#29B6F6" />
+    <title>LiteMaaS - Model as a Service Platform</title>
+    <script>
+      // Check for saved theme preference or default to 'light' mode
+      const theme = localStorage.getItem('theme') || 'light';
+      if (theme === 'dark') {
+        document.documentElement.classList.add('pf-v6-theme-dark');
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

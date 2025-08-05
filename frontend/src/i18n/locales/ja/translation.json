@@ -1,0 +1,379 @@
+{
+  "nav": {
+    "home": "ホーム",
+    "models": "モデル",
+    "subscriptions": "サブスクリプション",
+    "apiKeys": "APIキー",
+    "usage": "使用状況",
+    "settings": "設定"
+  },
+  "pages": {
+    "home": {
+      "title": "LiteMaaSへようこそ",
+      "subtitle": "AIモデルへのアクセスと管理のためのModel as a Serviceプラットフォーム。",
+      "cards": {
+        "modelsDescription": "利用可能なAIモデルを閲覧",
+        "subscriptionsDescription": "モデルサブスクリプションを管理",
+        "apiKeysDescription": "APIキーの生成と管理",
+        "usageDescription": "API使用状況の監視"
+      }
+    },
+    "login": {
+      "brandAlt": "LiteMaaSロゴ",
+      "signInText": "アカウントにサインイン",
+      "title": "LiteMaaSにログイン",
+      "subtitle": "OpenShift認証情報を使用してください",
+      "loginWithOpenShift": "OpenShiftでログイン",
+      "developmentMode": "開発モード",
+      "loginAsAdmin": "管理者としてログイン（テスト）",
+      "bypassAuthentication": "開発とテスト目的で認証をバイパス"
+    },
+    "models": {
+      "title": "利用可能なモデル",
+      "subtitle": "さまざまなプロバイダーのAIモデルを発見して購読する",
+      "noModels": "まだ利用可能なモデルはありません",
+      "description": "モデルの検出とサブスクリプション機能は近日公開予定です。",
+      "searchPlaceholder": "モデルを検索...",
+      "filters": {
+        "allProviders": "すべてのプロバイダー",
+        "allCategories": "すべてのカテゴリ"
+      },
+      "subscribe": "サブスクライブ",
+      "subscribing": "サブスクリプション作成中...",
+      "contextLabel": "コンテキスト：",
+      "pricingLabel": "価格：N/A",
+      "moreFeatures": "+{{count}}個の機能",
+      "loadingTitle": "モデルを読み込み中...",
+      "loadingDescription": "すべてのプロバイダーから利用可能なAIモデルを検出中",
+      "emptyStateMessage": "モデルを見つけるために検索条件やフィルターを調整してみてください。",
+      "clearAllFilters": "すべてのフィルターをクリア",
+      "modelUnavailable": "このモデルは現在新規サブスクリプションには利用できません。",
+      "close": "閉じる",
+      "notifications": {
+        "subscribeSuccess": "サブスクリプション成功！",
+        "subscribeSuccessDesc": "{{modelName}}にアクセスできるようになりました。サブスクリプションページからAPIキーを生成できます。",
+        "subscribeFailed": "サブスクリプション失敗",
+        "failedToSubscribe": "モデルのサブスクライブに失敗しました",
+        "alreadySubscribed": "すでにこのモデルをサブスクライブしています",
+        "loadError": "エラー",
+        "loadErrorDesc": "サーバーからモデルを読み込めませんでした。",
+        "loadFailed": "モデルの読み込みに失敗しました。もう一度お試しください。"
+      }
+    },
+    "subscriptions": {
+      "title": "モデルサブスクリプション",
+      "pageTitle": "マイサブスクリプション",
+      "pageSubtitle": "AIモデルのサブスクリプションと使用状況を管理",
+      "newSubscription": "新規サブスクリプション",
+      "loadingTitle": "サブスクリプションを読み込み中...",
+      "loadingDescription": "サブスクリプション情報を取得中",
+      "noSubscriptionsTitle": "サブスクリプションが見つかりません",
+      "noSubscriptionsDescription": "アクティブなサブスクリプションがありません。AIモデルのサブスクライブから始めましょう。",
+      "viewDetails": "詳細を表示",
+      "detailsTitle": "サブスクリプション詳細",
+      "provider": "プロバイダー",
+      "pricing": "価格",
+      "status": "ステータス",
+      "requestQuota": "リクエストクォータ",
+      "tokenQuota": "トークンクォータ",
+      "requestsUsed": "使用済みリクエスト",
+      "tokensUsed": "使用済みトークン",
+      "created": "作成日",
+      "features": "機能",
+      "close": "閉じる",
+      "byProvider": "{{provider}}提供",
+      "perMonth": "月額",
+      "requests": "リクエスト",
+      "tokens": "トークン",
+      "tokenUsageThisMonth": "今月のトークン使用量",
+      "quotaFormat": "クォータ：{{requests}}リクエスト、{{tokens}}トークン",
+      "pricingUnavailable": "価格情報なし",
+      "inputPricing": "入力：${{cost}}/1Kトークン",
+      "outputPricing": "出力：${{cost}}/1Kトークン",
+      "suspendedMessage": "サブスクリプションが一時停止されました。サポートに連絡するか、アカウントステータスを確認してください。",
+      "expiredMessage": "サブスクリプションは{{date}}に期限切れになりました。このモデルを使い続けるには更新してください。",
+      "cancelledMessage": "{{modelName}}サブスクリプションはキャンセルされ、アカウントから削除されました。",
+      "cancelSubscription": "サブスクリプションをキャンセル",
+      "cancelling": "キャンセル中...",
+      "notifications": {
+        "loadError": "エラー",
+        "loadErrorDesc": "サーバーからサブスクリプションを読み込めませんでした。",
+        "cancelSuccess": "サブスクリプションキャンセル済み",
+        "cancelError": "エラー",
+        "cancelErrorDesc": "サブスクリプションのキャンセルに失敗しました。もう一度お試しください。",
+        "cannotCancel": "サブスクリプションをキャンセルできません",
+        "cannotCancelDesc": "このサブスクリプションにリンクされたアクティブなAPIキーがあります。まずすべてのAPIキーを削除してから、サブスクリプションをキャンセルしてください。"
+      },
+      "alerts": {
+        "suspended": "サブスクリプション一時停止",
+        "expired": "サブスクリプション期限切れ"
+      }
+    },
+    "apiKeys": {
+      "title": "APIキー",
+      "createKey": "APIキーを作成",
+      "creating": "作成中...",
+      "deleteKey": "APIキーを削除",
+      "viewKey": "キーを表示",
+      "copyToClipboard": "クリップボードにコピー",
+      "hideKey": "キーを隠す",
+      "showKey": "キーを表示",
+      "copied": "コピーしました！",
+      "selectModels": "モデルを選択...",
+      "selectAll": "すべて選択",
+      "noModelsAssigned": "割り当てられたモデルなし",
+      "never": "なし",
+      "neverExpires": "有効期限なし",
+      "forms": {
+        "name": "名前",
+        "description": "説明",
+        "models": "モデル",
+        "expiration": "有効期限",
+        "apiKey": "APIキー",
+        "yourNewApiKey": "新しいAPIキー"
+      },
+      "permissions": {
+        "readModels": "モデル読み取り",
+        "writeModels": "モデル書き込み",
+        "createCompletions": "補完作成",
+        "readUsage": "使用状況読み取り",
+        "readAnalytics": "分析読み取り",
+        "adminAccess": "管理者アクセス"
+      },
+      "labels": {
+        "rateLimitLabel": "レート制限（リクエスト/分）",
+        "apiKeyLabel": "APIキー",
+        "lastUsed": "最終使用",
+        "actions": "アクション",
+        "created": "作成日",
+        "totalRequests": "総リクエスト数",
+        "rateLimit": "レート制限",
+        "expires": "有効期限",
+        "description": "説明",
+        "keyDetails": "キー詳細",
+        "usageExample": "使用例",
+        "cancel": "キャンセル",
+        "close": "閉じる"
+      },
+      "messages": {
+        "loadingModels": "サブスクライブ済みモデルを読み込み中...",
+        "noSubscribedModels": "サブスクライブ済みモデルがありません",
+        "noSubscribedModelsError": "サブスクライブ済みモデルが見つかりません。APIキーを作成する前に、モデルへのアクティブなサブスクリプションが必要です。",
+        "selectedModels": "選択されたモデル",
+        "modelsSelected": "{{count}}個のモデルが選択されました",
+        "keyCreatedSuccess": "{{name}}が正常に作成されました",
+        "keyDeleted": "{{name}}が削除されました",
+        "copyToClipboard": "{{label}}をクリップボードにコピーしました",
+        "secureRetrievalMessage": "上の目のアイコンをクリックして、完全なLiteLLM APIキーを安全に取得してください。セキュリティ上の理由から、最近の認証が必要で、レート制限されています。すべてのキー取得は監査目的で記録されます。",
+        "keyCreatedMessage": "APIキーが正常に作成されました。",
+        "deleteConfirmation": "{{name}} APIキーを削除してもよろしいですか？",
+        "deleteWarning": "この操作は元に戻せません。APIキーは永久に削除され、このキーを使用しているアプリケーションは即座にアクセスを失います。",
+        "keyRevokedMessage": "このAPIキーは取り消され、使用できなくなりました。",
+        "keyExpiredMessage": "このAPIキーは{{date}}に期限切れになりました。",
+        "retrievalMessage": "LiteLLM APIキーが安全に取得されました。取得日時：{{date}}",
+        "plusMore": "+{{count}}個",
+        "requestsPerMinute": "リクエスト/分",
+        "apiKeyDetails": "APIキー詳細",
+        "managementDescription": "LiteMaaSサービスにアクセスするためのAPIキーを管理",
+        "loadingTitle": "APIキーを読み込み中...",
+        "loadingDescription": "APIキー情報を取得中",
+        "errorLoadingTitle": "APIキー読み込みエラー",
+        "noKeysTitle": "APIキーが見つかりません",
+        "noKeysDescription": "LiteMaaSサービスを使用するための最初のAPIキーを作成してください。"
+      },
+      "placeholders": {
+        "keyName": "例：本番APIキー",
+        "keyDescription": "このキーの目的に関するオプションの説明"
+      },
+      "rateLimits": {
+        "basic": "100リクエスト/分（ベーシック）",
+        "standard": "500リクエスト/分（スタンダード）",
+        "premium": "1,000リクエスト/分（プレミアム）",
+        "enterprise": "5,000リクエスト/分（エンタープライズ）"
+      },
+      "timeRanges": {
+        "thirtyDays": "30日",
+        "ninetyDays": "90日",
+        "oneYear": "1年"
+      },
+      "clipboard": {
+        "copy": "コピー",
+        "copied": "コピー済み"
+      },
+      "notifications": {
+        "loadError": "エラー",
+        "loadErrorDesc": "サーバーからAPIキーを読み込めませんでした。",
+        "loadModelError": "エラー",
+        "loadModelErrorDesc": "サブスクライブ済みモデルの読み込みに失敗しました。",
+        "createSuccess": "APIキー作成済み",
+        "createError": "エラー",
+        "createErrorDesc": "APIキーの作成に失敗しました。もう一度お試しください。",
+        "deleteSuccess": "APIキー削除済み",
+        "deleteError": "エラー",
+        "deleteErrorDesc": "APIキーの削除に失敗しました。もう一度お試しください。",
+        "retrieveSuccess": "APIキー取得済み",
+        "retrieveError": "APIキー取得エラー",
+        "retrieveErrorDesc": "APIキーの取得に失敗しました",
+        "validationError": "検証エラー",
+        "nameRequired": "APIキー名は必須です",
+        "modelsRequired": "アクティブなサブスクリプションから少なくとも1つのモデルを選択してください"
+      },
+      "modals": {
+        "createTitle": "APIキーを作成",
+        "viewTitle": "APIキー詳細",
+        "deleteTitle": "APIキーを削除",
+        "createdTitle": "APIキーが正常に作成されました",
+        "success": "成功！",
+        "warning": "警告",
+        "secureRetrieval": "安全なキー取得",
+        "keyRevoked": "キー取り消し済み",
+        "keyExpired": "キー期限切れ",
+        "selectedModels": "選択されたモデル"
+      },
+      "tableHeaders": {
+        "apiKeysTable": "APIキーテーブル",
+        "keyDetails": "キー詳細",
+        "generatedKeyDetails": "生成されたキー詳細"
+      },
+      "codeExample": {
+        "role": "ユーザー",
+        "content": "こんにちは、世界！"
+      }
+    },
+    "usage": {
+      "title": "使用状況ダッシュボード",
+      "subtitle": "API使用状況、コスト、パフォーマンスメトリクスを監視",
+      "exportData": "データをエクスポート",
+      "loadingTitle": "使用状況データを読み込み中...",
+      "loadingDescription": "API使用パターンとメトリクスを分析中",
+      "noDataTitle": "使用可能な使用状況データがありません",
+      "noDataDescription": "APIリクエストを開始して、ここで使用統計を確認してください。",
+      "customDatePlaceholderTitle": "日付範囲を選択",
+      "customDatePlaceholderDescription": "カスタム日付範囲の使用統計を表示するには、上記で開始日と終了日を選択してください。",
+      "viewApiDocs": "APIドキュメントを表示",
+      "filters": {
+        "custom": "カスタム",
+        "overview": "概要",
+        "byModels": "モデル別",
+        "errors": "エラー",
+        "startDate": "開始日",
+        "endDate": "終了日",
+        "selectStartDate": "開始日を選択",
+        "selectEndDate": "終了日を選択"
+      },
+      "dateRanges": {
+        "last7Days": "過去7日間",
+        "last30Days": "過去30日間",
+        "last90Days": "過去90日間",
+        "customRange": "カスタム範囲"
+      },
+      "metrics": {
+        "totalRequests": "総リクエスト数",
+        "totalTokens": "総トークン数",
+        "totalCost": "総コスト",
+        "avgResponseTime": "平均応答時間",
+        "successRate": "成功率",
+        "successfulRequests": "成功したリクエスト"
+      },
+      "charts": {
+        "dailyUsage": "日次使用量",
+        "modelUsageDistribution": "モデル使用分布",
+        "errorTypes": "エラータイプ",
+        "usageTrends": "使用傾向",
+        "topModelsByUsage": "使用量別上位モデル",
+        "usageByModel": "モデル別使用量",
+        "noDataTitle": "データが利用できません",
+        "noDataDescription": "選択された期間の使用データが見つかりません。",
+        "noModelsTitle": "モデルデータなし",
+        "noModelsDescription": "選択された期間のモデル使用データが利用できません。",
+        "lineChartAriaLabel": "{{metric}}の時系列を示す線グラフ",
+        "modelDistributionAriaLabel": "モデル使用分布を示すドーナツグラフ",
+        "requests": "リクエスト",
+        "percentage": "パーセンテージ",
+        "modelBreakdown": "モデル内訳",
+        "detailedBreakdown": "詳細内訳"
+      },
+      "tables": {
+        "topModels": "上位モデルテーブル"
+      },
+      "tableHeaders": {
+        "model": "モデル",
+        "requests": "リクエスト",
+        "tokens": "トークン",
+        "cost": "コスト",
+        "usagePercent": "使用率 %",
+        "count": "カウント",
+        "percentage": "パーセンテージ"
+      },
+      "notifications": {
+        "loadError": "エラー",
+        "loadErrorDesc": "サーバーから使用状況メトリクスを読み込めませんでした。",
+        "loadFailed": "使用状況メトリクスの読み込みに失敗しました。もう一度お試しください。",
+        "exportStarted": "エクスポート開始",
+        "exportStartedDesc": "使用状況データのエクスポートを準備中です。まもなくダウンロードされます。",
+        "exportComplete": "エクスポート完了",
+        "exportCompleteDesc": "使用状況データが正常にエクスポートされました。",
+        "exportFailed": "エクスポート失敗",
+        "exportFailedDesc": "使用状況データのエクスポートに失敗しました。もう一度お試しください。",
+        "customDatesRequired": "カスタム範囲のエクスポートには開始日と終了日の両方を選択してください。"
+      }
+    },
+    "settings": {
+      "title": "設定",
+      "userPreferences": "ユーザー設定",
+      "apiConfiguration": "API設定",
+      "forms": {
+        "displayName": "表示名",
+        "displayNamePlaceholder": "表示名を入力してください",
+        "emailNotifications": "メール通知",
+        "autoRefreshDashboard": "ダッシュボード自動更新",
+        "enabled": "有効",
+        "defaultModelProvider": "デフォルトモデルプロバイダー",
+        "rateLimitLabel": "レート制限（リクエスト/分）",
+        "timeoutLabel": "タイムアウト（秒）",
+        "providerPlaceholder": "OpenAI、Anthropic など",
+        "openShiftAI": "OpenShift AI"
+      },
+      "buttons": {
+        "savePreferences": "設定を保存",
+        "updateConfiguration": "設定を更新"
+      }
+    }
+  },
+  "ui": {
+    "theme": {
+      "light": "ライト",
+      "dark": "ダーク",
+      "toggle": "テーマを切り替え"
+    },
+    "language": {
+      "selector": "言語",
+      "english": "English",
+      "spanish": "Español",
+      "french": "Français",
+      "german": "Deutsch",
+      "italian": "Italiano",
+      "korean": "한국어",
+      "japanese": "日本語",
+      "chinese": "中文",
+      "elvish": "Edhellen"
+    },
+    "notifications": {
+      "title": "通知",
+      "markRead": "既読にする",
+      "clear": "すべてクリア",
+      "empty": "通知なし"
+    },
+    "actions": {
+      "logout": "ログアウト",
+      "login": "OpenShiftでログイン",
+      "browse": "閲覧",
+      "refresh": "ページを更新",
+      "tryAgain": "再試行"
+    },
+    "errors": {
+      "somethingWrong": "問題が発生しました",
+      "tryRefresh": "申し訳ございませんが、予期しない問題が発生しました。ページを更新するか、問題が続く場合はサポートにお問い合わせください。"
+    }
+  }
+}
