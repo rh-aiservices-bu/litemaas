@@ -737,7 +737,7 @@ const ApiKeysPage: React.FC = () => {
                           hasCheckbox
                           isSelected={selectedModelIds.includes(model.id)}
                         >
-                          {model.name} ({model.provider})
+                          {model.name}
                         </SelectOption>
                       ))}
                     </>
@@ -838,12 +838,6 @@ const ApiKeysPage: React.FC = () => {
             </FlexItem>
             <FlexItem>{selectedApiKey && getStatusBadge(selectedApiKey.status)}</FlexItem>
           </Flex>
-          <Content
-            component={ContentVariants.p}
-            style={{ color: 'var(--pf-v6-global--Color--200)' }}
-          >
-            {t('pages.apiKeys.messages.apiKeyDetails')}
-          </Content>
         </ModalHeader>
         <ModalBody>
           {selectedApiKey && (
@@ -931,9 +925,7 @@ const ApiKeysPage: React.FC = () => {
                               );
                               return (
                                 <Label key={modelId} isCompact>
-                                  {modelDetail
-                                    ? `${modelDetail.name} (${modelDetail.provider})`
-                                    : modelId}
+                                  {modelDetail ? `${modelDetail.name}` : modelId}
                                 </Label>
                               );
                             })}
@@ -945,19 +937,15 @@ const ApiKeysPage: React.FC = () => {
                     </Tr>
                     <Tr>
                       <Td>
-                        <strong>{t('pages.apiKeys.labels.created')}</strong>
+                        <strong>API URL</strong>
                       </Td>
-                      <Td>{new Date(selectedApiKey.createdAt).toLocaleDateString()}</Td>
+                      <Td>{litellmApiUrl}/v1</Td>
                     </Tr>
                     <Tr>
                       <Td>
-                        <strong>{t('pages.apiKeys.labels.lastUsed')}</strong>
+                        <strong>{t('pages.apiKeys.labels.created')}</strong>
                       </Td>
-                      <Td>
-                        {selectedApiKey.lastUsed
-                          ? new Date(selectedApiKey.lastUsed).toLocaleDateString()
-                          : t('pages.apiKeys.never')}
-                      </Td>
+                      <Td>{new Date(selectedApiKey.createdAt).toLocaleDateString()}</Td>
                     </Tr>
                     <Tr>
                       <Td>
@@ -965,15 +953,7 @@ const ApiKeysPage: React.FC = () => {
                       </Td>
                       <Td>{selectedApiKey.usageCount.toLocaleString()}</Td>
                     </Tr>
-                    <Tr>
-                      <Td>
-                        <strong>{t('pages.apiKeys.labels.rateLimit')}</strong>
-                      </Td>
-                      <Td>
-                        {selectedApiKey.rateLimit.toLocaleString()}{' '}
-                        {t('pages.apiKeys.messages.requestsPerMinute')}
-                      </Td>
-                    </Tr>
+
                     {selectedApiKey.expiresAt && (
                       <Tr>
                         <Td>
