@@ -31,7 +31,6 @@ import {
   EmptyStateVariant,
   EmptyStateBody,
   EmptyStateActions,
-  Label,
   Alert,
   Bullseye,
   Stack,

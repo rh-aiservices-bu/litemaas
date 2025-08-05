@@ -81,7 +81,7 @@ const WorkingLineChart: React.FC<WorkingLineChartProps> = ({
       <Chart
         height={height}
         padding={{ bottom: 30, left: 10, right: 10, top: 10 }}
-        domain={{ y: [0, maxY * 1.1] }}
+        domain={{ y: [0, maxY * 1.1], x: [0, data.length - 1] }}
       >
         <ChartAxis
           tickFormat={formatXTick}
