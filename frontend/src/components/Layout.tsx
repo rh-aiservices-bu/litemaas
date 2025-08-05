@@ -328,28 +328,27 @@ const Layout: React.FC = () => {
             <Flex direction={{ default: 'column' }} style={{ width: '100%', alignItems: 'center' }}>
               <FlexItem style={{ marginBottom: '0rem' }}>
                 <Flex direction={{ default: 'row' }} alignItems={{ default: 'alignItemsCenter' }}>
-                  <a
-                    href="https://github.com/rh-aiservices-bu/litemaas"
-                    target="_blank"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginTop: '0.5rem',
-                    }}
-                    rel="noreferrer"
-                  >
-                    <FlexItem>
+                  <FlexItem>
+                    <Content
+                      component={ContentVariants.a}
+                      href="https://github.com/rh-aiservices-bu/litemaas"
+                      target="_blank"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        marginTop: '0.5rem',
+                        fontSize: '0.75rem',
+                      }}
+                    >
                       <img
                         src={isDarkTheme ? githubLogoWhite : githubLogo}
                         alt="GitHub Logo"
                         style={{ height: '20px', marginRight: '0.5rem' }}
                       />
-                    </FlexItem>
-                    <FlexItem>
-                      <Content component={ContentVariants.a}>Source on GitHub</Content>
-                    </FlexItem>
-                  </a>
+                      Source on GitHub
+                    </Content>
+                  </FlexItem>
                 </Flex>
               </FlexItem>
               <FlexItem>
