@@ -52,7 +52,7 @@ interface BackendSubscriptionDetails {
   updatedAt: string;
 
   // LiteLLM pricing info
-  pricing: {
+  pricing?: {
     inputCostPerToken: number;
     outputCostPerToken: number;
     currency: string;
@@ -106,12 +106,17 @@ class SubscriptionsService {
       usedTokens: backend.usedTokens || 0,
 
       // Map pricing if available
-      pricing: backend.pricing? {
+      pricing: backend.pricing
+        ? {
             inputCostPerToken: backend.pricing.inputCostPerToken,
             outputCostPerToken: backend.pricing.outputCostPerToken,
             currency: backend.pricing.currency || 'USD',
           }
-        : undefined,
+        : {
+            inputCostPerToken: 0,
+            outputCostPerToken: 0,
+            currency: 'USD',
+          },
 
       // Legacy fields for compatibility
       usageLimit: backend.quotaTokens || 0,
