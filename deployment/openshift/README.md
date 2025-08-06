@@ -1,20 +1,48 @@
-# OpenShift Deployment Files
+# OpenShift Deployment
 
 This directory contains Kubernetes manifests and Kustomize configuration for deploying LiteMaaS on OpenShift Container Platform.
 
+## Prerequisites
+
+1. **OpenShift cluster access** with project creation permissions
+2. **OpenShift CLI (oc)** installed and logged in
+3. **OAuth client configured** in OpenShift (see [full deployment guide](../../docs/deployment/openshift-deployment.md#oauth-client-configuration))
+4. **Container images** available at:
+   - `quay.io/rh-aiservices-bu/litemaas-backend`
+   - `quay.io/rh-aiservices-bu/litemaas-frontend`
+
+## Important Notes
+
+⚠️ **BEFORE DEPLOYMENT**: You must customize the secret files with your actual values. The included secrets contain placeholder values that will not work in production.
+
+🔐 **Security**: All secrets should be updated with secure, randomly generated values before deployment.
+
+📚 **Complete Guide**: For detailed setup instructions, see [OpenShift Deployment Guide](../../docs/deployment/openshift-deployment.md)
+
 ## Quick Start
+
+### Prepare the configuration file
+
+- Make a copy of `user-values.env.example`, renaming it `user-values.env`
+- Edit `user-values.env` and enter the values you want to use for the deployment
+- Prepare the deployment files using the `preparation.sh` script
+
+```bash
+# Prepare the local configuration files
+./preparation.sh
+```
+
+- Apply the configuration files to deploy all elements: PostgreSQL database, LiteLLM, Backend and Frontend.
 
 ```bash
 # Deploy to current project
 oc apply -k .
-
-# Deploy to specific namespace
-oc apply -k . -n my-namespace
 ```
 
 ## Files Overview
 
 ### Core Resources
+
 - `namespace.yaml` - Namespace definition
 - `postgres-deployment.yaml` - PostgreSQL StatefulSet
 - `postgres-service.yaml` - PostgreSQL service
@@ -26,39 +54,31 @@ oc apply -k . -n my-namespace
 - `litellm-service.yaml` - LiteLLM service
 
 ### External Access
+
 - `frontend-route.yaml` - OpenShift Route for LiteMaaS UI
 - `litellm-route.yaml` - OpenShift Route for LiteLLM admin UI
 
 ### Security & Configuration
+
 - `postgres-secret.yaml` - Database credentials
 - `backend-secret.yaml` - Backend configuration secrets
 - `litellm-secret.yaml` - LiteLLM configuration secrets
 
 ### Kustomize
+
 - `kustomization.yaml` - Main Kustomize configuration
-
-## Prerequisites
-
-1. **OpenShift cluster access** with project creation permissions
-2. **OpenShift CLI (oc)** installed and logged in
-3. **OAuth client configured** in OpenShift (see full deployment guide)
-4. **Container images** available at:
-   - `quay.io/rh-aiservice-bu/litemaas-backend:latest`
-   - `quay.io/rh-aiservice-bu/litemaas-frontend:latest`
-
-## Important Notes
-
-⚠️ **BEFORE DEPLOYMENT**: You must customize the secret files with your actual values. The included secrets contain placeholder values that will not work in production.
-
-🔐 **Security**: All secrets should be updated with secure, randomly generated values before deployment.
-
-📚 **Complete Guide**: For detailed setup instructions, see [OpenShift Deployment Guide](../../docs/deployment/openshift-deployment.md)
 
 ## Access Points
 
 After successful deployment:
+
 - **LiteMaaS Application**: `https://litemaas-<namespace>.apps.<cluster-domain>`
 - **LiteLLM Admin UI**: `https://litellm-<namespace>.apps.<cluster-domain>`
+
+## Post-Deployment tasks
+
+- Connect to LiteLLM dashboard and create Models
+- Wait for the backend to sync models, or start a Rollout of the deployment to initiate the refresh.
 
 ## Support
 

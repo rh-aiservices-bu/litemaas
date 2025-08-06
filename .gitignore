@@ -16,6 +16,8 @@ build/
 .env.local
 .env.*.local
 **/.env
+*.env
+*.yaml.local
 
 # Logs
 logs/

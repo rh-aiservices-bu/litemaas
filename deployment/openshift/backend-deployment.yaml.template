@@ -16,9 +16,27 @@ spec:
         app: backend
         component: api
     spec:
+      initContainers:
+        - name: wait-for-database
+          image: postgres:16-alpine
+          command: 
+            - sh
+            - -c
+            - |
+              until psql "postgresql://litemaas_admin:${PG_ADMIN_PASSWORD}@postgres:5432/litemaas_db" -c '\q' 2>/dev/null; do
+                echo "Waiting for database..."
+                sleep 2
+              done
+              echo "Database is ready!"
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: database-url
       containers:
         - name: backend
-          image: quay.io/rh-aiservices-bu/litemaas-backend:latest
+          image: quay.io/rh-aiservices-bu/litemaas-backend:${LITEMAAS_VERSION}
           ports:
             - containerPort: 8080
               name: http
@@ -87,7 +105,7 @@ spec:
 
             # LiteLLM Integration
             - name: LITELLM_API_URL
-              value: 'http://litellm:4000'
+              value: 'https://litellm-${NAMESPACE}.apps.${CLUSTER_DOMAIN_NAME}'
             - name: LITELLM_API_KEY
               valueFrom:
                 secretKeyRef:
