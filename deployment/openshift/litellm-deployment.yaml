@@ -16,9 +16,27 @@ spec:
         app: litellm
         component: ai-proxy
     spec:
+      initContainers:
+        - name: wait-for-database
+          image: postgres:16-alpine
+          command: 
+            - sh
+            - -c
+            - |
+              until psql "$DATABASE_URL" -c '\q' 2>/dev/null; do
+                echo "Waiting for database..."
+                sleep 2
+              done
+              echo "Database is ready!"
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: litellm-secret
+                  key: database-url
       containers:
         - name: litellm
-          image: ghcr.io/berriai/litellm-non_root:main-stable
+          image: ghcr.io/berriai/litellm-non_root:main-v1.74.7-stable
           ports:
             - containerPort: 4000
               name: http

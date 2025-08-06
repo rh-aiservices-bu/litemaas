@@ -4,12 +4,35 @@
 
 ## 🎟️ Key Benefits
 
-- **Multi-Model Access**: One API key can access multiple AI models
-- **Budget Control**: Set spending limits at user, team, and API key levels
-- **Usage Analytics**: Real-time tracking of token usage and costs
-- **Team Collaboration**: Share budgets and manage access across teams
-- **Enterprise Security**: OAuth2 authentication with OpenShift support
 - **Self-Service**: Users can independently manage subscriptions and API keys
+- **Multi-Model Access**: One API key can access multiple AI models
+- **Budget Control**: Set spending limits at user, team, and API key levels (upcoming feature)
+- **Usage Analytics**: Real-time tracking of token usage and costs
+- **Team Collaboration**: Share budgets and manage access across teams (upcoming feature)
+- **Enterprise Security**: OAuth2 authentication with OpenShift support
+- **Easy Deployment and Usage**: Automated deployment on OpenShift, Patternfly 6 UI
+
+## 📸 Screenshots
+
+### Model Discovery
+
+![model-discovery.png](img/model-discovery.png)
+
+### Subscriptions Management
+
+![subscriptions-management.png](img/subscriptions-management.png)
+
+### API Keys Management
+
+![api-keys-management.png](img/api-keys-management.png)
+
+### API Key Details
+
+![api-key-details.png](img/api-key-details.png)
+
+### Usage Statistics
+
+![usage-statistics.png](img/usage-statistics.png)
 
 ## 🚀 Quick Start
 
@@ -20,7 +43,7 @@ npm install
 # Start development servers (both backend and frontend)
 npm run dev
 
-# Backend only (http://localhost:8080)
+# Backend only (http://localhost:8081)
 npm run dev:backend
 
 # Frontend only (http://localhost:3000)

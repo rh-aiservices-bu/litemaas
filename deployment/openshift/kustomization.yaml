@@ -4,26 +4,19 @@ kind: Kustomization
 # Namespace configuration - change this to deploy to a different namespace
 namespace: litemaas
 
-# Metadata labels applied to all resources
-commonLabels:
-  app.kubernetes.io/name: litemaas
-  app.kubernetes.io/instance: litemaas
-  app.kubernetes.io/version: "1.0.0"
-  app.kubernetes.io/part-of: litemaas
-
 # Resources to deploy
 resources:
   # Namespace
-  - namespace.yaml
+  - namespace.yaml.local
   
   # Secrets (must be created/customized before deployment)
-  - postgres-secret.yaml
-  - backend-secret.yaml
-  - litellm-secret.yaml
+  - postgres-secret.yaml.local
+  - backend-secret.yaml.local
+  - litellm-secret.yaml.local
   
   # PostgreSQL Database
   - postgres-init-configmap.yaml
-  - postgres-deployment.yaml
+  - postgres-statefulset.yaml
   - postgres-service.yaml
   
   # LiteLLM AI Proxy
@@ -31,11 +24,11 @@ resources:
   - litellm-service.yaml
   
   # Backend API
-  - backend-deployment.yaml
+  - backend-deployment.yaml.local
   - backend-service.yaml
   
   # Frontend Web Application
-  - frontend-deployment.yaml
+  - frontend-deployment.yaml.local
   - frontend-service.yaml
   
   # OpenShift Routes

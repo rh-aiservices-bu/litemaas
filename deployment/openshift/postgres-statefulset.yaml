@@ -30,7 +30,7 @@ spec:
           name: postgres
         env:
         - name: POSTGRES_DB
-          value: "litemaas"
+          value: "litemaas_db"
         - name: POSTGRES_USER
           valueFrom:
             secretKeyRef:
