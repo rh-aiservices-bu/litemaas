@@ -1,7 +1,8 @@
 import { FastifyInstance } from 'fastify';
 import { randomBytes } from 'crypto';
 import { LiteLLMService } from './litellm.service';
-import { DefaultTeamService } from './default-team.service.js';
+import { BaseService } from './base.service.js';
+import { LiteLLMSyncUtils } from '../utils/litellm-sync.utils.js';
 import {
   SubscriptionStatus,
   EnhancedSubscription,
@@ -88,8 +89,7 @@ export interface SubscriptionDetails {
   metadata?: Record<string, any>;
 }
 
-export class SubscriptionService {
-  private fastify: FastifyInstance;
+export class SubscriptionService extends BaseService {
   private liteLLMService: LiteLLMService;
 
   // Mock data for development/fallback
@@ -274,56 +274,8 @@ export class SubscriptionService {
   ];
 
   constructor(fastify: FastifyInstance, liteLLMService?: LiteLLMService) {
-    this.fastify = fastify;
+    super(fastify);
     this.liteLLMService = liteLLMService || new LiteLLMService(fastify);
-  }
-
-  private shouldUseMockData(): boolean {
-    // Use mock data only if database is not available
-    // This allows using real data in development when database is connected
-    const dbUnavailable = this.isDatabaseUnavailable();
-
-    this.fastify.log.debug(
-      {
-        dbUnavailable,
-        nodeEnv: process.env.NODE_ENV,
-        hasPg: !!this.fastify.pg,
-        mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined,
-      },
-      'Checking if should use mock data',
-    );
-
-    return dbUnavailable;
-  }
-
-  private isDatabaseUnavailable(): boolean {
-    // Check if database connection is available
-    // This is a simple check - in a real scenario you might want to ping the database
-    try {
-      // Check if pg plugin is registered and has a working connection
-      if (!this.fastify.pg) {
-        this.fastify.log.debug('PostgreSQL plugin not available');
-        return true;
-      }
-
-      // Additional check: if the database plugin detected unavailability during startup,
-      // it would have set up mock mode. Check if we're in mock mode.
-      if (this.fastify.isDatabaseMockMode && this.fastify.isDatabaseMockMode()) {
-        this.fastify.log.debug('Database mock mode enabled');
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      this.fastify.log.debug({ error }, 'Error checking database availability');
-      return true;
-    }
-  }
-
-  private createMockResponse<T>(data: T): Promise<T> {
-    // Simulate network delay
-    const delay = Math.random() * 200 + 100; // 100-300ms
-    return new Promise((resolve) => setTimeout(() => resolve(data), delay));
   }
 
   async createSubscription(
@@ -344,7 +296,7 @@ export class SubscriptionService {
 
     try {
       // NEW: Ensure user exists in LiteLLM before creating subscription
-      await this.ensureUserExistsInLiteLLM(userId);
+      await LiteLLMSyncUtils.ensureUserExistsInLiteLLM(userId, this.fastify, this.liteLLMService);
 
       // Validate model exists
       const model = await this.liteLLMService.getModelById(modelId);
@@ -1666,237 +1618,5 @@ export class SubscriptionService {
     const now = new Date();
     const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     return nextReset;
-  }
-
-  /**
-   * Ensures user exists in LiteLLM backend, creating them if necessary
-   */
-  /**
-   * Ensures team exists in LiteLLM backend, creating it if necessary
-   */
-  private async ensureTeamExistsInLiteLLM(teamId: string): Promise<void> {
-    try {
-      // First check if team exists in LiteLLM
-      const existingTeam = await this.liteLLMService.getTeamInfo(teamId);
-      this.fastify.log.info(
-        {
-          teamId,
-          existingTeam: {
-            team_id: existingTeam.team_id,
-            team_alias: existingTeam.team_alias,
-            spend: existingTeam.spend,
-            max_budget: existingTeam.max_budget,
-          },
-        },
-        'Team already exists in LiteLLM',
-      );
-    } catch (error) {
-      // Team doesn't exist in LiteLLM, get team from database and create it
-      this.fastify.log.info(
-        {
-          teamId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-          isMocking: this.liteLLMService.getMetrics().config.enableMocking,
-        },
-        'Team not found in LiteLLM, attempting to create',
-      );
-
-      try {
-        // Get team information from database
-        const team = await this.fastify.dbUtils.queryOne(
-          'SELECT id, name, description, max_budget, tpm_limit, rpm_limit FROM teams WHERE id = $1',
-          [teamId],
-        );
-
-        if (!team) {
-          throw new Error(`Team ${teamId} not found in database`);
-        }
-
-        const createTeamRequest = {
-          team_id: String(team.id),
-          team_alias: team.name as string,
-          max_budget: Number(team.max_budget) || 1000, // Use team's budget or default
-          tpm_limit: Number(team.tpm_limit) || 10000, // Use team's limit or default
-          rpm_limit: Number(team.rpm_limit) || 500, // Use team's limit or default
-          admins: [], // Will be populated from team members
-          models: [], // Empty array enables all models
-        };
-
-        this.fastify.log.info(
-          {
-            teamId,
-            createTeamRequest,
-            isMocking: this.liteLLMService.getMetrics().config.enableMocking,
-          },
-          'Sending team creation request to LiteLLM',
-        );
-
-        // Create team in LiteLLM
-        const createdTeam = await this.liteLLMService.createTeam(createTeamRequest);
-
-        this.fastify.log.info(
-          {
-            teamId,
-            createdTeam: {
-              team_id: createdTeam.team_id,
-              team_alias: createdTeam.team_alias,
-              max_budget: createdTeam.max_budget,
-              spend: createdTeam.spend,
-              created_at: createdTeam.created_at,
-            },
-            isMocking: this.liteLLMService.getMetrics().config.enableMocking,
-          },
-          'LiteLLM team creation response received',
-        );
-
-        // Verify team was actually created by attempting to fetch it
-        try {
-          const verificationTeam = await this.liteLLMService.getTeamInfo(teamId);
-          this.fastify.log.info(
-            {
-              teamId,
-              verificationTeam: {
-                team_id: verificationTeam.team_id,
-                team_alias: verificationTeam.team_alias,
-              },
-            },
-            'Verified team exists in LiteLLM after creation',
-          );
-        } catch (verifyError) {
-          this.fastify.log.error(
-            {
-              teamId,
-              verifyError: verifyError instanceof Error ? verifyError.message : 'Unknown error',
-              isMocking: this.liteLLMService.getMetrics().config.enableMocking,
-            },
-            'CRITICAL: Team creation appeared to succeed but team cannot be retrieved from LiteLLM',
-          );
-          throw new Error(
-            `Team creation verification failed: ${verifyError instanceof Error ? verifyError.message : 'Unknown error'}`,
-          );
-        }
-
-        this.fastify.log.info(
-          { teamId },
-          'Successfully created and verified team in LiteLLM for subscription creation',
-        );
-      } catch (createError) {
-        this.fastify.log.error(
-          {
-            teamId,
-            error: createError instanceof Error ? createError.message : 'Unknown error',
-            errorStack: createError instanceof Error ? createError.stack : undefined,
-            isMocking: this.liteLLMService.getMetrics().config.enableMocking,
-          },
-          'Failed to create team in LiteLLM for subscription creation',
-        );
-
-        throw new Error(
-          `Failed to create team in LiteLLM: ${createError instanceof Error ? createError.message : 'Unknown error'}`,
-        );
-      }
-    }
-  }
-
-  private async ensureUserExistsInLiteLLM(userId: string): Promise<void> {
-    try {
-      // First check if user exists in LiteLLM (returns null for non-existent users)
-      const existingUser = await this.liteLLMService.getUserInfo(userId);
-      if (existingUser) {
-        this.fastify.log.info(
-          {
-            userId,
-            existingUser: {
-              user_id: existingUser.user_id,
-              user_alias: existingUser.user_alias,
-              spend: existingUser.spend,
-              max_budget: existingUser.max_budget,
-              teams: existingUser.teams,
-            },
-          },
-          'User already exists in LiteLLM',
-        );
-        return; // User exists, nothing to do
-      }
-
-      // User doesn't exist in LiteLLM, create them
-      this.fastify.log.info(
-        {
-          userId,
-          isMocking: this.liteLLMService.getMetrics().config.enableMocking,
-        },
-        'User not found in LiteLLM, attempting to create for subscription',
-      );
-
-      // Get user information from database
-      const user = await this.fastify.dbUtils.queryOne(
-        'SELECT id, username, email, full_name, roles, max_budget, tpm_limit, rpm_limit FROM users WHERE id = $1',
-        [userId],
-      );
-
-      if (!user) {
-        throw new Error(`User ${userId} not found in database`);
-      }
-
-      // Ensure the default team exists in LiteLLM before creating user
-      await this.ensureTeamExistsInLiteLLM(DefaultTeamService.DEFAULT_TEAM_ID);
-
-      // Create user in LiteLLM with default team assignment
-      await this.liteLLMService.createUser({
-        user_id: user.id as string,
-        user_email: user.email as string,
-        user_alias: user.username as string,
-        user_role: (user.roles as string[])?.includes('admin') ? 'proxy_admin' : 'internal_user',
-        max_budget: (user.max_budget as number) || 100, // Use user's budget or default
-        tpm_limit: (user.tpm_limit as number) || 1000, // Use user's limit or default
-        rpm_limit: (user.rpm_limit as number) || 60, // Use user's limit or default
-        auto_create_key: false, // Don't auto-create key during user creation
-        teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
-      });
-
-      // Update user sync status in database
-      await this.fastify.dbUtils.query(
-        'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
-        ['synced', userId],
-      );
-
-      this.fastify.log.info(
-        { userId },
-        'Successfully created user in LiteLLM for subscription creation',
-      );
-    } catch (error) {
-      // Check if error is due to user already existing (by email)
-      if (error instanceof Error && error.message && error.message.includes('already exists')) {
-        this.fastify.log.info(
-          { userId, error: error.message },
-          'User already exists in LiteLLM (by email) - continuing with subscription creation',
-        );
-        // Don't throw - user exists, which is what we wanted
-        // Update sync status to success since user exists
-        await this.fastify.dbUtils.query(
-          'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
-          ['synced', userId],
-        );
-        return;
-      }
-
-      // Update user sync status to error for other errors
-      await this.fastify.dbUtils.query(
-        'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
-        ['error', userId],
-      );
-
-      this.fastify.log.error(
-        {
-          userId,
-          error: error instanceof Error ? error.message : 'Unknown error',
-        },
-        'Failed to create user in LiteLLM for subscription creation',
-      );
-
-      throw new Error(
-        `Failed to create user in LiteLLM: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      );
-    }
   }
 }

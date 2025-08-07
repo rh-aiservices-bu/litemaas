@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { QueryParameter } from '../types/common.types.js';
 import { LiteLLMService } from './litellm.service.js';
+import { BaseService } from './base.service.js';
 
 export interface UsageMetrics {
   totalRequests: number;
@@ -77,8 +78,7 @@ export interface TopStats {
   }>;
 }
 
-export class UsageStatsService {
-  private fastify: FastifyInstance;
+export class UsageStatsService extends BaseService {
   private readonly CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private cache: Map<string, { data: any; timestamp: number }> = new Map();
 
@@ -179,56 +179,7 @@ export class UsageStatsService {
   };
 
   constructor(fastify: FastifyInstance) {
-    this.fastify = fastify;
-  }
-
-  private shouldUseMockData(): boolean {
-    // Use mock data only if database is not available
-    // This allows using real data in development when database is connected
-    const dbUnavailable = this.isDatabaseUnavailable();
-
-    this.fastify.log.debug(
-      {
-        dbUnavailable,
-        nodeEnv: process.env.NODE_ENV,
-        hasPg: !!this.fastify.pg,
-        mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined,
-      },
-      'Usage Stats Service: Checking if should use mock data',
-    );
-
-    return dbUnavailable;
-  }
-
-  private isDatabaseUnavailable(): boolean {
-    try {
-      // Check if pg plugin is registered and has a working connection
-      if (!this.fastify.pg) {
-        this.fastify.log.debug('Usage Stats Service: PostgreSQL plugin not available');
-        return true;
-      }
-
-      // Additional check: if the database plugin detected unavailability during startup,
-      // it would have set up mock mode. Check if we're in mock mode.
-      if (this.fastify.isDatabaseMockMode && this.fastify.isDatabaseMockMode()) {
-        this.fastify.log.debug('Usage Stats Service: Database mock mode enabled');
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      this.fastify.log.debug(
-        { error },
-        'Usage Stats Service: Error checking database availability',
-      );
-      return true;
-    }
-  }
-
-  private createMockResponse<T>(data: T): Promise<T> {
-    // Simulate network delay
-    const delay = Math.random() * 200 + 100; // 100-300ms
-    return new Promise((resolve) => setTimeout(() => resolve(data), delay));
+    super(fastify);
   }
 
   async getUsageStats(query: UsageStatsQuery): Promise<UsageStatsResponse> {

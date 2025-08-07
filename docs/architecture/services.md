@@ -7,6 +7,12 @@
 The LiteMaaS backend service layer implements the business logic and core functionality of the application. Services are designed following the single responsibility principle, with clear separation of concerns between authentication, model management, subscription handling, and external integrations.
 
 ### Recent Updates
+**2025-08-06**:
+- ✅ **Major Refactoring**: Eliminated code duplication across services
+- ✅ **BaseService Introduction**: Abstract base class for common service patterns
+- ✅ **Utility Extraction**: Created LiteLLMSyncUtils and ValidationUtils
+- ✅ **Code Reduction**: ~25% reduction in duplicate code
+
 **2025-08-04**:
 - ✅ **Simplified User ID Management**: Removed `lite_llm_user_id` column, using `user.id` directly
 - ✅ **Fixed LiteLLM Usage Tracking**: Correctly uses internal tokens instead of API key values
@@ -20,8 +26,29 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ## Core Services
 
-### ApiKeyService ✅ **UPDATED 2025-07-30**
+### BaseService ✅ **NEW 2025-08-06**
+**Purpose**: Abstract base class eliminating duplicate code across services
+
+**Responsibilities**:
+- Provide common mock data handling pattern
+- Implement database availability checking
+- Standardize mock response creation
+- Reduce code duplication across all services
+
+**Key Methods**:
+- `shouldUseMockData()` - Determine if mock data should be used
+- `isDatabaseUnavailable()` - Check database connection status
+- `createMockResponse<T>()` - Create delayed mock responses
+
+**Extended By**:
+- ApiKeyService, SubscriptionService, TeamService, UsageStatsService, LiteLLMService
+
+---
+
+### ApiKeyService ✅ **UPDATED 2025-08-06**
 **Purpose**: API key lifecycle management with LiteLLM integration
+
+**Extends**: BaseService
 
 **Responsibilities**:
 - Generate secure API keys for programmatic access
@@ -38,6 +65,7 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - TokenService for key generation
 - UsageStatsService for tracking
 - ✅ **DefaultTeamService** for team management
+- ✅ **LiteLLMSyncUtils** for user/team synchronization
 
 **Key Operations**:
 - `createApiKey()` - Generate new API key with budget constraints
@@ -53,8 +81,10 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ---
 
-### LiteLLMService ✅ **UPDATED 2025-08-04**
+### LiteLLMService ✅ **UPDATED 2025-08-06**
 **Purpose**: Core integration with LiteLLM instances
+
+**Extends**: BaseService
 
 **Responsibilities**:
 - Establish and maintain connection to LiteLLM API
@@ -188,8 +218,10 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ---
 
-### TeamService
+### TeamService ✅ **UPDATED 2025-08-06**
 **Purpose**: Team management with budget tracking
+
+**Extends**: BaseService
 
 **Responsibilities**:
 - Create and manage teams
@@ -295,8 +327,10 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ---
 
-### SubscriptionService ✅ **UPDATED 2025-07-30**
+### SubscriptionService ✅ **UPDATED 2025-08-06**
 **Purpose**: Model subscription logic with LiteLLM sync
+
+**Extends**: BaseService
 
 **Responsibilities**:
 - Create and manage user subscriptions
@@ -313,6 +347,7 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - UsageStatsService for tracking
 - LiteLLMService for external sync
 - ✅ **DefaultTeamService** for team management
+- ✅ **LiteLLMSyncUtils** for user/team synchronization
 
 **Key Operations**:
 - `createSubscription()` - Initialize new subscription
@@ -356,8 +391,10 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ---
 
-### UsageStatsService ✅ **UPDATED 2025-08-04**
+### UsageStatsService ✅ **UPDATED 2025-08-06**
 **Purpose**: Usage analytics and reporting with LiteLLM integration
+
+**Extends**: BaseService
 
 **Responsibilities**:
 - Track API usage per user/team/model
@@ -388,6 +425,56 @@ The LiteMaaS backend service layer implements the business logic and core functi
 - ✅ **Token Resolution**: Gets internal token before calling LiteLLM usage endpoint
 - ✅ **Fallback Strategy**: Returns local database data if LiteLLM unavailable
 - ✅ **Mock Data**: Provides realistic mock data in development mode
+
+## Utility Classes ✅ **NEW 2025-08-06**
+
+### LiteLLMSyncUtils
+**Purpose**: Centralized LiteLLM synchronization utilities
+
+**Location**: `/backend/src/utils/litellm-sync.utils.ts`
+
+**Responsibilities**:
+- Eliminate duplicate user/team synchronization code
+- Provide consistent error handling for LiteLLM operations
+- Centralize "already exists" error handling patterns
+- Manage default team assignment logic
+
+**Key Methods**:
+- `ensureUserExistsInLiteLLM()` - Check/create user with graceful error handling
+- `ensureTeamExistsInLiteLLM()` - Check/create team with proper model access
+- `getUserPrimaryTeam()` - Get user's primary team with default fallback
+
+**Used By**: ApiKeyService, SubscriptionService
+
+---
+
+### ValidationUtils
+**Purpose**: Comprehensive input validation utilities
+
+**Location**: `/backend/src/utils/validation.utils.ts`
+
+**Responsibilities**:
+- Centralize validation logic across services
+- Provide type-safe validation methods
+- Ensure consistent validation patterns
+- Reduce code duplication
+
+**Key Methods**:
+- `isValidEmail()` - Email format validation
+- `isValidUUID()` - UUID v4 validation
+- `isValidModelId()` - Model identifier validation
+- `validateBudget()` - Budget constraint validation
+- `validateRateLimits()` - TPM/RPM limit validation
+- `isValidTeamName()` - Team name validation
+- `isValidApiKeyName()` - API key name validation
+- `validateDateRange()` - Date range validation
+- `isValidStatus()` - Status enum validation
+- `sanitizeString()` - String sanitization for security
+- `validateMetadata()` - Metadata object validation
+
+**Used By**: All service classes for input validation
+
+---
 
 ## Service Interaction Patterns
 
