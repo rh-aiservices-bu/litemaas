@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { LiteLLMService } from './litellm.service.js';
+import { BaseService } from './base.service.js';
 import {
   User,
   TeamMember,
@@ -73,8 +74,7 @@ export interface TeamSyncResponse {
   };
 }
 
-export class TeamService {
-  private fastify: FastifyInstance;
+export class TeamService extends BaseService {
   private liteLLMService: LiteLLMService;
 
   // Mock data for development/fallback
@@ -202,48 +202,8 @@ export class TeamService {
   ];
 
   constructor(fastify: FastifyInstance, liteLLMService?: LiteLLMService) {
-    this.fastify = fastify;
+    super(fastify);
     this.liteLLMService = liteLLMService || new LiteLLMService(fastify);
-  }
-
-  private shouldUseMockData(): boolean {
-    const dbUnavailable = this.isDatabaseUnavailable();
-
-    this.fastify.log.debug(
-      {
-        dbUnavailable,
-        nodeEnv: process.env.NODE_ENV,
-        hasPg: !!this.fastify.pg,
-        mockMode: this.fastify.isDatabaseMockMode ? this.fastify.isDatabaseMockMode() : undefined,
-      },
-      'Team Service: Checking if should use mock data',
-    );
-
-    return dbUnavailable;
-  }
-
-  private isDatabaseUnavailable(): boolean {
-    try {
-      if (!this.fastify.pg) {
-        this.fastify.log.debug('Team Service: PostgreSQL plugin not available');
-        return true;
-      }
-
-      if (this.fastify.isDatabaseMockMode && this.fastify.isDatabaseMockMode()) {
-        this.fastify.log.debug('Team Service: Database mock mode enabled');
-        return true;
-      }
-
-      return false;
-    } catch (error) {
-      this.fastify.log.debug({ error }, 'Team Service: Error checking database availability');
-      return true;
-    }
-  }
-
-  private createMockResponse<T>(data: T): Promise<T> {
-    const delay = Math.random() * 200 + 100; // 100-300ms
-    return new Promise((resolve) => setTimeout(() => resolve(data), delay));
   }
 
   async createTeam(userId: string, request: CreateTeamDto): Promise<TeamWithMembers> {

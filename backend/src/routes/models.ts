@@ -191,9 +191,91 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         } catch (dbError) {
           fastify.log.debug(dbError, 'Database models unavailable, fetching from LiteLLM');
 
-          // Fallback to direct LiteLLM fetch
-          const liteLLMModels = await liteLLMService.getModels();
-          models = liteLLMModels.map(convertLiteLLMModel);
+          try {
+            // Fallback to direct LiteLLM fetch
+            const liteLLMModels = await liteLLMService.getModels();
+            models = liteLLMModels.map(convertLiteLLMModel);
+          } catch (liteLLMError) {
+            // In development mode only, fall back to mock data when both DB and LiteLLM are unavailable
+            if (process.env.NODE_ENV === 'development') {
+              fastify.log.warn(
+                { dbError, liteLLMError },
+                'Both database and LiteLLM unavailable in development mode, using mock models',
+              );
+
+              // Define mock LiteLLM models for development fallback
+              const mockLiteLLMModels: LiteLLMModel[] = [
+                {
+                  model_name: 'gpt-4o',
+                  litellm_params: {
+                    input_cost_per_token: 0.01,
+                    output_cost_per_token: 0.03,
+                    custom_llm_provider: 'openai',
+                    model: 'openai/gpt-4o',
+                  },
+                  model_info: {
+                    id: 'mock-gpt-4o-id',
+                    db_model: true,
+                    max_tokens: 128000,
+                    supports_function_calling: true,
+                    supports_parallel_function_calling: true,
+                    supports_vision: true,
+                    direct_access: true,
+                    access_via_team_ids: [],
+                    input_cost_per_token: 0.01,
+                    output_cost_per_token: 0.03,
+                  },
+                },
+                {
+                  model_name: 'gpt-4o-mini',
+                  litellm_params: {
+                    input_cost_per_token: 0.00015,
+                    output_cost_per_token: 0.0006,
+                    custom_llm_provider: 'openai',
+                    model: 'openai/gpt-4o-mini',
+                  },
+                  model_info: {
+                    id: 'mock-gpt-4o-mini-id',
+                    db_model: true,
+                    max_tokens: 128000,
+                    supports_function_calling: true,
+                    supports_parallel_function_calling: true,
+                    supports_vision: true,
+                    direct_access: true,
+                    access_via_team_ids: [],
+                    input_cost_per_token: 0.00015,
+                    output_cost_per_token: 0.0006,
+                  },
+                },
+                {
+                  model_name: 'claude-3-5-sonnet-20241022',
+                  litellm_params: {
+                    input_cost_per_token: 0.003,
+                    output_cost_per_token: 0.015,
+                    custom_llm_provider: 'anthropic',
+                    model: 'anthropic/claude-3-5-sonnet-20241022',
+                  },
+                  model_info: {
+                    id: 'mock-claude-3-5-sonnet-id',
+                    db_model: true,
+                    max_tokens: 200000,
+                    supports_function_calling: true,
+                    supports_parallel_function_calling: false,
+                    supports_vision: true,
+                    direct_access: true,
+                    access_via_team_ids: [],
+                    input_cost_per_token: 0.003,
+                    output_cost_per_token: 0.015,
+                  },
+                },
+              ];
+
+              models = mockLiteLLMModels.map(convertLiteLLMModel);
+            } else {
+              // In production, propagate the error
+              throw liteLLMError;
+            }
+          }
         }
 
         // Apply filters
