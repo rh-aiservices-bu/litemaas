@@ -106,8 +106,10 @@ litemaas/
 **Development:**
 ```bash
 npm install        # Install dependencies
-npm run dev        # Start both backend and frontend
+npm run dev        # Start both backend and frontend with auto-reload
 ```
+
+> **Note**: In development, both backend and frontend servers run with auto-reload enabled. Any code changes are automatically detected and applied without needing to restart the servers.
 
 **Production (OpenShift):**
 ```bash
