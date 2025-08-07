@@ -1,10 +1,9 @@
 # CLAUDE.md - LiteMaaS AI Context File
 
-> **Note for AI Assistants**: This is a condensed context file for AI-powered development tools. For comprehensive documentation, see:
-> - **API Documentation**: `docs/api/`
-> - **Architecture**: `docs/architecture/`
-> - **Development**: `docs/development/`
-> - **Deployment**: `docs/deployment/`
+> **Note for AI Assistants**: This is the root context file providing project overview. For detailed implementation context:
+> - **Backend Context**: [`backend/CLAUDE.md`](backend/CLAUDE.md) - Fastify API implementation details
+> - **Frontend Context**: [`frontend/CLAUDE.md`](frontend/CLAUDE.md) - React/PatternFly 6 implementation details
+> - **Documentation**: See `docs/` for comprehensive guides
 
 ## 🚀 Project Overview
 
@@ -67,39 +66,23 @@ litemaas/
 
 ## 🔧 Key Features
 
-### Backend
-- Fastify plugin architecture (auth, db, rate limiting, RBAC, swagger)
+### Backend (`@litemaas/backend`)
+- Fastify plugin architecture with PostgreSQL
 - OAuth2 + JWT authentication with API key support
-- PostgreSQL database with migration system
 - LiteLLM integration for model synchronization
-- Budget management and usage tracking
-- Team collaboration features with Default Team implementation
-- **Refactored service layer** with BaseService inheritance pattern
-- **Centralized utilities** for validation and LiteLLM synchronization
+- Multi-model API key support with budget management
+- Team collaboration with Default Team pattern
 
-### Database Tables
-`users`, `teams`, `models`, `subscriptions`, `api_keys`, `api_key_models`, `usage_logs`, `audit_logs`
+*See [`backend/CLAUDE.md`](backend/CLAUDE.md) for implementation details*
 
-> Added `api_key_models` junction table for multi-model API key support
-> Added Default Team (`a0000000-0000-4000-8000-000000000001`) for reliable user existence detection
+### Frontend (`@litemaas/frontend`)
+- React 18 with TypeScript and Vite
+- PatternFly 6 component library (`pf-v6-` prefix required)
+- React Query for server state management
+- Internationalization (EN, ES, FR)
+- Responsive design with dark theme support
 
-### API Routes Structure
-- **OAuth Flow** (`/api/auth/*`): login, callback, logout - unversioned for provider compatibility
-- **User Profile** (`/api/v1/auth/*`): me, profile - versioned API endpoints
-- **Business API** (`/api/v1/*`): models, subscriptions, api-keys, teams, usage - all versioned
-
-*See `docs/api/rest-api.md` for complete endpoint documentation*
-
-## 🎨 Frontend
-- React Context API for state (Auth, Notifications)
-- React Query for server state management with intelligent caching
-- Axios service layer with JWT interceptors
-- PatternFly 6 components (`pf-v6-` prefix required)
-- Main routes: `/home`, `/models`, `/subscriptions`, `/api-keys`, `/usage`, `/settings`
-
-## 🎯 PatternFly 6 Integration
-
-⚠️ **CRITICAL**: PatternFly 6 requires `pf-v6-` prefix for all classes. See [PATTERNFLY6_RULES.md](./PATTERNFLY6_RULES.md).
+*See [`frontend/CLAUDE.md`](frontend/CLAUDE.md) for implementation details*
 
 ## 🚀 Quick Start
 
@@ -128,125 +111,57 @@ docker-compose up -d  # Local development with containers
 - **Auth**: OAuth2 (OpenShift) + JWT + API keys + Development mock mode
 - **Security**: Rate limiting, CORS, CSP, encrypted storage
 - **Performance**: <200ms API response, <3s frontend load
-- **i18n**: EN, ES, FR via react-i18next
-- **CI/CD**: GitHub Actions, 80%+ coverage requirement
+- **Testing**: Vitest, Playwright, K6 with 80%+ coverage requirement
+- **CI/CD**: GitHub Actions for automated testing and deployment
 
-## 🔗 LiteLLM Integration
+## 🔗 Core Integration Points
 
-- **Model Sync**: Auto-sync from LiteLLM `/model/info` endpoint on startup
-- **Budget Management**: User/team/subscription-level budgets with alerts
-- **Rate Limiting**: TPM/RPM limits with burst capacity
-- **Data Handling**: Graceful handling of missing data (returns `undefined`, UI shows "N/A")
-- **Circuit Breaker**: Resilient API communication with mock data fallback
-- **User Management**: Standardized user existence checking and creation across all services
-- **Error Handling**: Graceful handling of "already exists" errors in user creation flows
+### LiteLLM Integration
+- Auto-sync models from LiteLLM `/model/info` endpoint
+- Multi-model API key support with budget management
+- Circuit breaker pattern for resilient communication
+- Graceful fallback to mock data in development
 
-*See `docs/architecture/litellm-integration.md` for details*
+### Authentication Flows
+- **Production**: OAuth2 with OpenShift provider
+- **Development**: Mock auth mode for rapid development
+- **API Keys**: LiteLLM-compatible key generation
 
-## 📝 Key Implementation Notes
-
-### Default Team Implementation
-- **Purpose**: Ensures all users belong to at least one team for proper LiteLLM integration
-- **Default Team UUID**: `a0000000-0000-4000-8000-000000000001`
-- **Key Feature**: Empty `allowed_models: []` array enables access to all models
-- **Usage**: Automatically assigned to all new users during creation
-
-### Multi-Model API Keys
-> API keys now support multi-model access instead of single subscription binding
-
-- **Architecture**: Many-to-many relationship between API keys and models via `api_key_models` junction table
-- **Backward Compatibility**: Legacy subscription-based keys still work with deprecation warnings
-- **Enhanced Features**: Budget limits, rate limiting, team support, metadata, and expiration per key
-- **Migration Strategy**: Gradual transition with full compatibility maintained
-
-### Subscription Management
-- Browse models → Select → Subscribe (creates "active" status immediately)
-- Self-service model: No approval workflow required
-- Default quotas: 10K requests/month, 1M tokens/month
-- Unique constraint: One subscription per user-model pair
-
-### Model Data Mapping
-```typescript
-// LiteLLM → Database
-model_name → id, name
-litellm_params.custom_llm_provider → provider
-model_info.max_tokens → context_length
-model_info.input/output_cost_per_token → pricing
-```
-
-### API Key Management
-
-#### Key Alias Uniqueness
-- **Format**: `${userChosenName}_${8charUUID}` (e.g., `production-key_a5f2b1c3`)
-- **Purpose**: Ensures global uniqueness for LiteLLM while preserving user-friendly names
-
-### API Key Structure
-```typescript
-// Multi-model API key creation with proper LiteLLM format
-{
-  "modelIds": ["gpt-4", "gpt-3.5-turbo"],  // Multiple models per key
-  "maxBudget": 500.00,                     // Per-key budget limits
-  "tpmLimit": 2000,                        // Rate limiting
-  "permissions": {...},                    // Fine-grained permissions
-  "metadata": {...}                        // Custom metadata
-}
-
-// Response includes actual LiteLLM key
-{
-  "id": "key_123",
-  "key": "sk-litellm-abcdef1234567890",    // Returns actual LiteLLM key
-  "keyPrefix": "sk-litellm",               // Correct LiteLLM prefix  
-  "isLiteLLMKey": true,                    // Indicates LiteLLM compatibility
-  "models": ["gpt-4", "gpt-3.5-turbo"]
-}
-
-// LEGACY: Single subscription (still supported)
-{
-  "subscriptionId": "sub_123"              // Deprecated with warnings
-}
-```
+*For detailed implementation, see workspace-specific CLAUDE.md files*
 
 
 ## 📚 Documentation Structure
 
+### AI Context Files (Start Here)
+- **[`./CLAUDE.md`](CLAUDE.md)** - This file, project overview
+- **[`backend/CLAUDE.md`](backend/CLAUDE.md)** - Backend implementation context
+- **[`frontend/CLAUDE.md`](frontend/CLAUDE.md)** - Frontend implementation context
+
+### Comprehensive Documentation
 ```
 docs/
 ├── api/                    # API endpoints, schemas, examples
 ├── architecture/           # System design, services, integration
-├── deployment/            # Configuration, environment setup, container deployment
+├── deployment/            # Configuration, environment, containers
 ├── development/           # Setup guide, testing, conventions
+│   └── pf6-guide/        # PatternFly 6 authoritative guide
 └── features/              # Feature-specific documentation
 ```
 
-### Key Documentation Files
-- `docs/api/rest-api.md` - Complete API reference with multi-model support
-- `docs/api/api-migration-guide.md` - Multi-model API migration guide
-- `docs/architecture/database-schema.md` - Database schema with multi-model tables
-- `docs/features/multi-model-api-keys-implementation.md` - Implementation details
-- `docs/features/default-team-implementation.md` - Default Team implementation and user existence detection
-- `docs/features/authentication-flow.md` - OAuth flow and user creation with error handling fixes
-- `docs/api/subscriptions-api.md` - Subscription endpoints
-- `docs/api/model-sync-api.md` - Model synchronization
-- `docs/architecture/services.md` - Service layer details with BaseService inheritance and utilities
-- `docs/deployment/configuration.md` - Environment variables
-- `docs/deployment/containers.md` - Container deployment guide with Docker/Podman
-- `docs/development/README.md` - Development setup
-- `PATTERNFLY6_RULES.md` - PatternFly 6 migration rules
+### Quick References
+- **PatternFly 6**: `docs/development/pf6-guide/` - UI development authority
+- **API Reference**: `docs/api/rest-api.md` - Complete endpoint documentation
+- **Database Schema**: `docs/architecture/database-schema.md` - Table structures
+- **Environment Config**: `docs/deployment/configuration.md` - All env variables
+- **Development Setup**: `docs/development/README.md` - Getting started
 
-## 🔨 Recent Backend Refactoring (2025-08-06)
+## 🎯 For AI Assistants
 
-### Refactoring Improvements
-- **BaseService Abstract Class**: All services now extend BaseService, eliminating ~200+ lines of duplicate mock data handling code
-- **LiteLLMSyncUtils**: Centralized user/team synchronization utilities, removing ~300+ lines of duplicate code
-- **ValidationUtils**: Comprehensive validation utilities for consistent input validation across all services
-- **Code Reduction**: ~25% reduction in duplicate code across the service layer
-- **Improved Maintainability**: Services now follow DRY principle with shared base functionality
-
-### New Utility Files
-- `/backend/src/services/base.service.ts` - Abstract base class for all services
-- `/backend/src/utils/litellm-sync.utils.ts` - LiteLLM synchronization utilities
-- `/backend/src/utils/validation.utils.ts` - Input validation utilities
+When working on:
+- **Backend tasks** → Load `backend/CLAUDE.md` for Fastify/service details
+- **Frontend tasks** → Load `frontend/CLAUDE.md` for React/PatternFly details
+- **Full-stack tasks** → Start with this file, then load specific contexts as needed
 
 ---
 
-*This is an AI context file. For human-readable documentation, see the `docs/` directory.*
+*This is an AI context file optimized for development assistance. For comprehensive documentation, see the `docs/` directory.*

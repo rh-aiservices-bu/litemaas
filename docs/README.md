@@ -33,7 +33,7 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 #### 💻 Development
 - **[Setup Guide](development/setup.md)** - Local development environment
 - **[Backend Guide](development/backend-guide.md)** - Fastify development
-- **[UI Guidelines](development/ui-guidelines.md)** - PatternFly 6 best practices
+- **[UI Guidelines](development/pf6-guide/README.md)** - PatternFly 6 best practices
 - **[Migration Notes](development/migration-notes.md)** - Database migrations
 
 #### ✨ Features
@@ -47,7 +47,7 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 1. Start with [Development Setup](development/setup.md)
 2. Review [Architecture Overview](architecture/overview.md)
 3. Check [API Documentation](api/)
-4. Follow [UI Guidelines](development/ui-guidelines.md)
+4. Follow [UI Guidelines](development/pf6-guide/README.md)
 
 ### For DevOps/SREs
 1. Read [OpenShift Deployment](deployment/openshift-deployment.md)
