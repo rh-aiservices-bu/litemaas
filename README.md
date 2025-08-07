@@ -134,7 +134,7 @@ graph TB
 - [Configuration Guide](docs/deployment/configuration.md)
 - [Development Guide](docs/development/setup.md)
 - [Production Deployment](docs/deployment/production-guide.md)
-- [UI Guidelines (PatternFly 6)](docs/development/ui-guidelines.md)
+- [UI Guidelines (PatternFly 6)](docs/development/pf6-guide/README.md)
 
 ### Quick Links
 

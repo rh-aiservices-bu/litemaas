@@ -60,19 +60,8 @@ LOG_LEVEL=debug
 ```
 
 #### Frontend Environment
-```bash
-# Copy the example environment file
-cp frontend/.env.example frontend/.env
 
-# Edit frontend/.env
-```
-
-Minimum frontend configuration:
-```env
-VITE_API_URL=http://localhost:8080
-VITE_OAUTH_CLIENT_ID=dev-client
-VITE_OAUTH_REDIRECT_URL=http://localhost:3000/auth/callback
-```
+No configuration is needed.
 
 ### 4. Database Setup
 
@@ -110,9 +99,9 @@ cd backend && npm run db:seed
 # Run both backend and frontend
 npm run dev
 
-# Backend: http://localhost:8080
+# Backend: http://localhost:8081
 # Frontend: http://localhost:3000
-# API Docs: http://localhost:8080/docs
+# API Docs: http://localhost:8081/docs
 ```
 
 ### Backend Only
@@ -158,8 +147,8 @@ Recommended extensions for the best development experience:
 - Thunder Client or REST Client (for API testing)
 
 ### API Documentation
-- Swagger UI: http://localhost:8080/docs
-- OpenAPI Spec: http://localhost:8080/docs/json
+- Swagger UI: http://localhost:8081/docs
+- OpenAPI Spec: http://localhost:8081/docs/json
 
 ### Database Management
 - pgAdmin: Web-based PostgreSQL admin
@@ -284,7 +273,7 @@ If the frontend can't reach the backend:
 ## Next Steps
 
 - Read the [Backend Development Guide](backend-guide.md)
-- Review [UI Guidelines](ui-guidelines.md) for frontend work
+- Review [UI Guidelines](./pf6-guide/README.md) for frontend work
 - Check [API Reference](../api/README.md) for endpoint documentation
 - Join the development chat for questions
 
