@@ -1,4 +1,17 @@
 {
+  "common": {
+    "label": "Label",
+    "value": "Value",
+    "chart": "Chart",
+    "table": "Table",
+    "export": "Export",
+    "day": "Day",
+    "date": "Date",
+    "error": "Error",
+    "notAvailable": "N/A",
+    "lineChart": "line chart",
+    "dataPoints": "data points"
+  },
   "nav": {
     "home": "Home",
     "models": "Models",
@@ -15,7 +28,11 @@
         "modelsDescription": "Browse available AI models",
         "subscriptionsDescription": "Manage your model subscriptions",
         "apiKeysDescription": "Generate and manage API keys",
-        "usageDescription": "Monitor your API usage"
+        "usageDescription": "Monitor your API usage",
+        "modelsAriaLabel": "Navigate to Models page to browse and subscribe to AI models",
+        "subscriptionsAriaLabel": "Navigate to Subscriptions page to manage your model subscriptions",
+        "apiKeysAriaLabel": "Navigate to API Keys page to generate and manage your API keys",
+        "usageAriaLabel": "Navigate to Usage page to monitor your API usage and metrics"
       }
     },
     "login": {
@@ -39,6 +56,7 @@
         "allCategories": "All Categories"
       },
       "subscribe": "Subscribe",
+      "subscribeToModel": "Subscribe to {{modelName}}",
       "subscribing": "Creating subscription...",
       "contextLabel": "Context:",
       "pricingLabel": "Pricing: N/A",
@@ -58,6 +76,12 @@
         "loadError": "Error",
         "loadErrorDesc": "Failed to load models from the server.",
         "loadFailed": "Failed to load models. Please try again."
+      },
+      "searchResults": "Found {{count}} models matching your criteria",
+      "availability": {
+        "available": "Available",
+        "limited": "Limited availability",
+        "unavailable": "Unavailable"
       }
     },
     "subscriptions": {
@@ -70,10 +94,11 @@
       "noSubscriptionsTitle": "No subscriptions found",
       "noSubscriptionsDescription": "You don't have any active subscriptions. Start by subscribing to an AI model.",
       "viewDetails": "View Details",
+      "viewDetailsForModel": "View details for {{modelName}} subscription",
       "detailsTitle": "Subscription Details",
       "provider": "Provider",
       "pricing": "Pricing",
-      "status": "Status",
+      "statusLabel": "Status",
       "requestQuota": "Request Quota",
       "tokenQuota": "Token Quota",
       "requestsUsed": "Requests Used",
@@ -94,6 +119,7 @@
       "expiredMessage": "Your subscription expired on {{date}}. Renew to continue using this model.",
       "cancelledMessage": "{{modelName}} subscription has been cancelled and removed from your account.",
       "cancelSubscription": "Cancel Subscription",
+      "cancelSubscriptionForModel": "Cancel {{modelName}} subscription",
       "cancelling": "Cancelling...",
       "notifications": {
         "loadError": "Error",
@@ -107,6 +133,12 @@
       "alerts": {
         "suspended": "Subscription Suspended",
         "expired": "Subscription Expired"
+      },
+      "status": {
+        "active": "Active",
+        "suspended": "Suspended",
+        "expired": "Expired",
+        "pending": "Pending"
       }
     },
     "apiKeys": {
@@ -120,14 +152,22 @@
       "showKey": "Show key",
       "copied": "Copied!",
       "selectModels": "Select models...",
+      "modelsSelected": "{{count}} model(s) selected",
       "selectAll": "Select all",
+      "selectAllModelsAriaLabel": "Select or deselect all available models",
+      "selectModelAriaLabel": "Select or deselect {{name}} model",
       "noModelsAssigned": "No models assigned",
       "never": "Never",
       "neverExpires": "Never expires",
       "forms": {
         "name": "Name",
+        "nameHelperText": "Enter a unique name to identify this API key",
         "description": "Description",
+        "descriptionHelperText": "Optional description to help you remember the purpose of this API key",
         "models": "Models",
+        "modelsHelperText": "Select one or more models that this API key can access",
+        "modelsSelectedText": "{{count}} model(s) selected for this API key",
+        "modelsAriaLabel": "Select models for API key access",
         "expiration": "Expiration",
         "apiKey": "API Key",
         "yourNewApiKey": "Your new API key"
@@ -179,7 +219,9 @@
         "loadingDescription": "Retrieving your API key information",
         "errorLoadingTitle": "Error loading API keys",
         "noKeysTitle": "No API keys found",
-        "noKeysDescription": "Create your first API key to start using LiteMaaS services."
+        "noKeysDescription": "Create your first API key to start using LiteMaaS services.",
+        "noKeysScreenReader": "You currently have no API keys. Use the Create API Key button to create your first key and start using LiteMaaS services.",
+        "errorScreenReader": "Error loading API keys: {{error}}. Use the Try Again button to retry loading."
       },
       "placeholders": {
         "keyName": "e.g., Production API Key",
@@ -216,7 +258,8 @@
         "retrieveErrorDesc": "Failed to retrieve API key",
         "validationError": "Validation Error",
         "nameRequired": "API key name is required",
-        "modelsRequired": "Please select at least one model from your active subscriptions"
+        "modelsRequired": "Please select at least one model from your active subscriptions",
+        "pleaseFixFormErrors": "Please fix the form errors and try again"
       },
       "modals": {
         "createTitle": "Create API Key",
@@ -232,9 +275,20 @@
       },
       "tableHeaders": {
         "apiKeysTable": "API Keys Table",
+        "apiKeysTableCaption": "Table showing {{count}} API keys with their names, preview values, assigned models, and available actions. {{description}}",
+        "apiKeysTableStructure": "Use arrow keys to navigate between rows and Tab to access action buttons within each row.",
         "keyDetails": "Key details",
-        "generatedKeyDetails": "Generated key details"
+        "keyDetailsCaption": "Table showing detailed information for the API key '{{keyName}}' including models, creation date, and usage statistics",
+        "generatedKeyDetails": "Generated key details",
+        "generatedKeyDetailsCaption": "Table showing details for the newly created API key '{{keyName}}' including assigned models and expiration date"
       },
+      "viewKeyAriaLabel": "View details for API key {{keyName}}",
+      "deleteKeyAriaLabel": "Delete API key {{keyName}}",
+      "hideKeyAriaLabel": "Hide API key value for {{keyName}}",
+      "showKeyAriaLabel": "Show API key value for {{keyName}}",
+      "copyKeyAriaLabel": "Copy API key value for {{keyName}} to clipboard",
+      "fullKeyVisible": "Full API key value for {{keyName}} is now visible",
+      "keyPreviewOnly": "Showing preview of API key {{keyName}} - click show to reveal full key",
       "codeExample": {
         "role": "user",
         "content": "Hello, world!"
@@ -244,12 +298,17 @@
       "title": "Usage Dashboard",
       "subtitle": "Monitor your API usage, costs, and performance metrics",
       "exportData": "Export Data",
+      "exportUsageData": "Export usage data for the selected time period",
       "loadingTitle": "Loading Usage Data...",
       "loadingDescription": "Analyzing your API usage patterns and metrics",
       "noDataTitle": "No usage data available",
       "noDataDescription": "Start making API requests to see your usage statistics here.",
+      "noDataScreenReader": "No usage data is currently available. Make API requests using your API keys to generate usage statistics that will be displayed here.",
       "customDatePlaceholderTitle": "Select Date Range",
       "customDatePlaceholderDescription": "Please select start and end dates above to view usage statistics for your custom date range.",
+      "customDatePlaceholderScreenReader": "Custom date range mode is active. Select both start and end dates using the date pickers above to load usage statistics.",
+      "noApiKeysScreenReader": "No API keys found. Create your first API key to start tracking usage statistics.",
+      "selectApiKeyScreenReader": "Select an API key from the dropdown above to view its usage statistics and metrics.",
       "viewApiDocs": "View API Documentation",
       "loadingApiKeys": "Loading API Keys...",
       "noApiKeys": "No API Keys",
@@ -294,18 +353,50 @@
         "topModelsByUsage": "Top Models by Usage",
         "usageByModel": "Usage by Model",
         "noDataTitle": "No Data Available",
-        "noDataDescription": "No usage data found for the selected time period.",
+        "noDataAvailable": "No data available for display",
+        "noDataExplanation": "There are currently no {{metricType}} to display for the selected time period. Try selecting a different date range or check back after making some API requests.",
+        "noDataDescription": "No {{metricType}} data found for the current time period selection",
+        "noDataSummary": "{{chartType}} showing no {{metricType}} data for the selected time period",
+        "noDataSuggestions": "Try making some API requests or selecting a different date range to see {{metricType}} trends over time.",
+        "noDataScreenReader": "{{chartType}} for {{metricType}} data in the {{timeframe}} period contains no data points. Try selecting a different time period or make some API requests to see usage trends.",
+        "chartFocused": "{{chartType}} focused. Contains {{dataPoints}} data points. Use Tab to navigate chart controls or press T to toggle table view.",
         "noModelsTitle": "No Model Data",
         "noModelsDescription": "No model usage data available for the selected period.",
         "lineChartAriaLabel": "Line chart showing {{metric}} over time",
         "modelDistributionAriaLabel": "Donut chart showing model usage distribution",
+        "lineChartDescription": "This line chart displays {{metricType}} usage over time",
+        "donutChartDescription": "This donut chart shows the distribution of requests across different AI models",
+        "modelBreakdownTable": "Detailed model usage breakdown table",
+        "usageTrendsDescription": "Line chart showing {{metricType}} trends over the selected time period",
+        "usageTrendsSummary": "Chart contains {{totalPoints}} data points with values ranging from {{minValue}} to {{maxValue}}, average of {{avgValue}}. The overall trend is {{trend}}",
+        "modelDistributionSummary": "Distribution chart shows usage across {{totalModels}} models. The top model is {{topModel}} accounting for {{topPercentage}}% of {{totalRequests}} total requests",
+        "legendDescription": "Visual representation of {{metricType}} data over time",
+        "trend": {
+          "increasing": "increasing",
+          "decreasing": "decreasing"
+        },
         "requests": "Requests",
         "percentage": "Percentage",
         "modelBreakdown": "Model Breakdown",
         "detailedBreakdown": "Detailed Breakdown"
       },
       "tables": {
-        "topModels": "Top models table"
+        "topModels": "Top models table",
+        "topModelsCaption": "Table showing {{count}} top models by usage for {{dateRange}}, with a total of {{totalRequests}} requests. Use arrow keys to navigate between rows."
+      },
+      "progressLabels": {
+        "successRate": "Success rate: {{percentage}} percent",
+        "successRateProgress": "Success rate progress bar: {{percentage}}% successful requests ({{successfulRequests}} of {{totalRequests}} total requests)",
+        "successRateTitle": "Success rate: {{percentage}}%",
+        "modelUsage": "Usage percentage for {{model}}: {{percentage}} percent",
+        "modelUsageProgress": "Usage progress bar for {{model}}: {{percentage}}% of total requests ({{requests}} out of {{totalRequests}})",
+        "modelUsageTitle": "{{model}} usage: {{percentage}}%"
+      },
+      "ariaLabels": {
+        "requestsCount": "{{formatted}} requests (exact count: {{count}})",
+        "tokensCount": "{{formatted}} tokens (exact count: {{count}})",
+        "costAmount": "{{formatted}} cost (exact amount: ${{amount}})",
+        "percentageValue": "{{percentage}} percent of total usage"
       },
       "tableHeaders": {
         "model": "Model",
@@ -314,7 +405,9 @@
         "cost": "Cost",
         "usagePercent": "Usage %",
         "count": "Count",
-        "percentage": "Percentage"
+        "percentage": "Percentage",
+        "date": "Date",
+        "formattedValue": "Formatted Value"
       },
       "notifications": {
         "loadError": "Error",
@@ -329,7 +422,8 @@
         "customDatesRequired": "Please select both start and end dates for custom range export.",
         "apiKeysLoadError": "Failed to Load API Keys",
         "apiKeysLoadErrorDesc": "Unable to retrieve your API keys. Please refresh the page or try again later."
-      }
+      },
+      "metricsUpdated": "Usage metrics updated. {{requests}} total requests, {{tokens}} total tokens, {{cost}} total cost"
     },
     "settings": {
       "title": "Settings",
@@ -338,11 +432,18 @@
       "forms": {
         "displayName": "Display Name",
         "displayNamePlaceholder": "Enter your display name",
+        "displayNameHelperText": "This name will be displayed in your profile and throughout the application",
         "emailNotifications": "Email Notifications",
+        "emailNotificationsHelperText": "Receive notifications about subscription changes, usage alerts, and security updates",
+        "emailNotificationsAriaLabel": "Toggle email notifications on or off",
         "autoRefreshDashboard": "Auto-refresh Dashboard",
+        "autoRefreshHelperText": "Automatically refresh dashboard data every 30 seconds",
+        "autoRefreshAriaLabel": "Toggle automatic dashboard refresh on or off",
         "enabled": "Enabled",
+        "disabled": "Disabled",
         "defaultModelProvider": "Default Model Provider",
         "rateLimitLabel": "Rate Limit (requests/minute)",
+        "rateLimitHelperText": "This limit is set by your subscription plan and cannot be modified",
         "timeoutLabel": "Timeout (seconds)",
         "providerPlaceholder": "OpenAI, Anthropic, etc.",
         "openShiftAI": "OpenShift AI"
@@ -354,6 +455,9 @@
     }
   },
   "ui": {
+    "actions": {
+      "tryAgain": "Try Again"
+    },
     "theme": {
       "light": "Light",
       "dark": "Dark",
@@ -382,7 +486,37 @@
       "login": "Login with OpenShift",
       "browse": "Browse",
       "refresh": "Refresh Page",
-      "tryAgain": "Try Again"
+      "tryAgain": "Try Again",
+      "openSidebar": "Open navigation sidebar",
+      "closeSidebar": "Close navigation sidebar"
+    },
+    "accessibility": {
+      "skipToMain": "Skip to main content",
+      "skipToNavigation": "Skip to navigation",
+      "viewModeToggle": "Toggle between chart and table view",
+      "showChartView": "Show chart view",
+      "showTableView": "Show table view",
+      "exportChartData": "Export chart data as CSV",
+      "dataTableAlternative": "Data Table Alternative",
+      "chartKeyboardInstructions": "Press T to toggle between chart and table view. Press E to export data",
+      "switchedToTable": "Switched to table view",
+      "switchedToChart": "Switched to chart view",
+      "dataExported": "Data exported to {{filename}}",
+      "chartContainsDataPoints": "Chart contains {{count}} data points",
+      "chartFocused": "Chart '{{title}}' is now focused. Contains {{dataPoints}} data points. Press T to toggle table view, E to export data, or Tab to navigate to chart controls.",
+      "tableCaption": "Data table for {{title}}",
+      "tableNavigationInstructions": "Use arrow keys to navigate between rows and columns, or Tab to move to the next interactive element.",
+      "lineChartSummary": "Line chart with {{totalPoints}} data points. Values range from {{minValue}} to {{maxValue}}, with an average of {{avgValue}}",
+      "pieChartSummary": "Pie chart showing {{totalCategories}} categories. Largest category is {{topCategory}} at {{topPercentage}}%",
+      "noDataAvailable": "No data available for display",
+      "chartLegend": "Chart legend with data series information",
+      "legendSummary": "Legend contains {{count}} items: {{items}}",
+      "legendPattern": "{{name}} series shown in {{color}} color with {{pattern}} line pattern",
+      "patterns": {
+        "solid": "solid",
+        "dashed": "dashed",
+        "dotted": "dotted"
+      }
     },
     "errors": {
       "somethingWrong": "Something went wrong",

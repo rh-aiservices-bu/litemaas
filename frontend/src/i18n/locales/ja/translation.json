@@ -1,4 +1,17 @@
 {
+  "common": {
+    "label": "ラベル",
+    "value": "値",
+    "chart": "グラフ",
+    "table": "テーブル",
+    "export": "エクスポート",
+    "day": "日",
+    "date": "日付",
+    "error": "エラー",
+    "notAvailable": "N/A",
+    "lineChart": "折れ線グラフ",
+    "dataPoints": "データポイント"
+  },
   "nav": {
     "home": "ホーム",
     "models": "モデル",
@@ -15,7 +28,11 @@
         "modelsDescription": "利用可能なAIモデルを閲覧",
         "subscriptionsDescription": "モデルサブスクリプションを管理",
         "apiKeysDescription": "APIキーの生成と管理",
-        "usageDescription": "API使用状況の監視"
+        "usageDescription": "API使用状況の監視",
+        "modelsAriaLabel": "モデルページに移動してAIモデルを閲覧・サブスクライブ",
+        "subscriptionsAriaLabel": "サブスクリプションページに移動してモデルサブスクリプションを管理",
+        "apiKeysAriaLabel": "APIキーページに移動してAPIキーの生成・管理",
+        "usageAriaLabel": "使用状況ページに移動してAPI使用状況とメトリクスを監視"
       }
     },
     "login": {
@@ -39,6 +56,7 @@
         "allCategories": "すべてのカテゴリ"
       },
       "subscribe": "サブスクライブ",
+      "subscribeToModel": "{{modelName}}をサブスクライブ",
       "subscribing": "サブスクリプション作成中...",
       "contextLabel": "コンテキスト：",
       "pricingLabel": "価格：N/A",
@@ -58,6 +76,12 @@
         "loadError": "エラー",
         "loadErrorDesc": "サーバーからモデルを読み込めませんでした。",
         "loadFailed": "モデルの読み込みに失敗しました。もう一度お試しください。"
+      },
+      "searchResults": "条件に一致する{{count}}個のモデルが見つかりました",
+      "availability": {
+        "available": "利用可能",
+        "limited": "限定利用可能",
+        "unavailable": "利用不可"
       }
     },
     "subscriptions": {
@@ -70,10 +94,11 @@
       "noSubscriptionsTitle": "サブスクリプションが見つかりません",
       "noSubscriptionsDescription": "アクティブなサブスクリプションがありません。AIモデルのサブスクライブから始めましょう。",
       "viewDetails": "詳細を表示",
+      "viewDetailsForModel": "{{modelName}}サブスクリプションの詳細を表示",
       "detailsTitle": "サブスクリプション詳細",
       "provider": "プロバイダー",
       "pricing": "価格",
-      "status": "ステータス",
+      "statusLabel": "ステータス",
       "requestQuota": "リクエストクォータ",
       "tokenQuota": "トークンクォータ",
       "requestsUsed": "使用済みリクエスト",
@@ -94,6 +119,7 @@
       "expiredMessage": "サブスクリプションは{{date}}に期限切れになりました。このモデルを使い続けるには更新してください。",
       "cancelledMessage": "{{modelName}}サブスクリプションはキャンセルされ、アカウントから削除されました。",
       "cancelSubscription": "サブスクリプションをキャンセル",
+      "cancelSubscriptionForModel": "{{modelName}}サブスクリプションをキャンセル",
       "cancelling": "キャンセル中...",
       "notifications": {
         "loadError": "エラー",
@@ -107,6 +133,12 @@
       "alerts": {
         "suspended": "サブスクリプション一時停止",
         "expired": "サブスクリプション期限切れ"
+      },
+      "status": {
+        "active": "アクティブ",
+        "suspended": "一時停止",
+        "expired": "期限切れ",
+        "pending": "保留中"
       }
     },
     "apiKeys": {
@@ -120,14 +152,22 @@
       "showKey": "キーを表示",
       "copied": "コピーしました！",
       "selectModels": "モデルを選択...",
+      "modelsSelected": "{{count}}個のモデルが選択されました",
       "selectAll": "すべて選択",
+      "selectAllModelsAriaLabel": "利用可能なすべてのモデルを選択・選択解除",
+      "selectModelAriaLabel": "{{name}}モデルを選択・選択解除",
       "noModelsAssigned": "割り当てられたモデルなし",
       "never": "なし",
       "neverExpires": "有効期限なし",
       "forms": {
         "name": "名前",
+        "nameHelperText": "このAPIキーを識別するための一意の名前を入力",
         "description": "説明",
+        "descriptionHelperText": "このAPIキーの目的を覚えるためのオプションの説明",
         "models": "モデル",
+        "modelsHelperText": "このAPIキーがアクセスできる1つ以上のモデルを選択",
+        "modelsSelectedText": "このAPIキー用に{{count}}個のモデルが選択されました",
+        "modelsAriaLabel": "APIキーアクセス用のモデルを選択",
         "expiration": "有効期限",
         "apiKey": "APIキー",
         "yourNewApiKey": "新しいAPIキー"
@@ -179,7 +219,9 @@
         "loadingDescription": "APIキー情報を取得中",
         "errorLoadingTitle": "APIキー読み込みエラー",
         "noKeysTitle": "APIキーが見つかりません",
-        "noKeysDescription": "LiteMaaSサービスを使用するための最初のAPIキーを作成してください。"
+        "noKeysDescription": "LiteMaaSサービスを使用するための最初のAPIキーを作成してください。",
+        "noKeysScreenReader": "現在APIキーがありません。APIキーを作成ボタンを使用して最初のキーを作成し、LiteMaaSサービスの利用を開始してください。",
+        "errorScreenReader": "APIキー読み込みエラー：{{error}}。再試行ボタンを使用して読み込みを再開してください。"
       },
       "placeholders": {
         "keyName": "例：本番APIキー",
@@ -216,7 +258,8 @@
         "retrieveErrorDesc": "APIキーの取得に失敗しました",
         "validationError": "検証エラー",
         "nameRequired": "APIキー名は必須です",
-        "modelsRequired": "アクティブなサブスクリプションから少なくとも1つのモデルを選択してください"
+        "modelsRequired": "アクティブなサブスクリプションから少なくとも1つのモデルを選択してください",
+        "pleaseFixFormErrors": "フォームエラーを修正してから再試行してください"
       },
       "modals": {
         "createTitle": "APIキーを作成",
@@ -232,9 +275,20 @@
       },
       "tableHeaders": {
         "apiKeysTable": "APIキーテーブル",
+        "apiKeysTableCaption": "{{count}}個のAPIキーをその名前、プレビュー値、割り当てられたモデル、利用可能なアクションとともに表示するテーブル。{{description}}",
+        "apiKeysTableStructure": "矢印キーを使用して行間を移動し、Tabキーを使用して各行内のアクションボタンにアクセスしてください。",
         "keyDetails": "キー詳細",
-        "generatedKeyDetails": "生成されたキー詳細"
+        "keyDetailsCaption": "APIキー「{{keyName}}」の詳細情報（モデル、作成日、使用統計を含む）を表示するテーブル",
+        "generatedKeyDetails": "生成されたキー詳細",
+        "generatedKeyDetailsCaption": "新しく作成されたAPIキー「{{keyName}}」の詳細（割り当てられたモデルと有効期限を含む）を表示するテーブル"
       },
+      "viewKeyAriaLabel": "APIキー{{keyName}}の詳細を表示",
+      "deleteKeyAriaLabel": "APIキー{{keyName}}を削除",
+      "hideKeyAriaLabel": "{{keyName}}のAPIキー値を隠す",
+      "showKeyAriaLabel": "{{keyName}}のAPIキー値を表示",
+      "copyKeyAriaLabel": "{{keyName}}のAPIキー値をクリップボードにコピー",
+      "fullKeyVisible": "{{keyName}}の完全なAPIキー値が表示されています",
+      "keyPreviewOnly": "APIキー{{keyName}}のプレビューを表示中 - 完全なキーを表示するには表示をクリック",
       "codeExample": {
         "role": "ユーザー",
         "content": "こんにちは、世界！"
@@ -244,13 +298,26 @@
       "title": "使用状況ダッシュボード",
       "subtitle": "API使用状況、コスト、パフォーマンスメトリクスを監視",
       "exportData": "データをエクスポート",
+      "exportUsageData": "選択した期間の使用状況データをエクスポート",
       "loadingTitle": "使用状況データを読み込み中...",
       "loadingDescription": "API使用パターンとメトリクスを分析中",
       "noDataTitle": "使用可能な使用状況データがありません",
       "noDataDescription": "APIリクエストを開始して、ここで使用統計を確認してください。",
+      "noDataScreenReader": "現在使用状況データは利用できません。APIキーを使用してAPIリクエストを行い、ここに表示される使用統計を生成してください。",
       "customDatePlaceholderTitle": "日付範囲を選択",
       "customDatePlaceholderDescription": "カスタム日付範囲の使用統計を表示するには、上記で開始日と終了日を選択してください。",
+      "customDatePlaceholderScreenReader": "カスタム日付範囲モードが有効です。上記の日付セレクターを使用して開始日と終了日の両方を選択し、使用統計を読み込んでください。",
+      "noApiKeysScreenReader": "APIキーが見つかりません。使用統計の追跡を開始するために最初のAPIキーを作成してください。",
+      "selectApiKeyScreenReader": "上記のドロップダウンからAPIキーを選択して、その使用統計とメトリクスを表示してください。",
       "viewApiDocs": "APIドキュメントを表示",
+      "loadingApiKeys": "APIキーを読み込み中...",
+      "noApiKeys": "APIキーなし",
+      "selectApiKey": "APIキーを選択",
+      "noApiKeysTitle": "APIキーが見つかりません",
+      "noApiKeysDescription": "使用統計の追跡を開始するためにAPIキーを作成してください。",
+      "selectApiKeyTitle": "APIキーを選択",
+      "selectApiKeyDescription": "上記のドロップダウンからAPIキーを選択して、その使用統計を表示してください。",
+      "createApiKey": "APIキーを作成",
       "filters": {
         "custom": "カスタム",
         "overview": "概要",
@@ -273,7 +340,10 @@
         "totalCost": "総コスト",
         "avgResponseTime": "平均応答時間",
         "successRate": "成功率",
-        "successfulRequests": "成功したリクエスト"
+        "successfulRequests": "成功したリクエスト",
+        "currency": "JPY",
+        "tokens": "トークン",
+        "requests": "リクエスト"
       },
       "charts": {
         "dailyUsage": "日次使用量",
@@ -283,18 +353,50 @@
         "topModelsByUsage": "使用量別上位モデル",
         "usageByModel": "モデル別使用量",
         "noDataTitle": "データが利用できません",
-        "noDataDescription": "選択された期間の使用データが見つかりません。",
+        "noDataAvailable": "表示するデータがありません",
+        "noDataExplanation": "選択した期間の{{metricType}}は現在表示できません。異なる日付範囲を選択するか、いくつかのAPIリクエストを行った後に再度確認してください。",
+        "noDataDescription": "現在の期間選択で{{metricType}}データが見つかりません",
+        "noDataSummary": "選択した期間の{{metricType}}データを表示しない{{chartType}}",
+        "noDataSuggestions": "いくつかのAPIリクエストを行うか、異なる日付範囲を選択して、時間経過による{{metricType}}トレンドを表示してみてください。",
+        "noDataScreenReader": "{{timeframe}}期間の{{metricType}}データの{{chartType}}にはデータポイントが含まれていません。異なる期間を選択するか、使用トレンドを確認するためにいくつかのAPIリクエストを行ってみてください。",
+        "chartFocused": "{{chartType}}がフォーカスされました。{{dataPoints}}個のデータポイントを含んでいます。グラフコントロールに移動するにはTabキーを、テーブル表示に切り替えるにはTキーを押してください。",
         "noModelsTitle": "モデルデータなし",
         "noModelsDescription": "選択された期間のモデル使用データが利用できません。",
-        "lineChartAriaLabel": "{{metric}}の時系列を示す線グラフ",
+        "lineChartAriaLabel": "{{metric}}の時系列を示す折れ線グラフ",
         "modelDistributionAriaLabel": "モデル使用分布を示すドーナツグラフ",
+        "lineChartDescription": "この折れ線グラフは時間経過による{{metricType}}使用状況を表示します",
+        "donutChartDescription": "このドーナツグラフは異なるAIモデル間でのリクエスト分布を表示します",
+        "modelBreakdownTable": "詳細なモデル使用内訳テーブル",
+        "usageTrendsDescription": "選択した期間の{{metricType}}トレンドを表示する折れ線グラフ",
+        "usageTrendsSummary": "グラフには{{minValue}}から{{maxValue}}の値を持つ{{totalPoints}}個のデータポイントが含まれ、平均は{{avgValue}}です。全体的なトレンドは{{trend}}です",
+        "modelDistributionSummary": "分布グラフは{{totalModels}}個のモデル全体の使用量を表示しています。上位モデルは{{topModel}}で、{{totalRequests}}総リクエストの{{topPercentage}}%を占めています",
+        "legendDescription": "時間経過による{{metricType}}データの視覚的表現",
+        "trend": {
+          "increasing": "増加",
+          "decreasing": "減少"
+        },
         "requests": "リクエスト",
         "percentage": "パーセンテージ",
         "modelBreakdown": "モデル内訳",
         "detailedBreakdown": "詳細内訳"
       },
       "tables": {
-        "topModels": "上位モデルテーブル"
+        "topModels": "上位モデルテーブル",
+        "topModelsCaption": "{{dateRange}}の使用量による{{count}}個の上位モデルを表示するテーブル（総{{totalRequests}}リクエスト）。矢印キーを使用して行間を移動してください。"
+      },
+      "progressLabels": {
+        "successRate": "成功率：{{percentage}}パーセント",
+        "successRateProgress": "成功率進行バー：{{percentage}}%の成功リクエスト（{{totalRequests}}総リクエスト中{{successfulRequests}}）",
+        "successRateTitle": "成功率：{{percentage}}%",
+        "modelUsage": "{{model}}の使用パーセンテージ：{{percentage}}パーセント",
+        "modelUsageProgress": "{{model}}の使用進行バー：総リクエストの{{percentage}}%（{{totalRequests}}中{{requests}}）",
+        "modelUsageTitle": "{{model}}使用量：{{percentage}}%"
+      },
+      "ariaLabels": {
+        "requestsCount": "{{formatted}}リクエスト（正確な数：{{count}}）",
+        "tokensCount": "{{formatted}}トークン（正確な数：{{count}}）",
+        "costAmount": "{{formatted}}コスト（正確な金額：${{amount}}）",
+        "percentageValue": "総使用量の{{percentage}}パーセント"
       },
       "tableHeaders": {
         "model": "モデル",
@@ -303,7 +405,9 @@
         "cost": "コスト",
         "usagePercent": "使用率 %",
         "count": "カウント",
-        "percentage": "パーセンテージ"
+        "percentage": "パーセンテージ",
+        "date": "日付",
+        "formattedValue": "フォーマット済み値"
       },
       "notifications": {
         "loadError": "エラー",
@@ -315,8 +419,11 @@
         "exportCompleteDesc": "使用状況データが正常にエクスポートされました。",
         "exportFailed": "エクスポート失敗",
         "exportFailedDesc": "使用状況データのエクスポートに失敗しました。もう一度お試しください。",
-        "customDatesRequired": "カスタム範囲のエクスポートには開始日と終了日の両方を選択してください。"
-      }
+        "customDatesRequired": "カスタム範囲のエクスポートには開始日と終了日の両方を選択してください。",
+        "apiKeysLoadError": "APIキー読み込みエラー",
+        "apiKeysLoadErrorDesc": "APIキーを取得できませんでした。ページを更新するか、後で再試行してください。"
+      },
+      "metricsUpdated": "使用状況メトリクスが更新されました。{{requests}}総リクエスト、{{tokens}}総トークン、{{cost}}総コスト"
     },
     "settings": {
       "title": "設定",
@@ -325,11 +432,18 @@
       "forms": {
         "displayName": "表示名",
         "displayNamePlaceholder": "表示名を入力してください",
+        "displayNameHelperText": "この名前はプロフィールとアプリケーション全体で表示されます",
         "emailNotifications": "メール通知",
+        "emailNotificationsHelperText": "サブスクリプション変更、使用量アラート、セキュリティ更新に関する通知を受け取る",
+        "emailNotificationsAriaLabel": "メール通知を有効・無効にする",
         "autoRefreshDashboard": "ダッシュボード自動更新",
+        "autoRefreshHelperText": "30秒ごとにダッシュボードデータを自動更新",
+        "autoRefreshAriaLabel": "ダッシュボード自動更新を有効・無効にする",
         "enabled": "有効",
+        "disabled": "無効",
         "defaultModelProvider": "デフォルトモデルプロバイダー",
         "rateLimitLabel": "レート制限（リクエスト/分）",
+        "rateLimitHelperText": "この制限はサブスクリプションプランによって設定され、変更できません",
         "timeoutLabel": "タイムアウト（秒）",
         "providerPlaceholder": "OpenAI、Anthropic など",
         "openShiftAI": "OpenShift AI"
@@ -341,6 +455,15 @@
     }
   },
   "ui": {
+    "actions": {
+      "tryAgain": "再試行",
+      "logout": "ログアウト",
+      "login": "OpenShiftでログイン",
+      "browse": "閲覧",
+      "refresh": "ページを更新",
+      "openSidebar": "ナビゲーションサイドバーを開く",
+      "closeSidebar": "ナビゲーションサイドバーを閉じる"
+    },
     "theme": {
       "light": "ライト",
       "dark": "ダーク",
@@ -364,12 +487,33 @@
       "clear": "すべてクリア",
       "empty": "通知なし"
     },
-    "actions": {
-      "logout": "ログアウト",
-      "login": "OpenShiftでログイン",
-      "browse": "閲覧",
-      "refresh": "ページを更新",
-      "tryAgain": "再試行"
+    "accessibility": {
+      "skipToMain": "メインコンテンツにスキップ",
+      "skipToNavigation": "ナビゲーションにスキップ",
+      "viewModeToggle": "グラフとテーブル表示を切り替え",
+      "showChartView": "グラフ表示を表示",
+      "showTableView": "テーブル表示を表示",
+      "exportChartData": "グラフデータをCSVとしてエクスポート",
+      "dataTableAlternative": "データテーブルの代替",
+      "chartKeyboardInstructions": "Tキーでグラフとテーブル表示を切り替え。Eキーでデータをエクスポート",
+      "switchedToTable": "テーブル表示に切り替えました",
+      "switchedToChart": "グラフ表示に切り替えました",
+      "dataExported": "データを{{filename}}にエクスポートしました",
+      "chartContainsDataPoints": "グラフには{{count}}個のデータポイントが含まれています",
+      "chartFocused": "グラフ「{{title}}」がフォーカスされています。{{dataPoints}}個のデータポイントを含んでいます。Tキーでテーブル表示に切り替え、Eキーでデータをエクスポート、またはTabキーでグラフコントロールに移動します。",
+      "tableCaption": "{{title}}のデータテーブル",
+      "tableNavigationInstructions": "矢印キーで行と列間を移動、またはTabキーで次のインタラクティブ要素に移動してください。",
+      "lineChartSummary": "{{totalPoints}}個のデータポイントを持つ折れ線グラフ。値は{{minValue}}から{{maxValue}}の範囲で、平均は{{avgValue}}です",
+      "pieChartSummary": "{{totalCategories}}個のカテゴリを示す円グラフ。最大のカテゴリは{{topCategory}}で{{topPercentage}}%です",
+      "noDataAvailable": "表示可能なデータがありません",
+      "chartLegend": "データ系列情報を含むグラフの凡例",
+      "legendSummary": "凡例には{{count}}個のアイテムが含まれています：{{items}}",
+      "legendPattern": "{{name}}系列は{{color}}色で{{pattern}}線パターンで表示されています",
+      "patterns": {
+        "solid": "実線",
+        "dashed": "破線",
+        "dotted": "点線"
+      }
     },
     "errors": {
       "somethingWrong": "問題が発生しました",

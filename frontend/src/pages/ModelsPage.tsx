@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from 'react-query';
 import {
@@ -43,15 +43,27 @@ import {
   Label,
   Stack,
 } from '@patternfly/react-core';
-import { CatalogIcon, FilterIcon, InfoCircleIcon } from '@patternfly/react-icons';
+import { 
+  CatalogIcon, 
+  FilterIcon, 
+  InfoCircleIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  TimesCircleIcon
+} from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
 import { modelsService, Model } from '../services/models.service';
 import { subscriptionsService } from '../services/subscriptions.service';
+import {
+  ScreenReaderAnnouncement,
+  useScreenReaderAnnouncement,
+} from '../components/ScreenReaderAnnouncement';
 
 const ModelsPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
+  const { announcement, announce } = useScreenReaderAnnouncement();
 
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,13 +75,53 @@ const ModelsPage: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const modalTriggerRef = useRef<HTMLElement | null>(null);
+  const modalPrimaryButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Set initial focus and focus trap for modal
+  useEffect(() => {
+    if (isModalOpen) {
+      // Set initial focus to the primary button
+      setTimeout(() => {
+        modalPrimaryButtonRef.current?.focus();
+      }, 100);
+
+      // Focus trap implementation
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Tab') {
+          const modal = document.querySelector('[aria-modal="true"]') as HTMLElement;
+          if (!modal) return;
+
+          const focusableElements = modal.querySelectorAll(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])',
+          );
+          const firstFocusable = focusableElements[0] as HTMLElement;
+          const lastFocusable = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+          if (event.shiftKey && document.activeElement === firstFocusable) {
+            event.preventDefault();
+            lastFocusable?.focus();
+          } else if (!event.shiftKey && document.activeElement === lastFocusable) {
+            event.preventDefault();
+            firstFocusable?.focus();
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+    return () => {}; // Return empty cleanup function when modal is not open
+  }, [isModalOpen]);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(12);
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
 
   // Load models from API
-  const loadModels = async (resetPage = false) => {
+  const loadModels = async (resetPage = false): Promise<void> => {
     try {
       setLoading(true);
       setError(null);
@@ -120,9 +172,20 @@ const ModelsPage: React.FC = () => {
       if (resetPage) {
         setPage(1);
       }
+
+      // Announce search/filter results to screen readers
+      if (searchValue || selectedCategory !== 'all' || selectedProvider !== 'all') {
+        const totalModels =
+          selectedCategory !== 'all' && selectedCategory !== 'Multimodal'
+            ? filteredModels.length
+            : response.pagination.total;
+        announce(t('pages.models.searchResults', { count: totalModels }), 'polite');
+      }
     } catch (err) {
       console.error('Failed to load models:', err);
       setError(t('pages.models.notifications.loadFailed'));
+      // Announce error to screen readers with assertive priority
+      announce(t('pages.models.notifications.loadFailed'), 'assertive');
       addNotification({
         title: t('pages.models.notifications.loadError'),
         description: t('pages.models.notifications.loadErrorDesc'),
@@ -161,9 +224,13 @@ const ModelsPage: React.FC = () => {
   // Get unique providers from current models for filters
   const providers = ['all', ...Array.from(new Set(models.map((m) => m.provider)))];
 
-  const handleModelSelect = (model: Model) => {
+  const handleModelSelect = (model: Model, triggerElement?: HTMLElement) => {
     setSelectedModel(model);
     setIsModalOpen(true);
+    // Store reference to the trigger element for focus restoration
+    if (triggerElement) {
+      modalTriggerRef.current = triggerElement;
+    }
   };
 
   const handleSubscribe = async () => {
@@ -214,9 +281,27 @@ const ModelsPage: React.FC = () => {
       unavailable: 'danger',
     } as const;
 
+    const icons = {
+      available: <CheckCircleIcon />,
+      limited: <ExclamationTriangleIcon />,
+      unavailable: <TimesCircleIcon />,
+    };
+
+    const statusLabels = {
+      available: t('pages.models.availability.available', 'Available'),
+      limited: t('pages.models.availability.limited', 'Limited availability'),
+      unavailable: t('pages.models.availability.unavailable', 'Unavailable'),
+    };
+
     return (
-      <Badge color={variants[availability as keyof typeof variants]}>
-        {availability.charAt(0).toUpperCase() + availability.slice(1)}
+      <Badge 
+        color={variants[availability as keyof typeof variants]}
+        aria-label={`Model availability: ${statusLabels[availability as keyof typeof statusLabels] || availability}`}
+      >
+        <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
+          <FlexItem>{icons[availability as keyof typeof icons]}</FlexItem>
+          <FlexItem>{statusLabels[availability as keyof typeof statusLabels] || availability.charAt(0).toUpperCase() + availability.slice(1)}</FlexItem>
+        </Flex>
       </Badge>
     );
   };
@@ -227,6 +312,11 @@ const ModelsPage: React.FC = () => {
   if (loading) {
     return (
       <>
+        <ScreenReaderAnnouncement
+          message={t('pages.models.loadingDescription')}
+          priority="polite"
+          announcementKey={loading ? 1 : 0}
+        />
         <PageSection variant="secondary">
           <Title headingLevel="h1" size="2xl">
             {t('pages.models.title')}
@@ -234,7 +324,7 @@ const ModelsPage: React.FC = () => {
         </PageSection>
         <PageSection>
           <EmptyState variant={EmptyStateVariant.lg}>
-            <Spinner size="xl" />
+            <Spinner size="xl" aria-busy="true" />
             <Title headingLevel="h2" size="lg">
               {t('pages.models.loadingTitle')}
             </Title>
@@ -247,6 +337,11 @@ const ModelsPage: React.FC = () => {
 
   return (
     <>
+      <ScreenReaderAnnouncement
+        message={announcement.message}
+        priority={announcement.priority}
+        announcementKey={announcement.key}
+      />
       <PageSection variant="secondary">
         <Title headingLevel="h1" size="2xl">
           {t('pages.models.title')}
@@ -388,7 +483,7 @@ const ModelsPage: React.FC = () => {
                   <Card isClickable style={{ height: '100%' }}>
                     <CardHeader
                       selectableActions={{
-                        onClickAction: () => handleModelSelect(model),
+                        onClickAction: (event) => handleModelSelect(model, event?.currentTarget as HTMLElement),
                         selectableActionAriaLabelledby: `clickable-model-${model.id}`,
                       }}
                     >
@@ -484,7 +579,21 @@ const ModelsPage: React.FC = () => {
         variant={ModalVariant.medium}
         title={selectedModel?.name || ''}
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          // Restore focus to the trigger element
+          setTimeout(() => {
+            modalTriggerRef.current?.focus();
+          }, 100);
+        }}
+        aria-modal="true"
+        onEscapePress={() => {
+          setIsModalOpen(false);
+          // Restore focus to the trigger element
+          setTimeout(() => {
+            modalTriggerRef.current?.focus();
+          }, 100);
+        }}
       >
         <ModalHeader>
           <Flex
@@ -615,14 +724,25 @@ const ModelsPage: React.FC = () => {
             }}
           >
             <Button
+              ref={modalPrimaryButtonRef}
               variant="primary"
               onClick={handleSubscribe}
               isLoading={isSubscribing}
               isDisabled={isSubscribing || selectedModel?.availability === 'unavailable'}
+              aria-label={selectedModel?.name ? t('pages.models.subscribeToModel', { modelName: selectedModel.name }) : undefined}
             >
               {isSubscribing ? t('pages.models.subscribing') : t('pages.models.subscribe')}
             </Button>
-            <Button variant="link" onClick={() => setIsModalOpen(false)}>
+            <Button
+              variant="link"
+              onClick={() => {
+                setIsModalOpen(false);
+                // Restore focus to the trigger element
+                setTimeout(() => {
+                  modalTriggerRef.current?.focus();
+                }, 100);
+              }}
+            >
               {t('pages.models.close')}
             </Button>
           </div>

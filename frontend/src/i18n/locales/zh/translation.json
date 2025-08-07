@@ -1,4 +1,17 @@
 {
+  "common": {
+    "label": "标签",
+    "value": "值",
+    "chart": "图表",
+    "table": "表格",
+    "export": "导出",
+    "day": "天",
+    "date": "日期",
+    "error": "错误",
+    "notAvailable": "N/A",
+    "lineChart": "折线图",
+    "dataPoints": "数据点"
+  },
   "nav": {
     "home": "首页",
     "models": "模型",
@@ -15,7 +28,11 @@
         "modelsDescription": "浏览可用的AI模型",
         "subscriptionsDescription": "管理您的模型订阅",
         "apiKeysDescription": "生成和管理API密钥",
-        "usageDescription": "监控您的API使用情况"
+        "usageDescription": "监控您的API使用情况",
+        "modelsAriaLabel": "导航到模型页面以浏览和订阅AI模型",
+        "subscriptionsAriaLabel": "导航到订阅页面以管理您的模型订阅",
+        "apiKeysAriaLabel": "导航到API密钥页面以生成和管理您的API密钥",
+        "usageAriaLabel": "导航到使用情况页面以监控您的API使用情况和指标"
       }
     },
     "login": {
@@ -39,6 +56,7 @@
         "allCategories": "所有类别"
       },
       "subscribe": "订阅",
+      "subscribeToModel": "订阅{{modelName}}",
       "subscribing": "创建订阅中...",
       "contextLabel": "上下文：",
       "pricingLabel": "价格：不适用",
@@ -58,6 +76,12 @@
         "loadError": "错误",
         "loadErrorDesc": "无法从服务器加载模型。",
         "loadFailed": "加载模型失败。请重试。"
+      },
+      "searchResults": "找到{{count}}个符合您条件的模型",
+      "availability": {
+        "available": "可用",
+        "limited": "有限可用",
+        "unavailable": "不可用"
       }
     },
     "subscriptions": {
@@ -70,10 +94,11 @@
       "noSubscriptionsTitle": "未找到订阅",
       "noSubscriptionsDescription": "您没有活动订阅。开始订阅AI模型。",
       "viewDetails": "查看详情",
+      "viewDetailsForModel": "查看{{modelName}}订阅详情",
       "detailsTitle": "订阅详情",
       "provider": "提供商",
       "pricing": "价格",
-      "status": "状态",
+      "statusLabel": "状态",
       "requestQuota": "请求配额",
       "tokenQuota": "令牌配额",
       "requestsUsed": "已使用请求",
@@ -94,6 +119,7 @@
       "expiredMessage": "您的订阅已于{{date}}到期。续订以继续使用此模型。",
       "cancelledMessage": "{{modelName}}订阅已被取消并从您的账户中删除。",
       "cancelSubscription": "取消订阅",
+      "cancelSubscriptionForModel": "取消{{modelName}}订阅",
       "cancelling": "正在取消...",
       "notifications": {
         "loadError": "错误",
@@ -107,6 +133,12 @@
       "alerts": {
         "suspended": "订阅已暂停",
         "expired": "订阅已过期"
+      },
+      "status": {
+        "active": "活跃",
+        "suspended": "已暂停",
+        "expired": "已过期",
+        "pending": "待处理"
       }
     },
     "apiKeys": {
@@ -120,14 +152,22 @@
       "showKey": "显示密钥",
       "copied": "已复制！",
       "selectModels": "选择模型...",
+      "modelsSelected": "已选择{{count}}个模型",
       "selectAll": "全部选择",
+      "selectAllModelsAriaLabel": "选择或取消选择所有可用模型",
+      "selectModelAriaLabel": "选择或取消选择{{name}}模型",
       "noModelsAssigned": "未分配模型",
       "never": "从不",
       "neverExpires": "永不过期",
       "forms": {
         "name": "名称",
+        "nameHelperText": "输入唯一名称以识别此API密钥",
         "description": "描述",
+        "descriptionHelperText": "可选描述，帮助您记住此API密钥的用途",
         "models": "模型",
+        "modelsHelperText": "选择此API密钥可以访问的一个或多个模型",
+        "modelsSelectedText": "为此API密钥选择了{{count}}个模型",
+        "modelsAriaLabel": "选择API密钥访问的模型",
         "expiration": "过期时间",
         "apiKey": "API密钥",
         "yourNewApiKey": "您的新API密钥"
@@ -179,7 +219,9 @@
         "loadingDescription": "正在检索您的API密钥信息",
         "errorLoadingTitle": "加载API密钥时出错",
         "noKeysTitle": "未找到API密钥",
-        "noKeysDescription": "创建您的第一个API密钥以开始使用LiteMaaS服务。"
+        "noKeysDescription": "创建您的第一个API密钥以开始使用LiteMaaS服务。",
+        "noKeysScreenReader": "您当前没有API密钥。使用创建API密钥按钮来创建您的第一个密钥并开始使用LiteMaaS服务。",
+        "errorScreenReader": "加载API密钥时出错：{{error}}。使用重试按钮重新开始加载。"
       },
       "placeholders": {
         "keyName": "例如，生产API密钥",
@@ -216,7 +258,8 @@
         "retrieveErrorDesc": "无法检索API密钥",
         "validationError": "验证错误",
         "nameRequired": "API密钥名称是必需的",
-        "modelsRequired": "请从您的活动订阅中选择至少一个模型"
+        "modelsRequired": "请从您的活动订阅中选择至少一个模型",
+        "pleaseFixFormErrors": "请修复表单错误并重试"
       },
       "modals": {
         "createTitle": "创建API密钥",
@@ -232,9 +275,20 @@
       },
       "tableHeaders": {
         "apiKeysTable": "API密钥表",
+        "apiKeysTableCaption": "显示{{count}}个API密钥及其名称、预览值、分配的模型和可用操作的表格。{{description}}",
+        "apiKeysTableStructure": "使用箭头键在行之间导航，使用Tab键访问每行内的操作按钮。",
         "keyDetails": "密钥详情",
-        "generatedKeyDetails": "生成的密钥详情"
+        "keyDetailsCaption": "显示API密钥'{{keyName}}'的详细信息的表格，包括模型、创建日期和使用统计",
+        "generatedKeyDetails": "生成的密钥详情",
+        "generatedKeyDetailsCaption": "显示新创建的API密钥'{{keyName}}'详情的表格，包括分配的模型和过期日期"
       },
+      "viewKeyAriaLabel": "查看API密钥{{keyName}}的详情",
+      "deleteKeyAriaLabel": "删除API密钥{{keyName}}",
+      "hideKeyAriaLabel": "隐藏{{keyName}}的API密钥值",
+      "showKeyAriaLabel": "显示{{keyName}}的API密钥值",
+      "copyKeyAriaLabel": "将{{keyName}}的API密钥值复制到剪贴板",
+      "fullKeyVisible": "{{keyName}}的完整API密钥值现在可见",
+      "keyPreviewOnly": "显示API密钥{{keyName}}的预览 - 点击显示以显示完整密钥",
       "codeExample": {
         "role": "用户",
         "content": "你好，世界！"
@@ -244,13 +298,26 @@
       "title": "使用情况仪表板",
       "subtitle": "监控您的API使用情况、成本和性能指标",
       "exportData": "导出数据",
+      "exportUsageData": "导出选定时间段的使用数据",
       "loadingTitle": "正在加载使用数据...",
       "loadingDescription": "分析您的API使用模式和指标",
       "noDataTitle": "没有可用的使用数据",
       "noDataDescription": "开始进行API请求以在此处查看您的使用统计信息。",
+      "noDataScreenReader": "目前没有可用的使用数据。使用您的API密钥执行API请求以生成将在此处显示的使用统计信息。",
       "customDatePlaceholderTitle": "选择日期范围",
       "customDatePlaceholderDescription": "请在上方选择开始日期和结束日期，以查看您自定义日期范围的使用统计信息。",
+      "customDatePlaceholderScreenReader": "自定义日期范围模式已激活。使用上面的日期选择器选择开始日期和结束日期以加载使用统计信息。",
+      "noApiKeysScreenReader": "未找到API密钥。创建您的第一个API密钥以开始跟踪使用统计信息。",
+      "selectApiKeyScreenReader": "从上面的下拉菜单中选择一个API密钥以查看其使用统计信息和指标。",
       "viewApiDocs": "查看API文档",
+      "loadingApiKeys": "正在加载API密钥...",
+      "noApiKeys": "无API密钥",
+      "selectApiKey": "选择API密钥",
+      "noApiKeysTitle": "未找到API密钥",
+      "noApiKeysDescription": "创建API密钥以开始跟踪您的使用统计信息。",
+      "selectApiKeyTitle": "选择API密钥",
+      "selectApiKeyDescription": "请从上面的下拉菜单中选择一个API密钥以查看其使用统计信息。",
+      "createApiKey": "创建API密钥",
       "filters": {
         "custom": "自定义",
         "overview": "概览",
@@ -273,7 +340,10 @@
         "totalCost": "总成本",
         "avgResponseTime": "平均响应时间",
         "successRate": "成功率",
-        "successfulRequests": "成功的请求"
+        "successfulRequests": "成功的请求",
+        "currency": "CNY",
+        "tokens": "令牌",
+        "requests": "请求"
       },
       "charts": {
         "dailyUsage": "每日使用量",
@@ -283,18 +353,50 @@
         "topModelsByUsage": "按使用量排名的顶级模型",
         "usageByModel": "按模型使用量",
         "noDataTitle": "无可用数据",
-        "noDataDescription": "未找到所选时间段的使用数据。",
+        "noDataAvailable": "没有数据可显示",
+        "noDataExplanation": "当前所选时间段没有{{metricType}}可显示。尝试选择不同的日期范围或在进行一些API请求后重新检查。",
+        "noDataDescription": "当前时间段选择未找到{{metricType}}数据",
+        "noDataSummary": "{{chartType}}显示所选时间段没有{{metricType}}数据",
+        "noDataSuggestions": "尝试进行一些API请求或选择不同的日期范围以查看{{metricType}}随时间的趋势。",
+        "noDataScreenReader": "{{timeframe}}时间段的{{metricType}}数据的{{chartType}}不包含数据点。尝试选择不同的时间段或进行一些API请求以查看使用趋势。",
+        "chartFocused": "{{chartType}}已聚焦。包含{{dataPoints}}个数据点。使用Tab导航到图表控件或按T切换到表格视图。",
         "noModelsTitle": "无模型数据",
         "noModelsDescription": "所选时间段无可用的模型使用数据。",
         "lineChartAriaLabel": "显示{{metric}}随时间变化的折线图",
         "modelDistributionAriaLabel": "显示模型使用分布的环形图",
+        "lineChartDescription": "此折线图显示{{metricType}}随时间的使用情况",
+        "donutChartDescription": "此环形图显示不同AI模型之间的请求分布",
+        "modelBreakdownTable": "详细的模型使用分解表",
+        "usageTrendsDescription": "显示所选时间段{{metricType}}趋势的折线图",
+        "usageTrendsSummary": "图表包含{{totalPoints}}个数据点，值范围从{{minValue}}到{{maxValue}}，平均值为{{avgValue}}。总体趋势为{{trend}}",
+        "modelDistributionSummary": "分布图显示了{{totalModels}}个模型的使用情况。顶级模型是{{topModel}}，占总{{totalRequests}}个请求的{{topPercentage}}%",
+        "legendDescription": "{{metricType}}数据随时间的视觉表示",
+        "trend": {
+          "increasing": "上升",
+          "decreasing": "下降"
+        },
         "requests": "请求",
         "percentage": "百分比",
         "modelBreakdown": "模型分解",
         "detailedBreakdown": "详细分解"
       },
       "tables": {
-        "topModels": "顶级模型表"
+        "topModels": "顶级模型表",
+        "topModelsCaption": "显示{{dateRange}}按使用量排名的前{{count}}个模型的表格，总计{{totalRequests}}个请求。使用箭头键在行之间导航。"
+      },
+      "progressLabels": {
+        "successRate": "成功率：{{percentage}}百分比",
+        "successRateProgress": "成功率进度条：{{percentage}}%成功请求（总{{totalRequests}}个请求中的{{successfulRequests}}个）",
+        "successRateTitle": "成功率：{{percentage}}%",
+        "modelUsage": "{{model}}的使用百分比：{{percentage}}百分比",
+        "modelUsageProgress": "{{model}}的使用进度条：总请求的{{percentage}}%（{{totalRequests}}个中的{{requests}}个）",
+        "modelUsageTitle": "{{model}}使用量：{{percentage}}%"
+      },
+      "ariaLabels": {
+        "requestsCount": "{{formatted}}个请求（确切数量：{{count}}）",
+        "tokensCount": "{{formatted}}个令牌（确切数量：{{count}}）",
+        "costAmount": "{{formatted}}成本（确切金额：${{amount}}）",
+        "percentageValue": "总使用量的{{percentage}}百分比"
       },
       "tableHeaders": {
         "model": "模型",
@@ -303,7 +405,9 @@
         "cost": "成本",
         "usagePercent": "使用率 %",
         "count": "计数",
-        "percentage": "百分比"
+        "percentage": "百分比",
+        "date": "日期",
+        "formattedValue": "格式化值"
       },
       "notifications": {
         "loadError": "错误",
@@ -315,8 +419,11 @@
         "exportCompleteDesc": "使用数据已成功导出。",
         "exportFailed": "导出失败",
         "exportFailedDesc": "无法导出使用数据。请重试。",
-        "customDatesRequired": "请选择开始日期和结束日期以导出自定义范围。"
-      }
+        "customDatesRequired": "请选择开始日期和结束日期以导出自定义范围。",
+        "apiKeysLoadError": "API密钥加载失败",
+        "apiKeysLoadErrorDesc": "无法检索您的API密钥。请刷新页面或稍后重试。"
+      },
+      "metricsUpdated": "使用指标已更新。{{requests}}总请求，{{tokens}}总令牌，{{cost}}总成本"
     },
     "settings": {
       "title": "设置",
@@ -325,11 +432,18 @@
       "forms": {
         "displayName": "显示名称",
         "displayNamePlaceholder": "输入您的显示名称",
+        "displayNameHelperText": "此名称将在您的个人资料和整个应用程序中显示",
         "emailNotifications": "电子邮件通知",
+        "emailNotificationsHelperText": "接收有关订阅更改、使用警报和安全更新的通知",
+        "emailNotificationsAriaLabel": "开启或关闭电子邮件通知",
         "autoRefreshDashboard": "自动刷新仪表板",
+        "autoRefreshHelperText": "每30秒自动刷新仪表板数据",
+        "autoRefreshAriaLabel": "开启或关闭自动仪表板刷新",
         "enabled": "已启用",
+        "disabled": "已禁用",
         "defaultModelProvider": "默认模型提供商",
         "rateLimitLabel": "速率限制（请求/分钟）",
+        "rateLimitHelperText": "此限制由您的订阅计划设置，无法修改",
         "timeoutLabel": "超时（秒）",
         "providerPlaceholder": "OpenAI、Anthropic等",
         "openShiftAI": "OpenShift AI"
@@ -341,6 +455,15 @@
     }
   },
   "ui": {
+    "actions": {
+      "tryAgain": "重试",
+      "logout": "退出",
+      "login": "使用OpenShift登录",
+      "browse": "浏览",
+      "refresh": "刷新页面",
+      "openSidebar": "打开导航侧边栏",
+      "closeSidebar": "关闭导航侧边栏"
+    },
     "theme": {
       "light": "浅色",
       "dark": "深色",
@@ -364,12 +487,33 @@
       "clear": "清除所有",
       "empty": "没有通知"
     },
-    "actions": {
-      "logout": "退出",
-      "login": "使用OpenShift登录",
-      "browse": "浏览",
-      "refresh": "刷新页面",
-      "tryAgain": "重试"
+    "accessibility": {
+      "skipToMain": "跳转到主要内容",
+      "skipToNavigation": "跳转到导航",
+      "viewModeToggle": "在图表和表格视图之间切换",
+      "showChartView": "显示图表视图",
+      "showTableView": "显示表格视图",
+      "exportChartData": "将图表数据导出为CSV",
+      "dataTableAlternative": "数据表格替代方案",
+      "chartKeyboardInstructions": "按T键在图表和表格视图之间切换。按E键导出数据",
+      "switchedToTable": "已切换到表格视图",
+      "switchedToChart": "已切换到图表视图",
+      "dataExported": "数据已导出到{{filename}}",
+      "chartContainsDataPoints": "图表包含{{count}}个数据点",
+      "chartFocused": "图表'{{title}}'现已聚焦。包含{{dataPoints}}个数据点。按T键切换表格视图，按E键导出数据，或按Tab键导航到图表控件。",
+      "tableCaption": "{{title}}的数据表格",
+      "tableNavigationInstructions": "使用箭头键在行和列之间导航，或使用Tab键移动到下一个交互元素。",
+      "lineChartSummary": "包含{{totalPoints}}个数据点的折线图。数值范围从{{minValue}}到{{maxValue}}，平均值为{{avgValue}}",
+      "pieChartSummary": "显示{{totalCategories}}个类别的饼图。最大类别是{{topCategory}}，占{{topPercentage}}%",
+      "noDataAvailable": "没有可显示的数据",
+      "chartLegend": "包含数据系列信息的图表图例",
+      "legendSummary": "图例包含{{count}}个项目：{{items}}",
+      "legendPattern": "{{name}}系列以{{color}}颜色和{{pattern}}线条模式显示",
+      "patterns": {
+        "solid": "实线",
+        "dashed": "虚线",
+        "dotted": "点线"
+      }
     },
     "errors": {
       "somethingWrong": "出现问题",

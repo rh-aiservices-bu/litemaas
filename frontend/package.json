@@ -16,7 +16,8 @@
     "test:all": "npm run test:unit && npm run test:e2e",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
-    "clean": "rimraf dist coverage .tsbuildinfo test-results playwright-report"
+    "clean": "rimraf dist coverage .tsbuildinfo test-results playwright-report",
+    "check:translations": "node scripts/check-translations.js"
   },
   "dependencies": {
     "@patternfly/react-charts": "^8.0.0",
@@ -37,10 +38,13 @@
     "victory-core": "^37.3.6"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.2",
+    "@axe-core/react": "^4.10.2",
     "@playwright/test": "^1.42.0",
     "@testing-library/jest-dom": "^6.4.2",
     "@testing-library/react": "^14.2.1",
     "@testing-library/user-event": "^14.5.2",
+    "@types/jest-axe": "^3.5.9",
     "@types/react": "^18.2.56",
     "@types/react-dom": "^18.2.19",
     "@types/uuid": "^10.0.0",
@@ -48,11 +52,13 @@
     "@typescript-eslint/parser": "^7.0.1",
     "@vitejs/plugin-react": "^4.2.1",
     "@vitest/coverage-v8": "^1.3.1",
+    "axe-core": "^4.10.3",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
+    "jest-axe": "^10.0.0",
     "jsdom": "^24.0.0",
     "msw": "^2.2.1",
     "prettier": "^3.2.5",

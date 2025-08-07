@@ -35,7 +35,7 @@ const HomePage: React.FC = () => {
               <CardHeader
                 selectableActions={{
                   to: '/models',
-                  selectableActionAriaLabelledby: 'to-models',
+                  selectableActionAriaLabel: t('pages.home.cards.modelsAriaLabel'),
                 }}
               ></CardHeader>
               <CardBody>
@@ -63,7 +63,7 @@ const HomePage: React.FC = () => {
               <CardHeader
                 selectableActions={{
                   to: '/subscriptions',
-                  selectableActionAriaLabelledby: 'to-subscriptions',
+                  selectableActionAriaLabel: t('pages.home.cards.subscriptionsAriaLabel'),
                 }}
               ></CardHeader>
               <CardBody>
@@ -91,7 +91,7 @@ const HomePage: React.FC = () => {
               <CardHeader
                 selectableActions={{
                   to: '/api-keys',
-                  selectableActionAriaLabelledby: 'to-api-keys',
+                  selectableActionAriaLabel: t('pages.home.cards.apiKeysAriaLabel'),
                 }}
               ></CardHeader>
               <CardBody>
@@ -119,7 +119,7 @@ const HomePage: React.FC = () => {
               <CardHeader
                 selectableActions={{
                   to: '/usage',
-                  selectableActionAriaLabelledby: 'to-usage',
+                  selectableActionAriaLabel: t('pages.home.cards.usageAriaLabel'),
                 }}
               ></CardHeader>
               <CardBody>
