@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Favicon } from './assets';
+import { initializeAxeAccessibility } from './utils/accessibility-setup';
 import './i18n'; // Initialize i18n
 import './index.css';
 
@@ -70,6 +71,11 @@ const setFavicon = (svgHref: string) => {
 
 // Set the favicon
 setFavicon(Favicon);
+
+// Initialize accessibility testing in development
+if (process.env.NODE_ENV === 'development') {
+  initializeAxeAccessibility(ReactDOM, React, 1000);
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

@@ -1,5 +1,9 @@
 import { beforeAll, vi } from 'vitest';
 import '@testing-library/jest-dom';
+import { toHaveNoViolations } from 'jest-axe';
+
+// Extend expect with accessibility matchers
+expect.extend(toHaveNoViolations);
 
 // Mock IntersectionObserver
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({

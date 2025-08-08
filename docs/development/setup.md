@@ -31,6 +31,7 @@ npm install
 ### 3. Environment Configuration
 
 #### Backend Environment
+
 ```bash
 # Copy the example environment file
 cp backend/.env.example backend/.env
@@ -40,6 +41,7 @@ cp backend/.env.example backend/.env
 ```
 
 Minimum backend configuration:
+
 ```env
 # Database
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/litemaas_dev
@@ -66,6 +68,7 @@ No configuration is needed.
 ### 4. Database Setup
 
 #### Option 1: Using Docker (Recommended)
+
 ```bash
 # Start PostgreSQL using the provided compose file
 docker compose -f dev-tools/compose.yaml up -d postgres
@@ -75,6 +78,7 @@ docker compose -f dev-tools/compose.yaml up -d postgres
 ```
 
 #### Option 2: Local PostgreSQL
+
 ```bash
 # Create the database
 createdb litemaas_dev
@@ -95,6 +99,7 @@ cd backend && npm run db:seed
 ## Running the Application
 
 ### Full Stack Development
+
 ```bash
 # Run both backend and frontend
 npm run dev
@@ -105,6 +110,7 @@ npm run dev
 ```
 
 ### Backend Only
+
 ```bash
 npm run dev:backend
 # or
@@ -112,6 +118,7 @@ cd backend && npm run dev
 ```
 
 ### Frontend Only
+
 ```bash
 npm run dev:frontend
 # or
@@ -121,6 +128,7 @@ cd frontend && npm run dev
 ## Frontend Technology Stack
 
 ### React Query Integration
+
 The frontend uses React Query for server state management:
 
 - **QueryClient Setup**: Configured in `frontend/src/routes/index.tsx`
@@ -129,6 +137,7 @@ The frontend uses React Query for server state management:
 - **Usage**: Available via `useQueryClient()` hook throughout the application
 
 ### Key Libraries
+
 - **React**: 18.x with hooks and modern patterns
 - **React Router**: 6.x for client-side routing
 - **React Query**: 3.x for server state management
@@ -139,7 +148,9 @@ The frontend uses React Query for server state management:
 ## Development Tools
 
 ### VS Code Extensions
+
 Recommended extensions for the best development experience:
+
 - ESLint
 - Prettier
 - TypeScript and JavaScript Language Features
@@ -147,10 +158,12 @@ Recommended extensions for the best development experience:
 - Thunder Client or REST Client (for API testing)
 
 ### API Documentation
-- Swagger UI: http://localhost:8081/docs
-- OpenAPI Spec: http://localhost:8081/docs/json
+
+- Swagger UI: <http://localhost:8081/docs>
+- OpenAPI Spec: <http://localhost:8081/docs/json>
 
 ### Database Management
+
 - pgAdmin: Web-based PostgreSQL admin
 - TablePlus: Native PostgreSQL client
 - DBeaver: Universal database tool
@@ -158,6 +171,7 @@ Recommended extensions for the best development experience:
 ## Authentication in Development
 
 ### Mock OAuth Mode
+
 By default, development uses mock OAuth to avoid needing a real OpenShift cluster:
 
 1. **Mock Users**: Three pre-configured test users are available:
@@ -171,9 +185,11 @@ By default, development uses mock OAuth to avoid needing a real OpenShift cluste
    - You'll be automatically logged in with that user's permissions
 
 ### Real OpenShift OAuth
+
 To test with a real OpenShift cluster:
 
 1. **Create OAuth Client** in OpenShift:
+
    ```bash
    oc create -f - <<EOF
    apiVersion: oauth.openshift.io/v1
@@ -188,6 +204,7 @@ To test with a real OpenShift cluster:
    ```
 
 2. **Update Environment**:
+
    ```env
    OAUTH_MOCK_ENABLED=false
    OAUTH_CLIENT_ID=litemaas
@@ -203,6 +220,7 @@ To test with a real OpenShift cluster:
 ## Common Development Tasks
 
 ### Running Tests
+
 ```bash
 # All tests
 npm run test
@@ -219,6 +237,7 @@ cd frontend && npm run test:watch
 ```
 
 ### Code Quality
+
 ```bash
 # Lint all code
 npm run lint
@@ -228,9 +247,34 @@ npm run lint -- --fix
 
 # Format code
 npm run format
+
+# Check translation completeness
+npm run check:translations
 ```
 
+### Translation Management
+
+The frontend includes a translation checker script to ensure all locales are synchronized with the English source:
+
+```bash
+# Check translation completeness for all languages
+cd frontend && npm run check:translations
+
+# The script will:
+# - Compare all translation files with English (source of truth)
+# - Report completeness percentage for each language
+# - List any missing keys that need translation
+# - Identify extra keys not present in the source
+# - Exit with error code if translations are incomplete (useful for CI/CD)
+```
+
+**Translation Files Location**: `frontend/src/i18n/locales/`
+
+- Supported languages: English (en), Spanish (es), French (fr), German (de), Italian (it), Japanese (ja), Korean (ko), Chinese (zh), Elvish (elv)
+- All translation files must maintain the same JSON structure and key ordering as the English source
+
 ### Building for Production
+
 ```bash
 # Build both packages
 npm run build
@@ -243,6 +287,7 @@ npm run build
 ## Troubleshooting
 
 ### Port Already in Use
+
 ```bash
 # Find process using port 8080
 lsof -i :8080
@@ -252,12 +297,14 @@ kill -9 <PID>
 ```
 
 ### Database Connection Issues
+
 1. Verify PostgreSQL is running
 2. Check DATABASE_URL format
 3. Ensure database exists
 4. Check user permissions
 
 ### Node Version Issues
+
 ```bash
 # Install correct Node version with nvm
 nvm install 18
@@ -265,7 +312,9 @@ nvm use 18
 ```
 
 ### Frontend Proxy Issues
+
 If the frontend can't reach the backend:
+
 1. Verify backend is running on port 8080
 2. Check VITE_API_URL in frontend/.env
 3. Clear browser cache

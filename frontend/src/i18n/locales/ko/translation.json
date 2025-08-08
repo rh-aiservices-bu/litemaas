@@ -1,4 +1,17 @@
 {
+  "common": {
+    "label": "라벨",
+    "value": "값",
+    "chart": "차트",
+    "table": "테이블",
+    "export": "내보내기",
+    "day": "일",
+    "date": "날짜",
+    "error": "오류",
+    "notAvailable": "N/A",
+    "lineChart": "선 차트",
+    "dataPoints": "데이터 포인트"
+  },
   "nav": {
     "home": "홈",
     "models": "모델",
@@ -15,7 +28,11 @@
         "modelsDescription": "사용 가능한 AI 모델 찾아보기",
         "subscriptionsDescription": "모델 구독 관리",
         "apiKeysDescription": "API 키 생성 및 관리",
-        "usageDescription": "API 사용량 모니터링"
+        "usageDescription": "API 사용량 모니터링",
+        "modelsAriaLabel": "AI 모델을 찾아보고 구독하려면 모델 페이지로 이동",
+        "subscriptionsAriaLabel": "모델 구독을 관리하려면 구독 페이지로 이동",
+        "apiKeysAriaLabel": "API 키를 생성하고 관리하려면 API 키 페이지로 이동",
+        "usageAriaLabel": "API 사용량 및 메트릭을 모니터링하려면 사용량 페이지로 이동"
       }
     },
     "login": {
@@ -39,6 +56,7 @@
         "allCategories": "모든 카테고리"
       },
       "subscribe": "구독",
+      "subscribeToModel": "{{modelName}} 구독",
       "subscribing": "구독 생성 중...",
       "contextLabel": "컨텍스트:",
       "pricingLabel": "가격: N/A",
@@ -58,6 +76,12 @@
         "loadError": "오류",
         "loadErrorDesc": "서버에서 모델을 불러오지 못했습니다.",
         "loadFailed": "모델을 불러오지 못했습니다. 다시 시도하세요."
+      },
+      "searchResults": "조건에 일치하는 {{count}}개 모델을 찾았습니다",
+      "availability": {
+        "available": "사용 가능",
+        "limited": "제한적으로 사용 가능",
+        "unavailable": "사용할 수 없음"
       }
     },
     "subscriptions": {
@@ -70,10 +94,11 @@
       "noSubscriptionsTitle": "구독을 찾을 수 없습니다",
       "noSubscriptionsDescription": "활성 구독이 없습니다. AI 모델 구독으로 시작하세요.",
       "viewDetails": "상세 정보 보기",
+      "viewDetailsForModel": "{{modelName}} 구독 상세 정보 보기",
       "detailsTitle": "구독 상세 정보",
       "provider": "공급자",
       "pricing": "가격",
-      "status": "상태",
+      "statusLabel": "상태",
       "requestQuota": "요청 할당량",
       "tokenQuota": "토큰 할당량",
       "requestsUsed": "사용된 요청",
@@ -94,6 +119,7 @@
       "expiredMessage": "구독이 {{date}}에 만료되었습니다. 이 모델을 계속 사용하려면 갱신하세요.",
       "cancelledMessage": "{{modelName}} 구독이 취소되어 계정에서 제거되었습니다.",
       "cancelSubscription": "구독 취소",
+      "cancelSubscriptionForModel": "{{modelName}} 구독 취소",
       "cancelling": "취소 중...",
       "notifications": {
         "loadError": "오류",
@@ -107,6 +133,12 @@
       "alerts": {
         "suspended": "구독 일시 중지",
         "expired": "구독 만료"
+      },
+      "status": {
+        "active": "활성",
+        "suspended": "일시 중지",
+        "expired": "만료",
+        "pending": "보류 중"
       }
     },
     "apiKeys": {
@@ -120,14 +152,22 @@
       "showKey": "키 표시",
       "copied": "복사됨!",
       "selectModels": "모델 선택...",
+      "modelsSelected": "{{count}}개 모델 선택됨",
       "selectAll": "모두 선택",
+      "selectAllModelsAriaLabel": "사용 가능한 모든 모델을 선택 또는 선택 해제",
+      "selectModelAriaLabel": "{{name}} 모델을 선택 또는 선택 해제",
       "noModelsAssigned": "할당된 모델 없음",
       "never": "없음",
       "neverExpires": "만료되지 않음",
       "forms": {
         "name": "이름",
+        "nameHelperText": "이 API 키를 식별할 고유한 이름을 입력하세요",
         "description": "설명",
+        "descriptionHelperText": "이 API 키의 목적을 기억하는 데 도움이 되는 선택적 설명",
         "models": "모델",
+        "modelsHelperText": "이 API 키가 액세스할 수 있는 하나 이상의 모델을 선택하세요",
+        "modelsSelectedText": "이 API 키에 대해 {{count}}개 모델이 선택되었습니다",
+        "modelsAriaLabel": "API 키 액세스를 위한 모델 선택",
         "expiration": "만료",
         "apiKey": "API 키",
         "yourNewApiKey": "새 API 키"
@@ -179,7 +219,9 @@
         "loadingDescription": "API 키 정보를 가져오는 중",
         "errorLoadingTitle": "API 키 불러오기 오류",
         "noKeysTitle": "API 키를 찾을 수 없습니다",
-        "noKeysDescription": "LiteMaaS 서비스를 사용하려면 첫 번째 API 키를 생성하세요."
+        "noKeysDescription": "LiteMaaS 서비스를 사용하려면 첫 번째 API 키를 생성하세요.",
+        "noKeysScreenReader": "현재 API 키가 없습니다. API 키 생성 버튼을 사용하여 첫 번째 키를 생성하고 LiteMaaS 서비스 사용을 시작하세요.",
+        "errorScreenReader": "API 키 불러오기 오류: {{error}}. 다시 시도 버튼을 사용하여 불러오기를 다시 시도하세요."
       },
       "placeholders": {
         "keyName": "예: 프로덕션 API 키",
@@ -216,7 +258,8 @@
         "retrieveErrorDesc": "API 키를 검색하지 못했습니다",
         "validationError": "유효성 검사 오류",
         "nameRequired": "API 키 이름이 필요합니다",
-        "modelsRequired": "활성 구독에서 최소한 하나의 모델을 선택하세요"
+        "modelsRequired": "활성 구독에서 최소한 하나의 모델을 선택하세요",
+        "pleaseFixFormErrors": "폼 오류를 수정하고 다시 시도하세요"
       },
       "modals": {
         "createTitle": "API 키 생성",
@@ -232,9 +275,20 @@
       },
       "tableHeaders": {
         "apiKeysTable": "API 키 테이블",
+        "apiKeysTableCaption": "{{count}}개 API 키와 그 이름, 미리보기 값, 할당된 모델 및 사용 가능한 작업을 보여주는 테이블. {{description}}",
+        "apiKeysTableStructure": "화살표 키를 사용하여 행 사이를 탐색하고 Tab 키를 사용하여 각 행 내의 작업 버튼에 액세스하세요.",
         "keyDetails": "키 상세 정보",
-        "generatedKeyDetails": "생성된 키 상세 정보"
+        "keyDetailsCaption": "API 키 '{{keyName}}'에 대한 자세한 정보(모델, 생성 날짜 및 사용 통계 포함)를 보여주는 테이블",
+        "generatedKeyDetails": "생성된 키 상세 정보",
+        "generatedKeyDetailsCaption": "새로 생성된 API 키 '{{keyName}}'의 세부 정보(할당된 모델 및 만료 날짜 포함)를 보여주는 테이블"
       },
+      "viewKeyAriaLabel": "API 키 {{keyName}}에 대한 상세 정보 보기",
+      "deleteKeyAriaLabel": "API 키 {{keyName}} 삭제",
+      "hideKeyAriaLabel": "{{keyName}}의 API 키 값 숨기기",
+      "showKeyAriaLabel": "{{keyName}}의 API 키 값 표시",
+      "copyKeyAriaLabel": "{{keyName}}의 API 키 값을 클립보드에 복사",
+      "fullKeyVisible": "{{keyName}}의 전체 API 키 값이 이제 표시됩니다",
+      "keyPreviewOnly": "API 키 {{keyName}}의 미리보기를 표시 중 - 전체 키를 표시하려면 표시를 클릭",
       "codeExample": {
         "role": "사용자",
         "content": "안녕하세요, 세계!"
@@ -244,13 +298,26 @@
       "title": "사용량 대시보드",
       "subtitle": "API 사용량, 비용 및 성능 메트릭 모니터링",
       "exportData": "데이터 내보내기",
+      "exportUsageData": "선택한 기간의 사용량 데이터 내보내기",
       "loadingTitle": "사용량 데이터 불러오는 중...",
       "loadingDescription": "API 사용 패턴 및 메트릭 분석 중",
       "noDataTitle": "사용 가능한 사용량 데이터가 없습니다",
       "noDataDescription": "API 요청을 시작하여 여기에서 사용 통계를 확인하세요.",
+      "noDataScreenReader": "현재 사용 가능한 사용량 데이터가 없습니다. API 키를 사용하여 API 요청을 수행하여 여기에 표시될 사용 통계를 생성하세요.",
       "customDatePlaceholderTitle": "날짜 범위 선택",
       "customDatePlaceholderDescription": "사용자 정의 날짜 범위의 사용 통계를 보려면 위에서 시작일과 종료일을 선택하세요.",
+      "customDatePlaceholderScreenReader": "사용자 정의 날짜 범위 모드가 활성화되었습니다. 위의 날짜 선택기를 사용하여 시작일과 종료일을 모두 선택하여 사용 통계를 불러오세요.",
+      "noApiKeysScreenReader": "API 키를 찾을 수 없습니다. 사용 통계 추적을 시작하려면 첫 번째 API 키를 생성하세요.",
+      "selectApiKeyScreenReader": "위의 드롭다운에서 API 키를 선택하여 사용 통계와 메트릭을 확인하세요.",
       "viewApiDocs": "API 문서 보기",
+      "loadingApiKeys": "API 키 불러오는 중...",
+      "noApiKeys": "API 키 없음",
+      "selectApiKey": "API 키 선택",
+      "noApiKeysTitle": "API 키를 찾을 수 없습니다",
+      "noApiKeysDescription": "사용 통계 추적을 시작하려면 API 키를 생성하세요.",
+      "selectApiKeyTitle": "API 키 선택",
+      "selectApiKeyDescription": "위의 드롭다운에서 API 키를 선택하여 사용 통계를 확인하세요.",
+      "createApiKey": "API 키 생성",
       "filters": {
         "custom": "사용자 정의",
         "overview": "개요",
@@ -273,7 +340,10 @@
         "totalCost": "총 비용",
         "avgResponseTime": "평균 응답 시간",
         "successRate": "성공률",
-        "successfulRequests": "성공적인 요청"
+        "successfulRequests": "성공적인 요청",
+        "currency": "KRW",
+        "tokens": "토큰",
+        "requests": "요청"
       },
       "charts": {
         "dailyUsage": "일일 사용량",
@@ -283,18 +353,50 @@
         "topModelsByUsage": "사용량별 상위 모델",
         "usageByModel": "모델별 사용량",
         "noDataTitle": "사용 가능한 데이터 없음",
-        "noDataDescription": "선택된 기간에 대한 사용량 데이터를 찾을 수 없습니다.",
+        "noDataAvailable": "표시할 데이터가 없습니다",
+        "noDataExplanation": "현재 선택된 기간에 대한 {{metricType}} 데이터가 없습니다. 다른 날짜 범위를 선택하거나 일부 API 요청을 수행한 후에 다시 확인하세요.",
+        "noDataDescription": "현재 기간 선택에 대한 {{metricType}} 데이터를 찾을 수 없습니다",
+        "noDataSummary": "선택한 기간에 대한 {{metricType}} 데이터를 표시하지 않는 {{chartType}}",
+        "noDataSuggestions": "일부 API 요청을 수행하거나 다른 날짜 범위를 선택하여 시간 경과에 따른 {{metricType}} 추세를 확인해 보세요.",
+        "noDataScreenReader": "{{timeframe}} 기간의 {{metricType}} 데이터에 대한 {{chartType}}에는 데이터 포인트가 없습니다. 다른 기간을 선택하거나 사용 추세를 보려면 일부 API 요청을 수행해 보세요.",
+        "chartFocused": "{{chartType}}이 포커스되었습니다. {{dataPoints}}개의 데이터 포인트를 포함합니다. 차트 컨트롤로 이동하려면 Tab 키를 사용하거나 테이블 보기로 전환하려면 T 키를 누르세요.",
         "noModelsTitle": "모델 데이터 없음",
         "noModelsDescription": "선택된 기간에 대한 모델 사용량 데이터가 없습니다.",
         "lineChartAriaLabel": "시간에 따른 {{metric}}을 보여주는 선 차트",
         "modelDistributionAriaLabel": "모델 사용량 분포를 보여주는 도넛 차트",
+        "lineChartDescription": "이 선 차트는 시간 경과에 따른 {{metricType}} 사용량을 보여줍니다",
+        "donutChartDescription": "이 도넛 차트는 서로 다른 AI 모델 간의 요청 분포를 보여줍니다",
+        "modelBreakdownTable": "상세한 모델 사용량 분석 테이블",
+        "usageTrendsDescription": "선택한 기간 동안의 {{metricType}} 추세를 보여주는 선 차트",
+        "usageTrendsSummary": "차트에는 {{minValue}}에서 {{maxValue}}까지의 값을 가진 {{totalPoints}}개의 데이터 포인트가 포함되어 있으며, 평균은 {{avgValue}}입니다. 전체적인 추세는 {{trend}}입니다",
+        "modelDistributionSummary": "분포 차트는 {{totalModels}}개 모델에 걸친 사용량을 보여줍니다. 상위 모델은 {{topModel}}로 총 {{totalRequests}}개 요청 중 {{topPercentage}}%를 차지합니다",
+        "legendDescription": "시간 경과에 따른 {{metricType}} 데이터의 시각적 표현",
+        "trend": {
+          "increasing": "증가",
+          "decreasing": "감소"
+        },
         "requests": "요청",
         "percentage": "백분율",
         "modelBreakdown": "모델 분석",
         "detailedBreakdown": "상세 분석"
       },
       "tables": {
-        "topModels": "상위 모델 테이블"
+        "topModels": "상위 모델 테이블",
+        "topModelsCaption": "{{dateRange}}에 대한 사용량별 상위 {{count}}개 모델을 총 {{totalRequests}}개 요청과 함께 보여주는 테이블. 행 사이를 탐색하려면 화살표 키를 사용하세요."
+      },
+      "progressLabels": {
+        "successRate": "성공률: {{percentage}}퍼센트",
+        "successRateProgress": "성공률 진행 막대: {{percentage}}% 성공적인 요청 (총 {{totalRequests}}개 요청 중 {{successfulRequests}}개)",
+        "successRateTitle": "성공률: {{percentage}}%",
+        "modelUsage": "{{model}}의 사용률: {{percentage}}퍼센트",
+        "modelUsageProgress": "{{model}}의 사용률 진행 막대: 총 요청의 {{percentage}}% ({{totalRequests}}개 중 {{requests}}개)",
+        "modelUsageTitle": "{{model}} 사용량: {{percentage}}%"
+      },
+      "ariaLabels": {
+        "requestsCount": "{{formatted}}개 요청 (정확한 수: {{count}})",
+        "tokensCount": "{{formatted}}개 토큰 (정확한 수: {{count}})",
+        "costAmount": "{{formatted}} 비용 (정확한 금액: ${{amount}})",
+        "percentageValue": "총 사용량의 {{percentage}}퍼센트"
       },
       "tableHeaders": {
         "model": "모델",
@@ -303,7 +405,9 @@
         "cost": "비용",
         "usagePercent": "사용률 %",
         "count": "개수",
-        "percentage": "백분율"
+        "percentage": "백분율",
+        "date": "날짜",
+        "formattedValue": "형식화된 값"
       },
       "notifications": {
         "loadError": "오류",
@@ -315,8 +419,11 @@
         "exportCompleteDesc": "사용량 데이터가 성공적으로 내보내졌습니다.",
         "exportFailed": "내보내기 실패",
         "exportFailedDesc": "사용량 데이터를 내보내지 못했습니다. 다시 시도하세요.",
-        "customDatesRequired": "사용자 정의 범위 내보내기에는 시작일과 종료일을 모두 선택해주세요."
-      }
+        "customDatesRequired": "사용자 정의 범위 내보내기에는 시작일과 종료일을 모두 선택해주세요.",
+        "apiKeysLoadError": "API 키 불러오기 실패",
+        "apiKeysLoadErrorDesc": "API 키를 가져올 수 없습니다. 페이지를 새로고침하거나 나중에 다시 시도하세요."
+      },
+      "metricsUpdated": "사용량 메트릭이 업데이트되었습니다. {{requests}}개 총 요청, {{tokens}}개 총 토큰, {{cost}} 총 비용"
     },
     "settings": {
       "title": "설정",
@@ -325,11 +432,18 @@
       "forms": {
         "displayName": "표시 이름",
         "displayNamePlaceholder": "표시 이름을 입력하세요",
+        "displayNameHelperText": "이 이름은 프로필과 애플리케이션 전반에 걸쳐 표시됩니다",
         "emailNotifications": "이메일 알림",
+        "emailNotificationsHelperText": "구독 변경, 사용량 경고 및 보안 업데이트에 대한 알림 받기",
+        "emailNotificationsAriaLabel": "이메일 알림을 켜거나 끄기",
         "autoRefreshDashboard": "대시보드 자동 새로고침",
+        "autoRefreshHelperText": "30초마다 대시보드 데이터 자동 새로고침",
+        "autoRefreshAriaLabel": "대시보드 자동 새로고침을 켜거나 끄기",
         "enabled": "활성화됨",
+        "disabled": "비활성화됨",
         "defaultModelProvider": "기본 모델 공급자",
         "rateLimitLabel": "속도 제한 (요청/분)",
+        "rateLimitHelperText": "이 제한은 구독 플랜에 의해 설정되며 수정할 수 없습니다",
         "timeoutLabel": "시간 제한 (초)",
         "providerPlaceholder": "OpenAI, Anthropic 등",
         "openShiftAI": "OpenShift AI"
@@ -341,6 +455,15 @@
     }
   },
   "ui": {
+    "actions": {
+      "tryAgain": "다시 시도",
+      "logout": "로그아웃",
+      "login": "OpenShift로 로그인",
+      "browse": "찾아보기",
+      "refresh": "페이지 새로고침",
+      "openSidebar": "네비게이션 사이드바 열기",
+      "closeSidebar": "네비게이션 사이드바 닫기"
+    },
     "theme": {
       "light": "라이트",
       "dark": "다크",
@@ -364,12 +487,33 @@
       "clear": "모두 지우기",
       "empty": "알림 없음"
     },
-    "actions": {
-      "logout": "로그아웃",
-      "login": "OpenShift로 로그인",
-      "browse": "찾아보기",
-      "refresh": "페이지 새로고침",
-      "tryAgain": "다시 시도"
+    "accessibility": {
+      "skipToMain": "본문으로 바로가기",
+      "skipToNavigation": "네비게이션으로 바로가기",
+      "viewModeToggle": "차트와 테이블 보기 전환",
+      "showChartView": "차트 보기 표시",
+      "showTableView": "테이블 보기 표시",
+      "exportChartData": "차트 데이터를 CSV로 내보내기",
+      "dataTableAlternative": "데이터 테이블 대안",
+      "chartKeyboardInstructions": "차트와 테이블 보기를 전환하려면 T를 누르세요. 데이터를 내보내려면 E를 누르세요",
+      "switchedToTable": "테이블 보기로 전환됨",
+      "switchedToChart": "차트 보기로 전환됨",
+      "dataExported": "데이터가 {{filename}}으로 내보내졌습니다",
+      "chartContainsDataPoints": "차트에 {{count}}개의 데이터 포인트가 포함되어 있습니다",
+      "chartFocused": "차트 '{{title}}'가 현재 포커스되어 있습니다. {{dataPoints}}개의 데이터 포인트를 포함합니다. T를 눌러 테이블 보기로 전환하거나, E를 눌러 데이터를 내보내거나, Tab을 눌러 차트 컨트롤로 이동하세요.",
+      "tableCaption": "{{title}}의 데이터 테이블",
+      "tableNavigationInstructions": "화살표 키를 사용하여 행과 열 사이를 탐색하거나, Tab을 사용하여 다음 대화형 요소로 이동하세요.",
+      "lineChartSummary": "{{totalPoints}}개의 데이터 포인트를 가진 선 차트. 값 범위는 {{minValue}}에서 {{maxValue}}까지이며, 평균은 {{avgValue}}입니다",
+      "pieChartSummary": "{{totalCategories}}개 카테고리를 보여주는 파이 차트. 가장 큰 카테고리는 {{topCategory}}로 {{topPercentage}}%입니다",
+      "noDataAvailable": "표시할 수 있는 데이터가 없습니다",
+      "chartLegend": "데이터 시리즈 정보가 있는 차트 범례",
+      "legendSummary": "범례에는 {{count}}개 항목이 포함되어 있습니다: {{items}}",
+      "legendPattern": "{{name}} 시리즈는 {{color}} 색상과 {{pattern}} 선 패턴으로 표시됩니다",
+      "patterns": {
+        "solid": "실선",
+        "dashed": "점선",
+        "dotted": "점선"
+      }
     },
     "errors": {
       "somethingWrong": "문제가 발생했습니다",
