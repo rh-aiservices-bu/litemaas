@@ -250,7 +250,7 @@ oc create secret generic postgres-secret \
 
 # Create backend secret
 oc create secret generic backend-secret \
-  --from-literal=database-url="postgresql://litemaas_admin:$POSTGRES_PASSWORD@postgres:5432/litemaas_db" \
+  --from-literal=database-url="postgresql://litemaas_admin:$POSTGRES_PASSWORD@postgres:5432/litemaas_db?sslmode=disable" \
   --from-literal=cors-origin="https://litemaas-$NAMESPACE.$CLUSTER_DOMAIN" \
   --from-literal=jwt-secret="$JWT_SECRET" \
   --from-literal=oauth-client-id="$OAUTH_CLIENT_ID" \
