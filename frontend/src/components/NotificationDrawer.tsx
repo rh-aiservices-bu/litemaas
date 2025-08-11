@@ -23,11 +23,11 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { ScreenReaderAnnouncement } from './ScreenReaderAnnouncement';
 
 interface NotificationDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export const NotificationDrawer: React.FC<NotificationDrawerProps> = () => {
+export const NotificationDrawer: React.FC<NotificationDrawerProps> = (_props) => {
   const { notifications, markAsRead, markAllAsRead, removeNotification, clearAll } =
     useNotifications();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);

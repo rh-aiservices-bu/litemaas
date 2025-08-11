@@ -5,10 +5,12 @@
 In PatternFly 6, clickable cards should use the `CardHeader` component with `selectableActions` prop instead of using `onClick` directly on the Card component.
 
 ### Why?
+
 - The `isClickable` prop on Card adds the `pf-m-clickable` modifier class which sets `border-width: 0` on the card's `::before` pseudo-element
 - Using `CardHeader` with `selectableActions` properly handles the clickable behavior while maintaining the card's border styling
 
 ### Pattern for Navigation
+
 ```tsx
 <Card isCompact isClickable>
   <CardHeader
@@ -17,13 +19,12 @@ In PatternFly 6, clickable cards should use the `CardHeader` component with `sel
       selectableActionAriaLabelledby: 'unique-label-id',
     }}
   />
-  <CardBody>
-    {/* Card content */}
-  </CardBody>
+  <CardBody>{/* Card content */}</CardBody>
 </Card>
 ```
 
 ### Pattern for Custom Actions (e.g., opening modals)
+
 ```tsx
 <Card isClickable>
   <CardHeader
@@ -32,17 +33,14 @@ In PatternFly 6, clickable cards should use the `CardHeader` component with `sel
       selectableActionAriaLabelledby: 'unique-label-id',
     }}
   >
-    <CardTitle id="unique-label-id">
-      {/* Title content */}
-    </CardTitle>
+    <CardTitle id="unique-label-id">{/* Title content */}</CardTitle>
   </CardHeader>
-  <CardBody>
-    {/* Card content */}
-  </CardBody>
+  <CardBody>{/* Card content */}</CardBody>
 </Card>
 ```
 
 ### Key Points
+
 1. Always use `CardHeader` with `selectableActions` for clickable cards
 2. Use `to` property for navigation (CardTitle stays outside CardHeader)
 3. Use `onClickAction` for custom actions (CardTitle goes inside CardHeader with matching id)

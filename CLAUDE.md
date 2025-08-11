@@ -106,6 +106,17 @@ docker-compose up -d  # Local development with containers
 
 *See `docs/development/` for detailed setup and `docs/deployment/configuration.md` for environment variables*
 
+## 🚨 CRITICAL DEVELOPMENT NOTES
+
+### Bash Tool Limitation
+**⚠️ CRITICAL**: stderr redirects are broken in the Bash tool - you can't use `2>&1` in bash commands. The Bash tool will mangle the stderr redirect and pass a "2" as an arg, and you won't see stderr.
+
+**Workaround**: Use the wrapper script: `./dev-tools/run_with_stderr.sh command args` to capture both stdout and stderr.
+
+See https://github.com/anthropics/claude-code/issues/4711 for details.
+
+
+
 ## 🔒 Security & Performance
 
 - **Auth**: OAuth2 (OpenShift) + JWT + API keys + Development mock mode

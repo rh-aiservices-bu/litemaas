@@ -142,13 +142,16 @@ const SubscriptionsPage: React.FC = () => {
     };
 
     return (
-      <Badge 
+      <Badge
         color={variants[status as keyof typeof variants]}
         aria-label={`Status: ${statusLabels[status as keyof typeof statusLabels] || status}`}
       >
         <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
           <FlexItem>{icons[status as keyof typeof icons]}</FlexItem>
-          <FlexItem>{statusLabels[status as keyof typeof statusLabels] || status.charAt(0).toUpperCase() + status.slice(1)}</FlexItem>
+          <FlexItem>
+            {statusLabels[status as keyof typeof statusLabels] ||
+              status.charAt(0).toUpperCase() + status.slice(1)}
+          </FlexItem>
         </Flex>
       </Badge>
     );
@@ -351,11 +354,18 @@ const SubscriptionsPage: React.FC = () => {
                               aria-label={`Token usage progress: ${subscription.usedTokens.toLocaleString()} of ${subscription.quotaTokens.toLocaleString()} tokens used (${getUsagePercentage(subscription.usedTokens, subscription.quotaTokens)}%)`}
                             />
                             <span className="pf-v6-screen-reader">
-                              Usage level: {getUsagePercentage(subscription.usedTokens, subscription.quotaTokens) >= 90 
-                                ? 'Critical - over 90% used' 
-                                : getUsagePercentage(subscription.usedTokens, subscription.quotaTokens) >= 75 
-                                ? 'High - over 75% used' 
-                                : 'Normal - under 75% used'}
+                              Usage level:{' '}
+                              {getUsagePercentage(
+                                subscription.usedTokens,
+                                subscription.quotaTokens,
+                              ) >= 90
+                                ? 'Critical - over 90% used'
+                                : getUsagePercentage(
+                                      subscription.usedTokens,
+                                      subscription.quotaTokens,
+                                    ) >= 75
+                                  ? 'High - over 75% used'
+                                  : 'Normal - under 75% used'}
                             </span>
                           </FlexItem>
 
@@ -378,7 +388,9 @@ const SubscriptionsPage: React.FC = () => {
                               onClick={(event) =>
                                 handleSubscriptionDetails(subscription, event.currentTarget)
                               }
-                              aria-label={t('pages.subscriptions.viewDetailsForModel', { modelName: subscription.modelName })}
+                              aria-label={t('pages.subscriptions.viewDetailsForModel', {
+                                modelName: subscription.modelName,
+                              })}
                             >
                               {t('pages.subscriptions.viewDetails')}
                             </Button>
@@ -506,11 +518,18 @@ const SubscriptionsPage: React.FC = () => {
                           aria-label={`Request usage progress: ${selectedSubscription.usedRequests.toLocaleString()} of ${selectedSubscription.quotaRequests.toLocaleString()} requests used (${getUsagePercentage(selectedSubscription.usedRequests, selectedSubscription.quotaRequests)}%)`}
                         />
                         <span className="pf-v6-screen-reader">
-                          Usage level: {getUsagePercentage(selectedSubscription.usedRequests, selectedSubscription.quotaRequests) >= 90 
-                            ? 'Critical - over 90% used' 
-                            : getUsagePercentage(selectedSubscription.usedRequests, selectedSubscription.quotaRequests) >= 75 
-                            ? 'High - over 75% used' 
-                            : 'Normal - under 75% used'}
+                          Usage level:{' '}
+                          {getUsagePercentage(
+                            selectedSubscription.usedRequests,
+                            selectedSubscription.quotaRequests,
+                          ) >= 90
+                            ? 'Critical - over 90% used'
+                            : getUsagePercentage(
+                                  selectedSubscription.usedRequests,
+                                  selectedSubscription.quotaRequests,
+                                ) >= 75
+                              ? 'High - over 75% used'
+                              : 'Normal - under 75% used'}
                         </span>
                       </FlexItem>
                     </Flex>
@@ -545,11 +564,18 @@ const SubscriptionsPage: React.FC = () => {
                           aria-label={`Token usage progress: ${selectedSubscription.usedTokens.toLocaleString()} of ${selectedSubscription.quotaTokens.toLocaleString()} tokens used (${getUsagePercentage(selectedSubscription.usedTokens, selectedSubscription.quotaTokens)}%)`}
                         />
                         <span className="pf-v6-screen-reader">
-                          Usage level: {getUsagePercentage(selectedSubscription.usedTokens, selectedSubscription.quotaTokens) >= 90 
-                            ? 'Critical - over 90% used' 
-                            : getUsagePercentage(selectedSubscription.usedTokens, selectedSubscription.quotaTokens) >= 75 
-                            ? 'High - over 75% used' 
-                            : 'Normal - under 75% used'}
+                          Usage level:{' '}
+                          {getUsagePercentage(
+                            selectedSubscription.usedTokens,
+                            selectedSubscription.quotaTokens,
+                          ) >= 90
+                            ? 'Critical - over 90% used'
+                            : getUsagePercentage(
+                                  selectedSubscription.usedTokens,
+                                  selectedSubscription.quotaTokens,
+                                ) >= 75
+                              ? 'High - over 75% used'
+                              : 'Normal - under 75% used'}
                         </span>
                       </FlexItem>
                     </Flex>
@@ -619,7 +645,13 @@ const SubscriptionsPage: React.FC = () => {
               onClick={() => selectedSubscription && handleCancelSubscription(selectedSubscription)}
               isDisabled={selectedSubscription?.status === 'expired' || isCancelling}
               isLoading={isCancelling}
-              aria-label={selectedSubscription?.modelName ? t('pages.subscriptions.cancelSubscriptionForModel', { modelName: selectedSubscription.modelName }) : undefined}
+              aria-label={
+                selectedSubscription?.modelName
+                  ? t('pages.subscriptions.cancelSubscriptionForModel', {
+                      modelName: selectedSubscription.modelName,
+                    })
+                  : undefined
+              }
             >
               {isCancelling
                 ? t('pages.subscriptions.cancelling')

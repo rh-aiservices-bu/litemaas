@@ -7,7 +7,7 @@
     "dev": "tsx watch src/index.ts | pino-pretty",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "vitest",
+    "test": "vitest run",
     "dev:oauth": "env-cmd -f .env.oauth.local tsx watch src/index.ts | pino-pretty",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",

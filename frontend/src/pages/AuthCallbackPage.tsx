@@ -14,7 +14,8 @@ const AuthCallbackPage: React.FC = () => {
         // Get token from URL fragment
         const hash = window.location.hash.substring(1);
         const params = new URLSearchParams(hash);
-        const token = params.get('token');
+        const rawToken = params.get('token');
+        const token = rawToken ? decodeURIComponent(rawToken).trim() : null;
         params.get('expires_in'); // expires_in parameter not used
 
         if (token) {
