@@ -20,5 +20,13 @@ export default defineConfig({
       reporter: ['text', 'json', 'html', 'lcov'],
       exclude: ['node_modules/', 'dist/', 'coverage/', '**/*.d.ts', '**/*.config.ts', 'src/types/'],
     },
+    env: {
+      NODE_ENV: 'test',
+      JWT_SECRET: 'test-secret-key-for-vitest-testing',
+      DATABASE_URL: 'postgresql://test:test@localhost:5432/litemaas_test',
+      OAUTH_CLIENT_ID: 'test-client-id',
+      OAUTH_CLIENT_SECRET: 'test-client-secret',
+      OAUTH_ISSUER: 'http://localhost:8080',
+    },
   },
 });
