@@ -29,6 +29,10 @@ vi.mock('../../pages/SettingsPage', () => ({
   default: () => <div data-testid="settings-page">Settings Page</div>,
 }));
 
+vi.mock('../../pages/ChatbotPage', () => ({
+  default: () => <div data-testid="chatbot-page">Chatbot Page</div>,
+}));
+
 vi.mock('../../pages/LoginPage', () => ({
   default: () => <div data-testid="login-page">Login Page</div>,
 }));

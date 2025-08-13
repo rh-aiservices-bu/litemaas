@@ -18,6 +18,7 @@
     "subscriptions": "Abonnements",
     "apiKeys": "API-Schlüssel",
     "usage": "Nutzung",
+    "chatbot": "Chatbot-Spielplatz",
     "settings": "Einstellungen"
   },
   "pages": {
@@ -292,6 +293,172 @@
       "codeExample": {
         "role": "Benutzer",
         "content": "Hallo, Welt!"
+      }
+    },
+    "chatbot": {
+      "title": "Chatbot-Spielplatz",
+      "subtitle": "Testen und interagieren Sie mit KI-Modellen über eine direkte Chat-Oberfläche",
+      "loading": "Chatbot wird geladen...",
+      "description": "Testen Sie Ihre API-Schlüssel und Modelle mit einer interaktiven Chat-Oberfläche",
+      "configuration": {
+        "title": "Konfiguration",
+        "apiKey": "API-Schlüssel auswählen",
+        "selectApiKey": "Einen API-Schlüssel auswählen...",
+        "apiKeyPlaceholder": "Wählen Sie einen API-Schlüssel zum Testen",
+        "model": "Modell auswählen",
+        "selectModel": "Ein Modell auswählen...",
+        "modelPlaceholder": "Wählen Sie ein Modell zum Testen",
+        "advancedSettings": "Erweiterte Einstellungen",
+        "temperature": "Temperatur",
+        "temperatureDescription": "Steuert Zufälligkeit (aktuell: {{value}})",
+        "temperatureHelp": "Steuert Zufälligkeit (0=deterministisch, 2=kreativ)",
+        "maxTokens": "Max. Token",
+        "maxTokensHelp": "Maximale Antwortlänge",
+        "systemPrompt": "System-Prompt",
+        "systemPromptPlaceholder": "Optionaler System-Prompt zur Steuerung des KI-Verhaltens...",
+        "systemPromptHelp": "Verhalten des Assistenten festlegen",
+        "streaming": "Echtzeit-Streaming",
+        "streamingEnabled": "Echtzeit-Streaming aktivieren",
+        "modelsLabel": "Modelle"
+      },
+      "quickTests": {
+        "title": "Schnelltests",
+        "codeGen": "Code-Generierung",
+        "translation": "Übersetzung",
+        "summary": "Zusammenfassung",
+        "jsonFormat": "JSON-Antwort",
+        "creative": "Kreatives Schreiben",
+        "problemSolving": "Problemlösung",
+        "dataAnalysis": "Datenanalyse",
+        "roleplay": "Rollenspiel",
+        "custom": "Meine Prompts"
+      },
+      "chat": {
+        "welcomeTitle": "Modell-Test-Assistent",
+        "welcomeDescription": "Beginnen Sie eine Unterhaltung, um Ihr ausgewähltes Modell und den API-Schlüssel zu testen",
+        "selectModelFirst": "Wählen Sie einen API-Schlüssel und ein Modell aus, um mit dem Chatten zu beginnen",
+        "placeholder": "Geben Sie hier Ihre Nachricht ein...",
+        "configureFirst": "Konfigurieren Sie zuerst API-Schlüssel und Modell",
+        "send": "Senden",
+        "clear": "Löschen",
+        "clearConversation": "Unterhaltung löschen",
+        "export": "Exportieren",
+        "savePrompt": "Prompt speichern",
+        "sending": "Wird gesendet...",
+        "stop": "Stoppen",
+        "stopGeneration": "Generierung stoppen",
+        "streamingInProgress": "Streaming läuft...",
+        "emptyConversation": "Noch keine Nachrichten. Beginnen Sie, indem Sie unten eine Nachricht eingeben."
+      },
+      "welcome": {
+        "title": "Willkommen beim Chatbot-Spielplatz",
+        "description": "Wählen Sie einen API-Schlüssel und ein Modell im Konfigurationspanel oben aus, dann beginnen Sie zu chatten, um Ihre KI-Modelle direkt zu testen."
+      },
+      "responseInfo": {
+        "title": "Antwort-Metriken",
+        "tokens": "Token",
+        "promptTokens": "Prompt",
+        "completionTokens": "Vervollständigung",
+        "totalTokens": "Gesamt",
+        "responseTime": "Antwortzeit",
+        "tokenUsage": "Token-Verwendung",
+        "estimatedCost": "Geschätzte Kosten",
+        "timeToFirstToken": "Zeit bis zum ersten Token",
+        "tokensPerSecond": "Token/Sekunde",
+        "tokensPerSecondUnit": "Token/s",
+        "prompt": "Prompt",
+        "completion": "Vervollständigung",
+        "viewRaw": "Rohe Antwort anzeigen",
+        "hideRaw": "Rohe Antwort ausblenden",
+        "noData": "Noch keine Antwort-Metriken verfügbar",
+        "noResponse": "Keine Antwortdaten verfügbar"
+      },
+      "export": {
+        "title": "Unterhaltung exportieren",
+        "format": "Format auswählen",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "download": "Herunterladen",
+        "cancel": "Abbrechen",
+        "filename": "Dateiname"
+      },
+      "savePromptModal": {
+        "title": "Prompt speichern",
+        "name": "Prompt-Name",
+        "namePlaceholder": "Geben Sie einen Namen für diesen Prompt ein",
+        "description": "Beschreibung (optional)",
+        "descriptionPlaceholder": "Beschreiben Sie, wofür dieser Prompt ist",
+        "save": "Speichern",
+        "cancel": "Abbrechen"
+      },
+      "prompts": {
+        "builtIn": "Eingebaute Vorlagen",
+        "custom": "Meine gespeicherten Prompts",
+        "noCustomPrompts": "Noch keine gespeicherten Prompts",
+        "usePrompt": "Diesen Prompt verwenden",
+        "deletePrompt": "Prompt löschen",
+        "confirmDelete": "Sind Sie sicher, dass Sie diesen Prompt löschen möchten?"
+      },
+      "validation": {
+        "noApiKey": "Bitte wählen Sie einen API-Schlüssel",
+        "noModel": "Bitte wählen Sie ein Modell",
+        "emptyMessage": "Bitte geben Sie eine Nachricht ein",
+        "promptNameRequired": "Prompt-Name ist erforderlich",
+        "promptNameExists": "Ein Prompt mit diesem Namen existiert bereits"
+      },
+      "errors": {
+        "requestFailed": "Anfrage fehlgeschlagen",
+        "invalidResponse": "Ungültige Antwort vom Server",
+        "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+        "authError": "Authentifizierung fehlgeschlagen. Bitte überprüfen Sie Ihren API-Schlüssel.",
+        "rateLimitError": "Ratenlimit überschritten. Bitte warten Sie und versuchen Sie es erneut.",
+        "validationError": "Validierungsfehler. Bitte überprüfen Sie Ihre Eingabe.",
+        "serverError": "Serverfehler. Bitte versuchen Sie es später erneut.",
+        "timeoutError": "Anfrage-Timeout. Bitte versuchen Sie es erneut.",
+        "unexpectedError": "Ein unerwarteter Fehler ist aufgetreten",
+        "keyRetrievalFailed": "Fehler beim Abrufen des API-Schlüssels",
+        "keyRetrievalFailedDesc": "Der vollständige API-Schlüssel konnte nicht abgerufen werden. Bitte überprüfen Sie Ihre Authentifizierung und versuchen Sie es erneut.",
+        "loadDataFailed": "Daten konnten nicht geladen werden",
+        "loadModelsFailed": "Modelle konnten nicht geladen werden",
+        "sendFailed": "Nachricht konnte nicht gesendet werden",
+        "chatError": "Chat-Fehler"
+      },
+      "notifications": {
+        "promptSaved": "Prompt gespeichert",
+        "promptSavedDesc": "Ihr Prompt wurde erfolgreich gespeichert",
+        "promptDeleted": "Prompt gelöscht",
+        "promptDeletedDesc": "Der Prompt wurde gelöscht",
+        "conversationCleared": "Unterhaltung gelöscht",
+        "conversationClearedDesc": "Chat-Verlauf wurde gelöscht",
+        "conversationExported": "Unterhaltung exportiert",
+        "conversationExportedDesc": "Ihre Unterhaltung wurde erfolgreich exportiert",
+        "messageSent": "Nachricht gesendet",
+        "apiError": "API-Fehler",
+        "keyRetrieved": "API-Schlüssel abgerufen",
+        "keyRetrievedDesc": "Ihr vollständiger API-Schlüssel wurde sicher abgerufen",
+        "savePromptError": "Fehler beim Speichern des Prompts",
+        "deletePromptError": "Fehler beim Löschen des Prompts",
+        "exportError": "Export-Fehler"
+      },
+      "success": {
+        "messageSent": "Nachricht gesendet",
+        "responseReceived": "Antwort erfolgreich erhalten",
+        "conversationCleared": "Unterhaltung gelöscht"
+      },
+      "accessibility": {
+        "configurationPanel": "Konfigurationspanel für Chatbot-Einstellungen",
+        "chatInterface": "Chat-Oberfläche zum Testen von AI-Modellen",
+        "responseInfoPanel": "Antwort-Informationspanel mit Metriken",
+        "messageHistory": "Nachrichtenverlauf",
+        "sendMessage": "Nachricht an AI-Modell senden",
+        "clearConversation": "Alle Nachrichten in der Unterhaltung löschen",
+        "exportConversation": "Unterhaltung in Datei exportieren",
+        "saveCurrentPrompt": "Aktuelle Nachricht als Prompt-Vorlage speichern",
+        "selectApiKey": "API-Schlüssel für Authentifizierung auswählen",
+        "selectModel": "AI-Modell zum Testen auswählen",
+        "adjustTemperature": "Temperatur für Antwort-Kreativität anpassen",
+        "setMaxTokens": "Maximale Token für Antwortlänge festlegen",
+        "enterSystemPrompt": "System-Prompt eingeben, um Modellverhalten zu steuern"
       }
     },
     "usage": {

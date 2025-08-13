@@ -18,6 +18,7 @@
     "subscriptions": "订阅",
     "apiKeys": "API密钥",
     "usage": "使用情况",
+    "chatbot": "聊天机器人游乐场",
     "settings": "设置"
   },
   "pages": {
@@ -292,6 +293,172 @@
       "codeExample": {
         "role": "用户",
         "content": "你好，世界！"
+      }
+    },
+    "chatbot": {
+      "title": "聊天机器人游乐场",
+      "subtitle": "使用直接聊天界面测试和与AI模型交互",
+      "loading": "加载聊天机器人中...",
+      "description": "使用交互式聊天界面测试您的API密钥和模型",
+      "configuration": {
+        "title": "配置",
+        "apiKey": "选择API密钥",
+        "apiKeyPlaceholder": "选择要测试的API密钥",
+        "model": "选择模型",
+        "modelPlaceholder": "选择要测试的模型",
+        "advancedSettings": "高级设置",
+        "temperature": "温度",
+        "temperatureHelp": "控制随机性（0=确定性，2=创造性）",
+        "maxTokens": "最大令牌数",
+        "maxTokensHelp": "最大响应长度",
+        "systemPrompt": "系统提示",
+        "systemPromptHelp": "设置助手行为",
+        "systemPromptPlaceholder": "输入系统提示（可选）",
+        "streaming": "流式传输",
+        "streamingEnabled": "启用实时流式传输",
+        "modelsLabel": "模型",
+        "selectApiKey": "选择API密钥...",
+        "selectModel": "选择模型...",
+        "temperatureDescription": "控制随机性（当前：{{value}}）"
+      },
+      "quickTests": {
+        "title": "快速测试",
+        "codeGen": "代码生成",
+        "translation": "翻译",
+        "summary": "摘要",
+        "jsonFormat": "JSON响应",
+        "creative": "创意写作",
+        "problemSolving": "问题解决",
+        "dataAnalysis": "数据分析",
+        "roleplay": "角色扮演",
+        "custom": "我的提示"
+      },
+      "chat": {
+        "welcomeTitle": "模型测试助手",
+        "welcomeDescription": "开始对话来测试您选择的模型和API密钥",
+        "placeholder": "输入您的消息...",
+        "send": "发送",
+        "clear": "清除聊天",
+        "export": "导出",
+        "savePrompt": "保存提示",
+        "sending": "发送中...",
+        "emptyConversation": "暂无消息。请在下方输入消息开始对话。",
+        "clearConversation": "清除对话",
+        "configureFirst": "请先配置API密钥和模型",
+        "selectModelFirst": "请选择API密钥和模型以开始聊天",
+        "stop": "停止",
+        "stopGeneration": "停止生成",
+        "streamingInProgress": "流式传输进行中..."
+      },
+      "responseInfo": {
+        "title": "响应指标",
+        "tokens": "令牌",
+        "promptTokens": "提示",
+        "completionTokens": "完成",
+        "totalTokens": "总计",
+        "responseTime": "响应时间",
+        "tokenUsage": "令牌使用",
+        "estimatedCost": "预估成本",
+        "timeToFirstToken": "到第一个令牌的时间",
+        "tokensPerSecond": "令牌/秒",
+        "tokensPerSecondUnit": "令牌/秒",
+        "prompt": "提示",
+        "completion": "完成",
+        "viewRaw": "查看原始响应",
+        "hideRaw": "隐藏原始响应",
+        "noData": "暂无响应指标",
+        "noResponse": "暂无可用的响应数据"
+      },
+      "export": {
+        "title": "导出对话",
+        "format": "选择格式",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "download": "下载",
+        "cancel": "取消",
+        "filename": "文件名"
+      },
+      "savePromptModal": {
+        "title": "保存提示",
+        "name": "提示名称",
+        "namePlaceholder": "为此提示输入名称",
+        "description": "描述（可选）",
+        "descriptionPlaceholder": "描述此提示的用途",
+        "save": "保存",
+        "cancel": "取消"
+      },
+      "prompts": {
+        "builtIn": "内置模板",
+        "custom": "我保存的提示",
+        "noCustomPrompts": "暂无保存的提示",
+        "usePrompt": "使用此提示",
+        "deletePrompt": "删除提示",
+        "confirmDelete": "您确定要删除此提示吗？"
+      },
+      "validation": {
+        "noApiKey": "请选择API密钥",
+        "noModel": "请选择模型",
+        "emptyMessage": "请输入消息",
+        "promptNameRequired": "提示名称为必填项",
+        "promptNameExists": "此名称的提示已存在"
+      },
+      "errors": {
+        "requestFailed": "请求失败",
+        "invalidResponse": "服务器返回无效响应",
+        "networkError": "网络错误。请检查您的连接并重试。",
+        "authError": "身份验证失败。请检查您的API密钥。",
+        "rateLimitError": "速率限制超出。请稍后重试。",
+        "validationError": "验证错误。请检查您的输入。",
+        "serverError": "服务器错误。请稍后重试。",
+        "timeoutError": "请求超时。请重试。",
+        "unexpectedError": "发生了意外错误",
+        "keyRetrievalFailed": "获取API密钥失败",
+        "keyRetrievalFailedDesc": "无法获取完整的API密钥。请检查您的身份验证并重试。",
+        "loadDataFailed": "加载数据失败",
+        "loadModelsFailed": "加载模型失败",
+        "sendFailed": "发送消息失败",
+        "chatError": "聊天错误"
+      },
+      "notifications": {
+        "promptSaved": "提示已保存",
+        "promptSavedDesc": "您的提示已成功保存",
+        "promptDeleted": "提示已删除",
+        "promptDeletedDesc": "提示已被删除",
+        "conversationCleared": "对话已清除",
+        "conversationClearedDesc": "聊天记录已被清除",
+        "conversationExported": "对话已导出",
+        "conversationExportedDesc": "您的对话已成功导出",
+        "messageSent": "消息已发送",
+        "apiError": "API错误",
+        "keyRetrieved": "API密钥已获取",
+        "keyRetrievedDesc": "您的完整API密钥已安全获取",
+        "savePromptError": "保存提示错误",
+        "deletePromptError": "删除提示错误",
+        "exportError": "导出错误"
+      },
+      "success": {
+        "messageSent": "消息已发送",
+        "responseReceived": "响应已成功接收",
+        "conversationCleared": "对话已清除"
+      },
+      "welcome": {
+        "title": "欢迎使用聊天机器人游乐场",
+        "description": "从上方的配置面板选择API密钥和模型，然后开始聊天以直接测试您的AI模型"
+      },
+      "accessibility": {
+        "configurationPanel": "聊天机器人设置的配置面板",
+        "chatInterface": "用于测试AI模型的聊天界面",
+        "responseInfoPanel": "显示指标的响应信息面板",
+        "messageHistory": "消息历史",
+        "sendMessage": "向AI模型发送消息",
+        "clearConversation": "清除对话中的所有消息",
+        "exportConversation": "将对话导出为文件",
+        "saveCurrentPrompt": "将当前消息保存为提示模板",
+        "selectApiKey": "选择用于身份验证的API密钥",
+        "selectModel": "选择用于测试的AI模型",
+        "adjustTemperature": "调整温度以控制响应创造性",
+        "setMaxTokens": "设置响应长度的最大令牌数",
+        "enterSystemPrompt": "输入系统提示以指导模型行为"
       }
     },
     "usage": {

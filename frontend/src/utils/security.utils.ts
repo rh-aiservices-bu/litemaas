@@ -173,7 +173,7 @@ export const sanitizeModelName = (modelName: string): string => {
   }
 
   // Extract content from HTML tags while preserving all content inside tags
-  let sanitized = modelName
+  const sanitized = modelName
     .replace(/<([^>]+)>/g, (_match, content) => {
       // Extract all content from inside tags (tag name, attributes, etc.)
       return content.replace(/[=/]/g, ''); // Remove = and / signs but keep the rest

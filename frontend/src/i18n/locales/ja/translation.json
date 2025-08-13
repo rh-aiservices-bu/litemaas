@@ -18,6 +18,7 @@
     "subscriptions": "サブスクリプション",
     "apiKeys": "APIキー",
     "usage": "使用状況",
+    "chatbot": "チャットボットプレイグラウンド",
     "settings": "設定"
   },
   "pages": {
@@ -292,6 +293,172 @@
       "codeExample": {
         "role": "ユーザー",
         "content": "こんにちは、世界！"
+      }
+    },
+    "chatbot": {
+      "title": "チャットボットプレイグラウンド",
+      "subtitle": "直接チャットインターフェースを使用してAIモデルをテストおよび対話",
+      "loading": "チャットボットを読み込み中...",
+      "description": "インタラクティブなチャットインターフェースでAPIキーとモデルをテスト",
+      "configuration": {
+        "title": "設定",
+        "apiKey": "APIキーを選択",
+        "apiKeyPlaceholder": "テストするAPIキーを選択",
+        "model": "モデルを選択",
+        "modelPlaceholder": "テストするモデルを選択",
+        "advancedSettings": "詳細設定",
+        "temperature": "温度",
+        "temperatureHelp": "ランダム性を制御（0=決定論的、2=創造的）",
+        "maxTokens": "最大トークン",
+        "maxTokensHelp": "応答の最大長",
+        "systemPrompt": "システムプロンプト",
+        "systemPromptHelp": "アシスタントの動作を設定",
+        "systemPromptPlaceholder": "システムプロンプトを入力（オプション）",
+        "streaming": "ストリーミング",
+        "streamingEnabled": "リアルタイムストリーミングを有効にする",
+        "modelsLabel": "モデル",
+        "selectApiKey": "APIキーを選択...",
+        "selectModel": "モデルを選択...",
+        "temperatureDescription": "ランダム性を制御（現在: {{value}}）"
+      },
+      "quickTests": {
+        "title": "クイックテスト",
+        "codeGen": "コード生成",
+        "translation": "翻訳",
+        "summary": "要約",
+        "jsonFormat": "JSON応答",
+        "creative": "創作文書",
+        "problemSolving": "問題解決",
+        "dataAnalysis": "データ分析",
+        "roleplay": "ロールプレイ",
+        "custom": "マイプロンプト"
+      },
+      "chat": {
+        "welcomeTitle": "モデルテストアシスタント",
+        "welcomeDescription": "選択したモデルとAPIキーをテストするために会話を開始してください",
+        "placeholder": "メッセージを入力...",
+        "send": "送信",
+        "clear": "チャットをクリア",
+        "export": "エクスポート",
+        "savePrompt": "プロンプトを保存",
+        "sending": "送信中...",
+        "emptyConversation": "まだメッセージがありません。下にメッセージを入力して開始してください。",
+        "clearConversation": "会話をクリア",
+        "configureFirst": "最初にAPIキーとモデルを設定してください",
+        "selectModelFirst": "チャットを開始するにはAPIキーとモデルを選択してください",
+        "stop": "停止",
+        "stopGeneration": "生成を停止",
+        "streamingInProgress": "ストリーミング進行中..."
+      },
+      "responseInfo": {
+        "title": "応答メトリクス",
+        "tokens": "トークン",
+        "promptTokens": "プロンプト",
+        "completionTokens": "補完",
+        "totalTokens": "合計",
+        "responseTime": "応答時間",
+        "tokenUsage": "トークン使用量",
+        "estimatedCost": "推定コスト",
+        "timeToFirstToken": "最初のトークンまでの時間",
+        "tokensPerSecond": "トークン/秒",
+        "tokensPerSecondUnit": "トークン/秒",
+        "prompt": "プロンプト",
+        "completion": "補完",
+        "viewRaw": "生の応答を表示",
+        "hideRaw": "生の応答を隠す",
+        "noData": "まだ応答メトリクスはありません",
+        "noResponse": "利用可能な応答データがありません"
+      },
+      "export": {
+        "title": "会話をエクスポート",
+        "format": "フォーマットを選択",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "download": "ダウンロード",
+        "cancel": "キャンセル",
+        "filename": "ファイル名"
+      },
+      "savePromptModal": {
+        "title": "プロンプトを保存",
+        "name": "プロンプト名",
+        "namePlaceholder": "このプロンプトの名前を入力",
+        "description": "説明（オプション）",
+        "descriptionPlaceholder": "このプロンプトの用途を説明",
+        "save": "保存",
+        "cancel": "キャンセル"
+      },
+      "prompts": {
+        "builtIn": "組み込みテンプレート",
+        "custom": "保存したプロンプト",
+        "noCustomPrompts": "まだ保存されたプロンプトがありません",
+        "usePrompt": "このプロンプトを使用",
+        "deletePrompt": "プロンプトを削除",
+        "confirmDelete": "このプロンプトを削除してもよろしいですか？"
+      },
+      "validation": {
+        "noApiKey": "APIキーを選択してください",
+        "noModel": "モデルを選択してください",
+        "emptyMessage": "メッセージを入力してください",
+        "promptNameRequired": "プロンプト名が必要です",
+        "promptNameExists": "この名前のプロンプトが既に存在します"
+      },
+      "errors": {
+        "requestFailed": "リクエストが失敗しました",
+        "invalidResponse": "サーバーからの無効な応答",
+        "networkError": "ネットワークエラー。接続を確認して再試行してください。",
+        "authError": "認証に失敗しました。APIキーを確認してください。",
+        "rateLimitError": "レート制限を超えました。しばらく待ってから再試行してください。",
+        "validationError": "検証エラー。入力を確認してください。",
+        "serverError": "サーバーエラー。後で再試行してください。",
+        "timeoutError": "リクエストがタイムアウトしました。再試行してください。",
+        "unexpectedError": "予期しないエラーが発生しました",
+        "keyRetrievalFailed": "APIキーの取得に失敗しました",
+        "keyRetrievalFailedDesc": "完全なAPIキーを取得できませんでした。認証を確認して再試行してください。",
+        "loadDataFailed": "データの読み込みに失敗しました",
+        "loadModelsFailed": "モデルの読み込みに失敗しました",
+        "sendFailed": "メッセージの送信に失敗しました",
+        "chatError": "チャットエラー"
+      },
+      "notifications": {
+        "promptSaved": "プロンプト保存完了",
+        "promptSavedDesc": "プロンプトが正常に保存されました",
+        "promptDeleted": "プロンプト削除完了",
+        "promptDeletedDesc": "プロンプトが削除されました",
+        "conversationCleared": "会話をクリア",
+        "conversationClearedDesc": "チャット履歴がクリアされました",
+        "conversationExported": "会話をエクスポート",
+        "conversationExportedDesc": "会話が正常にエクスポートされました",
+        "messageSent": "メッセージ送信完了",
+        "apiError": "APIエラー",
+        "keyRetrieved": "APIキー取得完了",
+        "keyRetrievedDesc": "完全なAPIキーが安全に取得されました",
+        "savePromptError": "プロンプト保存エラー",
+        "deletePromptError": "プロンプト削除エラー",
+        "exportError": "エクスポートエラー"
+      },
+      "success": {
+        "messageSent": "メッセージが送信されました",
+        "responseReceived": "レスポンスが正常に受信されました",
+        "conversationCleared": "会話がクリアされました"
+      },
+      "welcome": {
+        "title": "チャットボットプレイグラウンドへようこそ",
+        "description": "上の設定パネルからAPIキーとモデルを選択し、AIモデルを直接テストするためにチャットを開始してください"
+      },
+      "accessibility": {
+        "configurationPanel": "チャットボット設定用の設定パネル",
+        "chatInterface": "AIモデルをテストするためのチャットインターフェース",
+        "responseInfoPanel": "メトリクスを表示する応答情報パネル",
+        "messageHistory": "メッセージ履歴",
+        "sendMessage": "AIモデルにメッセージを送信",
+        "clearConversation": "会話内のすべてのメッセージをクリア",
+        "exportConversation": "会話をファイルにエクスポート",
+        "saveCurrentPrompt": "現在のメッセージをプロンプトテンプレートとして保存",
+        "selectApiKey": "認証用のAPIキーを選択",
+        "selectModel": "テスト用のAIモデルを選択",
+        "adjustTemperature": "応答の創造性のために温度を調整",
+        "setMaxTokens": "応答の長さの最大トークンを設定",
+        "enterSystemPrompt": "モデルの動作を導くためのシステムプロンプトを入力"
       }
     },
     "usage": {

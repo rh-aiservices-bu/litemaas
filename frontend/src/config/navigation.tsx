@@ -5,12 +5,14 @@ import {
   KeyIcon,
   ChartLineIcon,
   CogIcon,
+  ChatIcon,
 } from '@patternfly/react-icons';
 
 import HomePage from '../pages/HomePage';
 import ModelsPage from '../pages/ModelsPage';
 import SubscriptionsPage from '../pages/SubscriptionsPage';
 import ApiKeysPage from '../pages/ApiKeysPage';
+import ChatbotPage from '../pages/ChatbotPage';
 import UsagePage from '../pages/UsagePage';
 import SettingsPage from '../pages/SettingsPage';
 
@@ -53,6 +55,13 @@ export const appConfig: AppConfig = {
           icon: KeyIcon,
         },
         {
+          id: 'chatbot',
+          path: '/chatbot',
+          element: ChatbotPage,
+          label: 'nav.chatbot',
+          icon: ChatIcon,
+        },
+        {
           id: 'usage',
           path: '/usage',
           element: UsagePage,
@@ -93,6 +102,12 @@ export const appConfig: AppConfig = {
       label: 'nav.apiKeys',
       path: '/api-keys',
       icon: KeyIcon,
+    },
+    {
+      id: 'chatbot',
+      label: 'nav.chatbot',
+      path: '/chatbot',
+      icon: ChatIcon,
     },
     {
       id: 'usage',

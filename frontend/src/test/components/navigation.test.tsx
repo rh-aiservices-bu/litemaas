@@ -27,6 +27,10 @@ vi.mock('../../pages/SettingsPage', () => ({
   default: () => <div>Settings Page</div>,
 }));
 
+vi.mock('../../pages/ChatbotPage', () => ({
+  default: () => <div>Chatbot Page</div>,
+}));
+
 // Mock PatternFly icons
 vi.mock('@patternfly/react-icons', () => ({
   HomeIcon: () => <svg data-testid="home-icon" />,
@@ -35,6 +39,7 @@ vi.mock('@patternfly/react-icons', () => ({
   KeyIcon: () => <svg data-testid="key-icon" />,
   ChartLineIcon: () => <svg data-testid="chart-line-icon" />,
   CogIcon: () => <svg data-testid="cog-icon" />,
+  ChatIcon: () => <svg data-testid="chat-icon" />,
 }));
 
 describe('Navigation Configuration', () => {
@@ -49,7 +54,7 @@ describe('Navigation Configuration', () => {
     const mainGroup = appConfig.routes[0] as AppRouteGroup;
     expect(mainGroup.id).toBe('main');
     expect(mainGroup.label).toBe('Main');
-    expect(mainGroup.routes).toHaveLength(5); // Home, Models, Subscriptions, API Keys, Usage
+    expect(mainGroup.routes).toHaveLength(6); // Home, Models, Subscriptions, API Keys, Chatbot, Usage
 
     const settingsRoute = appConfig.routes[1] as AppRoute;
     expect(settingsRoute.id).toBe('settings');
@@ -59,7 +64,7 @@ describe('Navigation Configuration', () => {
 
   it('has correct navigation structure', () => {
     expect(appConfig.navigation).toBeDefined();
-    expect(appConfig.navigation).toHaveLength(5); // Home, Models, Subscriptions, API Keys, Usage (Settings commented out)
+    expect(appConfig.navigation).toHaveLength(6); // Home, Models, Subscriptions, API Keys, Chatbot, Usage (Settings commented out)
   });
 
   describe('Route Configuration', () => {
@@ -215,6 +220,7 @@ describe('Navigation Configuration', () => {
         'nav.models',
         'nav.subscriptions',
         'nav.apiKeys',
+        'nav.chatbot',
         'nav.usage',
         'nav.settings',
       ];
@@ -236,6 +242,7 @@ describe('Navigation Configuration', () => {
         'nav.models',
         'nav.subscriptions',
         'nav.apiKeys',
+        'nav.chatbot',
         'nav.usage',
       ];
 

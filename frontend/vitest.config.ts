@@ -6,6 +6,9 @@ export default defineConfig({
   plugins: [react()],
   // Cache configuration moved to root level
   cacheDir: 'node_modules/.vitest',
+  ssr: {
+    noExternal: ['@patternfly/react-icons'],
+  },
   test: {
     globals: true,
     environment: 'jsdom',
@@ -51,6 +54,8 @@ export default defineConfig({
           '@testing-library/react',
           '@testing-library/user-event',
           'react-query',
+          // Handle PatternFly icons ESM module resolution issues
+          '@patternfly/react-icons',
         ],
       },
     },
@@ -118,6 +123,7 @@ export default defineConfig({
     ],
   },
   resolve: {
+    extensions: ['.js', '.jsx', '.ts', '.tsx', '.mjs', '.json'],
     alias: {
       '@': '/src',
       // Ensure deep CSS imports from PatternFly map to asset mock too

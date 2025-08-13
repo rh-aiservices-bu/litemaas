@@ -18,6 +18,7 @@
     "subscriptions": "Subscriptions",
     "apiKeys": "API Keys",
     "usage": "Usage",
+    "chatbot": "Chatbot Playground",
     "settings": "Settings"
   },
   "pages": {
@@ -451,6 +452,184 @@
       "buttons": {
         "savePreferences": "Save Preferences",
         "updateConfiguration": "Update Configuration"
+      }
+    },
+    "chatbot": {
+      "title": "Chatbot Playground",
+      "subtitle": "Test and interact with AI models using a direct chat interface",
+      "description": "Test your API keys and models with a real-time chat interface",
+      "loading": "Loading chatbot...",
+      "configuration": {
+        "title": "Configuration",
+        "apiKey": "API Key",
+        "selectApiKey": "Select an API key...",
+        "model": "Model",
+        "selectModel": "Select a model...",
+        "temperature": "Temperature",
+        "temperatureDescription": "Controls randomness (current: {{value}})",
+        "maxTokens": "Max Tokens",
+        "systemPrompt": "System Prompt",
+        "systemPromptPlaceholder": "Optional system prompt to guide the AI's behavior...",
+        "streaming": "Streaming",
+        "streamingEnabled": "Enable real-time streaming",
+        "modelsLabel": "models",
+        "advancedSettings": "Advanced Settings",
+        "apiKeyPlaceholder": "Select an API key for testing...",
+        "modelPlaceholder": "Choose a model to chat with...",
+        "temperatureHelp": "Controls randomness in responses (0=deterministic, 2=creative)",
+        "maxTokensHelp": "Maximum number of tokens to generate",
+        "systemPromptHelp": "Instructions to guide the AI's behavior and responses"
+      },
+      "chat": {
+        "selectModelFirst": "Select an API key and model to start chatting",
+        "placeholder": "Type your message here...",
+        "configureFirst": "Configure API key and model first",
+        "clear": "Clear",
+        "clearConversation": "Clear conversation",
+        "send": "Send",
+        "sending": "Sending...",
+        "stop": "Stop",
+        "stopGeneration": "Stop generation",
+        "streamingInProgress": "Streaming in progress...",
+        "emptyConversation": "No messages yet. Start a conversation by typing a message above.",
+        "export": "Export",
+        "savePrompt": "Save Prompt",
+        "welcomeTitle": "Welcome to the AI Chat Interface",
+        "welcomeDescription": "Select an API key and model from the configuration panel to start testing your AI models"
+      },
+      "welcome": {
+        "title": "Welcome to the Chatbot Playground",
+        "description": "Select an API key and model from the configuration panel above, then start chatting to test your AI models directly."
+      },
+      "responseInfo": {
+        "title": "Response Metrics",
+        "responseTime": "Response Time",
+        "tokenUsage": "Token Usage",
+        "estimatedCost": "Estimated Cost",
+        "noData": "No response metrics available yet",
+        "timeToFirstToken": "Time to First Token",
+        "tokensPerSecond": "Tokens/Second",
+        "tokensPerSecondUnit": "tokens/s",
+        "prompt": "prompt",
+        "completion": "completion"
+      },
+      "errors": {
+        "loadDataFailed": "Failed to Load Data",
+        "loadModelsFailed": "Failed to Load Models",
+        "sendFailed": "Failed to Send Message",
+        "chatError": "Chat Error",
+        "keyRetrievalFailed": "Failed to retrieve API key",
+        "keyRetrievalFailedDesc": "Unable to retrieve the full API key. Please check your authentication and try again.",
+        "requestFailed": "Request failed",
+        "invalidResponse": "Invalid response from server",
+        "networkError": "Network error. Please check your connection and try again.",
+        "authError": "Authentication failed. Please check your API key.",
+        "rateLimitError": "Rate limit exceeded. Please wait and try again.",
+        "validationError": "Validation error. Please check your input.",
+        "serverError": "Server error. Please try again later.",
+        "timeoutError": "Request timeout. Please try again.",
+        "unexpectedError": "An unexpected error occurred"
+      },
+      "success": {
+        "messageSent": "Message Sent",
+        "responseReceived": "Response received successfully",
+        "conversationCleared": "Conversation Cleared"
+      },
+      "quickTests": {
+        "title": "Quick Tests",
+        "codeGen": "Code Generation",
+        "translation": "Translation",
+        "summary": "Summarization",
+        "jsonFormat": "JSON Format",
+        "creative": "Creative Writing",
+        "problemSolving": "Problem Solving",
+        "dataAnalysis": "Data Analysis",
+        "roleplay": "Role Playing",
+        "custom": "Custom Prompts"
+      },
+      "prompts": {
+        "builtIn": "Built-in Templates",
+        "custom": "Custom Saved Prompts",
+        "noCustomPrompts": "No custom prompts saved",
+        "usePrompt": "Use This Prompt",
+        "deletePrompt": "Delete Prompt",
+        "confirmDelete": "Are you sure you want to delete this prompt?"
+      },
+      "export": {
+        "title": "Export Conversation",
+        "format": "Select Format",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "download": "Download",
+        "cancel": "Cancel",
+        "filename": "Filename"
+      },
+      "savePromptModal": {
+        "title": "Save Prompt",
+        "name": "Prompt Name",
+        "namePlaceholder": "Enter a name for this prompt",
+        "description": "Description (optional)",
+        "descriptionPlaceholder": "Describe what this prompt is for",
+        "save": "Save",
+        "cancel": "Cancel"
+      },
+      "validation": {
+        "noApiKey": "Please select an API key",
+        "noModel": "Please select a model",
+        "emptyMessage": "Please enter a message",
+        "promptNameRequired": "Prompt name is required",
+        "promptNameExists": "A prompt with this name already exists"
+      },
+      "notifications": {
+        "promptSaved": "Prompt Saved",
+        "promptSavedDesc": "Your custom prompt has been saved successfully",
+        "promptDeleted": "Prompt Deleted",
+        "promptDeletedDesc": "The prompt has been removed",
+        "conversationCleared": "Conversation Cleared",
+        "conversationClearedDesc": "Chat history has been cleared",
+        "conversationExported": "Conversation Exported",
+        "conversationExportedDesc": "Your conversation has been exported successfully",
+        "messageSent": "Message Sent",
+        "apiError": "API Error",
+        "keyRetrieved": "API Key Retrieved",
+        "keyRetrievedDesc": "Your full API key has been retrieved securely",
+        "savePromptError": "Save Prompt Error",
+        "deletePromptError": "Delete Prompt Error",
+        "exportError": "Export Error"
+      },
+      "responseInfo": {
+        "title": "Response Metrics",
+        "responseTime": "Response Time",
+        "tokenUsage": "Token Usage",
+        "estimatedCost": "Estimated Cost",
+        "noData": "No response metrics available yet",
+        "timeToFirstToken": "Time to First Token",
+        "tokensPerSecond": "Tokens/Second",
+        "tokensPerSecondUnit": "tokens/s",
+        "prompt": "prompt",
+        "completion": "completion",
+        "completionTokens": "Completion",
+        "promptTokens": "Prompt",
+        "tokens": "Tokens",
+        "totalTokens": "Total",
+        "hideRaw": "Hide Raw Response",
+        "viewRaw": "View Raw Response",
+        "noResponse": "No response data available"
+      },
+      "accessibility": {
+        "configurationPanel": "Configuration panel for chatbot settings",
+        "chatInterface": "Chat interface for testing AI models",
+        "responseInfoPanel": "Response metrics panel showing performance data",
+        "messageHistory": "Message history",
+        "sendMessage": "Send message to AI model",
+        "clearConversation": "Clear all messages in conversation",
+        "exportConversation": "Export conversation to file",
+        "saveCurrentPrompt": "Save current prompt as template",
+        "selectApiKey": "Select API key for authentication",
+        "selectModel": "Select AI model for testing",
+        "adjustTemperature": "Adjust temperature for response creativity",
+        "setMaxTokens": "Set maximum tokens for response length",
+        "enterSystemPrompt": "Enter system prompt to guide AI behavior"
       }
     }
   },
