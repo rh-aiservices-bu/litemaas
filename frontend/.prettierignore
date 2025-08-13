@@ -1,0 +1,18 @@
+# Ignore node_modules
+node_modules/
+
+# Ignore build artifacts
+build/
+dist/
+out/
+
+# Ignore generated files or caches
+.cache/
+.next/ # For Next.js projects
+.parcel-cache/ # For Parcel projects
+
+# Ignore log files
+*.log
+
+# Ignore coverage reports
+coverage/

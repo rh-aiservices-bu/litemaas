@@ -35,57 +35,68 @@ const Root = () => (
   </QueryClientProvider>
 );
 
-export const router = createBrowserRouter([
+export const router = createBrowserRouter(
+  [
+    {
+      path: '/',
+      element: <Root />,
+      children: [
+        {
+          path: '/',
+          element: (
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          ),
+          children: [
+            {
+              index: true,
+              element: <Navigate to="/home" replace />,
+            },
+            {
+              path: 'home',
+              element: <HomePage />,
+            },
+            {
+              path: 'models',
+              element: <ModelsPage />,
+            },
+            {
+              path: 'subscriptions',
+              element: <SubscriptionsPage />,
+            },
+            {
+              path: 'api-keys',
+              element: <ApiKeysPage />,
+            },
+            {
+              path: 'usage',
+              element: <UsagePage />,
+            },
+            {
+              path: 'settings',
+              element: <SettingsPage />,
+            },
+          ],
+        },
+        {
+          path: '/login',
+          element: <LoginPage />,
+        },
+        {
+          path: '/auth/callback',
+          element: <AuthCallbackPage />,
+        },
+      ],
+    },
+  ],
   {
-    path: '/',
-    element: <Root />,
-    children: [
-      {
-        path: '/',
-        element: (
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        ),
-        children: [
-          {
-            index: true,
-            element: <Navigate to="/home" replace />,
-          },
-          {
-            path: 'home',
-            element: <HomePage />,
-          },
-          {
-            path: 'models',
-            element: <ModelsPage />,
-          },
-          {
-            path: 'subscriptions',
-            element: <SubscriptionsPage />,
-          },
-          {
-            path: 'api-keys',
-            element: <ApiKeysPage />,
-          },
-          {
-            path: 'usage',
-            element: <UsagePage />,
-          },
-          {
-            path: 'settings',
-            element: <SettingsPage />,
-          },
-        ],
-      },
-      {
-        path: '/login',
-        element: <LoginPage />,
-      },
-      {
-        path: '/auth/callback',
-        element: <AuthCallbackPage />,
-      },
-    ],
+    future: {
+      v7_relativeSplatPath: true,
+      v7_fetcherPersist: true,
+      v7_normalizeFormMethod: true,
+      v7_partialHydration: true,
+      v7_skipActionErrorRevalidation: true,
+    },
   },
-]);
+);

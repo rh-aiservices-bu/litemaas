@@ -72,6 +72,7 @@ frontend/
 ⚠️ **MANDATORY**: Follow the [PatternFly 6 Development Guide](../docs/development/pf6-guide/README.md) as the **AUTHORITATIVE SOURCE** for all UI development.
 
 ### Essential Rules
+
 1. **Class Prefix**: ALL PatternFly classes MUST use `pf-v6-` prefix
 2. **Design Tokens**: Use semantic tokens only, never hardcode colors
 3. **Component Import**: Import from `@patternfly/react-core` v6 and other @patternfly libraries
@@ -79,6 +80,7 @@ frontend/
 5. **Table Patterns**: Follow guide's table implementation (current code may be outdated)
 
 ### Common Mistakes to Avoid
+
 ```typescript
 // ❌ WRONG - Missing pf-v6- prefix
 <div className="c-card">
@@ -96,6 +98,7 @@ style={{ color: 'var(--pf-v6-global--primary-color--100)' }}
 ## 🏗️ State Management
 
 ### React Context (Global State)
+
 ```typescript
 // AuthContext - User authentication state
 {
@@ -116,38 +119,38 @@ style={{ color: 'var(--pf-v6-global--primary-color--100)' }}
 ```
 
 ### React Query (Server State)
+
 ```typescript
 // Caching strategy
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000,    // 5 minutes
-      cacheTime: 10 * 60 * 1000,   // 10 minutes
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
       retry: 3,
-      refetchOnWindowFocus: false
-    }
-  }
+      refetchOnWindowFocus: false,
+    },
+  },
 });
 
 // Usage pattern
-const { data, isLoading, error } = useQuery(
-  ['models'],
-  () => modelsService.getAll(),
-  { enabled: isAuthenticated }
-);
+const { data, isLoading, error } = useQuery(['models'], () => modelsService.getAll(), {
+  enabled: isAuthenticated,
+});
 ```
 
 ## 🔌 API Service Layer
 
 ### Axios Configuration
+
 ```typescript
 // Base setup with interceptors
 const apiClient = axios.create({
   baseURL: '/api/v1',
   timeout: 30000,
   headers: {
-    'Content-Type': 'application/json'
-  }
+    'Content-Type': 'application/json',
+  },
 });
 
 // JWT token interceptor
@@ -161,27 +164,27 @@ apiClient.interceptors.request.use((config) => {
 
 // Error handling interceptor
 apiClient.interceptors.response.use(
-  response => response,
-  error => {
+  (response) => response,
+  (error) => {
     if (error.response?.status === 401) {
       // Redirect to login
       window.location.href = '/auth/login';
     }
     return Promise.reject(error);
-  }
+  },
 );
 ```
 
 ### Service Pattern
+
 ```typescript
 // Consistent service structure
 export const modelService = {
   getAll: () => apiClient.get<Model[]>('/models'),
   getById: (id: string) => apiClient.get<Model>(`/models/${id}`),
-  subscribe: (modelId: string, data: SubscriptionRequest) => 
+  subscribe: (modelId: string, data: SubscriptionRequest) =>
     apiClient.post<Subscription>(`/models/${modelId}/subscribe`, data),
-  unsubscribe: (modelId: string) => 
-    apiClient.delete(`/models/${modelId}/unsubscribe`)
+  unsubscribe: (modelId: string) => apiClient.delete(`/models/${modelId}/unsubscribe`),
 };
 ```
 
@@ -211,6 +214,7 @@ const routes = [
 ## 🌍 Internationalization (i18n)
 
 ### Configuration
+
 ```typescript
 i18n.use(initReactI18next).init({
   resources: { en, es, fr },
@@ -219,18 +223,19 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
   detection: {
     order: ['localStorage', 'navigator'],
-    caches: ['localStorage']
-  }
+    caches: ['localStorage'],
+  },
 });
 ```
 
 ### Usage Pattern
+
 ```typescript
 import { useTranslation } from 'react-i18next';
 
 function Component() {
   const { t } = useTranslation();
-  
+
   return (
     <div>
       <h1>{t('models.title')}</h1>
@@ -243,33 +248,34 @@ function Component() {
 ## 🎯 Component Patterns
 
 ### Page Component Structure
+
 ```typescript
 export const ModelPage: React.FC = () => {
   // Hooks
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   // React Query
   const { data: models, isLoading, error } = useQuery(
     ['models'],
     modelService.getAll
   );
-  
+
   // Local state
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
-  
+
   // Handlers
   const handleSubscribe = async (model: Model) => {
     // Implementation
   };
-  
+
   // Loading state
   if (isLoading) return <Spinner />;
-  
+
   // Error state
   if (error) return <ErrorAlert error={error} />;
-  
+
   // Main render
   return (
     <PageSection variant="light">
@@ -280,21 +286,22 @@ export const ModelPage: React.FC = () => {
 ```
 
 ### Form Handling Pattern
+
 ```typescript
 const FormComponent: React.FC = () => {
   const [formData, setFormData] = useState(initialState);
   const [errors, setErrors] = useState<ValidationErrors>({});
-  
+
   const validate = (): boolean => {
     const newErrors = validateForm(formData);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!validate()) return;
-    
+
     try {
       await apiService.submit(formData);
       showSuccessToast('Success!');
@@ -302,7 +309,7 @@ const FormComponent: React.FC = () => {
       showErrorToast('Failed to submit');
     }
   };
-  
+
   return (
     <Form onSubmit={handleSubmit}>
       {/* Form fields */}
@@ -339,13 +346,14 @@ npm run clean          # Remove build artifacts
 ## 🎨 Styling Guidelines
 
 ### CSS Organization
+
 ```css
 /* Component-specific styles */
 .app-custom-component {
   /* Use PatternFly design tokens */
   padding: var(--pf-v6-global--spacer--md);
   color: var(--pf-v6-global--Color--100);
-  
+
   /* Responsive utilities */
   @media (min-width: 768px) {
     padding: var(--pf-v6-global--spacer--lg);
@@ -353,12 +361,13 @@ npm run clean          # Remove build artifacts
 }
 
 /* Dark theme overrides */
-[data-theme="dark"] .app-custom-component {
+[data-theme='dark'] .app-custom-component {
   background: var(--pf-v6-global--BackgroundColor--dark-200);
 }
 ```
 
 ## 📊 Performance Targets
+
 - Initial load: <3s
 - Time to interactive: <5s
 - Lighthouse score: >90
@@ -368,6 +377,7 @@ npm run clean          # Remove build artifacts
 ## 🔧 Key Implementation Notes
 
 ### Authentication Flow
+
 1. User clicks "Login" → Redirect to OAuth provider
 2. OAuth callback → Receive auth code
 3. Exchange code for JWT token
@@ -375,6 +385,7 @@ npm run clean          # Remove build artifacts
 5. Set auth context → App ready
 
 ### Error Boundary Strategy
+
 ```typescript
 // Global error boundary
 <ErrorBoundary fallback={<ErrorPage />}>
@@ -388,6 +399,7 @@ npm run clean          # Remove build artifacts
 ```
 
 ### Data Fetching Patterns
+
 - **List views**: Use React Query with pagination
 - **Detail views**: Prefetch on hover, cache for navigation
 - **Forms**: Optimistic updates with rollback on error
@@ -396,6 +408,7 @@ npm run clean          # Remove build artifacts
 ## 🔗 Environment Variables
 
 Key frontend configuration:
+
 ```bash
 # API Configuration
 VITE_API_BASE_URL=http://localhost:3000/api/v1
@@ -411,6 +424,7 @@ VITE_SUPPORTED_LOCALES=en,es,fr
 ```
 
 ## 📚 Related Documentation
+
 - Root [`CLAUDE.md`](../CLAUDE.md) - Project overview
 - Backend [`CLAUDE.md`](../backend/CLAUDE.md) - Backend context
 - [`docs/development/pf6-guide/`](../docs/development/pf6-guide/) - **PatternFly 6 Guide (AUTHORITATIVE)**

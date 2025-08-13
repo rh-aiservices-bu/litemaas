@@ -9,15 +9,17 @@ This document outlines the standardized accessibility patterns implemented acros
 All buttons should have descriptive, contextual labels that clearly indicate what action will be performed and on which data:
 
 #### Good Examples:
+
 - ❌ "View" → ✅ "View details for GPT-4 subscription"
 - ❌ "Delete" → ✅ "Delete API key Production-Key"
 - ❌ "Subscribe" → ✅ "Subscribe to GPT-4 model"
 - ❌ "Export" → ✅ "Export usage data for the selected time period"
 
 #### Implementation Pattern:
+
 ```tsx
 // Use aria-label for contextual descriptions
-<Button 
+<Button
   variant="primary"
   onClick={handleAction}
   aria-label={t('pages.section.actionWithContext', { itemName: item.name })}
@@ -38,9 +40,7 @@ Cards that navigate to other pages should have descriptive aria-labels:
       selectableActionAriaLabel: t('pages.home.cards.modelsAriaLabel'),
     }}
   />
-  <CardBody>
-    {/* Card content */}
-  </CardBody>
+  <CardBody>{/* Card content */}</CardBody>
 </Card>
 ```
 
@@ -62,6 +62,7 @@ All icon-only buttons must have appropriate aria-labels:
 ## Translation Key Patterns
 
 ### Contextual Aria Labels
+
 ```json
 {
   "pages": {
@@ -75,6 +76,7 @@ All icon-only buttons must have appropriate aria-labels:
 ```
 
 ### Navigation Labels for Cards
+
 ```json
 {
   "pages": {
@@ -90,12 +92,14 @@ All icon-only buttons must have appropriate aria-labels:
 ## Modal Accessibility
 
 ### Focus Management
+
 - Set initial focus to the primary action button or first form element
 - Implement focus trap within modal
 - Restore focus to trigger element on close
 - Use `ref` for consistent focus management
 
 ### Example Implementation:
+
 ```tsx
 useEffect(() => {
   if (isModalOpen) {
@@ -120,6 +124,7 @@ useEffect(() => {
 ## Table Accessibility
 
 ### Table Headers and Captions
+
 - Use descriptive captions for screen readers
 - Provide table structure information
 - Include row/column counts
@@ -129,7 +134,7 @@ useEffect(() => {
   <caption className="pf-v6-screen-reader">
     {t('pages.section.tableCaption', {
       count: items.length,
-      description: t('pages.section.tableStructure')
+      description: t('pages.section.tableStructure'),
     })}
   </caption>
   <Thead>
@@ -143,14 +148,15 @@ useEffect(() => {
 ## Empty State Accessibility
 
 ### Screen Reader Support
+
 - Provide appropriate roles (alert, region)
 - Include hidden text for screen readers
 - Use aria-labelledby and aria-describedby
 
 ```tsx
-<EmptyState 
-  variant={EmptyStateVariant.lg} 
-  role="region" 
+<EmptyState
+  variant={EmptyStateVariant.lg}
+  role="region"
   aria-labelledby="empty-title"
   aria-describedby="empty-description"
 >
@@ -169,6 +175,7 @@ useEffect(() => {
 ## Loading State Accessibility
 
 ### Screen Reader Announcements
+
 - Use ScreenReaderAnnouncement component
 - Provide loading context
 - Set appropriate aria-busy states
@@ -186,6 +193,7 @@ useEffect(() => {
 ## Form Accessibility
 
 ### Required Fields
+
 - Mark required fields appropriately
 - Provide validation error messages
 - Use aria-invalid and aria-describedby
@@ -212,6 +220,7 @@ useEffect(() => {
 ## Error Handling Accessibility
 
 ### Error Announcements
+
 - Use assertive priority for errors
 - Provide recovery instructions
 - Include context about what failed
@@ -230,6 +239,7 @@ addNotification({
 ## Testing Guidelines
 
 ### Manual Testing Checklist
+
 - [ ] All buttons have meaningful labels
 - [ ] Tab navigation flows logically
 - [ ] Screen reader announces content correctly
@@ -238,6 +248,7 @@ addNotification({
 - [ ] All interactive elements are keyboard accessible
 
 ### Automated Testing
+
 - Use axe-core for accessibility testing
 - Test with screen readers (NVDA, JAWS, VoiceOver)
 - Verify color contrast ratios
@@ -253,18 +264,21 @@ addNotification({
 ## Implementation Status
 
 ### ✅ Completed
+
 - [x] HomePage card navigation aria-labels
 - [x] ModelsPage subscribe button context
-- [x] SubscriptionsPage view/cancel button context  
+- [x] SubscriptionsPage view/cancel button context
 - [x] ApiKeysPage already has excellent accessibility
 - [x] UsagePage export button context
 
 ### 🔄 In Progress
+
 - [ ] Complete translation keys for all languages
 - [ ] Audit remaining components for accessibility gaps
 - [ ] Add automated accessibility testing
 
 ### 📋 Future Improvements
+
 - [ ] Implement skip links for main navigation
 - [ ] Add keyboard shortcuts documentation
 - [ ] Enhance error message specificity

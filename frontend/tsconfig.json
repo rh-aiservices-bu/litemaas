@@ -13,7 +13,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "types": ["vite/client", "vitest/globals"]
+    "types": ["vite/client", "vitest"]
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]

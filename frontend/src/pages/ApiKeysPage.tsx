@@ -663,9 +663,9 @@ const ApiKeysPage: React.FC = () => {
 
       <PageSection>
         {error ? (
-          <EmptyState 
-            variant={EmptyStateVariant.lg} 
-            role="alert" 
+          <EmptyState
+            variant={EmptyStateVariant.lg}
+            role="alert"
             aria-labelledby="error-loading-title"
             aria-describedby="error-loading-description"
           >
@@ -680,8 +680,8 @@ const ApiKeysPage: React.FC = () => {
               </div>
             </EmptyStateBody>
             <EmptyStateActions>
-              <Button 
-                variant="primary" 
+              <Button
+                variant="primary"
                 onClick={loadApiKeys}
                 aria-describedby="error-loading-description"
               >
@@ -719,7 +719,7 @@ const ApiKeysPage: React.FC = () => {
                 <caption className="pf-v6-screen-reader">
                   {t('pages.apiKeys.tableHeaders.apiKeysTableCaption', {
                     count: apiKeys.length,
-                    description: t('pages.apiKeys.tableHeaders.apiKeysTableStructure')
+                    description: t('pages.apiKeys.tableHeaders.apiKeysTableStructure'),
                   })}
                 </caption>
                 <Thead>
@@ -764,7 +764,7 @@ const ApiKeysPage: React.FC = () => {
                           spaceItems={{ default: 'spaceItemsSm' }}
                         >
                           <FlexItem>
-                            <code 
+                            <code
                               style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}
                               id={`key-${apiKey.id}-description`}
                               aria-label={
@@ -923,11 +923,7 @@ const ApiKeysPage: React.FC = () => {
       >
         <ModalBody>
           <Form>
-            <FormGroup
-              label={t('pages.apiKeys.forms.name')}
-              isRequired
-              fieldId="key-name"
-            >
+            <FormGroup label={t('pages.apiKeys.forms.name')} isRequired fieldId="key-name">
               <TextInput
                 isRequired
                 type="text"
@@ -945,11 +941,7 @@ const ApiKeysPage: React.FC = () => {
                 placeholder={t('pages.apiKeys.placeholders.keyName')}
                 aria-required="true"
                 aria-invalid={formErrors.name ? 'true' : 'false'}
-                aria-describedby={
-                  formErrors.name
-                    ? 'key-name-error'
-                    : undefined
-                }
+                aria-describedby={formErrors.name ? 'key-name-error' : undefined}
                 validated={formErrors.name ? 'error' : 'default'}
               />
               {formErrors.name && (
@@ -959,10 +951,7 @@ const ApiKeysPage: React.FC = () => {
               )}
             </FormGroup>
 
-            <FormGroup
-              label={t('pages.apiKeys.forms.description')}
-              fieldId="key-description"
-            >
+            <FormGroup label={t('pages.apiKeys.forms.description')} fieldId="key-description">
               <TextInput
                 type="text"
                 id="key-description"
@@ -975,11 +964,7 @@ const ApiKeysPage: React.FC = () => {
             </FormGroup>
 
             {/* ✅ Multi-model selection */}
-            <FormGroup
-              label={t('pages.apiKeys.forms.models')}
-              isRequired
-              fieldId="key-models"
-            >
+            <FormGroup label={t('pages.apiKeys.forms.models')} isRequired fieldId="key-models">
               <Select
                 role="listbox"
                 id="key-models"
@@ -988,11 +973,7 @@ const ApiKeysPage: React.FC = () => {
                 aria-label={t('pages.apiKeys.forms.modelsAriaLabel')}
                 aria-required="true"
                 aria-invalid={formErrors.models ? 'true' : 'false'}
-                aria-describedby={
-                  formErrors.models
-                    ? 'key-models-error'
-                    : undefined
-                }
+                aria-describedby={formErrors.models ? 'key-models-error' : undefined}
                 toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
                   <MenuToggle
                     ref={toggleRef}
@@ -1001,11 +982,7 @@ const ApiKeysPage: React.FC = () => {
                     aria-expanded={isModelSelectOpen}
                     aria-haspopup="listbox"
                     aria-invalid={formErrors.models ? 'true' : 'false'}
-                    aria-describedby={
-                      formErrors.models
-                        ? 'key-models-error'
-                        : undefined
-                    }
+                    aria-describedby={formErrors.models ? 'key-models-error' : undefined}
                   >
                     {selectedModelIds.length === 0
                       ? t('pages.apiKeys.selectModels')
@@ -1273,7 +1250,7 @@ const ApiKeysPage: React.FC = () => {
                 <Table aria-label={t('pages.apiKeys.tableHeaders.keyDetails')} variant="compact">
                   <caption className="pf-v6-screen-reader">
                     {t('pages.apiKeys.tableHeaders.keyDetailsCaption', {
-                      keyName: selectedApiKey.name
+                      keyName: selectedApiKey.name,
                     })}
                   </caption>
                   <Tbody>
@@ -1463,7 +1440,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                 >
                   <caption className="pf-v6-screen-reader">
                     {t('pages.apiKeys.tableHeaders.generatedKeyDetailsCaption', {
-                      keyName: generatedKey.name
+                      keyName: generatedKey.name,
                     })}
                   </caption>
                   <Tbody>

@@ -43,13 +43,13 @@ import {
   Label,
   Stack,
 } from '@patternfly/react-core';
-import { 
-  CatalogIcon, 
-  FilterIcon, 
+import {
+  CatalogIcon,
+  FilterIcon,
   InfoCircleIcon,
   CheckCircleIcon,
   ExclamationTriangleIcon,
-  TimesCircleIcon
+  TimesCircleIcon,
 } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
 import { modelsService, Model } from '../services/models.service';
@@ -294,13 +294,16 @@ const ModelsPage: React.FC = () => {
     };
 
     return (
-      <Badge 
+      <Badge
         color={variants[availability as keyof typeof variants]}
         aria-label={`Model availability: ${statusLabels[availability as keyof typeof statusLabels] || availability}`}
       >
         <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
           <FlexItem>{icons[availability as keyof typeof icons]}</FlexItem>
-          <FlexItem>{statusLabels[availability as keyof typeof statusLabels] || availability.charAt(0).toUpperCase() + availability.slice(1)}</FlexItem>
+          <FlexItem>
+            {statusLabels[availability as keyof typeof statusLabels] ||
+              availability.charAt(0).toUpperCase() + availability.slice(1)}
+          </FlexItem>
         </Flex>
       </Badge>
     );
@@ -483,7 +486,8 @@ const ModelsPage: React.FC = () => {
                   <Card isClickable style={{ height: '100%' }}>
                     <CardHeader
                       selectableActions={{
-                        onClickAction: (event) => handleModelSelect(model, event?.currentTarget as HTMLElement),
+                        onClickAction: (event) =>
+                          handleModelSelect(model, event?.currentTarget as HTMLElement),
                         selectableActionAriaLabelledby: `clickable-model-${model.id}`,
                       }}
                     >
@@ -729,7 +733,11 @@ const ModelsPage: React.FC = () => {
               onClick={handleSubscribe}
               isLoading={isSubscribing}
               isDisabled={isSubscribing || selectedModel?.availability === 'unavailable'}
-              aria-label={selectedModel?.name ? t('pages.models.subscribeToModel', { modelName: selectedModel.name }) : undefined}
+              aria-label={
+                selectedModel?.name
+                  ? t('pages.models.subscribeToModel', { modelName: selectedModel.name })
+                  : undefined
+              }
             >
               {isSubscribing ? t('pages.models.subscribing') : t('pages.models.subscribe')}
             </Button>
