@@ -85,6 +85,34 @@
         "available": "Úir",
         "limited": "Úir siniath",
         "unavailable": "Ú-úir"
+      },
+      "categories": {
+        "languageModel": "Lammen Sador",
+        "multimodal": "Mornië Sador",
+        "imageGeneration": "Tirion Gwaith",
+        "audio": "Lindir"
+      },
+      "ariaLabels": {
+        "modelAvailability": "Sador-aear"
+      },
+      "pricing": {
+        "input": "Minno",
+        "output": "Toltha",
+        "separator": "•"
+      },
+      "units": {
+        "tokens": "fuin"
+      },
+      "modal": {
+        "subscribeInfo": "Sui velui, na-chaed le cael i fuin a na-chaed le gwaetha fuin-glass en-adar.",
+        "category": "Sír",
+        "contextLength": "Lúg Ost",
+        "tokens": "fuin",
+        "pricing": "Luin",
+        "pricingInput": "Minno",
+        "pricingOutput": "Toltha",
+        "pricingUnavailable": "Luin-uin ú-chaed",
+        "features": "Thyn"
       }
     },
     "subscriptions": {
@@ -142,6 +170,13 @@
         "suspended": "Daer",
         "expired": "Firn",
         "pending": "Dar"
+      },
+      "ariaLabels": {
+        "status": "Estar"
+      },
+      "pricing": {
+        "input": "Minno",
+        "output": "Toltha"
       }
     },
     "apiKeys": {

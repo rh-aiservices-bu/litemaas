@@ -142,7 +142,7 @@ const SubscriptionsPage: React.FC = () => {
     return (
       <Badge
         color={variants[status as keyof typeof variants]}
-        aria-label={`Status: ${statusLabels[status as keyof typeof statusLabels] || status}`}
+        aria-label={`${t('pages.subscriptions.ariaLabels.status')}: ${statusLabels[status as keyof typeof statusLabels] || status}`}
       >
         <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
           <FlexItem>{icons[status as keyof typeof icons]}</FlexItem>
@@ -171,9 +171,11 @@ const SubscriptionsPage: React.FC = () => {
     return (
       <Stack hasGutter>
         <Content component={ContentVariants.small}>
-          Input: ${inputCostPerMillion.toFixed(2)}/1M {t('pages.usage.metrics.tokens')}
+          {t('pages.subscriptions.pricing.input')}: ${inputCostPerMillion.toFixed(2)}/1M{' '}
+          {t('pages.usage.metrics.tokens')}
           <br />
-          Output: ${outputCostPerMillion.toFixed(2)}/1M {t('pages.usage.metrics.tokens')}
+          {t('pages.subscriptions.pricing.output')}: ${outputCostPerMillion.toFixed(2)}/1M{' '}
+          {t('pages.usage.metrics.tokens')}
         </Content>
       </Stack>
     );

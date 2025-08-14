@@ -85,6 +85,34 @@
         "available": "利用可能",
         "limited": "限定利用可能",
         "unavailable": "利用不可"
+      },
+      "categories": {
+        "languageModel": "言語モデル",
+        "multimodal": "マルチモーダル",
+        "imageGeneration": "画像生成",
+        "audio": "音声"
+      },
+      "ariaLabels": {
+        "modelAvailability": "モデルの利用可能性"
+      },
+      "pricing": {
+        "input": "入力",
+        "output": "出力",
+        "separator": "•"
+      },
+      "units": {
+        "tokens": "トークン"
+      },
+      "modal": {
+        "subscribeInfo": "購読することで、このモデルにアクセスでき、使用するためのAPIキーを生成できるようになります。",
+        "category": "カテゴリー",
+        "contextLength": "コンテキスト長",
+        "tokens": "トークン",
+        "pricing": "料金",
+        "pricingInput": "入力",
+        "pricingOutput": "出力",
+        "pricingUnavailable": "料金情報は利用できません",
+        "features": "機能"
       }
     },
     "subscriptions": {
@@ -142,6 +170,13 @@
         "suspended": "一時停止",
         "expired": "期限切れ",
         "pending": "保留中"
+      },
+      "ariaLabels": {
+        "status": "ステータス"
+      },
+      "pricing": {
+        "input": "入力",
+        "output": "出力"
       }
     },
     "apiKeys": {

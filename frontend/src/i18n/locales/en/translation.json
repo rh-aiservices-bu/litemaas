@@ -85,6 +85,34 @@
         "available": "Available",
         "limited": "Limited availability",
         "unavailable": "Unavailable"
+      },
+      "categories": {
+        "languageModel": "Language Model",
+        "multimodal": "Multimodal",
+        "imageGeneration": "Image Generation",
+        "audio": "Audio"
+      },
+      "ariaLabels": {
+        "modelAvailability": "Model availability"
+      },
+      "pricing": {
+        "input": "Input",
+        "output": "Output",
+        "separator": "•"
+      },
+      "units": {
+        "tokens": "tokens"
+      },
+      "modal": {
+        "subscribeInfo": "By subscribing, you'll get access to this model and can generate API keys to use it.",
+        "category": "Category",
+        "contextLength": "Context Length",
+        "tokens": "tokens",
+        "pricing": "Pricing",
+        "pricingInput": "Input",
+        "pricingOutput": "Output",
+        "pricingUnavailable": "Pricing information unavailable",
+        "features": "Features"
       }
     },
     "subscriptions": {
@@ -136,6 +164,13 @@
       "alerts": {
         "suspended": "Subscription Suspended",
         "expired": "Subscription Expired"
+      },
+      "ariaLabels": {
+        "status": "Status"
+      },
+      "pricing": {
+        "input": "Input",
+        "output": "Output"
       },
       "status": {
         "active": "Active",

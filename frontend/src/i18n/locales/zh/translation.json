@@ -85,6 +85,34 @@
         "available": "可用",
         "limited": "有限可用",
         "unavailable": "不可用"
+      },
+      "categories": {
+        "languageModel": "语言模型",
+        "multimodal": "多模态",
+        "imageGeneration": "图像生成",
+        "audio": "音频"
+      },
+      "ariaLabels": {
+        "modelAvailability": "模型可用性"
+      },
+      "pricing": {
+        "input": "输入",
+        "output": "输出",
+        "separator": "•"
+      },
+      "units": {
+        "tokens": "令牌"
+      },
+      "modal": {
+        "subscribeInfo": "通过订阅，您将获得访问此模型的权限，并可以生成用于使用它的API密钥。",
+        "category": "类别",
+        "contextLength": "上下文长度",
+        "tokens": "令牌",
+        "pricing": "定价",
+        "pricingInput": "输入",
+        "pricingOutput": "输出",
+        "pricingUnavailable": "定价信息不可用",
+        "features": "功能"
       }
     },
     "subscriptions": {
@@ -142,6 +170,13 @@
         "suspended": "已暂停",
         "expired": "已过期",
         "pending": "待处理"
+      },
+      "ariaLabels": {
+        "status": "状态"
+      },
+      "pricing": {
+        "input": "输入",
+        "output": "输出"
       }
     },
     "apiKeys": {
