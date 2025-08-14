@@ -30,9 +30,11 @@
         "subscriptionsDescription": "Gestionar tus suscripciones de modelos",
         "apiKeysDescription": "Generar y gestionar claves API",
         "usageDescription": "Monitorear tu uso de API",
+        "chatbotDescription": "Probar y experimentar con modelos de IA",
         "modelsAriaLabel": "Navegar a la página de Modelos para explorar y suscribirse a modelos de IA",
         "subscriptionsAriaLabel": "Navegar a la página de Suscripciones para gestionar tus suscripciones de modelos",
         "apiKeysAriaLabel": "Navegar a la página de Claves API para generar y gestionar tus claves API",
+        "chatbotAriaLabel": "Navegar al Área de Juegos del Chatbot para probar y experimentar con modelos de IA",
         "usageAriaLabel": "Navegar a la página de Uso para monitorear tu uso de API y métricas"
       }
     },

@@ -30,9 +30,11 @@
         "subscriptionsDescription": "Orthad glaemscaul echuin",
         "apiKeysDescription": "Banda a orthad anguirel-API",
         "usageDescription": "Tirno aerlinn-API",
+        "chatbotDescription": "Prestanno a eredio echuin isui",
         "modelsAriaLabel": "Linna na echuis-band ad leithia a glaemscatha echuin isui",
         "subscriptionsAriaLabel": "Linna na glaemscaul-band ad orthad echuin-glaemscaul",
         "apiKeysAriaLabel": "Linna na anguirel-API-band ad banda a orthad anguirel-API",
+        "chatbotAriaLabel": "Linna na Glingad-Celeb ad prestanno a eredio echuin isui",
         "usageAriaLabel": "Linna na aerlinn-band ad tirno API-aerlinn a govaded"
       }
     },

@@ -5,7 +5,7 @@ import {
   KeyIcon,
   ChartLineIcon,
   CogIcon,
-  ChatIcon,
+  CommentsIcon,
 } from '@patternfly/react-icons';
 
 import HomePage from '../pages/HomePage';
@@ -59,7 +59,7 @@ export const appConfig: AppConfig = {
           path: '/chatbot',
           element: ChatbotPage,
           label: 'nav.chatbot',
-          icon: ChatIcon,
+          icon: CommentsIcon,
         },
         {
           id: 'usage',
@@ -107,7 +107,7 @@ export const appConfig: AppConfig = {
       id: 'chatbot',
       label: 'nav.chatbot',
       path: '/chatbot',
-      icon: ChatIcon,
+      icon: CommentsIcon,
     },
     {
       id: 'usage',

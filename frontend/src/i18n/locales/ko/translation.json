@@ -30,9 +30,11 @@
         "subscriptionsDescription": "모델 구독 관리",
         "apiKeysDescription": "API 키 생성 및 관리",
         "usageDescription": "API 사용량 모니터링",
+        "chatbotDescription": "AI 모델 테스트 및 실험",
         "modelsAriaLabel": "AI 모델을 찾아보고 구독하려면 모델 페이지로 이동",
         "subscriptionsAriaLabel": "모델 구독을 관리하려면 구독 페이지로 이동",
         "apiKeysAriaLabel": "API 키를 생성하고 관리하려면 API 키 페이지로 이동",
+        "chatbotAriaLabel": "AI 모델을 테스트하고 실험하려면 챗봇 플레이그라운드로 이동",
         "usageAriaLabel": "API 사용량 및 메트릭을 모니터링하려면 사용량 페이지로 이동"
       }
     },

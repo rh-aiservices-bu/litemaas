@@ -39,7 +39,7 @@ vi.mock('@patternfly/react-icons', () => ({
   KeyIcon: () => <svg data-testid="key-icon" />,
   ChartLineIcon: () => <svg data-testid="chart-line-icon" />,
   CogIcon: () => <svg data-testid="cog-icon" />,
-  ChatIcon: () => <svg data-testid="chat-icon" />,
+  CommentsIcon: () => <svg data-testid="chat-icon" />,
 }));
 
 describe('Navigation Configuration', () => {

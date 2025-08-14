@@ -30,9 +30,11 @@
         "subscriptionsDescription": "管理您的模型订阅",
         "apiKeysDescription": "生成和管理API密钥",
         "usageDescription": "监控您的API使用情况",
+        "chatbotDescription": "测试和试验AI模型",
         "modelsAriaLabel": "导航到模型页面以浏览和订阅AI模型",
         "subscriptionsAriaLabel": "导航到订阅页面以管理您的模型订阅",
         "apiKeysAriaLabel": "导航到API密钥页面以生成和管理您的API密钥",
+        "chatbotAriaLabel": "导航到聊天机器人游乐场以测试和试验AI模型",
         "usageAriaLabel": "导航到使用情况页面以监控您的API使用情况和指标"
       }
     },

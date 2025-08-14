@@ -30,9 +30,11 @@
         "subscriptionsDescription": "Ihre Modell-Abonnements verwalten",
         "apiKeysDescription": "API-Schlüssel generieren und verwalten",
         "usageDescription": "Ihre API-Nutzung überwachen",
+        "chatbotDescription": "KI-Modelle testen und experimentieren",
         "modelsAriaLabel": "Zur Modell-Seite navigieren, um KI-Modelle zu durchsuchen und zu abonnieren",
         "subscriptionsAriaLabel": "Zur Abonnements-Seite navigieren, um Ihre Modell-Abonnements zu verwalten",
         "apiKeysAriaLabel": "Zur API-Schlüssel-Seite navigieren, um Ihre API-Schlüssel zu generieren und zu verwalten",
+        "chatbotAriaLabel": "Zum Chatbot-Spielplatz navigieren, um KI-Modelle zu testen und zu experimentieren",
         "usageAriaLabel": "Zur Nutzungs-Seite navigieren, um Ihre API-Nutzung und Metriken zu überwachen"
       }
     },

@@ -30,9 +30,11 @@
         "subscriptionsDescription": "Manage your model subscriptions",
         "apiKeysDescription": "Generate and manage API keys",
         "usageDescription": "Monitor your API usage",
+        "chatbotDescription": "Test and experiment with AI models",
         "modelsAriaLabel": "Navigate to Models page to browse and subscribe to AI models",
         "subscriptionsAriaLabel": "Navigate to Subscriptions page to manage your model subscriptions",
         "apiKeysAriaLabel": "Navigate to API Keys page to generate and manage your API keys",
+        "chatbotAriaLabel": "Navigate to Chatbot Playground to test and experiment with AI models",
         "usageAriaLabel": "Navigate to Usage page to monitor your API usage and metrics"
       }
     },

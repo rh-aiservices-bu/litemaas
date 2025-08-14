@@ -30,9 +30,11 @@
         "subscriptionsDescription": "モデルサブスクリプションを管理",
         "apiKeysDescription": "APIキーの生成と管理",
         "usageDescription": "API使用状況の監視",
+        "chatbotDescription": "AIモデルのテストと実験",
         "modelsAriaLabel": "モデルページに移動してAIモデルを閲覧・サブスクライブ",
         "subscriptionsAriaLabel": "サブスクリプションページに移動してモデルサブスクリプションを管理",
         "apiKeysAriaLabel": "APIキーページに移動してAPIキーの生成・管理",
+        "chatbotAriaLabel": "チャットボットプレイグラウンドに移動してAIモデルをテスト・実験",
         "usageAriaLabel": "使用状況ページに移動してAPI使用状況とメトリクスを監視"
       }
     },

@@ -787,7 +787,7 @@ const ChatbotPage: React.FC = () => {
                 <Content style={{ marginBottom: '10px' }}>
                   <Title headingLevel="h1" size="2xl">
                     <CommentsIcon className="pf-v6-u-mr-sm" />
-                    {t('pages.chatbot.title')}
+                    &nbsp;{t('pages.chatbot.title')}
                   </Title>
                   {/* <Content component="p">{t('pages.chatbot.subtitle')}</Content> */}
                 </Content>

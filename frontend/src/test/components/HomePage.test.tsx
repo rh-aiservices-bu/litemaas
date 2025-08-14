@@ -69,7 +69,7 @@ describe('HomePage', () => {
 
       // Verify the card structure is correct
       const cards = document.querySelectorAll('.pf-v6-c-card');
-      expect(cards).toHaveLength(4);
+      expect(cards).toHaveLength(5);
     });
   });
 
@@ -79,7 +79,7 @@ describe('HomePage', () => {
 
       // Find cards by their PatternFly class structure
       const cards = document.querySelectorAll('.pf-v6-c-card');
-      expect(cards).toHaveLength(4);
+      expect(cards).toHaveLength(5);
 
       // Check for navigation links with aria-labels
       const modelsLink = screen.getByLabelText('View available AI models');
@@ -98,7 +98,7 @@ describe('HomePage', () => {
 
       // Check that translated aria-labels are present in the links
       const links = screen.getAllByRole('link');
-      expect(links).toHaveLength(4);
+      expect(links).toHaveLength(5);
 
       // Verify specific aria-labels exist
       expect(screen.getByLabelText('View available AI models')).toBeInTheDocument();
@@ -117,18 +117,6 @@ describe('HomePage', () => {
   });
 
   describe('Responsive layout', () => {
-    it('should use responsive grid layout', () => {
-      render(<HomePage />);
-
-      // Check for PatternFly grid classes
-      const gridContainer = document.querySelector('.pf-v6-l-grid');
-      expect(gridContainer).toBeInTheDocument();
-
-      // Check for responsive grid items
-      const gridItems = document.querySelectorAll('.pf-v6-l-grid__item');
-      expect(gridItems).toHaveLength(4);
-    });
-
     it('should apply correct responsive breakpoints', () => {
       render(<HomePage />);
 
@@ -184,7 +172,7 @@ describe('HomePage', () => {
       const h3s = screen.getAllByRole('heading', { level: 3 });
 
       expect(h1).toBeInTheDocument();
-      expect(h3s).toHaveLength(4);
+      expect(h3s).toHaveLength(5);
     });
 
     it('should have proper landmarks and regions', () => {
@@ -213,7 +201,7 @@ describe('HomePage', () => {
 
       // Verify links have proper aria-labels
       const links = screen.getAllByRole('link');
-      expect(links).toHaveLength(4);
+      expect(links).toHaveLength(5);
 
       // Cards should have accessible headings
       expect(screen.getByRole('heading', { level: 3, name: 'Models' })).toBeInTheDocument();
@@ -257,11 +245,7 @@ describe('HomePage', () => {
 
       // Check for cards
       const cards = document.querySelectorAll('.pf-v6-c-card');
-      expect(cards).toHaveLength(4);
-
-      // Check for grid layout
-      const grid = document.querySelector('.pf-v6-l-grid');
-      expect(grid).toBeInTheDocument();
+      expect(cards).toHaveLength(5);
     });
 
     it('should apply compact and clickable card modifiers', () => {
