@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   PageSection,
@@ -17,6 +17,10 @@ import {
 
 const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
+  const [displayName, setDisplayName] = useState('');
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
 
   return (
     <>
@@ -35,36 +39,81 @@ const SettingsPage: React.FC = () => {
                 </Title>
                 <Divider style={{ margin: '1rem 0' }} />
                 <Form>
-                  <FormGroup label={t('pages.settings.forms.displayName')} fieldId="display-name">
+                  <FormGroup
+                    label={t('pages.settings.forms.displayName')}
+                    isRequired
+                    fieldId="display-name"
+                  >
                     <TextInput
                       type="text"
                       id="display-name"
                       name="display-name"
+                      value={displayName}
+                      onChange={(_event, value) => {
+                        setDisplayName(value);
+                        if (formErrors.displayName && value.trim()) {
+                          const newErrors = { ...formErrors };
+                          delete newErrors.displayName;
+                          setFormErrors(newErrors);
+                        }
+                      }}
                       placeholder={t('pages.settings.forms.displayNamePlaceholder')}
+                      aria-required="true"
+                      aria-invalid={formErrors.displayName ? 'true' : 'false'}
+                      aria-describedby="display-name-description"
+                      validated={formErrors.displayName ? 'error' : 'default'}
                     />
                   </FormGroup>
+                  <div
+                    id="display-name-description"
+                    className={
+                      formErrors.displayName
+                        ? 'pf-v6-c-form__helper-text pf-m-error'
+                        : 'pf-v6-c-form__helper-text'
+                    }
+                  >
+                    {formErrors.displayName || t('pages.settings.forms.displayNameHelperText')}
+                  </div>
                   <FormGroup
                     label={t('pages.settings.forms.emailNotifications')}
                     fieldId="email-notifications"
                   >
                     <Switch
                       id="email-notifications"
-                      label={t('pages.settings.forms.enabled')}
-                      isChecked={true}
-                      onChange={() => {}}
+                      label={
+                        emailNotifications
+                          ? t('pages.settings.forms.enabled')
+                          : t('pages.settings.forms.disabled')
+                      }
+                      isChecked={emailNotifications}
+                      onChange={(_event, checked) => setEmailNotifications(checked)}
+                      aria-describedby="email-notifications-helper"
+                      aria-label={t('pages.settings.forms.emailNotificationsAriaLabel')}
                     />
                   </FormGroup>
+                  <div id="email-notifications-helper" className="pf-v6-c-form__helper-text">
+                    {t('pages.settings.forms.emailNotificationsHelperText')}
+                  </div>
                   <FormGroup
                     label={t('pages.settings.forms.autoRefreshDashboard')}
                     fieldId="auto-refresh"
                   >
                     <Switch
                       id="auto-refresh"
-                      label={t('pages.settings.forms.enabled')}
-                      isChecked={false}
-                      onChange={() => {}}
+                      label={
+                        autoRefresh
+                          ? t('pages.settings.forms.enabled')
+                          : t('pages.settings.forms.disabled')
+                      }
+                      isChecked={autoRefresh}
+                      onChange={(_event, checked) => setAutoRefresh(checked)}
+                      aria-describedby="auto-refresh-helper"
+                      aria-label={t('pages.settings.forms.autoRefreshAriaLabel')}
                     />
                   </FormGroup>
+                  <div id="auto-refresh-helper" className="pf-v6-c-form__helper-text">
+                    {t('pages.settings.forms.autoRefreshHelperText')}
+                  </div>
                   <Button variant="primary">{t('pages.settings.buttons.savePreferences')}</Button>
                 </Form>
               </CardBody>
@@ -98,8 +147,13 @@ const SettingsPage: React.FC = () => {
                       name="rate-limit"
                       value="100"
                       readOnly
+                      aria-readonly="true"
+                      aria-describedby="rate-limit-helper"
                     />
                   </FormGroup>
+                  <div id="rate-limit-helper" className="pf-v6-c-form__helper-text">
+                    {t('pages.settings.forms.rateLimitHelperText')}
+                  </div>
                   <FormGroup label={t('pages.settings.forms.timeoutLabel')} fieldId="timeout">
                     <TextInput type="number" id="timeout" name="timeout" value="30" />
                   </FormGroup>

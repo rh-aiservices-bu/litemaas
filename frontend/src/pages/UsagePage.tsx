@@ -40,7 +40,7 @@ import {
   UsersIcon,
   CubeIcon,
 } from '@patternfly/react-icons';
-import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
+import { Table, Thead, Tbody, Tr, Th, Td, Caption } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
 import { usageService, UsageMetrics, UsageFilters } from '../services/usage.service';
 import { apiKeysService, ApiKey } from '../services/apiKeys.service';
@@ -50,13 +50,18 @@ import {
   transformModelBreakdownToChartData,
 } from '../utils/chartDataTransformers';
 import { maskApiKey } from '../utils/security.utils';
+import {
+  ScreenReaderAnnouncement,
+  useScreenReaderAnnouncement,
+} from '../components/ScreenReaderAnnouncement';
 
 const UsagePage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
+  const { announcement, announce } = useScreenReaderAnnouncement();
 
   const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState('7d');
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
@@ -141,9 +146,21 @@ const UsagePage: React.FC = () => {
 
       const usageMetrics = await usageService.getUsageMetrics(filters);
       setMetrics(usageMetrics);
+
+      // Announce metrics update to screen readers
+      announce(
+        t('pages.usage.metricsUpdated', {
+          requests: formatNumber(usageMetrics.totalRequests),
+          tokens: formatNumber(usageMetrics.totalTokens),
+          cost: formatCurrency(usageMetrics.totalCost),
+        }),
+        'polite',
+      );
     } catch (err) {
       console.error('Failed to load usage metrics:', err);
       setError(t('pages.usage.notifications.loadFailed'));
+      // Announce error to screen readers with assertive priority
+      announce(t('pages.usage.notifications.loadFailed'), 'assertive');
       addNotification({
         title: t('pages.usage.notifications.loadError'),
         description: t('pages.usage.notifications.loadErrorDesc'),
@@ -257,6 +274,11 @@ const UsagePage: React.FC = () => {
   if (loading) {
     return (
       <>
+        <ScreenReaderAnnouncement
+          message={t('pages.usage.loadingDescription')}
+          priority="polite"
+          announcementKey={loading ? 1 : 0}
+        />
         <PageSection variant="secondary">
           <Title headingLevel="h1" size="2xl">
             {t('pages.usage.title')}
@@ -265,7 +287,7 @@ const UsagePage: React.FC = () => {
         <PageSection>
           <Bullseye>
             <EmptyState variant={EmptyStateVariant.lg}>
-              <Spinner size="xl" />
+              <Spinner size="xl" aria-busy="true" />
               <Title headingLevel="h2" size="lg">
                 {t('pages.usage.loadingTitle')}
               </Title>
@@ -286,25 +308,44 @@ const UsagePage: React.FC = () => {
           </Title>
         </PageSection>
         <PageSection>
-          <EmptyState variant={EmptyStateVariant.lg}>
-            <ChartLineIcon />
-            <Title headingLevel="h2" size="lg">
+          <EmptyState
+            variant={EmptyStateVariant.lg}
+            role="region"
+            aria-labelledby="no-api-keys-title"
+            aria-describedby="no-api-keys-description"
+          >
+            <ChartLineIcon aria-hidden="true" />
+            <Title headingLevel="h2" size="lg" id="no-api-keys-title">
               {apiKeys.length === 0
                 ? t('pages.usage.noApiKeysTitle')
                 : t('pages.usage.selectApiKeyTitle')}
             </Title>
-            <EmptyStateBody>
+            <EmptyStateBody id="no-api-keys-description">
               {apiKeys.length === 0
                 ? t('pages.usage.noApiKeysDescription')
                 : t('pages.usage.selectApiKeyDescription')}
+              <div className="pf-v6-screen-reader" aria-live="polite">
+                {apiKeys.length === 0
+                  ? t('pages.usage.noApiKeysScreenReader')
+                  : t('pages.usage.selectApiKeyScreenReader')}
+              </div>
             </EmptyStateBody>
             <EmptyStateActions>
               {apiKeys.length === 0 ? (
-                <Button variant="primary" component="a" href="/api-keys">
+                <Button
+                  variant="primary"
+                  component="a"
+                  href="/api-keys"
+                  aria-describedby="no-api-keys-description"
+                >
                   {t('pages.usage.createApiKey')}
                 </Button>
               ) : (
-                <Button variant="primary" onClick={() => setIsApiKeyOpen(true)}>
+                <Button
+                  variant="primary"
+                  onClick={() => setIsApiKeyOpen(true)}
+                  aria-describedby="no-api-keys-description"
+                >
                   {t('pages.usage.selectApiKey')}
                 </Button>
               )}
@@ -325,14 +366,26 @@ const UsagePage: React.FC = () => {
           </Title>
         </PageSection>
         <PageSection>
-          <EmptyState variant={EmptyStateVariant.lg}>
-            <ChartLineIcon />
-            <Title headingLevel="h2" size="lg">
+          <EmptyState
+            variant={EmptyStateVariant.lg}
+            role="region"
+            aria-labelledby="no-data-title"
+            aria-describedby="no-data-description"
+          >
+            <ChartLineIcon aria-hidden="true" />
+            <Title headingLevel="h2" size="lg" id="no-data-title">
               {t('pages.usage.noDataTitle')}
             </Title>
-            <EmptyStateBody>{t('pages.usage.noDataDescription')}</EmptyStateBody>
+            <EmptyStateBody id="no-data-description">
+              {t('pages.usage.noDataDescription')}
+              <div className="pf-v6-screen-reader" aria-live="polite">
+                {t('pages.usage.noDataScreenReader')}
+              </div>
+            </EmptyStateBody>
             <EmptyStateActions>
-              <Button variant="primary">{t('pages.usage.viewApiDocs')}</Button>
+              <Button variant="primary" aria-describedby="no-data-description">
+                {t('pages.usage.viewApiDocs')}
+              </Button>
             </EmptyStateActions>
           </EmptyState>
         </PageSection>
@@ -342,6 +395,11 @@ const UsagePage: React.FC = () => {
 
   return (
     <>
+      <ScreenReaderAnnouncement
+        message={announcement.message}
+        priority={announcement.priority}
+        announcementKey={announcement.key}
+      />
       <PageSection variant="secondary">
         <Flex
           justifyContent={{ default: 'justifyContentSpaceBetween' }}
@@ -354,7 +412,12 @@ const UsagePage: React.FC = () => {
             <Content component={ContentVariants.p}>{t('pages.usage.subtitle')}</Content>
           </FlexItem>
           <FlexItem>
-            <Button variant="secondary" icon={<DownloadIcon />} onClick={handleExportData}>
+            <Button
+              variant="secondary"
+              icon={<DownloadIcon />}
+              onClick={handleExportData}
+              aria-label={t('pages.usage.exportUsageData')}
+            >
               {t('pages.usage.exportData')}
             </Button>
           </FlexItem>
@@ -504,12 +567,22 @@ const UsagePage: React.FC = () => {
         {dateRange === 'custom' && showCustomDatePickers && !metrics && (
           <Card style={{ marginBottom: '2rem' }}>
             <CardBody>
-              <EmptyState variant={EmptyStateVariant.sm}>
-                <CalendarAltIcon />
-                <Title headingLevel="h3" size="md">
+              <EmptyState
+                variant={EmptyStateVariant.sm}
+                role="status"
+                aria-labelledby="custom-date-title"
+                aria-describedby="custom-date-description"
+              >
+                <CalendarAltIcon aria-hidden="true" />
+                <Title headingLevel="h3" size="md" id="custom-date-title">
                   {t('pages.usage.customDatePlaceholderTitle')}
                 </Title>
-                <EmptyStateBody>{t('pages.usage.customDatePlaceholderDescription')}</EmptyStateBody>
+                <EmptyStateBody id="custom-date-description">
+                  {t('pages.usage.customDatePlaceholderDescription')}
+                  <div className="pf-v6-screen-reader" aria-live="polite">
+                    {t('pages.usage.customDatePlaceholderScreenReader')}
+                  </div>
+                </EmptyStateBody>
               </EmptyState>
             </CardBody>
           </Card>
@@ -688,12 +761,48 @@ const UsagePage: React.FC = () => {
                     </Flex>
                   </CardTitle>
                   <CardBody>
-                    <UsageTrends
-                      data={transformDailyUsageToChartData(metrics.dailyUsage)[selectedMetric]}
-                      metricType={selectedMetric}
-                      height={250}
-                      loading={false}
-                    />
+                    <div
+                      role="region"
+                      aria-labelledby="usage-trends-heading"
+                      aria-describedby="usage-trends-description"
+                    >
+                      <div id="usage-trends-heading" className="pf-v6-screen-reader">
+                        {t('pages.usage.charts.usageTrends')} -{' '}
+                        {t('pages.usage.charts.lineChartAriaLabel', {
+                          metric:
+                            selectedMetric === 'requests'
+                              ? t('pages.usage.metrics.totalRequests')
+                              : selectedMetric === 'tokens'
+                                ? t('pages.usage.metrics.totalTokens')
+                                : t('pages.usage.metrics.totalCost'),
+                        })}
+                      </div>
+                      <div id="usage-trends-description" className="pf-v6-screen-reader">
+                        {t('pages.usage.charts.usageTrendsDescription', {
+                          metricType:
+                            selectedMetric === 'requests'
+                              ? t('pages.usage.metrics.totalRequests')
+                              : selectedMetric === 'tokens'
+                                ? t('pages.usage.metrics.totalTokens')
+                                : t('pages.usage.metrics.totalCost'),
+                        })}
+                      </div>
+                      <UsageTrends
+                        data={transformDailyUsageToChartData(metrics.dailyUsage)[selectedMetric]}
+                        metricType={selectedMetric}
+                        height={250}
+                        loading={false}
+                        title={t('pages.usage.charts.usageTrends')}
+                        description={t('pages.usage.charts.usageTrendsDescription', {
+                          metricType:
+                            selectedMetric === 'requests'
+                              ? t('pages.usage.metrics.totalRequests')
+                              : selectedMetric === 'tokens'
+                                ? t('pages.usage.metrics.totalTokens')
+                                : t('pages.usage.metrics.totalCost'),
+                        })}
+                      />
+                    </div>
                   </CardBody>
                 </Card>
               </GridItem>
@@ -725,7 +834,17 @@ const UsagePage: React.FC = () => {
                           variant="success"
                           measureLocation={ProgressMeasureLocation.none}
                           style={{ width: '200px' }}
-                          aria-label="successRate"
+                          aria-label={t('pages.usage.progressLabels.successRateProgress', {
+                            percentage: metrics.successRate,
+                            successfulRequests: (
+                              (metrics.totalRequests * metrics.successRate) /
+                              100
+                            ).toFixed(0),
+                            totalRequests: metrics.totalRequests,
+                          })}
+                          title={t('pages.usage.progressLabels.successRateTitle', {
+                            percentage: metrics.successRate,
+                          })}
                         />
                       </FlexItem>
                       <FlexItem>
@@ -752,13 +871,35 @@ const UsagePage: React.FC = () => {
               </CardTitle>
               <CardBody>
                 <Table aria-label={t('pages.usage.tables.topModels')} variant="compact">
+                  <Caption className="pf-v6-screen-reader">
+                    {t('pages.usage.tables.topModelsCaption', {
+                      count: metrics.topModels.length,
+                      totalRequests: formatNumber(metrics.totalRequests),
+                      dateRange:
+                        dateRange === 'custom'
+                          ? `${customStartDate} to ${customEndDate}`
+                          : dateRange === '7d'
+                            ? t('pages.usage.dateRanges.last7Days')
+                            : dateRange === '30d'
+                              ? t('pages.usage.dateRanges.last30Days')
+                              : t('pages.usage.dateRanges.last90Days'),
+                    })}
+                  </Caption>
                   <Thead>
                     <Tr>
-                      <Th>{t('pages.usage.tableHeaders.model')}</Th>
-                      <Th>{t('pages.usage.tableHeaders.requests')}</Th>
-                      <Th>{t('pages.usage.tableHeaders.tokens')}</Th>
-                      <Th>{t('pages.usage.tableHeaders.cost')}</Th>
-                      <Th>{t('pages.usage.tableHeaders.usagePercent')}</Th>
+                      <Th scope="col">{t('pages.usage.tableHeaders.model')}</Th>
+                      <Th scope="col" modifier="nowrap">
+                        {t('pages.usage.tableHeaders.requests')}
+                      </Th>
+                      <Th scope="col" modifier="nowrap">
+                        {t('pages.usage.tableHeaders.tokens')}
+                      </Th>
+                      <Th scope="col" modifier="nowrap">
+                        {t('pages.usage.tableHeaders.cost')}
+                      </Th>
+                      <Th scope="col" modifier="nowrap">
+                        {t('pages.usage.tableHeaders.usagePercent')}
+                      </Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -766,12 +907,39 @@ const UsagePage: React.FC = () => {
                       const usagePercentage = (model.requests / metrics.totalRequests) * 100;
                       return (
                         <Tr key={index}>
-                          <Td>
+                          <Th scope="row">
                             <strong>{model.name}</strong>
+                          </Th>
+                          <Td>
+                            <span
+                              aria-label={t('pages.usage.ariaLabels.requestsCount', {
+                                count: model.requests,
+                                formatted: formatNumber(model.requests),
+                              })}
+                            >
+                              {formatNumber(model.requests)}
+                            </span>
                           </Td>
-                          <Td>{formatNumber(model.requests)}</Td>
-                          <Td>{formatNumber(model.tokens)}</Td>
-                          <Td>{formatCurrency(model.cost)}</Td>
+                          <Td>
+                            <span
+                              aria-label={t('pages.usage.ariaLabels.tokensCount', {
+                                count: model.tokens,
+                                formatted: formatNumber(model.tokens),
+                              })}
+                            >
+                              {formatNumber(model.tokens)}
+                            </span>
+                          </Td>
+                          <Td>
+                            <span
+                              aria-label={t('pages.usage.ariaLabels.costAmount', {
+                                amount: model.cost,
+                                formatted: formatCurrency(model.cost),
+                              })}
+                            >
+                              {formatCurrency(model.cost)}
+                            </span>
+                          </Td>
                           <Td>
                             <Flex
                               alignItems={{ default: 'alignItemsCenter' }}
@@ -781,20 +949,17 @@ const UsagePage: React.FC = () => {
                                 <Progress
                                   value={usagePercentage}
                                   measureLocation={ProgressMeasureLocation.none}
-                                  variant={
-                                    usagePercentage > 30
-                                      ? 'success'
-                                      : usagePercentage > 15
-                                        ? 'warning'
-                                        : undefined
-                                  }
-                                  aria-label="usagePercentage"
+                                  aria-label={t('pages.usage.progressLabels.modelUsageProgress', {
+                                    model: model.name,
+                                    percentage: usagePercentage.toFixed(1),
+                                    requests: formatNumber(model.requests),
+                                    totalRequests: formatNumber(metrics.totalRequests),
+                                  })}
+                                  title={t('pages.usage.progressLabels.modelUsageTitle', {
+                                    model: model.name,
+                                    percentage: usagePercentage.toFixed(1),
+                                  })}
                                 />
-                              </FlexItem>
-                              <FlexItem>
-                                <Content component={ContentVariants.small}>
-                                  {usagePercentage.toFixed(1)}%
-                                </Content>
                               </FlexItem>
                             </Flex>
                           </Td>
@@ -816,23 +981,44 @@ const UsagePage: React.FC = () => {
               </Title>
             </CardTitle>
             <CardBody>
-              {(() => {
-                const transformedData = transformModelBreakdownToChartData(
-                  metrics.topModels,
-                  metrics.totalRequests,
-                );
-                return (
-                  <ModelDistributionChart
-                    data={transformedData.chartData}
-                    modelBreakdown={transformedData.modelBreakdown}
-                    size={300}
-                    width="auto"
-                    showLegend={true}
-                    showBreakdown={true}
-                    ariaLabel={t('pages.usage.charts.modelUsageDistribution')}
-                  />
-                );
-              })()}
+              <div
+                role="region"
+                aria-labelledby="model-distribution-heading"
+                aria-describedby="model-distribution-description"
+              >
+                <div id="model-distribution-heading" className="pf-v6-screen-reader">
+                  {t('pages.usage.charts.usageByModel')} -{' '}
+                  {t('pages.usage.charts.modelDistributionAriaLabel')}
+                </div>
+                <div id="model-distribution-description" className="pf-v6-screen-reader">
+                  {t('pages.usage.charts.donutChartDescription')}.{' '}
+                  {t('pages.usage.charts.modelDistributionSummary', {
+                    totalModels: metrics.topModels.length,
+                    topModel: metrics.topModels[0]?.name || t('common.notAvailable'),
+                    topPercentage: metrics.topModels[0]
+                      ? ((metrics.topModels[0].requests / metrics.totalRequests) * 100).toFixed(1)
+                      : '0',
+                    totalRequests: formatNumber(metrics.totalRequests),
+                  })}
+                </div>
+                {(() => {
+                  const transformedData = transformModelBreakdownToChartData(
+                    metrics.topModels,
+                    metrics.totalRequests,
+                  );
+                  return (
+                    <ModelDistributionChart
+                      data={transformedData.chartData}
+                      modelBreakdown={transformedData.modelBreakdown}
+                      size={300}
+                      width="auto"
+                      showLegend={true}
+                      showBreakdown={true}
+                      ariaLabel={t('pages.usage.charts.modelUsageDistribution')}
+                    />
+                  );
+                })()}
+              </div>
             </CardBody>
           </Card>
         )}

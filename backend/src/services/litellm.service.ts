@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { BaseService } from './base.service.js';
 import {
   LiteLLMModel,
   LiteLLMHealth,
@@ -20,9 +21,8 @@ import {
   LiteLLMTeamResponse,
 } from '../types/user.types.js';
 
-export class LiteLLMService {
+export class LiteLLMService extends BaseService {
   private config: LiteLLMConfig;
-  private fastify: FastifyInstance;
   private cache: Map<string, { data: any; timestamp: number; ttl: number }> = new Map();
   private readonly DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
   private isCircuitBreakerOpen = false;
@@ -99,7 +99,7 @@ export class LiteLLMService {
   ];
 
   constructor(fastify: FastifyInstance, config?: Partial<LiteLLMConfig>) {
-    this.fastify = fastify;
+    super(fastify);
     this.config = {
       baseUrl:
         config?.baseUrl ||
@@ -295,11 +295,6 @@ export class LiteLLMService {
 
     this.recordFailure();
     throw lastError!;
-  }
-
-  private createMockResponse<T>(data: T): Promise<T> {
-    const delay = Math.random() * 100 + 50; // 50-150ms
-    return new Promise((resolve) => setTimeout(() => resolve(data), delay));
   }
 
   // Enhanced Model Management

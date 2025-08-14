@@ -1,10 +1,24 @@
 {
+  "common": {
+    "label": "Label",
+    "value": "Wert",
+    "chart": "Diagramm",
+    "table": "Tabelle",
+    "export": "Exportieren",
+    "day": "Tag",
+    "date": "Datum",
+    "error": "Fehler",
+    "notAvailable": "N/V",
+    "lineChart": "Liniendiagramm",
+    "dataPoints": "Datenpunkte"
+  },
   "nav": {
     "home": "Startseite",
     "models": "Modelle",
     "subscriptions": "Abonnements",
     "apiKeys": "API-Schlüssel",
     "usage": "Nutzung",
+    "chatbot": "Chatbot-Spielplatz",
     "settings": "Einstellungen"
   },
   "pages": {
@@ -15,7 +29,13 @@
         "modelsDescription": "Verfügbare KI-Modelle durchsuchen",
         "subscriptionsDescription": "Ihre Modell-Abonnements verwalten",
         "apiKeysDescription": "API-Schlüssel generieren und verwalten",
-        "usageDescription": "Ihre API-Nutzung überwachen"
+        "usageDescription": "Ihre API-Nutzung überwachen",
+        "chatbotDescription": "KI-Modelle testen und experimentieren",
+        "modelsAriaLabel": "Zur Modell-Seite navigieren, um KI-Modelle zu durchsuchen und zu abonnieren",
+        "subscriptionsAriaLabel": "Zur Abonnements-Seite navigieren, um Ihre Modell-Abonnements zu verwalten",
+        "apiKeysAriaLabel": "Zur API-Schlüssel-Seite navigieren, um Ihre API-Schlüssel zu generieren und zu verwalten",
+        "chatbotAriaLabel": "Zum Chatbot-Spielplatz navigieren, um KI-Modelle zu testen und zu experimentieren",
+        "usageAriaLabel": "Zur Nutzungs-Seite navigieren, um Ihre API-Nutzung und Metriken zu überwachen"
       }
     },
     "login": {
@@ -39,6 +59,7 @@
         "allCategories": "Alle Kategorien"
       },
       "subscribe": "Abonnieren",
+      "subscribeToModel": "{{modelName}} abonnieren",
       "subscribing": "Abonnement wird erstellt...",
       "contextLabel": "Kontext:",
       "pricingLabel": "Preisgestaltung: N/A",
@@ -51,13 +72,47 @@
       "close": "Schließen",
       "notifications": {
         "subscribeSuccess": "Erfolgreich abonniert!",
-        "subscribeSuccessDesc": "Sie haben jetzt Zugriff auf {{modelName}}. Sie können API-Schlüssel auf der Abonnements-Seite generieren.",
+        "subscribeSuccessDesc": "Sie haben jetzt Zugriff auf {{modelName}}. Sie können Schlüssel auf der API-Schlüssel-Seite generieren.",
         "subscribeFailed": "Abonnement fehlgeschlagen",
         "failedToSubscribe": "Fehler beim Abonnieren des Modells",
         "alreadySubscribed": "Sie haben dieses Modell bereits abonniert",
         "loadError": "Fehler",
         "loadErrorDesc": "Fehler beim Laden der Modelle vom Server.",
         "loadFailed": "Fehler beim Laden der Modelle. Bitte versuchen Sie es erneut."
+      },
+      "searchResults": "{{count}} Modelle gefunden, die Ihren Kriterien entsprechen",
+      "availability": {
+        "available": "Verfügbar",
+        "limited": "Begrenzte Verfügbarkeit",
+        "unavailable": "Nicht verfügbar"
+      },
+      "categories": {
+        "languageModel": "Sprachmodell",
+        "multimodal": "Multimodal",
+        "imageGeneration": "Bildgenerierung",
+        "audio": "Audio"
+      },
+      "ariaLabels": {
+        "modelAvailability": "Modellverfügbarkeit"
+      },
+      "pricing": {
+        "input": "Eingabe",
+        "output": "Ausgabe",
+        "separator": "•"
+      },
+      "units": {
+        "tokens": "Token"
+      },
+      "modal": {
+        "subscribeInfo": "Mit einem Abonnement erhalten Sie Zugang zu diesem Modell und können API-Schlüssel für dessen Nutzung generieren.",
+        "category": "Kategorie",
+        "contextLength": "Kontextlänge",
+        "tokens": "Token",
+        "pricing": "Preise",
+        "pricingInput": "Eingabe",
+        "pricingOutput": "Ausgabe",
+        "pricingUnavailable": "Preisinformationen nicht verfügbar",
+        "features": "Funktionen"
       }
     },
     "subscriptions": {
@@ -70,10 +125,11 @@
       "noSubscriptionsTitle": "Keine Abonnements gefunden",
       "noSubscriptionsDescription": "Sie haben keine aktiven Abonnements. Beginnen Sie mit dem Abonnieren eines KI-Modells.",
       "viewDetails": "Details anzeigen",
+      "viewDetailsForModel": "Details für {{modelName}} Abonnement anzeigen",
       "detailsTitle": "Abonnement-Details",
       "provider": "Anbieter",
       "pricing": "Preisgestaltung",
-      "status": "Status",
+      "statusLabel": "Status",
       "requestQuota": "Anfrage-Kontingent",
       "tokenQuota": "Token-Kontingent",
       "requestsUsed": "Verwendete Anfragen",
@@ -94,6 +150,7 @@
       "expiredMessage": "Ihr Abonnement ist am {{date}} abgelaufen. Erneuern Sie es, um dieses Modell weiter zu nutzen.",
       "cancelledMessage": "{{modelName}} Abonnement wurde gekündigt und von Ihrem Konto entfernt.",
       "cancelSubscription": "Abonnement kündigen",
+      "cancelSubscriptionForModel": "{{modelName}} Abonnement kündigen",
       "cancelling": "Wird gekündigt...",
       "notifications": {
         "loadError": "Fehler",
@@ -107,6 +164,19 @@
       "alerts": {
         "suspended": "Abonnement ausgesetzt",
         "expired": "Abonnement abgelaufen"
+      },
+      "status": {
+        "active": "Aktiv",
+        "suspended": "Ausgesetzt",
+        "expired": "Abgelaufen",
+        "pending": "Ausstehend"
+      },
+      "ariaLabels": {
+        "status": "Status"
+      },
+      "pricing": {
+        "input": "Eingabe",
+        "output": "Ausgabe"
       }
     },
     "apiKeys": {
@@ -120,14 +190,22 @@
       "showKey": "Schlüssel anzeigen",
       "copied": "Kopiert!",
       "selectModels": "Modelle auswählen...",
+      "modelsSelected": "{{count}} Modell(e) ausgewählt",
       "selectAll": "Alle auswählen",
+      "selectAllModelsAriaLabel": "Alle verfügbaren Modelle aus- oder abwählen",
+      "selectModelAriaLabel": "{{name}} Modell aus- oder abwählen",
       "noModelsAssigned": "Keine Modelle zugewiesen",
       "never": "Nie",
       "neverExpires": "Läuft nie ab",
       "forms": {
         "name": "Name",
+        "nameHelperText": "Geben Sie einen eindeutigen Namen ein, um diesen API-Schlüssel zu identifizieren",
         "description": "Beschreibung",
+        "descriptionHelperText": "Optionale Beschreibung, um sich an den Zweck dieses API-Schlüssels zu erinnern",
         "models": "Modelle",
+        "modelsHelperText": "Wählen Sie ein oder mehrere Modelle aus, auf die dieser API-Schlüssel zugreifen kann",
+        "modelsSelectedText": "{{count}} Modell(e) für diesen API-Schlüssel ausgewählt",
+        "modelsAriaLabel": "Modelle für API-Schlüssel-Zugriff auswählen",
         "expiration": "Ablauf",
         "apiKey": "API-Schlüssel",
         "yourNewApiKey": "Ihr neuer API-Schlüssel"
@@ -179,7 +257,9 @@
         "loadingDescription": "Ihre API-Schlüssel-Informationen werden abgerufen",
         "errorLoadingTitle": "Fehler beim Laden der API-Schlüssel",
         "noKeysTitle": "Keine API-Schlüssel gefunden",
-        "noKeysDescription": "Erstellen Sie Ihren ersten API-Schlüssel, um LiteMaaS-Dienste zu nutzen."
+        "noKeysDescription": "Erstellen Sie Ihren ersten API-Schlüssel, um LiteMaaS-Dienste zu nutzen.",
+        "noKeysScreenReader": "Sie haben derzeit keine API-Schlüssel. Verwenden Sie die Schaltfläche API-Schlüssel erstellen, um Ihren ersten Schlüssel zu erstellen und LiteMaaS-Dienste zu nutzen.",
+        "errorScreenReader": "Fehler beim Laden der API-Schlüssel: {{error}}. Verwenden Sie die Schaltfläche Erneut versuchen, um das Laden zu wiederholen."
       },
       "placeholders": {
         "keyName": "z.B. Produktions-API-Schlüssel",
@@ -216,7 +296,8 @@
         "retrieveErrorDesc": "Fehler beim Abrufen des API-Schlüssels",
         "validationError": "Validierungsfehler",
         "nameRequired": "API-Schlüsselname ist erforderlich",
-        "modelsRequired": "Bitte wählen Sie mindestens ein Modell aus Ihren aktiven Abonnements"
+        "modelsRequired": "Bitte wählen Sie mindestens ein Modell aus Ihren aktiven Abonnements",
+        "pleaseFixFormErrors": "Bitte beheben Sie die Formularfehler und versuchen Sie es erneut"
       },
       "modals": {
         "createTitle": "API-Schlüssel erstellen",
@@ -232,25 +313,215 @@
       },
       "tableHeaders": {
         "apiKeysTable": "API-Schlüssel-Tabelle",
+        "apiKeysTableCaption": "Tabelle mit {{count}} API-Schlüsseln mit ihren Namen, Vorschauwerten, zugewiesenen Modellen und verfügbaren Aktionen. {{description}}",
+        "apiKeysTableStructure": "Verwenden Sie Pfeiltasten, um zwischen Zeilen zu navigieren, und Tab, um auf Aktionsschaltflächen innerhalb jeder Zeile zuzugreifen.",
         "keyDetails": "Schlüssel-Details",
-        "generatedKeyDetails": "Generierte Schlüssel-Details"
+        "keyDetailsCaption": "Tabelle mit detaillierten Informationen für den API-Schlüssel '{{keyName}}' einschließlich Modellen, Erstellungsdatum und Nutzungsstatistiken",
+        "generatedKeyDetails": "Generierte Schlüssel-Details",
+        "generatedKeyDetailsCaption": "Tabelle mit Details für den neu erstellten API-Schlüssel '{{keyName}}' einschließlich zugewiesener Modelle und Ablaufdatum"
       },
+      "viewKeyAriaLabel": "Details für API-Schlüssel {{keyName}} anzeigen",
+      "deleteKeyAriaLabel": "API-Schlüssel {{keyName}} löschen",
+      "hideKeyAriaLabel": "API-Schlüssel-Wert für {{keyName}} verbergen",
+      "showKeyAriaLabel": "API-Schlüssel-Wert für {{keyName}} anzeigen",
+      "copyKeyAriaLabel": "API-Schlüssel-Wert für {{keyName}} in die Zwischenablage kopieren",
+      "fullKeyVisible": "Vollständiger API-Schlüssel-Wert für {{keyName}} ist jetzt sichtbar",
+      "keyPreviewOnly": "Vorschau des API-Schlüssels {{keyName}} - klicken Sie auf Anzeigen, um den vollständigen Schlüssel zu enthüllen",
       "codeExample": {
         "role": "Benutzer",
         "content": "Hallo, Welt!"
+      }
+    },
+    "chatbot": {
+      "title": "Chatbot-Spielplatz",
+      "subtitle": "Testen und interagieren Sie mit KI-Modellen über eine direkte Chat-Oberfläche",
+      "loading": "Chatbot wird geladen...",
+      "description": "Testen Sie Ihre API-Schlüssel und Modelle mit einer interaktiven Chat-Oberfläche",
+      "configuration": {
+        "title": "Konfiguration",
+        "apiKey": "API-Schlüssel auswählen",
+        "selectApiKey": "Einen API-Schlüssel auswählen...",
+        "apiKeyPlaceholder": "Wählen Sie einen API-Schlüssel zum Testen",
+        "model": "Modell auswählen",
+        "selectModel": "Ein Modell auswählen...",
+        "modelPlaceholder": "Wählen Sie ein Modell zum Testen",
+        "advancedSettings": "Erweiterte Einstellungen",
+        "temperature": "Temperatur",
+        "temperatureDescription": "Steuert Zufälligkeit (aktuell: {{value}})",
+        "temperatureHelp": "Steuert Zufälligkeit (0=deterministisch, 2=kreativ)",
+        "maxTokens": "Max. Token",
+        "maxTokensHelp": "Maximale Antwortlänge",
+        "systemPrompt": "System-Prompt",
+        "systemPromptPlaceholder": "Optionaler System-Prompt zur Steuerung des KI-Verhaltens...",
+        "systemPromptHelp": "Verhalten des Assistenten festlegen",
+        "streaming": "Echtzeit-Streaming",
+        "streamingEnabled": "Echtzeit-Streaming aktivieren",
+        "modelsLabel": "Modelle"
+      },
+      "quickTests": {
+        "title": "Schnelltests",
+        "codeGen": "Code-Generierung",
+        "translation": "Übersetzung",
+        "summary": "Zusammenfassung",
+        "jsonFormat": "JSON-Antwort",
+        "creative": "Kreatives Schreiben",
+        "problemSolving": "Problemlösung",
+        "dataAnalysis": "Datenanalyse",
+        "roleplay": "Rollenspiel",
+        "custom": "Meine Prompts"
+      },
+      "chat": {
+        "welcomeTitle": "Modell-Test-Assistent",
+        "welcomeDescription": "Beginnen Sie eine Unterhaltung, um Ihr ausgewähltes Modell und den API-Schlüssel zu testen",
+        "selectModelFirst": "Wählen Sie einen API-Schlüssel und ein Modell aus, um mit dem Chatten zu beginnen",
+        "placeholder": "Geben Sie hier Ihre Nachricht ein...",
+        "configureFirst": "Konfigurieren Sie zuerst API-Schlüssel und Modell",
+        "send": "Senden",
+        "clear": "Löschen",
+        "clearConversation": "Unterhaltung löschen",
+        "export": "Exportieren",
+        "savePrompt": "Prompt speichern",
+        "sending": "Wird gesendet...",
+        "stop": "Stoppen",
+        "stopGeneration": "Generierung stoppen",
+        "streamingInProgress": "Streaming läuft...",
+        "emptyConversation": "Noch keine Nachrichten. Beginnen Sie, indem Sie unten eine Nachricht eingeben."
+      },
+      "welcome": {
+        "title": "Willkommen beim Chatbot-Spielplatz",
+        "description": "Wählen Sie einen API-Schlüssel und ein Modell im Konfigurationspanel oben aus, dann beginnen Sie zu chatten, um Ihre KI-Modelle direkt zu testen."
+      },
+      "responseInfo": {
+        "title": "Antwort-Metriken",
+        "tokens": "Token",
+        "promptTokens": "Prompt",
+        "completionTokens": "Vervollständigung",
+        "totalTokens": "Gesamt",
+        "responseTime": "Antwortzeit",
+        "tokenUsage": "Token-Verwendung",
+        "estimatedCost": "Geschätzte Kosten",
+        "timeToFirstToken": "Zeit bis zum ersten Token",
+        "tokensPerSecond": "Token/Sekunde",
+        "tokensPerSecondUnit": "Token/s",
+        "prompt": "Prompt",
+        "completion": "Vervollständigung",
+        "viewRaw": "Rohe Antwort anzeigen",
+        "hideRaw": "Rohe Antwort ausblenden",
+        "noData": "Noch keine Antwort-Metriken verfügbar",
+        "noResponse": "Keine Antwortdaten verfügbar"
+      },
+      "export": {
+        "title": "Unterhaltung exportieren",
+        "format": "Format auswählen",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "download": "Herunterladen",
+        "cancel": "Abbrechen",
+        "filename": "Dateiname"
+      },
+      "savePromptModal": {
+        "title": "Prompt speichern",
+        "name": "Prompt-Name",
+        "namePlaceholder": "Geben Sie einen Namen für diesen Prompt ein",
+        "description": "Beschreibung (optional)",
+        "descriptionPlaceholder": "Beschreiben Sie, wofür dieser Prompt ist",
+        "save": "Speichern",
+        "cancel": "Abbrechen"
+      },
+      "prompts": {
+        "builtIn": "Eingebaute Vorlagen",
+        "custom": "Meine gespeicherten Prompts",
+        "noCustomPrompts": "Noch keine gespeicherten Prompts",
+        "usePrompt": "Diesen Prompt verwenden",
+        "deletePrompt": "Prompt löschen",
+        "confirmDelete": "Sind Sie sicher, dass Sie diesen Prompt löschen möchten?"
+      },
+      "validation": {
+        "noApiKey": "Bitte wählen Sie einen API-Schlüssel",
+        "noModel": "Bitte wählen Sie ein Modell",
+        "emptyMessage": "Bitte geben Sie eine Nachricht ein",
+        "promptNameRequired": "Prompt-Name ist erforderlich",
+        "promptNameExists": "Ein Prompt mit diesem Namen existiert bereits"
+      },
+      "errors": {
+        "requestFailed": "Anfrage fehlgeschlagen",
+        "invalidResponse": "Ungültige Antwort vom Server",
+        "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
+        "authError": "Authentifizierung fehlgeschlagen. Bitte überprüfen Sie Ihren API-Schlüssel.",
+        "rateLimitError": "Ratenlimit überschritten. Bitte warten Sie und versuchen Sie es erneut.",
+        "validationError": "Validierungsfehler. Bitte überprüfen Sie Ihre Eingabe.",
+        "serverError": "Serverfehler. Bitte versuchen Sie es später erneut.",
+        "timeoutError": "Anfrage-Timeout. Bitte versuchen Sie es erneut.",
+        "unexpectedError": "Ein unerwarteter Fehler ist aufgetreten",
+        "keyRetrievalFailed": "Fehler beim Abrufen des API-Schlüssels",
+        "keyRetrievalFailedDesc": "Der vollständige API-Schlüssel konnte nicht abgerufen werden. Bitte überprüfen Sie Ihre Authentifizierung und versuchen Sie es erneut.",
+        "loadDataFailed": "Daten konnten nicht geladen werden",
+        "loadModelsFailed": "Modelle konnten nicht geladen werden",
+        "sendFailed": "Nachricht konnte nicht gesendet werden",
+        "chatError": "Chat-Fehler"
+      },
+      "notifications": {
+        "promptSaved": "Prompt gespeichert",
+        "promptSavedDesc": "Ihr Prompt wurde erfolgreich gespeichert",
+        "promptDeleted": "Prompt gelöscht",
+        "promptDeletedDesc": "Der Prompt wurde gelöscht",
+        "conversationCleared": "Unterhaltung gelöscht",
+        "conversationClearedDesc": "Chat-Verlauf wurde gelöscht",
+        "conversationExported": "Unterhaltung exportiert",
+        "conversationExportedDesc": "Ihre Unterhaltung wurde erfolgreich exportiert",
+        "messageSent": "Nachricht gesendet",
+        "apiError": "API-Fehler",
+        "keyRetrieved": "API-Schlüssel abgerufen",
+        "keyRetrievedDesc": "Ihr vollständiger API-Schlüssel wurde sicher abgerufen",
+        "savePromptError": "Fehler beim Speichern des Prompts",
+        "deletePromptError": "Fehler beim Löschen des Prompts",
+        "exportError": "Export-Fehler"
+      },
+      "success": {
+        "messageSent": "Nachricht gesendet",
+        "responseReceived": "Antwort erfolgreich erhalten",
+        "conversationCleared": "Unterhaltung gelöscht"
+      },
+      "accessibility": {
+        "configurationPanel": "Konfigurationspanel für Chatbot-Einstellungen",
+        "chatInterface": "Chat-Oberfläche zum Testen von AI-Modellen",
+        "responseInfoPanel": "Antwort-Informationspanel mit Metriken",
+        "messageHistory": "Nachrichtenverlauf",
+        "sendMessage": "Nachricht an AI-Modell senden",
+        "clearConversation": "Alle Nachrichten in der Unterhaltung löschen",
+        "exportConversation": "Unterhaltung in Datei exportieren",
+        "saveCurrentPrompt": "Aktuelle Nachricht als Prompt-Vorlage speichern",
+        "selectApiKey": "API-Schlüssel für Authentifizierung auswählen",
+        "selectModel": "AI-Modell zum Testen auswählen",
+        "adjustTemperature": "Temperatur für Antwort-Kreativität anpassen",
+        "setMaxTokens": "Maximale Token für Antwortlänge festlegen",
+        "enterSystemPrompt": "System-Prompt eingeben, um Modellverhalten zu steuern"
       }
     },
     "usage": {
       "title": "Nutzungs-Dashboard",
       "subtitle": "Überwachen Sie Ihre API-Nutzung, Kosten und Leistungsmetriken",
       "exportData": "Daten exportieren",
+      "exportUsageData": "Nutzungsdaten für den ausgewählten Zeitraum exportieren",
       "loadingTitle": "Nutzungsdaten werden geladen...",
       "loadingDescription": "Ihre API-Nutzungsmuster und Metriken werden analysiert",
       "noDataTitle": "Keine Nutzungsdaten verfügbar",
       "noDataDescription": "Beginnen Sie mit API-Anfragen, um Ihre Nutzungsstatistiken hier zu sehen.",
+      "noDataScreenReader": "Keine Nutzungsdaten sind derzeit verfügbar. Stellen Sie API-Anfragen mit Ihren API-Schlüsseln, um Nutzungsstatistiken zu generieren, die hier angezeigt werden.",
       "customDatePlaceholderTitle": "Datumsbereich auswählen",
       "customDatePlaceholderDescription": "Bitte wählen Sie oben Start- und Enddatum aus, um Nutzungsstatistiken für Ihren benutzerdefinierten Datumsbereich anzuzeigen.",
+      "customDatePlaceholderScreenReader": "Benutzerdefinierter Datumsbereich-Modus ist aktiv. Wählen Sie sowohl Start- als auch Enddatum mit den Datumsauswahlen oben aus, um Nutzungsstatistiken zu laden.",
+      "noApiKeysScreenReader": "Keine API-Schlüssel gefunden. Erstellen Sie Ihren ersten API-Schlüssel, um mit der Verfolgung von Nutzungsstatistiken zu beginnen.",
+      "selectApiKeyScreenReader": "Wählen Sie einen API-Schlüssel aus dem Dropdown oben aus, um dessen Nutzungsstatistiken und Metriken anzuzeigen.",
       "viewApiDocs": "API-Dokumentation anzeigen",
+      "loadingApiKeys": "API-Schlüssel werden geladen...",
+      "noApiKeys": "Keine API-Schlüssel",
+      "selectApiKey": "API-Schlüssel auswählen",
+      "noApiKeysTitle": "Keine API-Schlüssel gefunden",
+      "noApiKeysDescription": "Erstellen Sie einen API-Schlüssel, um mit der Verfolgung Ihrer Nutzungsstatistiken zu beginnen.",
+      "selectApiKeyTitle": "API-Schlüssel auswählen",
+      "selectApiKeyDescription": "Bitte wählen Sie einen API-Schlüssel aus dem Dropdown oben aus, um dessen Nutzungsstatistiken anzuzeigen.",
+      "createApiKey": "API-Schlüssel erstellen",
       "filters": {
         "custom": "Benutzerdefiniert",
         "overview": "Übersicht",
@@ -273,7 +544,10 @@
         "totalCost": "Gesamtkosten",
         "avgResponseTime": "Durchschn. Antwortzeit",
         "successRate": "Erfolgsrate",
-        "successfulRequests": "erfolgreiche Anfragen"
+        "successfulRequests": "erfolgreiche Anfragen",
+        "currency": "EUR",
+        "tokens": "Token",
+        "requests": "Anfragen"
       },
       "charts": {
         "dailyUsage": "Tägliche Nutzung",
@@ -283,18 +557,50 @@
         "topModelsByUsage": "Top-Modelle nach Nutzung",
         "usageByModel": "Nutzung nach Modell",
         "noDataTitle": "Keine Daten Verfügbar",
-        "noDataDescription": "Keine Nutzungsdaten für den ausgewählten Zeitraum gefunden.",
+        "noDataAvailable": "Keine Daten zur Anzeige verfügbar",
+        "noDataExplanation": "Es sind derzeit keine {{metricType}} für den ausgewählten Zeitraum anzuzeigen. Versuchen Sie, einen anderen Datumsbereich auszuwählen oder schauen Sie nach einigen API-Anfragen wieder vorbei.",
+        "noDataDescription": "Keine {{metricType}} Daten für die aktuelle Zeitraumauswahl gefunden",
+        "noDataSummary": "{{chartType}} zeigt keine {{metricType}} Daten für den ausgewählten Zeitraum",
+        "noDataSuggestions": "Versuchen Sie, einige API-Anfragen zu stellen oder einen anderen Datumsbereich auszuwählen, um {{metricType}} Trends über die Zeit zu sehen.",
+        "noDataScreenReader": "{{chartType}} für {{metricType}} Daten im {{timeframe}} Zeitraum enthält keine Datenpunkte. Versuchen Sie, einen anderen Zeitraum auszuwählen oder stellen Sie einige API-Anfragen, um Nutzungstrends zu sehen.",
+        "chartFocused": "{{chartType}} fokussiert. Enthält {{dataPoints}} Datenpunkte. Verwenden Sie Tab, um zu Diagrammsteuerelementen zu navigieren, oder drücken Sie T, um zur Tabellenansicht zu wechseln.",
         "noModelsTitle": "Keine Modelldaten",
         "noModelsDescription": "Keine Modellnutzungsdaten für den ausgewählten Zeitraum verfügbar.",
         "lineChartAriaLabel": "Liniendiagramm zeigt {{metric}} über die Zeit",
         "modelDistributionAriaLabel": "Donut-Diagramm zeigt Modellnutzungsverteilung",
+        "lineChartDescription": "Dieses Liniendiagramm zeigt {{metricType}} Nutzung über die Zeit",
+        "donutChartDescription": "Dieses Donut-Diagramm zeigt die Verteilung von Anfragen auf verschiedene AI-Modelle",
+        "modelBreakdownTable": "Detaillierte Modellnutzungs-Aufschlüsselungstabelle",
+        "usageTrendsDescription": "Liniendiagramm zeigt {{metricType}} Trends über den ausgewählten Zeitraum",
+        "usageTrendsSummary": "Diagramm enthält {{totalPoints}} Datenpunkte mit Werten von {{minValue}} bis {{maxValue}}, Durchschnitt von {{avgValue}}. Der Gesamttrend ist {{trend}}",
+        "modelDistributionSummary": "Verteilungsdiagramm zeigt Nutzung über {{totalModels}} Modelle. Das Top-Modell ist {{topModel}} und macht {{topPercentage}}% von {{totalRequests}} Gesamtanfragen aus",
+        "legendDescription": "Visuelle Darstellung von {{metricType}} Daten über die Zeit",
+        "trend": {
+          "increasing": "steigend",
+          "decreasing": "fallend"
+        },
         "requests": "Anfragen",
         "percentage": "Prozentsatz",
         "modelBreakdown": "Modell-Aufschlüsselung",
         "detailedBreakdown": "Detaillierte Aufschlüsselung"
       },
       "tables": {
-        "topModels": "Top-Modelle-Tabelle"
+        "topModels": "Top-Modelle-Tabelle",
+        "topModelsCaption": "Tabelle mit {{count}} Top-Modellen nach Nutzung für {{dateRange}}, mit insgesamt {{totalRequests}} Anfragen. Verwenden Sie Pfeiltasten, um zwischen Zeilen zu navigieren."
+      },
+      "progressLabels": {
+        "successRate": "Erfolgsrate: {{percentage}} Prozent",
+        "successRateProgress": "Erfolgsrate Fortschrittsbalken: {{percentage}}% erfolgreiche Anfragen ({{successfulRequests}} von {{totalRequests}} Gesamtanfragen)",
+        "successRateTitle": "Erfolgsrate: {{percentage}}%",
+        "modelUsage": "Nutzungsprozentsatz für {{model}}: {{percentage}} Prozent",
+        "modelUsageProgress": "Nutzungsfortschrittsbalken für {{model}}: {{percentage}}% der Gesamtanfragen ({{requests}} von {{totalRequests}})",
+        "modelUsageTitle": "{{model}} Nutzung: {{percentage}}%"
+      },
+      "ariaLabels": {
+        "requestsCount": "{{formatted}} Anfragen (exakte Anzahl: {{count}})",
+        "tokensCount": "{{formatted}} Token (exakte Anzahl: {{count}})",
+        "costAmount": "{{formatted}} Kosten (exakter Betrag: ${{amount}})",
+        "percentageValue": "{{percentage}} Prozent der Gesamtnutzung"
       },
       "tableHeaders": {
         "model": "Modell",
@@ -303,7 +609,9 @@
         "cost": "Kosten",
         "usagePercent": "Nutzung %",
         "count": "Anzahl",
-        "percentage": "Prozentsatz"
+        "percentage": "Prozentsatz",
+        "date": "Datum",
+        "formattedValue": "Formatierter Wert"
       },
       "notifications": {
         "loadError": "Fehler",
@@ -315,8 +623,11 @@
         "exportCompleteDesc": "Nutzungsdaten wurden erfolgreich exportiert.",
         "exportFailed": "Export fehlgeschlagen",
         "exportFailedDesc": "Fehler beim Exportieren der Nutzungsdaten. Bitte versuchen Sie es erneut.",
-        "customDatesRequired": "Bitte wählen Sie sowohl Start- als auch Enddatum für den Export des benutzerdefinierten Bereichs aus."
-      }
+        "customDatesRequired": "Bitte wählen Sie sowohl Start- als auch Enddatum für den Export des benutzerdefinierten Bereichs aus.",
+        "apiKeysLoadError": "Laden der API-Schlüssel fehlgeschlagen",
+        "apiKeysLoadErrorDesc": "API-Schlüssel konnten nicht abgerufen werden. Bitte aktualisieren Sie die Seite oder versuchen Sie es später erneut."
+      },
+      "metricsUpdated": "Nutzungsmetriken aktualisiert. {{requests}} Gesamtanfragen, {{tokens}} Gesamttoken, {{cost}} Gesamtkosten"
     },
     "settings": {
       "title": "Einstellungen",
@@ -325,11 +636,18 @@
       "forms": {
         "displayName": "Anzeigename",
         "displayNamePlaceholder": "Geben Sie Ihren Anzeigenamen ein",
+        "displayNameHelperText": "Dieser Name wird in Ihrem Profil und in der gesamten Anwendung angezeigt",
         "emailNotifications": "E-Mail-Benachrichtigungen",
+        "emailNotificationsHelperText": "Benachrichtigungen über Abonnementänderungen, Nutzungsalarme und Sicherheitsupdates erhalten",
+        "emailNotificationsAriaLabel": "E-Mail-Benachrichtigungen ein- oder ausschalten",
         "autoRefreshDashboard": "Dashboard automatisch aktualisieren",
+        "autoRefreshHelperText": "Dashboard-Daten automatisch alle 30 Sekunden aktualisieren",
+        "autoRefreshAriaLabel": "Automatische Dashboard-Aktualisierung ein- oder ausschalten",
         "enabled": "Aktiviert",
+        "disabled": "Deaktiviert",
         "defaultModelProvider": "Standard-Modellanbieter",
         "rateLimitLabel": "Ratenlimit (Anfragen/Minute)",
+        "rateLimitHelperText": "Dieses Limit wird durch Ihren Abonnementplan festgelegt und kann nicht geändert werden",
         "timeoutLabel": "Zeitüberschreitung (Sekunden)",
         "providerPlaceholder": "OpenAI, Anthropic, usw.",
         "openShiftAI": "OpenShift AI"
@@ -341,6 +659,15 @@
     }
   },
   "ui": {
+    "actions": {
+      "tryAgain": "Erneut versuchen",
+      "logout": "Abmelden",
+      "login": "Mit OpenShift anmelden",
+      "browse": "Durchsuchen",
+      "refresh": "Seite aktualisieren",
+      "openSidebar": "Navigations-Seitenleiste öffnen",
+      "closeSidebar": "Navigations-Seitenleiste schließen"
+    },
     "theme": {
       "light": "Hell",
       "dark": "Dunkel",
@@ -364,12 +691,33 @@
       "clear": "Alle löschen",
       "empty": "Keine Benachrichtigungen"
     },
-    "actions": {
-      "logout": "Abmelden",
-      "login": "Mit OpenShift anmelden",
-      "browse": "Durchsuchen",
-      "refresh": "Seite aktualisieren",
-      "tryAgain": "Erneut versuchen"
+    "accessibility": {
+      "skipToMain": "Zum Hauptinhalt springen",
+      "skipToNavigation": "Zur Navigation springen",
+      "viewModeToggle": "Zwischen Diagramm- und Tabellenansicht wechseln",
+      "showChartView": "Diagrammansicht anzeigen",
+      "showTableView": "Tabellenansicht anzeigen",
+      "exportChartData": "Diagrammdaten als CSV exportieren",
+      "dataTableAlternative": "Datentabellen-Alternative",
+      "chartKeyboardInstructions": "Drücken Sie T, um zwischen Diagramm- und Tabellenansicht zu wechseln. Drücken Sie E, um Daten zu exportieren",
+      "switchedToTable": "Zur Tabellenansicht gewechselt",
+      "switchedToChart": "Zur Diagrammansicht gewechselt",
+      "dataExported": "Daten exportiert nach {{filename}}",
+      "chartContainsDataPoints": "Diagramm enthält {{count}} Datenpunkte",
+      "chartFocused": "Diagramm '{{title}}' ist jetzt fokussiert. Enthält {{dataPoints}} Datenpunkte. Drücken Sie T für Tabellenansicht, E zum Exportieren von Daten oder Tab zur Navigation zu Diagramm-Steuerelementen.",
+      "tableCaption": "Datentabelle für {{title}}",
+      "tableNavigationInstructions": "Verwenden Sie die Pfeiltasten, um zwischen Zeilen und Spalten zu navigieren, oder Tab, um zum nächsten interaktiven Element zu wechseln.",
+      "lineChartSummary": "Liniendiagramm mit {{totalPoints}} Datenpunkten. Werte reichen von {{minValue}} bis {{maxValue}}, mit einem Durchschnitt von {{avgValue}}",
+      "pieChartSummary": "Kreisdiagramm mit {{totalCategories}} Kategorien. Die größte Kategorie ist {{topCategory}} mit {{topPercentage}}%",
+      "noDataAvailable": "Keine Daten zur Anzeige verfügbar",
+      "chartLegend": "Diagramm-Legende mit Informationen zu Datenreihen",
+      "legendSummary": "Legende enthält {{count}} Elemente: {{items}}",
+      "legendPattern": "Serie {{name}} in {{color}} Farbe mit {{pattern}} Linienmuster angezeigt",
+      "patterns": {
+        "solid": "durchgezogen",
+        "dashed": "gestrichelt",
+        "dotted": "gepunktet"
+      }
     },
     "errors": {
       "somethingWrong": "Etwas ist schief gelaufen",

@@ -1,47 +1,68 @@
 {
+  "common": {
+    "label": "Etiqueta",
+    "value": "Valor",
+    "chart": "Gráfico",
+    "table": "Tabla",
+    "export": "Exportar",
+    "day": "Día",
+    "date": "Fecha",
+    "error": "Error",
+    "notAvailable": "N/D",
+    "lineChart": "gráfico de líneas",
+    "dataPoints": "puntos de datos"
+  },
   "nav": {
     "home": "Inicio",
     "models": "Modelos",
     "subscriptions": "Suscripciones",
     "apiKeys": "Claves API",
     "usage": "Uso",
+    "chatbot": "Área de Juegos del Chatbot",
     "settings": "Configuración"
   },
   "pages": {
     "home": {
       "title": "Bienvenido a LiteMaaS",
-      "subtitle": "Tu plataforma de Modelo como Servicio para acceder y gestionar modelos de IA.",
+      "subtitle": "Tu plataforma Modelo como Servicio para acceder y gestionar modelos de IA.",
       "cards": {
         "modelsDescription": "Explorar modelos de IA disponibles",
         "subscriptionsDescription": "Gestionar tus suscripciones de modelos",
         "apiKeysDescription": "Generar y gestionar claves API",
-        "usageDescription": "Monitorear tu uso de API"
+        "usageDescription": "Monitorear tu uso de API",
+        "chatbotDescription": "Probar y experimentar con modelos de IA",
+        "modelsAriaLabel": "Navegar a la página de Modelos para explorar y suscribirse a modelos de IA",
+        "subscriptionsAriaLabel": "Navegar a la página de Suscripciones para gestionar tus suscripciones de modelos",
+        "apiKeysAriaLabel": "Navegar a la página de Claves API para generar y gestionar tus claves API",
+        "chatbotAriaLabel": "Navegar al Área de Juegos del Chatbot para probar y experimentar con modelos de IA",
+        "usageAriaLabel": "Navegar a la página de Uso para monitorear tu uso de API y métricas"
       }
     },
     "login": {
       "brandAlt": "Logo de LiteMaaS",
-      "signInText": "Inicia sesión en tu cuenta",
+      "signInText": "Iniciar sesión en tu cuenta",
       "title": "Iniciar sesión en LiteMaaS",
       "subtitle": "Usa tus credenciales de OpenShift",
       "loginWithOpenShift": "Iniciar sesión con OpenShift",
       "developmentMode": "Modo de Desarrollo",
       "loginAsAdmin": "Iniciar sesión como Administrador (Prueba)",
-      "bypassAuthentication": "Omitir autenticación para propósitos de desarrollo y pruebas"
+      "bypassAuthentication": "Omitir autenticación para propósitos de desarrollo y prueba"
     },
     "models": {
       "title": "Modelos Disponibles",
       "subtitle": "Descubre y suscríbete a modelos de IA de varios proveedores",
-      "noModels": "No hay modelos disponibles aún",
-      "description": "El descubrimiento de modelos y la funcionalidad de suscripción estarán disponibles pronto.",
+      "noModels": "Aún no hay modelos disponibles",
+      "description": "El descubrimiento de modelos y la funcionalidad de suscripción llegarán pronto.",
       "searchPlaceholder": "Buscar modelos...",
       "filters": {
         "allProviders": "Todos los Proveedores",
         "allCategories": "Todas las Categorías"
       },
       "subscribe": "Suscribirse",
+      "subscribeToModel": "Suscribirse a {{modelName}}",
       "subscribing": "Creando suscripción...",
       "contextLabel": "Contexto:",
-      "pricingLabel": "Precios: N/A",
+      "pricingLabel": "Precios: N/D",
       "moreFeatures": "+{{count}} más",
       "loadingTitle": "Cargando Modelos...",
       "loadingDescription": "Descubriendo modelos de IA disponibles de todos los proveedores",
@@ -51,13 +72,47 @@
       "close": "Cerrar",
       "notifications": {
         "subscribeSuccess": "¡Suscripción exitosa!",
-        "subscribeSuccessDesc": "Ahora tienes acceso a {{modelName}}. Puedes generar claves API desde la página de Suscripciones.",
-        "subscribeFailed": "Suscripción fallida",
-        "failedToSubscribe": "Error al suscribirse al modelo",
+        "subscribeSuccessDesc": "Ahora tienes acceso a {{modelName}}. Puedes generar claves desde la página de Claves API.",
+        "subscribeFailed": "Suscripción falló",
+        "failedToSubscribe": "No se pudo suscribir al modelo",
         "alreadySubscribed": "Ya estás suscrito a este modelo",
         "loadError": "Error",
-        "loadErrorDesc": "Error al cargar modelos del servidor.",
-        "loadFailed": "Error al cargar modelos. Por favor intenta de nuevo."
+        "loadErrorDesc": "No se pudieron cargar los modelos desde el servidor.",
+        "loadFailed": "No se pudieron cargar los modelos. Por favor, inténtalo de nuevo."
+      },
+      "searchResults": "Encontrados {{count}} modelos que coinciden con tus criterios",
+      "availability": {
+        "available": "Disponible",
+        "limited": "Disponibilidad limitada",
+        "unavailable": "No disponible"
+      },
+      "categories": {
+        "languageModel": "Modelo de Lenguaje",
+        "multimodal": "Multimodal",
+        "imageGeneration": "Generación de Imágenes",
+        "audio": "Audio"
+      },
+      "ariaLabels": {
+        "modelAvailability": "Disponibilidad del modelo"
+      },
+      "pricing": {
+        "input": "Entrada",
+        "output": "Salida",
+        "separator": "•"
+      },
+      "units": {
+        "tokens": "tokens"
+      },
+      "modal": {
+        "subscribeInfo": "Al suscribirte, obtendrás acceso a este modelo y podrás generar claves API para usarlo.",
+        "category": "Categoría",
+        "contextLength": "Longitud del Contexto",
+        "tokens": "tokens",
+        "pricing": "Precios",
+        "pricingInput": "Entrada",
+        "pricingOutput": "Salida",
+        "pricingUnavailable": "Información de precios no disponible",
+        "features": "Características"
       }
     },
     "subscriptions": {
@@ -66,18 +121,19 @@
       "pageSubtitle": "Gestiona tus suscripciones y uso de modelos de IA",
       "newSubscription": "Nueva Suscripción",
       "loadingTitle": "Cargando Suscripciones...",
-      "loadingDescription": "Obteniendo información de tus suscripciones",
+      "loadingDescription": "Obteniendo tu información de suscripciones",
       "noSubscriptionsTitle": "No se encontraron suscripciones",
       "noSubscriptionsDescription": "No tienes suscripciones activas. Comienza suscribiéndote a un modelo de IA.",
       "viewDetails": "Ver Detalles",
+      "viewDetailsForModel": "Ver detalles para la suscripción de {{modelName}}",
       "detailsTitle": "Detalles de Suscripción",
       "provider": "Proveedor",
       "pricing": "Precios",
-      "status": "Estado",
+      "statusLabel": "Estado",
       "requestQuota": "Cuota de Solicitudes",
       "tokenQuota": "Cuota de Tokens",
-      "requestsUsed": "Solicitudes Usadas",
-      "tokensUsed": "Tokens Usados",
+      "requestsUsed": "Solicitudes Utilizadas",
+      "tokensUsed": "Tokens Utilizados",
       "created": "Creado",
       "features": "Características",
       "close": "Cerrar",
@@ -90,23 +146,37 @@
       "pricingUnavailable": "Información de precios no disponible",
       "inputPricing": "Entrada: ${{cost}}/1K tokens",
       "outputPricing": "Salida: ${{cost}}/1K tokens",
-      "suspendedMessage": "Tu suscripción ha sido suspendida. Contacta soporte o verifica el estado de tu cuenta.",
-      "expiredMessage": "Tu suscripción expiró el {{date}}. Renueva para continuar usando este modelo.",
-      "cancelledMessage": "La suscripción de {{modelName}} ha sido cancelada y eliminada de tu cuenta.",
+      "suspendedMessage": "Tu suscripción ha sido suspendida. Contacta con soporte o verifica el estado de tu cuenta.",
+      "expiredMessage": "Tu suscripción expiró el {{date}}. Renueva para seguir usando este modelo.",
+      "cancelledMessage": "La suscripción de {{modelName}} ha sido cancelada y removida de tu cuenta.",
       "cancelSubscription": "Cancelar Suscripción",
+      "cancelSubscriptionForModel": "Cancelar suscripción de {{modelName}}",
       "cancelling": "Cancelando...",
       "notifications": {
         "loadError": "Error",
-        "loadErrorDesc": "Error al cargar suscripciones del servidor.",
+        "loadErrorDesc": "No se pudieron cargar las suscripciones desde el servidor.",
         "cancelSuccess": "Suscripción Cancelada",
         "cancelError": "Error",
-        "cancelErrorDesc": "Error al cancelar suscripción. Por favor intenta de nuevo.",
-        "cannotCancel": "No se puede Cancelar Suscripción",
-        "cannotCancelDesc": "Hay claves API activas vinculadas a esta suscripción. Por favor elimina todas las claves API primero, luego cancela la suscripción."
+        "cancelErrorDesc": "No se pudo cancelar la suscripción. Por favor, inténtalo de nuevo.",
+        "cannotCancel": "No se Puede Cancelar la Suscripción",
+        "cannotCancelDesc": "Hay claves API activas vinculadas a esta suscripción. Por favor, elimina todas las claves API primero, luego cancela la suscripción."
       },
       "alerts": {
         "suspended": "Suscripción Suspendida",
         "expired": "Suscripción Expirada"
+      },
+      "status": {
+        "active": "Activo",
+        "suspended": "Suspendido",
+        "expired": "Expirado",
+        "pending": "Pendiente"
+      },
+      "ariaLabels": {
+        "status": "Estado"
+      },
+      "pricing": {
+        "input": "Entrada",
+        "output": "Salida"
       }
     },
     "apiKeys": {
@@ -120,14 +190,22 @@
       "showKey": "Mostrar clave",
       "copied": "¡Copiado!",
       "selectModels": "Seleccionar modelos...",
+      "modelsSelected": "{{count}} modelo(s) seleccionado(s)",
       "selectAll": "Seleccionar todo",
+      "selectAllModelsAriaLabel": "Seleccionar o deseleccionar todos los modelos disponibles",
+      "selectModelAriaLabel": "Seleccionar o deseleccionar el modelo {{name}}",
       "noModelsAssigned": "No hay modelos asignados",
       "never": "Nunca",
       "neverExpires": "Nunca expira",
       "forms": {
         "name": "Nombre",
+        "nameHelperText": "Introduce un nombre único para identificar esta clave API",
         "description": "Descripción",
+        "descriptionHelperText": "Descripción opcional para ayudarte a recordar el propósito de esta clave API",
         "models": "Modelos",
+        "modelsHelperText": "Selecciona uno o más modelos a los que esta clave API puede acceder",
+        "modelsSelectedText": "{{count}} modelo(s) seleccionado(s) para esta clave API",
+        "modelsAriaLabel": "Seleccionar modelos para acceso de clave API",
         "expiration": "Expiración",
         "apiKey": "Clave API",
         "yourNewApiKey": "Tu nueva clave API"
@@ -141,7 +219,7 @@
         "adminAccess": "Acceso Administrador"
       },
       "labels": {
-        "rateLimitLabel": "Límite de Velocidad (solicitudes por minuto)",
+        "rateLimitLabel": "Límite de velocidad (solicitudes por minuto)",
         "apiKeyLabel": "Clave API",
         "lastUsed": "Último Uso",
         "actions": "Acciones",
@@ -158,38 +236,40 @@
       "messages": {
         "loadingModels": "Cargando tus modelos suscritos...",
         "noSubscribedModels": "No hay modelos suscritos disponibles",
-        "noSubscribedModelsError": "No se encontraron modelos suscritos. Necesitas una suscripción activa a un modelo antes de crear una clave API.",
+        "noSubscribedModelsError": "No se encontraron modelos suscritos. Necesitas tener una suscripción activa a un modelo antes de crear una clave API.",
         "selectedModels": "Modelos seleccionados",
         "modelsSelected": "{{count}} modelo(s) seleccionado(s)",
-        "keyCreatedSuccess": "{{name}} ha sido creado exitosamente",
-        "keyDeleted": "{{name}} ha sido eliminado",
+        "keyCreatedSuccess": "{{name}} se creó exitosamente",
+        "keyDeleted": "{{name}} fue eliminada",
         "copyToClipboard": "{{label}} copiado al portapapeles",
-        "secureRetrievalMessage": "Haz clic en el ícono del ojo arriba para recuperar de forma segura tu clave API completa de LiteLLM. Por razones de seguridad, esto requiere autenticación reciente y tiene límite de velocidad. Todas las recuperaciones de claves son registradas para auditoría.",
-        "keyCreatedMessage": "Tu clave API ha sido creada exitosamente.",
+        "secureRetrievalMessage": "Haz clic en el ícono del ojo arriba para recuperar de forma segura tu clave API completa de LiteLLM. Por motivos de seguridad, esto requiere autenticación reciente y tiene límite de velocidad. Todas las recuperaciones de claves se registran para fines de auditoría.",
+        "keyCreatedMessage": "Tu clave API se creó exitosamente.",
         "deleteConfirmation": "¿Estás seguro de que quieres eliminar la clave API {{name}}?",
-        "deleteWarning": "Esta acción no se puede deshacer. La clave API será eliminada permanentemente y las aplicaciones que usen esta clave perderán acceso inmediatamente.",
+        "deleteWarning": "Esta acción no se puede deshacer. La clave API se eliminará permanentemente y las aplicaciones que usen esta clave perderán acceso inmediatamente.",
         "keyRevokedMessage": "Esta clave API ha sido revocada y ya no se puede usar.",
         "keyExpiredMessage": "Esta clave API expiró el {{date}}.",
-        "retrievalMessage": "Tu clave API de LiteLLM ha sido recuperada de forma segura. Recuperada en: {{date}}",
+        "retrievalMessage": "Tu clave API de LiteLLM fue recuperada de forma segura. Recuperada el: {{date}}",
         "plusMore": "+{{count}} más",
         "requestsPerMinute": "solicitudes/minuto",
         "apiKeyDetails": "Detalles de Clave API",
-        "managementDescription": "Gestionar claves API para acceder a servicios LiteMaaS",
+        "managementDescription": "Gestionar claves API para acceder a servicios de LiteMaaS",
         "loadingTitle": "Cargando Claves API...",
-        "loadingDescription": "Obteniendo información de tus claves API",
+        "loadingDescription": "Recuperando tu información de claves API",
         "errorLoadingTitle": "Error cargando claves API",
         "noKeysTitle": "No se encontraron claves API",
-        "noKeysDescription": "Crea tu primera clave API para comenzar a usar servicios LiteMaaS."
+        "noKeysDescription": "Crea tu primera clave API para comenzar a usar los servicios de LiteMaaS.",
+        "noKeysScreenReader": "Actualmente no tienes claves API. Usa el botón Crear Clave API para crear tu primera clave y comenzar a usar los servicios de LiteMaaS.",
+        "errorScreenReader": "Error cargando claves API: {{error}}. Usa el botón Reintentar para comenzar de nuevo la carga."
       },
       "placeholders": {
         "keyName": "ej., Clave API de Producción",
         "keyDescription": "Descripción opcional del propósito de esta clave"
       },
       "rateLimits": {
-        "basic": "100 sol/min (Básico)",
-        "standard": "500 sol/min (Estándar)",
-        "premium": "1,000 sol/min (Premium)",
-        "enterprise": "5,000 sol/min (Empresarial)"
+        "basic": "100 req/min (Básico)",
+        "standard": "500 req/min (Estándar)",
+        "premium": "1,000 req/min (Premium)",
+        "enterprise": "5,000 req/min (Empresarial)"
       },
       "timeRanges": {
         "thirtyDays": "30 días",
@@ -202,21 +282,22 @@
       },
       "notifications": {
         "loadError": "Error",
-        "loadErrorDesc": "Error al cargar claves API del servidor.",
+        "loadErrorDesc": "No se pudieron cargar las claves API desde el servidor.",
         "loadModelError": "Error",
-        "loadModelErrorDesc": "Error al cargar tus modelos suscritos.",
+        "loadModelErrorDesc": "No se pudieron cargar tus modelos suscritos.",
         "createSuccess": "Clave API Creada",
         "createError": "Error",
-        "createErrorDesc": "Error al crear clave API. Por favor intenta de nuevo.",
+        "createErrorDesc": "No se pudo crear la clave API. Por favor, inténtalo de nuevo.",
         "deleteSuccess": "Clave API Eliminada",
         "deleteError": "Error",
-        "deleteErrorDesc": "Error al eliminar clave API. Por favor intenta de nuevo.",
+        "deleteErrorDesc": "No se pudo eliminar la clave API. Por favor, inténtalo de nuevo.",
         "retrieveSuccess": "Clave API Recuperada",
         "retrieveError": "Error Recuperando Clave API",
-        "retrieveErrorDesc": "Error al recuperar clave API",
+        "retrieveErrorDesc": "No se pudo recuperar la clave API",
         "validationError": "Error de Validación",
         "nameRequired": "El nombre de la clave API es requerido",
-        "modelsRequired": "Por favor selecciona al menos un modelo de tus suscripciones activas"
+        "modelsRequired": "Por favor, selecciona al menos un modelo de tus suscripciones activas",
+        "pleaseFixFormErrors": "Por favor, corrige los errores del formulario e inténtalo de nuevo"
       },
       "modals": {
         "createTitle": "Crear Clave API",
@@ -232,25 +313,215 @@
       },
       "tableHeaders": {
         "apiKeysTable": "Tabla de Claves API",
+        "apiKeysTableCaption": "Tabla mostrando {{count}} claves API con sus nombres, valores de vista previa, modelos asignados y acciones disponibles. {{description}}",
+        "apiKeysTableStructure": "Usa las teclas de flecha para navegar entre filas y Tab para acceder a botones de acción dentro de cada fila.",
         "keyDetails": "Detalles de clave",
-        "generatedKeyDetails": "Detalles de clave generada"
+        "keyDetailsCaption": "Tabla mostrando información detallada para la clave API '{{keyName}}' incluyendo modelos, fecha de creación y estadísticas de uso",
+        "generatedKeyDetails": "Detalles de clave generada",
+        "generatedKeyDetailsCaption": "Tabla mostrando detalles para la clave API recién creada '{{keyName}}' incluyendo modelos asignados y fecha de expiración"
       },
+      "viewKeyAriaLabel": "Ver detalles para la clave API {{keyName}}",
+      "deleteKeyAriaLabel": "Eliminar clave API {{keyName}}",
+      "hideKeyAriaLabel": "Ocultar valor de clave API para {{keyName}}",
+      "showKeyAriaLabel": "Mostrar valor de clave API para {{keyName}}",
+      "copyKeyAriaLabel": "Copiar valor de clave API para {{keyName}} al portapapeles",
+      "fullKeyVisible": "El valor completo de la clave API para {{keyName}} ahora está visible",
+      "keyPreviewOnly": "Mostrando vista previa de la clave API {{keyName}} - haz clic en mostrar para revelar la clave completa",
       "codeExample": {
         "role": "usuario",
         "content": "¡Hola, mundo!"
+      }
+    },
+    "chatbot": {
+      "title": "Área de Juegos del Chatbot",
+      "subtitle": "Prueba e interactúa con modelos de IA usando una interfaz de chat directa",
+      "loading": "Cargando chatbot...",
+      "description": "Prueba tus claves API y modelos con una interfaz de chat interactiva",
+      "configuration": {
+        "title": "Configuración",
+        "apiKey": "Seleccionar Clave API",
+        "selectApiKey": "Seleccionar una clave API...",
+        "apiKeyPlaceholder": "Elige una clave API para probar",
+        "model": "Seleccionar Modelo",
+        "selectModel": "Seleccionar un modelo...",
+        "modelPlaceholder": "Elige un modelo para probar",
+        "advancedSettings": "Configuración Avanzada",
+        "temperature": "Temperatura",
+        "temperatureDescription": "Controla la aleatoriedad (actual: {{value}})",
+        "temperatureHelp": "Controla la aleatoriedad (0=determinista, 2=creativo)",
+        "maxTokens": "Máx Tokens",
+        "maxTokensHelp": "Longitud máxima de respuesta",
+        "systemPrompt": "Prompt del Sistema",
+        "systemPromptPlaceholder": "Prompt opcional del sistema para guiar el comportamiento de la IA...",
+        "systemPromptHelp": "Configura el comportamiento del asistente",
+        "streaming": "Transmisión en tiempo real",
+        "streamingEnabled": "Habilitar transmisión en tiempo real",
+        "modelsLabel": "modelos"
+      },
+      "quickTests": {
+        "title": "Pruebas Rápidas",
+        "codeGen": "Generación de Código",
+        "translation": "Traducción",
+        "summary": "Resumen",
+        "jsonFormat": "Respuesta JSON",
+        "creative": "Escritura Creativa",
+        "problemSolving": "Resolución de Problemas",
+        "dataAnalysis": "Análisis de Datos",
+        "roleplay": "Juego de Roles",
+        "custom": "Mis Prompts"
+      },
+      "chat": {
+        "welcomeTitle": "Asistente de Prueba de Modelos",
+        "welcomeDescription": "Inicia una conversación para probar tu modelo y clave API seleccionados",
+        "selectModelFirst": "Selecciona una clave API y modelo para comenzar a chatear",
+        "placeholder": "Escribe tu mensaje aquí...",
+        "configureFirst": "Configura primero la clave API y el modelo",
+        "send": "Enviar",
+        "clear": "Limpiar",
+        "clearConversation": "Limpiar conversación",
+        "export": "Exportar",
+        "savePrompt": "Guardar Prompt",
+        "sending": "Enviando...",
+        "stop": "Detener",
+        "stopGeneration": "Detener generación",
+        "streamingInProgress": "Transmisión en progreso...",
+        "emptyConversation": "Aún no hay mensajes. Comienza escribiendo un mensaje abajo."
+      },
+      "welcome": {
+        "title": "Bienvenido al Área de Juegos del Chatbot",
+        "description": "Selecciona una clave API y modelo desde el panel de configuración arriba, luego comienza a chatear para probar tus modelos de IA directamente."
+      },
+      "responseInfo": {
+        "title": "Métricas de Respuesta",
+        "tokens": "Tokens",
+        "promptTokens": "Prompt",
+        "completionTokens": "Completado",
+        "totalTokens": "Total",
+        "responseTime": "Tiempo de Respuesta",
+        "tokenUsage": "Uso de Tokens",
+        "estimatedCost": "Costo Estimado",
+        "timeToFirstToken": "Tiempo al Primer Token",
+        "tokensPerSecond": "Tokens/Segundo",
+        "tokensPerSecondUnit": "tokens/s",
+        "prompt": "prompt",
+        "completion": "completado",
+        "viewRaw": "Ver Respuesta Cruda",
+        "hideRaw": "Ocultar Respuesta Cruda",
+        "noData": "Aún no hay métricas de respuesta disponibles",
+        "noResponse": "No hay datos de respuesta disponibles"
+      },
+      "export": {
+        "title": "Exportar Conversación",
+        "format": "Seleccionar Formato",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "download": "Descargar",
+        "cancel": "Cancelar",
+        "filename": "Nombre de archivo"
+      },
+      "savePromptModal": {
+        "title": "Guardar Prompt",
+        "name": "Nombre del Prompt",
+        "namePlaceholder": "Ingresa un nombre para este prompt",
+        "description": "Descripción (opcional)",
+        "descriptionPlaceholder": "Describe para qué es este prompt",
+        "save": "Guardar",
+        "cancel": "Cancelar"
+      },
+      "prompts": {
+        "builtIn": "Plantillas Integradas",
+        "custom": "Mis Prompts Guardados",
+        "noCustomPrompts": "Aún no hay prompts guardados",
+        "usePrompt": "Usar Este Prompt",
+        "deletePrompt": "Eliminar Prompt",
+        "confirmDelete": "¿Estás seguro de que quieres eliminar este prompt?"
+      },
+      "validation": {
+        "noApiKey": "Por favor selecciona una clave API",
+        "noModel": "Por favor selecciona un modelo",
+        "emptyMessage": "Por favor ingresa un mensaje",
+        "promptNameRequired": "El nombre del prompt es requerido",
+        "promptNameExists": "Ya existe un prompt con este nombre"
+      },
+      "errors": {
+        "requestFailed": "Solicitud falló",
+        "invalidResponse": "Respuesta inválida del servidor",
+        "networkError": "Error de red. Por favor verifica tu conexión e inténtalo de nuevo.",
+        "authError": "Falló la autenticación. Por favor verifica tu clave API.",
+        "rateLimitError": "Límite de tasa excedido. Por favor espera e inténtalo de nuevo.",
+        "validationError": "Error de validación. Por favor verifica tu entrada.",
+        "serverError": "Error del servidor. Por favor inténtalo más tarde.",
+        "timeoutError": "Solicitud expiró. Por favor inténtalo de nuevo.",
+        "unexpectedError": "Ocurrió un error inesperado",
+        "keyRetrievalFailed": "Error al recuperar clave API",
+        "keyRetrievalFailedDesc": "No se pudo recuperar la clave API completa. Por favor verifica tu autenticación e inténtalo de nuevo.",
+        "loadDataFailed": "Error al cargar los datos",
+        "loadModelsFailed": "Error al cargar los modelos",
+        "sendFailed": "Error al enviar el mensaje",
+        "chatError": "Error del chat"
+      },
+      "notifications": {
+        "promptSaved": "Prompt Guardado",
+        "promptSavedDesc": "Tu prompt ha sido guardado exitosamente",
+        "promptDeleted": "Prompt Eliminado",
+        "promptDeletedDesc": "El prompt ha sido eliminado",
+        "conversationCleared": "Conversación Limpiada",
+        "conversationClearedDesc": "El historial de chat ha sido limpiado",
+        "conversationExported": "Conversación Exportada",
+        "conversationExportedDesc": "Tu conversación ha sido exportada exitosamente",
+        "messageSent": "Mensaje Enviado",
+        "apiError": "Error de API",
+        "keyRetrieved": "Clave API Recuperada",
+        "keyRetrievedDesc": "Tu clave API completa ha sido recuperada de forma segura",
+        "savePromptError": "Error Guardando Prompt",
+        "deletePromptError": "Error Eliminando Prompt",
+        "exportError": "Error de Exportación"
+      },
+      "success": {
+        "messageSent": "Mensaje enviado",
+        "responseReceived": "Respuesta recibida exitosamente",
+        "conversationCleared": "Conversación eliminada"
+      },
+      "accessibility": {
+        "configurationPanel": "Panel de configuración para configuraciones del chatbot",
+        "chatInterface": "Interfaz de chat para probar modelos AI",
+        "responseInfoPanel": "Panel de información de respuesta mostrando métricas",
+        "messageHistory": "Historial de mensajes",
+        "sendMessage": "Enviar mensaje al modelo AI",
+        "clearConversation": "Limpiar todos los mensajes en la conversación",
+        "exportConversation": "Exportar conversación a archivo",
+        "saveCurrentPrompt": "Guardar mensaje actual como plantilla de prompt",
+        "selectApiKey": "Seleccionar clave API para autenticación",
+        "selectModel": "Seleccionar modelo AI para pruebas",
+        "adjustTemperature": "Ajustar temperatura para creatividad de respuesta",
+        "setMaxTokens": "Establecer tokens máximos para longitud de respuesta",
+        "enterSystemPrompt": "Ingresar prompt del sistema para guiar comportamiento del modelo"
       }
     },
     "usage": {
       "title": "Panel de Uso",
       "subtitle": "Monitorea tu uso de API, costos y métricas de rendimiento",
       "exportData": "Exportar Datos",
+      "exportUsageData": "Exportar datos de uso para el período de tiempo seleccionado",
       "loadingTitle": "Cargando Datos de Uso...",
       "loadingDescription": "Analizando tus patrones de uso de API y métricas",
       "noDataTitle": "No hay datos de uso disponibles",
-      "noDataDescription": "Comienza a hacer solicitudes API para ver tus estadísticas de uso aquí.",
+      "noDataDescription": "Comienza haciendo solicitudes API para ver tus estadísticas de uso aquí.",
+      "noDataScreenReader": "No hay datos de uso disponibles actualmente. Realiza solicitudes API usando tus claves API para generar estadísticas de uso que se mostrarán aquí.",
       "customDatePlaceholderTitle": "Seleccionar Rango de Fechas",
-      "customDatePlaceholderDescription": "Por favor selecciona las fechas de inicio y fin arriba para ver las estadísticas de uso de tu rango de fechas personalizado.",
-      "viewApiDocs": "Ver Documentación de API",
+      "customDatePlaceholderDescription": "Por favor, selecciona fechas de inicio y fin arriba para mostrar estadísticas de uso para tu rango de fechas personalizado.",
+      "customDatePlaceholderScreenReader": "El modo de rango de fechas personalizado está activo. Selecciona tanto la fecha de inicio como la de fin usando los selectores de fecha arriba para cargar estadísticas de uso.",
+      "noApiKeysScreenReader": "No se encontraron claves API. Crea tu primera clave API para comenzar a rastrear estadísticas de uso.",
+      "selectApiKeyScreenReader": "Selecciona una clave API del menú desplegable arriba para ver sus estadísticas de uso y métricas.",
+      "viewApiDocs": "Ver Documentación API",
+      "loadingApiKeys": "Cargando Claves API...",
+      "noApiKeys": "No Hay Claves API",
+      "selectApiKey": "Seleccionar Clave API",
+      "noApiKeysTitle": "No se Encontraron Claves API",
+      "noApiKeysDescription": "Crea una clave API para comenzar a rastrear tus estadísticas de uso.",
+      "selectApiKeyTitle": "Selecciona una Clave API",
+      "selectApiKeyDescription": "Por favor, selecciona una clave API del menú desplegable arriba para ver sus estadísticas de uso.",
+      "createApiKey": "Crear Clave API",
       "filters": {
         "custom": "Personalizado",
         "overview": "Resumen",
@@ -273,28 +544,63 @@
         "totalCost": "Costo Total",
         "avgResponseTime": "Tiempo de Respuesta Promedio",
         "successRate": "Tasa de Éxito",
-        "successfulRequests": "solicitudes exitosas"
+        "successfulRequests": "solicitudes exitosas",
+        "currency": "EUR",
+        "tokens": "tokens",
+        "requests": "solicitudes"
       },
       "charts": {
         "dailyUsage": "Uso Diario",
-        "modelUsageDistribution": "Distribución de Uso del Modelo",
+        "modelUsageDistribution": "Distribución de Uso de Modelos",
         "errorTypes": "Tipos de Error",
         "usageTrends": "Tendencias de Uso",
         "topModelsByUsage": "Modelos Principales por Uso",
         "usageByModel": "Uso por Modelo",
-        "noDataTitle": "Sin Datos Disponibles",
-        "noDataDescription": "No se encontraron datos de uso para el período de tiempo seleccionado.",
-        "noModelsTitle": "Sin Datos de Modelo",
-        "noModelsDescription": "No hay datos de uso de modelo disponibles para el período seleccionado.",
-        "lineChartAriaLabel": "Gráfico de línea mostrando {{metric}} a lo largo del tiempo",
+        "noDataTitle": "No Hay Datos Disponibles",
+        "noDataAvailable": "No hay datos disponibles para mostrar",
+        "noDataExplanation": "No hay {{metricType}} actualmente para mostrar para el período de tiempo seleccionado. Intenta seleccionar un rango de fechas diferente o revisa de nuevo después de hacer algunas solicitudes API.",
+        "noDataDescription": "No se encontraron datos de {{metricType}} para la selección de período de tiempo actual",
+        "noDataSummary": "{{chartType}} no mostrando datos de {{metricType}} para el período de tiempo seleccionado",
+        "noDataSuggestions": "Intenta hacer algunas solicitudes API o seleccionar un rango de fechas diferente para ver tendencias de {{metricType}} a lo largo del tiempo.",
+        "noDataScreenReader": "{{chartType}} para datos de {{metricType}} en el período {{timeframe}} no contiene puntos de datos. Intenta seleccionar un período de tiempo diferente o hacer algunas solicitudes API para ver tendencias de uso.",
+        "chartFocused": "{{chartType}} enfocado. Contiene {{dataPoints}} puntos de datos. Usa Tab para navegar a controles del gráfico o presiona T para alternar a vista de tabla.",
+        "noModelsTitle": "No Hay Datos de Modelos",
+        "noModelsDescription": "No hay datos de uso de modelos disponibles para el período seleccionado.",
+        "lineChartAriaLabel": "Gráfico de líneas mostrando {{metric}} a lo largo del tiempo",
         "modelDistributionAriaLabel": "Gráfico de dona mostrando distribución de uso de modelos",
+        "lineChartDescription": "Este gráfico de líneas muestra el uso de {{metricType}} a lo largo del tiempo",
+        "donutChartDescription": "Este gráfico de dona muestra la distribución de solicitudes entre diferentes modelos de IA",
+        "modelBreakdownTable": "Tabla detallada de desglose de uso de modelos",
+        "usageTrendsDescription": "Gráfico de líneas mostrando tendencias de {{metricType}} durante el período de tiempo seleccionado",
+        "usageTrendsSummary": "El gráfico contiene {{totalPoints}} puntos de datos con valores que van de {{minValue}} a {{maxValue}}, promediando {{avgValue}}. La tendencia general es {{trend}}",
+        "modelDistributionSummary": "El gráfico de distribución muestra uso a través de {{totalModels}} modelos. El modelo principal es {{topModel}} representando {{topPercentage}}% de {{totalRequests}} solicitudes totales",
+        "legendDescription": "Representación visual de datos de {{metricType}} a lo largo del tiempo",
+        "trend": {
+          "increasing": "creciente",
+          "decreasing": "decreciente"
+        },
         "requests": "Solicitudes",
         "percentage": "Porcentaje",
         "modelBreakdown": "Desglose de Modelo",
         "detailedBreakdown": "Desglose Detallado"
       },
       "tables": {
-        "topModels": "Tabla de modelos principales"
+        "topModels": "Tabla de modelos principales",
+        "topModelsCaption": "Tabla mostrando los {{count}} modelos principales por uso para {{dateRange}}, con un total de {{totalRequests}} solicitudes. Usa las teclas de flecha para navegar entre filas."
+      },
+      "progressLabels": {
+        "successRate": "Tasa de éxito: {{percentage}} por ciento",
+        "successRateProgress": "Barra de progreso de tasa de éxito: {{percentage}}% solicitudes exitosas ({{successfulRequests}} de {{totalRequests}} solicitudes totales)",
+        "successRateTitle": "Tasa de éxito: {{percentage}}%",
+        "modelUsage": "Porcentaje de uso para {{model}}: {{percentage}} por ciento",
+        "modelUsageProgress": "Barra de progreso de uso para {{model}}: {{percentage}}% de solicitudes totales ({{requests}} de {{totalRequests}})",
+        "modelUsageTitle": "Uso de {{model}}: {{percentage}}%"
+      },
+      "ariaLabels": {
+        "requestsCount": "{{formatted}} solicitudes (número exacto: {{count}})",
+        "tokensCount": "{{formatted}} tokens (número exacto: {{count}})",
+        "costAmount": "{{formatted}} costo (cantidad exacta: ${{amount}})",
+        "percentageValue": "{{percentage}} por ciento del uso total"
       },
       "tableHeaders": {
         "model": "Modelo",
@@ -302,34 +608,46 @@
         "tokens": "Tokens",
         "cost": "Costo",
         "usagePercent": "Uso %",
-        "count": "Cantidad",
-        "percentage": "Porcentaje"
+        "count": "Conteo",
+        "percentage": "Porcentaje",
+        "date": "Fecha",
+        "formattedValue": "Valor Formateado"
       },
       "notifications": {
         "loadError": "Error",
-        "loadErrorDesc": "Error al cargar métricas de uso del servidor.",
-        "loadFailed": "Error al cargar métricas de uso. Por favor intenta de nuevo.",
+        "loadErrorDesc": "No se pudieron cargar las métricas de uso desde el servidor.",
+        "loadFailed": "No se pudieron cargar las métricas de uso. Por favor, inténtalo de nuevo.",
         "exportStarted": "Exportación Iniciada",
-        "exportStartedDesc": "La exportación de tus datos de uso se está preparando y se descargará en breve.",
-        "exportComplete": "Exportación Completa",
-        "exportCompleteDesc": "Los datos de uso se han exportado exitosamente.",
-        "exportFailed": "Exportación Fallida",
-        "exportFailedDesc": "Error al exportar datos de uso. Por favor intenta de nuevo.",
-        "customDatesRequired": "Por favor selecciona tanto la fecha de inicio como la de fin para la exportación de rango personalizado."
-      }
+        "exportStartedDesc": "Tu exportación de datos de uso se está preparando y se descargará en breve.",
+        "exportComplete": "Exportación Completada",
+        "exportCompleteDesc": "Los datos de uso se exportaron exitosamente.",
+        "exportFailed": "Exportación Falló",
+        "exportFailedDesc": "No se pudieron exportar los datos de uso. Por favor, inténtalo de nuevo.",
+        "customDatesRequired": "Por favor, selecciona tanto la fecha de inicio como la de fin para la exportación de rango personalizado.",
+        "apiKeysLoadError": "Error de Carga de Claves API",
+        "apiKeysLoadErrorDesc": "No se pudieron recuperar tus claves API. Por favor, actualiza la página o inténtalo de nuevo más tarde."
+      },
+      "metricsUpdated": "Métricas de uso actualizadas. {{requests}} solicitudes totales, {{tokens}} tokens totales, {{cost}} costo total"
     },
     "settings": {
       "title": "Configuración",
       "userPreferences": "Preferencias de Usuario",
-      "apiConfiguration": "Configuración de API",
+      "apiConfiguration": "Configuración API",
       "forms": {
         "displayName": "Nombre para Mostrar",
-        "displayNamePlaceholder": "Ingresa tu nombre para mostrar",
+        "displayNamePlaceholder": "Introduce tu nombre para mostrar",
+        "displayNameHelperText": "Este nombre se mostrará en tu perfil y a través de la aplicación",
         "emailNotifications": "Notificaciones por Email",
+        "emailNotificationsHelperText": "Recibir notificaciones sobre cambios de suscripción, alertas de uso y actualizaciones de seguridad",
+        "emailNotificationsAriaLabel": "Activar o desactivar notificaciones por email",
         "autoRefreshDashboard": "Actualización Automática del Panel",
+        "autoRefreshHelperText": "Actualizar automáticamente los datos del panel cada 30 segundos",
+        "autoRefreshAriaLabel": "Activar o desactivar la actualización automática del panel",
         "enabled": "Habilitado",
+        "disabled": "Deshabilitado",
         "defaultModelProvider": "Proveedor de Modelo Predeterminado",
         "rateLimitLabel": "Límite de Velocidad (solicitudes/minuto)",
+        "rateLimitHelperText": "Este límite está establecido por tu plan de suscripción y no se puede modificar",
         "timeoutLabel": "Tiempo de Espera (segundos)",
         "providerPlaceholder": "OpenAI, Anthropic, etc.",
         "openShiftAI": "OpenShift AI"
@@ -341,10 +659,19 @@
     }
   },
   "ui": {
+    "actions": {
+      "tryAgain": "Intentar de nuevo",
+      "logout": "Cerrar sesión",
+      "login": "Iniciar sesión con OpenShift",
+      "browse": "Explorar",
+      "refresh": "Actualizar página",
+      "openSidebar": "Abrir barra lateral de navegación",
+      "closeSidebar": "Cerrar barra lateral de navegación"
+    },
     "theme": {
       "light": "Claro",
       "dark": "Oscuro",
-      "toggle": "Cambiar tema"
+      "toggle": "Alternar tema"
     },
     "language": {
       "selector": "Idioma",
@@ -364,16 +691,37 @@
       "clear": "Limpiar todo",
       "empty": "Sin notificaciones"
     },
-    "actions": {
-      "logout": "Cerrar sesión",
-      "login": "Iniciar sesión con OpenShift",
-      "browse": "Explorar",
-      "refresh": "Refrescar página",
-      "tryAgain": "Intentar de nuevo"
+    "accessibility": {
+      "skipToMain": "Saltar al contenido principal",
+      "skipToNavigation": "Saltar a la navegación",
+      "viewModeToggle": "Alternar entre vista de gráfico y tabla",
+      "showChartView": "Mostrar vista de gráfico",
+      "showTableView": "Mostrar vista de tabla",
+      "exportChartData": "Exportar datos del gráfico como CSV",
+      "dataTableAlternative": "Alternativa de tabla de datos",
+      "chartKeyboardInstructions": "Presiona T para alternar entre vista de gráfico y tabla. Presiona E para exportar datos",
+      "switchedToTable": "Cambiado a vista de tabla",
+      "switchedToChart": "Cambiado a vista de gráfico",
+      "dataExported": "Datos exportados a {{filename}}",
+      "chartContainsDataPoints": "El gráfico contiene {{count}} puntos de datos",
+      "chartFocused": "Gráfico '{{title}}' ahora está enfocado. Contiene {{dataPoints}} puntos de datos. Presiona T para alternar a vista de tabla, E para exportar datos, o Tab para navegar a controles del gráfico.",
+      "tableCaption": "Tabla de datos para {{title}}",
+      "tableNavigationInstructions": "Usa las teclas de flecha para navegar entre filas y columnas, o Tab para moverte al siguiente elemento interactivo.",
+      "lineChartSummary": "Gráfico de líneas con {{totalPoints}} puntos de datos. Los valores van de {{minValue}} a {{maxValue}}, con un promedio de {{avgValue}}",
+      "pieChartSummary": "Gráfico circular mostrando {{totalCategories}} categorías. La categoría más grande es {{topCategory}} con {{topPercentage}}%",
+      "noDataAvailable": "No hay datos disponibles para mostrar",
+      "chartLegend": "Leyenda del gráfico con información de series de datos",
+      "legendSummary": "La leyenda contiene {{count}} elementos: {{items}}",
+      "legendPattern": "Serie {{name}} mostrada en color {{color}} con patrón de línea {{pattern}}",
+      "patterns": {
+        "solid": "sólida",
+        "dashed": "discontinua",
+        "dotted": "punteada"
+      }
     },
     "errors": {
       "somethingWrong": "Algo salió mal",
-      "tryRefresh": "Lo sentimos, pero algo inesperado ocurrió. Por favor intenta refrescar la página o contacta soporte si el problema persiste."
+      "tryRefresh": "Lo sentimos, pero algo inesperado ocurrió. Por favor, intenta actualizar la página o contacta con soporte si el problema persiste."
     }
   }
 }

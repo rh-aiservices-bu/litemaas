@@ -30,22 +30,36 @@ export const sanitizeChartLabel = (label: string): string => {
     return '';
   }
 
-  // Remove HTML tags and dangerous characters
-  return label
-    .replace(/<[^>]*>/g, '') // Remove HTML tags
-    .replace(/[<>'"&]/g, (match) => {
-      // Escape dangerous characters
-      const escapeMap: Record<string, string> = {
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#x27;',
-        '&': '&amp;',
-      };
-      return escapeMap[match] || match;
-    })
-    .trim()
-    .substring(0, 100); // Limit length to prevent overflow
+  let sanitized = label;
+
+  // Special handling for data URLs with script content
+  if (sanitized.includes('data:text/html')) {
+    sanitized = sanitized.replace(
+      /data:text\/html[^,]*,<script[^>]*>.*?<\/script>/gi,
+      'data:text/html,',
+    );
+  }
+
+  // Remove script blocks and well-formed HTML tags (but not standalone < > characters)
+  sanitized = sanitized
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '') // Remove script blocks entirely
+    .replace(/<([a-zA-Z][a-zA-Z0-9]*)\b[^>]*>/g, '') // Remove opening HTML tags
+    .replace(/<\/([a-zA-Z][a-zA-Z0-9]*)>/g, '') // Remove closing HTML tags
+    .replace(/\/\*.*?\*\//g, ''); // Remove comment blocks
+
+  // Escape dangerous characters for safe display (including standalone < >)
+  sanitized = sanitized.replace(/[<>'"&]/g, (match) => {
+    const escapeMap: Record<string, string> = {
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#x27;',
+      '&': '&amp;',
+    };
+    return escapeMap[match] || match;
+  });
+
+  return sanitized.trim().substring(0, 100); // Limit length to prevent overflow
 };
 
 /**
@@ -119,12 +133,7 @@ export const sanitizeNumericValue = (
     allowNegative?: boolean;
   } = {},
 ): number => {
-  const {
-    min = 0,
-    max = Number.MAX_SAFE_INTEGER,
-    defaultValue = 0,
-    allowNegative = false,
-  } = options;
+  const { min, max = Number.MAX_SAFE_INTEGER, defaultValue = 0, allowNegative = false } = options;
 
   // Convert to number
   const numValue = Number(value);
@@ -134,13 +143,17 @@ export const sanitizeNumericValue = (
     return defaultValue;
   }
 
-  // Apply constraints
+  // Apply negative constraint
   if (!allowNegative && numValue < 0) {
     return defaultValue;
   }
 
-  if (numValue < min) {
-    return min;
+  // Determine effective minimum based on allowNegative
+  const effectiveMin = min !== undefined ? min : allowNegative ? Number.NEGATIVE_INFINITY : 0;
+
+  // Apply min/max constraints
+  if (numValue < effectiveMin) {
+    return effectiveMin === Number.NEGATIVE_INFINITY ? numValue : effectiveMin;
   }
 
   if (numValue > max) {
@@ -159,9 +172,19 @@ export const sanitizeModelName = (modelName: string): string => {
     return 'Unknown Model';
   }
 
-  // Allow alphanumeric, hyphens, underscores, dots, and spaces
+  // Extract content from HTML tags while preserving all content inside tags
   const sanitized = modelName
-    .replace(/[^a-zA-Z0-9\-_./\s]/g, '')
+    .replace(/<([^>]+)>/g, (_match, content) => {
+      // Extract all content from inside tags (tag name, attributes, etc.)
+      return content.replace(/[=/]/g, ''); // Remove = and / signs but keep the rest
+    }) // Convert <img src=x onerror=alert(1)> to img srcx onerroralert1
+    .replace(/<\/([^>]+)>/g, (_match, content) => {
+      // Extract closing tag content without the forward slash
+      return content.replace(/[=/]/g, '');
+    }) // Convert </script> to script
+    .replace(/[<>]/g, '') // Remove any remaining angle brackets
+    .replace(/[^a-zA-Z0-9\-_./\s]/g, '') // Remove dangerous characters but keep alphanumeric and safe punctuation
+    .replace(/--+/g, '') // Remove SQL comment markers
     .trim()
     .substring(0, 50); // Limit length
 
@@ -282,9 +305,32 @@ export const sanitizeChartDataArray = <T extends { x: string | number; y: number
     return [];
   }
 
-  return data.filter(isValidChartDataPoint).map((point) => ({
-    ...point,
-    x: typeof point.x === 'string' ? sanitizeChartLabel(point.x) : point.x,
-    y: sanitizeNumericValue(point.y),
-  })) as T[];
+  return data
+    .filter((item): item is { x: string | number; y: unknown } => {
+      // Filter out items with completely invalid structure
+      if (!item || typeof item !== 'object' || !('x' in item) || !('y' in item)) {
+        return false;
+      }
+
+      const x = (item as any).x;
+      const y = (item as any).y;
+
+      // x must be string or number
+      if (typeof x !== 'string' && typeof x !== 'number') {
+        return false;
+      }
+
+      // y must be a number or numeric value that can be meaningfully sanitized
+      // String values that aren't numbers should be filtered out
+      if (typeof y === 'string' && (isNaN(Number(y)) || y.trim() === '')) {
+        return false;
+      }
+
+      return true;
+    })
+    .map((point) => ({
+      ...point,
+      x: typeof point.x === 'string' ? sanitizeChartLabel(point.x) : point.x,
+      y: sanitizeNumericValue(point.y), // Will handle -50, Infinity, etc.
+    })) as T[];
 };

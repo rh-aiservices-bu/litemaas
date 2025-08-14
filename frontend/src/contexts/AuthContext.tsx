@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  ReactNode,
+} from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authService, User } from '../services/auth.service';
 
@@ -31,14 +39,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     try {
       // Check for admin bypass first
       const adminUser = localStorage.getItem('litemaas_admin_user');
       if (adminUser) {
-        const parsedUser = JSON.parse(adminUser);
-        setUser(parsedUser);
-        return;
+        try {
+          const parsedUser = JSON.parse(adminUser);
+          setUser(parsedUser);
+          return;
+        } catch (parseError) {
+          console.error('Failed to parse admin user from localStorage:', parseError);
+          localStorage.removeItem('litemaas_admin_user');
+        }
       }
 
       // Only try to fetch current user if we have a token
@@ -53,22 +66,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Check for admin bypass on error
       const adminUser = localStorage.getItem('litemaas_admin_user');
       if (adminUser) {
-        const parsedUser = JSON.parse(adminUser);
-        setUser(parsedUser);
+        try {
+          const parsedUser = JSON.parse(adminUser);
+          setUser(parsedUser);
+        } catch (parseError) {
+          console.error('Failed to parse admin user from localStorage:', parseError);
+          localStorage.removeItem('litemaas_admin_user');
+          setUser(null);
+        }
       } else {
         setUser(null);
       }
     }
-  };
+  }, []);
 
   useEffect(() => {
     const initAuth = async () => {
       // Check for admin bypass first
       const adminUser = localStorage.getItem('litemaas_admin_user');
       if (adminUser) {
-        setUser(JSON.parse(adminUser));
-        setLoading(false);
-        return;
+        try {
+          setUser(JSON.parse(adminUser));
+          setLoading(false);
+          return;
+        } catch (parseError) {
+          console.error('Failed to parse admin user from localStorage:', parseError);
+          localStorage.removeItem('litemaas_admin_user');
+        }
       }
 
       if (authService.isAuthenticated()) {
@@ -78,9 +102,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     initAuth();
-  }, []);
+  }, [refreshUser]);
 
-  const login = async () => {
+  const login = useCallback(async () => {
     try {
       console.log('Initiating OAuth login...');
       const response = await fetch('/api/auth/login', {
@@ -111,9 +135,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('Login failed:', error);
       // You might want to show an error notification here
     }
-  };
+  }, []);
 
-  const loginAsAdmin = () => {
+  const loginAsAdmin = useCallback(() => {
     const adminUser: User = {
       id: 'admin-bypass',
       username: 'admin',
@@ -125,9 +149,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUser(adminUser);
     localStorage.setItem('litemaas_admin_user', JSON.stringify(adminUser));
     navigate('/');
-  };
+  }, [navigate]);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       // Check if this is an admin bypass session
       const adminUser = localStorage.getItem('litemaas_admin_user');
@@ -148,19 +172,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       navigate('/login');
     }
-  };
+  }, [navigate]);
 
-  const isAuthenticated = !!user || !!localStorage.getItem('litemaas_admin_user');
+  const isAuthenticated = useMemo(() => {
+    return !!user || !!localStorage.getItem('litemaas_admin_user');
+  }, [user]);
 
-  const value: AuthContextType = {
-    user,
-    loading,
-    isAuthenticated,
-    login,
-    loginAsAdmin,
-    logout,
-    refreshUser,
-  };
+  const value: AuthContextType = useMemo(
+    () => ({
+      user,
+      loading,
+      isAuthenticated,
+      login,
+      loginAsAdmin,
+      logout,
+      refreshUser,
+    }),
+    [user, loading, isAuthenticated, login, loginAsAdmin, logout, refreshUser],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

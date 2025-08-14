@@ -98,7 +98,7 @@ git rebase upstream/main
 
 ### Frontend Specific
 - Follow React hooks best practices
-- Use PatternFly 6 components (see [UI Guidelines](docs/development/ui-guidelines.md))
+- Use PatternFly 6 components (see [UI Guidelines](docs/development/pf6-guide/))
 - Implement proper loading and error states
 - Ensure accessibility compliance
 

@@ -60,3 +60,65 @@ code {
 .pf-v6-theme-dark {
   color-scheme: dark;
 }
+
+/* Skip navigation styles for accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: var(--pf-t--global--background--color--primary--default);
+  color: var(--pf-t--global--text--color--regular);
+  padding: 8px;
+  text-decoration: none;
+  border: 1px solid var(--pf-t--global--border--color--default);
+  border-radius: 4px;
+  z-index: 1000;
+  font-size: 14px;
+  font-weight: 500;
+  transition: top 0.3s;
+}
+
+.skip-link:focus,
+.skip-link:active {
+  top: 6px;
+}
+
+/* Screen reader only class - visually hidden but accessible to screen readers */
+.pf-v6-screen-reader {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* High contrast mode improvements */
+@media (prefers-contrast: high) {
+  .pf-v6-c-badge {
+    border: 2px solid currentColor;
+  }
+
+  .pf-v6-c-progress__bar {
+    border: 1px solid currentColor;
+  }
+}
+
+.chat-header {
+  background-color: #0084ff !important;
+  border-top-left-radius: 10px !important;
+  border-top-right-radius: 10px !important;
+  border-bottom-left-radius: 0px !important;
+  border-bottom-right-radius: 0px !important;
+  padding: 10px !important;
+}
+
+.chat-header-title {
+  color: #ffffff !important;
+  width: 100%;
+  text-align: center;
+  padding-top: 0px;
+}

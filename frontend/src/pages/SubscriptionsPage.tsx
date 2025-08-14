@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -24,8 +24,6 @@ import {
   DescriptionListGroup,
   DescriptionListTerm,
   DescriptionListDescription,
-  Progress,
-  ProgressMeasureLocation,
   Spinner,
   EmptyState,
   EmptyStateVariant,
@@ -55,6 +53,46 @@ const SubscriptionsPage: React.FC = () => {
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const modalTriggerRef = useRef<HTMLElement | null>(null);
+  const modalPrimaryButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Set initial focus and focus trap for modal
+  useEffect(() => {
+    if (isDetailsModalOpen) {
+      // Set initial focus to the primary button (Cancel Subscription)
+      setTimeout(() => {
+        modalPrimaryButtonRef.current?.focus();
+      }, 100);
+
+      // Focus trap implementation
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Tab') {
+          const modal = document.querySelector('[aria-modal="true"]') as HTMLElement;
+          if (!modal) return;
+
+          const focusableElements = modal.querySelectorAll(
+            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])',
+          );
+          const firstFocusable = focusableElements[0] as HTMLElement;
+          const lastFocusable = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+          if (event.shiftKey && document.activeElement === firstFocusable) {
+            event.preventDefault();
+            lastFocusable?.focus();
+          } else if (!event.shiftKey && document.activeElement === lastFocusable) {
+            event.preventDefault();
+            firstFocusable?.focus();
+          }
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+    return () => {}; // Return empty cleanup function when modal is not open
+  }, [isDetailsModalOpen]);
 
   // Load subscriptions from API
   const loadSubscriptions = async () => {
@@ -94,11 +132,24 @@ const SubscriptionsPage: React.FC = () => {
       pending: <Spinner size="sm" />,
     };
 
+    const statusLabels = {
+      active: t('pages.subscriptions.status.active'),
+      suspended: t('pages.subscriptions.status.suspended'),
+      expired: t('pages.subscriptions.status.expired'),
+      pending: t('pages.subscriptions.status.pending'),
+    };
+
     return (
-      <Badge color={variants[status as keyof typeof variants]}>
+      <Badge
+        color={variants[status as keyof typeof variants]}
+        aria-label={`${t('pages.subscriptions.ariaLabels.status')}: ${statusLabels[status as keyof typeof statusLabels] || status}`}
+      >
         <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
           <FlexItem>{icons[status as keyof typeof icons]}</FlexItem>
-          <FlexItem>{status.charAt(0).toUpperCase() + status.slice(1)}</FlexItem>
+          <FlexItem>
+            {statusLabels[status as keyof typeof statusLabels] ||
+              status.charAt(0).toUpperCase() + status.slice(1)}
+          </FlexItem>
         </Flex>
       </Badge>
     );
@@ -120,27 +171,33 @@ const SubscriptionsPage: React.FC = () => {
     return (
       <Stack hasGutter>
         <Content component={ContentVariants.small}>
-          Input: ${inputCostPerMillion}/1M {t('pages.usage.metrics.tokens')}
+          {t('pages.subscriptions.pricing.input')}: ${inputCostPerMillion.toFixed(2)}/1M{' '}
+          {t('pages.usage.metrics.tokens')}
           <br />
-          Output: ${outputCostPerMillion}/1M {t('pages.usage.metrics.tokens')}
+          {t('pages.subscriptions.pricing.output')}: ${outputCostPerMillion.toFixed(2)}/1M{' '}
+          {t('pages.usage.metrics.tokens')}
         </Content>
       </Stack>
     );
   };
-
-  const getUsagePercentage = (used: number, limit: number) => {
-    return Math.round((used / limit) * 100);
-  };
-
-  const getUsageVariant = (percentage: number) => {
-    if (percentage >= 90) return 'danger';
-    if (percentage >= 75) return 'warning';
-    return 'success';
-  };
-
-  const handleSubscriptionDetails = (subscription: Subscription) => {
+  /* 
+    const getUsagePercentage = (used: number, limit: number) => {
+      return Math.round((used / limit) * 100);
+    };
+  
+    const getUsageVariant = (percentage: number) => {
+      if (percentage >= 90) return 'danger';
+      if (percentage >= 75) return 'warning';
+      return 'success';
+    };
+   */
+  const handleSubscriptionDetails = (subscription: Subscription, triggerElement?: HTMLElement) => {
     setSelectedSubscription(subscription);
     setIsDetailsModalOpen(true);
+    // Store reference to the trigger element for focus restoration
+    if (triggerElement) {
+      modalTriggerRef.current = triggerElement;
+    }
   };
 
   const handleCancelSubscription = async (subscription: Subscription) => {
@@ -280,6 +337,7 @@ const SubscriptionsPage: React.FC = () => {
                           spaceItems={{ default: 'spaceItemsSm' }}
                         >
                           <FlexItem>{getPricingInfo(subscription)}</FlexItem>
+                          {/* TODO: Implement token usage
                           <FlexItem>
                             <Progress
                               value={getUsagePercentage(
@@ -294,9 +352,24 @@ const SubscriptionsPage: React.FC = () => {
                                 ),
                               )}
                               measureLocation={ProgressMeasureLocation.outside}
+                              aria-label={`Token usage progress: ${subscription.usedTokens.toLocaleString()} of ${subscription.quotaTokens.toLocaleString()} tokens used (${getUsagePercentage(subscription.usedTokens, subscription.quotaTokens)}%)`}
                             />
-                          </FlexItem>
-
+                            <span className="pf-v6-screen-reader">
+                              Usage level:{' '}
+                              {getUsagePercentage(
+                                subscription.usedTokens,
+                                subscription.quotaTokens,
+                              ) >= 90
+                                ? 'Critical - over 90% used'
+                                : getUsagePercentage(
+                                      subscription.usedTokens,
+                                      subscription.quotaTokens,
+                                    ) >= 75
+                                  ? 'High - over 75% used'
+                                  : 'Normal - under 75% used'}
+                            </span>
+                          </FlexItem> */}
+                          {/* TODO: Implement quotas
                           <FlexItem>
                             <Content component={ContentVariants.small}>
                               {t('pages.subscriptions.quotaFormat', {
@@ -304,7 +377,7 @@ const SubscriptionsPage: React.FC = () => {
                                 tokens: subscription.quotaTokens.toLocaleString(),
                               })}
                             </Content>
-                          </FlexItem>
+                          </FlexItem> */}
                         </Flex>
                       </CardBody>
                       <CardFooter>
@@ -313,7 +386,12 @@ const SubscriptionsPage: React.FC = () => {
                             <Button
                               variant="primary"
                               size="sm"
-                              onClick={() => handleSubscriptionDetails(subscription)}
+                              onClick={(event) =>
+                                handleSubscriptionDetails(subscription, event.currentTarget)
+                              }
+                              aria-label={t('pages.subscriptions.viewDetailsForModel', {
+                                modelName: subscription.modelName,
+                              })}
                             >
                               {t('pages.subscriptions.viewDetails')}
                             </Button>
@@ -334,7 +412,21 @@ const SubscriptionsPage: React.FC = () => {
         variant={ModalVariant.medium}
         title={selectedSubscription?.modelName || ''}
         isOpen={isDetailsModalOpen}
-        onClose={() => setIsDetailsModalOpen(false)}
+        onClose={() => {
+          setIsDetailsModalOpen(false);
+          // Restore focus to the trigger element
+          setTimeout(() => {
+            modalTriggerRef.current?.focus();
+          }, 100);
+        }}
+        aria-modal="true"
+        onEscapePress={() => {
+          setIsDetailsModalOpen(false);
+          // Restore focus to the trigger element
+          setTimeout(() => {
+            modalTriggerRef.current?.focus();
+          }, 100);
+        }}
       >
         <ModalHeader>
           <Flex
@@ -377,12 +469,12 @@ const SubscriptionsPage: React.FC = () => {
                 </DescriptionListGroup>
 
                 <DescriptionListGroup>
-                  <DescriptionListTerm>{t('pages.subscriptions.status')}</DescriptionListTerm>
+                  <DescriptionListTerm>{t('pages.subscriptions.statusLabel')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     {getStatusBadge(selectedSubscription.status)}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-
+                {/* TODO Implement quotas and token counts
                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('pages.subscriptions.requestQuota')}</DescriptionListTerm>
                   <DescriptionListDescription>
@@ -424,7 +516,22 @@ const SubscriptionsPage: React.FC = () => {
                             ),
                           )}
                           measureLocation={ProgressMeasureLocation.outside}
+                          aria-label={`Request usage progress: ${selectedSubscription.usedRequests.toLocaleString()} of ${selectedSubscription.quotaRequests.toLocaleString()} requests used (${getUsagePercentage(selectedSubscription.usedRequests, selectedSubscription.quotaRequests)}%)`}
                         />
+                        <span className="pf-v6-screen-reader">
+                          Usage level:{' '}
+                          {getUsagePercentage(
+                            selectedSubscription.usedRequests,
+                            selectedSubscription.quotaRequests,
+                          ) >= 90
+                            ? 'Critical - over 90% used'
+                            : getUsagePercentage(
+                              selectedSubscription.usedRequests,
+                              selectedSubscription.quotaRequests,
+                            ) >= 75
+                              ? 'High - over 75% used'
+                              : 'Normal - under 75% used'}
+                        </span>
                       </FlexItem>
                     </Flex>
                   </DescriptionListDescription>
@@ -455,12 +562,27 @@ const SubscriptionsPage: React.FC = () => {
                             ),
                           )}
                           measureLocation={ProgressMeasureLocation.outside}
+                          aria-label={`Token usage progress: ${selectedSubscription.usedTokens.toLocaleString()} of ${selectedSubscription.quotaTokens.toLocaleString()} tokens used (${getUsagePercentage(selectedSubscription.usedTokens, selectedSubscription.quotaTokens)}%)`}
                         />
+                        <span className="pf-v6-screen-reader">
+                          Usage level:{' '}
+                          {getUsagePercentage(
+                            selectedSubscription.usedTokens,
+                            selectedSubscription.quotaTokens,
+                          ) >= 90
+                            ? 'Critical - over 90% used'
+                            : getUsagePercentage(
+                              selectedSubscription.usedTokens,
+                              selectedSubscription.quotaTokens,
+                            ) >= 75
+                              ? 'High - over 75% used'
+                              : 'Normal - under 75% used'}
+                        </span>
                       </FlexItem>
                     </Flex>
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-
+ */}
                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('pages.subscriptions.created')}</DescriptionListTerm>
                   <DescriptionListDescription>
@@ -519,16 +641,33 @@ const SubscriptionsPage: React.FC = () => {
             }}
           >
             <Button
+              ref={modalPrimaryButtonRef}
               variant="danger"
               onClick={() => selectedSubscription && handleCancelSubscription(selectedSubscription)}
               isDisabled={selectedSubscription?.status === 'expired' || isCancelling}
               isLoading={isCancelling}
+              aria-label={
+                selectedSubscription?.modelName
+                  ? t('pages.subscriptions.cancelSubscriptionForModel', {
+                      modelName: selectedSubscription.modelName,
+                    })
+                  : undefined
+              }
             >
               {isCancelling
                 ? t('pages.subscriptions.cancelling')
                 : t('pages.subscriptions.cancelSubscription')}
             </Button>
-            <Button variant="link" onClick={() => setIsDetailsModalOpen(false)}>
+            <Button
+              variant="link"
+              onClick={() => {
+                setIsDetailsModalOpen(false);
+                // Restore focus to the trigger element
+                setTimeout(() => {
+                  modalTriggerRef.current?.focus();
+                }, 100);
+              }}
+            >
               {t('pages.subscriptions.close')}
             </Button>
           </div>

@@ -52,7 +52,9 @@ describe('Auth Hooks Middleware', () => {
         queryOne: vi.fn(),
         query: vi.fn(),
       },
-      createAuthError: vi.fn().mockReturnValue(new Error('Authentication required')),
+      createAuthError: vi.fn().mockImplementation((message) => {
+        return new Error(typeof message === 'string' ? message : 'Authentication required');
+      }),
       createError: vi.fn().mockImplementation((code, message) => {
         const error = new Error(typeof message === 'string' ? message : message.message);
         (error as any).statusCode = code;
@@ -184,6 +186,14 @@ describe('Auth Hooks Middleware', () => {
     });
 
     it('should reject disabled user accounts', async () => {
+      const testUser = {
+        userId: 'user-123',
+        username: 'testuser',
+        email: 'test@example.com',
+        roles: ['user'],
+        iat: Math.floor(Date.now() / 1000) - 60,
+      };
+      
       mockFastify.dbUtils!.queryOne = vi.fn().mockResolvedValue({ is_active: false });
 
       const requireRecentAuth = async (request: FastifyRequest, _reply: FastifyReply) => {
@@ -203,8 +213,14 @@ describe('Auth Hooks Middleware', () => {
         }
       };
 
+      // Create the authenticated request with the user
+      const authRequest: AuthenticatedRequest = {
+        ...mockRequest,
+        user: testUser,
+      } as AuthenticatedRequest;
+
       await expect(
-        requireRecentAuth(mockRequest as FastifyRequest, mockReply as FastifyReply),
+        requireRecentAuth(authRequest as FastifyRequest, mockReply as FastifyReply),
       ).rejects.toThrow('User account is disabled');
     });
   });
