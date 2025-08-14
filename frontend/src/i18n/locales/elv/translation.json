@@ -18,6 +18,7 @@
     "subscriptions": "Glaemscaul",
     "apiKeys": "Anguirel-API",
     "usage": "Aerlinn",
+    "chatbot": "Glingad-Celeb",
     "settings": "Govannen"
   },
   "pages": {
@@ -292,6 +293,172 @@
       "codeExample": {
         "role": "aduiadan",
         "content": "Suilad, arda!"
+      }
+    },
+    "chatbot": {
+      "title": "Glingad-Celeb",
+      "subtitle": "Prestanno a anglenna IA-echuin dan thîn-glingad-gwedh",
+      "loading": "Lain prestann-glingad...",
+      "description": "Prestanno anguirel-API a echuin dan glingad gwedh-vuin",
+      "configuration": {
+        "title": "Orthad",
+        "apiKey": "Edhello Anguirel-API",
+        "apiKeyPlaceholder": "Edhello anguirel-API nan prestanno",
+        "model": "Edhello Echui",
+        "modelPlaceholder": "Edhello echui nan prestanno",
+        "advancedSettings": "Orthad Govannon",
+        "temperature": "Lûn-rond",
+        "temperatureHelp": "Orthad randui (0=thand, 2=dagor-vuin)",
+        "maxTokens": "Têw Uir",
+        "maxTokensHelp": "Dandollen and uir",
+        "systemPrompt": "Orthad-Peth",
+        "systemPromptHelp": "Gwaedho orthad-uin caran",
+        "systemPromptPlaceholder": "Minno orthad-peth (muindor)",
+        "streaming": "Thîn-rannol",
+        "streamingEnabled": "Orthad thîn-rannol anann",
+        "modelsLabel": "echuin",
+        "selectApiKey": "Edhello anguirel-API...",
+        "selectModel": "Edhello echui...",
+        "temperatureDescription": "Orthad dhûr-gwalh (hinan: {{value}})"
+      },
+      "quickTests": {
+        "title": "Prestann Thand",
+        "codeGen": "Coe-Banda",
+        "translation": "Lam-Thelia",
+        "summary": "Echannen",
+        "jsonFormat": "JSON Dandollen",
+        "creative": "Dagor-Vuin Teitha",
+        "problemSolving": "Ohtar-Gwa",
+        "dataAnalysis": "Gwaed-Minithia",
+        "roleplay": "Echad-Dagor",
+        "custom": "Nin Pethain"
+      },
+      "chat": {
+        "welcomeTitle": "Echui-Prestann Orthad-Uin",
+        "welcomeDescription": "Togo glingad ad prestanno echui a anguirel-API edhellen",
+        "placeholder": "Teitha peth...",
+        "send": "Anno",
+        "clear": "Thuia Glingad",
+        "export": "Edwen",
+        "savePrompt": "Goda Peth",
+        "sending": "Bêd anno...",
+        "emptyConversation": "Uíin peth. Togo teithant peth mi-muin.",
+        "clearConversation": "Heb a gýn sael",
+        "configureFirst": "Prestanno a anglenna egor",
+        "selectModelFirst": "Anann anglenna-echuin egor",
+        "stop": "Daro",
+        "stopGeneration": "Daro anglenna-garch",
+        "streamingInProgress": "Sír-glân an lân"
+      },
+      "responseInfo": {
+        "title": "Dandollen-Gwaed",
+        "tokens": "Têw",
+        "promptTokens": "Peth",
+        "completionTokens": "Echannen",
+        "totalTokens": "Îl",
+        "responseTime": "Dandollen-Lû",
+        "tokenUsage": "Têw Aerlinn",
+        "estimatedCost": "Vuin Minnen",
+        "viewRaw": "Tira Crún Dandollen",
+        "hideRaw": "Thuia Crún Dandollen",
+        "noResponse": "Uíin dandollen-gwaed uír",
+        "timeToFirstToken": "Lû na Têw Minui",
+        "tokensPerSecond": "Têw hen Lhûn",
+        "tokensPerSecondUnit": "têw/lhûn",
+        "prompt": "peth",
+        "completion": "echannen",
+        "noData": "úin gwaed úir"
+      },
+      "export": {
+        "title": "Edwen Glingad",
+        "format": "Edhello Echad",
+        "json": "JSON",
+        "markdown": "Teith-Tegil",
+        "download": "Duin",
+        "cancel": "Maetho",
+        "filename": "Teith-eneth"
+      },
+      "savePromptModal": {
+        "title": "Goda Peth",
+        "name": "Peth-Eneth",
+        "namePlaceholder": "Minno eneth nan peth sin",
+        "description": "Orthael (muindor)",
+        "descriptionPlaceholder": "Orthaelio aníron peth sin",
+        "save": "Goda",
+        "cancel": "Maetho"
+      },
+      "prompts": {
+        "builtIn": "Echuin Thurin",
+        "custom": "Nin Pethain Goda",
+        "noCustomPrompts": "Uin pethain goda",
+        "usePrompt": "Aníra Peth Sin",
+        "deletePrompt": "Orthad Peth",
+        "confirmDelete": "Uir orthad peth sin?"
+      },
+      "validation": {
+        "noApiKey": "Anno edhello anguirel-API",
+        "noModel": "Anno edhello echui",
+        "emptyMessage": "Anno teitha peth",
+        "promptNameRequired": "Aníra peth-eneth",
+        "promptNameExists": "Uir peth dan eneth sin"
+      },
+      "errors": {
+        "requestFailed": "Pedo fael",
+        "invalidResponse": "Dandollen-bêl o thurin",
+        "networkError": "Thâur ohtar. Anno doro gwedh a prestanno.",
+        "authError": "Auth-fael. Anno doro anguirel-API.",
+        "rateLimitError": "Rond-lim thand. Anno dar a prestanno.",
+        "validationError": "Tírad ohtar. Anno doro minnen.",
+        "serverError": "Thurin ohtar. Anno prestanno min.",
+        "timeoutError": "Pedo lû firn. Anno prestanno.",
+        "unexpectedError": "Ú-prestann ohtar orthant",
+        "keyRetrievalFailed": "Anguirel-API dotha fael",
+        "keyRetrievalFailedDesc": "Ú-ern dotha anguirel-API îl. Anno doro auth a prestanno.",
+        "chatError": "Glingad ohtar",
+        "loadDataFailed": "Gwaed lain fael",
+        "loadModelsFailed": "Echuin lain fael",
+        "sendFailed": "Anno fael"
+      },
+      "success": {
+        "messageSent": "Peth Anno",
+        "responseReceived": "Dandollen dotha prestann",
+        "conversationCleared": "Glingad Thuia"
+      },
+      "welcome": {
+        "title": "Mae govannen dan Glingad-Celeb",
+        "description": "Edhello anguirel-API a echui o orthad-rond anann, mae togo glingad ad prestanno IA-echuin istui"
+      },
+      "notifications": {
+        "promptSaved": "Peth Goda",
+        "promptSavedDesc": "Uin peth goda prestann",
+        "promptDeleted": "Peth Orthad",
+        "promptDeletedDesc": "I peth orthad",
+        "conversationCleared": "Glingad Thuia",
+        "conversationClearedDesc": "Glingad-rimm thuia",
+        "conversationExported": "Glingad Edwen",
+        "conversationExportedDesc": "Uin glingad edwen prestann",
+        "messageSent": "Peth Anno",
+        "apiError": "API Ohtar",
+        "keyRetrieved": "Anguirel-API Dotha",
+        "keyRetrievedDesc": "Uin anguirel-API îl dotha díheno",
+        "savePromptError": "Goda Peth Ohtar",
+        "deletePromptError": "Orthad Peth Ohtar",
+        "exportError": "Edwen Ohtar"
+      },
+      "accessibility": {
+        "configurationPanel": "Orthad-rond nan glingad-orthad",
+        "chatInterface": "Glingad-gwedh nan prestanno echuin isui",
+        "responseInfoPanel": "Dandollen-gwaed-rond tira govaded",
+        "messageHistory": "Peth-rimm",
+        "sendMessage": "Anno peth na echui isui",
+        "clearConversation": "Thuia îl peth mi glingad",
+        "exportConversation": "Edwen glingad na teith",
+        "saveCurrentPrompt": "Goda peth hinan sui peth-echad",
+        "selectApiKey": "Edhello anguirel-API nan auth",
+        "selectModel": "Edhello echui isui nan prestanno",
+        "adjustTemperature": "Orthad lûn-rond nan dandollen dagor-vuin",
+        "setMaxTokens": "Gwaedho têw uir nan dandollen and",
+        "enterSystemPrompt": "Minno orthad-peth ad linna echui caran"
       }
     },
     "usage": {

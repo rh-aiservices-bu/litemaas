@@ -18,6 +18,7 @@
     "subscriptions": "구독",
     "apiKeys": "API 키",
     "usage": "사용량",
+    "chatbot": "챗봇 플레이그라운드",
     "settings": "설정"
   },
   "pages": {
@@ -292,6 +293,174 @@
       "codeExample": {
         "role": "사용자",
         "content": "안녕하세요, 세계!"
+      }
+    },
+    "chatbot": {
+      "title": "챗봇 플레이그라운드",
+      "subtitle": "직접적인 채팅 인터페이스를 사용하여 AI 모델을 테스트하고 상호작용",
+      "loading": "챗봇 로딩 중...",
+      "description": "상호작용 챗 인터페이스로 API 키와 모델을 테스트하세요",
+      "configuration": {
+        "title": "구성",
+        "apiKey": "API 키 선택",
+        "apiKeyPlaceholder": "테스트할 API 키 선택",
+        "model": "모델 선택",
+        "modelPlaceholder": "테스트할 모델 선택",
+        "advancedSettings": "고급 설정",
+        "temperature": "온도",
+        "temperatureHelp": "무작위성 제어 (0=결정론적, 2=창의적)",
+        "maxTokens": "최대 토큰",
+        "maxTokensHelp": "최대 응답 길이",
+        "systemPrompt": "시스템 프롬프트",
+        "systemPromptHelp": "어시스턴트 동작 설정",
+        "systemPromptPlaceholder": "AI 동작을 가이드하는 선택적 시스템 프롬프트...",
+        "selectApiKey": "API 키를 선택하세요...",
+        "selectModel": "모델을 선택하세요...",
+        "temperatureDescription": "무작위성 제어 (현재: {{value}})",
+        "streaming": "실시간 스트리밍",
+        "streamingEnabled": "실시간 스트리밍 활성화",
+        "modelsLabel": "모델"
+      },
+      "quickTests": {
+        "title": "빠른 테스트",
+        "codeGen": "코드 생성",
+        "translation": "번역",
+        "summary": "요약",
+        "jsonFormat": "JSON 응답",
+        "creative": "창의적 글쓰기",
+        "problemSolving": "문제 해결",
+        "dataAnalysis": "데이터 분석",
+        "roleplay": "역할 연기",
+        "custom": "내 프롬프트"
+      },
+      "chat": {
+        "welcomeTitle": "모델 테스트 어시스턴트",
+        "welcomeDescription": "선택한 모델과 API 키를 테스트하기 위해 대화를 시작하세요",
+        "placeholder": "메시지를 입력하세요...",
+        "send": "전송",
+        "clear": "챗 지우기",
+        "export": "내보내기",
+        "savePrompt": "프롬프트 저장",
+        "sending": "전송 중...",
+        "stop": "중지",
+        "stopGeneration": "생성 중지",
+        "streamingInProgress": "스트리밍 진행 중...",
+        "selectModelFirst": "채팅을 시작하려면 API 키와 모델을 선택하세요",
+        "placeholder": "여기에 메시지를 입력하세요...",
+        "configureFirst": "먼저 API 키와 모델을 구성하세요",
+        "clear": "지우기",
+        "clearConversation": "대화 지우기",
+        "emptyConversation": "아직 메시지가 없습니다. 아래에 메시지를 입력하여 시작하세요."
+      },
+      "welcome": {
+        "title": "챗봇 플레이그라운드에 오신 것을 환영합니다",
+        "description": "위의 구성 패널에서 API 키와 모델을 선택한 다음, 채팅을 시작하여 AI 모델을 직접 테스트하세요."
+      },
+      "responseInfo": {
+        "title": "응답 메트릭",
+        "tokens": "토큰",
+        "promptTokens": "프롬프트",
+        "completionTokens": "완료",
+        "totalTokens": "총계",
+        "responseTime": "응답 시간",
+        "tokenUsage": "토큰 사용량",
+        "estimatedCost": "예상 비용",
+        "timeToFirstToken": "첫 번째 토큰까지의 시간",
+        "tokensPerSecond": "토큰/초",
+        "tokensPerSecondUnit": "토큰/초",
+        "prompt": "프롬프트",
+        "completion": "완성",
+        "viewRaw": "원시 응답 보기",
+        "hideRaw": "원시 응답 숨기기",
+        "noData": "아직 응답 메트릭이 없습니다",
+        "noResponse": "사용 가능한 응답 데이터가 없습니다"
+      },
+      "export": {
+        "title": "대화 내보내기",
+        "format": "형식 선택",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "download": "다운로드",
+        "cancel": "취소",
+        "filename": "파일명"
+      },
+      "savePromptModal": {
+        "title": "프롬프트 저장",
+        "name": "프롬프트 이름",
+        "namePlaceholder": "이 프롬프트의 이름을 입력하세요",
+        "description": "설명 (선택사항)",
+        "descriptionPlaceholder": "이 프롬프트가 무엇에 사용되는지 설명하세요",
+        "save": "저장",
+        "cancel": "취소"
+      },
+      "prompts": {
+        "builtIn": "내장 템플릿",
+        "custom": "내가 저장한 프롬프트",
+        "noCustomPrompts": "아직 저장된 프롬프트가 없습니다",
+        "usePrompt": "이 프롬프트 사용",
+        "deletePrompt": "프롬프트 삭제",
+        "confirmDelete": "이 프롬프트를 삭제하시겠습니까?"
+      },
+      "validation": {
+        "noApiKey": "API 키를 선택해 주세요",
+        "noModel": "모델을 선택해 주세요",
+        "emptyMessage": "메시지를 입력해 주세요",
+        "promptNameRequired": "프롬프트 이름이 필요합니다",
+        "promptNameExists": "이 이름의 프롬프트가 이미 존재합니다"
+      },
+      "errors": {
+        "requestFailed": "요청 실패",
+        "invalidResponse": "서버로부터 유효하지 않은 응답",
+        "networkError": "네트워크 오류. 연결을 확인하고 다시 시도하세요.",
+        "authError": "인증 실패. API 키를 확인해 주세요.",
+        "rateLimitError": "속도 제한 초과. 잠시 기다려 주세요.",
+        "validationError": "유효성 검사 오류. 입력을 확인해 주세요.",
+        "serverError": "서버 오류. 나중에 다시 시도해 주세요.",
+        "timeoutError": "요청 시간 초과. 다시 시도해 주세요.",
+        "unexpectedError": "예상치 못한 오류가 발생했습니다",
+        "keyRetrievalFailed": "API 키 검색 실패",
+        "keyRetrievalFailedDesc": "전체 API 키를 검색할 수 없습니다. 인증을 확인하고 다시 시도해 주세요.",
+        "loadDataFailed": "데이터 로드 실패",
+        "loadModelsFailed": "모델 로드 실패",
+        "sendFailed": "메시지 전송 실패",
+        "chatError": "채팅 오류"
+      },
+      "notifications": {
+        "promptSaved": "프롬프트 저장됨",
+        "promptSavedDesc": "프롬프트가 성공적으로 저장되었습니다",
+        "promptDeleted": "프롬프트 삭제됨",
+        "promptDeletedDesc": "프롬프트가 삭제되었습니다",
+        "conversationCleared": "대화 지워짐",
+        "conversationClearedDesc": "챗 기록이 지워졌습니다",
+        "conversationExported": "대화 내보내기 완료",
+        "conversationExportedDesc": "대화가 성공적으로 내보내졌습니다",
+        "messageSent": "메시지 전송됨",
+        "apiError": "API 오류",
+        "keyRetrieved": "API 키 검색됨",
+        "keyRetrievedDesc": "전체 API 키가 안전하게 검색되었습니다",
+        "savePromptError": "프롬프트 저장 오류",
+        "deletePromptError": "프롬프트 삭제 오류",
+        "exportError": "내보내기 오류"
+      },
+      "success": {
+        "messageSent": "메시지 전송됨",
+        "responseReceived": "응답을 성공적으로 받았습니다",
+        "conversationCleared": "대화 삭제됨"
+      },
+      "accessibility": {
+        "configurationPanel": "챗봇 설정을 위한 구성 패널",
+        "chatInterface": "AI 모델을 테스트하기 위한 챗 인터페이스",
+        "responseInfoPanel": "메트릭을 보여주는 응답 정보 패널",
+        "messageHistory": "메시지 기록",
+        "sendMessage": "AI 모델에 메시지 전송",
+        "clearConversation": "대화의 모든 메시지 지우기",
+        "exportConversation": "대화를 파일로 내보내기",
+        "saveCurrentPrompt": "현재 메시지를 프롬프트 템플릿으로 저장",
+        "selectApiKey": "인증을 위한 API 키 선택",
+        "selectModel": "테스트를 위한 AI 모델 선택",
+        "adjustTemperature": "응답 창의성을 위한 온도 조정",
+        "setMaxTokens": "응답 길이를 위한 최대 토큰 설정",
+        "enterSystemPrompt": "모델 동작을 안내하기 위한 시스템 프롬프트 입력"
       }
     },
     "usage": {

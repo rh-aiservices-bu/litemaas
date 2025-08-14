@@ -8,6 +8,7 @@ import HomePage from '../pages/HomePage';
 import ModelsPage from '../pages/ModelsPage';
 import SubscriptionsPage from '../pages/SubscriptionsPage';
 import ApiKeysPage from '../pages/ApiKeysPage';
+import ChatbotPage from '../pages/ChatbotPage';
 import UsagePage from '../pages/UsagePage';
 import SettingsPage from '../pages/SettingsPage';
 import LoginPage from '../pages/LoginPage';
@@ -68,6 +69,10 @@ export const router = createBrowserRouter(
             {
               path: 'api-keys',
               element: <ApiKeysPage />,
+            },
+            {
+              path: 'chatbot',
+              element: <ChatbotPage />,
             },
             {
               path: 'usage',

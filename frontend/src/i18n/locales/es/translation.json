@@ -18,6 +18,7 @@
     "subscriptions": "Suscripciones",
     "apiKeys": "Claves API",
     "usage": "Uso",
+    "chatbot": "Área de Juegos del Chatbot",
     "settings": "Configuración"
   },
   "pages": {
@@ -292,6 +293,172 @@
       "codeExample": {
         "role": "usuario",
         "content": "¡Hola, mundo!"
+      }
+    },
+    "chatbot": {
+      "title": "Área de Juegos del Chatbot",
+      "subtitle": "Prueba e interactúa con modelos de IA usando una interfaz de chat directa",
+      "loading": "Cargando chatbot...",
+      "description": "Prueba tus claves API y modelos con una interfaz de chat interactiva",
+      "configuration": {
+        "title": "Configuración",
+        "apiKey": "Seleccionar Clave API",
+        "selectApiKey": "Seleccionar una clave API...",
+        "apiKeyPlaceholder": "Elige una clave API para probar",
+        "model": "Seleccionar Modelo",
+        "selectModel": "Seleccionar un modelo...",
+        "modelPlaceholder": "Elige un modelo para probar",
+        "advancedSettings": "Configuración Avanzada",
+        "temperature": "Temperatura",
+        "temperatureDescription": "Controla la aleatoriedad (actual: {{value}})",
+        "temperatureHelp": "Controla la aleatoriedad (0=determinista, 2=creativo)",
+        "maxTokens": "Máx Tokens",
+        "maxTokensHelp": "Longitud máxima de respuesta",
+        "systemPrompt": "Prompt del Sistema",
+        "systemPromptPlaceholder": "Prompt opcional del sistema para guiar el comportamiento de la IA...",
+        "systemPromptHelp": "Configura el comportamiento del asistente",
+        "streaming": "Transmisión en tiempo real",
+        "streamingEnabled": "Habilitar transmisión en tiempo real",
+        "modelsLabel": "modelos"
+      },
+      "quickTests": {
+        "title": "Pruebas Rápidas",
+        "codeGen": "Generación de Código",
+        "translation": "Traducción",
+        "summary": "Resumen",
+        "jsonFormat": "Respuesta JSON",
+        "creative": "Escritura Creativa",
+        "problemSolving": "Resolución de Problemas",
+        "dataAnalysis": "Análisis de Datos",
+        "roleplay": "Juego de Roles",
+        "custom": "Mis Prompts"
+      },
+      "chat": {
+        "welcomeTitle": "Asistente de Prueba de Modelos",
+        "welcomeDescription": "Inicia una conversación para probar tu modelo y clave API seleccionados",
+        "selectModelFirst": "Selecciona una clave API y modelo para comenzar a chatear",
+        "placeholder": "Escribe tu mensaje aquí...",
+        "configureFirst": "Configura primero la clave API y el modelo",
+        "send": "Enviar",
+        "clear": "Limpiar",
+        "clearConversation": "Limpiar conversación",
+        "export": "Exportar",
+        "savePrompt": "Guardar Prompt",
+        "sending": "Enviando...",
+        "stop": "Detener",
+        "stopGeneration": "Detener generación",
+        "streamingInProgress": "Transmisión en progreso...",
+        "emptyConversation": "Aún no hay mensajes. Comienza escribiendo un mensaje abajo."
+      },
+      "welcome": {
+        "title": "Bienvenido al Área de Juegos del Chatbot",
+        "description": "Selecciona una clave API y modelo desde el panel de configuración arriba, luego comienza a chatear para probar tus modelos de IA directamente."
+      },
+      "responseInfo": {
+        "title": "Métricas de Respuesta",
+        "tokens": "Tokens",
+        "promptTokens": "Prompt",
+        "completionTokens": "Completado",
+        "totalTokens": "Total",
+        "responseTime": "Tiempo de Respuesta",
+        "tokenUsage": "Uso de Tokens",
+        "estimatedCost": "Costo Estimado",
+        "timeToFirstToken": "Tiempo al Primer Token",
+        "tokensPerSecond": "Tokens/Segundo",
+        "tokensPerSecondUnit": "tokens/s",
+        "prompt": "prompt",
+        "completion": "completado",
+        "viewRaw": "Ver Respuesta Cruda",
+        "hideRaw": "Ocultar Respuesta Cruda",
+        "noData": "Aún no hay métricas de respuesta disponibles",
+        "noResponse": "No hay datos de respuesta disponibles"
+      },
+      "export": {
+        "title": "Exportar Conversación",
+        "format": "Seleccionar Formato",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "download": "Descargar",
+        "cancel": "Cancelar",
+        "filename": "Nombre de archivo"
+      },
+      "savePromptModal": {
+        "title": "Guardar Prompt",
+        "name": "Nombre del Prompt",
+        "namePlaceholder": "Ingresa un nombre para este prompt",
+        "description": "Descripción (opcional)",
+        "descriptionPlaceholder": "Describe para qué es este prompt",
+        "save": "Guardar",
+        "cancel": "Cancelar"
+      },
+      "prompts": {
+        "builtIn": "Plantillas Integradas",
+        "custom": "Mis Prompts Guardados",
+        "noCustomPrompts": "Aún no hay prompts guardados",
+        "usePrompt": "Usar Este Prompt",
+        "deletePrompt": "Eliminar Prompt",
+        "confirmDelete": "¿Estás seguro de que quieres eliminar este prompt?"
+      },
+      "validation": {
+        "noApiKey": "Por favor selecciona una clave API",
+        "noModel": "Por favor selecciona un modelo",
+        "emptyMessage": "Por favor ingresa un mensaje",
+        "promptNameRequired": "El nombre del prompt es requerido",
+        "promptNameExists": "Ya existe un prompt con este nombre"
+      },
+      "errors": {
+        "requestFailed": "Solicitud falló",
+        "invalidResponse": "Respuesta inválida del servidor",
+        "networkError": "Error de red. Por favor verifica tu conexión e inténtalo de nuevo.",
+        "authError": "Falló la autenticación. Por favor verifica tu clave API.",
+        "rateLimitError": "Límite de tasa excedido. Por favor espera e inténtalo de nuevo.",
+        "validationError": "Error de validación. Por favor verifica tu entrada.",
+        "serverError": "Error del servidor. Por favor inténtalo más tarde.",
+        "timeoutError": "Solicitud expiró. Por favor inténtalo de nuevo.",
+        "unexpectedError": "Ocurrió un error inesperado",
+        "keyRetrievalFailed": "Error al recuperar clave API",
+        "keyRetrievalFailedDesc": "No se pudo recuperar la clave API completa. Por favor verifica tu autenticación e inténtalo de nuevo.",
+        "loadDataFailed": "Error al cargar los datos",
+        "loadModelsFailed": "Error al cargar los modelos",
+        "sendFailed": "Error al enviar el mensaje",
+        "chatError": "Error del chat"
+      },
+      "notifications": {
+        "promptSaved": "Prompt Guardado",
+        "promptSavedDesc": "Tu prompt ha sido guardado exitosamente",
+        "promptDeleted": "Prompt Eliminado",
+        "promptDeletedDesc": "El prompt ha sido eliminado",
+        "conversationCleared": "Conversación Limpiada",
+        "conversationClearedDesc": "El historial de chat ha sido limpiado",
+        "conversationExported": "Conversación Exportada",
+        "conversationExportedDesc": "Tu conversación ha sido exportada exitosamente",
+        "messageSent": "Mensaje Enviado",
+        "apiError": "Error de API",
+        "keyRetrieved": "Clave API Recuperada",
+        "keyRetrievedDesc": "Tu clave API completa ha sido recuperada de forma segura",
+        "savePromptError": "Error Guardando Prompt",
+        "deletePromptError": "Error Eliminando Prompt",
+        "exportError": "Error de Exportación"
+      },
+      "success": {
+        "messageSent": "Mensaje enviado",
+        "responseReceived": "Respuesta recibida exitosamente",
+        "conversationCleared": "Conversación eliminada"
+      },
+      "accessibility": {
+        "configurationPanel": "Panel de configuración para configuraciones del chatbot",
+        "chatInterface": "Interfaz de chat para probar modelos AI",
+        "responseInfoPanel": "Panel de información de respuesta mostrando métricas",
+        "messageHistory": "Historial de mensajes",
+        "sendMessage": "Enviar mensaje al modelo AI",
+        "clearConversation": "Limpiar todos los mensajes en la conversación",
+        "exportConversation": "Exportar conversación a archivo",
+        "saveCurrentPrompt": "Guardar mensaje actual como plantilla de prompt",
+        "selectApiKey": "Seleccionar clave API para autenticación",
+        "selectModel": "Seleccionar modelo AI para pruebas",
+        "adjustTemperature": "Ajustar temperatura para creatividad de respuesta",
+        "setMaxTokens": "Establecer tokens máximos para longitud de respuesta",
+        "enterSystemPrompt": "Ingresar prompt del sistema para guiar comportamiento del modelo"
       }
     },
     "usage": {

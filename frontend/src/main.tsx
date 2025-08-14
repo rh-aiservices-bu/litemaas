@@ -6,6 +6,7 @@ import { Favicon } from './assets';
 import { initializeAxeAccessibility } from './utils/accessibility-setup';
 import './i18n'; // Initialize i18n
 import './index.css';
+import '@patternfly/chatbot/dist/css/main.css';
 
 // Create a high-contrast PNG favicon for better Chrome visibility
 const createPngFavicon = (): string => {

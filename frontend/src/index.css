@@ -106,3 +106,19 @@ code {
     border: 1px solid currentColor;
   }
 }
+
+.chat-header {
+  background-color: #0084ff !important;
+  border-top-left-radius: 10px !important;
+  border-top-right-radius: 10px !important;
+  border-bottom-left-radius: 0px !important;
+  border-bottom-right-radius: 0px !important;
+  padding: 10px !important;
+}
+
+.chat-header-title {
+  color: #ffffff !important;
+  width: 100%;
+  text-align: center;
+  padding-top: 0px;
+}
