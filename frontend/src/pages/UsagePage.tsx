@@ -61,7 +61,7 @@ const UsagePage: React.FC = () => {
   const { announcement, announce } = useScreenReaderAnnouncement();
 
   const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [, setError] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState('7d');
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
