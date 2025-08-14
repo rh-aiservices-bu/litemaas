@@ -949,13 +949,6 @@ const UsagePage: React.FC = () => {
                                 <Progress
                                   value={usagePercentage}
                                   measureLocation={ProgressMeasureLocation.none}
-                                  variant={
-                                    usagePercentage > 30
-                                      ? 'success'
-                                      : usagePercentage > 15
-                                        ? 'warning'
-                                        : undefined
-                                  }
                                   aria-label={t('pages.usage.progressLabels.modelUsageProgress', {
                                     model: model.name,
                                     percentage: usagePercentage.toFixed(1),
@@ -967,16 +960,6 @@ const UsagePage: React.FC = () => {
                                     percentage: usagePercentage.toFixed(1),
                                   })}
                                 />
-                              </FlexItem>
-                              <FlexItem>
-                                <Content
-                                  component={ContentVariants.small}
-                                  aria-label={t('pages.usage.ariaLabels.percentageValue', {
-                                    percentage: usagePercentage.toFixed(1),
-                                  })}
-                                >
-                                  {usagePercentage.toFixed(1)}%
-                                </Content>
                               </FlexItem>
                             </Flex>
                           </Td>
