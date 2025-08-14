@@ -535,7 +535,7 @@ const ModelsPage: React.FC = () => {
                         <FlexItem>
                           <Content component={ContentVariants.small}>
                             {model.pricing
-                              ? `Input: $${model.pricing.input * 1000000}/1M ${t('pages.usage.metrics.tokens')} • Output: $${model.pricing.output * 1000000}/1M ${t('pages.usage.metrics.tokens')}`
+                              ? `Input: $${(model.pricing.input * 1000000).toFixed(2)}/1M ${t('pages.usage.metrics.tokens')} • Output: $${(model.pricing.output * 1000000).toFixed(2)}/1M ${t('pages.usage.metrics.tokens')}`
                               : t('pages.models.pricingLabel')}
                           </Content>
                         </FlexItem>
@@ -666,11 +666,11 @@ const ModelsPage: React.FC = () => {
                     {selectedModel.pricing ? (
                       <Stack hasGutter>
                         <Content>
-                          Input: ${selectedModel.pricing.input * 1000000}/1M{' '}
+                          Input: ${(selectedModel.pricing.input * 1000000).toFixed(2)}/1M{' '}
                           {t('pages.usage.metrics.tokens')}
                         </Content>
                         <Content>
-                          Output: ${selectedModel.pricing.output * 1000000}/1M{' '}
+                          Output: ${(selectedModel.pricing.output * 1000000).toFixed(2)}/1M{' '}
                           {t('pages.usage.metrics.tokens')}
                         </Content>
                       </Stack>

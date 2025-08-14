@@ -24,8 +24,6 @@ import {
   DescriptionListGroup,
   DescriptionListTerm,
   DescriptionListDescription,
-  Progress,
-  ProgressMeasureLocation,
   Spinner,
   EmptyState,
   EmptyStateVariant,
@@ -173,24 +171,24 @@ const SubscriptionsPage: React.FC = () => {
     return (
       <Stack hasGutter>
         <Content component={ContentVariants.small}>
-          Input: ${inputCostPerMillion}/1M {t('pages.usage.metrics.tokens')}
+          Input: ${inputCostPerMillion.toFixed(2)}/1M {t('pages.usage.metrics.tokens')}
           <br />
-          Output: ${outputCostPerMillion}/1M {t('pages.usage.metrics.tokens')}
+          Output: ${outputCostPerMillion.toFixed(2)}/1M {t('pages.usage.metrics.tokens')}
         </Content>
       </Stack>
     );
   };
-
-  const getUsagePercentage = (used: number, limit: number) => {
-    return Math.round((used / limit) * 100);
-  };
-
-  const getUsageVariant = (percentage: number) => {
-    if (percentage >= 90) return 'danger';
-    if (percentage >= 75) return 'warning';
-    return 'success';
-  };
-
+  /* 
+    const getUsagePercentage = (used: number, limit: number) => {
+      return Math.round((used / limit) * 100);
+    };
+  
+    const getUsageVariant = (percentage: number) => {
+      if (percentage >= 90) return 'danger';
+      if (percentage >= 75) return 'warning';
+      return 'success';
+    };
+   */
   const handleSubscriptionDetails = (subscription: Subscription, triggerElement?: HTMLElement) => {
     setSelectedSubscription(subscription);
     setIsDetailsModalOpen(true);
@@ -337,6 +335,7 @@ const SubscriptionsPage: React.FC = () => {
                           spaceItems={{ default: 'spaceItemsSm' }}
                         >
                           <FlexItem>{getPricingInfo(subscription)}</FlexItem>
+                          {/* TODO: Implement token usage
                           <FlexItem>
                             <Progress
                               value={getUsagePercentage(
@@ -367,8 +366,8 @@ const SubscriptionsPage: React.FC = () => {
                                   ? 'High - over 75% used'
                                   : 'Normal - under 75% used'}
                             </span>
-                          </FlexItem>
-
+                          </FlexItem> */}
+                          {/* TODO: Implement quotas
                           <FlexItem>
                             <Content component={ContentVariants.small}>
                               {t('pages.subscriptions.quotaFormat', {
@@ -376,7 +375,7 @@ const SubscriptionsPage: React.FC = () => {
                                 tokens: subscription.quotaTokens.toLocaleString(),
                               })}
                             </Content>
-                          </FlexItem>
+                          </FlexItem> */}
                         </Flex>
                       </CardBody>
                       <CardFooter>
@@ -473,7 +472,7 @@ const SubscriptionsPage: React.FC = () => {
                     {getStatusBadge(selectedSubscription.status)}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-
+                {/* TODO Implement quotas and token counts
                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('pages.subscriptions.requestQuota')}</DescriptionListTerm>
                   <DescriptionListDescription>
@@ -525,9 +524,9 @@ const SubscriptionsPage: React.FC = () => {
                           ) >= 90
                             ? 'Critical - over 90% used'
                             : getUsagePercentage(
-                                  selectedSubscription.usedRequests,
-                                  selectedSubscription.quotaRequests,
-                                ) >= 75
+                              selectedSubscription.usedRequests,
+                              selectedSubscription.quotaRequests,
+                            ) >= 75
                               ? 'High - over 75% used'
                               : 'Normal - under 75% used'}
                         </span>
@@ -571,9 +570,9 @@ const SubscriptionsPage: React.FC = () => {
                           ) >= 90
                             ? 'Critical - over 90% used'
                             : getUsagePercentage(
-                                  selectedSubscription.usedTokens,
-                                  selectedSubscription.quotaTokens,
-                                ) >= 75
+                              selectedSubscription.usedTokens,
+                              selectedSubscription.quotaTokens,
+                            ) >= 75
                               ? 'High - over 75% used'
                               : 'Normal - under 75% used'}
                         </span>
@@ -581,7 +580,7 @@ const SubscriptionsPage: React.FC = () => {
                     </Flex>
                   </DescriptionListDescription>
                 </DescriptionListGroup>
-
+ */}
                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('pages.subscriptions.created')}</DescriptionListTerm>
                   <DescriptionListDescription>
