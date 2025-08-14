@@ -70,7 +70,7 @@
       "close": "Close",
       "notifications": {
         "subscribeSuccess": "Successfully subscribed!",
-        "subscribeSuccessDesc": "You now have access to {{modelName}}. You can generate API keys from the Subscriptions page.",
+        "subscribeSuccessDesc": "You now have access to {{modelName}}. You can generate keys from the API Keys page.",
         "subscribeFailed": "Subscription failed",
         "failedToSubscribe": "Failed to subscribe to model",
         "alreadySubscribed": "You are already subscribed to this model",

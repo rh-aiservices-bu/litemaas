@@ -70,7 +70,7 @@
       "close": "닫기",
       "notifications": {
         "subscribeSuccess": "구독 성공!",
-        "subscribeSuccessDesc": "이제 {{modelName}}에 액세스할 수 있습니다. 구독 페이지에서 API 키를 생성할 수 있습니다.",
+        "subscribeSuccessDesc": "이제 {{modelName}}에 액세스할 수 있습니다. API 키 페이지에서 키를 생성할 수 있습니다.",
         "subscribeFailed": "구독 실패",
         "failedToSubscribe": "모델 구독 실패",
         "alreadySubscribed": "이미 이 모델을 구독하고 있습니다",

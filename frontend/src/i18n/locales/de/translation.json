@@ -70,7 +70,7 @@
       "close": "Schließen",
       "notifications": {
         "subscribeSuccess": "Erfolgreich abonniert!",
-        "subscribeSuccessDesc": "Sie haben jetzt Zugriff auf {{modelName}}. Sie können API-Schlüssel auf der Abonnements-Seite generieren.",
+        "subscribeSuccessDesc": "Sie haben jetzt Zugriff auf {{modelName}}. Sie können Schlüssel auf der API-Schlüssel-Seite generieren.",
         "subscribeFailed": "Abonnement fehlgeschlagen",
         "failedToSubscribe": "Fehler beim Abonnieren des Modells",
         "alreadySubscribed": "Sie haben dieses Modell bereits abonniert",

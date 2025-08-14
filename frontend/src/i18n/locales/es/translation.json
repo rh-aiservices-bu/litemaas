@@ -70,7 +70,7 @@
       "close": "Cerrar",
       "notifications": {
         "subscribeSuccess": "¡Suscripción exitosa!",
-        "subscribeSuccessDesc": "Ahora tienes acceso a {{modelName}}. Puedes generar claves API desde la página de Suscripciones.",
+        "subscribeSuccessDesc": "Ahora tienes acceso a {{modelName}}. Puedes generar claves desde la página de Claves API.",
         "subscribeFailed": "Suscripción falló",
         "failedToSubscribe": "No se pudo suscribir al modelo",
         "alreadySubscribed": "Ya estás suscrito a este modelo",

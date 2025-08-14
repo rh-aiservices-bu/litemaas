@@ -70,7 +70,7 @@
       "close": "Fermer",
       "notifications": {
         "subscribeSuccess": "Abonnement réussi !",
-        "subscribeSuccessDesc": "Vous avez maintenant accès à {{modelName}}. Vous pouvez générer des clés API depuis la page Abonnements.",
+        "subscribeSuccessDesc": "Vous avez maintenant accès à {{modelName}}. Vous pouvez générer des clés depuis la page Clés API.",
         "subscribeFailed": "Échec de l'abonnement",
         "failedToSubscribe": "Échec de l'abonnement au modèle",
         "alreadySubscribed": "Vous êtes déjà abonné à ce modèle",

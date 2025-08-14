@@ -70,7 +70,7 @@
       "close": "閉じる",
       "notifications": {
         "subscribeSuccess": "サブスクリプション成功！",
-        "subscribeSuccessDesc": "{{modelName}}にアクセスできるようになりました。サブスクリプションページからAPIキーを生成できます。",
+        "subscribeSuccessDesc": "{{modelName}}にアクセスできるようになりました。APIキーページからキーを生成できます。",
         "subscribeFailed": "サブスクリプション失敗",
         "failedToSubscribe": "モデルのサブスクライブに失敗しました",
         "alreadySubscribed": "すでにこのモデルをサブスクライブしています",

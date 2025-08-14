@@ -70,7 +70,7 @@
       "close": "关闭",
       "notifications": {
         "subscribeSuccess": "订阅成功！",
-        "subscribeSuccessDesc": "您现在可以访问{{modelName}}。您可以从订阅页面生成API密钥。",
+        "subscribeSuccessDesc": "您现在可以访问{{modelName}}。您可以从API密钥页面生成密钥。",
         "subscribeFailed": "订阅失败",
         "failedToSubscribe": "订阅模型失败",
         "alreadySubscribed": "您已经订阅了此模型",
