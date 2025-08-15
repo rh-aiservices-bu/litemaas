@@ -209,6 +209,49 @@ npm run build
 # - Frontend: frontend/dist/
 ```
 
+### Container Image Build
+
+Build container images for deployment using the automated build script:
+
+> **📦 Custom Registry**: To use a different container registry, edit the `REGISTRY` variable in `scripts/build-containers.sh` before building:
+>
+> ```bash
+> # Change this line in scripts/build-containers.sh:
+> REGISTRY="your-registry.com/your-org"
+> ```
+
+```bash
+# Build both backend and frontend container images
+npm run build:containers
+
+# Build and push to registry (default: quay.io/rh-aiservices-bu)
+npm run build:containers:push
+
+# Push existing images to registry
+npm run push:containers
+```
+
+**Features:**
+
+- 🏷️ **Centralized versioning** - Uses version from root package.json
+- 🐳 **Multi-runtime support** - Works with Docker or Podman
+- 🚀 **Flexible workflow** - Separate build and push operations
+- 🏗️ **Platform support** - Build for different architectures
+- 🔧 **Registry flexibility** - Easy to configure for any container registry
+
+**Script options:**
+
+```bash
+# Build without cache
+./scripts/build-containers.sh --no-cache
+
+# Build for ARM64
+./scripts/build-containers.sh --platform linux/arm64
+
+# Build with local tags only (no registry prefix)
+./scripts/build-containers.sh --local
+```
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details on:

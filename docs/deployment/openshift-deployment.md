@@ -208,7 +208,42 @@ LITELLM_UI_PASSWORD=your-litellm-ui-password
 > openssl rand -hex 16      # For API keys
 > ```
 
-### Step 3: Generate Deployment Files
+### Step 3: Build and Push Container Images (Optional)
+
+If you need to build custom images or use a different registry:
+
+> **📦 Registry Configuration**: If using a custom registry, edit the `REGISTRY` variable in `scripts/build-containers.sh` FIRST:
+>
+> ```bash
+> # Edit line ~20 in scripts/build-containers.sh:
+> REGISTRY="quay.io/rh-aiservices-bu"  # Default
+>
+> # Change to your registry:
+> REGISTRY="your-registry.com/your-org"
+> REGISTRY="ghcr.io/your-org"         # GitHub Container Registry
+> REGISTRY="docker.io/your-username"  # Docker Hub
+> ```
+
+```bash
+# 1. Configure registry (if needed) - edit scripts/build-containers.sh
+# 2. Login to your registry
+docker login your-registry.com
+
+# 3. Build container images with current version
+npm run build:containers
+
+# 4. Build and push to your configured registry
+npm run build:containers:push
+```
+
+**Default Images**: The deployment templates use pre-built images from `quay.io/rh-aiservices-bu`. You only need this step if:
+
+- Building from source code
+- Using a custom or private registry
+- Building with custom modifications
+- Your organization requires specific registry usage
+
+### Step 4: Generate Deployment Files
 
 The deployment uses environment variable substitution to generate actual deployment files from templates:
 
@@ -220,7 +255,7 @@ The deployment uses environment variable substitution to generate actual deploym
 # Example: backend-secret.yaml.template → backend-secret.yaml.local
 ```
 
-### Step 4: Deploy to OpenShift
+### Step 5: Deploy to OpenShift
 
 ```bash
 # Preview what will be deployed

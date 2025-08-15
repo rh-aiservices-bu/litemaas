@@ -1,6 +1,6 @@
 {
   "name": "litemaas",
-  "version": "1.0.0",
+  "version": "0.0.9",
   "description": "LiteLLM User Application - Model subscription and management platform",
   "private": true,
   "workspaces": [
@@ -11,8 +11,11 @@
     "dev": "concurrently --names \"backend,frontend\" --prefix-colors \"magenta,green\" \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npm run dev --workspace=backend",
     "dev:frontend": "npm run dev --workspace=frontend",
-    "check-backend": "node check-backend.js",
+    "check-backend": "node scripts/check-backend.js",
     "build": "npm run build --workspaces",
+    "build:containers": "./scripts/build-containers.sh",
+    "build:containers:push": "./scripts/build-containers.sh --build-and-push",
+    "push:containers": "./scripts/build-containers.sh --push",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
     "format": "prettier --write \"{docs/**,deployment/**,dev-tools/**,*.{js,jsx,ts,tsx,json,css,scss,md}}\"",

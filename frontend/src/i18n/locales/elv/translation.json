@@ -86,6 +86,7 @@
         "limited": "Úir siniath",
         "unavailable": "Ú-úir"
       },
+      "subscribed": "Orthad",
       "categories": {
         "languageModel": "Lammen Sador",
         "multimodal": "Mornië Sador",
@@ -93,7 +94,8 @@
         "audio": "Lindir"
       },
       "ariaLabels": {
-        "modelAvailability": "Sador-aear"
+        "modelAvailability": "Sador-aear",
+        "subscriptionStatus": "Orthad-thaid"
       },
       "pricing": {
         "input": "Minno",
@@ -174,7 +176,7 @@
       "ariaLabels": {
         "status": "Estar"
       },
-      "pricing": {
+      "pricingLabels": {
         "input": "Minno",
         "output": "Toltha"
       }

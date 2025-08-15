@@ -31,7 +31,7 @@ backend/
 │   │   └── subscription-hooks.ts # Subscription lifecycle
 │   ├── routes/            # API endpoints (flat structure)
 │   │   ├── auth.ts       # OAuth flow endpoints
-│   │   ├── auth-user.ts  # User profile endpoints  
+│   │   ├── auth-user.ts  # User profile endpoints
 │   │   ├── models.ts     # Model management
 │   │   ├── subscriptions.ts # Subscription CRUD
 │   │   ├── api-keys.ts   # API key management
@@ -76,7 +76,7 @@ backend/
 │   │   └── index.ts      # Type exports
 │   ├── utils/             # Utility functions
 │   │   ├── validation.utils.ts # Input validation helpers
-│   │   └── litellm-sync.utils.ts # LiteLLM sync utilities  
+│   │   └── litellm-sync.utils.ts # LiteLLM sync utilities
 │   ├── validators/        # Input validators
 │   │   └── usage.validator.ts # Usage tracking validation
 │   ├── app.ts            # Fastify app configuration

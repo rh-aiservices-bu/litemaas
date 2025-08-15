@@ -1,6 +1,6 @@
 {
   "name": "@litemaas/frontend",
-  "version": "1.0.0",
+  "version": "workspace",
   "description": "LiteMaaS Frontend Application",
   "private": true,
   "scripts": {
