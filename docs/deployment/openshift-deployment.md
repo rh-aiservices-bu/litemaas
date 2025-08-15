@@ -2,13 +2,13 @@
 
 This guide provides step-by-step instructions for deploying LiteMaaS on OpenShift Container Platform. It's designed for users with varying levels of OpenShift experience.
 
+> **📁 Source of Truth**: All deployment files and templates are in [`deployment/openshift/`](../../deployment/openshift/). This document is a deployment guide that references those authoritative files.
+
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
 - [Architecture Overview](#architecture-overview)
-- [Pre-Deployment Setup](#pre-deployment-setup)
 - [OAuth Client Configuration](#oauth-client-configuration)
-- [Secret Configuration](#secret-configuration)
 - [Deployment Process](#deployment-process)
 - [Post-Deployment Configuration](#post-deployment-configuration)
 - [Accessing the Applications](#accessing-the-applications)
@@ -58,7 +58,7 @@ Before starting, gather the following information:
 
 The LiteMaaS deployment consists of four main components:
 
-1. **PostgreSQL Database** - Persistent data storage
+1. **PostgreSQL Database** - Persistent data storage (StatefulSet)
 2. **LiteMaaS Backend** - Fastify API server
 3. **LiteMaaS Frontend** - React web application
 4. **LiteLLM Service** - AI model proxy and management UI
@@ -78,47 +78,6 @@ Internet → OpenShift Router → Routes → Services → Pods
 User → Frontend → Backend → PostgreSQL
                      ↓
               LiteLLM Service → External AI APIs
-```
-
-## Pre-Deployment Setup
-
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/your-org/litemaas.git
-cd litemaas
-```
-
-### 2. Login to OpenShift
-
-```bash
-# Option 1: Using web console token
-oc login --token=<your-token> --server=https://api.cluster.example.com:6443
-
-# Option 2: Using username/password
-oc login -u <username> -p <password> https://api.cluster.example.com:6443
-
-# Verify login
-oc whoami
-oc cluster-info
-```
-
-### 3. Create Project/Namespace
-
-```bash
-# Create a new project
-oc new-project litemaas --display-name="LiteMaaS Application" --description="LiteMaaS AI Model Management Platform"
-
-# OR use an existing project
-oc project your-existing-project
-```
-
-### 4. Get Cluster Domain Information
-
-```bash
-# Get the cluster's app domain
-oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}'
-# Example output: apps.cluster.example.com
 ```
 
 ## OAuth Client Configuration
@@ -158,7 +117,7 @@ LiteMaaS uses OpenShift's built-in OAuth for authentication. Follow these steps 
 
 ### Step 4: Retrieve OAuth Information
 
-After creating the OAuth client, you'll need several pieces of information:
+After creating the OAuth client, you'll need:
 
 1. **OAuth Client ID**: The name you entered (e.g., `litemaas-oauth-client`)
 
@@ -185,166 +144,95 @@ curl -k https://oauth-openshift.apps.cluster.example.com/.well-known/oauth_autho
 # Should return JSON with OAuth server configuration
 ```
 
-## Secret Configuration
+## Deployment Process
 
-The application requires several secrets to be configured before deployment. We'll create these secrets with the OAuth information gathered above.
-
-### Understanding the Secrets
-
-1. **postgres-secret**: Database credentials
-2. **backend-secret**: Backend API configuration
-3. **litellm-secret**: LiteLLM service configuration
-
-### Step 1: Generate Secure Values
+### Step 1: Prepare Repository and Login
 
 ```bash
-# Generate secure passwords and keys
-export POSTGRES_PASSWORD=$(openssl rand -base64 32)
-export JWT_SECRET=$(openssl rand -base64 64)
-export LITELLM_MASTER_KEY="sk-$(openssl rand -hex 16)"
-export LITELLM_UI_PASSWORD=$(openssl rand -base64 16)
-export ADMIN_API_KEY="ltm_admin_$(openssl rand -hex 12)"
+# Clone the repository if you haven't already
+git clone https://github.com/your-org/litemaas.git
+cd litemaas
 
-# Show generated values (save these securely!)
-echo "Generated secure values:"
-echo "POSTGRES_PASSWORD: $POSTGRES_PASSWORD"
-echo "JWT_SECRET: $JWT_SECRET"
-echo "LITELLM_MASTER_KEY: $LITELLM_MASTER_KEY"
-echo "LITELLM_UI_PASSWORD: $LITELLM_UI_PASSWORD"
-echo "ADMIN_API_KEY: $ADMIN_API_KEY"
+# Login to OpenShift
+oc login --token=<your-token> --server=https://api.cluster.example.com:6443
+# OR
+oc login -u <username> -p <password> https://api.cluster.example.com:6443
+
+# Create or use a project
+oc new-project litemaas --display-name="LiteMaaS Application"
+# OR
+oc project your-existing-project
+
+# Get the cluster domain for configuration
+oc get ingresses.config.openshift.io cluster -o jsonpath='{.spec.domain}'
+# Example output: apps.cluster.example.com
 ```
 
-### Step 2: Prepare Secret Values
+### Step 2: Configure Deployment
 
-Create a temporary file to store your configuration:
-
-```bash
-# Create a secure temporary file
-cat > /tmp/litemaas-config.env << EOF
-# OAuth Configuration (replace with your actual values)
-OAUTH_CLIENT_ID=litemaas-oauth-client
-OAUTH_CLIENT_SECRET=your-oauth-client-secret-from-step-4
-OAUTH_ISSUER=https://oauth-openshift.apps.cluster.example.com
-CLUSTER_DOMAIN=apps.cluster.example.com
-NAMESPACE=litemaas
-
-# Generated secure values
-POSTGRES_PASSWORD=$POSTGRES_PASSWORD
-JWT_SECRET=$JWT_SECRET
-LITELLM_MASTER_KEY=$LITELLM_MASTER_KEY
-LITELLM_UI_PASSWORD=$LITELLM_UI_PASSWORD
-ADMIN_API_KEY=$ADMIN_API_KEY
-EOF
-
-# Source the configuration
-source /tmp/litemaas-config.env
-```
-
-### Step 3: Create Secrets Using CLI
-
-```bash
-# Create PostgreSQL secret
-oc create secret generic postgres-secret \
-  --from-literal=username=litemaas_admin \
-  --from-literal=password="$POSTGRES_PASSWORD"
-
-# Create backend secret
-oc create secret generic backend-secret \
-  --from-literal=database-url="postgresql://litemaas_admin:$POSTGRES_PASSWORD@postgres:5432/litemaas_db?sslmode=disable" \
-  --from-literal=cors-origin="https://litemaas-$NAMESPACE.$CLUSTER_DOMAIN" \
-  --from-literal=jwt-secret="$JWT_SECRET" \
-  --from-literal=oauth-client-id="$OAUTH_CLIENT_ID" \
-  --from-literal=oauth-client-secret="$OAUTH_CLIENT_SECRET" \
-  --from-literal=oauth-issuer="$OAUTH_ISSUER" \
-  --from-literal=oauth-callback-url="https://litemaas-$NAMESPACE.$CLUSTER_DOMAIN/api/auth/callback" \
-  --from-literal=admin-api-keys="$ADMIN_API_KEY" \
-  --from-literal=litellm-api-key="$LITELLM_MASTER_KEY"
-
-# Create LiteLLM secret
-oc create secret generic litellm-secret \
-  --from-literal=database-url="postgresql://litemaas_admin:$POSTGRES_PASSWORD@postgres:5432/litellm" \
-  --from-literal=master-key="$LITELLM_MASTER_KEY" \
-  --from-literal=ui-username=admin \
-  --from-literal=ui-password="$LITELLM_UI_PASSWORD"
-
-# Verify secrets were created
-oc get secrets | grep -E "(postgres|backend|litellm)-secret"
-```
-
-### Step 4: Alternative - Update YAML Files
-
-If you prefer to use the provided YAML files, edit each secret file:
+The deployment uses a template-based configuration system. All secrets and environment-specific values are managed through templates:
 
 ```bash
 # Navigate to the OpenShift deployment directory
 cd deployment/openshift
 
-# Edit each secret file and replace the base64 encoded values
-# Use this command to encode values:
-echo -n "your-actual-value" | base64
+# Copy the example configuration
+cp user-values.env.example user-values.env
 
-# Example for postgres-secret.yaml:
-# Replace: bGl0ZW1hYXNfYWRtaW4= with: $(echo -n "litemaas_admin" | base64)
-# Replace: Y2hhbmdlLW1lLXBsZWFzZQ== with: $(echo -n "$POSTGRES_PASSWORD" | base64)
+# Edit the configuration file with your actual values
+vi user-values.env
 ```
 
-### Step 5: Clean Up Temporary Files
+**Edit `user-values.env`** with your specific values:
 
 ```bash
-# Securely remove temporary configuration
-rm -f /tmp/litemaas-config.env
-unset POSTGRES_PASSWORD JWT_SECRET LITELLM_MASTER_KEY LITELLM_UI_PASSWORD ADMIN_API_KEY
+LITEMAAS_VERSION=0.0.7
+CLUSTER_DOMAIN_NAME=apps.your-cluster.example.com
+NAMESPACE=litemaas
+PG_ADMIN_PASSWORD=your-secure-db-password
+JWT_SECRET=your-secure-jwt-secret-64-chars
+OAUTH_CLIENT_ID=litemaas-oauth-client
+OAUTH_CLIENT_SECRET=your-oauth-client-secret-from-step-4
+ADMIN_API_KEY=ltm_admin_your-admin-key
+LITELLM_API_KEY=sk-your-litellm-master-key
+LITELLM_UI_USERNAME=admin
+LITELLM_UI_PASSWORD=your-litellm-ui-password
 ```
 
-## Deployment Process
+> **💡 Security Tips**:
+> ```bash
+> # Generate secure passwords:
+> openssl rand -base64 32   # For passwords
+> openssl rand -base64 64   # For JWT secret
+> openssl rand -hex 16      # For API keys
+> ```
 
-### Step 1: Verify Prerequisites
+### Step 3: Generate Deployment Files
+
+The deployment uses environment variable substitution to generate actual deployment files from templates:
 
 ```bash
-# Ensure you're in the correct project
-oc project litemaas
+# Generate the .local files from templates
+./preparation.sh
 
-# Verify secrets exist
-oc get secrets | grep -E "(postgres|backend|litellm)-secret"
-# Should show 3 secrets
-
-# Check if container images are accessible
-oc run test-backend --image=quay.io/rh-aiservice-bu/litemaas-backend:latest --dry-run=client -o yaml > /dev/null
-oc run test-frontend --image=quay.io/rh-aiservice-bu/litemaas-frontend:latest --dry-run=client -o yaml > /dev/null
-echo "Container images are accessible"
+# This creates *.local files that contain your actual configuration
+# Example: backend-secret.yaml.template → backend-secret.yaml.local
 ```
 
-### Step 2: Deploy Using Kustomize
+### Step 4: Deploy to OpenShift
 
 ```bash
-# Navigate to the deployment directory
-cd deployment/openshift
-
 # Preview what will be deployed
 oc apply -k . --dry-run=client
 
-# Deploy all resources
+# Deploy all resources using Kustomize
 oc apply -k .
 
-# Alternative: Deploy to a different namespace
-oc apply -k . -n your-custom-namespace
-```
-
-### Step 3: Monitor Deployment Progress
-
-```bash
-# Watch pods as they start
+# Monitor deployment progress
 oc get pods -w
-
-# Check deployment status
-oc get deployments
-oc get statefulsets
-
-# Check routes
-oc get routes
 ```
 
-### Step 4: Wait for All Pods to be Ready
+### Step 5: Wait for Deployment Completion
 
 ```bash
 # Wait for PostgreSQL to be ready (this may take 2-3 minutes)
@@ -361,7 +249,7 @@ oc wait --for=condition=ready pod -l app=litellm --timeout=300s
 
 # Verify all pods are running
 oc get pods
-# All pods should show STATUS as "Running" and READY as "1/1" or "2/2"
+# All pods should show STATUS as "Running" and READY as "1/1"
 ```
 
 ## Post-Deployment Configuration
@@ -391,9 +279,9 @@ oc exec deployment/backend -- curl -f http://localhost:8080/api/v1/health
    https://litellm-litemaas.apps.cluster.example.com
    ```
 
-3. Login with the credentials from your `litellm-secret`:
-   - **Username**: admin
-   - **Password**: (the value you set in `LITELLM_UI_PASSWORD`)
+3. Login with the credentials from your `user-values.env`:
+   - **Username**: admin (or value of `LITELLM_UI_USERNAME`)
+   - **Password**: (value of `LITELLM_UI_PASSWORD`)
 
 ### Step 3: Configure Initial Models in LiteLLM
 
@@ -491,12 +379,12 @@ oc get pods -l app=postgres
 oc logs -l app=postgres --tail=50
 
 # Test database connectivity
-oc exec deployment/postgres -- pg_isready -U litemaas_admin -d litemaas
+oc exec statefulset/postgres -- pg_isready -U litemaas_admin -d litemaas_db
 ```
 
 **Solutions**:
 
-- Verify `postgres-secret` has correct credentials
+- Verify `postgres-secret.yaml.local` has correct credentials
 - Check if PostgreSQL service is accessible: `oc get svc postgres`
 - Ensure PostgreSQL is fully initialized before backend starts
 
@@ -517,10 +405,30 @@ oc get oauthclients litemaas-oauth-client -o yaml
 **Solutions**:
 
 - Verify OAuth redirect URLs match your route URLs exactly
-- Check OAuth client secret is correctly set in `backend-secret`
+- Check OAuth client secret is correctly set in `backend-secret.yaml.local`
 - Ensure OAuth issuer URL is accessible from within the cluster
 
-#### 4. Route Accessibility Issues
+#### 4. Template Configuration Errors
+
+**Symptoms**: Pods failing to start after deployment, missing environment variables
+
+**Diagnosis**:
+
+```bash
+# Check if .local files were generated
+ls -la *.local
+
+# Verify secret content
+oc get secret backend-secret -o jsonpath='{.data}' | jq keys
+```
+
+**Solutions**:
+
+- Ensure `user-values.env` has all required values
+- Re-run `./preparation.sh` to regenerate .local files
+- Verify all template variables are properly substituted
+
+#### 5. Route Accessibility Issues
 
 **Symptoms**: Routes return 503 errors or timeouts
 
@@ -542,26 +450,6 @@ oc exec deployment/backend -- curl -f http://frontend:8080/
 - Verify services are properly selecting pods: `oc describe svc <service-name>`
 - Check if pods are ready and healthy
 - Verify route TLS configuration
-
-#### 5. Secret Configuration Errors
-
-**Symptoms**: Pods failing with missing environment variable errors
-
-**Diagnosis**:
-
-```bash
-# Check if secrets exist
-oc get secrets
-
-# Verify secret content (be careful not to expose sensitive data)
-oc get secret backend-secret -o jsonpath='{.data}' | jq keys
-```
-
-**Solutions**:
-
-- Recreate secrets with correct base64 encoding
-- Verify all required secret keys are present
-- Check secret names match deployment references
 
 ### Advanced Debugging
 
@@ -601,9 +489,13 @@ oc run debug --image=curlimages/curl --rm -it --restart=Never -- curl https://oa
 ### Updating Application Images
 
 ```bash
-# Update to a new image version
-oc set image deployment/backend backend=quay.io/rh-aiservice-bu/litemaas-backend:v1.1.0
-oc set image deployment/frontend frontend=quay.io/rh-aiservice-bu/litemaas-frontend:v1.1.0
+# Update to a new image version using Kustomize
+# Edit kustomization.yaml to change image tags, then:
+oc apply -k .
+
+# Or update directly
+oc set image deployment/backend backend=quay.io/rh-aiservices-bu/litemaas-backend:v1.1.0
+oc set image deployment/frontend frontend=quay.io/rh-aiservices-bu/litemaas-frontend:v1.1.0
 
 # Monitor rollout
 oc rollout status deployment/backend
@@ -628,20 +520,39 @@ oc scale deployment frontend --replicas=3
 
 ```bash
 # Create database backup
-oc exec -i deployment/postgres -- pg_dump -U litemaas_admin litemaas > litemaas-backup-$(date +%Y%m%d).sql
+oc exec -i statefulset/postgres -- pg_dump -U litemaas_admin litemaas_db > litemaas-backup-$(date +%Y%m%d).sql
 
 # Store backup securely (example with persistent volume)
 oc create pvc backup-pvc --size=10Gi
 oc run backup-job --image=postgres:16-alpine --rm -it --restart=Never \
   --mount-path=/backup --volume-claim-name=backup-pvc \
-  -- bash -c "pg_dump -h postgres -U litemaas_admin litemaas > /backup/litemaas-$(date +%Y%m%d).sql"
+  -- bash -c "pg_dump -h postgres -U litemaas_admin litemaas_db > /backup/litemaas-$(date +%Y%m%d).sql"
 ```
 
 #### Database Restore
 
 ```bash
 # Restore from backup (CAUTION: This will overwrite existing data)
-oc exec -i deployment/postgres -- psql -U litemaas_admin litemaas < litemaas-backup-20241201.sql
+oc exec -i statefulset/postgres -- psql -U litemaas_admin litemaas_db < litemaas-backup-20241201.sql
+```
+
+### Configuration Updates
+
+To update configuration values:
+
+```bash
+# Edit your configuration
+vi user-values.env
+
+# Regenerate deployment files
+./preparation.sh
+
+# Apply updates
+oc apply -k .
+
+# Restart affected deployments if needed
+oc rollout restart deployment/backend
+oc rollout restart deployment/frontend
 ```
 
 ### Monitoring and Alerts
@@ -674,7 +585,7 @@ oc logs -f deployment/backend
 1. **Secret Management**
    - Rotate secrets regularly
    - Use strong, randomly generated passwords
-   - Never commit secrets to version control
+   - Never commit `user-values.env` or `*.local` files to version control
 
 2. **Network Security**
    - Use TLS for all external routes
@@ -695,7 +606,9 @@ oc logs -f deployment/backend
 
 For additional support:
 
+- **Source Files**: [`deployment/openshift/`](../../deployment/openshift/) - Authoritative deployment configuration
 - **Documentation**: Check the `docs/` directory for detailed guides
+- **Configuration Reference**: [`docs/deployment/configuration.md`](./configuration.md) - Environment variables
 - **Issues**: Report problems via GitHub Issues
 - **Community**: Join our Discord community for discussions
 

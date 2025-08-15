@@ -23,14 +23,18 @@ This directory contains Kubernetes manifests and Kustomize configuration for dep
 
 ### Prepare the configuration file
 
+The deployment uses a **template-based configuration system**:
+
 - Make a copy of `user-values.env.example`, renaming it `user-values.env`
 - Edit `user-values.env` and enter the values you want to use for the deployment
 - Prepare the deployment files using the `preparation.sh` script
 
 ```bash
-# Prepare the local configuration files
+# Prepare the local configuration files (generates *.local from *.template)
 ./preparation.sh
 ```
+
+> **Template System**: Files ending in `.template` are processed by `preparation.sh` using environment variable substitution from `user-values.env`. This generates `.local` files with your actual configuration values.
 
 - Apply the configuration files to deploy all elements: PostgreSQL database, LiteLLM, Backend and Frontend.
 
