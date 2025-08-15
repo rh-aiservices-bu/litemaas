@@ -35,6 +35,19 @@ export interface LegacyCreateApiKeyRequest extends Omit<CreateApiKeyRequest, 'mo
   subscriptionId: string;
 }
 
+/**
+ * Interface for updating API key properties
+ */
+export interface UpdateApiKeyRequest {
+  name?: string;
+  modelIds?: string[];
+  metadata?: {
+    description?: string;
+    permissions?: string[];
+    rateLimit?: number;
+  };
+}
+
 export interface ApiKey {
   id: string;
   userId: string;

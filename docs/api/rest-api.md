@@ -576,6 +576,60 @@ Response:
 }
 ```
 
+#### PATCH /api/v1/api-keys/:id
+
+Update an existing API key's name, models, or metadata
+
+**Request:**
+
+```json
+{
+  "name": "Updated Key Name", // Optional: Update display name
+  "modelIds": ["gpt-4", "claude-3"], // Optional: Update accessible models
+  "metadata": {
+    // Optional: Update metadata
+    "description": "Updated description",
+    "permissions": ["read", "write"],
+    "rateLimit": 2000
+  }
+}
+```
+
+**Response:**
+
+```json
+{
+  "id": "key_123",
+  "name": "Updated Key Name",
+  "prefix": "sk-litellm",
+  "models": ["gpt-4", "claude-3"],
+  "modelDetails": [
+    {
+      "id": "gpt-4",
+      "name": "GPT-4",
+      "provider": "openai"
+    },
+    {
+      "id": "claude-3",
+      "name": "Claude 3",
+      "provider": "anthropic"
+    }
+  ],
+  "status": "active",
+  "createdAt": "2024-01-01T00:00:00Z",
+  "updatedAt": "2024-01-20T10:00:00Z",
+  "lastSyncAt": "2024-01-20T10:00:00Z"
+}
+```
+
+**Notes:**
+
+- Updates both local database and LiteLLM configuration
+- When name is updated, automatically regenerates unique key_alias in LiteLLM
+- Cannot update inactive (revoked/expired) keys
+- Requires authentication and ownership of the key
+- All updates are audit logged for compliance
+
 #### POST /api/v1/api-keys/:id/retrieve-key
 
 Securely retrieve full API key value
