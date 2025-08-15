@@ -66,6 +66,7 @@ PGDEBUG=1 npm run dev:backend
 ### Common Debugging Scenarios
 
 #### Model Sync Issues
+
 ```bash
 # Check LiteLLM connectivity directly
 curl -I $LITELLM_API_URL/model/info
@@ -80,6 +81,7 @@ curl localhost:8080/api/v1/models/health
 ```
 
 #### Authentication Problems
+
 ```bash
 # Test OAuth config (mock mode in development)
 curl localhost:8080/api/v1/auth/config
@@ -89,6 +91,7 @@ curl -H "Authorization: Bearer $TOKEN" localhost:8080/api/v1/auth/me
 ```
 
 #### Database Connection Issues
+
 ```bash
 # Test raw database connection
 psql $DATABASE_URL -c "SELECT 1"
@@ -100,13 +103,16 @@ curl localhost:8080/api/v1/health/database
 ## Backend-Specific Configuration
 
 ### Mock Mode Development
+
 Set `NODE_ENV=development` to enable:
+
 - Mock OAuth authentication (no real OAuth required)
 - Mock LiteLLM responses when API unavailable
 - Detailed error messages in responses
 - Request/response logging
 
 ### Performance Profiling
+
 ```bash
 # Run with Node.js profiler
 node --prof dist/index.js
@@ -116,6 +122,7 @@ node --prof dist/index.js
 ```
 
 ### Load Testing
+
 ```bash
 # Run K6 performance tests
 cd backend/tests/performance

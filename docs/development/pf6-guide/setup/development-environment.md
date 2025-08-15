@@ -16,12 +16,14 @@ The frontend uses Vite as its build system, providing fast development builds an
 ## Vite Development Server
 
 ### Configuration
+
 - **Port**: `3000` (configurable in `vite.config.ts`)
 - **Hot Module Replacement**: Enabled by default
 - **Source Maps**: Enabled for debugging
 - **API Proxy**: Routes `/api` calls to backend when needed
 
 ### Starting the Frontend Server
+
 ```bash
 # Start frontend development server
 npm run dev:frontend
@@ -44,7 +46,8 @@ VITE_APP_NAME=LiteMaaS
 VITE_DEBUG_MODE=true
 ```
 
-**Important**: 
+**Important**:
+
 - Only `VITE_` prefixed variables are exposed to the browser
 - Never put secrets in frontend environment variables
 - Use `.env.example` as a template
@@ -52,6 +55,7 @@ VITE_DEBUG_MODE=true
 ## IDE and Editor Configuration
 
 ### Recommended Extensions (VS Code)
+
 - **ES7+ React/Redux/React-Native snippets**: React development shortcuts
 - **Auto Rename Tag**: Automatic HTML/JSX tag renaming
 - **Bracket Pair Colorizer**: Visual bracket matching
@@ -60,7 +64,9 @@ VITE_DEBUG_MODE=true
 - **ESLint**: Code linting
 
 ### TypeScript Configuration
+
 LiteMaaS uses TypeScript throughout. The frontend configuration (`frontend/tsconfig.json`):
+
 ```json
 {
   "compilerOptions": {
@@ -88,6 +94,7 @@ LiteMaaS uses TypeScript throughout. The frontend configuration (`frontend/tscon
 ## Debugging Configuration
 
 ### Browser DevTools Setup
+
 1. **React Developer Tools**: Install browser extension for React debugging
 2. **PatternFly DevTools**: Use browser inspector to examine PatternFly classes
 3. **Network Tab**: Monitor API calls and resource loading
@@ -117,6 +124,7 @@ Create `.vscode/launch.json` for frontend debugging:
 ```
 
 **Tips**:
+
 - Set breakpoints directly in VS Code
 - Use React Developer Tools browser extension
 - Enable "Pause on exceptions" for debugging
@@ -124,6 +132,7 @@ Create `.vscode/launch.json` for frontend debugging:
 ## Frontend Build and Testing
 
 ### Build Commands
+
 ```bash
 # Build frontend for production
 npm run build:frontend
@@ -133,6 +142,7 @@ cd frontend && npm run preview
 ```
 
 ### Testing PatternFly Components
+
 ```bash
 # Run frontend unit tests
 npm run test:unit
@@ -145,6 +155,7 @@ npm run test:watch
 ```
 
 ### Code Quality
+
 ```bash
 # Lint frontend code
 npm run lint
@@ -159,6 +170,7 @@ npm run type-check
 ## Frontend Dependencies
 
 ### Core PatternFly 6 Packages
+
 ```json
 {
   "@patternfly/react-core": "^6.0.0",
@@ -169,6 +181,7 @@ npm run type-check
 ```
 
 ### Version Management
+
 ```bash
 # Check for PatternFly updates
 cd frontend && npm outdated | grep patternfly
@@ -185,11 +198,13 @@ npm run type-check && npm test
 ## Performance Optimization
 
 ### Development Performance
+
 - **Code Splitting**: Implement lazy loading for large components
 - **Bundle Analysis**: Regular bundle size monitoring
 - **Memory Management**: Monitor for memory leaks during development
 
 ### Vite Performance Features
+
 - **Hot Module Replacement**: Instant updates without losing state
 - **Fast Refresh**: React-specific HMR for components
 - **Dependency Pre-bundling**: Faster cold starts
@@ -198,6 +213,7 @@ npm run type-check && npm test
 ## Frontend Development Tools
 
 ### Recommended VS Code Extensions
+
 - **ES7+ React snippets** - React development shortcuts
 - **Prettier** - Code formatting
 - **ESLint** - Linting integration
@@ -206,6 +222,7 @@ npm run type-check && npm test
 - **PatternFly Snippets** - PatternFly component snippets
 
 ### Browser Extensions
+
 - **React Developer Tools** - Component inspection
 - **Redux DevTools** - If using Redux
 - **Accessibility Insights** - WCAG testing
@@ -213,21 +230,24 @@ npm run type-check && npm test
 ## Troubleshooting Frontend Development
 
 ### Vite Issues
-- **HMR not working**: 
+
+- **HMR not working**:
   ```bash
   rm -rf frontend/node_modules/.vite
   npm run dev:frontend
   ```
-- **Port 3000 in use**: 
+- **Port 3000 in use**:
   - Change in `frontend/vite.config.ts`
   - Or kill process: `lsof -ti:3000 | xargs kill -9`
 
 ### PatternFly Issues
+
 - **Styles not loading**: Verify `@patternfly/react-core/dist/styles/base.css` import
 - **Wrong prefix**: Ensure using `pf-v6-` not `pf-c-` or `pf-v5-`
 - **Theme not working**: Check `pf-v6-theme-dark` class on `<html>` element
 
 ### Performance Monitoring
+
 - Use React DevTools Profiler
 - Monitor bundle size: `npm run build -- --analyze`
 - Check network waterfall in browser DevTools
@@ -235,6 +255,7 @@ npm run type-check && npm test
 ## PatternFly 6 Development Best Practices
 
 ### Component Development
+
 1. **Always use `pf-v6-` prefixed classes**
 2. **Follow design token system** - No hardcoded values
 3. **Test in both themes** - Light and dark
@@ -242,12 +263,14 @@ npm run type-check && npm test
 5. **Use TypeScript** - Maintain type safety
 
 ### Performance Optimization
+
 - **Code Splitting**: Use React.lazy() for large components
 - **Bundle Analysis**: Run `npm run build -- --analyze`
 - **Memoization**: Use React.memo and useMemo appropriately
 - **Image Optimization**: Use appropriate formats and lazy loading
 
 ### Development Workflow
+
 1. **Use HMR** - Make changes and see them instantly
 2. **DevTools** - Use React DevTools for debugging
 3. **Type Check** - Run frequently during development

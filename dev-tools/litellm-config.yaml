@@ -2,13 +2,13 @@
 
 # Router settings
 router_settings:
-  redis_host: null  # Add Redis host if using Redis for caching
+  redis_host: null # Add Redis host if using Redis for caching
   redis_port: null
   redis_password: null
-  routing_strategy: "simple-shuffle"  # Options: simple-shuffle, least-busy, usage-based-routing
-  
+  routing_strategy: 'simple-shuffle' # Options: simple-shuffle, least-busy, usage-based-routing
+
 # General settings
 general_settings:
   master_key: os.environ/LITELLM_MASTER_KEY
   database_url: os.environ/DATABASE_URL
-  otel_exporter: null  # Options: otlp_http, otlp_grpc for telemetry
+  otel_exporter: null # Options: otlp_http, otlp_grpc for telemetry

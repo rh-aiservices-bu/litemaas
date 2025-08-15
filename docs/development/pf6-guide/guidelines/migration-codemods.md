@@ -15,6 +15,7 @@ PatternFly 6 provides automated codemods to help migrate your codebase from prev
 ## Mandatory Codemods (Run in Order)
 
 ### 1. Class Name Updater
+
 Updates class names from `pf-v5-` to `pf-v6-` prefix.
 
 ```bash
@@ -22,11 +23,13 @@ npx @patternfly/class-name-updater --v6 --fix path/to/code
 ```
 
 **What it does:**
+
 - Updates all PatternFly class prefixes
 - Converts `pf-c-`, `pf-u-`, `pf-l-` to `pf-v6-` versions
 - Handles both JSX className and CSS files
 
 ### 2. PatternFly Codemods
+
 Updates React component code to PatternFly 6 standards.
 
 ```bash
@@ -34,11 +37,13 @@ npx @patternfly/pf-codemods --v6 --fix path/to/code
 ```
 
 **What it does:**
+
 - Updates component imports and props
 - Handles breaking API changes
 - Migrates deprecated component patterns
 
 ### 3. Tokens Update
+
 Replaces CSS variables with new design tokens.
 
 ```bash
@@ -46,6 +51,7 @@ npx @patternfly/tokens-update --fix path/to/code
 ```
 
 **What it does:**
+
 - Converts global CSS variables to semantic design tokens
 - Updates `--pf-global-*` to `--pf-t--global-*` format
 - Identifies tokens that need manual replacement
@@ -53,18 +59,21 @@ npx @patternfly/tokens-update --fix path/to/code
 ## Codemod Best Practices
 
 ### Before Running Codemods
+
 1. **Commit all changes** - Ensure clean git state
 2. **Create a branch** - Isolate migration work
 3. **Remove CSS overrides** - Temporarily remove custom CSS that targets PatternFly classes
 4. **Document custom patterns** - Note any non-standard implementations
 
 ### Running Codemods
+
 1. **Multiple Passes**: Run each codemod multiple times until no new changes are detected
 2. **Order Matters**: Always run codemods in the specified order
 3. **Review Changes**: Use `git diff` to review all modifications
 4. **Test Incrementally**: Test after each codemod to identify issues early
 
 ### After Running Codemods
+
 1. **Manual Review**: Check for patterns the codemods couldn't handle
 2. **Hot Pink Tokens**: Replace any `--pf-t--temp--dev--tbd` tokens manually
 3. **Test Coverage**: Run all tests and fix any failures
@@ -75,6 +84,7 @@ npx @patternfly/tokens-update --fix path/to/code
 ### Component Migration Examples
 
 #### Button Component
+
 ```jsx
 // Before (v5)
 <Button isDisabled={true}>Click me</Button>
@@ -84,12 +94,14 @@ npx @patternfly/tokens-update --fix path/to/code
 ```
 
 #### Select Component
+
 ```jsx
 // Old Select deprecated - manual migration needed
 // Codemod will flag but not auto-migrate
 ```
 
 #### Table Component
+
 ```jsx
 // Class updates handled automatically
 // Component structure changes need manual review
@@ -140,6 +152,7 @@ When you see `--pf-t--temp--dev--tbd` tokens:
 4. **Test Both Themes**: Verify in light and dark modes
 
 Example resolution:
+
 ```css
 /* Hot pink token found */
 background: var(--pf-t--temp--dev--tbd);
@@ -154,12 +167,14 @@ background: var(--pf-t--global--background--color--disabled);
 The following components are deprecated in v6 and require manual migration:
 
 ### Completely Deprecated
+
 - **Old Select**: Migrate to new Select implementation
 - **Old Dropdown**: Migrate to new Dropdown patterns
 - **Old Wizard**: Use new Wizard component
 - **Old Table**: Update to composable Table components
 
 ### Changed Components
+
 - **Button**: `isDisabled` → `disabled` prop
 - **Text**: Use `Content` component instead
 - **PageHeader**: No longer exists, use `PageSection` + `Title`
@@ -169,6 +184,7 @@ The following components are deprecated in v6 and require manual migration:
 ### Required Test Updates
 
 1. **Button Tests**
+
 ```jsx
 // Before
 expect(button).toHaveAttribute('aria-disabled', 'true');
@@ -178,6 +194,7 @@ expect(button).toBeDisabled();
 ```
 
 2. **Text Queries**
+
 ```jsx
 // Before - may fail due to wrapper divs
 screen.getByText('Button text');
@@ -187,6 +204,7 @@ screen.getByRole('button', { name: 'Button text' });
 ```
 
 3. **Class Name Checks**
+
 ```jsx
 // Before
 expect(element).toHaveClass('pf-c-button');
@@ -200,6 +218,7 @@ expect(element).toHaveClass('pf-v6-c-button');
 ### Common Problems
 
 #### Codemod Won't Run
+
 ```bash
 # Clear npm cache
 npm cache clean --force
@@ -209,11 +228,13 @@ npm install -g @patternfly/pf-codemods
 ```
 
 #### Partial Updates
+
 - Run codemod again on the same path
 - Check for syntax errors blocking parsing
 - Manually handle complex patterns
 
 #### TypeScript Errors
+
 - Update PatternFly type definitions
 - Rebuild TypeScript cache: `npx tsc --build --clean`
 
@@ -228,16 +249,19 @@ If migration issues are severe:
 ## Resources
 
 ### Documentation
+
 - [PatternFly 6 Upgrade Guide](https://www.patternfly.org/get-started/upgrade/)
 - [Codemod Documentation](https://github.com/patternfly/pf-codemods)
 - [Design Token Migration](https://www.patternfly.org/tokens/)
 
 ### Tools
+
 - [@patternfly/pf-codemods](https://www.npmjs.com/package/@patternfly/pf-codemods)
 - [@patternfly/class-name-updater](https://github.com/patternfly/class-name-updater)
 - [@patternfly/tokens-update](https://www.npmjs.com/package/@patternfly/tokens-update)
 
 ### Support
+
 - **Slack**: PatternFly community Slack
 - **GitHub Issues**: Report codemod bugs
 - **Discussion Board**: Migration questions
@@ -258,4 +282,4 @@ If migration issues are severe:
 
 ---
 
-*Remember: Codemods handle ~80% of the migration work. The remaining 20% requires careful manual attention and testing.*
+_Remember: Codemods handle ~80% of the migration work. The remaining 20% requires careful manual attention and testing._

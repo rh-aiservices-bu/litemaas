@@ -25,6 +25,7 @@ Core development rules for AI coders building PatternFly React applications.
 - ❌ **Don't override component internals** - Use provided props and APIs
 
 ### Text Components (v6+)
+
 ```jsx
 // ✅ Correct
 import { Content } from '@patternfly/react-core';
@@ -35,11 +36,14 @@ import { Content } from '@patternfly/react-core';
 ```
 
 ### Icon Usage
+
 ```jsx
 // ✅ Correct - Wrap with Icon component
 import { Icon } from '@patternfly/react-core';
 import { UserIcon } from '@patternfly/react-icons';
-<Icon size="md"><UserIcon /></Icon>
+<Icon size="md">
+  <UserIcon />
+</Icon>;
 ```
 
 ### Styling Rules
@@ -68,6 +72,7 @@ import { UserIcon } from '@patternfly/react-icons';
 ## Quality Assurance Checklist
 
 ### Before Code Review
+
 - [ ] All `pf-c-`, `pf-u-`, `pf-l-` classes updated to `pf-v6-` versions
 - [ ] All global CSS variables replaced with design tokens
 - [ ] All codemods run successfully without errors (see [Migration Codemods](./migration-codemods.md))
@@ -76,6 +81,7 @@ import { UserIcon } from '@patternfly/react-icons';
 - [ ] Breakpoint logic updated to use rem units (divide px by 16)
 
 ### During Development
+
 - [ ] Uses PatternFly v6 classes only
 - [ ] Use semantic tokens, not base/palette tokens
 - [ ] Choose tokens by meaning, not by old variable names
@@ -89,6 +95,7 @@ import { UserIcon } from '@patternfly/react-icons';
 - [ ] Performance is acceptable
 
 ### Post-Implementation Validation
+
 - [ ] Product builds without errors
 - [ ] Visual regression testing completed
 - [ ] All tests pass with new PatternFly 6 changes
@@ -108,12 +115,14 @@ See [Common Issues](../troubleshooting/common-issues.md) for specific problems.
 ## Important Notes
 
 ### Migration Considerations
+
 - **No Rollback**: Once upgraded to PatternFly 6, rolling back requires significant work
 - **PatternFly 5 Support**: Ends with PatternFly 7 release (following N-1 support policy)
 - **Visual Changes**: PatternFly 6 includes significant visual updates - review all UIs
 - **Custom Themes**: Products with custom PatternFly replications need complete re-skinning
 
 ### Breaking Changes
+
 - **Button Component**: `isDisabled` prop now uses `disabled` attribute, not `aria-disabled`
 - **Typography**: Default font changed from Overpass to RedHatText and RedHatDisplay
 - **Units**: All breakpoints now use rem instead of pixels (divide px by 16)

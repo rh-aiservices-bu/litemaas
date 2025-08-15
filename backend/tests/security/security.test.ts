@@ -22,9 +22,9 @@ describe('Security Tests', () => {
       // Note: /api/v1/models is intentionally public and doesn't require authentication
       const protectedEndpoints = [
         '/api/v1/subscriptions',
-        '/api/v1/api-keys', 
+        '/api/v1/api-keys',
         '/api/v1/usage/dashboard',
-        '/api/v1/users/me/activity'
+        '/api/v1/users/me/activity',
       ];
 
       for (const endpoint of protectedEndpoints) {
@@ -335,7 +335,7 @@ describe('Security Tests', () => {
         Array.from({ length: 10 }, () =>
           app.inject({
             method: 'GET',
-            url: '/api/v1/usage/dashboard', 
+            url: '/api/v1/usage/dashboard',
             headers: { authorization: `Bearer ${token}` },
           }),
         ),
@@ -367,7 +367,7 @@ describe('Security Tests', () => {
       expect(response.headers).toHaveProperty('x-frame-options', 'SAMEORIGIN');
       expect(response.headers).toHaveProperty('x-xss-protection', '0'); // Modern best practice
       expect(response.headers).toHaveProperty('strict-transport-security');
-      
+
       // Content Security Policy should be present for additional security
       if (response.headers['content-security-policy']) {
         expect(response.headers['content-security-policy']).toContain("default-src 'self'");

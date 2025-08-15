@@ -78,11 +78,13 @@ expect(accessibilityScanResults.violations).toEqual([]);
 ### Runtime Testing in Development
 
 When running the development server, axe-core automatically:
+
 - Scans the page for accessibility violations
 - Reports issues in the browser console
 - Provides detailed violation information with fix suggestions
 
 Access debugging utilities in browser console:
+
 ```javascript
 // Highlight violations on page
 window.a11yDebug.highlightViolations();
@@ -99,6 +101,7 @@ window.a11yDebug.printSummary();
 ### 1. Keyboard Navigation Test
 
 **Procedure:**
+
 1. Disconnect your mouse/trackpad
 2. Use only Tab, Shift+Tab, Enter, Space, and Arrow keys
 3. Navigate through all interactive elements
@@ -106,6 +109,7 @@ window.a11yDebug.printSummary();
 5. Test that focus doesn't get trapped unexpectedly
 
 **Expected Results:**
+
 - All interactive elements are reachable via keyboard
 - Focus order is logical and follows visual layout
 - Focus indicators are clearly visible
@@ -115,12 +119,14 @@ window.a11yDebug.printSummary();
 ### 2. Screen Reader Testing
 
 **Required Screen Readers:**
+
 - **NVDA** (Windows) - Free
 - **JAWS** (Windows) - Commercial
 - **VoiceOver** (macOS) - Built-in
 - **Orca** (Linux) - Free
 
 **Testing Procedure:**
+
 1. Turn on screen reader
 2. Navigate using screen reader shortcuts
 3. Verify all content is announced appropriately
@@ -128,6 +134,7 @@ window.a11yDebug.printSummary();
 5. Verify live region announcements work
 
 **VoiceOver Commands (macOS):**
+
 - `Cmd + F5`: Toggle VoiceOver
 - `Ctrl + Opt + A`: Start reading
 - `Ctrl + Opt + →/←`: Navigate by element
@@ -136,11 +143,13 @@ window.a11yDebug.printSummary();
 ### 3. Color Contrast Testing
 
 **Tools:**
+
 - Chrome DevTools Accessibility panel
 - WebAIM Contrast Checker
 - Colour Contrast Analyser (CCA)
 
 **Requirements:**
+
 - **Normal text**: 4.5:1 contrast ratio minimum
 - **Large text**: 3:1 contrast ratio minimum
 - **UI components**: 3:1 contrast ratio minimum
@@ -148,6 +157,7 @@ window.a11yDebug.printSummary();
 ### 4. Zoom and Scaling Testing
 
 **Procedure:**
+
 1. Test at 200% zoom level
 2. Test at 400% zoom level (if supported)
 3. Verify content remains accessible and usable
@@ -171,6 +181,7 @@ window.a11yDebug.printSummary();
 ### Common Screen Reader Shortcuts
 
 **NVDA (Windows):**
+
 - `Insert + Space`: Toggle focus/browse mode
 - `H/Shift+H`: Navigate headings
 - `F/Shift+F`: Navigate form fields
@@ -178,6 +189,7 @@ window.a11yDebug.printSummary();
 - `L/Shift+L`: Navigate links
 
 **JAWS (Windows):**
+
 - `Insert + F7`: List headings
 - `Insert + F5`: List form fields
 - `Insert + F8`: List links
@@ -361,6 +373,7 @@ Accessibility checks are integrated into the build process:
 ### Quality Gates
 
 Builds will fail if:
+
 - Critical accessibility violations are found
 - Accessibility tests fail
 - Color contrast ratios are below WCAG AA standards
@@ -370,12 +383,14 @@ Builds will fail if:
 ### Pre-Release Checklist
 
 #### ✅ Automated Testing
+
 - [ ] All axe-core unit tests pass
 - [ ] E2E accessibility tests pass
 - [ ] No critical violations in development mode
 - [ ] Color contrast tests pass
 
 #### ✅ Manual Testing
+
 - [ ] Keyboard navigation works completely
 - [ ] Screen reader testing completed (at least one screen reader)
 - [ ] Focus management works in all modals/dialogs
@@ -383,6 +398,7 @@ Builds will fail if:
 - [ ] High contrast mode testing completed
 
 #### ✅ Content Review
+
 - [ ] All images have appropriate alt text
 - [ ] Form labels are present and descriptive
 - [ ] Headings follow proper hierarchy
@@ -390,6 +406,7 @@ Builds will fail if:
 - [ ] Error messages are clear and actionable
 
 #### ✅ Component-Specific
+
 - [ ] Tables have proper headers
 - [ ] Lists use proper markup
 - [ ] Buttons have clear purposes
@@ -399,6 +416,7 @@ Builds will fail if:
 ### Page-Specific Checklists
 
 #### Models Page
+
 - [ ] Model cards are keyboard accessible
 - [ ] Search functionality works with screen readers
 - [ ] Filter controls are properly labeled
@@ -406,6 +424,7 @@ Builds will fail if:
 - [ ] Pagination controls work via keyboard
 
 #### API Keys Page
+
 - [ ] Table navigation works with screen readers
 - [ ] Create/edit forms are fully accessible
 - [ ] Action buttons have clear labels
@@ -413,6 +432,7 @@ Builds will fail if:
 - [ ] Copy functionality is announced
 
 #### Usage Page
+
 - [ ] Charts have alternative text descriptions
 - [ ] Data tables are screen reader accessible
 - [ ] Date pickers work via keyboard
@@ -423,12 +443,14 @@ Builds will fail if:
 ### Issue: Missing Form Labels
 
 **Problem**: Screen readers can't identify form fields
+
 ```html
 <!-- Problematic -->
 <input type="text" placeholder="Enter name" />
 ```
 
 **Solution**: Add proper labels
+
 ```html
 <!-- Fixed -->
 <label htmlFor="name">Name</label>
@@ -443,6 +465,7 @@ Builds will fail if:
 **Problem**: Text doesn't meet WCAG contrast requirements
 
 **Solution**: Use PatternFly color tokens
+
 ```css
 /* Instead of custom colors, use PatternFly tokens */
 .text-primary {
@@ -455,6 +478,7 @@ Builds will fail if:
 **Problem**: Focus escapes modal, no keyboard access
 
 **Solution**: Implement proper focus management
+
 ```typescript
 // Use PatternFly Modal component with proper props
 <Modal
@@ -478,11 +502,12 @@ Builds will fail if:
 **Problem**: Dynamic content changes aren't announced
 
 **Solution**: Use ScreenReaderAnnouncement component
+
 ```typescript
 // Announce status changes
-<ScreenReaderAnnouncement 
-  message="API key created successfully" 
-  priority="assertive" 
+<ScreenReaderAnnouncement
+  message="API key created successfully"
+  priority="assertive"
 />
 ```
 
@@ -491,6 +516,7 @@ Builds will fail if:
 **Problem**: Focus gets stuck in custom components
 
 **Solution**: Implement proper focus management
+
 ```typescript
 // Handle escape key and tab cycling
 const handleKeyDown = (event: KeyboardEvent) => {
@@ -504,19 +530,23 @@ const handleKeyDown = (event: KeyboardEvent) => {
 ## Resources and References
 
 ### WCAG Guidelines
+
 - [WCAG 2.1 AA Guidelines](https://www.w3.org/WAI/WCAG21/quickref/?versions=2.1&levels=aa)
 - [WebAIM WCAG Checklist](https://webaim.org/standards/wcag/checklist)
 
 ### Testing Tools
+
 - [axe-core Documentation](https://github.com/dequelabs/axe-core)
 - [Playwright Accessibility](https://playwright.dev/docs/accessibility-testing)
 - [WebAIM Resources](https://webaim.org/)
 
 ### PatternFly Accessibility
+
 - [PatternFly Accessibility Guide](https://www.patternfly.org/accessibility/accessibility-guide)
 - [PatternFly Component Accessibility](https://www.patternfly.org/accessibility/component-accessibility)
 
 ### Screen Reader Resources
+
 - [NVDA User Guide](https://www.nvaccess.org/documentation/)
 - [VoiceOver Commands](https://support.apple.com/guide/voiceover/welcome/mac)
 - [JAWS Shortcuts](https://support.freedomscientific.com/Content/Documents/Manuals/JAWS/Keystrokes.htm)
@@ -524,6 +554,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
 ## Contact and Support
 
 For accessibility questions or issues:
+
 - Review this document and run the testing procedures
 - Check the [PatternFly Accessibility Guide](https://www.patternfly.org/accessibility/accessibility-guide)
 - File accessibility issues in the project repository
@@ -531,4 +562,4 @@ For accessibility questions or issues:
 
 ---
 
-*This document is living documentation and should be updated as new accessibility features and testing procedures are added to the LiteMaaS application.*
+_This document is living documentation and should be updated as new accessibility features and testing procedures are added to the LiteMaaS application._

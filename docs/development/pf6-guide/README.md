@@ -7,29 +7,35 @@ Essential rules and guidelines for developing React applications with PatternFly
 ## Quick Navigation
 
 ### 🚀 Frontend Setup
+
 - [**Setup Guide**](./setup/README.md) - Frontend development prerequisites
 - [**Quick Start**](./setup/quick-start.md) - Start developing with PatternFly 6 and Vite
 - [**Development Environment**](./setup/development-environment.md) - Frontend tools and configuration
 
 ### 📚 Development Guidelines
+
 - [**PatternFly Guidelines**](./guidelines/README.md) - Core development principles with quality checklist
 - [**Component Architecture**](./guidelines/component-architecture.md) - Component structure and patterns
 - [**Styling Standards**](./guidelines/styling-standards.md) - Design tokens and CSS requirements
 - [**Migration Codemods**](./guidelines/migration-codemods.md) - Automated migration tools for v6
 
 ### 🧩 Component Rules
+
 - [**Layout Rules**](./components/layout/README.md) - Page structure requirements
 - [**Table Component Rules**](./components/data-display/table.md) - Table usage and best practices
 - [**Data View Component Rules**](./components/data-display/README.md) - Data view usage and best practices
 
 ### 📊 Specialized Rules
+
 - [**Charts Rules**](./charts/README.md) - PatternFly Charts requirements
 - [**Chatbot Rules**](./chatbot/README.md) - PatternFly Chatbot requirements
 
 ### 🔧 Troubleshooting
+
 - [**Common Issues**](./troubleshooting/common-issues.md) - Frontend, PatternFly 6, and Vite issues
 
 ### 📖 Resources
+
 - [**External Links**](./resources/external-links.md) - Official documentation links
 
 ## Core Development Principles
@@ -50,6 +56,7 @@ Essential rules and guidelines for developing React applications with PatternFly
 ## What's Covered
 
 This guide provides comprehensive PatternFly 6 frontend development guidance:
+
 - ✅ **Component Development** - PatternFly 6 React component patterns
 - ✅ **Design Token System** - Complete token documentation and usage
 - ✅ **Styling Standards** - CSS guidelines and utility classes
@@ -60,6 +67,7 @@ This guide provides comprehensive PatternFly 6 frontend development guidance:
 ## Scope and Authority
 
 ### What This Guide Covers
+
 - ✅ PatternFly 6 React components and patterns
 - ✅ Frontend styling and design tokens
 - ✅ Accessibility requirements
@@ -67,6 +75,7 @@ This guide provides comprehensive PatternFly 6 frontend development guidance:
 - ✅ Frontend build and development with Vite
 
 ### What This Guide Does NOT Cover
+
 - ❌ Backend development
 - ❌ Deployment and CI/CD
 - ❌ Database or API design
@@ -74,6 +83,7 @@ This guide provides comprehensive PatternFly 6 frontend development guidance:
 - ❌ Full-stack architecture
 
 ### Authority
+
 This guide is the authoritative source for PatternFly 6 frontend patterns. When current implementation conflicts with this guide, follow the guide.
 
 ## External Resources
@@ -85,6 +95,7 @@ This guide is the authoritative source for PatternFly 6 frontend patterns. When 
 ## Related Project Documentation
 
 For non-frontend concerns, see the main project documentation:
+
 - **Backend Development**: `docs/development/`
 - **API Documentation**: `docs/api/`
 - **Deployment**: `docs/deployment/`

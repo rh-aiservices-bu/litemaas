@@ -7,6 +7,7 @@ The Usage API provides endpoints for tracking and analyzing API usage, including
 ## Authentication
 
 All usage endpoints require JWT authentication via Bearer token:
+
 ```http
 Authorization: Bearer <jwt-token>
 ```
@@ -45,11 +46,12 @@ Retrieve usage metrics for the frontend dashboard.
 | apiKeyId | string | No | Filter by specific API key |
 
 **Response:**
+
 ```json
 {
   "totalRequests": 125000,
   "totalTokens": 8500000,
-  "totalCost": 127.50,
+  "totalCost": 127.5,
   "averageResponseTime": 1.2,
   "successRate": 99.2,
   "activeModels": 4,
@@ -58,7 +60,7 @@ Retrieve usage metrics for the frontend dashboard.
       "name": "gpt-4",
       "requests": 45000,
       "tokens": 3200000,
-      "cost": 96.00
+      "cost": 96.0
     }
   ],
   "dailyUsage": [
@@ -66,7 +68,7 @@ Retrieve usage metrics for the frontend dashboard.
       "date": "2025-08-01",
       "requests": 18000,
       "tokens": 1200000,
-      "cost": 18.00
+      "cost": 18.0
     }
   ],
   "hourlyUsage": [
@@ -101,6 +103,7 @@ Retrieve aggregated usage statistics.
 | granularity | string | No | hour, day, week, month (default: day) |
 
 **Response:**
+
 ```json
 {
   "period": {
@@ -110,7 +113,7 @@ Retrieve aggregated usage statistics.
   "totals": {
     "requests": 125000,
     "tokens": 8500000,
-    "cost": 127.50,
+    "cost": 127.5,
     "inputTokens": 5100000,
     "outputTokens": 3400000,
     "averageLatency": 1200,
@@ -123,7 +126,7 @@ Retrieve aggregated usage statistics.
       "modelName": "GPT-4",
       "requests": 45000,
       "tokens": 3200000,
-      "cost": 96.00
+      "cost": 96.0
     }
   ]
 }
@@ -145,6 +148,7 @@ Retrieve usage data over time.
 | subscriptionId | string | No | Filter by subscription |
 
 **Response:**
+
 ```json
 {
   "interval": "day",
@@ -177,18 +181,19 @@ Retrieve comprehensive dashboard data.
 | timeRange | string | No | day, week, month (default: month) |
 
 **Response:**
+
 ```json
 {
   "summary": {
     "currentPeriod": {
       "requests": 125000,
       "tokens": 8500000,
-      "cost": 127.50
+      "cost": 127.5
     },
     "previousPeriod": {
       "requests": 108000,
       "tokens": 7300000,
-      "cost": 109.50
+      "cost": 109.5
     },
     "percentChange": {
       "requests": 15.7,
@@ -252,6 +257,7 @@ Export usage data in CSV or JSON format.
 | apiKeyId | string | No | Filter by API key |
 
 **Response:**
+
 - CSV: Returns file download with Content-Type: text/csv
 - JSON: Returns structured JSON with metadata
 
@@ -264,6 +270,7 @@ Record real-time usage for API requests.
 **Required Permission:** `usage:write`
 
 **Request Body:**
+
 ```json
 {
   "subscriptionId": "sub_123",
@@ -298,6 +305,7 @@ Record real-time usage for API requests.
 **Required Permission:** `admin:usage`
 
 **Request Body:**
+
 ```json
 {
   "retentionDays": 90
@@ -314,7 +322,7 @@ sequenceDiagram
     participant Backend
     participant Database
     participant LiteLLM
-    
+
     Frontend->>Backend: GET /usage/metrics?apiKeyId=123
     Backend->>Database: Get API key details
     Backend->>LiteLLM: GET /user/info?user_id={userId}

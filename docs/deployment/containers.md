@@ -51,6 +51,7 @@ docker-compose up -d
 ```
 
 This will start:
+
 - PostgreSQL database on port 5432
 - Backend API on port 8080
 - Frontend web app on port 3000
@@ -60,29 +61,29 @@ This will start:
 
 ### Backend Environment Variables
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | - | Yes |
-| `JWT_SECRET` | JWT signing secret | - | Yes |
-| `OAUTH_CLIENT_ID` | OAuth client ID | - | Yes |
-| `OAUTH_CLIENT_SECRET` | OAuth client secret | - | Yes |
-| `OAUTH_ISSUER` | OAuth provider URL | - | Yes |
-| `OAUTH_CALLBACK_URL` | OAuth callback URL | - | Yes |
-| `ADMIN_API_KEYS` | Comma-separated admin keys | - | Yes |
-| `LITELLM_API_URL` | LiteLLM service URL | - | Yes |
-| `HOST` | Server bind address | `0.0.0.0` | No |
-| `PORT` | Server port | `8080` | No |
-| `NODE_ENV` | Environment mode | `production` | No |
-| `LOG_LEVEL` | Logging level | `info` | No |
-| `CORS_ORIGIN` | CORS allowed origins | - | No |
+| Variable              | Description                  | Default      | Required |
+| --------------------- | ---------------------------- | ------------ | -------- |
+| `DATABASE_URL`        | PostgreSQL connection string | -            | Yes      |
+| `JWT_SECRET`          | JWT signing secret           | -            | Yes      |
+| `OAUTH_CLIENT_ID`     | OAuth client ID              | -            | Yes      |
+| `OAUTH_CLIENT_SECRET` | OAuth client secret          | -            | Yes      |
+| `OAUTH_ISSUER`        | OAuth provider URL           | -            | Yes      |
+| `OAUTH_CALLBACK_URL`  | OAuth callback URL           | -            | Yes      |
+| `ADMIN_API_KEYS`      | Comma-separated admin keys   | -            | Yes      |
+| `LITELLM_API_URL`     | LiteLLM service URL          | -            | Yes      |
+| `HOST`                | Server bind address          | `0.0.0.0`    | No       |
+| `PORT`                | Server port                  | `8080`       | No       |
+| `NODE_ENV`            | Environment mode             | `production` | No       |
+| `LOG_LEVEL`           | Logging level                | `info`       | No       |
+| `CORS_ORIGIN`         | CORS allowed origins         | -            | No       |
 
 ### Frontend Runtime Configuration
 
 The frontend container is now fully environment-agnostic and configured at **runtime**:
 
-| Variable | Description | Default | Required |
-|----------|-------------|---------|----------|
-| `BACKEND_URL` | Backend API URL for proxying `/api` requests | `http://backend:8080` | No |
+| Variable      | Description                                  | Default               | Required |
+| ------------- | -------------------------------------------- | --------------------- | -------- |
+| `BACKEND_URL` | Backend API URL for proxying `/api` requests | `http://backend:8080` | No       |
 
 **Note**: No build-time configuration is needed. The container image can be built once and deployed to any environment by setting the `BACKEND_URL` environment variable at runtime.
 
@@ -160,6 +161,7 @@ oc apply -k deployment/openshift/
 ### Complete Setup Guide
 
 For detailed OpenShift deployment instructions including:
+
 - OAuth client configuration
 - Secret preparation
 - Step-by-step deployment process
@@ -179,11 +181,13 @@ Both containers include built-in health checks:
 Both containers use an optimized three-stage build approach:
 
 ### Backend Build Stages:
+
 1. **Base stage**: UBI9 Node.js with updated system packages
 2. **Builder stage**: Inherits from base, installs dev dependencies, builds application
 3. **Runtime stage**: Inherits from base, installs only production dependencies, copies built artifacts
 
 ### Frontend Build Stages:
+
 1. **Base stage**: UBI9 Node.js with updated system packages (for building)
 2. **Builder stage**: Inherits from base, builds React application without any environment-specific configuration
 3. **Runtime stage**: UBI9 nginx with envsubst for runtime configuration, serves the built static files
@@ -243,7 +247,7 @@ podman logs litemaas-postgres
 ### Development vs Production
 
 - **Development**: Use the existing `dev-tools/compose.yaml` for local development
-- **Production**: Use the root `compose.yaml` or deploy containers individually
+- **Production**: Use the deployment instructions
 - **Testing**: Both containers support health checks for automated testing
 
 ## Image Registry
@@ -274,13 +278,13 @@ graph TB
         Browser[Browser]
         OAuth[OpenShift OAuth Provider]
     end
-    
+
     subgraph "Container Stack"
         NGINX[NGINX<br/>Port 8080]
         Backend[Backend API<br/>Port 8081]
         Frontend[Frontend SPA<br/>Static Files]
     end
-    
+
     Browser -->|All requests| NGINX
     NGINX -->|/api/*| Backend
     NGINX -->|/*| Frontend
@@ -296,7 +300,7 @@ sequenceDiagram
     participant NGINX
     participant Backend
     participant OAuth Provider
-    
+
     Note over User,OAuth Provider: 1. Login Initiation
     User->>Browser: Click "Login"
     Browser->>NGINX: POST /api/auth/login
@@ -304,11 +308,11 @@ sequenceDiagram
     Backend->>NGINX: Return OAuth URL
     NGINX->>Browser: Return OAuth URL
     Browser->>OAuth Provider: Redirect to OAuth
-    
+
     Note over User,OAuth Provider: 2. OAuth Authentication
     User->>OAuth Provider: Enter credentials
     OAuth Provider->>Browser: Redirect to callback
-    
+
     Note over Browser,Backend: 3. OAuth Callback Processing
     Browser->>NGINX: GET /api/auth/callback?code=xxx
     Note right of Browser: OAuth provider redirects here
@@ -316,7 +320,7 @@ sequenceDiagram
     Backend->>OAuth Provider: Exchange code for token
     OAuth Provider->>Backend: Return access token
     Backend->>Backend: Create/update user
-    
+
     Note over Backend,Browser: 4. Frontend Redirect
     Backend->>NGINX: 302 Redirect to /auth/callback
     Note right of Backend: Relative redirect works<br/>in any environment
@@ -342,12 +346,12 @@ As of the latest update, LiteMaaS implements **automatic OAuth callback URL dete
 
 Register ALL possible callback URLs with your OAuth provider:
 
-| Environment | Callback URLs to Register | Notes |
-|-------------|--------------------------|--------|
-| Development (Vite) | `http://localhost:3000/api/auth/callback` | Vite dev server on port 3000 |
-| Development (Direct) | `http://localhost:8080/api/auth/callback`<br>`http://localhost:8081/api/auth/callback` | Direct backend access |
-| Container (NGINX) | `http://localhost:8080/api/auth/callback` | NGINX on port 8080 |
-| Production | `https://your-domain.com/api/auth/callback` | Through ingress/load balancer |
+| Environment          | Callback URLs to Register                                                              | Notes                         |
+| -------------------- | -------------------------------------------------------------------------------------- | ----------------------------- |
+| Development (Vite)   | `http://localhost:3000/api/auth/callback`                                              | Vite dev server on port 3000  |
+| Development (Direct) | `http://localhost:8080/api/auth/callback`<br>`http://localhost:8081/api/auth/callback` | Direct backend access         |
+| Container (NGINX)    | `http://localhost:8080/api/auth/callback`                                              | NGINX on port 8080            |
+| Production           | `https://your-domain.com/api/auth/callback`                                            | Through ingress/load balancer |
 
 ##### Example OAuth Provider Configuration
 
@@ -359,10 +363,10 @@ metadata:
   name: litemaas
 secret: your-secret-here
 redirectURIs:
-  - http://localhost:3000/api/auth/callback    # Vite development
-  - http://localhost:8080/api/auth/callback    # Container/Direct
-  - http://localhost:8081/api/auth/callback    # Backend direct
-  - https://your-domain.com/api/auth/callback  # Production
+  - http://localhost:3000/api/auth/callback # Vite development
+  - http://localhost:8080/api/auth/callback # Container/Direct
+  - http://localhost:8081/api/auth/callback # Backend direct
+  - https://your-domain.com/api/auth/callback # Production
 grantMethod: prompt
 ```
 
@@ -395,10 +399,11 @@ The backend uses relative redirects to ensure environment portability:
 ```typescript
 // After OAuth callback processing
 const callbackPath = `/auth/callback#token=${token}&expires_in=${expiresIn}`;
-return reply.redirect(callbackPath);  // Relative redirect
+return reply.redirect(callbackPath); // Relative redirect
 ```
 
 This means:
+
 - No `FRONTEND_URL` configuration needed
 - Works regardless of domain or port
 - Browser maintains the current origin
@@ -411,7 +416,8 @@ This means:
 
 **Cause**: The `redirect_uri` parameter doesn't match between authorization and token exchange
 
-**Solution**: 
+**Solution**:
+
 1. Register all possible callback URLs with your OAuth provider
 2. The automatic detection ensures the same URL is used in both phases
 3. Check backend logs for "Token exchange callback URL" to see what's being used
@@ -422,7 +428,8 @@ This means:
 
 **Cause**: Mismatch between where frontend is served and OAuth callback configuration
 
-**Solution**: 
+**Solution**:
+
 1. The backend now uses relative redirects (`/auth/callback`)
 2. Automatic callback URL detection handles port differences
 3. Ensure all possible URLs are registered with OAuth provider
@@ -433,7 +440,8 @@ This means:
 
 **Cause**: Hard-coded callback URLs don't match the deployment environment
 
-**Solution**: 
+**Solution**:
+
 1. Register multiple callback URLs with your OAuth provider
 2. Automatic detection selects the right one based on request origin
 3. No need to change configuration between environments
@@ -444,7 +452,8 @@ This means:
 
 **Cause**: Wrong OAuth callback URL configuration or NGINX proxy issue
 
-**Solution**: 
+**Solution**:
+
 1. Verify OAuth callback URL includes `/api/auth/callback`
 2. Ensure NGINX is properly proxying `/api/*` to backend
 3. Check backend is running and healthy
@@ -462,6 +471,7 @@ This means:
 To test OAuth in containerized environment:
 
 1. **Start containers with proper configuration:**
+
 ```bash
 # Backend with OAuth config
 podman run -d --name backend \
@@ -495,4 +505,4 @@ podman run -d --name frontend \
 2. **Validate OAuth state parameter** to prevent CSRF attacks
 3. **Use secure token storage** in frontend (httpOnly cookies or secure localStorage)
 4. **Implement proper CORS policies** to prevent unauthorized access
-5. **Regular token rotation** and expiration handling 
+5. **Regular token rotation** and expiration handling

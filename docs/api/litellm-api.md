@@ -5,13 +5,14 @@
 > **Authentication**: API Key Header (`x-litellm-api-key`)  
 > **Integration Status**: ✅ **FULLY IMPLEMENTED** - All critical endpoints integrated
 
-This document provides a comprehensive reference for integrating LiteMaaS with the LiteLLM API server. 
+This document provides a comprehensive reference for integrating LiteMaaS with the LiteLLM API server.
 
 **🎉 Integration Complete**: All migration phases have been successfully implemented. See [PROJECT_PLAN.md](../PROJECT_PLAN.md) for detailed implementation status.
 
 ## 🔐 Authentication
 
 All API calls require authentication via API key header:
+
 ```http
 x-litellm-api-key: sk-your-api-key-here
 ```
@@ -20,24 +21,26 @@ x-litellm-api-key: sk-your-api-key-here
 
 ### Essential Endpoints for LiteMaaS Integration
 
-| Endpoint | Method | Purpose | Priority |
-|----------|--------|---------|----------|
-| `/health/liveliness` | GET | Service health check | **Critical** |
-| `/model/info` | GET | List available models with detailed info | **Critical** |
-| `/key/generate` | POST | Create API keys | **Critical** |
-| `/key/info` | GET | Get key details | **High** |
-| `/user/new` | POST | Create internal users | **High** |
-| `/budget/info` | GET | Budget tracking | **Medium** |
-| `/team/new` | POST | Team management | **Medium** |
+| Endpoint             | Method | Purpose                                  | Priority     |
+| -------------------- | ------ | ---------------------------------------- | ------------ |
+| `/health/liveliness` | GET    | Service health check                     | **Critical** |
+| `/model/info`        | GET    | List available models with detailed info | **Critical** |
+| `/key/generate`      | POST   | Create API keys                          | **Critical** |
+| `/key/info`          | GET    | Get key details                          | **High**     |
+| `/user/new`          | POST   | Create internal users                    | **High**     |
+| `/budget/info`       | GET    | Budget tracking                          | **Medium**   |
+| `/team/new`          | POST   | Team management                          | **Medium**   |
 
 ---
 
 ## 🏥 Health & Monitoring
 
 ### Health Check
+
 ```http
 GET /health/liveliness
 ```
+
 **Response**: `200 OK` - Service is healthy
 
 **Integration Use**: Use for service availability checks in LiteMaaS health monitoring.
@@ -47,11 +50,13 @@ GET /health/liveliness
 ## 🤖 Model Management
 
 ### List Available Models with Detailed Information
+
 ```http
 GET /model/info
 ```
 
 **Response**:
+
 ```json
 {
   "data": [
@@ -84,7 +89,8 @@ GET /model/info
 }
 ```
 
-**Integration Use**: 
+**Integration Use**:
+
 - Populate LiteMaaS model registry with accurate pricing and capabilities
 - Extract model capabilities (`supports_vision`, `supports_function_calling`, etc.)
 - Validate subscription model access via `access_via_team_ids`
@@ -92,11 +98,13 @@ GET /model/info
 - Handle missing data gracefully (undefined values for missing `max_tokens` or pricing)
 
 ### Model Discovery with Filters
+
 ```http
 GET /model/info?team_id=team_123
 ```
 
 **Query Parameters**:
+
 - `team_id`: Filter models accessible by specific team
 
 ---
@@ -104,6 +112,7 @@ GET /model/info?team_id=team_123
 ## 🔑 API Key Management
 
 ### Generate API Key
+
 ```http
 POST /key/generate
 Content-Type: application/json
@@ -131,6 +140,7 @@ Content-Type: application/json
 ```
 
 **Response**:
+
 ```json
 {
   "key": "sk-litellm-1234567890abcdef",
@@ -139,24 +149,26 @@ Content-Type: application/json
   "token_id": "token_abc123",
   "user_id": "user_12345",
   "team_id": "team_67890",
-  "max_budget": 100.00,
-  "current_spend": 0.00,
+  "max_budget": 100.0,
+  "current_spend": 0.0,
   "created_at": "2024-07-24T14:06:00Z"
 }
 ```
 
 ### Get Key Information
+
 ```http
 GET /key/info
 x-litellm-api-key: sk-litellm-1234567890abcdef
 ```
 
 **Response**:
+
 ```json
 {
   "key_name": "user-john-production",
   "spend": 15.75,
-  "max_budget": 100.00,
+  "max_budget": 100.0,
   "models": ["gpt-4o", "gpt-3.5-turbo"],
   "tpm_limit": 1000,
   "rpm_limit": 60,
@@ -168,6 +180,7 @@ x-litellm-api-key: sk-litellm-1234567890abcdef
 ```
 
 ### Update Key Settings
+
 ```http
 POST /key/update
 Content-Type: application/json
@@ -180,6 +193,7 @@ Content-Type: application/json
 ```
 
 ### Delete/Block Key
+
 ```http
 POST /key/delete
 Content-Type: application/json
@@ -194,6 +208,7 @@ Content-Type: application/json
 ## 👥 User Management
 
 ### Create Internal User
+
 ```http
 POST /user/new
 Content-Type: application/json
@@ -218,24 +233,27 @@ Content-Type: application/json
 ```
 
 **Response**:
+
 ```json
 {
   "user_id": "litemaas_user_12345",
   "user_email": "john.doe@company.com",
   "teams": ["team_67890"],
-  "max_budget": 500.00,
-  "spend": 0.00,
+  "max_budget": 500.0,
+  "spend": 0.0,
   "api_key": "sk-litellm-auto-generated-key",
   "created_at": "2024-07-24T14:06:00Z"
 }
 ```
 
 ### Get User Information
+
 ```http
 GET /user/info?user_id=litemaas_user_12345
 ```
 
 ### List Users
+
 ```http
 GET /user/list
 ```
@@ -245,6 +263,7 @@ GET /user/list
 ## 🏢 Team Management
 
 ### Create Team
+
 ```http
 POST /team/new
 Content-Type: application/json
@@ -266,6 +285,7 @@ Content-Type: application/json
 ```
 
 ### Get Team Information
+
 ```http
 GET /team/info?team_id=litemaas_team_eng
 ```
@@ -275,6 +295,7 @@ GET /team/info?team_id=litemaas_team_eng
 ## 💰 Budget Management
 
 ### Create Budget
+
 ```http
 POST /budget/new
 Content-Type: application/json
@@ -291,19 +312,21 @@ Content-Type: application/json
 ```
 
 ### Get Budget Information
+
 ```http
 GET /budget/info?budget_id=eng_team_monthly
 ```
 
 **Response**:
+
 ```json
 {
   "budget_id": "eng_team_monthly",
-  "max_budget": 2000.00,
-  "spend": 850.30,
-  "remaining": 1149.70,
+  "max_budget": 2000.0,
+  "spend": 850.3,
+  "remaining": 1149.7,
   "reset_at": "2024-08-01T00:00:00Z",
-  "soft_limit": 1800.00,
+  "soft_limit": 1800.0,
   "alert_triggered": false,
   "team_id": "litemaas_team_eng"
 }
@@ -314,11 +337,13 @@ GET /budget/info?budget_id=eng_team_monthly
 ## 🔍 Audit & Analytics
 
 ### Get Audit Logs
+
 ```http
 GET /audit?user_id=litemaas_user_12345&limit=100
 ```
 
 **Response**:
+
 ```json
 {
   "data": [
@@ -329,7 +354,7 @@ GET /audit?user_id=litemaas_user_12345&limit=100
       "user_id": "litemaas_user_12345",
       "details": {
         "key_name": "user-john-production",
-        "max_budget": 100.00
+        "max_budget": 100.0
       }
     }
   ]
@@ -341,6 +366,7 @@ GET /audit?user_id=litemaas_user_12345&limit=100
 ## 🚀 LLM Operations (OpenAI Compatible)
 
 ### Chat Completions
+
 ```http
 POST /chat/completions
 Content-Type: application/json
@@ -360,6 +386,7 @@ x-litellm-api-key: sk-litellm-1234567890abcdef
 ```
 
 ### Text Completions
+
 ```http
 POST /completions
 Content-Type: application/json
@@ -374,6 +401,7 @@ x-litellm-api-key: sk-litellm-1234567890abcdef
 ```
 
 ### Embeddings
+
 ```http
 POST /embeddings
 Content-Type: application/json
@@ -390,6 +418,7 @@ x-litellm-api-key: sk-litellm-1234567890abcdef
 ## 🔧 Integration Best Practices
 
 ### 1. Service Health Monitoring
+
 ```typescript
 // Health check with timeout
 async checkLiteLLMHealth(): Promise<boolean> {
@@ -405,6 +434,7 @@ async checkLiteLLMHealth(): Promise<boolean> {
 ```
 
 ### 2. Key Generation for Subscriptions
+
 ```typescript
 async createLiteLLMKey(subscription: Subscription): Promise<string> {
   const keyRequest = {
@@ -418,17 +448,18 @@ async createLiteLLMKey(subscription: Subscription): Promise<string> {
       created_by: 'litemaas'
     }
   };
-  
+
   const response = await this.liteLLMClient.post('/key/generate', keyRequest);
   return response.data.key;
 }
 ```
 
 ### 3. Spend Tracking Integration
+
 ```typescript
 async syncSpendData(apiKey: string): Promise<void> {
   const keyInfo = await this.getLiteLLMKeyInfo(apiKey);
-  
+
   // Update local database with spend info
   await this.updateApiKeySpend(apiKey, {
     currentSpend: keyInfo.spend,
@@ -439,6 +470,7 @@ async syncSpendData(apiKey: string): Promise<void> {
 ```
 
 ### 4. Error Handling
+
 ```typescript
 interface LiteLLMError {
   detail: Array<{
@@ -453,11 +485,11 @@ async handleLiteLLMError(error: AxiosError): Promise<never> {
     const validationError = error.response.data as LiteLLMError;
     throw new ValidationError('LiteLLM validation failed', validationError.detail);
   }
-  
+
   if (error.response?.status === 401) {
     throw new AuthenticationError('Invalid LiteLLM API key');
   }
-  
+
   throw new ServiceError('LiteLLM service error', error.message);
 }
 ```
@@ -467,57 +499,60 @@ async handleLiteLLMError(error: AxiosError): Promise<never> {
 ## 📊 Data Model Mappings
 
 ### LiteMaaS → LiteLLM User Mapping (IMPLEMENTED)
+
 ```typescript
 interface UserSyncMapping {
   // LiteMaaS User → LiteLLM User
-  id: string;                    // → user_id
-  username: string;              // → user_alias  
-  email: string;                 // → user_email
-  roles: string[];               // → user_role (convert to single role)
+  id: string; // → user_id
+  username: string; // → user_alias
+  email: string; // → user_email
+  roles: string[]; // → user_role (convert to single role)
   // ✅ IMPLEMENTED in LiteMaaS:
-  maxBudget: number;             // → max_budget
-  currentSpend: number;          // → tracked via spend sync
-  tpmLimit: number;              // → tpm_limit
-  rpmLimit: number;              // → rpm_limit
-  liteLLMUserId: string;         // → LiteLLM user_id mapping
-  lastSyncAt: Date;              // → sync timestamp
-  syncStatus: string;            // → sync status tracking
+  maxBudget: number; // → max_budget
+  currentSpend: number; // → tracked via spend sync
+  tpmLimit: number; // → tpm_limit
+  rpmLimit: number; // → rpm_limit
+  liteLLMUserId: string; // → LiteLLM user_id mapping
+  lastSyncAt: Date; // → sync timestamp
+  syncStatus: string; // → sync status tracking
 }
 ```
 
 ### LiteMaaS → LiteLLM API Key Mapping (IMPLEMENTED)
+
 ```typescript
 interface ApiKeySyncMapping {
   // LiteMaaS ApiKey → LiteLLM Key
-  subscriptionId: string;        // → metadata.subscription_id
-  expiresAt: Date;              // → duration (calculate)
+  subscriptionId: string; // → metadata.subscription_id
+  expiresAt: Date; // → duration (calculate)
   // ✅ IMPLEMENTED in LiteMaaS:
-  maxBudget: number;             // → max_budget
-  currentSpend: number;          // → tracked via spend sync
-  tpmLimit: number;              // → tpm_limit
-  rpmLimit: number;              // → rpm_limit
-  teamId: string;                // → team_id
-  liteLLMKeyId: string;          // → LiteLLM key mapping
-  liteLLMKeyAlias: string;       // → key_alias
-  lastSyncAt: Date;              // → sync timestamp
-  syncStatus: string;            // → sync status tracking
+  maxBudget: number; // → max_budget
+  currentSpend: number; // → tracked via spend sync
+  tpmLimit: number; // → tpm_limit
+  rpmLimit: number; // → rpm_limit
+  teamId: string; // → team_id
+  liteLLMKeyId: string; // → LiteLLM key mapping
+  liteLLMKeyAlias: string; // → key_alias
+  lastSyncAt: Date; // → sync timestamp
+  syncStatus: string; // → sync status tracking
 }
 ```
 
 ### LiteMaaS Team → LiteLLM Team Mapping (IMPLEMENTED)
+
 ```typescript
 interface TeamSyncMapping {
   // LiteMaaS Team → LiteLLM Team
-  id: string;                    // → team_id
-  name: string;                  // → team_alias
-  maxBudget: number;             // → max_budget
-  currentSpend: number;          // → tracked via spend sync
-  budgetDuration: string;        // → budget_duration
-  tpmLimit: number;              // → tpm_limit
-  rpmLimit: number;              // → rpm_limit
-  liteLLMTeamId: string;         // → LiteLLM team mapping
-  lastSyncAt: Date;              // → sync timestamp
-  syncStatus: string;            // → sync status tracking
+  id: string; // → team_id
+  name: string; // → team_alias
+  maxBudget: number; // → max_budget
+  currentSpend: number; // → tracked via spend sync
+  budgetDuration: string; // → budget_duration
+  tpmLimit: number; // → tpm_limit
+  rpmLimit: number; // → rpm_limit
+  liteLLMTeamId: string; // → LiteLLM team mapping
+  lastSyncAt: Date; // → sync timestamp
+  syncStatus: string; // → sync status tracking
 }
 ```
 
@@ -526,12 +561,15 @@ interface TeamSyncMapping {
 ## 🚨 Rate Limits & Quotas
 
 ### Default Limits
+
 - **Requests per minute**: 60 (configurable per key)
 - **Tokens per minute**: 1000 (configurable per key)
 - **Budget limits**: $100/month (configurable per key)
 
 ### Limit Headers
+
 LiteLLM returns rate limit information in response headers:
+
 ```http
 x-ratelimit-limit-requests: 60
 x-ratelimit-remaining-requests: 45
@@ -551,4 +589,4 @@ x-ratelimit-remaining-tokens: 750
 
 ---
 
-*This documentation is maintained alongside the LiteMaaS codebase and should be updated when LiteLLM API changes occur.*
+_This documentation is maintained alongside the LiteMaaS codebase and should be updated when LiteLLM API changes occur._

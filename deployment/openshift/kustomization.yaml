@@ -8,29 +8,29 @@ namespace: litemaas
 resources:
   # Namespace
   - namespace.yaml.local
-  
+
   # Secrets (must be created/customized before deployment)
   - postgres-secret.yaml.local
   - backend-secret.yaml.local
   - litellm-secret.yaml.local
-  
+
   # PostgreSQL Database
   - postgres-init-configmap.yaml
   - postgres-statefulset.yaml
   - postgres-service.yaml
-  
+
   # LiteLLM AI Proxy
   - litellm-deployment.yaml
   - litellm-service.yaml
-  
+
   # Backend API
   - backend-deployment.yaml.local
   - backend-service.yaml
-  
+
   # Frontend Web Application
   - frontend-deployment.yaml.local
   - frontend-service.yaml
-  
+
   # OpenShift Routes
   - frontend-route.yaml
   - litellm-route.yaml
@@ -41,7 +41,6 @@ images:
     newTag: latest
   - name: quay.io/rh-aiservice-bu/litemaas-frontend
     newTag: latest
-
 # Resource patches - can be uncommented and customized as needed
 # patches:
 #   # Example: Increase backend replicas for production
@@ -52,7 +51,7 @@ images:
 #     target:
 #       kind: Deployment
 #       name: backend
-#   
+#
 #   # Example: Set custom storage class for PostgreSQL
 #   - patch: |-
 #       - op: add

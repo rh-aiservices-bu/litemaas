@@ -61,8 +61,11 @@ describe('SubscriptionService', () => {
       createUser: vi.fn().mockResolvedValue(undefined),
       getUserInfo: vi.fn().mockResolvedValue({ user_id: mockUser.id }),
     } as Partial<LiteLLMService>;
-    
-    service = new SubscriptionService(mockFastify as FastifyInstance, mockLiteLLMService as LiteLLMService);
+
+    service = new SubscriptionService(
+      mockFastify as FastifyInstance,
+      mockLiteLLMService as LiteLLMService,
+    );
   });
 
   describe('createSubscription', () => {
@@ -86,33 +89,33 @@ describe('SubscriptionService', () => {
     it('should prevent duplicate active subscriptions for same model', async () => {
       // Mock the service to NOT use mock data so it goes through database logic
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
-      
-      const mockQueryOne = vi
-        .fn()
-        .mockResolvedValueOnce(mockSubscription); // Existing subscription found
+
+      const mockQueryOne = vi.fn().mockResolvedValueOnce(mockSubscription); // Existing subscription found
       mockFastify.dbUtils!.queryOne = mockQueryOne;
 
       const subscriptionData = {
         modelId: 'gpt-4',
       };
 
-      await expect(service.createEnhancedSubscription(mockUser.id, subscriptionData)).rejects.toThrow(
-        'Subscription already exists for model',
-      );
+      await expect(
+        service.createEnhancedSubscription(mockUser.id, subscriptionData),
+      ).rejects.toThrow('Subscription already exists for model');
     });
 
     it('should validate model exists', async () => {
       // Mock the service to NOT use mock data so it goes through database logic
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
-      
-      // Mock LiteLLM service to return null for invalid model  
+
+      // Mock LiteLLM service to return null for invalid model
       mockLiteLLMService.getModelById = vi.fn().mockResolvedValue(null);
 
       const subscriptionData = {
         modelId: 'invalid-model',
       };
 
-      await expect(service.createEnhancedSubscription(mockUser.id, subscriptionData)).rejects.toThrow('Model invalid-model not found');
+      await expect(
+        service.createEnhancedSubscription(mockUser.id, subscriptionData),
+      ).rejects.toThrow('Model invalid-model not found');
     });
 
     it('should allow custom quotas when provided', async () => {
@@ -190,7 +193,11 @@ describe('SubscriptionService', () => {
       const mockQueryOne = vi
         .fn()
         .mockResolvedValueOnce(mockSubscription) // Subscription exists
-        .mockResolvedValueOnce({ ...mockSubscription, quota_requests: 20000, quota_tokens: 2000000 });
+        .mockResolvedValueOnce({
+          ...mockSubscription,
+          quota_requests: 20000,
+          quota_tokens: 2000000,
+        });
       const mockQuery = vi.fn().mockResolvedValue({ rowCount: 1 });
       mockFastify.dbUtils!.queryOne = mockQueryOne;
       mockFastify.dbUtils!.query = mockQuery;
@@ -215,7 +222,7 @@ describe('SubscriptionService', () => {
       await expect(
         service.updateSubscription('non-existent', mockUser.id, {
           quotaRequests: 20000,
-        })
+        }),
       ).rejects.toThrow('Subscription not found');
     });
   });
@@ -245,9 +252,9 @@ describe('SubscriptionService', () => {
       const mockQueryOne = vi.fn().mockResolvedValueOnce(null);
       mockFastify.dbUtils!.queryOne = mockQueryOne;
 
-      await expect(
-        service.cancelSubscription('non-existent', mockUser.id)
-      ).rejects.toThrow('Subscription not found');
+      await expect(service.cancelSubscription('non-existent', mockUser.id)).rejects.toThrow(
+        'Subscription not found',
+      );
     });
   });
 

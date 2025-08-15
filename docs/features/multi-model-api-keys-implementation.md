@@ -7,11 +7,13 @@ LiteMaaS supports multi-model API keys, allowing a single key to access multiple
 ## Architecture
 
 ### Database Design
+
 - **api_keys** table: Stores key metadata and settings
 - **api_key_models** junction table: Many-to-many relationship between keys and models
 - **Backward Compatibility**: Legacy `subscription_id` column maintained for existing keys
 
 ### Key Features
+
 1. **Multi-Model Access**: One key can access multiple models
 2. **Per-Key Budgets**: Set spending limits per API key
 3. **Rate Limiting**: TPM/RPM limits per key
@@ -103,7 +105,7 @@ Update `backend/src/types/api-key.types.ts`:
 ```typescript
 // New interface for multi-model support
 export interface CreateApiKeyRequest {
-  modelIds: string[];  // Array of model IDs
+  modelIds: string[]; // Array of model IDs
   name?: string;
   expiresAt?: Date;
   maxBudget?: number;
@@ -127,7 +129,7 @@ export interface LegacyCreateApiKeyRequest extends Omit<CreateApiKeyRequest, 'mo
 export interface ApiKey {
   id: string;
   userId: string;
-  models: string[];  // Array of model IDs instead of single subscription
+  models: string[]; // Array of model IDs instead of single subscription
   name: string;
   keyHash: string;
   keyPrefix: string;
@@ -176,41 +178,41 @@ export class ApiKeyService {
   // Update createApiKey method
   async createApiKey(
     userId: string,
-    request: CreateApiKeyRequest | LegacyCreateApiKeyRequest
+    request: CreateApiKeyRequest | LegacyCreateApiKeyRequest,
   ): Promise<ApiKeyWithSecret> {
     try {
       // Handle backward compatibility
       let modelIds: string[];
       let isLegacyRequest = false;
-      
+
       if ('subscriptionId' in request) {
         // Legacy request - convert subscription to model
         isLegacyRequest = true;
         const subscription = await this.fastify.dbUtils.queryOne(
           `SELECT model_id, status FROM subscriptions WHERE id = $1 AND user_id = $2`,
-          [request.subscriptionId, userId]
+          [request.subscriptionId, userId],
         );
-        
+
         if (!subscription) {
           throw this.fastify.createNotFoundError('Subscription not found');
         }
-        
+
         if (subscription.status !== 'active') {
           throw this.fastify.createValidationError(
-            `Cannot create API key for ${subscription.status} subscription`
+            `Cannot create API key for ${subscription.status} subscription`,
           );
         }
-        
+
         modelIds = [subscription.model_id];
-        
+
         this.fastify.log.warn({
           userId,
           subscriptionId: request.subscriptionId,
-          message: 'Using deprecated subscriptionId parameter. Please migrate to modelIds.'
+          message: 'Using deprecated subscriptionId parameter. Please migrate to modelIds.',
         });
       } else {
         modelIds = request.modelIds;
-        
+
         if (!modelIds || modelIds.length === 0) {
           throw this.fastify.createValidationError('At least one model must be selected');
         }
@@ -228,28 +230,28 @@ export class ApiKeyService {
          WHERE s.user_id = $1 
            AND s.status = 'active' 
            AND s.model_id = ANY($2::text[])`,
-        [userId, modelIds]
+        [userId, modelIds],
       );
 
-      const validModelIds = validModels.map(m => m.model_id);
-      const invalidModels = modelIds.filter(id => !validModelIds.includes(id));
-      
+      const validModelIds = validModels.map((m) => m.model_id);
+      const invalidModels = modelIds.filter((id) => !validModelIds.includes(id));
+
       if (invalidModels.length > 0) {
         throw this.fastify.createValidationError(
-          `You do not have active subscriptions for the following models: ${invalidModels.join(', ')}`
+          `You do not have active subscriptions for the following models: ${invalidModels.join(', ')}`,
         );
       }
 
       // Check API key limits per user
       const existingKeysCount = await this.fastify.dbUtils.queryOne(
         `SELECT COUNT(*) FROM api_keys WHERE user_id = $1 AND is_active = true`,
-        [userId]
+        [userId],
       );
 
       const maxKeysPerUser = 10;
       if (parseInt(existingKeysCount.count) >= maxKeysPerUser) {
         throw this.fastify.createValidationError(
-          `Maximum ${maxKeysPerUser} active API keys allowed per user`
+          `Maximum ${maxKeysPerUser} active API keys allowed per user`,
         );
       }
 
@@ -260,18 +262,20 @@ export class ApiKeyService {
       const liteLLMRequest: LiteLLMKeyGenerationRequest = {
         key_alias: request.name || `key-${Date.now()}`,
         duration: request.expiresAt ? this.calculateDuration(request.expiresAt) : undefined,
-        models: modelIds,  // Pass all model IDs
+        models: modelIds, // Pass all model IDs
         max_budget: request.maxBudget,
         user_id: userId,
         team_id: request.teamId,
         tpm_limit: request.tpmLimit,
         rpm_limit: request.rpmLimit,
         budget_duration: request.budgetDuration,
-        permissions: request.permissions ? {
-          allow_chat_completions: request.permissions.allowChatCompletions,
-          allow_embeddings: request.permissions.allowEmbeddings,
-          allow_completions: request.permissions.allowCompletions,
-        } : undefined,
+        permissions: request.permissions
+          ? {
+              allow_chat_completions: request.permissions.allowChatCompletions,
+              allow_embeddings: request.permissions.allowEmbeddings,
+              allow_completions: request.permissions.allowCompletions,
+            }
+          : undefined,
         tags: request.tags,
         soft_budget: request.softBudget,
         guardrails: request.guardrails,
@@ -288,7 +292,7 @@ export class ApiKeyService {
 
       // Begin transaction for atomicity
       const client = await this.fastify.pg.connect();
-      
+
       try {
         await client.query('BEGIN');
 
@@ -317,16 +321,16 @@ export class ApiKeyService {
             new Date(),
             'synced',
             request.metadata || {},
-            ...(isLegacyRequest ? [request.subscriptionId] : [])
-          ]
+            ...(isLegacyRequest ? [request.subscriptionId] : []),
+          ],
         );
 
         // Insert model associations
         for (const modelId of modelIds) {
-          await client.query(
-            `INSERT INTO api_key_models (api_key_id, model_id) VALUES ($1, $2)`,
-            [apiKey.rows[0].id, modelId]
-          );
+          await client.query(`INSERT INTO api_key_models (api_key_id, model_id) VALUES ($1, $2)`, [
+            apiKey.rows[0].id,
+            modelId,
+          ]);
         }
 
         // Create audit log
@@ -338,27 +342,30 @@ export class ApiKeyService {
             'API_KEY_CREATE',
             'API_KEY',
             apiKey.rows[0].id,
-            { 
+            {
               name: request.name,
               keyPrefix,
               liteLLMKeyId: liteLLMResponse.key,
               models: modelIds,
               modelCount: modelIds.length,
-              legacy: isLegacyRequest
+              legacy: isLegacyRequest,
             },
-          ]
+          ],
         );
 
         await client.query('COMMIT');
 
-        this.fastify.log.info({
-          userId,
-          apiKeyId: apiKey.rows[0].id,
-          keyPrefix,
-          liteLLMKeyId: liteLLMResponse.key,
-          models: modelIds,
-          modelCount: modelIds.length,
-        }, 'API key created with multi-model support');
+        this.fastify.log.info(
+          {
+            userId,
+            apiKeyId: apiKey.rows[0].id,
+            keyPrefix,
+            liteLLMKeyId: liteLLMResponse.key,
+            models: modelIds,
+            modelCount: modelIds.length,
+          },
+          'API key created with multi-model support',
+        );
 
         return {
           ...this.mapToEnhancedApiKey(apiKey.rows[0], liteLLMResponse),
@@ -368,7 +375,7 @@ export class ApiKeyService {
         };
       } catch (error) {
         await client.query('ROLLBACK');
-        
+
         // Try to clean up in LiteLLM if key was created
         if (liteLLMResponse?.key) {
           try {
@@ -377,7 +384,7 @@ export class ApiKeyService {
             this.fastify.log.error(cleanupError, 'Failed to cleanup LiteLLM key after error');
           }
         }
-        
+
         throw error;
       } finally {
         client.release();
@@ -410,7 +417,7 @@ export class ApiKeyService {
          WHERE ak.user_id = $1
          GROUP BY ak.id
          ORDER BY ak.created_at DESC`,
-        [userId]
+        [userId],
       );
 
       // For backward compatibility, include model from subscription if no models in junction table
@@ -421,35 +428,36 @@ export class ApiKeyService {
              FROM subscriptions s
              JOIN models m ON s.model_id = m.id
              WHERE s.id = $1`,
-            [key.subscription_id]
+            [key.subscription_id],
           );
-          
+
           if (subscription) {
             key.models = [subscription.model_id];
-            key.model_details = [{
-              id: subscription.model_id,
-              name: subscription.name,
-              provider: subscription.provider,
-              context_length: subscription.context_length
-            }];
+            key.model_details = [
+              {
+                id: subscription.model_id,
+                name: subscription.name,
+                provider: subscription.provider,
+                context_length: subscription.context_length,
+              },
+            ];
           }
         }
       }
 
       // Sync with LiteLLM if needed
-      const keysToSync = apiKeys.filter(key => 
-        key.sync_status === 'pending' || 
-        !key.last_sync_at ||
-        new Date() - new Date(key.last_sync_at) > 3600000 // 1 hour
+      const keysToSync = apiKeys.filter(
+        (key) =>
+          key.sync_status === 'pending' ||
+          !key.last_sync_at ||
+          new Date() - new Date(key.last_sync_at) > 3600000, // 1 hour
       );
 
       if (keysToSync.length > 0) {
-        await Promise.all(keysToSync.map(key => 
-          this.syncApiKeyWithLiteLLM(key.id, userId)
-        ));
+        await Promise.all(keysToSync.map((key) => this.syncApiKeyWithLiteLLM(key.id, userId)));
       }
 
-      return apiKeys.map(key => this.mapToEnhancedApiKey(key));
+      return apiKeys.map((key) => this.mapToEnhancedApiKey(key));
     } catch (error) {
       this.fastify.log.error(error, 'Failed to get user API keys');
       throw error;
@@ -466,7 +474,7 @@ export class ApiKeyService {
          LEFT JOIN api_key_models akm ON ak.id = akm.api_key_id
          WHERE ak.key_hash = $1 AND ak.is_active = true
          GROUP BY ak.id`,
-        [keyHash]
+        [keyHash],
       );
 
       if (!apiKey) {
@@ -482,7 +490,7 @@ export class ApiKeyService {
       if ((!apiKey.models || apiKey.models.length === 0) && apiKey.subscription_id) {
         const subscription = await this.fastify.dbUtils.queryOne(
           `SELECT model_id FROM subscriptions WHERE id = $1`,
-          [apiKey.subscription_id]
+          [apiKey.subscription_id],
         );
         if (subscription) {
           apiKey.models = [subscription.model_id];
@@ -519,43 +527,57 @@ import { Type, Static } from '@sinclair/typebox';
 
 // New schema for multi-model support
 export const CreateApiKeySchema = Type.Object({
-  modelIds: Type.Array(Type.String(), { 
+  modelIds: Type.Array(Type.String(), {
     minItems: 1,
     description: 'Array of model IDs to associate with this API key',
-    examples: [['gpt-4', 'gpt-3.5-turbo']]
+    examples: [['gpt-4', 'gpt-3.5-turbo']],
   }),
-  name: Type.Optional(Type.String({ 
-    minLength: 1, 
-    maxLength: 255,
-    description: 'Human-readable name for the API key' 
-  })),
-  expiresAt: Type.Optional(Type.String({ 
-    format: 'date-time',
-    description: 'ISO 8601 date-time when the key expires' 
-  })),
-  maxBudget: Type.Optional(Type.Number({ 
-    minimum: 0,
-    description: 'Maximum budget for this API key' 
-  })),
-  budgetDuration: Type.Optional(Type.String({ 
-    enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
-    default: 'monthly' 
-  })),
-  tpmLimit: Type.Optional(Type.Integer({ 
-    minimum: 0,
-    description: 'Tokens per minute limit' 
-  })),
-  rpmLimit: Type.Optional(Type.Integer({ 
-    minimum: 0,
-    description: 'Requests per minute limit' 
-  })),
+  name: Type.Optional(
+    Type.String({
+      minLength: 1,
+      maxLength: 255,
+      description: 'Human-readable name for the API key',
+    }),
+  ),
+  expiresAt: Type.Optional(
+    Type.String({
+      format: 'date-time',
+      description: 'ISO 8601 date-time when the key expires',
+    }),
+  ),
+  maxBudget: Type.Optional(
+    Type.Number({
+      minimum: 0,
+      description: 'Maximum budget for this API key',
+    }),
+  ),
+  budgetDuration: Type.Optional(
+    Type.String({
+      enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
+      default: 'monthly',
+    }),
+  ),
+  tpmLimit: Type.Optional(
+    Type.Integer({
+      minimum: 0,
+      description: 'Tokens per minute limit',
+    }),
+  ),
+  rpmLimit: Type.Optional(
+    Type.Integer({
+      minimum: 0,
+      description: 'Requests per minute limit',
+    }),
+  ),
   teamId: Type.Optional(Type.String()),
   tags: Type.Optional(Type.Array(Type.String())),
-  permissions: Type.Optional(Type.Object({
-    allowChatCompletions: Type.Optional(Type.Boolean()),
-    allowEmbeddings: Type.Optional(Type.Boolean()),
-    allowCompletions: Type.Optional(Type.Boolean()),
-  })),
+  permissions: Type.Optional(
+    Type.Object({
+      allowChatCompletions: Type.Optional(Type.Boolean()),
+      allowEmbeddings: Type.Optional(Type.Boolean()),
+      allowCompletions: Type.Optional(Type.Boolean()),
+    }),
+  ),
   softBudget: Type.Optional(Type.Number()),
   guardrails: Type.Optional(Type.Array(Type.String())),
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
@@ -563,29 +585,30 @@ export const CreateApiKeySchema = Type.Object({
 
 // Legacy schema for backward compatibility
 export const LegacyCreateApiKeySchema = Type.Object({
-  subscriptionId: Type.String({ 
+  subscriptionId: Type.String({
     description: 'DEPRECATED: Use modelIds instead. Subscription ID to associate with this API key',
-    deprecated: true 
+    deprecated: true,
   }),
   ...Type.Omit(CreateApiKeySchema, ['modelIds']).properties,
 });
 
 // Union type for API endpoint
-export const CreateApiKeyRequestSchema = Type.Union([
-  CreateApiKeySchema,
-  LegacyCreateApiKeySchema
-]);
+export const CreateApiKeyRequestSchema = Type.Union([CreateApiKeySchema, LegacyCreateApiKeySchema]);
 
 // Response schema
 export const ApiKeyResponseSchema = Type.Object({
   id: Type.String(),
   models: Type.Array(Type.String()),
-  modelDetails: Type.Optional(Type.Array(Type.Object({
-    id: Type.String(),
-    name: Type.String(),
-    provider: Type.String(),
-    contextLength: Type.Optional(Type.Integer()),
-  }))),
+  modelDetails: Type.Optional(
+    Type.Array(
+      Type.Object({
+        id: Type.String(),
+        name: Type.String(),
+        provider: Type.String(),
+        contextLength: Type.Optional(Type.Integer()),
+      }),
+    ),
+  ),
   name: Type.String(),
   keyPrefix: Type.String(),
   key: Type.Optional(Type.String({ description: 'Only included on creation' })),
@@ -595,14 +618,16 @@ export const ApiKeyResponseSchema = Type.Object({
   lastUsedAt: Type.Optional(Type.String({ format: 'date-time' })),
   // LiteLLM fields
   liteLLMKeyId: Type.Optional(Type.String()),
-  liteLLMInfo: Type.Optional(Type.Object({
-    key_name: Type.String(),
-    max_budget: Type.Optional(Type.Number()),
-    current_spend: Type.Number(),
-    models: Type.Array(Type.String()),
-    tpm_limit: Type.Optional(Type.Integer()),
-    rpm_limit: Type.Optional(Type.Integer()),
-  })),
+  liteLLMInfo: Type.Optional(
+    Type.Object({
+      key_name: Type.String(),
+      max_budget: Type.Optional(Type.Number()),
+      current_spend: Type.Number(),
+      models: Type.Array(Type.String()),
+      tpm_limit: Type.Optional(Type.Integer()),
+      rpm_limit: Type.Optional(Type.Integer()),
+    }),
+  ),
   // Metadata
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
 });
@@ -620,69 +645,80 @@ Update `backend/src/routes/api-keys.ts`:
 // Update the POST endpoint to handle both formats
 fastify.post<{
   Body: CreateApiKeyRequest | LegacyCreateApiKeyRequest;
-}>('/', {
-  schema: {
-    description: 'Create a new API key associated with one or more models',
-    tags: ['API Keys'],
-    body: CreateApiKeyRequestSchema,
-    response: {
-      201: ApiKeyResponseSchema,
+}>(
+  '/',
+  {
+    schema: {
+      description: 'Create a new API key associated with one or more models',
+      tags: ['API Keys'],
+      body: CreateApiKeyRequestSchema,
+      response: {
+        201: ApiKeyResponseSchema,
+      },
     },
+    preHandler: fastify.authenticate,
   },
-  preHandler: fastify.authenticate,
-}, async (request, reply) => {
-  const userId = request.user.id;
-  
-  // Log deprecation warning for legacy requests
-  if ('subscriptionId' in request.body) {
-    request.log.warn({
-      userId,
-      subscriptionId: request.body.subscriptionId,
-    }, 'Deprecated subscriptionId parameter used in API key creation');
-  }
-  
-  const apiKey = await apiKeyService.createApiKey(userId, request.body);
-  
-  return reply.code(201).send(apiKey);
-});
+  async (request, reply) => {
+    const userId = request.user.id;
+
+    // Log deprecation warning for legacy requests
+    if ('subscriptionId' in request.body) {
+      request.log.warn(
+        {
+          userId,
+          subscriptionId: request.body.subscriptionId,
+        },
+        'Deprecated subscriptionId parameter used in API key creation',
+      );
+    }
+
+    const apiKey = await apiKeyService.createApiKey(userId, request.body);
+
+    return reply.code(201).send(apiKey);
+  },
+);
 
 // Update GET endpoint response
 fastify.get<{
   Querystring: PaginationQuery;
-}>('/', {
-  schema: {
-    description: 'Get all API keys for the authenticated user',
-    tags: ['API Keys'],
-    querystring: PaginationQuerySchema,
-    response: {
-      200: Type.Object({
-        data: Type.Array(ApiKeyResponseSchema),
-        pagination: PaginationSchema,
-      }),
+}>(
+  '/',
+  {
+    schema: {
+      description: 'Get all API keys for the authenticated user',
+      tags: ['API Keys'],
+      querystring: PaginationQuerySchema,
+      response: {
+        200: Type.Object({
+          data: Type.Array(ApiKeyResponseSchema),
+          pagination: PaginationSchema,
+        }),
+      },
     },
+    preHandler: fastify.authenticate,
   },
-  preHandler: fastify.authenticate,
-}, async (request, reply) => {
-  const userId = request.user.id;
-  const { page = 1, limit = 20 } = request.query;
-  
-  const apiKeys = await apiKeyService.getUserApiKeys(userId);
-  
-  // Apply pagination
-  const startIndex = (page - 1) * limit;
-  const endIndex = startIndex + limit;
-  const paginatedKeys = apiKeys.slice(startIndex, endIndex);
-  
-  return {
-    data: paginatedKeys,
-    pagination: {
-      page,
-      limit,
-      total: apiKeys.length,
-      totalPages: Math.ceil(apiKeys.length / limit),
-    },
-  };
-});
+  async (request, reply) => {
+    const userId = request.user.id;
+    const { page = 1, limit = 20 } = request.query;
+
+    const apiKeys = await apiKeyService.getUserApiKeys(userId);
+
+    // Apply pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = startIndex + limit;
+    const paginatedKeys = apiKeys.slice(startIndex, endIndex);
+
+    return {
+      data: paginatedKeys,
+      pagination: {
+        page,
+        limit,
+        total: apiKeys.length,
+        totalPages: Math.ceil(apiKeys.length / limit),
+      },
+    };
+  },
+);
 ```
 
 ### Phase 3: Frontend Implementation
@@ -759,7 +795,10 @@ class ApiKeysService {
     return response.data;
   }
 
-  async getApiKeys(page = 1, limit = 20): Promise<{
+  async getApiKeys(
+    page = 1,
+    limit = 20,
+  ): Promise<{
     data: ApiKeyDisplay[];
     pagination: {
       page: number;
@@ -769,19 +808,21 @@ class ApiKeysService {
     };
   }> {
     const response = await axios.get(this.baseURL, {
-      params: { page, limit }
+      params: { page, limit },
     });
-    
+
     // Transform for display
-    const displayKeys = response.data.data.map((key: ApiKey): ApiKeyDisplay => ({
-      ...key,
-      fullKey: key.key || `${key.keyPrefix}${'*'.repeat(32)}`,
-      status: this.getKeyStatus(key),
-      usageCount: key.liteLLMInfo?.current_spend || 0,
-      rateLimit: key.liteLLMInfo?.rpm_limit || 1000,
-      description: key.metadata?.description as string,
-    }));
-    
+    const displayKeys = response.data.data.map(
+      (key: ApiKey): ApiKeyDisplay => ({
+        ...key,
+        fullKey: key.key || `${key.keyPrefix}${'*'.repeat(32)}`,
+        status: this.getKeyStatus(key),
+        usageCount: key.liteLLMInfo?.current_spend || 0,
+        rateLimit: key.liteLLMInfo?.rpm_limit || 1000,
+        description: key.metadata?.description as string,
+      }),
+    );
+
     return {
       data: displayKeys,
       pagination: response.data.pagination,
@@ -873,19 +914,19 @@ interface SubscribedModel extends Model {
 const ApiKeysPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
-  
+
   // State for API keys
   const [apiKeys, setApiKeys] = useState<ApiKeyDisplay[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // State for modals
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [selectedApiKey, setSelectedApiKey] = useState<ApiKeyDisplay | null>(null);
   const [keyToDelete, setKeyToDelete] = useState<ApiKeyDisplay | null>(null);
-  
+
   // State for form
   const [newKeyName, setNewKeyName] = useState('');
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
@@ -893,12 +934,12 @@ const ApiKeysPage: React.FC = () => {
   const [newKeyRateLimit, setNewKeyRateLimit] = useState('1000');
   const [newKeyBudget, setNewKeyBudget] = useState('100');
   const [creatingKey, setCreatingKey] = useState(false);
-  
+
   // State for generated key display
   const [generatedKey, setGeneratedKey] = useState<ApiKeyDisplay | null>(null);
   const [showGeneratedKey, setShowGeneratedKey] = useState(false);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
-  
+
   // State for models
   const [subscribedModels, setSubscribedModels] = useState<SubscribedModel[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
@@ -908,7 +949,7 @@ const ApiKeysPage: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await apiKeysService.getApiKeys();
       setApiKeys(response.data);
     } catch (err) {
@@ -928,11 +969,11 @@ const ApiKeysPage: React.FC = () => {
   const loadSubscribedModels = async () => {
     try {
       setLoadingModels(true);
-      
+
       // Get user's active subscriptions
       const subscriptionsResponse = await subscriptionsService.getSubscriptions(1, 100);
       const activeSubscriptions = subscriptionsResponse.data.filter(sub => sub.status === 'active');
-      
+
       // Get unique model IDs and fetch model details
       const modelPromises = activeSubscriptions.map(async (sub) => {
         try {
@@ -948,10 +989,10 @@ const ApiKeysPage: React.FC = () => {
           return null;
         }
       });
-      
+
       const models = await Promise.all(modelPromises);
       const validModels = models.filter(m => m !== null) as SubscribedModel[];
-      
+
       setSubscribedModels(validModels);
     } catch (err) {
       console.error('Failed to load subscribed models:', err);
@@ -1000,12 +1041,12 @@ const ApiKeysPage: React.FC = () => {
     }
 
     setCreatingKey(true);
-    
+
     try {
       const request: CreateApiKeyRequest = {
         modelIds: selectedModelIds,
         name: newKeyName,
-        expiresAt: newKeyExpiration !== 'never' 
+        expiresAt: newKeyExpiration !== 'never'
           ? new Date(Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000).toISOString()
           : undefined,
         maxBudget: parseFloat(newKeyBudget),
@@ -1017,7 +1058,7 @@ const ApiKeysPage: React.FC = () => {
       };
 
       const newKey = await apiKeysService.createApiKey(request);
-      
+
       // Convert to display format
       const displayKey: ApiKeyDisplay = {
         ...newKey,
@@ -1026,14 +1067,14 @@ const ApiKeysPage: React.FC = () => {
         usageCount: 0,
         rateLimit: parseInt(newKeyRateLimit),
       };
-      
+
       // Refresh the API keys list
       await loadApiKeys();
-      
+
       setGeneratedKey(displayKey);
       setShowGeneratedKey(true);
       setIsCreateModalOpen(false);
-      
+
       addNotification({
         title: 'API Key Created',
         description: `${newKeyName} has been created successfully with ${selectedModelIds.length} model(s)`,
@@ -1063,13 +1104,13 @@ const ApiKeysPage: React.FC = () => {
 
   const confirmDeleteKey = async () => {
     if (!keyToDelete) return;
-    
+
     try {
       await apiKeysService.deleteApiKey(keyToDelete.id);
-      
+
       // Refresh the API keys list
       await loadApiKeys();
-      
+
       addNotification({
         title: 'API Key Deleted',
         description: `${keyToDelete.name} has been deleted`,
@@ -1110,7 +1151,7 @@ const ApiKeysPage: React.FC = () => {
   const getStatusBadge = (status: string) => {
     const variants = {
       active: 'success',
-      revoked: 'warning', 
+      revoked: 'warning',
       expired: 'danger'
     } as const;
 
@@ -1133,12 +1174,12 @@ const ApiKeysPage: React.FC = () => {
   // Model selection component
   const ModelSelector = () => (
     <FormGroup label="Select Models" isRequired fieldId="key-models">
-      <div style={{ 
-        maxHeight: '300px', 
-        overflowY: 'auto', 
-        border: '1px solid var(--pf-v6-global--BorderColor--100)', 
+      <div style={{
+        maxHeight: '300px',
+        overflowY: 'auto',
+        border: '1px solid var(--pf-v6-global--BorderColor--100)',
         borderRadius: '3px',
-        padding: '0.5rem' 
+        padding: '0.5rem'
       }}>
         {loadingModels ? (
           <Bullseye>
@@ -1203,7 +1244,7 @@ const ApiKeysPage: React.FC = () => {
         const subscribedModel = subscribedModels.find(m => m.id === modelId);
         const displayName = details?.name || subscribedModel?.name || modelId;
         const provider = details?.provider || subscribedModel?.provider || 'Unknown';
-        
+
         return (
           <FlexItem key={modelId}>
             <Tooltip content={`${displayName} (${provider})`}>
@@ -1259,7 +1300,7 @@ const ApiKeysPage: React.FC = () => {
           </FlexItem>
         </Flex>
       </PageSection>
-      
+
       <PageSection>
         {error ? (
           <EmptyState variant={EmptyStateVariant.lg}>
@@ -1323,8 +1364,8 @@ const ApiKeysPage: React.FC = () => {
                         </Flex>
                       </Td>
                       <Td>
-                        <ModelsDisplay 
-                          models={apiKey.models} 
+                        <ModelsDisplay
+                          models={apiKey.models}
                           modelDetails={apiKey.modelDetails}
                         />
                       </Td>
@@ -1373,9 +1414,9 @@ const ApiKeysPage: React.FC = () => {
                             </Button>
                           </FlexItem>
                           <FlexItem>
-                            <Button 
-                              variant="danger" 
-                              size="sm" 
+                            <Button
+                              variant="danger"
+                              size="sm"
                               onClick={() => handleDeleteKey(apiKey)}
                               isDisabled={apiKey.status !== 'active'}
                               icon={<TrashIcon />}
@@ -1413,9 +1454,9 @@ const ApiKeysPage: React.FC = () => {
                 placeholder="e.g., Production API Key"
               />
             </FormGroup>
-            
+
             <ModelSelector />
-            
+
             <FormGroup label="Rate Limit (requests per minute)" fieldId="key-rate-limit">
               <FormSelect
                 value={newKeyRateLimit}
@@ -1428,7 +1469,7 @@ const ApiKeysPage: React.FC = () => {
                 <FormSelectOption value="5000" label="5,000 req/min (Enterprise)" />
               </FormSelect>
             </FormGroup>
-            
+
             <FormGroup label="Budget Limit ($)" fieldId="key-budget">
               <FormSelect
                 value={newKeyBudget}
@@ -1442,7 +1483,7 @@ const ApiKeysPage: React.FC = () => {
                 <FormSelectOption value="1000" label="$1,000 / month" />
               </FormSelect>
             </FormGroup>
-            
+
             <FormGroup label="Expiration" fieldId="key-expiration">
               <FormSelect
                 value={newKeyExpiration}
@@ -1456,7 +1497,7 @@ const ApiKeysPage: React.FC = () => {
               </FormSelect>
             </FormGroup>
           </Form>
-          
+
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
             <Button
               variant="primary"
@@ -1491,7 +1532,7 @@ const ApiKeysPage: React.FC = () => {
                   {getStatusBadge(selectedApiKey.status)}
                 </FlexItem>
               </Flex>
-              
+
               <FormGroup label="API Key" fieldId="view-key">
                 <ClipboardCopy
                   hoverTip="Copy"
@@ -1504,19 +1545,19 @@ const ApiKeysPage: React.FC = () => {
                   {selectedApiKey.fullKey}
                 </ClipboardCopy>
               </FormGroup>
-              
+
               <div style={{ marginTop: '1rem' }}>
                 <Content component={ContentVariants.h3}>Associated Models</Content>
                 <Card isCompact>
                   <CardBody>
-                    <ModelsDisplay 
-                      models={selectedApiKey.models} 
+                    <ModelsDisplay
+                      models={selectedApiKey.models}
                       modelDetails={selectedApiKey.modelDetails}
                     />
                   </CardBody>
                 </Card>
               </div>
-              
+
               <div style={{ marginTop: '1rem' }}>
                 <Content component={ContentVariants.h3}>Key Information</Content>
                 <Table aria-label="Key details" variant="compact">
@@ -1546,7 +1587,7 @@ const ApiKeysPage: React.FC = () => {
                   </Tbody>
                 </Table>
               </div>
-              
+
               <div style={{ marginTop: '1rem' }}>
                 <Content component={ContentVariants.h3}>Usage Example</Content>
                 <CodeBlock>
@@ -1563,7 +1604,7 @@ const ApiKeysPage: React.FC = () => {
                   </CodeBlockCode>
                 </CodeBlock>
               </div>
-              
+
               {selectedApiKey.status === 'expired' && (
                 <Alert variant="danger" title="Key Expired" style={{ marginTop: '1rem' }}>
                   This API key expired on {selectedApiKey.expiresAt && new Date(selectedApiKey.expiresAt).toLocaleDateString()}.
@@ -1571,7 +1612,7 @@ const ApiKeysPage: React.FC = () => {
               )}
             </>
           )}
-          
+
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
             <Button variant="link" onClick={() => setIsViewModalOpen(false)}>
               Close
@@ -1593,7 +1634,7 @@ const ApiKeysPage: React.FC = () => {
               <Alert variant="success" title="Success!" style={{ marginBottom: '1rem' }}>
                 Your API key has been created successfully. Make sure to copy it now - you won't be able to see it again!
               </Alert>
-              
+
               <FormGroup label="Your new API key" fieldId="generated-key">
                 <ClipboardCopy
                   hoverTip="Copy"
@@ -1604,7 +1645,7 @@ const ApiKeysPage: React.FC = () => {
                   {generatedKey.fullKey}
                 </ClipboardCopy>
               </FormGroup>
-              
+
               <div style={{ marginTop: '1rem' }}>
                 <Content component={ContentVariants.h3}>Key Details</Content>
                 <Table aria-label="Generated key details" variant="compact">
@@ -1616,8 +1657,8 @@ const ApiKeysPage: React.FC = () => {
                     <Tr>
                       <Td><strong>Models</strong></Td>
                       <Td>
-                        <ModelsDisplay 
-                          models={generatedKey.models} 
+                        <ModelsDisplay
+                          models={generatedKey.models}
                           modelDetails={generatedKey.modelDetails}
                         />
                       </Td>
@@ -1637,7 +1678,7 @@ const ApiKeysPage: React.FC = () => {
               </div>
             </>
           )}
-          
+
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
             <Button variant="primary" onClick={() => setShowGeneratedKey(false)}>
               Close
@@ -1666,11 +1707,11 @@ const ApiKeysPage: React.FC = () => {
                   </Content>
                 </FlexItem>
               </Flex>
-              
+
               <Alert variant="danger" title="Warning" style={{ marginBottom: '1rem' }}>
                 This action cannot be undone. The API key will be permanently removed and applications using this key will lose access immediately.
               </Alert>
-              
+
               <div style={{ marginTop: '1rem' }}>
                 <Content component={ContentVariants.p}>
                   This key is associated with {keyToDelete.models.length} model{keyToDelete.models.length !== 1 ? 's' : ''}.
@@ -1678,7 +1719,7 @@ const ApiKeysPage: React.FC = () => {
               </div>
             </>
           )}
-          
+
           <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
             <Button variant="danger" onClick={confirmDeleteKey}>
               Delete API Key
@@ -1762,10 +1803,12 @@ describe('ApiKeyService - Multi-Model Support', () => {
 
       // Mock database operations
       const mockClient = {
-        query: vi.fn()
+        query: vi
+          .fn()
           .mockResolvedValueOnce(undefined) // BEGIN
-          .mockResolvedValueOnce({ // INSERT api_keys
-            rows: [{ id: 'key-123', name: 'Multi-Model Key' }]
+          .mockResolvedValueOnce({
+            // INSERT api_keys
+            rows: [{ id: 'key-123', name: 'Multi-Model Key' }],
           })
           .mockResolvedValueOnce(undefined) // INSERT api_key_models (1)
           .mockResolvedValueOnce(undefined) // INSERT api_key_models (2)
@@ -1786,7 +1829,7 @@ describe('ApiKeyService - Multi-Model Support', () => {
       expect(mockLiteLLMService.generateApiKey).toHaveBeenCalledWith(
         expect.objectContaining({
           models: ['gpt-4', 'gpt-3.5-turbo', 'claude-3'],
-        })
+        }),
       );
     });
 
@@ -1814,7 +1857,7 @@ describe('ApiKeyService - Multi-Model Support', () => {
       expect(mockFastify.log.warn).toHaveBeenCalledWith(
         expect.objectContaining({
           message: expect.stringContaining('deprecated'),
-        })
+        }),
       );
     });
 
@@ -1826,13 +1869,11 @@ describe('ApiKeyService - Multi-Model Support', () => {
       };
 
       // Mock validation - only one model is authorized
-      mockFastify.dbUtils.query.mockResolvedValueOnce([
-        { model_id: 'gpt-4' },
-      ]);
+      mockFastify.dbUtils.query.mockResolvedValueOnce([{ model_id: 'gpt-4' }]);
 
-      await expect(
-        service.createApiKey(userId, request)
-      ).rejects.toThrow('You do not have active subscriptions for the following models: unauthorized-model');
+      await expect(service.createApiKey(userId, request)).rejects.toThrow(
+        'You do not have active subscriptions for the following models: unauthorized-model',
+      );
     });
   });
 
@@ -1854,9 +1895,7 @@ describe('ApiKeyService - Multi-Model Support', () => {
           id: 'key-2',
           name: 'Single Model Key',
           models: ['claude-3'],
-          model_details: [
-            { id: 'claude-3', name: 'Claude 3', provider: 'anthropic' },
-          ],
+          model_details: [{ id: 'claude-3', name: 'Claude 3', provider: 'anthropic' }],
         },
       ]);
 
@@ -2106,12 +2145,12 @@ If issues arise:
 
 Update `docs/api/api-keys.md`:
 
-```markdown
+````markdown
 # API Keys API
 
 ## Overview
 
-The API Keys API allows users to create and manage API keys for accessing LiteMaaS services. 
+The API Keys API allows users to create and manage API keys for accessing LiteMaaS services.
 Each API key can be associated with multiple models, allowing flexible access control.
 
 ## Changes in v2.0
@@ -2129,6 +2168,7 @@ Create a new API key associated with one or more models.
 **Endpoint**: `POST /api/api-keys`
 
 **Request Body**:
+
 ```json
 {
   "modelIds": ["gpt-4", "gpt-3.5-turbo", "claude-3"],
@@ -2144,8 +2184,10 @@ Create a new API key associated with one or more models.
   }
 }
 ```
+````
 
 **Legacy Format** (deprecated):
+
 ```json
 {
   "subscriptionId": "sub-123",
@@ -2153,7 +2195,8 @@ Create a new API key associated with one or more models.
 }
 ```
 
-**Response**: 
+**Response**:
+
 ```json
 {
   "id": "key-123",
@@ -2200,6 +2243,7 @@ Create a new API key associated with one or more models.
 **Endpoint**: `GET /api/api-keys`
 
 **Response**:
+
 ```json
 {
   "data": [
@@ -2234,35 +2278,38 @@ Create a new API key associated with one or more models.
 ### Example Migration
 
 **Before**:
+
 ```javascript
 const response = await fetch('/api/api-keys', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
   },
   body: JSON.stringify({
     subscriptionId: 'sub-123',
-    name: 'My API Key'
-  })
+    name: 'My API Key',
+  }),
 });
 ```
 
 **After**:
+
 ```javascript
 const response = await fetch('/api/api-keys', {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${token}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${token}`,
+    'Content-Type': 'application/json',
   },
   body: JSON.stringify({
     modelIds: ['gpt-4', 'gpt-3.5-turbo'],
-    name: 'My API Key'
-  })
+    name: 'My API Key',
+  }),
 });
 ```
-```
+
+````
 
 #### 6.2 Update Architecture Documentation
 
@@ -2313,7 +2360,7 @@ private generateUniqueKeyAlias(baseName: string): string {
   // Return the unique alias
   return `${sanitizedName || 'api-key'}_${uuid}`;
 }
-```
+````
 
 #### Usage in API Key Creation
 
@@ -2327,7 +2374,7 @@ const liteLLMRequest: LiteLLMKeyGenerationRequest = {
 // In SubscriptionService.createEnhancedSubscription()
 const keyRequest: LiteLLMKeyGenerationRequest = {
   key_alias: this.generateUniqueKeyAlias(
-    apiKeyAlias || `subscription-${baseSubscription.id.substring(0, 8)}`
+    apiKeyAlias || `subscription-${baseSubscription.id.substring(0, 8)}`,
   ),
   // ... other fields
 };
@@ -2344,13 +2391,13 @@ const keyRequest: LiteLLMKeyGenerationRequest = {
 
 ### Examples
 
-| User Input | Generated key_alias | Notes |
-|------------|-------------------|--------|
-| `production-key` | `production-key_a5f2b1c3` | Standard case |
-| `my@special#key!` | `my-special-key_f71c5769` | Special chars sanitized |
-| `test key (main)` | `test-key-main_abf867a7` | Spaces replaced |
-| ` ` (empty) | `api-key_66532322` | Default fallback |
-| `@#$%^&*()` | `api-key_e2daa9b6` | All invalid chars |
+| User Input           | Generated key_alias                                           | Notes                    |
+| -------------------- | ------------------------------------------------------------- | ------------------------ |
+| `production-key`     | `production-key_a5f2b1c3`                                     | Standard case            |
+| `my@special#key!`    | `my-special-key_f71c5769`                                     | Special chars sanitized  |
+| `test key (main)`    | `test-key-main_abf867a7`                                      | Spaces replaced          |
+| ` ` (empty)          | `api-key_66532322`                                            | Default fallback         |
+| `@#$%^&*()`          | `api-key_e2daa9b6`                                            | All invalid chars        |
 | Long name (95 chars) | `this-is-a-very-long-api-key-name-that-exceeds-the-_0e70476c` | Truncated to 50 + suffix |
 
 ### Alternatives Considered

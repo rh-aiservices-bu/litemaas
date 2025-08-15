@@ -28,7 +28,7 @@ describe('Secure API Key Retrieval Endpoint', () => {
       name: 'Test User',
       roles: ['user'],
     };
-    
+
     recentTestToken = app.generateToken(recentPayload);
     oldTestToken = app.generateToken(oldPayload);
   });
@@ -199,10 +199,9 @@ describe('Secure API Key Retrieval Endpoint', () => {
       expect(response.statusCode).toBe(404);
 
       // Should have attempted to check user status (for auth middleware)
-      expect(auditLogSpy).toHaveBeenCalledWith(
-        'SELECT is_active FROM users WHERE id = $1',
-        ['user-123']
-      );
+      expect(auditLogSpy).toHaveBeenCalledWith('SELECT is_active FROM users WHERE id = $1', [
+        'user-123',
+      ]);
     });
 
     it('should validate request parameters', async () => {

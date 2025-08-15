@@ -15,7 +15,7 @@ This guide walks you through setting up a complete development environment for L
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-org/litemaas.git
+git clone https://github.com/rh-aiservices-bu/litemaas.git
 cd litemaas
 ```
 

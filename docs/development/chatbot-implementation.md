@@ -85,21 +85,25 @@ The ChatService handles all communication with the LiteLLM endpoint and provides
 ```typescript
 class ChatService {
   // Send message to LiteLLM endpoint
-  async sendMessage(litellmUrl: string, apiKey: string, request: ChatCompletionRequest): Promise<{response, metrics}>
+  async sendMessage(
+    litellmUrl: string,
+    apiKey: string,
+    request: ChatCompletionRequest,
+  ): Promise<{ response; metrics }>;
 
   // Calculate cost based on token usage
-  calculateCost(model: string, usage: TokenUsage): number
+  calculateCost(model: string, usage: TokenUsage): number;
 
   // Export conversation in different formats
-  exportConversation(conversation: ConversationExport, format: ExportFormat): string
+  exportConversation(conversation: ConversationExport, format: ExportFormat): string;
 
   // Create downloadable blob for export
-  createExportBlob(content: string, format: ExportFormat): Blob
+  createExportBlob(content: string, format: ExportFormat): Blob;
 
   // Utility methods for message creation and validation
-  createMessage(role, content, id?): ChatMessage
-  private validateRequest(request): void
-  private handleApiError(response): Promise<ChatError>
+  createMessage(role, content, id?): ChatMessage;
+  private validateRequest(request): void;
+  private handleApiError(response): Promise<ChatError>;
 }
 ```
 
@@ -176,13 +180,13 @@ import '@patternfly/chatbot/dist/css/main.css';
 ```jsx
 <Chatbot>
   <ChatbotContent>
-    <ChatbotWelcomePrompt 
+    <ChatbotWelcomePrompt
       title={t('pages.chatbot.chat.welcomeTitle')}
       description={t('pages.chatbot.chat.welcomeDescription')}
     />
     <MessageBox>
-      {messages.map(message => (
-        <Message 
+      {messages.map((message) => (
+        <Message
           key={message.id}
           role={message.role}
           content={message.content}
@@ -192,7 +196,7 @@ import '@patternfly/chatbot/dist/css/main.css';
     </MessageBox>
   </ChatbotContent>
   <ChatbotFooter>
-    <MessageBar 
+    <MessageBar
       onSendMessage={handleSendMessage}
       placeholder={t('pages.chatbot.chat.placeholder')}
     />
@@ -210,19 +214,19 @@ interface ChatbotPageState {
   selectedApiKey: ApiKey | null;
   selectedModel: string | null;
   settings: ChatSettings;
-  
+
   // Chat state
   messages: ChatMessage[];
   isLoading: boolean;
-  
+
   // UI state
   isConfigExpanded: boolean;
   showRawResponse: boolean;
-  
+
   // Data
   apiKeys: ApiKey[];
   models: Model[];
-  
+
   // Metrics
   lastResponse: ResponseMetrics | null;
 }
@@ -246,16 +250,16 @@ Following the pattern established in ApiKeysPage (line ~1326), the chatbot makes
 const response = await fetch(`${litellmUrl}/v1/chat/completions`, {
   method: 'POST',
   headers: {
-    'Authorization': `Bearer ${apiKey}`,
-    'Content-Type': 'application/json'
+    Authorization: `Bearer ${apiKey}`,
+    'Content-Type': 'application/json',
   },
   body: JSON.stringify({
     model: selectedModel,
     messages: conversationMessages,
     temperature: settings.temperature,
-    max_tokens: settings.maxTokens
+    max_tokens: settings.maxTokens,
   }),
-  signal: AbortSignal.timeout(60000) // 60 second timeout
+  signal: AbortSignal.timeout(60000), // 60 second timeout
 });
 ```
 
@@ -268,11 +272,11 @@ interface ChatCompletionRequest {
     role: 'user' | 'assistant' | 'system';
     content: string;
   }>;
-  temperature?: number;        // 0-2
-  max_tokens?: number;        // 1-128000
-  top_p?: number;            // Alternative to temperature
+  temperature?: number; // 0-2
+  max_tokens?: number; // 1-128000
+  top_p?: number; // Alternative to temperature
   frequency_penalty?: number; // -2.0 to 2.0
-  presence_penalty?: number;  // -2.0 to 2.0
+  presence_penalty?: number; // -2.0 to 2.0
 }
 ```
 
@@ -307,14 +311,30 @@ Comprehensive i18n support with organized key structure:
 {
   "pages": {
     "chatbot": {
-      "configuration": { /* API key, model, settings */ },
-      "quickTests": { /* Template names */ },
-      "chat": { /* Interface text */ },
-      "responseInfo": { /* Analytics labels */ },
-      "export": { /* Export modal */ },
-      "validation": { /* Error messages */ },
-      "notifications": { /* Success/error toasts */ },
-      "accessibility": { /* ARIA labels */ }
+      "configuration": {
+        /* API key, model, settings */
+      },
+      "quickTests": {
+        /* Template names */
+      },
+      "chat": {
+        /* Interface text */
+      },
+      "responseInfo": {
+        /* Analytics labels */
+      },
+      "export": {
+        /* Export modal */
+      },
+      "validation": {
+        /* Error messages */
+      },
+      "notifications": {
+        /* Success/error toasts */
+      },
+      "accessibility": {
+        /* ARIA labels */
+      }
     }
   }
 }
@@ -323,6 +343,7 @@ Comprehensive i18n support with organized key structure:
 ### Language Support
 
 Full translations provided for:
+
 - **English (en)**: Base language
 - **Spanish (es)**: Professional technical translations
 - **French (fr)**: Proper technical terminology with accents
@@ -394,18 +415,18 @@ describe('ChatbotPage', () => {
 test.describe('Chatbot Feature', () => {
   test('complete chatbot workflow', async ({ page }) => {
     await page.goto('/chatbot');
-    
+
     // Select API key and model
     await page.selectOption('[data-testid="api-key-select"]', 'test-key-id');
     await page.selectOption('[data-testid="model-select"]', 'gpt-3.5-turbo');
-    
+
     // Send a message
     await page.fill('[data-testid="message-input"]', 'Hello, world!');
     await page.click('[data-testid="send-button"]');
-    
+
     // Verify response appears
     await expect(page.locator('[data-testid="message-history"]')).toContainText('Hello, world!');
-    
+
     // Check analytics panel
     await expect(page.locator('[data-testid="token-usage"]')).toBeVisible();
   });
@@ -461,6 +482,7 @@ test.describe('Chatbot Feature', () => {
 ### Environment Variables
 
 No additional environment variables required. Uses existing:
+
 - `VITE_API_BASE_URL`: For API key and model data
 - `LITELLM_BASE_URL`: Available from configuration endpoint
 
@@ -480,6 +502,7 @@ npm run build  # Includes chatbot in production bundle
 - Edge 90+
 
 Requires modern browser features:
+
 - Fetch API with AbortController
 - ES6 modules
 - CSS Grid support
@@ -489,12 +512,14 @@ Requires modern browser features:
 ### Common Development Issues
 
 #### PatternFly CSS Not Loading
+
 ```bash
 # Ensure CSS is imported in main.tsx
 import '@patternfly/chatbot/dist/css/main.css';
 ```
 
 #### Component Import Errors
+
 ```typescript
 // Use dynamic imports only
 import { Chatbot } from '@patternfly/chatbot/dist/dynamic/Chatbot';
@@ -502,6 +527,7 @@ import { Chatbot } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 ```
 
 #### Type Errors
+
 ```bash
 # Ensure all types are properly defined
 # Check chat.ts for interface definitions
@@ -510,11 +536,13 @@ import { Chatbot } from '@patternfly/chatbot/dist/dynamic/Chatbot';
 ### Runtime Issues
 
 #### API Key Not Working
+
 1. Verify key has model permissions
 2. Check key hasn't expired or been revoked
 3. Ensure model is available in user's subscription
 
 #### LiteLLM Connection Issues
+
 1. Check network connectivity
 2. Verify LiteLLM service is running
 3. Check CORS configuration for direct calls
