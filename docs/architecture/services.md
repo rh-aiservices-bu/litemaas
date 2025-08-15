@@ -81,6 +81,7 @@ The LiteMaaS backend service layer implements the business logic and core functi
 **Key Operations**:
 
 - `createApiKey()` - Generate new API key with budget constraints
+- `updateApiKey(keyId, userId, updates)` - Update key name, models, and metadata with LiteLLM sync
 - `validateApiKey()` - Verify key validity and permissions
 - `rotateApiKey()` - Rotate existing key for security
 - `revokeApiKey()` - Disable key and prevent further usage

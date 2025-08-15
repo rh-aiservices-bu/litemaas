@@ -50,6 +50,7 @@ import {
   TrashIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
+  PencilAltIcon,
 } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
@@ -80,6 +81,11 @@ const ApiKeysPage: React.FC = () => {
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [keyToDelete, setKeyToDelete] = useState<ApiKey | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // Edit modal state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingKey, setEditingKey] = useState<ApiKey | null>(null);
+  const [updatingKey, setUpdatingKey] = useState(false);
 
   // Modal focus management refs
   const createModalTriggerRef = useRef<HTMLElement | null>(null);
@@ -397,6 +403,10 @@ const ApiKeysPage: React.FC = () => {
   };
 
   const handleCreateApiKey = (triggerElement?: HTMLElement) => {
+    // Reset edit mode
+    setIsEditMode(false);
+    setEditingKey(null);
+
     setNewKeyName('');
     setNewKeyDescription('');
     setNewKeyPermissions([]);
@@ -434,40 +444,75 @@ const ApiKeysPage: React.FC = () => {
     }
 
     setCreatingKey(true);
+    setUpdatingKey(true);
 
     try {
-      const request: CreateApiKeyRequest = {
-        modelIds: selectedModelIds, // ✅ Use modelIds for multi-model support
-        name: newKeyName,
-        expiresAt:
-          newKeyExpiration !== 'never'
-            ? new Date(Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000).toISOString()
-            : undefined,
-        // ✅ Put additional fields in metadata as backend expects
-        metadata: {
-          description: newKeyDescription || undefined,
-          permissions: newKeyPermissions,
-          rateLimit: parseInt(newKeyRateLimit),
-        },
-      };
+      if (isEditMode && editingKey) {
+        // Update existing API key
+        const updateRequest = {
+          name: newKeyName,
+          modelIds: selectedModelIds,
+          metadata: {
+            description: newKeyDescription || undefined,
+            permissions: newKeyPermissions,
+            rateLimit: parseInt(newKeyRateLimit),
+          },
+        };
 
-      const newKey = await apiKeysService.createApiKey(request);
+        await apiKeysService.updateApiKey(editingKey.id, updateRequest);
 
-      // Refresh the API keys list
-      await loadApiKeys();
+        // Refresh the API keys list
+        await loadApiKeys();
 
-      setGeneratedKey(newKey);
-      setShowGeneratedKey(true);
-      setIsCreateModalOpen(false);
+        // Reset edit mode
+        setIsEditMode(false);
+        setEditingKey(null);
+        setIsCreateModalOpen(false);
 
-      addNotification({
-        title: t('pages.apiKeys.notifications.createSuccess'),
-        description: t('pages.apiKeys.messages.keyCreatedSuccess', { name: newKeyName }),
-        variant: 'success',
-      });
+        addNotification({
+          title: t('pages.apiKeys.notifications.updateSuccess'),
+          description: t('pages.apiKeys.messages.keyUpdatedSuccess', { name: newKeyName }),
+          variant: 'success',
+        });
+      } else {
+        // Create new API key
+        const request: CreateApiKeyRequest = {
+          modelIds: selectedModelIds, // ✅ Use modelIds for multi-model support
+          name: newKeyName,
+          expiresAt:
+            newKeyExpiration !== 'never'
+              ? new Date(
+                  Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000,
+                ).toISOString()
+              : undefined,
+          // ✅ Put additional fields in metadata as backend expects
+          metadata: {
+            description: newKeyDescription || undefined,
+            permissions: newKeyPermissions,
+            rateLimit: parseInt(newKeyRateLimit),
+          },
+        };
+
+        const newKey = await apiKeysService.createApiKey(request);
+
+        // Refresh the API keys list
+        await loadApiKeys();
+
+        setGeneratedKey(newKey);
+        setShowGeneratedKey(true);
+        setIsCreateModalOpen(false);
+
+        addNotification({
+          title: t('pages.apiKeys.notifications.createSuccess'),
+          description: t('pages.apiKeys.messages.keyCreatedSuccess', { name: newKeyName }),
+          variant: 'success',
+        });
+      }
     } catch (err: any) {
-      console.error('Failed to create API key:', err);
-      let errorMessage = t('pages.apiKeys.notifications.createErrorDesc');
+      console.error(isEditMode ? 'Failed to update API key:' : 'Failed to create API key:', err);
+      let errorMessage = isEditMode
+        ? t('pages.apiKeys.notifications.updateErrorDesc')
+        : t('pages.apiKeys.notifications.createErrorDesc');
 
       // Extract error message from Axios error response
       if (err.response?.data?.message) {
@@ -482,12 +527,15 @@ const ApiKeysPage: React.FC = () => {
       }
 
       addNotification({
-        title: t('pages.apiKeys.notifications.createError'),
+        title: isEditMode
+          ? t('pages.apiKeys.notifications.updateError')
+          : t('pages.apiKeys.notifications.createError'),
         description: errorMessage,
         variant: 'danger',
       });
     } finally {
       setCreatingKey(false);
+      setUpdatingKey(false);
     }
   };
 
@@ -498,6 +546,25 @@ const ApiKeysPage: React.FC = () => {
       viewModalTriggerRef.current = triggerElement;
     }
     setIsViewModalOpen(true);
+  };
+
+  const handleEditKey = (apiKey: ApiKey, triggerElement?: HTMLElement) => {
+    // Set edit mode and populate form with existing data
+    setIsEditMode(true);
+    setEditingKey(apiKey);
+    setNewKeyName(apiKey.name);
+    setNewKeyDescription(apiKey.description || '');
+    setSelectedModelIds(apiKey.models || []);
+    setNewKeyPermissions([]); // Reset permissions for edit
+    setNewKeyRateLimit('1000'); // Reset rate limit for edit
+    setNewKeyExpiration('never'); // Reset expiration for edit
+    setFormErrors({}); // Clear any previous validation errors
+
+    // Store reference to the trigger element for focus restoration
+    if (triggerElement) {
+      createModalTriggerRef.current = triggerElement;
+    }
+    setIsCreateModalOpen(true);
   };
 
   const handleDeleteKey = (apiKey: ApiKey, triggerElement?: HTMLElement) => {
@@ -727,13 +794,13 @@ const ApiKeysPage: React.FC = () => {
                     <Th scope="col" style={{ width: '15%' }}>
                       {t('pages.apiKeys.forms.name')}
                     </Th>
-                    <Th scope="col" style={{ width: '40%' }}>
+                    <Th scope="col" style={{ width: '35%' }}>
                       {t('pages.apiKeys.forms.apiKey')}
                     </Th>
                     <Th scope="col" style={{ width: '15%' }}>
                       {t('pages.apiKeys.forms.models')}
                     </Th>
-                    <Th scope="col" style={{ width: '30%' }}>
+                    <Th scope="col" style={{ width: '35%' }}>
                       {t('pages.apiKeys.labels.actions')}
                     </Th>
                   </Tr>
@@ -876,6 +943,20 @@ const ApiKeysPage: React.FC = () => {
                           </FlexItem>
                           <FlexItem>
                             <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={(event) => handleEditKey(apiKey, event.currentTarget)}
+                              isDisabled={apiKey.status !== 'active'}
+                              icon={<PencilAltIcon />}
+                              aria-label={t('pages.apiKeys.editKeyAriaLabel', {
+                                keyName: apiKey.name,
+                              })}
+                            >
+                              {t('pages.apiKeys.editKey')}
+                            </Button>
+                          </FlexItem>
+                          <FlexItem>
+                            <Button
                               variant="danger"
                               size="sm"
                               onClick={(event) => handleDeleteKey(apiKey, event.currentTarget)}
@@ -902,10 +983,14 @@ const ApiKeysPage: React.FC = () => {
       {/* Create API Key Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={t('pages.apiKeys.modals.createTitle')}
+        title={
+          isEditMode ? t('pages.apiKeys.modals.editTitle') : t('pages.apiKeys.modals.createTitle')
+        }
         isOpen={isCreateModalOpen}
         onClose={() => {
           setIsCreateModalOpen(false);
+          setIsEditMode(false);
+          setEditingKey(null);
           // Restore focus to the trigger element
           setTimeout(() => {
             createModalTriggerRef.current?.focus();
@@ -915,6 +1000,8 @@ const ApiKeysPage: React.FC = () => {
         data-modal="create"
         onEscapePress={() => {
           setIsCreateModalOpen(false);
+          setIsEditMode(false);
+          setEditingKey(null);
           // Restore focus to the trigger element
           setTimeout(() => {
             createModalTriggerRef.current?.focus();
@@ -1121,14 +1208,22 @@ const ApiKeysPage: React.FC = () => {
               ref={createModalPrimaryButtonRef}
               variant="primary"
               onClick={handleSaveApiKey}
-              isLoading={creatingKey}
+              isLoading={creatingKey || updatingKey}
             >
-              {creatingKey ? t('pages.apiKeys.creating') : t('pages.apiKeys.createKey')}
+              {isEditMode
+                ? updatingKey
+                  ? t('pages.apiKeys.updating')
+                  : t('pages.apiKeys.updateKey')
+                : creatingKey
+                  ? t('pages.apiKeys.creating')
+                  : t('pages.apiKeys.createKey')}
             </Button>
             <Button
               variant="link"
               onClick={() => {
                 setIsCreateModalOpen(false);
+                setIsEditMode(false);
+                setEditingKey(null);
                 // Restore focus to the trigger element
                 setTimeout(() => {
                   createModalTriggerRef.current?.focus();

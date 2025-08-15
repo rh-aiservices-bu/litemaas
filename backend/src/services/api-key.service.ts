@@ -10,6 +10,7 @@ import {
   ApiKeyListParams,
   CreateApiKeyRequest,
   LegacyCreateApiKeyRequest,
+  UpdateApiKeyRequest,
   LiteLLMKeyGenerationRequest,
   ApiKeyValidation,
 } from '../types/api-key.types.js';
@@ -1079,6 +1080,165 @@ export class ApiKeyService extends BaseService {
       return this.mapToEnhancedApiKey(updatedApiKey);
     } catch (error) {
       this.fastify.log.error(error, 'Failed to update API key limits');
+      throw error;
+    }
+  }
+
+  async updateApiKey(
+    keyId: string,
+    userId: string,
+    updates: UpdateApiKeyRequest,
+  ): Promise<EnhancedApiKey> {
+    try {
+      const apiKey = await this.getApiKey(keyId, userId);
+      if (!apiKey) {
+        throw this.fastify.createNotFoundError('API key');
+      }
+
+      if (!apiKey.isActive) {
+        throw this.fastify.createValidationError('Cannot update inactive API key');
+      }
+
+      // Get the full LiteLLM key for the update call
+      let fullKey: string | undefined;
+      if (apiKey.liteLLMKeyId && !this.shouldUseMockData()) {
+        try {
+          // Use the stored LiteLLM key value or try to retrieve it
+          fullKey = apiKey.liteLLMKey || (await this.retrieveFullKey(keyId, userId));
+        } catch (error) {
+          this.fastify.log.warn(
+            error,
+            'Failed to retrieve full key for LiteLLM update, proceeding with database-only update',
+          );
+        }
+      }
+
+      // Update in LiteLLM if we have the full key
+      if (fullKey && !this.shouldUseMockData()) {
+        const litellmUpdates: any = {};
+
+        // If name is being updated, also update the key_alias in LiteLLM
+        if (updates.name !== undefined) {
+          litellmUpdates.key_alias = this.generateUniqueKeyAlias(updates.name);
+        }
+
+        if (updates.modelIds) {
+          litellmUpdates.models = updates.modelIds;
+        }
+
+        if (updates.metadata) {
+          litellmUpdates.metadata = updates.metadata;
+        }
+
+        await this.liteLLMService.updateKey(fullKey, litellmUpdates);
+
+        this.fastify.log.info(
+          {
+            keyId,
+            userId,
+            litellmUpdates,
+            nameUpdated: updates.name !== undefined,
+            keyAliasGenerated: litellmUpdates.key_alias,
+          },
+          'LiteLLM API key updated',
+        );
+      }
+
+      // Build the database update query dynamically
+      const updateFields: string[] = [];
+      const updateValues: any[] = [];
+      let paramCount = 0;
+
+      if (updates.name !== undefined) {
+        paramCount++;
+        updateFields.push(`name = $${paramCount}`);
+        updateValues.push(updates.name);
+      }
+
+      if (updates.metadata !== undefined) {
+        paramCount++;
+        updateFields.push(`metadata = COALESCE(metadata, '{}'::jsonb) || $${paramCount}`);
+        updateValues.push(JSON.stringify(updates.metadata));
+      }
+
+      // Always update sync timestamp
+      updateFields.push(`last_sync_at = CURRENT_TIMESTAMP`);
+
+      // Add WHERE condition
+      paramCount++;
+      updateValues.push(keyId);
+      const whereClause = `WHERE id = $${paramCount}`;
+
+      // Update local database
+      const updatedApiKey = await this.fastify.dbUtils.queryOne<{
+        id: string;
+        user_id: string;
+        models?: string[];
+        name?: string;
+        key_hash: string;
+        key_prefix: string;
+        last_used_at?: Date | string;
+        expires_at?: Date | string;
+        is_active: boolean;
+        created_at: Date | string;
+        revoked_at?: Date | string;
+        lite_llm_key_value?: string;
+        last_sync_at?: Date | string;
+        sync_status?: string;
+        sync_error?: string;
+        max_budget?: number;
+        current_spend?: number;
+        tpm_limit?: number;
+        rpm_limit?: number;
+        metadata?: Record<string, unknown>;
+        subscription_id?: string;
+      }>(
+        `UPDATE api_keys 
+         SET ${updateFields.join(', ')}
+         ${whereClause}
+         RETURNING *`,
+        updateValues,
+      );
+
+      // Update api_key_models junction table if models were updated
+      if (updates.modelIds !== undefined) {
+        await this.fastify.dbUtils.query(`DELETE FROM api_key_models WHERE api_key_id = $1`, [
+          keyId,
+        ]);
+
+        if (updates.modelIds.length > 0) {
+          const modelInserts = updates.modelIds.map((_, index) => `($1, $${index + 2})`).join(', ');
+
+          await this.fastify.dbUtils.query(
+            `INSERT INTO api_key_models (api_key_id, model_id) VALUES ${modelInserts}`,
+            [keyId, ...updates.modelIds],
+          );
+        }
+      }
+
+      // Create audit log
+      await this.fastify.dbUtils.query(
+        `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [userId, 'API_KEY_UPDATE', 'API_KEY', keyId, JSON.stringify(updates)],
+      );
+
+      this.fastify.log.info(
+        {
+          keyId,
+          userId,
+          updates,
+        },
+        'API key updated',
+      );
+
+      if (!updatedApiKey) {
+        throw this.fastify.createNotFoundError('API key');
+      }
+
+      return this.mapToEnhancedApiKey(updatedApiKey);
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to update API key');
       throw error;
     }
   }

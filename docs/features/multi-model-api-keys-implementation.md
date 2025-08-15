@@ -15,10 +15,11 @@ LiteMaaS supports multi-model API keys, allowing a single key to access multiple
 ### Key Features
 
 1. **Multi-Model Access**: One key can access multiple models
-2. **Per-Key Budgets**: Set spending limits per API key
-3. **Rate Limiting**: TPM/RPM limits per key
-4. **Team Support**: Keys can be shared within teams
-5. **Metadata & Permissions**: Custom metadata and fine-grained permissions
+2. **API Key Editing**: Update key name, models, and metadata after creation with automatic LiteLLM synchronization
+3. **Per-Key Budgets**: Set spending limits per API key
+4. **Rate Limiting**: TPM/RPM limits per key
+5. **Team Support**: Keys can be shared within teams
+6. **Metadata & Permissions**: Custom metadata and fine-grained permissions
 
 ## Implementation Plan
 
