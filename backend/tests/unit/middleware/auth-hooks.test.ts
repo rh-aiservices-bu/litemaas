@@ -193,7 +193,7 @@ describe('Auth Hooks Middleware', () => {
         roles: ['user'],
         iat: Math.floor(Date.now() / 1000) - 60,
       };
-      
+
       mockFastify.dbUtils!.queryOne = vi.fn().mockResolvedValue({ is_active: false });
 
       const requireRecentAuth = async (request: FastifyRequest, _reply: FastifyReply) => {

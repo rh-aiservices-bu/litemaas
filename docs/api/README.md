@@ -37,16 +37,20 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 ## API Access
 
 ### Base URL
+
 - Development: `http://localhost:8080/api`
 - Production: `https://api.your-domain.com/api`
 
 ### Authentication
+
 All API endpoints require authentication via one of:
+
 1. JWT Bearer token (obtained via OAuth flow)
 2. API Key (for programmatic access)
 3. Admin API Key (for administrative operations)
 
 ### API Documentation Tools
+
 - **Swagger UI**: Available at `/docs` when the backend is running
 - **OpenAPI Spec**: Available at `/docs/json`
 
@@ -59,6 +63,7 @@ All API endpoints require authentication via one of:
 ## API Versioning
 
 The API follows semantic versioning:
+
 - Current version: `v1`
 - Version prefix: `/api/v1/`
 
@@ -67,6 +72,7 @@ Breaking changes will result in a new major version with appropriate migration g
 ## Rate Limiting
 
 Default rate limits:
+
 - Standard users: 100 requests per minute
 - API key access: 200 requests per minute
 - Admin access: 1000 requests per minute
@@ -76,6 +82,7 @@ See [Configuration Guide](../deployment/configuration.md#security--rate-limiting
 ## Error Handling
 
 All APIs follow a consistent error response format:
+
 ```json
 {
   "error": {
@@ -87,6 +94,7 @@ All APIs follow a consistent error response format:
 ```
 
 Common HTTP status codes:
+
 - `200` - Success
 - `201` - Created
 - `400` - Bad Request

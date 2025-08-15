@@ -15,34 +15,44 @@ frontend/
 │   │   ├── images/       # Images and logos
 │   │   └── icons/        # Custom icons
 │   ├── components/        # Reusable components
-│   │   ├── charts/       # Chart components
+│   │   ├── charts/       # Chart components (AccessibleChart, etc.)
 │   │   ├── AlertToastGroup.tsx # Toast notifications
-│   │   ├── ErrorBoundary.tsx # Error handling
+│   │   ├── ComponentErrorBoundary.tsx # Component-level error handling
+│   │   ├── ErrorBoundary.tsx # Global error handling
 │   │   ├── Layout.tsx    # Main app layout
 │   │   ├── NotificationDrawer.tsx # Notification UI
-│   │   └── ProtectedRoute.tsx # Auth route guard
+│   │   ├── ProtectedRoute.tsx # Auth route guard
+│   │   ├── ScreenReaderAnnouncement.tsx # ARIA live regions
+│   │   └── index.ts      # Component exports
 │   ├── config/            # App configuration
 │   │   └── navigation.ts # Navigation structure
 │   ├── contexts/          # React Context providers
 │   │   ├── AuthContext.tsx # Authentication state
 │   │   └── NotificationContext.tsx # Notifications
 │   ├── hooks/             # Custom React hooks
-│   │   ├── useAuth.ts    # Auth operations
-│   │   ├── useApi.ts     # API calls wrapper
-│   │   └── useNotifications.ts # Notification helpers
+│   │   └── useAsyncError.ts # Async error handling hook
 │   ├── i18n/              # Internationalization
 │   │   ├── index.ts      # i18n configuration
-│   │   └── locales/      # Translation files
+│   │   └── locales/      # Translation files (9 languages)
 │   │       ├── en/       # English
-│   │       ├── es/       # Spanish
-│   │       └── fr/       # French
-│   ├── pages/             # Page components
-│   │   ├── Home/         # Dashboard
-│   │   ├── Models/       # Model catalog
-│   │   ├── Subscriptions/ # Subscription management
-│   │   ├── ApiKeys/      # API key management
-│   │   ├── Usage/        # Usage analytics
-│   │   └── Settings/     # User settings
+│   │       ├── es/       # Spanish  
+│   │       ├── fr/       # French
+│   │       ├── de/       # German
+│   │       ├── it/       # Italian
+│   │       ├── ja/       # Japanese
+│   │       ├── ko/       # Korean
+│   │       ├── zh/       # Chinese
+│   │       └── elv/      # Elvish
+│   ├── pages/             # Page components (flat structure)
+│   │   ├── HomePage.tsx  # Dashboard
+│   │   ├── ModelsPage.tsx # Model catalog
+│   │   ├── SubscriptionsPage.tsx # Subscription management
+│   │   ├── ApiKeysPage.tsx # API key management
+│   │   ├── UsagePage.tsx # Usage analytics
+│   │   ├── SettingsPage.tsx # User settings
+│   │   ├── ChatbotPage.tsx # AI chatbot interface
+│   │   ├── LoginPage.tsx # Authentication
+│   │   └── AuthCallbackPage.tsx # OAuth callback
 │   ├── routes/            # Routing configuration
 │   │   └── index.tsx     # Route definitions
 │   ├── services/          # API service layer
@@ -50,7 +60,11 @@ frontend/
 │   │   ├── auth.service.ts # Authentication API
 │   │   ├── models.service.ts # Models API
 │   │   ├── subscriptions.service.ts # Subscriptions API
-│   │   └── apiKeys.service.ts # API keys API
+│   │   ├── apiKeys.service.ts # API keys API
+│   │   ├── usage.service.ts # Usage analytics API
+│   │   ├── chat.service.ts # Chatbot API
+│   │   ├── prompts.service.ts # Prompt management API
+│   │   └── config.service.ts # Configuration API
 │   ├── types/             # TypeScript interfaces
 │   │   ├── auth.ts       # Auth types
 │   │   ├── models.ts     # Model types
@@ -217,7 +231,7 @@ const routes = [
 
 ```typescript
 i18n.use(initReactI18next).init({
-  resources: { en, es, fr },
+  resources: { en, es, fr, de, it, ja, ko, zh, elv },
   lng: 'en',
   fallbackLng: 'en',
   interpolation: { escapeValue: false },
@@ -405,6 +419,35 @@ npm run clean          # Remove build artifacts
 - **Forms**: Optimistic updates with rollback on error
 - **Real-time**: Consider WebSocket for live updates
 
+### Accessibility Patterns
+
+```typescript
+// ARIA live region announcements
+import { ScreenReaderAnnouncement } from './components';
+
+const Component = () => {
+  const { announcement, announce } = useScreenReaderAnnouncement();
+  
+  const handleAction = () => {
+    // Announce status changes
+    announce('Action completed successfully', 'polite');
+    // Use 'assertive' for errors or critical updates
+    announce('Error occurred', 'assertive');
+  };
+
+  return (
+    <>
+      <button onClick={handleAction}>Perform Action</button>
+      <ScreenReaderAnnouncement
+        message={announcement.message}
+        priority={announcement.priority}
+        announcementKey={announcement.key}
+      />
+    </>
+  );
+};
+```
+
 ## 🔗 Environment Variables
 
 Key frontend configuration:
@@ -420,7 +463,7 @@ VITE_ENABLE_ANALYTICS=true
 
 # i18n
 VITE_DEFAULT_LOCALE=en
-VITE_SUPPORTED_LOCALES=en,es,fr
+VITE_SUPPORTED_LOCALES=en,es,fr,de,it,ja,ko,zh,elv
 ```
 
 ## 📚 Related Documentation
@@ -428,5 +471,6 @@ VITE_SUPPORTED_LOCALES=en,es,fr
 - Root [`CLAUDE.md`](../CLAUDE.md) - Project overview
 - Backend [`CLAUDE.md`](../backend/CLAUDE.md) - Backend context
 - [`docs/development/pf6-guide/`](../docs/development/pf6-guide/) - **PatternFly 6 Guide (AUTHORITATIVE)**
+- [`docs/development/accessibility/`](../docs/development/accessibility/) - **Accessibility Guide (WCAG 2.1 AA)**
 - [`docs/development/`](../docs/development/) - Development setup
 - [`docs/architecture/`](../docs/architecture/) - System design

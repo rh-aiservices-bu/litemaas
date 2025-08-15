@@ -18,6 +18,7 @@
     "test:all": "npm run test:unit && npm run test:integration && npm run test:security",
     "lint": "eslint src tests --ext .ts",
     "lint:fix": "eslint src tests --ext .ts --fix",
+    "format": "prettier --write \"**/*.{js,jsx,ts,tsx,json,css,scss,md}\"",
     "clean": "rimraf dist coverage .tsbuildinfo",
     "db:seed": "tsx src/scripts/seed-data.ts",
     "db:setup": "npm run db:seed"

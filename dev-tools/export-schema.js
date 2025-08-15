@@ -2,10 +2,10 @@
 
 /**
  * Export Database Schema from Backend Migrations
- * 
+ *
  * This script extracts the database schema from the backend's migration system
  * and outputs it as a SQL file for reference or manual database setup.
- * 
+ *
  * Usage: node dev-tools/export-schema.js > dev-tools/schema-export.sql
  */
 
@@ -32,7 +32,7 @@ for (const line of lines) {
     currentSql = '';
     continue;
   }
-  
+
   if (inSqlBlock && line.includes('`;')) {
     inSqlBlock = false;
     if (currentSql.trim()) {
@@ -40,7 +40,7 @@ for (const line of lines) {
     }
     continue;
   }
-  
+
   if (inSqlBlock) {
     currentSql += line + '\n';
   }
@@ -61,7 +61,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 `);
 
 // Output all SQL statements
-sqlStatements.forEach(sql => {
+sqlStatements.forEach((sql) => {
   console.log(sql);
   console.log('\n');
 });

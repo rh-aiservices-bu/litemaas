@@ -71,24 +71,24 @@ graph TB
     subgraph "Frontend"
         UI[React + PatternFly 6]
     end
-    
+
     subgraph "Backend Services"
         API[Fastify API Server]
         Auth[OAuth2/JWT Auth]
         DB[(PostgreSQL)]
     end
-    
+
     subgraph "External Services"
         LiteLLM[LiteLLM Gateway]
         OAuth[OpenShift OAuth]
     end
-    
+
     UI <--> API
     API <--> Auth
     API <--> DB
     API <--> LiteLLM
     Auth <--> OAuth
-    
+
     style UI fill:#e3f2fd
     style API fill:#fff3e0
     style LiteLLM fill:#f3e5f5
@@ -99,7 +99,7 @@ graph TB
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/your-org/litemaas.git
+   git clone https://github.com/rh-aiservices-bu/litemaas.git
    cd litemaas
    ```
 
@@ -230,7 +230,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 💬 Getting Help
 
 - 📖 [Documentation](docs/) - Comprehensive guides and references
-- 🐛 [Issue Tracker](https://github.com/your-org/litemaas/issues) - Report bugs or request features
+- 🐛 [Issue Tracker](https://github.com/rh-aiservices-bu/litemaas/issues) - Report bugs or request features
 - 🤝 [Contributing](CONTRIBUTING.md) - Join the development community
 
 ---

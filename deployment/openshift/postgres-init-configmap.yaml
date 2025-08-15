@@ -9,30 +9,30 @@ data:
   init-db.sh: |
     #!/bin/bash
     set -e
-    
+
     # This script runs as the postgres user during container initialization
     # It creates additional databases beyond the default POSTGRES_DB
-    
+
     echo "Creating additional databases..."
-    
+
     # Create litemaas_db if it doesn't exist
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "postgres" <<-EOSQL
         SELECT 'CREATE DATABASE litemaas_db'
         WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'litemaas_db')\gexec
     EOSQL
-    
+
     # Create litellm_db if it doesn't exist
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "postgres" <<-EOSQL
         SELECT 'CREATE DATABASE litellm_db'
         WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'litellm_db')\gexec
     EOSQL
-    
+
     echo "Granting privileges on databases..."
-    
+
     # Grant all privileges to the postgres user on both databases
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "postgres" <<-EOSQL
         GRANT ALL PRIVILEGES ON DATABASE litemaas_db TO $POSTGRES_USER;
         GRANT ALL PRIVILEGES ON DATABASE litellm_db TO $POSTGRES_USER;
     EOSQL
-    
+
     echo "Database initialization completed successfully!"

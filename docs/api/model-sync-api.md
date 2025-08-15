@@ -14,6 +14,7 @@ The Model Synchronization system automatically keeps the LiteMaaS database in sy
 ## Authentication
 
 All model synchronization endpoints require authentication and admin permissions:
+
 - **Authentication**: Bearer token required
 - **Permissions**: `models:read` for read operations, `models:write` for sync operations
 
@@ -30,14 +31,15 @@ Manually trigger model synchronization from LiteLLM to the database.
 
 ```json
 {
-  "forceUpdate": false,      // Optional: Force update all models even if unchanged
-  "markUnavailable": true    // Optional: Mark missing models as unavailable
+  "forceUpdate": false, // Optional: Force update all models even if unchanged
+  "markUnavailable": true // Optional: Mark missing models as unavailable
 }
 ```
 
 #### Response
 
 **Success (200)**
+
 ```json
 {
   "success": true,
@@ -51,6 +53,7 @@ Manually trigger model synchronization from LiteLLM to the database.
 ```
 
 **Error (500)**
+
 ```json
 {
   "error": {
@@ -109,9 +112,7 @@ Validate model data integrity and check for inconsistencies.
 ```json
 {
   "validModels": 14,
-  "invalidModels": [
-    "gpt-4-invalid (Missing provider)"
-  ],
+  "invalidModels": ["gpt-4-invalid (Missing provider)"],
   "orphanedSubscriptions": 2
 }
 ```
@@ -142,16 +143,14 @@ Check the health status of the model synchronization system.
 ```
 
 **With Issues**
+
 ```json
 {
   "status": "warning",
   "lastSync": "2025-07-25T15:08:53.676Z",
   "modelsCount": 15,
   "litellmConnected": false,
-  "issues": [
-    "Cannot connect to LiteLLM backend",
-    "2 subscriptions reference unavailable models"
-  ]
+  "issues": ["Cannot connect to LiteLLM backend", "2 subscriptions reference unavailable models"]
 }
 ```
 
@@ -187,16 +186,16 @@ Administrators can trigger manual synchronization at any time using the sync API
 
 ### LiteLLM to Database Field Mapping
 
-| LiteLLM Field | Database Field | Description |
-|---------------|----------------|-------------|
-| `model_name` | `id`, `name` | Unique model identifier |
-| `litellm_params.custom_llm_provider` | `provider` | Model provider (openai, anthropic, etc.) |
-| `model_info.max_tokens` | `context_length` | Maximum context window |
-| `model_info.input_cost_per_token` | `input_cost_per_token` | Input pricing |
-| `model_info.output_cost_per_token` | `output_cost_per_token` | Output pricing |
-| `model_info.supports_vision` | `supports_vision` | Vision capability |
-| `model_info.supports_function_calling` | `supports_function_calling` | Function calling |
-| `model_info.supports_parallel_function_calling` | `supports_parallel_function_calling` | Parallel functions |
+| LiteLLM Field                                   | Database Field                       | Description                              |
+| ----------------------------------------------- | ------------------------------------ | ---------------------------------------- |
+| `model_name`                                    | `id`, `name`                         | Unique model identifier                  |
+| `litellm_params.custom_llm_provider`            | `provider`                           | Model provider (openai, anthropic, etc.) |
+| `model_info.max_tokens`                         | `context_length`                     | Maximum context window                   |
+| `model_info.input_cost_per_token`               | `input_cost_per_token`               | Input pricing                            |
+| `model_info.output_cost_per_token`              | `output_cost_per_token`              | Output pricing                           |
+| `model_info.supports_vision`                    | `supports_vision`                    | Vision capability                        |
+| `model_info.supports_function_calling`          | `supports_function_calling`          | Function calling                         |
+| `model_info.supports_parallel_function_calling` | `supports_parallel_function_calling` | Parallel functions                       |
 
 ### Capability Mapping
 
@@ -235,8 +234,8 @@ The synchronization system includes robust error handling:
 All synchronization operations are logged to the `audit_logs` table:
 
 ```sql
-SELECT * FROM audit_logs 
-WHERE action = 'MODELS_SYNC' 
+SELECT * FROM audit_logs
+WHERE action = 'MODELS_SYNC'
 ORDER BY created_at DESC;
 ```
 
@@ -302,21 +301,25 @@ cd backend && npm run dev
 ### Common Issues
 
 **Sync Fails on Startup**
+
 - Check LiteLLM_API_URL and connectivity
 - Verify database migrations have run
 - Check application logs for specific errors
 
 **Models Not Updating**
+
 - Trigger manual sync via API
 - Check forceUpdate parameter
 - Verify LiteLLM has model changes
 
-**Pricing Information Missing**  
+**Pricing Information Missing**
+
 - LiteLLM may not provide pricing for all models
 - UI should display "N/A" for missing pricing
 - Check model metadata in LiteLLM response
 
 **Database Constraint Errors**
+
 - Usually indicates duplicate model IDs
 - Check for model name conflicts
 - Verify database schema is up to date
@@ -324,6 +327,7 @@ cd backend && npm run dev
 ### Support
 
 For additional support:
+
 - Check application logs for detailed error messages
 - Use health endpoint to diagnose connectivity issues
 - Review audit logs for sync operation history

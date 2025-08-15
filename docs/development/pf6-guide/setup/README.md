@@ -20,11 +20,13 @@ Before starting any PatternFly React project, ensure the following requirements 
 ### Required Software
 
 #### Node.js & npm
+
 - **Requirement**: Node.js 18+ and npm 9+
 - **Verification**: Run `node --version && npm --version`
 - **Installation**: Download from [https://nodejs.org/](https://nodejs.org/)
 
 #### Build Tool: Vite
+
 - **Purpose**: Fast frontend build tool with HMR
 - **Included**: Automatically installed with project dependencies
 - **Configuration**: `vite.config.ts` in frontend directory
@@ -39,6 +41,7 @@ Before starting any PatternFly React project, ensure the following requirements 
 ## PatternFly 6 Dependencies
 
 ### Core Packages
+
 ```json
 {
   "@patternfly/react-core": "^6.0.0",
@@ -50,6 +53,7 @@ Before starting any PatternFly React project, ensure the following requirements 
 ```
 
 ### Development Tools
+
 - **Vite**: Build tool and dev server
 - **TypeScript**: Type safety
 - **ESLint**: Code quality

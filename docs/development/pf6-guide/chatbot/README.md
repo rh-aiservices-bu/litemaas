@@ -27,9 +27,7 @@ import '@patternfly/chatbot/dist/css/main.css';
 
 ```javascript
 // stylePaths.js - Add to webpack if CSS not loading
-module.exports = [
-  require.resolve('@patternfly/chatbot/dist/css/main.css')
-];
+module.exports = [require.resolve('@patternfly/chatbot/dist/css/main.css')];
 ```
 
 ## Import Rules
@@ -64,7 +62,7 @@ import { Chatbot, ChatbotContent } from '@patternfly/chatbot';
   <ChatbotContent>
     <ChatbotWelcomePrompt title="Assistant" description="How can I help?" />
     <MessageBox>
-      {messages.map(message => (
+      {messages.map((message) => (
         <Message key={message.id} role={message.role} content={message.content} />
       ))}
     </MessageBox>
@@ -89,7 +87,7 @@ const createMessage = (content, role) => ({
   content,
   role, // 'user' | 'assistant' | 'system'
   timestamp: new Date(),
-  status: 'sent'
+  status: 'sent',
 });
 ```
 
@@ -109,9 +107,7 @@ const createMessage = (content, role) => ({
 // ✅ Required integration pattern
 <PageSection hasBodyWrapper>
   <div style={{ height: '600px' }}>
-    <Chatbot>
-      {/* Chatbot content */}
-    </Chatbot>
+    <Chatbot>{/* Chatbot content */}</Chatbot>
   </div>
 </PageSection>
 ```
@@ -129,7 +125,7 @@ const createMessage = (content, role) => ({
 // ✅ Required accessibility pattern
 <Chatbot role="application" aria-label="AI Assistant">
   <MessageBox role="log" aria-live="polite" aria-label="Chat messages">
-    {messages.map(message => (
+    {messages.map((message) => (
       <Message aria-label={`${message.role} message: ${message.content}`} />
     ))}
   </MessageBox>
@@ -191,6 +187,7 @@ const createMessage = (content, role) => ({
 > For the most up-to-date documentation and code examples, consult both PatternFly.org and the official GitHub repository. When using AI tools, leverage context7 to fetch the latest docs from these sources.
 
 ### Further Reading
+
 - **[PatternFly Chatbot Docs](https://www.patternfly.org/chatbot/overview/)**
 - **[Component API](https://github.com/patternfly/patternfly-react/tree/main/packages/react-core/src/components/ChipGroup)** - ChipGroup component API for tags
 - **[Accessibility Guide](https://www.patternfly.org/get-started/accessibility-guide)**

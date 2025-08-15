@@ -376,4 +376,3 @@ export async function validateUsageExportQuery(
   query.startDate = dateValidation.parsedStartDate?.toISOString().split('T')[0];
   query.endDate = dateValidation.parsedEndDate?.toISOString().split('T')[0];
 }
-

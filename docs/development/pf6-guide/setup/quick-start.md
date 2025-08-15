@@ -30,6 +30,7 @@ cd frontend && npm install
 ```
 
 This installs:
+
 - PatternFly 6 components and icons
 - React 18 and React Router
 - Vite build tool
@@ -43,6 +44,7 @@ npm run dev:frontend
 ```
 
 This starts the Vite dev server at `http://localhost:3000` with:
+
 - Hot Module Replacement (HMR)
 - TypeScript support
 - PatternFly 6 styles
@@ -63,6 +65,7 @@ This starts the Vite dev server at `http://localhost:3000` with:
 The LiteMaaS project includes:
 
 ### Pre-configured Components
+
 - PatternFly 6 component library
 - React Router for navigation
 - React Query for server state management
@@ -70,12 +73,14 @@ The LiteMaaS project includes:
 - Authentication context with OAuth2/JWT
 
 ### Development Tools
+
 - Vite for fast builds and HMR
 - TypeScript for type safety
 - ESLint for code quality
 - Prettier for code formatting
 
 ### Testing Setup
+
 - Vitest for unit tests
 - Playwright for E2E tests
 - Testing utilities and fixtures
@@ -90,12 +95,14 @@ The LiteMaaS project includes:
 ## Frontend Development Workflow
 
 ### Key Directories
+
 - `frontend/src/components` - PatternFly 6 React components
 - `frontend/src/pages` - Page-level components
 - `frontend/src/services` - API service layer
 - `frontend/src/assets` - Static assets and styles
 
 ### Development Best Practices
+
 1. **Follow PatternFly 6 Guidelines** - See [PatternFly Guidelines](../guidelines/README.md)
 2. **Use Design Tokens** - Never hardcode colors or spacing
 3. **Test Both Themes** - Verify in light and dark modes
@@ -105,6 +112,7 @@ The LiteMaaS project includes:
 ## Troubleshooting Frontend Issues
 
 ### Common Problems
+
 1. **Port 3000 in use**: Change port in `frontend/vite.config.ts`
 2. **Vite HMR not working**: Clear cache with `rm -rf frontend/node_modules/.vite`
 3. **PatternFly styles missing**: Ensure `@patternfly/react-core/dist/styles/base.css` is imported
@@ -118,6 +126,7 @@ For detailed troubleshooting, see [Common Issues](../troubleshooting/common-issu
 ## Success Indicators
 
 You're ready for PatternFly 6 development when:
+
 - ✅ Frontend server running at `http://localhost:3000`
 - ✅ PatternFly 6 components render with `pf-v6-` classes
 - ✅ Hot Module Replacement works instantly

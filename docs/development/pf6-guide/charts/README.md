@@ -3,12 +3,14 @@
 Essential rules for PatternFly Charts implementation using Victory.js and ECharts.
 
 ## Related Files
+
 - [**Component Architecture**](../guidelines/component-architecture.md) - Chart component structure rules
 - [**Performance Optimization**](../troubleshooting/performance.md) - Chart performance considerations
 
 ## Installation Rules
 
 ### Required Installation
+
 ```bash
 # ✅ Victory-based charts (recommended)
 npm install @patternfly/react-charts victory
@@ -18,6 +20,7 @@ npm install @patternfly/react-charts echarts
 ```
 
 ### Import Rules
+
 - ✅ **Use specific import paths** - Import from `/victory` or `/echarts` subdirectories
 - ❌ **Don't use general imports** - Avoid importing from main package
 
@@ -31,7 +34,9 @@ import { ChartDonut } from '@patternfly/react-charts';
 ```
 
 ### Troubleshooting Import Issues
+
 If "module not found" errors occur:
+
 1. **Clear cache**: `rm -rf node_modules package-lock.json`
 2. **Reinstall**: `npm install`
 3. **Verify paths**: Check import paths match installed version
@@ -39,6 +44,7 @@ If "module not found" errors occur:
 ## Chart Implementation Rules
 
 ### Color Rules
+
 - ✅ **Use PatternFly chart color tokens** - For consistency with design system
 - ❌ **Don't use hardcoded colors** - Use design tokens instead
 
@@ -47,13 +53,14 @@ If "module not found" errors occur:
 const chartColors = [
   'var(--pf-v6-chart-color-blue-300)',
   'var(--pf-v6-chart-color-green-300)',
-  'var(--pf-v6-chart-color-orange-300)'
+  'var(--pf-v6-chart-color-orange-300)',
 ];
 
-<ChartDonut data={data} colorScale={chartColors} />
+<ChartDonut data={data} colorScale={chartColors} />;
 ```
 
 ### Responsive Rules
+
 - ✅ **Implement responsive sizing** - Charts must work on all screen sizes
 - ✅ **Use container-based dimensions** - Not fixed width/height
 - ❌ **Don't hardcode dimensions** - Charts must be responsive
@@ -76,6 +83,7 @@ useEffect(() => {
 ```
 
 ### Accessibility Rules
+
 - ✅ **Provide ARIA labels** - For screen reader support
 - ✅ **Use high contrast colors** - Meet WCAG standards
 - ✅ **Support keyboard navigation** - Add tabIndex and role
@@ -92,6 +100,7 @@ useEffect(() => {
 ```
 
 ### State Management Rules
+
 - ✅ **Handle loading states** - Show spinners during data loading
 - ✅ **Handle error states** - Show error messages with retry
 - ✅ **Handle empty states** - Show appropriate empty messages
@@ -100,15 +109,26 @@ useEffect(() => {
 ```jsx
 // ✅ Required state handling
 if (isLoading) return <Spinner />;
-if (error) return <EmptyState><EmptyStateHeader titleText="Chart error" /></EmptyState>;
-if (!data?.length) return <EmptyState><EmptyStateHeader titleText="No data" /></EmptyState>;
+if (error)
+  return (
+    <EmptyState>
+      <EmptyStateHeader titleText="Chart error" />
+    </EmptyState>
+  );
+if (!data?.length)
+  return (
+    <EmptyState>
+      <EmptyStateHeader titleText="No data" />
+    </EmptyState>
+  );
 
 const processedData = useMemo(() => {
-  return rawData.map(item => ({ x: item.date, y: item.value }));
+  return rawData.map((item) => ({ x: item.date, y: item.value }));
 }, [rawData]);
 ```
 
 ### Integration Rules
+
 - ✅ **Use with PatternFly components** - Integrate charts in Cards, PageSections
 - ✅ **Follow grid layouts** - Use PatternFly grid for chart dashboards
 - ❌ **Don't create standalone chart pages** - Integrate with PatternFly layout
@@ -122,12 +142,13 @@ import { Card, CardTitle, CardBody } from '@patternfly/react-core';
   <CardBody>
     <ChartDonut data={data} />
   </CardBody>
-</Card>
+</Card>;
 ```
 
 ## Performance Rules
 
 ### Required Optimizations
+
 - ✅ **Use lazy loading for heavy charts** - Improve initial page load
 - ✅ **Memoize data processing** - Use useMemo for expensive calculations
 - ✅ **Implement proper loading states** - Show feedback during data loading
@@ -138,12 +159,13 @@ const LazyChart = lazy(() => import('./HeavyChart'));
 
 <Suspense fallback={<Spinner />}>
   <LazyChart />
-</Suspense>
+</Suspense>;
 ```
 
 ## Essential Do's and Don'ts
 
 ### ✅ Do's
+
 - Use PatternFly chart color tokens for consistency
 - Implement responsive sizing for different screen sizes
 - Provide proper ARIA labels and descriptions
@@ -153,6 +175,7 @@ const LazyChart = lazy(() => import('./HeavyChart'));
 - Integrate charts with PatternFly layout components
 
 ### ❌ Don'ts
+
 - Hardcode chart dimensions without responsive design
 - Use colors that don't meet accessibility standards
 - Skip loading states for charts with async data
@@ -164,21 +187,25 @@ const LazyChart = lazy(() => import('./HeavyChart'));
 ## Common Issues
 
 ### Module Not Found
+
 - **Clear cache**: `rm -rf node_modules package-lock.json`
 - **Reinstall**: `npm install`
 - **Check paths**: Verify import paths are correct
 
 ### Chart Not Rendering
+
 - **Check container dimensions**: Ensure parent has width/height
 - **Verify data format**: Data must match chart expectations
 - **Check console**: Look for Victory.js or ECharts warnings
 
 ### Performance Issues
+
 - **Use data memoization**: useMemo for expensive calculations
 - **Implement lazy loading**: For heavy chart components
 - **Optimize re-renders**: Use React.memo for chart components
 
 ## Quick Reference
+
 - **[PatternFly Charts README](https://github.com/patternfly/patternfly-react/tree/main/packages/react-charts#readme)** - Installation and usage
 - **[Victory.js Documentation](https://formidable.com/open-source/victory/)** - Chart library documentation
 - **[PatternFly Chart Guidelines](https://www.patternfly.org/charts/about)** - Design guidelines

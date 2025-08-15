@@ -38,18 +38,21 @@ For detailed examples of all its features, refer to the official documentation.
 This section describes common page layout patterns and links to their official documentation and examples.
 
 ### Standard Page Layout
+
 A standard page layout typically consists of a page title, an optional toolbar for actions, and a main content area.
 
 - [**Page Layout Documentation**](https://www.patternfly.org/layouts/page)
 - [**Page Component Examples on GitHub**](https://github.com/patternfly/patternfly-react/tree/main/packages/react-core/src/components/Page/examples)
 
 ### Dashboard Layout
+
 A dashboard is used to display a high-level overview of system status and key metrics using a grid of cards and charts.
 
 - [**Dashboard Layout Documentation**](https://www.patternfly.org/layouts/dashboard)
 - [**Grid Layout Examples on GitHub**](https://github.com/patternfly/patternfly-react/tree/main/packages/react-core/src/layouts/Grid/examples)
 
 ### Form Layout
+
 Forms should be presented clearly within a card or a dedicated page section, often in a two-column layout on larger screens to separate the form from supplementary help text.
 
 - [**Form Component Documentation**](https://www.patternfly.org/components/form)
@@ -73,15 +76,18 @@ Use the `Flex` and `FlexItem` components along with breakpoint modifiers to crea
 ## Accessibility Considerations
 
 ### Semantic Structure
+
 Always use the correct heading hierarchy (`<h1>`, `<h2>`, `<h3>`, etc.) to structure your page content logically. Use the `component` prop on PatternFly components to render the correct HTML element.
 
 ### Skip to Content and Back to Top
+
 For accessible and user-friendly navigation on long pages, PatternFly provides the `SkipToContent` and `BackToTop` components, which are integrated directly into the `Page` component.
 
--   **`SkipToContent`**: Allows keyboard users to bypass navigation and jump directly to the main content area.
--   **`BackToTop`**: Allows all users to quickly return to the top of the page after scrolling.
+- **`SkipToContent`**: Allows keyboard users to bypass navigation and jump directly to the main content area.
+- **`BackToTop`**: Allows all users to quickly return to the top of the page after scrolling.
 
 **Best Practices**:
+
 - ✅ Use `SkipToContent` on every page with navigation, linking its `href` to the main content `id`.
 - ✅ Use `BackToTop` on any page that requires significant scrolling, linking `scrollableSelector` to the main content `id`.
 - ✅ Assign the `mainContainerId` on the `Page` component to ensure both helpers work correctly.
@@ -91,7 +97,7 @@ For accessible and user-friendly navigation on long pages, PatternFly provides t
 import { Page, PageSection, SkipToContent, BackToTop } from '@patternfly/react-core';
 
 const AppLayout = () => {
-  const mainContentId = "main-content";
+  const mainContentId = 'main-content';
 
   return (
     <Page
@@ -99,19 +105,19 @@ const AppLayout = () => {
       skipToContent={<SkipToContent href={`#${mainContentId}`}>Skip to content</SkipToContent>}
       backToTop={<BackToTop scrollableSelector={`#${mainContentId}`} />}
     >
-      <PageSection>
-        {/* ... long content that requires scrolling ... */}
-      </PageSection>
+      <PageSection>{/* ... long content that requires scrolling ... */}</PageSection>
     </Page>
   );
 };
 ```
 
 **Reference Documentation**:
+
 - [SkipToContent Component Docs](https://www.patternfly.org/components/skip-to-content)
 - [BackToTop Component Docs](https://www.patternfly.org/components/back-to-top)
 
 ### ARIA Landmarks
+
 Use ARIA landmarks to define regions of a page like `main`, `aside`, `nav`, etc. This can be done by passing the `component` prop to `PageSection`.
 
 - [**ARIA Landmarks in PatternFly**](https://www.patternfly.org/accessibility/aria-landmarks)
@@ -119,6 +125,7 @@ Use ARIA landmarks to define regions of a page like `main`, `aside`, `nav`, etc.
 ## Performance Optimization
 
 ### Lazy Loading and Conditional Rendering
+
 For performance-critical applications, use standard React patterns like lazy loading and conditional rendering to defer loading of non-critical components or sections of the page.
 
 - [**React Docs: Code-Splitting and Lazy Loading**](https://react.dev/reference/react/lazy)
@@ -157,13 +164,13 @@ For a complete, working example of a full application layout, refer to the offic
 
 ### Layout Summary Table
 
-| Layout Element | PatternFly Component(s) | Notes |
-|---------------|------------------------|-------|
-| Root          | `Page`                 | Use `masthead`, `sidebar`, `breadcrumb` props |
-| Masthead      | `Masthead`, `MastheadMain`, `MastheadBrand`, etc. | Compose for logo, toggles, user menu |
-| Sidebar       | `PageSidebar`, `PageSidebarBody`, `Nav` | Use for navigation |
-| Main Content  | `PageSection`, `Title`, `Content` | Use for each page/view |
-| Breadcrumbs   | `Breadcrumb`           | Pass as `breadcrumb` prop to `Page` |
-| Page Header   | *No `PageHeader`*      | Use `PageSection` + `Title` instead |
+| Layout Element | PatternFly Component(s)                           | Notes                                         |
+| -------------- | ------------------------------------------------- | --------------------------------------------- |
+| Root           | `Page`                                            | Use `masthead`, `sidebar`, `breadcrumb` props |
+| Masthead       | `Masthead`, `MastheadMain`, `MastheadBrand`, etc. | Compose for logo, toggles, user menu          |
+| Sidebar        | `PageSidebar`, `PageSidebarBody`, `Nav`           | Use for navigation                            |
+| Main Content   | `PageSection`, `Title`, `Content`                 | Use for each page/view                        |
+| Breadcrumbs    | `Breadcrumb`                                      | Pass as `breadcrumb` prop to `Page`           |
+| Page Header    | _No `PageHeader`_                                 | Use `PageSection` + `Title` instead           |
 
 > **Note:** `PageHeader` is not a PatternFly component in v6+. Use `PageSection`, `Title`, and layout components instead.

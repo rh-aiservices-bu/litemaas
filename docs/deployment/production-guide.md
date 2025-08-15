@@ -15,12 +15,13 @@ metadata:
   name: litemaas-client
 secret: <generate-secure-secret>
 redirectURIs:
-- https://<your-production-domain>/api/auth/callback
-- http://localhost:8080/api/auth/callback  # For local testing
+  - https://<your-production-domain>/api/auth/callback
+  - http://localhost:8080/api/auth/callback # For local testing
 grantMethod: auto
 ```
 
 Apply the configuration:
+
 ```bash
 oc apply -f oauth-client.yaml
 ```
@@ -53,7 +54,7 @@ ADMIN_API_KEYS=<comma-separated-strong-keys>
 Configure how OpenShift groups map to application roles:
 
 - `litemaas-admins` → `admin` role
-- `litemaas-users` → `user` role  
+- `litemaas-users` → `user` role
 - `litemaas-readonly` → `readonly` role
 
 Users must be members of at least one of these groups to access the application.
@@ -68,6 +69,7 @@ NODE_ENV=production npm run dev
 ## Authentication Behavior
 
 ### Development Mode (`NODE_ENV=development`)
+
 - ✅ Mock OAuth authentication with test users
 - ✅ Frontend requests bypass authentication (localhost origins)
 - ✅ Swagger docs accessible with logging
@@ -75,6 +77,7 @@ NODE_ENV=production npm run dev
 - 📝 All access logged for security monitoring
 
 ### Production Mode (`NODE_ENV=production`)
+
 - 🔒 OpenShift OAuth authentication required
 - 🔒 Swagger docs require authentication (admin API key or JWT token)
 - 🔒 No frontend bypass - proper OAuth flow required
@@ -91,7 +94,7 @@ sequenceDiagram
     participant F as Frontend
     participant B as Backend
     participant O as OpenShift OAuth
-    
+
     U->>F: Click Login
     F->>B: GET /api/auth/login
     B->>F: Return OAuth authorize URL
@@ -117,8 +120,8 @@ All API requests in production must include a valid JWT token:
 const apiClient = axios.create({
   baseURL: '/api',
   headers: {
-    'Authorization': `Bearer ${getStoredJWT()}`
-  }
+    Authorization: `Bearer ${getStoredJWT()}`,
+  },
 });
 ```
 
@@ -148,6 +151,7 @@ curl -H "Authorization: Bearer ${ADMIN_API_KEY}" \
 ### 2. Required OpenShift Permissions
 
 Ensure the service account has permissions to:
+
 - Read user information: `user:info`
 - Check user access: `user:check-access`
 - List user groups: `user:list-scoped`
@@ -157,16 +161,19 @@ Ensure the service account has permissions to:
 #### Common Issues:
 
 **OAuth callback fails:**
+
 - Verify redirect URI matches exactly in OpenShift OAuth client
 - Check OAUTH_CALLBACK_URL environment variable
 - Ensure network connectivity between app and OpenShift API
 
 **User info retrieval fails:**
+
 - Verify OAUTH_ISSUER points to correct OpenShift API server
 - Check token has required scopes
 - Ensure user has proper OpenShift groups
 
 **JWT generation fails:**
+
 - Verify JWT_SECRET is set
 - Check user has required groups for role mapping
 - Review backend logs for specific errors
@@ -211,16 +218,16 @@ curl -X POST https://litemaas.example.com/api/auth/dev-token \
 
 ## Security Features by Mode
 
-| Feature | Development | Production | Notes |
-|---------|-------------|------------|-------|
-| OAuth Provider | Mock users | OpenShift OAuth | Real authentication in production |
-| Frontend Bypass | ✅ Enabled | 🚫 Disabled | No bypass in production |
-| Mock Authentication | ✅ Enabled | 🚫 Disabled | `OAUTH_MOCK_ENABLED=false` |
-| Swagger Access | ✅ Open | 🔒 Admin/JWT required | Requires authentication |
-| Dev Token Endpoint | ✅ Available | 🚫 Hidden | Not available in production |
-| Admin API Keys | ✅ Full access | ✅ Full access | System operations only |
-| User API Keys | ✅ Validated | ✅ Validated | Full LiteLLM integration |
-| Security Logging | 📝 Debug | ⚠️ Warning | Enhanced monitoring |
+| Feature             | Development    | Production            | Notes                             |
+| ------------------- | -------------- | --------------------- | --------------------------------- |
+| OAuth Provider      | Mock users     | OpenShift OAuth       | Real authentication in production |
+| Frontend Bypass     | ✅ Enabled     | 🚫 Disabled           | No bypass in production           |
+| Mock Authentication | ✅ Enabled     | 🚫 Disabled           | `OAUTH_MOCK_ENABLED=false`        |
+| Swagger Access      | ✅ Open        | 🔒 Admin/JWT required | Requires authentication           |
+| Dev Token Endpoint  | ✅ Available   | 🚫 Hidden             | Not available in production       |
+| Admin API Keys      | ✅ Full access | ✅ Full access        | System operations only            |
+| User API Keys       | ✅ Validated   | ✅ Validated          | Full LiteLLM integration          |
+| Security Logging    | 📝 Debug       | ⚠️ Warning            | Enhanced monitoring               |
 
 ---
 

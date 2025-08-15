@@ -1,16 +1,21 @@
 # API Contracts
 
 ## Base URL
+
 - Development: `http://localhost:8080`
 - Production: `https://api.litemaas.com`
 
 ## API Structure
+
 The API is organized into two main paths:
+
 - `/api/auth/*` - OAuth authentication flow endpoints (unversioned)
 - `/api/v1/*` - All versioned API endpoints
 
 ## Authentication
+
 All protected endpoints require JWT token in Authorization header:
+
 ```
 Authorization: Bearer <jwt_token>
 ```
@@ -18,10 +23,13 @@ Authorization: Bearer <jwt_token>
 ## API Endpoints
 
 ### Authentication Flow (/api/auth)
+
 These endpoints handle OAuth authentication and must remain unversioned for OAuth provider compatibility.
 
 #### POST /api/auth/login
+
 Initiates OAuth flow
+
 ```json
 Response:
 {
@@ -30,7 +38,9 @@ Response:
 ```
 
 #### GET /api/auth/callback
+
 OAuth callback endpoint
+
 ```
 Query Parameters:
 - code: OAuth authorization code
@@ -40,7 +50,9 @@ Response: Redirects to frontend with JWT token
 ```
 
 #### POST /api/auth/logout
+
 Invalidates user session
+
 ```json
 Response:
 {
@@ -49,10 +61,13 @@ Response:
 ```
 
 ### User Profile (/api/v1/auth)
+
 Authenticated user operations that are part of the versioned API.
 
 #### GET /api/v1/auth/me
+
 Get current user basic info
+
 ```json
 Response:
 {
@@ -65,7 +80,9 @@ Response:
 ```
 
 #### GET /api/v1/auth/profile
+
 Get current user detailed profile
+
 ```json
 Response:
 {
@@ -81,7 +98,9 @@ Response:
 ### Models (/api/v1/models)
 
 #### GET /api/v1/models
+
 List available models
+
 ```json
 Query Parameters:
 - page: number (default: 1)
@@ -117,7 +136,9 @@ Response:
 ```
 
 #### GET /api/v1/models/:id
+
 Get model details
+
 ```json
 Response:
 {
@@ -143,7 +164,9 @@ Response:
 ### Subscriptions
 
 #### GET /api/v1/subscriptions
+
 List user subscriptions
+
 ```json
 Query Parameters:
 - status: string (optional) - Filter by status (active, cancelled, suspended, expired)
@@ -185,7 +208,9 @@ Response:
 ```
 
 #### GET /api/v1/subscriptions/:id
+
 Get subscription details
+
 ```json
 Response:
 {
@@ -210,7 +235,9 @@ Response:
 ```
 
 #### POST /api/v1/subscriptions
+
 Create new subscription
+
 ```json
 Request:
 {
@@ -240,7 +267,9 @@ Response:
 ```
 
 #### PUT /api/v1/subscriptions/:id/quotas
+
 Update subscription quotas
+
 ```json
 Request:
 {
@@ -262,7 +291,9 @@ Response:
 ```
 
 #### GET /api/v1/subscriptions/:id/pricing
+
 Get subscription pricing information
+
 ```json
 Response:
 {
@@ -287,7 +318,9 @@ Response:
 ```
 
 #### GET /api/v1/subscriptions/:id/usage
+
 Get subscription usage and quota information
+
 ```json
 Response:
 {
@@ -309,6 +342,7 @@ Response:
 ```
 
 #### POST /api/v1/subscriptions/:id/cancel
+
 Cancel subscription
 
 **Important**: A subscription can only be cancelled if there are no active API keys linked to it. If active API keys exist, the cancellation will be rejected with a 400 error.
@@ -319,7 +353,7 @@ Cancel subscription
 Response (Success):
 {
   "id": "sub_123",
-  "userId": "user_123", 
+  "userId": "user_123",
   "modelId": "gpt-4",
   "modelName": "GPT-4",
   "provider": "OpenAI",
@@ -342,11 +376,13 @@ Response (Error - Active API Keys):
 ```
 
 **Cancellation Workflow**:
+
 1. Check for linked API keys: `GET /api-keys?subscriptionId={id}`
 2. Delete all active API keys: `DELETE /api-keys/{keyId}` for each key
 3. Cancel subscription: `POST /subscriptions/{id}/cancel`
 
 **Notes**:
+
 - Only subscriptions with status `active` or `suspended` can be cancelled
 - Subscriptions already `cancelled` or `expired` cannot be cancelled again
 - The cancellation permanently deletes the subscription from the database and cannot be undone
@@ -357,7 +393,9 @@ Response (Error - Active API Keys):
 > API Keys support multi-model access with proper LiteLLM compatibility. Keys use 'sk-' prefix format and display actual key values.
 
 #### GET /api/v1/api-keys
+
 List user API keys with multi-model support
+
 ```json
 Query Parameters:
 - page: number (default: 1)
@@ -408,9 +446,11 @@ Response:
 ```
 
 #### POST /api/v1/api-keys
+
 Generate new API key with multi-model support
 
 **Multi-Model Format** (Recommended):
+
 ```json
 Request:
 {
@@ -444,14 +484,14 @@ Response:
   "modelDetails": [
     {
       "id": "gpt-4",
-      "name": "GPT-4", 
+      "name": "GPT-4",
       "provider": "openai",
       "contextLength": 8192
     },
     {
       "id": "gpt-3.5-turbo",
       "name": "GPT-3.5 Turbo",
-      "provider": "openai", 
+      "provider": "openai",
       "contextLength": 4096
     }
   ],
@@ -468,6 +508,7 @@ Response:
 ```
 
 **Legacy Subscription Format** (Deprecated but supported):
+
 ```json
 Request:
 {
@@ -482,7 +523,7 @@ X-API-Migration-Guide: See /docs/api/api-migration-guide for details on upgradin
 Response:
 {
   "id": "key_456",
-  "name": "Development Key", 
+  "name": "Development Key",
   "key": "lm_abcdef1234567890",
   "models": ["gpt-4"],                     // Derived from subscription's model
   "modelDetails": [
@@ -500,7 +541,9 @@ Response:
 ```
 
 #### GET /api/v1/api-keys/:id
+
 Get API key details with multi-model information
+
 ```json
 Response:
 {
@@ -516,7 +559,7 @@ Response:
       "contextLength": 8192
     },
     {
-      "id": "gpt-3.5-turbo", 
+      "id": "gpt-3.5-turbo",
       "name": "GPT-3.5 Turbo",
       "provider": "openai",
       "contextLength": 4096
@@ -534,9 +577,11 @@ Response:
 ```
 
 #### POST /api/v1/api-keys/:id/retrieve-key
+
 Securely retrieve full API key value
 
 **Security Features**:
+
 - Requires valid JWT authentication
 - Rate limited (5 requests per minute per user)
 - Audit logged with user ID, timestamp, and IP address
@@ -563,12 +608,13 @@ Error Responses:
 
 // Key not found or access denied
 {
-  "error": "Not Found", 
+  "error": "Not Found",
   "message": "API key not found or access denied"
 }
 ```
 
 **Usage Example**:
+
 ```bash
 curl -X POST "http://localhost:8080/api/api-keys/key_456/retrieve-key" \
   -H "Authorization: Bearer <your-jwt-token>" \
@@ -576,7 +622,9 @@ curl -X POST "http://localhost:8080/api/api-keys/key_456/retrieve-key" \
 ```
 
 #### POST /api/v1/api-keys/:id/rotate
+
 Rotate API key
+
 ```json
 Response:
 {
@@ -589,6 +637,7 @@ Response:
 ```
 
 #### DELETE /api/v1/api-keys/:id
+
 Delete API key
 
 **Important**: This permanently deletes the API key from both LiteMaaS and LiteLLM. This action cannot be undone. Applications using this key will lose access immediately.
@@ -602,13 +651,16 @@ Response:
 ```
 
 **Notes**:
+
 - Only active API keys can be deleted
 - The API key is completely removed from the database
 - An audit log entry is created to track the deletion
 - All active connections using this key will be immediately terminated
 
 #### GET /api/v1/api-keys/:id/usage
+
 Get API key usage statistics
+
 ```json
 Response:
 {
@@ -620,7 +672,9 @@ Response:
 ```
 
 #### GET /api/v1/api-keys/stats
+
 Get user API key statistics
+
 ```json
 Response:
 {
@@ -641,7 +695,9 @@ Response:
 ```
 
 #### POST /api/v1/api-keys/validate
+
 Validate API key (admin endpoint)
+
 ```json
 Request:
 {
@@ -651,7 +707,7 @@ Request:
 Response:
 {
   "isValid": true,
-  "subscriptionId": "sub_123",           // For backward compatibility  
+  "subscriptionId": "sub_123",           // For backward compatibility
   "models": ["gpt-4", "gpt-3.5-turbo"], // Array of accessible models
   "userId": "user_123",
   "keyId": "key_456",
@@ -662,7 +718,9 @@ Response:
 ### Usage Statistics
 
 #### GET /api/v1/usage/summary
+
 Get usage summary
+
 ```json
 Query Parameters:
 - startDate: ISO date
@@ -691,7 +749,9 @@ Response:
 ```
 
 #### GET /api/v1/usage/timeseries
+
 Get usage time series
+
 ```json
 Query Parameters:
 - startDate: ISO date
@@ -714,7 +774,9 @@ Response:
 ```
 
 #### GET /api/v1/usage/export
+
 Export usage data
+
 ```json
 Query Parameters:
 - startDate: ISO date
@@ -729,7 +791,9 @@ Response: File download
 > **Default Team**: All users are automatically assigned to the Default Team (`a0000000-0000-4000-8000-000000000001`) during registration or API key creation. This team has an empty `allowed_models` array which enables access to all available models.
 
 #### GET /api/v1/teams
+
 List user teams
+
 ```json
 Query Parameters:
 - page: number (default: 1)
@@ -771,7 +835,9 @@ Response:
 ```
 
 #### POST /api/v1/teams
+
 Create new team
+
 ```json
 Request:
 {
@@ -793,7 +859,9 @@ Response:
 ```
 
 #### POST /api/v1/teams/:id/sync
+
 Sync team with LiteLLM
+
 ```json
 Request:
 {
@@ -818,7 +886,9 @@ Response:
 ### Integration
 
 #### GET /api/v1/integration/health
+
 LiteLLM integration health check
+
 ```json
 Response:
 {
@@ -843,7 +913,9 @@ Response:
 ```
 
 #### POST /api/v1/integration/sync
+
 Perform global synchronization
+
 ```json
 Request:
 {
@@ -885,7 +957,9 @@ Response:
 ```
 
 #### GET /api/v1/integration/alerts
+
 Get system alerts
+
 ```json
 Response:
 {
@@ -910,7 +984,9 @@ Response:
 ### Health & Status
 
 #### GET /api/v1/health
+
 Health check
+
 ```json
 Response:
 {
@@ -925,7 +1001,9 @@ Response:
 ```
 
 #### GET /api/v1/metrics
+
 Prometheus metrics
+
 ```
 Response: Prometheus format metrics
 ```
@@ -933,6 +1011,7 @@ Response: Prometheus format metrics
 ## Error Responses
 
 All errors follow consistent format:
+
 ```json
 {
   "error": {
@@ -948,6 +1027,7 @@ All errors follow consistent format:
 ```
 
 ### Error Codes
+
 - `UNAUTHORIZED`: Missing or invalid authentication
 - `FORBIDDEN`: Insufficient permissions
 - `NOT_FOUND`: Resource not found
@@ -959,11 +1039,13 @@ All errors follow consistent format:
 ## Rate Limiting
 
 Default limits:
+
 - Anonymous: 10 requests/minute
 - Authenticated: 100 requests/minute
 - Per API Key: Configurable
 
 Headers:
+
 ```
 X-RateLimit-Limit: 100
 X-RateLimit-Remaining: 99

@@ -15,6 +15,7 @@
     "build": "npm run build --workspaces",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",
+    "format": "prettier --write \"{docs/**,deployment/**,dev-tools/**,*.{js,jsx,ts,tsx,json,css,scss,md}}\"",
     "clean": "npm run clean --workspaces && rimraf node_modules"
   },
   "devDependencies": {

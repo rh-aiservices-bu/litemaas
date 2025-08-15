@@ -5,6 +5,7 @@
 LiteMaaS implements a multi-layered authentication system that supports different access methods based on use case and environment. The system is designed to be secure in production while remaining developer-friendly during local development.
 
 **Updated**: 2025-01-30
+
 - OAuth endpoints reorganized: `/api/auth` for flow, `/api/v1/auth` for user operations
 - Fixed user profile schema issues
 - Enhanced OAuth integration with OpenShift
@@ -13,6 +14,7 @@ LiteMaaS implements a multi-layered authentication system that supports differen
 ## Authentication Methods
 
 ### 1. JWT Tokens (Frontend Sessions)
+
 - **Purpose**: User authentication for web interface
 - **Usage**: Generated after OAuth2/OpenShift SSO login
 - **Format**: Standard JWT with user claims
@@ -20,6 +22,7 @@ LiteMaaS implements a multi-layered authentication system that supports differen
 - **Header**: `Authorization: Bearer <jwt_token>`
 
 ### 2. Admin API Keys
+
 - **Purpose**: Administrative and external system access
 - **Format**: `ltm_admin_<unique_identifier>`
 - **Storage**: Environment variables (never in code)
@@ -27,6 +30,7 @@ LiteMaaS implements a multi-layered authentication system that supports differen
 - **Example**: `ltm_admin_dev123456789`
 
 ### 3. User API Keys (UPDATED - Session 2025-01-29)
+
 - **Purpose**: Direct programmatic access to LiteLLM endpoints
 - **Format**: `sk-litellm-<unique_identifier>` (Full LiteLLM compatible format)
 - **Storage**: Actual LiteLLM key value stored in `lite_llm_key_value` column (not hashed)
@@ -40,6 +44,7 @@ LiteMaaS implements a multi-layered authentication system that supports differen
   - ✅ Direct LiteLLM compatibility
 
 ### 4. Development Bypass
+
 - **Purpose**: Frontend development without authentication setup
 - **Availability**: Only when `NODE_ENV=development`
 - **Mechanism**: Detects requests from allowed localhost origins
@@ -95,6 +100,7 @@ CORS_ORIGIN=https://your-production-domain
 ### 3. OAuth2/OpenShift SSO Setup
 
 1. Register application in OpenShift:
+
    ```yaml
    kind: OAuthClient
    apiVersion: oauth.openshift.io/v1
@@ -102,8 +108,8 @@ CORS_ORIGIN=https://your-production-domain
      name: litemaas
    secret: your-client-secret-here
    redirectURIs:
-     - "http://localhost:8080/api/auth/callback"  # Development
-     - "https://your-domain/api/auth/callback"    # Production
+     - 'http://localhost:8080/api/auth/callback' # Development
+     - 'https://your-domain/api/auth/callback' # Production
    grantMethod: prompt
    ```
 
@@ -114,10 +120,11 @@ CORS_ORIGIN=https://your-production-domain
    - `OAUTH_CALLBACK_URL`: Must match redirectURIs
 
 3. Test OAuth flow:
+
    ```bash
    # Initiate login - returns auth URL
    curl -X POST http://localhost:8080/api/auth/login
-   
+
    # Response:
    # {"authUrl":"https://oauth-openshift.apps.cluster.com/oauth/authorize?..."}
    ```
@@ -140,6 +147,7 @@ npm run check-backend
 ### 2. Manual Testing
 
 #### Test Public Endpoints (No Auth Required)
+
 ```bash
 # Should return 200
 curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/models
@@ -147,6 +155,7 @@ curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/models/provider
 ```
 
 #### Test Protected Endpoints (Auth Required)
+
 ```bash
 # Without auth - should return 401
 curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/subscriptions
@@ -164,6 +173,7 @@ curl -s -H "Origin: http://localhost:3000" \
 ### 3. Frontend Integration Testing
 
 1. Start both backend and frontend:
+
    ```bash
    npm run dev
    ```
@@ -178,6 +188,7 @@ curl -s -H "Origin: http://localhost:3000" \
 ### 4. API Key Security Testing (NEW - Session 2025-01-29)
 
 #### Test API Key Creation and Retrieval
+
 ```bash
 # Create a new API key via API (requires JWT token)
 curl -X POST "http://localhost:8080/api/api-keys" \
@@ -198,6 +209,7 @@ curl -X POST "http://localhost:8080/api/api-keys" \
 ```
 
 #### Test Secure Key Retrieval Endpoint
+
 ```bash
 # Retrieve full API key securely (rate limited)
 curl -X POST "http://localhost:8080/api/api-keys/key_123/retrieve-key" \
@@ -213,6 +225,7 @@ curl -X POST "http://localhost:8080/api/api-keys/key_123/retrieve-key" \
 ```
 
 #### Test Rate Limiting
+
 ```bash
 # Test rate limiting (should fail after 5 requests/minute)
 for i in {1..6}; do
@@ -228,6 +241,7 @@ done
 ```
 
 #### Test LiteLLM Compatibility
+
 ```bash
 # Test the retrieved key directly with LiteLLM endpoint
 LITELLM_KEY="sk-litellm-abcdef123456..."  # Use key from above
@@ -250,21 +264,25 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 **Symptoms**: Frontend shows connection errors on protected pages
 
 **Solutions**:
+
 1. Verify backend is running:
+
    ```bash
    npm run check-backend
    ```
 
 2. Check port availability:
+
    ```bash
    lsof -i :8080
    ```
 
 3. Restart services:
+
    ```bash
    # Kill existing processes
    pkill -f "tsx.*index.ts"
-   
+
    # Start fresh
    npm run dev
    ```
@@ -274,17 +292,20 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 **Symptoms**: API calls return 401 even with credentials
 
 **Solutions**:
+
 1. Verify authentication header format:
+
    ```bash
    # Correct
    Authorization: Bearer ltm_admin_dev123456789
-   
+
    # Incorrect
    Authorization: ltm_admin_dev123456789
    Authorization: Bearer: ltm_admin_dev123456789
    ```
 
 2. Check admin key in environment:
+
    ```bash
    grep ADMIN_API_KEYS backend/.env
    ```
@@ -301,6 +322,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 **Symptoms**: OAuth redirect fails or returns error
 
 **Solutions**:
+
 1. Verify OAuth environment variables are set
 2. Check redirect URI matches OAuth provider configuration
 3. Ensure callback URL is accessible
@@ -311,6 +333,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 **Symptoms**: Frontend gets 401 errors in development
 
 **Solutions**:
+
 1. Verify `NODE_ENV` is not set to "production"
 2. Check `ALLOWED_FRONTEND_ORIGINS` includes your port
 3. Clear browser cache and cookies
@@ -319,6 +342,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 ## Security Best Practices
 
 ### 1. API Key Management
+
 - **Never commit API keys** to version control
 - **Rotate keys regularly** (monthly in production)
 - **Use strong keys**: At least 32 characters, randomly generated
@@ -326,6 +350,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 - **Monitor usage**: Track API key usage patterns
 
 ### 2. Production Security
+
 - **Disable development bypass**: Remove `ALLOWED_FRONTEND_ORIGINS`
 - **Use HTTPS everywhere**: Enforce TLS for all connections
 - **Implement rate limiting**: Prevent brute force attacks
@@ -333,12 +358,14 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 - **Set secure headers**: Use Helmet.js defaults
 
 ### 3. Token Security
+
 - **Short expiration**: JWT tokens should expire within 24 hours
 - **Refresh tokens**: Implement refresh token rotation
 - **Secure storage**: Never store tokens in localStorage in production
 - **CSRF protection**: Implement CSRF tokens for state-changing operations
 
 ### 4. OAuth Security
+
 - **Validate redirect URIs**: Prevent open redirect vulnerabilities
 - **Use PKCE**: Implement Proof Key for Code Exchange
 - **Validate state parameter**: Prevent CSRF in OAuth flow
@@ -347,6 +374,7 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 ## API Endpoint Security
 
 ### Public Endpoints (No Authentication)
+
 - `GET /api/models` - Browse available models
 - `GET /api/models/:id` - Model details
 - `GET /api/models/providers` - List providers
@@ -356,16 +384,19 @@ curl -X POST "http://localhost:4000/v1/chat/completions" \
 ### Protected Endpoints (Authentication Required)
 
 #### OAuth Flow Endpoints (Unversioned at `/api/auth`)
+
 - `POST /api/auth/login` - Initiate OAuth flow
 - `GET /api/auth/callback` - OAuth callback
 - `POST /api/auth/logout` - Logout user
 - `POST /api/auth/validate` - Validate JWT token
 
 #### User Profile Endpoints (Versioned at `/api/v1/auth`)
+
 - `GET /api/v1/auth/me` - Get current user (simple format)
 - `GET /api/v1/auth/profile` - Get detailed user profile
 
 #### Other Protected Endpoints (Versioned at `/api/v1`)
+
 - `GET /api/v1/subscriptions` - User subscriptions
 - `POST /api/v1/subscriptions` - Create subscription
 - `GET /api/v1/api-keys` - List API keys
@@ -395,6 +426,7 @@ graph TD
 ## Migration to Production
 
 ### 1. Pre-Production Checklist
+
 - [ ] Generate strong production API keys
 - [ ] Configure OAuth with production URLs
 - [ ] Disable development bypass
@@ -405,6 +437,7 @@ graph TD
 - [ ] Enable audit logging
 
 ### 2. Configuration Changes
+
 ```bash
 # Production .env
 NODE_ENV=production
@@ -415,6 +448,7 @@ ADMIN_API_KEYS=<strong-production-keys>
 ```
 
 ### 3. Testing Production Auth
+
 1. Verify all development bypasses are disabled
 2. Test OAuth flow with production URLs
 3. Validate API key authentication
@@ -424,6 +458,7 @@ ADMIN_API_KEYS=<strong-production-keys>
 ## Monitoring and Auditing
 
 ### 1. Authentication Events to Monitor
+
 - Failed login attempts
 - API key usage patterns
 - Token expiration/refresh
@@ -431,6 +466,7 @@ ADMIN_API_KEYS=<strong-production-keys>
 - Rate limit violations
 
 ### 2. Audit Log Fields
+
 - Timestamp
 - User/API key identifier
 - IP address
@@ -439,6 +475,7 @@ ADMIN_API_KEYS=<strong-production-keys>
 - Request duration
 
 ### 3. Alerting Thresholds
+
 - 5+ failed logins from same IP in 5 minutes
 - API key used from multiple IPs simultaneously
 - Spike in 401/403 responses

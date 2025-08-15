@@ -101,9 +101,9 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE TRIGGER update_models_updated_at 
-    BEFORE UPDATE ON models 
-    FOR EACH ROW 
+CREATE TRIGGER update_models_updated_at
+    BEFORE UPDATE ON models
+    FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 ```
 
@@ -115,7 +115,7 @@ The synchronization process supports various configuration options:
 
 ```typescript
 interface ModelSyncOptions {
-  forceUpdate?: boolean;    // Update all models regardless of changes
+  forceUpdate?: boolean; // Update all models regardless of changes
   markUnavailable?: boolean; // Mark missing models as unavailable
 }
 ```
@@ -123,11 +123,13 @@ interface ModelSyncOptions {
 ### Default Behavior
 
 **Automatic Startup Sync**:
+
 - Runs after database migrations complete
 - Uses default options: `{ forceUpdate: false, markUnavailable: true }`
 - Logs results and continues startup even if sync fails
 
 **Model Processing Logic**:
+
 1. **New Models**: Insert with all available metadata
 2. **Existing Models**: Update only if changes detected (unless forceUpdate=true)
 3. **Missing Models**: Mark as unavailable if markUnavailable=true
@@ -158,15 +160,19 @@ modelId = litellmModel.model_name;
 modelName = litellmModel.model_name;
 
 // Provider extraction priority
-provider = litellmModel.litellm_params?.custom_llm_provider || 
-          (litellmModel.litellm_params?.model?.includes('/') ? 
-           litellmModel.litellm_params.model.split('/')[0] : 'unknown');
+provider =
+  litellmModel.litellm_params?.custom_llm_provider ||
+  (litellmModel.litellm_params?.model?.includes('/')
+    ? litellmModel.litellm_params.model.split('/')[0]
+    : 'unknown');
 
 // Pricing with fallback
-inputCost = litellmModel.model_info?.input_cost_per_token || 
-           litellmModel.litellm_params?.input_cost_per_token;
-outputCost = litellmModel.model_info?.output_cost_per_token || 
-            litellmModel.litellm_params?.output_cost_per_token;
+inputCost =
+  litellmModel.model_info?.input_cost_per_token ||
+  litellmModel.litellm_params?.input_cost_per_token;
+outputCost =
+  litellmModel.model_info?.output_cost_per_token ||
+  litellmModel.litellm_params?.output_cost_per_token;
 
 // Context length
 contextLength = litellmModel.model_info?.max_tokens;
@@ -174,7 +180,8 @@ contextLength = litellmModel.model_info?.max_tokens;
 // Capabilities
 supportsVision = litellmModel.model_info?.supports_vision || false;
 supportsFunctionCalling = litellmModel.model_info?.supports_function_calling || false;
-supportsParallelFunctionCalling = litellmModel.model_info?.supports_parallel_function_calling || false;
+supportsParallelFunctionCalling =
+  litellmModel.model_info?.supports_parallel_function_calling || false;
 ```
 
 ### Capability Feature Array
@@ -194,7 +201,7 @@ Raw LiteLLM data is preserved in the metadata JSONB field:
 ```typescript
 metadata = JSON.stringify({
   litellm_model_info: litellmModel.model_info,
-  litellm_params: litellmModel.litellm_params
+  litellm_params: litellmModel.litellm_params,
 });
 ```
 
@@ -203,17 +210,17 @@ metadata = JSON.stringify({
 ### Circuit Breaker Settings
 
 ```typescript
-const CIRCUIT_BREAKER_THRESHOLD = 5;    // Failures before opening
-const CIRCUIT_BREAKER_TIMEOUT = 30000;  // Timeout before retry (ms)
+const CIRCUIT_BREAKER_THRESHOLD = 5; // Failures before opening
+const CIRCUIT_BREAKER_TIMEOUT = 30000; // Timeout before retry (ms)
 ```
 
 ### Retry Configuration
 
 ```typescript
 const config = {
-  timeout: 30000,        // Request timeout
-  retryAttempts: 3,      // Max retry attempts
-  retryDelay: 1000,      // Base retry delay (ms)
+  timeout: 30000, // Request timeout
+  retryAttempts: 3, // Max retry attempts
+  retryDelay: 1000, // Base retry delay (ms)
 };
 ```
 
@@ -241,12 +248,13 @@ connectionTimeoutMillis: parseInt(process.env.DB_CONNECTION_TIMEOUT || '2000'),
 ```typescript
 // LiteLLMService caching
 const DEFAULT_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
-const HEALTH_CACHE_TTL = 30000;          // 30 seconds
+const HEALTH_CACHE_TTL = 30000; // 30 seconds
 ```
 
 ### Batch Processing
 
 Models are processed individually with error isolation:
+
 - Each model sync is wrapped in try-catch
 - Errors don't stop processing of other models
 - Results aggregated at the end
@@ -288,9 +296,9 @@ VALUES ($1, 'MODELS_SYNC', 'MODEL', $2, $3);
 
 ```typescript
 // Automatic mock mode triggers
-enableMocking: process.env.NODE_ENV === 'development' && 
-              !process.env.LITELLM_API_URL && 
-              !process.env.LITELLM_BASE_URL
+enableMocking: process.env.NODE_ENV === 'development' &&
+  !process.env.LITELLM_API_URL &&
+  !process.env.LITELLM_BASE_URL;
 ```
 
 ### Mock Data
@@ -303,7 +311,7 @@ const MOCK_MODELS = [
       input_cost_per_token: 0.01,
       output_cost_per_token: 0.03,
       custom_llm_provider: 'openai',
-      model: 'openai/gpt-4o'
+      model: 'openai/gpt-4o',
     },
     model_info: {
       max_tokens: 128000,
@@ -311,8 +319,8 @@ const MOCK_MODELS = [
       supports_parallel_function_calling: true,
       supports_vision: true,
       // ... additional fields
-    }
-  }
+    },
+  },
 ];
 ```
 
@@ -351,6 +359,7 @@ const MOCK_MODELS = [
 ### Common Configuration Issues
 
 **Environment Variables Not Set**
+
 ```bash
 # Check required variables
 echo $LITELLM_API_URL
@@ -358,12 +367,14 @@ echo $DATABASE_URL
 ```
 
 **Database Connection Issues**
+
 ```sql
 -- Test database connectivity
 SELECT NOW() as current_time;
 ```
 
 **Model Sync Failures**
+
 ```bash
 # Check API connectivity
 curl -I $LITELLM_API_URL/model/info
@@ -425,13 +436,13 @@ curl -X POST localhost:8080/api/v1/models/sync
 // Future configuration options
 interface AdvancedSyncConfig {
   scheduleEnabled: boolean;
-  scheduleInterval: string;        // cron expression
+  scheduleInterval: string; // cron expression
   conflictResolution: 'litellm_wins' | 'database_wins' | 'merge';
   selectiveSync: {
-    providers: string[];          // Only sync specific providers
-    modelPatterns: string[];      // Regex patterns for model names
+    providers: string[]; // Only sync specific providers
+    modelPatterns: string[]; // Regex patterns for model names
   };
-  webhookEndpoints: string[];     // External notification URLs
+  webhookEndpoints: string[]; // External notification URLs
   retentionPolicy: {
     keepUnavailableModels: boolean;
     unavailableRetentionDays: number;

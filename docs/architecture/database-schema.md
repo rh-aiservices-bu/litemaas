@@ -1,12 +1,15 @@
 # Database Schema
 
 ## Overview
+
 PostgreSQL database schema for LiteMaaS application with focus on user management, subscriptions, and usage tracking.
 
 ## Tables
 
 ### users
+
 Stores user information from OAuth authentication with LiteLLM integration
+
 ```sql
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -17,13 +20,13 @@ CREATE TABLE users (
     oauth_id VARCHAR(255) NOT NULL,
     roles TEXT[] DEFAULT ARRAY['user'],
     is_active BOOLEAN DEFAULT true,
-    
+
     -- Budget and Rate Limiting
     max_budget DECIMAL(10, 2) DEFAULT 100.00,
     tpm_limit INTEGER DEFAULT 1000,
     rpm_limit INTEGER DEFAULT 60,
     sync_status VARCHAR(20) DEFAULT 'pending', -- pending, synced, error
-    
+
     last_login_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -38,7 +41,9 @@ CREATE INDEX idx_users_oauth ON users(oauth_provider, oauth_id);
 ```
 
 ### models
+
 Cached model information from LiteLLM with enhanced metadata
+
 ```sql
 CREATE TABLE models (
     id VARCHAR(255) PRIMARY KEY,
@@ -49,13 +54,13 @@ CREATE TABLE models (
     context_length INTEGER,
     input_price_per_1k DECIMAL(10, 6),
     output_price_per_1k DECIMAL(10, 6),
-    
+
     -- LiteLLM Enhanced Fields
     max_tokens INTEGER,
     supports_function_calling BOOLEAN DEFAULT false,
     supports_vision BOOLEAN DEFAULT false,
     litellm_provider VARCHAR(100),
-    
+
     metadata JSONB DEFAULT '{}',
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -69,7 +74,9 @@ CREATE INDEX idx_models_litellm_provider ON models(litellm_provider);
 ```
 
 ### teams
+
 Team management with LiteLLM integration and Default Team support
+
 ```sql
 CREATE TABLE teams (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -79,7 +86,7 @@ CREATE TABLE teams (
     created_by UUID REFERENCES users(id), -- Nullable for system-created teams
     max_budget DECIMAL(10, 2) DEFAULT 1000.00,
     current_spend DECIMAL(10, 2) DEFAULT 0.00,
-    
+
     -- LiteLLM Integration Fields
     litellm_team_id VARCHAR(255),
     budget_duration VARCHAR(20) DEFAULT 'monthly', -- monthly, yearly, lifetime
@@ -89,7 +96,7 @@ CREATE TABLE teams (
     metadata JSONB DEFAULT '{}'::JSONB,
     last_sync_at TIMESTAMP WITH TIME ZONE,
     sync_status VARCHAR(20) DEFAULT 'pending', -- pending, synced, error
-    
+
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -105,7 +112,9 @@ CREATE INDEX idx_teams_sync_status ON teams(sync_status);
 ```
 
 ### team_members
+
 Team membership and roles
+
 ```sql
 CREATE TABLE team_members (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -121,10 +130,12 @@ CREATE INDEX idx_team_members_user ON team_members(user_id);
 ```
 
 ### subscriptions
+
 User subscriptions to models with enhanced budget tracking
+
 ```sql
 CREATE TYPE subscription_status AS ENUM ('pending', 'active', 'suspended', 'cancelled', 'expired');
--- Note: 'cancelled' status is maintained for schema compatibility, but cancellation 
+-- Note: 'cancelled' status is maintained for schema compatibility, but cancellation
 -- now permanently deletes subscription records from the database
 
 CREATE TABLE subscriptions (
@@ -137,20 +148,20 @@ CREATE TABLE subscriptions (
     quota_tokens BIGINT DEFAULT 1000000,
     used_requests INTEGER DEFAULT 0,
     used_tokens BIGINT DEFAULT 0,
-    
+
     -- Enhanced Budget and Rate Limiting
     max_budget DECIMAL(10, 2) DEFAULT 100.00,
     current_spend DECIMAL(10, 2) DEFAULT 0.00,
     budget_duration VARCHAR(20) DEFAULT 'monthly',
     tpm_limit INTEGER DEFAULT 1000,
     rpm_limit INTEGER DEFAULT 60,
-    
+
     -- LiteLLM Integration Fields
     litellm_key_id VARCHAR(255),
     litellm_key_alias VARCHAR(255),
     last_sync_at TIMESTAMP WITH TIME ZONE,
     sync_status VARCHAR(20) DEFAULT 'pending',
-    
+
     reset_at TIMESTAMP WITH TIME ZONE,
     expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -167,7 +178,9 @@ CREATE INDEX idx_subscriptions_litellm ON subscriptions(litellm_key_id);
 ```
 
 ### api_keys
+
 API keys with multi-model support and LiteLLM integration
+
 ```sql
 CREATE TABLE api_keys (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -176,21 +189,21 @@ CREATE TABLE api_keys (
     name VARCHAR(255),
     key_hash VARCHAR(255) UNIQUE NOT NULL,
     key_prefix VARCHAR(10) NOT NULL,
-    
+
     -- Enhanced Budget and Rate Limiting
     max_budget DECIMAL(10, 2) DEFAULT 100.00,
     current_spend DECIMAL(10, 2) DEFAULT 0.00,
     budget_duration VARCHAR(20) DEFAULT 'monthly',
     tpm_limit INTEGER DEFAULT 1000,
     rpm_limit INTEGER DEFAULT 60,
-    
+
     -- LiteLLM Integration Fields
     lite_llm_key_value VARCHAR(255),       -- Stores actual LiteLLM key value (e.g., "sk-litellm-xxxxx")
     litellm_key_alias VARCHAR(255),
     team_id UUID REFERENCES teams(id) ON DELETE SET NULL,
     last_sync_at TIMESTAMP WITH TIME ZONE,
     sync_status VARCHAR(20) DEFAULT 'pending',
-    
+
     last_used_at TIMESTAMP WITH TIME ZONE,
     expires_at TIMESTAMP WITH TIME ZONE,
     is_active BOOLEAN DEFAULT true,
@@ -209,7 +222,9 @@ CREATE INDEX idx_api_keys_team ON api_keys(team_id);
 ```
 
 ### api_key_models
+
 Junction table for many-to-many relationship between API keys and models
+
 ```sql
 CREATE TABLE api_key_models (
     api_key_id UUID NOT NULL REFERENCES api_keys(id) ON DELETE CASCADE,
@@ -223,7 +238,9 @@ CREATE INDEX idx_api_key_models_model ON api_key_models(model_id);
 ```
 
 ### usage_logs
+
 Detailed usage logging for analytics with cost calculation
+
 ```sql
 CREATE TABLE usage_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -234,19 +251,19 @@ CREATE TABLE usage_logs (
     request_tokens INTEGER NOT NULL,
     response_tokens INTEGER NOT NULL,
     total_tokens INTEGER GENERATED ALWAYS AS (request_tokens + response_tokens) STORED,
-    
+
     -- Cost Calculation Fields
     input_cost DECIMAL(10, 6) DEFAULT 0.000000,
     output_cost DECIMAL(10, 6) DEFAULT 0.000000,
     total_cost DECIMAL(10, 6) GENERATED ALWAYS AS (input_cost + output_cost) STORED,
-    
+
     latency_ms INTEGER,
     status_code INTEGER,
     error_message TEXT,
-    
+
     -- LiteLLM Integration Fields
     litellm_request_id VARCHAR(255),
-    
+
     metadata JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 ) PARTITION BY RANGE (created_at);
@@ -263,7 +280,9 @@ CREATE INDEX idx_usage_logs_litellm ON usage_logs(litellm_request_id);
 ```
 
 ### usage_summaries
+
 Pre-aggregated usage statistics for performance
+
 ```sql
 CREATE TABLE usage_summaries (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -284,7 +303,9 @@ CREATE INDEX idx_usage_summaries_period ON usage_summaries(period_type, period_s
 ```
 
 ### audit_logs
+
 Security and compliance audit trail
+
 ```sql
 CREATE TABLE audit_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -306,6 +327,7 @@ CREATE INDEX idx_audit_logs_created ON audit_logs(created_at);
 ## Functions & Triggers
 
 ### Update timestamp trigger
+
 ```sql
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -326,6 +348,7 @@ CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON subscriptions
 ```
 
 ### Usage quota enforcement
+
 ```sql
 CREATE OR REPLACE FUNCTION check_subscription_quota()
 RETURNS TRIGGER AS $$
@@ -338,13 +361,14 @@ END;
 $$ language 'plpgsql';
 
 CREATE TRIGGER enforce_subscription_quota BEFORE UPDATE ON subscriptions
-    FOR EACH ROW 
-    WHEN (NEW.used_requests IS DISTINCT FROM OLD.used_requests OR 
+    FOR EACH ROW
+    WHEN (NEW.used_requests IS DISTINCT FROM OLD.used_requests OR
           NEW.used_tokens IS DISTINCT FROM OLD.used_tokens)
     EXECUTE FUNCTION check_subscription_quota();
 ```
 
 ### Automatic usage summary update
+
 ```sql
 CREATE OR REPLACE FUNCTION update_usage_summary()
 RETURNS TRIGGER AS $$
@@ -373,19 +397,19 @@ BEGIN
     DO UPDATE SET
         request_count = usage_summaries.request_count + 1,
         total_tokens = usage_summaries.total_tokens + NEW.total_tokens,
-        error_count = usage_summaries.error_count + 
+        error_count = usage_summaries.error_count +
             CASE WHEN NEW.status_code >= 400 THEN 1 ELSE 0 END,
         avg_latency_ms = (
-            (usage_summaries.avg_latency_ms * usage_summaries.request_count + NEW.latency_ms) / 
+            (usage_summaries.avg_latency_ms * usage_summaries.request_count + NEW.latency_ms) /
             (usage_summaries.request_count + 1)
         );
-    
+
     -- Update subscription usage
     UPDATE subscriptions
     SET used_requests = used_requests + 1,
         used_tokens = used_tokens + NEW.total_tokens
     WHERE id = NEW.subscription_id;
-    
+
     RETURN NEW;
 END;
 $$ language 'plpgsql';
@@ -397,9 +421,10 @@ CREATE TRIGGER update_usage_on_log AFTER INSERT ON usage_logs
 ## Views
 
 ### Active subscriptions view
+
 ```sql
 CREATE VIEW active_subscriptions AS
-SELECT 
+SELECT
     s.*,
     u.username,
     u.email,
@@ -415,9 +440,10 @@ WHERE s.status = 'active'
 ```
 
 ### Usage statistics view
+
 ```sql
 CREATE VIEW usage_statistics AS
-SELECT 
+SELECT
     s.user_id,
     s.model_id,
     date_trunc('day', ul.created_at) as usage_date,
@@ -433,9 +459,11 @@ GROUP BY s.user_id, s.model_id, date_trunc('day', ul.created_at);
 ## Multi-Model API Key Migration
 
 ### Migration Overview
+
 The system has been enhanced to support multi-model API keys, allowing a single API key to access multiple models instead of being tied to a single subscription.
 
 ### Migration Strategy
+
 1. **Phase 1**: Add new `api_key_models` junction table
 2. **Phase 2**: Migrate existing API key data from subscription-based to model-based associations
 3. **Phase 3**: Make `subscription_id` nullable in `api_keys` table for backward compatibility
@@ -443,6 +471,7 @@ The system has been enhanced to support multi-model API keys, allowing a single 
 ### Migration Scripts
 
 #### Migration 001: Add API Key Models Junction Table
+
 ```sql
 -- Create junction table for many-to-many relationship
 CREATE TABLE api_key_models (
@@ -457,10 +486,11 @@ CREATE INDEX idx_api_key_models_model ON api_key_models(model_id);
 ```
 
 #### Migration 002: Migrate Existing Data
+
 ```sql
 -- Migrate existing API key-subscription relationships to API key-model relationships
 INSERT INTO api_key_models (api_key_id, model_id, created_at)
-SELECT 
+SELECT
     ak.id as api_key_id,
     s.model_id,
     ak.created_at
@@ -479,9 +509,10 @@ ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS metadata JSONB DEFAULT '{}';
 ### Enhanced Views
 
 #### Multi-Model API Keys View
+
 ```sql
 CREATE OR REPLACE VIEW api_keys_with_models AS
-SELECT 
+SELECT
     ak.id,
     ak.user_id,
     ak.name,
@@ -500,14 +531,15 @@ SELECT
 FROM api_keys ak
 LEFT JOIN api_key_models akm ON ak.id = akm.api_key_id
 LEFT JOIN models m ON akm.model_id = m.id
-GROUP BY ak.id, ak.user_id, ak.name, ak.key_prefix, ak.subscription_id, 
+GROUP BY ak.id, ak.user_id, ak.name, ak.key_prefix, ak.subscription_id,
          ak.is_active, ak.created_at, ak.last_used_at, ak.expires_at, ak.metadata;
 ```
 
 #### Updated Active Subscriptions View
+
 ```sql
 CREATE OR REPLACE VIEW active_subscriptions AS
-SELECT 
+SELECT
     s.*,
     u.username,
     u.email,
@@ -523,7 +555,7 @@ JOIN models m ON s.model_id = m.id
 LEFT JOIN (
     -- Legacy API keys directly linked to subscription
     SELECT subscription_id, COUNT(*) as count
-    FROM api_keys 
+    FROM api_keys
     WHERE subscription_id IS NOT NULL AND is_active = true
     GROUP BY subscription_id
 ) legacy_keys ON s.id = legacy_keys.subscription_id
@@ -543,6 +575,7 @@ WHERE s.status = 'active'
 ## Migrations
 
 ### Initial setup
+
 ```sql
 -- Enable required extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -556,6 +589,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 ```
 
 ### Default Team Migration
+
 ```sql
 -- Create Default Team (required for user existence detection)
 INSERT INTO teams (
@@ -587,9 +621,8 @@ WHERE id NOT IN (
 ) ON CONFLICT (team_id, user_id) DO NOTHING;
 ```
 
-
-
 ### Database Initialization
+
 ```bash
 # Database tables are automatically created on backend startup
 cd backend && npm run dev

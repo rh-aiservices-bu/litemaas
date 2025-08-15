@@ -31,10 +31,10 @@ This guide provides step-by-step instructions for deploying LiteMaaS on OpenShif
    # For Linux:
    curl -L https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/openshift-client-linux.tar.gz | tar xz
    sudo mv oc /usr/local/bin/
-   
+
    # For macOS:
    brew install openshift-cli
-   
+
    # For Windows: Download from https://mirror.openshift.com/pub/openshift-v4/clients/ocp/stable/
    ```
 
@@ -106,10 +106,10 @@ LiteMaaS uses OpenShift's built-in OAuth for authentication. Follow these steps 
    kind: OAuthClient
    apiVersion: oauth.openshift.io/v1
    metadata:
-      name: litemaas-oauth-client
+     name: litemaas-oauth-client
    secret: <your_secret>
    redirectURIs:
-   - 'https://litemaas-<your-namespace>.apps.<your-cluster-domain>/api/auth/callback'
+     - 'https://litemaas-<your-namespace>.apps.<your-cluster-domain>/api/auth/callback'
    grantMethod: auto
    ```
 
@@ -150,7 +150,7 @@ curl -k https://oauth-openshift.apps.cluster.example.com/.well-known/oauth_autho
 
 ```bash
 # Clone the repository if you haven't already
-git clone https://github.com/your-org/litemaas.git
+git clone https://github.com/rh-aiservices-bu/litemaas.git
 cd litemaas
 
 # Login to OpenShift
@@ -200,6 +200,7 @@ LITELLM_UI_PASSWORD=your-litellm-ui-password
 ```
 
 > **💡 Security Tips**:
+>
 > ```bash
 > # Generate secure passwords:
 > openssl rand -base64 32   # For passwords
