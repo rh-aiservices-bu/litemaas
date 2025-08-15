@@ -337,6 +337,115 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
     },
   });
 
+  // Update API key
+  fastify.patch<{
+    Params: { id: string };
+    Body: {
+      name?: string;
+      modelIds?: string[];
+      metadata?: {
+        description?: string;
+        permissions?: string[];
+        rateLimit?: number;
+      };
+    };
+    Reply: ApiKeyDetails;
+  }>('/:id', {
+    schema: {
+      tags: ['API Keys'],
+      description: 'Update API key name, description, and models',
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+        },
+        required: ['id'],
+      },
+      body: {
+        type: 'object',
+        properties: {
+          name: { type: 'string' },
+          modelIds: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Array of model IDs this API key can access',
+          },
+          metadata: {
+            type: 'object',
+            properties: {
+              description: { type: 'string' },
+              permissions: {
+                type: 'array',
+                items: { type: 'string' },
+              },
+              rateLimit: { type: 'number' },
+            },
+          },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            name: { type: 'string' },
+            prefix: { type: 'string' },
+            models: {
+              type: 'array',
+              items: { type: 'string' },
+            },
+            subscriptionId: { type: 'string' },
+            lastUsedAt: { type: 'string', format: 'date-time' },
+            createdAt: { type: 'string', format: 'date-time' },
+          },
+        },
+      },
+    },
+    preHandler: fastify.authenticateWithDevBypass,
+    handler: async (request, _reply) => {
+      const user = (request as AuthenticatedRequest).user;
+      const { id } = request.params;
+      const body = request.body;
+
+      try {
+        const updatedApiKey = await apiKeyService.updateApiKey(id, user.userId, body);
+
+        return {
+          id: updatedApiKey.id,
+          name: updatedApiKey.name,
+          prefix: updatedApiKey.keyPrefix,
+          models: updatedApiKey.models || [],
+          modelDetails: updatedApiKey.modelDetails,
+          subscriptionId: updatedApiKey.subscriptionDetails?.[0]?.subscriptionId,
+          lastUsedAt: updatedApiKey.lastUsedAt,
+          createdAt: updatedApiKey.createdAt,
+          keyPrefix: updatedApiKey.keyPrefix,
+          expiresAt: updatedApiKey.expiresAt,
+          isActive: updatedApiKey.isActive,
+          revokedAt: updatedApiKey.revokedAt,
+          liteLLMKeyId: updatedApiKey.liteLLMKeyId,
+          lastSyncAt: updatedApiKey.lastSyncAt,
+          syncStatus: updatedApiKey.syncStatus,
+          syncError: updatedApiKey.syncError,
+          maxBudget: updatedApiKey.maxBudget,
+          currentSpend: updatedApiKey.currentSpend,
+          tpmLimit: updatedApiKey.tpmLimit,
+          rpmLimit: updatedApiKey.rpmLimit,
+          metadata: updatedApiKey.metadata,
+        };
+      } catch (error) {
+        fastify.log.error(error, 'Failed to update API key');
+
+        if ((error as ErrorWithStatusCode).statusCode) {
+          throw error;
+        }
+
+        throw fastify.createError(500, 'Failed to update API key');
+      }
+    },
+  });
+
   // Get API key usage statistics
   fastify.get<{
     Params: { id: string };
