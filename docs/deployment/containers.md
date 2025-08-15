@@ -27,15 +27,77 @@ Both the backend and frontend use optimized three-stage builds that share a comm
 
 - Podman, Docker, or compatible container engine
 - Access to Red Hat UBI9 registry (`registry.access.redhat.com`)
+- Node.js (for version extraction from package.json)
 
-### Build Commands
+### Automated Build Script
+
+LiteMaaS includes an automated build script that handles both backend and frontend container builds with centralized versioning:
+
+> **📦 Custom Registry Configuration**: Before building for production, configure your container registry by editing the `REGISTRY` variable in `scripts/build-containers.sh`:
+>
+> ```bash
+> # Edit this line in scripts/build-containers.sh:
+> REGISTRY="quay.io/rh-aiservices-bu"  # Default
+>
+> # Examples for other registries:
+> REGISTRY="ghcr.io/your-org"                    # GitHub Container Registry
+> REGISTRY="your-company.com/litemaas"           # Private registry
+> REGISTRY="docker.io/your-username"             # Docker Hub
+> ```
 
 ```bash
-# Build backend container (launch from the root of the project)
-podman build -f backend/Containerfile -t litemaas-backend:0.0.1 .
+# Build both images (uses version from root package.json)
+npm run build:containers
 
-# Build frontend container (no build arguments needed - fully environment-agnostic)
-podman build -f frontend/Containerfile -t litemaas-frontend:latest .
+# Build and push to configured registry
+npm run build:containers:push
+
+# Push existing images only
+npm run push:containers
+```
+
+**Key Features:**
+
+- 🏷️ **Centralized versioning** - Automatically uses version from root `package.json`
+- 🐳 **Runtime detection** - Automatically detects and uses Docker or Podman
+- 🏗️ **Flexible options** - Support for different platforms, local builds, and cache control
+- ✅ **Validation** - Checks for image existence before push-only operations
+- 🔧 **Registry flexibility** - Easy configuration for any container registry
+
+### Manual Build Commands
+
+If you prefer manual control or need to customize the build process:
+
+```bash
+# Extract version from root package.json
+VERSION=$(node -p "require('./package.json').version")
+
+# Build backend container (launch from the root of the project)
+podman build -f backend/Containerfile -t quay.io/rh-aiservices-bu/litemaas-backend:$VERSION .
+
+# Build frontend container (fully environment-agnostic)
+podman build -f frontend/Containerfile -t quay.io/rh-aiservices-bu/litemaas-frontend:$VERSION .
+```
+
+### Script Options
+
+The build script supports various options for different deployment scenarios:
+
+```bash
+# Build without using cache
+./scripts/build-containers.sh --no-cache
+
+# Build for specific platform (useful for ARM64)
+./scripts/build-containers.sh --platform linux/arm64
+
+# Build with local tags only (no registry prefix)
+./scripts/build-containers.sh --local
+
+# Push existing images to registry (validates existence first)
+./scripts/build-containers.sh --push
+
+# Build and then push to registry
+./scripts/build-containers.sh --build-and-push
 ```
 
 ## Docker/Podman Compose Deployment
@@ -252,16 +314,68 @@ podman logs litemaas-postgres
 
 ## Image Registry
 
-For production deployments, push images to a container registry:
+### Automated Registry Push
+
+For production deployments, the build script can automatically push to the configured registry:
 
 ```bash
+# Build and push to quay.io/rh-aiservices-bu (default registry)
+npm run build:containers:push
+
+# Or manually with the script
+./scripts/build-containers.sh --build-and-push
+```
+
+The script automatically tags images with:
+
+- Version from root `package.json` (e.g., `quay.io/rh-aiservices-bu/litemaas-backend:1.0.0`)
+- Latest tag (e.g., `quay.io/rh-aiservices-bu/litemaas-backend:latest`)
+
+### Manual Registry Operations
+
+If you need manual control over registry operations:
+
+```bash
+# Extract version for consistency
+VERSION=$(node -p "require('./package.json').version")
+
 # Tag for registry
-podman tag litemaas-backend:latest registry.example.com/litemaas/backend:v1.0.0
-podman tag litemaas-frontend:latest registry.example.com/litemaas/frontend:v1.0.0
+podman tag litemaas-backend:$VERSION registry.example.com/litemaas/backend:$VERSION
+podman tag litemaas-frontend:$VERSION registry.example.com/litemaas/frontend:$VERSION
 
 # Push to registry
-podman push registry.example.com/litemaas/backend:v1.0.0
-podman push registry.example.com/litemaas/frontend:v1.0.0
+podman push registry.example.com/litemaas/backend:$VERSION
+podman push registry.example.com/litemaas/frontend:$VERSION
+```
+
+### Registry Configuration
+
+> **⚠️ Important**: Always configure your registry BEFORE building and pushing images.
+
+To use a different registry, edit the `REGISTRY` variable in `scripts/build-containers.sh`:
+
+```bash
+# Default registry (line ~20 in scripts/build-containers.sh)
+REGISTRY="quay.io/rh-aiservices-bu"
+
+# Examples for common registries:
+REGISTRY="ghcr.io/your-org"                    # GitHub Container Registry
+REGISTRY="your-company.com/your-org"           # Private/corporate registry
+REGISTRY="docker.io/your-username"             # Docker Hub
+REGISTRY="registry.example.com/your-org"       # Custom registry
+```
+
+**Authentication**: Ensure you're logged into your registry before pushing:
+
+```bash
+# Docker Hub
+docker login
+
+# GitHub Container Registry
+docker login ghcr.io -u YOUR_USERNAME
+
+# Custom registry
+docker login your-registry.com
 ```
 
 ## OAuth Flow in Containerized Environments

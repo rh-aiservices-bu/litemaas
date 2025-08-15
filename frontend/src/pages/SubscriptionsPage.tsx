@@ -171,10 +171,10 @@ const SubscriptionsPage: React.FC = () => {
     return (
       <Stack hasGutter>
         <Content component={ContentVariants.small}>
-          {t('pages.subscriptions.pricing.input')}: ${inputCostPerMillion.toFixed(2)}/1M{' '}
+          {t('pages.subscriptions.pricingLabels.input')}: ${inputCostPerMillion.toFixed(2)}/1M{' '}
           {t('pages.usage.metrics.tokens')}
           <br />
-          {t('pages.subscriptions.pricing.output')}: ${outputCostPerMillion.toFixed(2)}/1M{' '}
+          {t('pages.subscriptions.pricingLabels.output')}: ${outputCostPerMillion.toFixed(2)}/1M{' '}
           {t('pages.usage.metrics.tokens')}
         </Content>
       </Stack>
