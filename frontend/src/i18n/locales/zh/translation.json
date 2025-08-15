@@ -86,6 +86,7 @@
         "limited": "有限可用",
         "unavailable": "不可用"
       },
+      "subscribed": "已订阅",
       "categories": {
         "languageModel": "语言模型",
         "multimodal": "多模态",
@@ -93,7 +94,8 @@
         "audio": "音频"
       },
       "ariaLabels": {
-        "modelAvailability": "模型可用性"
+        "modelAvailability": "模型可用性",
+        "subscriptionStatus": "订阅状态"
       },
       "pricing": {
         "input": "输入",
@@ -174,7 +176,7 @@
       "ariaLabels": {
         "status": "状态"
       },
-      "pricing": {
+      "pricingLabels": {
         "input": "输入",
         "output": "输出"
       }

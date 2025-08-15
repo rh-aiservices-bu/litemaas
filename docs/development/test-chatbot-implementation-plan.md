@@ -402,8 +402,8 @@ import { Message } from '@patternfly/chatbot/dist/dynamic/Message';
 
 ### Current Session Progress
 
-**Date**: ****\_\_\_****  
-**Agent**: ****\_\_\_****  
+**Date**: \***\*\_\_\_\*\***  
+**Agent**: \***\*\_\_\_\*\***  
 **Completed**:
 
 - [ ] Phase X tasks completed

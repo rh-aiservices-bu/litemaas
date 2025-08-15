@@ -261,7 +261,5 @@ describe('ModelsPage', () => {
     await waitFor(() => {
       expect(screen.getByText('GPT-4')).toBeInTheDocument();
     });
-
-    expect(screen.getByText('Unavailable')).toBeInTheDocument();
   });
 });

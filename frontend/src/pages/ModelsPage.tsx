@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQueryClient } from 'react-query';
 import {
   PageSection,
   Title,
@@ -43,14 +42,7 @@ import {
   Label,
   Stack,
 } from '@patternfly/react-core';
-import {
-  CatalogIcon,
-  FilterIcon,
-  InfoCircleIcon,
-  CheckCircleIcon,
-  ExclamationTriangleIcon,
-  TimesCircleIcon,
-} from '@patternfly/react-icons';
+import { CatalogIcon, FilterIcon, InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
 import { modelsService, Model } from '../services/models.service';
 import { subscriptionsService } from '../services/subscriptions.service';
@@ -62,7 +54,6 @@ import {
 const ModelsPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
-  const queryClient = useQueryClient();
   const { announcement, announce } = useScreenReaderAnnouncement();
 
   const [models, setModels] = useState<Model[]>([]);
@@ -75,6 +66,7 @@ const ModelsPage: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscriptions, setSubscriptions] = useState<Set<string>>(new Set());
   const modalTriggerRef = useRef<HTMLElement | null>(null);
   const modalPrimaryButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -119,6 +111,23 @@ const ModelsPage: React.FC = () => {
   const [perPage, setPerPage] = useState(12);
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  // Load subscriptions from API
+  const loadSubscriptions = async (): Promise<void> => {
+    try {
+      const response = await subscriptionsService.getSubscriptions();
+      // Create a Set of subscribed model IDs for efficient lookup
+      const subscribedModelIds = new Set(
+        response.data
+          .filter((sub) => sub.status === 'active') // Only include active subscriptions
+          .map((sub) => sub.modelId),
+      );
+      setSubscriptions(subscribedModelIds);
+    } catch (err) {
+      console.error('Failed to load subscriptions:', err);
+      // Don't show error notification as this is not critical for model browsing
+    }
+  };
 
   // Load models from API
   const loadModels = async (resetPage = false): Promise<void> => {
@@ -199,6 +208,7 @@ const ModelsPage: React.FC = () => {
   // Initial load
   useEffect(() => {
     loadModels();
+    loadSubscriptions();
   }, []);
 
   // Reload when filters or pagination change
@@ -266,7 +276,7 @@ const ModelsPage: React.FC = () => {
       setIsModalOpen(false);
 
       // Refresh subscriptions to show new one
-      queryClient.invalidateQueries('subscriptions');
+      await loadSubscriptions();
     } catch (error: any) {
       let errorMessage = t('pages.models.notifications.failedToSubscribe');
 
@@ -284,36 +294,22 @@ const ModelsPage: React.FC = () => {
     }
   };
 
-  const getAvailabilityBadge = (availability: string) => {
-    const variants = {
-      available: 'success',
-      limited: 'warning',
-      unavailable: 'danger',
-    } as const;
-
-    const icons = {
-      available: <CheckCircleIcon />,
-      limited: <ExclamationTriangleIcon />,
-      unavailable: <TimesCircleIcon />,
-    };
-
-    const statusLabels = {
-      available: t('pages.models.availability.available', 'Available'),
-      limited: t('pages.models.availability.limited', 'Limited availability'),
-      unavailable: t('pages.models.availability.unavailable', 'Unavailable'),
-    };
+  const getSubscriptionBadge = (modelId: string) => {
+    // Only show badge if user is subscribed to this model
+    if (!subscriptions.has(modelId)) {
+      return null;
+    }
 
     return (
       <Badge
-        color={variants[availability as keyof typeof variants]}
-        aria-label={`${t('pages.models.ariaLabels.modelAvailability')}: ${statusLabels[availability as keyof typeof statusLabels] || availability}`}
+        color="success"
+        aria-label={`${t('pages.models.ariaLabels.subscriptionStatus')}: ${t('pages.models.subscribed')}`}
       >
         <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
-          <FlexItem>{icons[availability as keyof typeof icons]}</FlexItem>
           <FlexItem>
-            {statusLabels[availability as keyof typeof statusLabels] ||
-              availability.charAt(0).toUpperCase() + availability.slice(1)}
+            <CheckCircleIcon />
           </FlexItem>
+          <FlexItem>{t('pages.models.subscribed')}</FlexItem>
         </Flex>
       </Badge>
     );
@@ -508,7 +504,7 @@ const ModelsPage: React.FC = () => {
                               {model.name}
                             </Title>
                           </FlexItem>
-                          <FlexItem>{getAvailabilityBadge(model.availability)}</FlexItem>
+                          <FlexItem>{getSubscriptionBadge(model.id)}</FlexItem>
                         </Flex>
                         {/* TODO: implement model description
                          <Content
@@ -616,7 +612,7 @@ const ModelsPage: React.FC = () => {
                 {selectedModel?.name}
               </Title>
             </FlexItem>
-            <FlexItem>{selectedModel && getAvailabilityBadge(selectedModel.availability)}</FlexItem>
+            <FlexItem>{selectedModel && getSubscriptionBadge(selectedModel.id)}</FlexItem>
           </Flex>
           {/* TODO: Model Description
           <Content

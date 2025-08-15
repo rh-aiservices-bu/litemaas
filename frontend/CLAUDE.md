@@ -35,7 +35,7 @@ frontend/
 │   │   ├── index.ts      # i18n configuration
 │   │   └── locales/      # Translation files (9 languages)
 │   │       ├── en/       # English
-│   │       ├── es/       # Spanish  
+│   │       ├── es/       # Spanish
 │   │       ├── fr/       # French
 │   │       ├── de/       # German
 │   │       ├── it/       # Italian
@@ -427,7 +427,7 @@ import { ScreenReaderAnnouncement } from './components';
 
 const Component = () => {
   const { announcement, announce } = useScreenReaderAnnouncement();
-  
+
   const handleAction = () => {
     // Announce status changes
     announce('Action completed successfully', 'polite');

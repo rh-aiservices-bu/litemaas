@@ -1,6 +1,6 @@
 {
   "name": "@litemaas/backend",
-  "version": "1.0.0",
+  "version": "workspace",
   "description": "LiteMaaS Backend Service",
   "main": "dist/index.js",
   "scripts": {

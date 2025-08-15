@@ -86,6 +86,7 @@
         "limited": "Begrenzte Verfügbarkeit",
         "unavailable": "Nicht verfügbar"
       },
+      "subscribed": "Abonniert",
       "categories": {
         "languageModel": "Sprachmodell",
         "multimodal": "Multimodal",
@@ -93,7 +94,8 @@
         "audio": "Audio"
       },
       "ariaLabels": {
-        "modelAvailability": "Modellverfügbarkeit"
+        "modelAvailability": "Modellverfügbarkeit",
+        "subscriptionStatus": "Abonnement-Status"
       },
       "pricing": {
         "input": "Eingabe",
@@ -174,7 +176,7 @@
       "ariaLabels": {
         "status": "Status"
       },
-      "pricing": {
+      "pricingLabels": {
         "input": "Eingabe",
         "output": "Ausgabe"
       }

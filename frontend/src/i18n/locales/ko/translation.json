@@ -86,6 +86,7 @@
         "limited": "제한적으로 사용 가능",
         "unavailable": "사용할 수 없음"
       },
+      "subscribed": "구독됨",
       "categories": {
         "languageModel": "언어 모델",
         "multimodal": "멀티모달",
@@ -93,7 +94,8 @@
         "audio": "오디오"
       },
       "ariaLabels": {
-        "modelAvailability": "모델 가용성"
+        "modelAvailability": "모델 가용성",
+        "subscriptionStatus": "구독 상태"
       },
       "pricing": {
         "input": "입력",
@@ -168,7 +170,7 @@
       "ariaLabels": {
         "status": "상태"
       },
-      "pricing": {
+      "pricingLabels": {
         "input": "입력",
         "output": "출력"
       },

@@ -143,6 +143,77 @@ cd backend && npm run test:watch
 - Aim for >80% code coverage
 - Test error cases and edge conditions
 
+## Container Development
+
+### Building Container Images
+
+LiteMaaS uses a centralized container build system with automatic versioning:
+
+> **📦 Registry Configuration**: Before pushing images, configure your registry by editing the `REGISTRY` variable in `scripts/build-containers.sh`:
+>
+> ```bash
+> # Edit line ~20 in scripts/build-containers.sh:
+> REGISTRY="quay.io/rh-aiservices-bu"  # Default (for maintainers)
+>
+> # Contributors should use their own registry:
+> REGISTRY="ghcr.io/your-username"              # GitHub Container Registry
+> REGISTRY="docker.io/your-username"            # Docker Hub
+> REGISTRY="your-company.com/your-username"     # Private registry
+> ```
+
+```bash
+# Build both backend and frontend images
+npm run build:containers
+
+# Build and push to your configured registry
+npm run build:containers:push
+
+# Push existing images only (after building)
+npm run push:containers
+```
+
+### Versioning Strategy
+
+- **Single source of truth**: Only the root `package.json` version matters
+- **Workspace packages**: Backend and frontend use `"version": "workspace"`
+- **Image tagging**: Automatically tagged with version + `latest`
+
+### Build Script Features
+
+```bash
+# Build for different platforms
+./scripts/build-containers.sh --platform linux/arm64
+
+# Build without cache
+./scripts/build-containers.sh --no-cache
+
+# Local builds only (no registry prefix)
+./scripts/build-containers.sh --local
+```
+
+### For Contributors
+
+**Important**: Contributors should:
+
+1. **Configure your own registry** - Don't push to the default `quay.io/rh-aiservices-bu`
+2. **Use local builds** for testing - `./scripts/build-containers.sh --local`
+3. **Test thoroughly** before creating PRs
+
+### Project Structure
+
+```
+scripts/
+├── build-containers.sh    # Automated container build script
+└── check-backend.js      # Backend health check script
+```
+
+**Key Points:**
+
+- All scripts are in the `scripts/` directory for organization
+- The build script auto-detects Docker/Podman
+- Images use optimized multi-stage builds
+- **Always configure your own registry** before pushing images
+
 ### Test Structure
 
 ```typescript
