@@ -1,5 +1,11 @@
 import React from 'react';
-import { Chart, ChartAxis, ChartGroup, ChartLine } from '@patternfly/react-charts/victory';
+import {
+  Chart,
+  ChartAxis,
+  ChartGroup,
+  ChartLine,
+  ChartScatter,
+} from '@patternfly/react-charts/victory';
 import { Skeleton } from '@patternfly/react-core';
 import { useTranslation } from 'react-i18next';
 import { LineChartDataPoint } from '../../utils/chartDataTransformers';
@@ -282,7 +288,21 @@ const UsageTrends: React.FC<UsageTrendsProps> = ({
               }}
               animate={{
                 duration: 1000,
-                onLoad: { duration: 500 },
+                onLoad: { duration: 1 },
+              }}
+            />
+            <ChartScatter
+              data={chartData}
+              symbol="diamond"
+              style={{
+                data: {
+                  stroke: getMetricColor(metricType),
+                  strokeWidth: 3,
+                  fill: getMetricColor(metricType),
+                },
+                parent: {
+                  border: '1px solid transparent',
+                },
               }}
             />
           </ChartGroup>
