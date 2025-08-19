@@ -57,6 +57,14 @@ import axios from 'axios';
 
 const Layout: React.FC = () => {
   const { t, i18n } = useTranslation();
+
+  // Helper function to get the most powerful role
+  const getMostPowerfulRole = (roles: string[]): string => {
+    if (roles.includes('admin')) return 'admin';
+    if (roles.includes('adminReadonly')) return 'adminReadonly';
+    if (roles.includes('user')) return 'user';
+    return 'user'; // default fallback
+  };
   const { unreadCount, toastNotifications, removeToastNotification } = useNotifications();
   const { user, logout } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -132,15 +140,6 @@ const Layout: React.FC = () => {
   ];
 
   const userDropdownActions = [
-    {
-      key: 'settings',
-      label: 'Settings',
-      action: () => {
-        setIsUserDropdownOpen(false);
-        setUserDropdownFocusedIndex(-1);
-        window.location.href = '/settings';
-      },
-    },
     {
       key: 'logout',
       label: t('ui.actions.logout'),
@@ -268,19 +267,37 @@ const Layout: React.FC = () => {
   const PageNav = (
     <Nav aria-label="Global navigation" id="main-navigation">
       <NavList>
-        {appConfig.navigation.map((navItem) => {
-          const Icon = navItem.icon;
-          const isActive = location.pathname === navItem.path;
+        {appConfig.navigation
+          .filter((navItem) => {
+            // Show item if no required roles or if user has at least one of the required roles
+            if (!navItem.requiredRoles) return true;
+            return navItem.requiredRoles.some((role) => user?.roles?.includes(role));
+          })
+          .map((navItem) => {
+            // Handle separator items (render as Divider)
+            if (navItem.isGroup) {
+              return (
+                <div>
+                  <Divider key={navItem.id} component="li" />
+                  <Content component={ContentVariants.h4}>
+                    {user?.roles ? t('role.' + getMostPowerfulRole(user.roles)) : ''}
+                  </Content>
+                </div>
+              );
+            }
 
-          return (
-            <NavItem key={navItem.id} itemId={navItem.id} isActive={isActive}>
-              <Link to={navItem.path || '#'}>
-                {Icon && <Icon />}
-                <span style={{ marginLeft: Icon ? '0.5rem' : '0' }}>{t(navItem.label)}</span>
-              </Link>
-            </NavItem>
-          );
-        })}
+            const Icon = navItem.icon;
+            const isActive = location.pathname === navItem.path;
+
+            return (
+              <NavItem key={navItem.id} itemId={navItem.id} isActive={isActive}>
+                <Link to={navItem.path || '#'}>
+                  {Icon && <Icon />}
+                  <span style={{ marginLeft: Icon ? '0.5rem' : '0' }}>{t(navItem.label)}</span>
+                </Link>
+              </NavItem>
+            );
+          })}
       </NavList>
     </Nav>
   );
@@ -310,8 +327,13 @@ const Layout: React.FC = () => {
             {user?.email}
           </div>
           {user?.roles?.includes('admin') && (
-            <div style={{ fontSize: '0.75rem', color: 'var(--pf-t--global--text--color--brand)' }}>
-              Administrator
+            <div style={{ fontSize: '0.75rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+              {t('role.admin')}
+            </div>
+          )}
+          {user?.roles?.includes('admin-readonly') && !user?.roles?.includes('admin') && (
+            <div style={{ fontSize: '0.75rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+              {t('role.adminReadonly')}
             </div>
           )}
         </div>

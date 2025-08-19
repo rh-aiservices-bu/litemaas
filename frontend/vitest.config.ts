@@ -27,7 +27,7 @@ export default defineConfig({
     teardownTimeout: 5000, // 5 seconds for cleanup
 
     // Improved error reporting
-    reporter: ['verbose', 'junit'],
+    reporters: ['default'],
     outputFile: {
       junit: './coverage/junit-report.xml',
     },
@@ -70,7 +70,7 @@ export default defineConfig({
     },
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
+      reporter: ['default'],
       exclude: [
         'node_modules/',
         'dist/',

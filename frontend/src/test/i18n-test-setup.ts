@@ -16,7 +16,8 @@ const testTranslations = {
   'nav.subscriptions': 'Subscriptions',
   'nav.apiKeys': 'API Keys',
   'nav.usage': 'Usage',
-  'nav.settings': 'Settings',
+  'nav.admin.settings': 'Settings',
+  'nav.admin.users': 'Settings',
   'nav.home': 'Home',
 
   // Common UI elements
@@ -211,6 +212,57 @@ const testTranslations = {
   'pages.settings.preferences': 'Preferences',
   'pages.settings.security': 'Security',
   'pages.settings.notifications': 'Notifications',
+
+  // Settings - Models Management
+  'pages.settings.models': 'Models Management',
+  'pages.settings.modelsDescription':
+    'Synchronize AI models from LiteLLM to ensure you have access to the latest available models.',
+  'pages.settings.refreshModels': 'Refresh Models from LiteLLM',
+  'pages.settings.syncInProgress': 'Synchronizing models...',
+  'pages.settings.syncSuccess': 'Models synchronized successfully',
+  'pages.settings.syncSuccessDetails':
+    '{{totalModels}} total models ({{newModels}} new, {{updatedModels}} updated)',
+  'pages.settings.syncError': 'Failed to synchronize models',
+  'pages.settings.syncErrorGeneric':
+    'An error occurred while synchronizing models. Please try again.',
+  'pages.settings.adminRequired': 'Admin access required to sync models',
+  'pages.settings.lastSync': 'Last Synchronization',
+  'pages.settings.totalModels': 'Total Models',
+  'pages.settings.newModels': 'New Models',
+  'pages.settings.updatedModels': 'Updated Models',
+  'pages.settings.syncErrors': 'Errors:',
+  'pages.settings.syncTime': 'Sync Time',
+
+  // Settings - Limits Management
+  'pages.settings.limitsManagement': 'Limits Management',
+  'pages.settings.limitsDescription': 'Apply user limits to all active users in the system.',
+  'pages.settings.maxBudgetLabel': 'Maximum Budget ($)',
+  'pages.settings.tpmLimitLabel': 'Tokens per Minute Limit',
+  'pages.settings.rpmLimitLabel': 'Requests per Minute Limit',
+  'pages.settings.leaveEmptyToKeep': 'Leave empty to keep current value',
+  'pages.settings.maxBudgetHelper': 'Maximum budget allowed per user',
+  'pages.settings.tpmLimitHelper': 'Maximum tokens per minute per user',
+  'pages.settings.rpmLimitHelper': 'Maximum requests per minute per user',
+  'pages.settings.applyToAllUsers': 'Apply to All Users',
+  'pages.settings.processing': 'Processing...',
+  'pages.settings.bulkUpdateSuccess': 'User limits updated successfully',
+  'pages.settings.bulkUpdatePartial': 'Partial success updating user limits',
+  'pages.settings.bulkUpdateError': 'Failed to update user limits',
+  'pages.settings.bulkUpdateErrorGeneric':
+    'An error occurred while updating user limits. Please try again.',
+  'pages.settings.noValuesProvided': 'No values provided',
+  'pages.settings.noValuesProvidedDescription': 'Please provide at least one value to update.',
+  'pages.settings.confirmBulkUpdate': 'Confirm Bulk Update',
+  'pages.settings.confirmBulkUpdateMessage':
+    'Are you sure you want to apply these limits to all active users?',
+  'pages.settings.changesToApply': 'Changes to Apply',
+  'pages.settings.confirmApply': 'Confirm and Apply',
+  'pages.settings.lastLimitsUpdate': 'Last Limits Update',
+  'pages.settings.updateTime': 'Update Time',
+  'pages.settings.totalUsersUpdated': 'Total Users',
+  'pages.settings.successfulUpdates': 'Successful Updates',
+  'pages.settings.failedUpdates': 'Failed Updates',
+  'pages.settings.updateErrors': 'Update Errors',
 
   // Auth
   'auth.login.title': 'Login to LiteMaaS',

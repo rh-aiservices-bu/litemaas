@@ -19,7 +19,10 @@
     "apiKeys": "API 키",
     "usage": "사용량",
     "chatbot": "챗봇 플레이그라운드",
-    "settings": "설정"
+    "admin": {
+      "users": "사용자",
+      "settings": "설정"
+    }
   },
   "pages": {
     "home": {
@@ -246,6 +249,7 @@
         "modelsSelected": "{{count}}개 모델 선택됨",
         "keyCreatedSuccess": "{{name}}이(가) 성공적으로 생성되었습니다",
         "keyDeleted": "{{name}}이(가) 삭제되었습니다",
+        "keyUpdatedSuccess": "{{name}}이(가) 성공적으로 업데이트되었습니다",
         "copyToClipboard": "{{label}}이(가) 클립보드에 복사되었습니다",
         "secureRetrievalMessage": "위의 눈 아이콘을 클릭하여 전체 LiteLLM API 키를 안전하게 검색하세요. 보안상의 이유로 최근 인증이 필요하며 속도가 제한됩니다. 모든 키 검색은 감사 목적으로 기록됩니다.",
         "keyCreatedMessage": "API 키가 성공적으로 생성되었습니다.",
@@ -302,10 +306,14 @@
         "validationError": "유효성 검사 오류",
         "nameRequired": "API 키 이름이 필요합니다",
         "modelsRequired": "활성 구독에서 최소한 하나의 모델을 선택하세요",
-        "pleaseFixFormErrors": "폼 오류를 수정하고 다시 시도하세요"
+        "pleaseFixFormErrors": "폼 오류를 수정하고 다시 시도하세요",
+        "updateError": "오류",
+        "updateErrorDesc": "API 키 업데이트에 실패했습니다. 다시 시도해 주세요.",
+        "updateSuccess": "API 키가 업데이트됨"
       },
       "modals": {
         "createTitle": "API 키 생성",
+        "editTitle": "API 키 편집",
         "viewTitle": "API 키 상세 정보",
         "deleteTitle": "API 키 삭제",
         "createdTitle": "API 키가 성공적으로 생성되었습니다",
@@ -327,6 +335,7 @@
       },
       "viewKeyAriaLabel": "API 키 {{keyName}}에 대한 상세 정보 보기",
       "deleteKeyAriaLabel": "API 키 {{keyName}} 삭제",
+      "editKeyAriaLabel": "API 키 {{keyName}} 편집",
       "hideKeyAriaLabel": "{{keyName}}의 API 키 값 숨기기",
       "showKeyAriaLabel": "{{keyName}}의 API 키 값 표시",
       "copyKeyAriaLabel": "{{keyName}}의 API 키 값을 클립보드에 복사",
@@ -662,11 +671,30 @@
       "buttons": {
         "savePreferences": "환경설정 저장",
         "updateConfiguration": "구성 업데이트"
-      }
+      },
+      "models": "모델",
+      "modelsDescription": "LiteLLM에서 사용 가능한 AI 모델 관리 및 동기화",
+      "refreshModels": "모델 새로고침",
+      "lastSync": "마지막 동기화",
+      "syncTime": "{{time}}",
+      "syncInProgress": "동기화 중...",
+      "syncSuccess": "동기화 성공",
+      "syncSuccessDetails": "총 {{total}}개 모델, {{new}}개 신규, {{updated}}개 업데이트됨",
+      "syncError": "동기화 오류",
+      "syncErrorGeneric": "모델을 동기화할 수 없습니다. 다시 시도하세요.",
+      "syncErrors": "동기화 오류",
+      "adminRequired": "모델 동기화에 관리자 권한이 필요합니다",
+      "totalModels": "총 모델 수",
+      "newModels": "신규 모델",
+      "updatedModels": "업데이트된 모델"
     }
   },
   "ui": {
     "actions": {
+      "cancel": "취소",
+      "close": "닫기",
+      "save": "저장",
+      "saving": "저장 중...",
       "tryAgain": "다시 시도",
       "logout": "로그아웃",
       "login": "OpenShift로 로그인",
@@ -674,6 +702,9 @@
       "refresh": "페이지 새로고침",
       "openSidebar": "네비게이션 사이드바 열기",
       "closeSidebar": "네비게이션 사이드바 닫기"
+    },
+    "pagination": {
+      "showing": "표시 중"
     },
     "theme": {
       "light": "라이트",
@@ -730,5 +761,114 @@
       "somethingWrong": "문제가 발생했습니다",
       "tryRefresh": "죄송합니다만 예기치 않은 문제가 발생했습니다. 페이지를 새로고침하거나 문제가 지속되면 지원팀에 문의하세요."
     }
+  },
+  "role": {
+    "admin": "관리자",
+    "adminReadonly": "관리자 (읽기 전용)",
+    "user": "사용자"
+  },
+  "users": {
+    "alerts": {
+      "admin": {
+        "description": "이 사용자는 관리자 권한을 가지고 있으며 시스템에 대한 전체 액세스 권한이 있습니다.",
+        "title": "관리자 계정"
+      },
+      "inactive": {
+        "description": "이 사용자 계정은 현재 비활성 상태이며 시스템에 액세스할 수 없습니다.",
+        "title": "사용자 계정 비활성"
+      }
+    },
+    "error": {
+      "loadDescription": "서버에서 사용자를 불러오는 데 실패했습니다.",
+      "loadTitle": "사용자 로딩 오류",
+      "tryAgain": "다시 시도",
+      "load": "사용자 로딩 실패",
+      "update": "사용자 업데이트 실패"
+    },
+    "filters": {
+      "adjustFilters": "사용자를 찾기 위해 검색어나 필터를 조정해 보세요.",
+      "allRoles": "모든 역할",
+      "allStatus": "모든 상태",
+      "clearAll": "모든 필터 지우기",
+      "noMatches": "필터에 일치하는 사용자가 없습니다",
+      "roleAriaLabel": "역할별 필터링",
+      "statusAriaLabel": "상태별 필터링"
+    },
+    "form": {
+      "noRoles": "할당된 역할 없음",
+      "toggleRole": "{{role}} 역할 토글",
+      "toggleStatus": "사용자 활성 상태 토글",
+      "userInfo": "사용자 정보",
+      "username": "사용자명",
+      "email": "이메일",
+      "fullName": "전체 이름",
+      "roles": "역할",
+      "status": "상태",
+      "lastLogin": "최종 로그인",
+      "createdAt": "생성일"
+    },
+    "loading": {
+      "description": "서버에서 사용자 정보 검색 중",
+      "title": "사용자 로딩 중..."
+    },
+    "modal": {
+      "close": "닫기",
+      "defaultTitle": "사용자 세부정보",
+      "edit": {
+        "title": "사용자 편집"
+      },
+      "view": {
+        "title": "사용자 세부사항"
+      }
+    },
+    "notifications": {
+      "updateError": "업데이트 실패",
+      "updateSuccess": "사용자가 업데이트됨",
+      "updateSuccessDesc": "사용자 정보가 성공적으로 업데이트되었습니다."
+    },
+    "pageDescription": "조직의 사용자, 역할 및 권한 관리",
+    "pagination": {
+      "of": "/",
+      "users": "사용자"
+    },
+    "permissions": {
+      "accessDenied": "액세스 거부",
+      "noPermission": "사용자 관리에 액세스할 권한이 없습니다. 이것이 오류라고 생각되면 관리자에게 문의하세요."
+    },
+    "search": {
+      "ariaLabel": "사용자 검색",
+      "placeholder": "사용자 검색..."
+    },
+    "status": {
+      "oauthManaged": "상태는 OAuth 제공자가 관리합니다."
+    },
+    "table": {
+      "ariaLabel": "사용자 테이블",
+      "caption": "사용자명, 이메일, 전체 이름, 역할 및 상태가 포함된 {{count}}명의 사용자 테이블.",
+      "moreRoles": "+{{count}}개 더",
+      "notProvided": "제공되지 않음",
+      "username": "사용자명",
+      "email": "이메일",
+      "fullName": "전체 이름",
+      "roles": "역할",
+      "status": "상태"
+    },
+    "warnings": {
+      "roleConflict": "역할 충돌",
+      "roleConflictDesc": "관리자와 관리자(읽기 전용) 역할이 충돌합니다. 관리자 역할이 우선합니다."
+    },
+    "actions": {
+      "edit": "편집",
+      "view": "세부사항 보기"
+    },
+    "empty": {
+      "title": "사용자를 찾을 수 없습니다",
+      "description": "검색 조건에 맞는 사용자가 없습니다."
+    },
+    "never": "없음"
+  },
+  "status": {
+    "active": "활성",
+    "inactive": "비활성"
   }
 }

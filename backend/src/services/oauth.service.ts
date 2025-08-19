@@ -378,7 +378,7 @@ export class OAuthService {
         user_alias: user.username,
         user_role: user.roles.includes('admin') ? 'proxy_admin' : 'internal_user',
         max_budget: 100, // Default budget - can be customized via environment
-        tpm_limit: 1000, // Default TPM limit
+        tpm_limit: 10000, // Default TPM limit
         rpm_limit: 60, // Default RPM limit
         auto_create_key: false, // Don't auto-create key during user creation
         teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team

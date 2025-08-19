@@ -198,20 +198,6 @@ describe('Router Configuration', () => {
   });
   */
 
-  // TODO: Fix settings page routing test - page component not rendering
-  // Issue: Unable to find an element by: [data-testid="settings-page"]
-  // Problem: Router not properly rendering route components, only showing Layout
-  // Root cause: Complex routing structure with nested components not working in test
-  /*
-  it('renders settings page at /settings', () => {
-    renderWithRouter(['/settings']);
-    
-    expect(screen.getByTestId('protected-route')).toBeInTheDocument();
-    expect(screen.getByTestId('layout')).toBeInTheDocument();
-    expect(screen.getByTestId('settings-page')).toBeInTheDocument();
-  });
-  */
-
   it('renders login page at /login (not protected)', () => {
     renderWithRouter(['/login']);
 

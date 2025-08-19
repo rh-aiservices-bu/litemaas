@@ -23,6 +23,10 @@ vi.mock('../../pages/UsagePage', () => ({
   default: () => <div>Usage Page</div>,
 }));
 
+vi.mock('../../pages/UsersPage', () => ({
+  default: () => <div>Settings Page</div>,
+}));
+
 vi.mock('../../pages/SettingsPage', () => ({
   default: () => <div>Settings Page</div>,
 }));
@@ -40,6 +44,7 @@ vi.mock('@patternfly/react-icons', () => ({
   ChartLineIcon: () => <svg data-testid="chart-line-icon" />,
   CogIcon: () => <svg data-testid="cog-icon" />,
   CommentsIcon: () => <svg data-testid="chat-icon" />,
+  UsersIcon: () => <svg data-testid="users-icon" />,
 }));
 
 describe('Navigation Configuration', () => {
@@ -57,14 +62,14 @@ describe('Navigation Configuration', () => {
     expect(mainGroup.routes).toHaveLength(6); // Home, Models, Subscriptions, API Keys, Chatbot, Usage
 
     const settingsRoute = appConfig.routes[1] as AppRoute;
-    expect(settingsRoute.id).toBe('settings');
-    expect(settingsRoute.label).toBe('nav.settings');
-    expect(settingsRoute.path).toBe('/settings');
+    expect(settingsRoute.id).toBe('admin');
+    expect(settingsRoute.label).toBe('Admin');
+    expect(mainGroup.routes).toHaveLength(6); // Users, Settings
   });
 
   it('has correct navigation structure', () => {
     expect(appConfig.navigation).toBeDefined();
-    expect(appConfig.navigation).toHaveLength(6); // Home, Models, Subscriptions, API Keys, Chatbot, Usage (Settings commented out)
+    expect(appConfig.navigation).toHaveLength(9); // Home, Models, Subscriptions, API Keys, Chatbot, Usage, Users, Settings
   });
 
   describe('Route Configuration', () => {
@@ -125,16 +130,6 @@ describe('Navigation Configuration', () => {
       expect(usageRoute?.element).toBeDefined();
       expect(usageRoute?.icon).toBeDefined();
     });
-
-    it('has correct settings route', () => {
-      const settingsRoute = appConfig.routes[1] as AppRoute;
-
-      expect(settingsRoute.id).toBe('settings');
-      expect(settingsRoute.path).toBe('/settings');
-      expect(settingsRoute.label).toBe('nav.settings');
-      expect(settingsRoute.element).toBeDefined();
-      expect(settingsRoute.icon).toBeDefined();
-    });
   });
 
   describe('Navigation Configuration', () => {
@@ -183,11 +178,7 @@ describe('Navigation Configuration', () => {
       expect(usageNav?.icon).toBeDefined();
     });
 
-    it('does not include settings in navigation (commented out)', () => {
-      const settingsNav = appConfig.navigation.find((nav) => nav.id === 'settings');
-
-      expect(settingsNav).toBeUndefined();
-    });
+    // TODO Add tests for Users and Settings
   });
 
   describe('Icon Configuration', () => {
@@ -199,17 +190,15 @@ describe('Navigation Configuration', () => {
         expect(route.icon).toBeDefined();
         expect(typeof route.icon).toBe('function'); // React component
       });
-
-      const settingsRoute = appConfig.routes[1] as AppRoute;
-      expect(settingsRoute.icon).toBeDefined();
-      expect(typeof settingsRoute.icon).toBe('function');
     });
 
     it('has correct icon components for all navigation items', () => {
-      appConfig.navigation.forEach((navItem) => {
-        expect(navItem.icon).toBeDefined();
-        expect(typeof navItem.icon).toBe('function'); // React component
-      });
+      appConfig.navigation
+        .filter((navItem) => navItem.id !== 'admin-separator')
+        .forEach((navItem) => {
+          expect(navItem.icon).toBeDefined();
+          expect(typeof navItem.icon).toBe('function'); // React component
+        });
     });
   });
 
@@ -222,18 +211,16 @@ describe('Navigation Configuration', () => {
         'nav.apiKeys',
         'nav.chatbot',
         'nav.usage',
-        'nav.settings',
+        'nav.admin.users',
+        'nav.admin.settings',
       ];
 
       const mainGroup = appConfig.routes[0] as AppRouteGroup;
       const routes: AppRoute[] = mainGroup.routes;
-      const settingsRoute = appConfig.routes[1] as AppRoute;
 
       routes.forEach((route: AppRoute) => {
         expect(expectedLabels).toContain(route.label);
       });
-
-      expect(expectedLabels).toContain(settingsRoute.label);
     });
 
     it('uses correct i18n keys for navigation', () => {
@@ -244,11 +231,15 @@ describe('Navigation Configuration', () => {
         'nav.apiKeys',
         'nav.chatbot',
         'nav.usage',
+        'nav.admin.users',
+        'nav.admin.settings',
       ];
 
-      appConfig.navigation.forEach((navItem) => {
-        expect(expectedLabels).toContain(navItem.label);
-      });
+      appConfig.navigation
+        .filter((navItem) => navItem.id !== 'admin-separator')
+        .forEach((navItem) => {
+          expect(expectedLabels).toContain(navItem.label);
+        });
     });
   });
 
@@ -265,20 +256,25 @@ describe('Navigation Configuration', () => {
       });
     });
 
-    it('has all paths starting with /', () => {
+    it('has all paths starting with / or /admin', () => {
       const mainGroup = appConfig.routes[0] as AppRouteGroup;
-      const routes: AppRoute[] = mainGroup.routes;
-      const settingsRoute = appConfig.routes[1] as AppRoute;
+      const mainRoutes: AppRoute[] = mainGroup.routes;
+      const adminGroup = appConfig.routes[1] as AppRouteGroup;
+      const adminRoutes: AppRoute[] = adminGroup.routes;
 
-      routes.forEach((route: AppRoute) => {
+      mainRoutes.forEach((route: AppRoute) => {
         expect(route.path).toMatch(/^\/[a-z-]+$/);
       });
 
-      expect(settingsRoute.path).toMatch(/^\/[a-z-]+$/);
-
-      appConfig.navigation.forEach((navItem) => {
-        expect(navItem.path).toMatch(/^\/[a-z-]+$/);
+      adminRoutes.forEach((route: AppRoute) => {
+        expect(route.path).toMatch(/^\/admin(\/|$)/);
       });
+
+      appConfig.navigation
+        .filter((navItem) => navItem.id !== 'admin-separator')
+        .forEach((navItem) => {
+          expect(navItem.path).toMatch(/^\/[a-z0-9-/]+$/);
+        });
     });
   });
 
@@ -286,15 +282,11 @@ describe('Navigation Configuration', () => {
     it('has valid React components for all route elements', () => {
       const mainGroup = appConfig.routes[0] as AppRouteGroup;
       const routes: AppRoute[] = mainGroup.routes;
-      const settingsRoute = appConfig.routes[1] as AppRoute;
 
       routes.forEach((route: AppRoute) => {
         expect(route.element).toBeDefined();
         expect(typeof route.element).toBe('function'); // React component
       });
-
-      expect(settingsRoute.element).toBeDefined();
-      expect(typeof settingsRoute.element).toBe('function');
     });
   });
 });

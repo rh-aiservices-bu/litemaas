@@ -19,7 +19,7 @@ spec:
       initContainers:
         - name: wait-for-database
           image: postgres:16-alpine
-          command: 
+          command:
             - sh
             - -c
             - |

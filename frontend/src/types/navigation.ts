@@ -8,6 +8,7 @@ export interface AppRoute {
   icon?: ComponentType;
   exact?: boolean;
   children?: AppRoute[];
+  requiredRoles?: string[];
 }
 
 export interface AppRouteGroup {
@@ -23,6 +24,7 @@ export interface NavigationItem {
   icon?: ComponentType;
   children?: NavigationItem[];
   isGroup?: boolean;
+  requiredRoles?: string[];
 }
 
 export interface AppConfig {

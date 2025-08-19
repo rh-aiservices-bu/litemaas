@@ -17,7 +17,7 @@ export default defineConfig({
     testTimeout: 30000,
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json', 'html', 'lcov'],
+      reporter: ['default'],
       exclude: ['node_modules/', 'dist/', 'coverage/', '**/*.d.ts', '**/*.config.ts', 'src/types/'],
     },
     env: {

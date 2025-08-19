@@ -86,7 +86,7 @@ export class LiteLLMSyncUtils {
           ? 'proxy_admin'
           : ('internal_user' as 'proxy_admin' | 'internal_user' | 'internal_user_viewer'),
         max_budget: Number(user.max_budget) || 100,
-        tpm_limit: Number(user.tpm_limit) || 1000,
+        tpm_limit: Number(user.tpm_limit) || 10000,
         rpm_limit: Number(user.rpm_limit) || 60,
         auto_create_key: false,
         teams: [userTeam], // CRITICAL: Always assign user to a team

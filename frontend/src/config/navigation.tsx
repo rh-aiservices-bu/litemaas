@@ -6,6 +6,7 @@ import {
   ChartLineIcon,
   CogIcon,
   CommentsIcon,
+  UsersIcon,
 } from '@patternfly/react-icons';
 
 import HomePage from '../pages/HomePage';
@@ -15,6 +16,7 @@ import ApiKeysPage from '../pages/ApiKeysPage';
 import ChatbotPage from '../pages/ChatbotPage';
 import UsagePage from '../pages/UsagePage';
 import SettingsPage from '../pages/SettingsPage';
+import UsersPage from '../pages/UsersPage';
 
 import { AppConfig } from '../types/navigation';
 
@@ -71,11 +73,25 @@ export const appConfig: AppConfig = {
       ],
     },
     {
-      id: 'settings',
-      path: '/settings',
-      element: SettingsPage,
-      label: 'nav.settings',
-      icon: CogIcon,
+      id: 'admin',
+      label: 'Admin',
+      routes: [
+        {
+          id: 'admin-users',
+          path: '/admin/users',
+          element: UsersPage,
+          label: 'nav.admin.users',
+          icon: UsersIcon,
+          requiredRoles: ['admin', 'admin-readonly'],
+        },
+        {
+          id: 'settings',
+          path: '/admin/settings',
+          element: SettingsPage,
+          label: 'nav.admin.settings',
+          icon: CogIcon,
+        },
+      ],
     },
   ],
   navigation: [
@@ -115,12 +131,26 @@ export const appConfig: AppConfig = {
       path: '/usage',
       icon: ChartLineIcon,
     },
-    // Settings menu item hidden for now - uncomment when needed
-    // {
-    //   id: 'settings',
-    //   label: 'nav.settings',
-    //   path: '/settings',
-    //   icon: CogIcon,
-    // },
+    // Admin separator
+    {
+      id: 'admin-separator',
+      label: '',
+      isGroup: true,
+      requiredRoles: ['admin', 'admin-readonly'],
+    },
+    {
+      id: 'admin-users',
+      label: 'nav.admin.users',
+      path: '/admin/users',
+      icon: UsersIcon,
+      requiredRoles: ['admin', 'admin-readonly'],
+    },
+    {
+      id: 'settings',
+      label: 'nav.admin.settings',
+      path: '/admin/settings',
+      icon: CogIcon,
+      requiredRoles: ['admin', 'admin-readonly'],
+    },
   ],
 };

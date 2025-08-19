@@ -8,6 +8,7 @@ import apiKeysRoutes from './api-keys';
 import usageRoutes from './usage';
 import healthRoutes from './health';
 import configRoutes from './config';
+import adminRoutes from './admin';
 
 const routes: FastifyPluginAsync = async (fastify) => {
   // Register all route handlers
@@ -24,6 +25,9 @@ const routes: FastifyPluginAsync = async (fastify) => {
   await fastify.register(usageRoutes, { prefix: '/usage' });
   await fastify.register(healthRoutes, { prefix: '/health' });
   await fastify.register(configRoutes, { prefix: '/config' });
+
+  // Admin endpoints
+  await fastify.register(adminRoutes, { prefix: '/admin' });
 
   // Root endpoint
   fastify.get('/', {

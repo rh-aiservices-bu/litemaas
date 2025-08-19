@@ -12,13 +12,44 @@ The API is organized into two main paths:
 - `/api/auth/*` - OAuth authentication flow endpoints (unversioned)
 - `/api/v1/*` - All versioned API endpoints
 
-## Authentication
+## Authentication & Authorization
 
 All protected endpoints require JWT token in Authorization header:
 
 ```
 Authorization: Bearer <jwt_token>
 ```
+
+### Role-Based Access Control (RBAC)
+
+LiteMaaS implements a three-tier role hierarchy where users can have multiple roles, but the most powerful role determines their effective permissions:
+
+```
+admin > adminReadonly > user
+```
+
+#### Role Definitions
+
+- **`admin`**: Full system access including user management, system configuration, and all CRUD operations
+- **`adminReadonly`**: Read-only access to all data and system information, but cannot modify anything
+- **`user`**: Standard user access - can only view and modify their own resources
+
+#### Role Requirements by Endpoint Type
+
+- **Public endpoints** (`/api/auth/*`): No authentication required
+- **User endpoints** (`/api/v1/models`, `/api/v1/subscriptions`, etc.): Require valid JWT token
+- **Admin endpoints** (`/api/v1/admin/*`): Require `admin` or `adminReadonly` role
+- **Admin-write endpoints**: Require `admin` role only (no read-only admin access)
+
+#### Multi-Role Users
+
+Users with multiple roles inherit the permissions of their most powerful role. For example, a user with `['admin', 'user']` roles has full admin access.
+
+#### Role-Based Data Filtering
+
+- **Standard users**: Can only access their own resources (subscriptions, API keys, usage data)
+- **Admin users**: Can access all users' data through admin endpoints or query parameters
+- **Read-only admins**: Can view all data but cannot modify anything
 
 ## API Endpoints
 
@@ -66,6 +97,8 @@ Authenticated user operations that are part of the versioned API.
 
 #### GET /api/v1/auth/me
 
+**Authorization**: Requires valid JWT token (any role)
+
 Get current user basic info
 
 ```json
@@ -75,11 +108,22 @@ Response:
   "username": "user@example.com",
   "email": "user@example.com",
   "name": "User Name",
-  "roles": ["user"]
+  "roles": ["user"]  // Array of assigned roles
+}
+
+// Example multi-role admin user
+{
+  "id": "admin-uuid",
+  "username": "admin@example.com",
+  "email": "admin@example.com",
+  "name": "System Administrator",
+  "roles": ["admin", "user"]  // Multiple roles - admin permissions apply
 }
 ```
 
 #### GET /api/v1/auth/profile
+
+**Authorization**: Requires valid JWT token (any role)
 
 Get current user detailed profile
 
@@ -90,7 +134,7 @@ Response:
   "username": "user@example.com",
   "email": "user@example.com",
   "fullName": "User Full Name",
-  "roles": ["user"],
+  "roles": ["user"],  // User's assigned roles
   "createdAt": "2024-01-01T00:00:00Z"
 }
 ```
@@ -98,6 +142,8 @@ Response:
 ### Models (/api/v1/models)
 
 #### GET /api/v1/models
+
+**Authorization**: Requires valid JWT token (any role)
 
 List available models
 
@@ -137,6 +183,8 @@ Response:
 
 #### GET /api/v1/models/:id
 
+**Authorization**: Requires valid JWT token (any role)
+
 Get model details
 
 ```json
@@ -164,6 +212,12 @@ Response:
 ### Subscriptions
 
 #### GET /api/v1/subscriptions
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**:
+
+- Standard users: Only their own subscriptions
+- Admin users: All subscriptions (use `?userId=all` for admin view)
 
 List user subscriptions
 
@@ -209,6 +263,9 @@ Response:
 
 #### GET /api/v1/subscriptions/:id
 
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only access their own subscriptions; admins can access any subscription
+
 Get subscription details
 
 ```json
@@ -235,6 +292,9 @@ Response:
 ```
 
 #### POST /api/v1/subscriptions
+
+**Authorization**: Requires valid JWT token (any role)
+**Note**: Admin users can create subscriptions for other users by including `userId` in request
 
 Create new subscription
 
@@ -267,6 +327,9 @@ Response:
 ```
 
 #### PUT /api/v1/subscriptions/:id/quotas
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only modify their own subscriptions; admins can modify any subscription
 
 Update subscription quotas
 
@@ -343,6 +406,9 @@ Response:
 
 #### POST /api/v1/subscriptions/:id/cancel
 
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only cancel their own subscriptions; admins can cancel any subscription
+
 Cancel subscription
 
 **Important**: A subscription can only be cancelled if there are no active API keys linked to it. If active API keys exist, the cancellation will be rejected with a 400 error.
@@ -393,6 +459,12 @@ Response (Error - Active API Keys):
 > API Keys support multi-model access with proper LiteLLM compatibility. Keys use 'sk-' prefix format and display actual key values.
 
 #### GET /api/v1/api-keys
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**:
+
+- Standard users: Only their own API keys
+- Admin users: All API keys (use `?userId=all` for admin view)
 
 List user API keys with multi-model support
 
@@ -446,6 +518,9 @@ Response:
 ```
 
 #### POST /api/v1/api-keys
+
+**Authorization**: Requires valid JWT token (any role)
+**Note**: Admin users can create API keys for other users by including `userId` in request
 
 Generate new API key with multi-model support
 
@@ -542,6 +617,9 @@ Response:
 
 #### GET /api/v1/api-keys/:id
 
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only access their own API keys; admins can access any API key
+
 Get API key details with multi-model information
 
 ```json
@@ -577,6 +655,9 @@ Response:
 ```
 
 #### PATCH /api/v1/api-keys/:id
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only update their own API keys; admins can update any API key
 
 Update an existing API key's name, models, or metadata
 
@@ -632,6 +713,9 @@ Update an existing API key's name, models, or metadata
 
 #### POST /api/v1/api-keys/:id/retrieve-key
 
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only retrieve their own API keys; admins can retrieve any API key
+
 Securely retrieve full API key value
 
 **Security Features**:
@@ -677,6 +761,9 @@ curl -X POST "http://localhost:8080/api/api-keys/key_456/retrieve-key" \
 
 #### POST /api/v1/api-keys/:id/rotate
 
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only rotate their own API keys; admins can rotate any API key
+
 Rotate API key
 
 ```json
@@ -691,6 +778,9 @@ Response:
 ```
 
 #### DELETE /api/v1/api-keys/:id
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only delete their own API keys; admins can delete any API key
 
 Delete API key
 
@@ -750,6 +840,8 @@ Response:
 
 #### POST /api/v1/api-keys/validate
 
+**Authorization**: Requires `admin` or `adminReadonly` role
+
 Validate API key (admin endpoint)
 
 ```json
@@ -772,6 +864,12 @@ Response:
 ### Usage Statistics
 
 #### GET /api/v1/usage/summary
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**:
+
+- Standard users: Only their own usage data
+- Admin users: All usage data (use `?userId=all` for admin view)
 
 Get usage summary
 
@@ -804,6 +902,12 @@ Response:
 
 #### GET /api/v1/usage/timeseries
 
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**:
+
+- Standard users: Only their own usage data
+- Admin users: All usage data (use `?userId=all` for admin view)
+
 Get usage time series
 
 ```json
@@ -829,6 +933,12 @@ Response:
 
 #### GET /api/v1/usage/export
 
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**:
+
+- Standard users: Only their own usage data
+- Admin users: All usage data (use `?userId=all` for admin view)
+
 Export usage data
 
 ```json
@@ -845,6 +955,12 @@ Response: File download
 > **Default Team**: All users are automatically assigned to the Default Team (`a0000000-0000-4000-8000-000000000001`) during registration or API key creation. This team has an empty `allowed_models` array which enables access to all available models.
 
 #### GET /api/v1/teams
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**:
+
+- Standard users: Only teams they belong to
+- Admin users: All teams (use `?userId=all` for admin view)
 
 List user teams
 
@@ -890,6 +1006,8 @@ Response:
 
 #### POST /api/v1/teams
 
+**Authorization**: Requires `admin` role (write operation)
+
 Create new team
 
 ```json
@@ -913,6 +1031,8 @@ Response:
 ```
 
 #### POST /api/v1/teams/:id/sync
+
+**Authorization**: Requires `admin` role (system operation)
 
 Sync team with LiteLLM
 
@@ -941,6 +1061,8 @@ Response:
 
 #### GET /api/v1/integration/health
 
+**Authorization**: Requires `admin` or `adminReadonly` role (system monitoring)
+
 LiteLLM integration health check
 
 ```json
@@ -967,6 +1089,8 @@ Response:
 ```
 
 #### POST /api/v1/integration/sync
+
+**Authorization**: Requires `admin` role (system write operation)
 
 Perform global synchronization
 
@@ -1012,6 +1136,8 @@ Response:
 
 #### GET /api/v1/integration/alerts
 
+**Authorization**: Requires `admin` or `adminReadonly` role (system monitoring)
+
 Get system alerts
 
 ```json
@@ -1039,6 +1165,8 @@ Response:
 
 #### GET /api/v1/health
 
+**Authorization**: Public endpoint (no authentication required)
+
 Health check
 
 ```json
@@ -1056,10 +1184,184 @@ Response:
 
 #### GET /api/v1/metrics
 
+**Authorization**: Requires `admin` or `adminReadonly` role (system monitoring)
+
 Prometheus metrics
 
 ```
 Response: Prometheus format metrics
+```
+
+## Admin Endpoints
+
+### User Management (/api/v1/admin/users)
+
+#### GET /api/v1/admin/users
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+List all users in the system
+
+```json
+Query Parameters:
+- page: number (default: 1)
+- limit: number (default: 20)
+- role: string (optional) - Filter by role
+- search: string (optional) - Search by name or email
+
+Response:
+{
+  "data": [
+    {
+      "id": "uuid",
+      "username": "user@example.com",
+      "email": "user@example.com",
+      "fullName": "User Full Name",
+      "roles": ["user"],
+      "isActive": true,
+      "lastLogin": "2024-01-20T10:00:00Z",
+      "createdAt": "2024-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 100,
+    "totalPages": 5
+  }
+}
+```
+
+#### POST /api/v1/admin/users
+
+**Authorization**: Requires `admin` role (write operation)
+
+Create new user (admin only)
+
+```json
+Request:
+{
+  "username": "newuser@example.com",
+  "email": "newuser@example.com",
+  "fullName": "New User",
+  "roles": ["user"],  // Optional, defaults to ["user"]
+  "isActive": true     // Optional, defaults to true
+}
+
+Response:
+{
+  "id": "new-uuid",
+  "username": "newuser@example.com",
+  "email": "newuser@example.com",
+  "fullName": "New User",
+  "roles": ["user"],
+  "isActive": true,
+  "createdAt": "2024-01-20T10:00:00Z"
+}
+```
+
+#### PUT /api/v1/admin/users/:id
+
+**Authorization**: Requires `admin` role (write operation)
+
+Update user (admin only)
+
+```json
+Request:
+{
+  "fullName": "Updated User Name",  // Optional
+  "roles": ["admin", "user"],       // Optional - update roles
+  "isActive": false                  // Optional - deactivate user
+}
+
+Response:
+{
+  "id": "uuid",
+  "username": "user@example.com",
+  "email": "user@example.com",
+  "fullName": "Updated User Name",
+  "roles": ["admin", "user"],
+  "isActive": false,
+  "updatedAt": "2024-01-20T10:00:00Z"
+}
+```
+
+#### DELETE /api/v1/admin/users/:id
+
+**Authorization**: Requires `admin` role (write operation)
+
+Deactivate user (admin only) - Soft delete to preserve data integrity
+
+```json
+Response:
+{
+  "message": "User deactivated successfully",
+  "deactivatedAt": "2024-01-20T10:00:00Z"
+}
+```
+
+### System Operations (/api/v1/admin/system)
+
+#### GET /api/v1/admin/system/status
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Get comprehensive system status
+
+```json
+Response:
+{
+  "system": {
+    "uptime": 86400,
+    "version": "1.0.0",
+    "environment": "production"
+  },
+  "database": {
+    "status": "healthy",
+    "connectionPool": {
+      "active": 5,
+      "idle": 15,
+      "total": 20
+    }
+  },
+  "litellm": {
+    "status": "healthy",
+    "lastSync": "2024-01-20T09:00:00Z",
+    "modelCount": 25
+  },
+  "usage": {
+    "totalUsers": 150,
+    "activeUsers": 95,
+    "totalSubscriptions": 200,
+    "totalApiKeys": 180
+  }
+}
+```
+
+#### POST /api/v1/admin/sync/models
+
+**Authorization**: Requires `admin` role (system operation)
+
+Manually trigger model synchronization from LiteLLM
+
+```json
+Request:
+{
+  "forceSync": true  // Optional, forces full resync
+}
+
+Response:
+{
+  "syncId": "sync-models-1642674000",
+  "startedAt": "2024-01-20T10:00:00Z",
+  "completedAt": "2024-01-20T10:01:30Z",
+  "results": {
+    "modelsAdded": 3,
+    "modelsUpdated": 12,
+    "modelsRemoved": 1,
+    "total": 25
+  }
+}
 ```
 
 ## Error Responses
@@ -1083,12 +1385,58 @@ All errors follow consistent format:
 ### Error Codes
 
 - `UNAUTHORIZED`: Missing or invalid authentication
-- `FORBIDDEN`: Insufficient permissions
+- `FORBIDDEN`: Insufficient permissions (including role-based access)
 - `NOT_FOUND`: Resource not found
 - `VALIDATION_ERROR`: Invalid request data
 - `QUOTA_EXCEEDED`: Usage quota exceeded
 - `RATE_LIMITED`: Too many requests
 - `INTERNAL_ERROR`: Server error
+
+### Role-Based Error Examples
+
+```json
+// Insufficient role for admin endpoint
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Admin role required",
+    "details": {
+      "requiredRoles": ["admin", "adminReadonly"],
+      "userRoles": ["user"]
+    }
+  },
+  "requestId": "req_123456"
+}
+
+// Write operation denied for read-only admin
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Write operation not allowed for read-only administrator",
+    "details": {
+      "operation": "CREATE_USER",
+      "requiredRoles": ["admin"],
+      "userRoles": ["adminReadonly", "user"]
+    }
+  },
+  "requestId": "req_789012"
+}
+
+// Resource access denied
+{
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Cannot access resource belonging to another user",
+    "details": {
+      "resourceType": "subscription",
+      "resourceId": "sub_123",
+      "resourceOwner": "user_456",
+      "requestingUser": "user_789"
+    }
+  },
+  "requestId": "req_345678"
+}
+```
 
 ## Rate Limiting
 

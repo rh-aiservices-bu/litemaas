@@ -215,11 +215,21 @@ const routes = [
   { path: '/api-keys', element: <ApiKeysPage /> },
   { path: '/usage', element: <UsagePage /> },
   { path: '/settings', element: <SettingsPage /> },
+  // Admin routes (role-protected)
+  { path: '/admin', element: <AdminPage />, requiredRoles: ['admin', 'adminReadonly'] },
+  { path: '/admin/users', element: <UserManagementPage />, requiredRoles: ['admin', 'adminReadonly'] },
+  { path: '/admin/system', element: <SystemStatusPage />, requiredRoles: ['admin', 'adminReadonly'] },
+  // Auth routes
   { path: '/auth/login', element: <LoginPage /> },
   { path: '/auth/callback', element: <AuthCallback /> }
 ];
 
-// Protected route wrapper
+// Role-based protected route wrapper
+<RoleProtectedRoute requiredRoles={['admin', 'adminReadonly']}>
+  <Route element={<AdminComponent />} />
+</RoleProtectedRoute>
+
+// Standard protected route wrapper
 <ProtectedRoute>
   <Route element={<Component />} />
 </ProtectedRoute>
@@ -355,6 +365,9 @@ npm run lint:fix       # Auto-fix issues
 
 # Cleanup
 npm run clean          # Remove build artifacts
+
+# Internationalization (i18n)
+npm run check:translations  # Check all locale files for missing keys
 ```
 
 ## 🎨 Styling Guidelines

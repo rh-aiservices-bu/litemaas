@@ -8,7 +8,7 @@ import {
 } from '../types';
 import { LiteLLMModel } from '../types/model.types';
 import { LiteLLMService } from '../services/litellm.service';
-import { ModelSyncService, ModelSyncOptions } from '../services/model-sync.service';
+import { ModelSyncService } from '../services/model-sync.service';
 
 const modelsRoutes: FastifyPluginAsync = async (fastify) => {
   // Initialize services
@@ -661,80 +661,31 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('models:write')],
     handler: async (request, reply) => {
-      const user = (request as AuthenticatedRequest).user;
-      const { forceUpdate = false, markUnavailable = true } = request.body as ModelSyncOptions;
-
       try {
-        fastify.log.info({ userId: user.userId }, 'Starting model synchronization');
+        // Use the unified ModelSyncService
+        const modelSyncService = new ModelSyncService(fastify);
 
+        const body = request.body as { forceUpdate?: boolean; markUnavailable?: boolean };
         const result = await modelSyncService.syncModels({
-          forceUpdate,
-          markUnavailable,
+          forceUpdate: body?.forceUpdate || false,
+          markUnavailable: body?.markUnavailable !== false,
         });
 
-        // Create audit log
-        await fastify.dbUtils.query(
-          `INSERT INTO audit_logs (user_id, action, resource_type, metadata, success)
-           VALUES ($1, $2, $3, $4, $5)`,
-          [
-            user.userId,
-            'MODELS_SYNC',
-            'MODEL',
-            JSON.stringify({
-              forceUpdate,
-              markUnavailable,
-              result: {
-                totalModels: result.totalModels,
-                newModels: result.newModels,
-                updatedModels: result.updatedModels,
-                unavailableModels: result.unavailableModels,
-                errors: result.errors.length,
-              },
-            }),
-            result.success,
-          ],
-        );
-
-        if (!result.success && result.errors.length > 0) {
-          return reply.status(500).send({
-            error: {
-              code: 'SYNC_FAILED',
-              message: `Model synchronization failed: ${result.errors.join(', ')}`,
-            },
-          });
-        }
-
-        fastify.log.info(
-          {
-            userId: user.userId,
-            result,
-          },
-          'Model synchronization completed',
-        );
-
-        return result;
+        // Return the full result to frontend
+        return reply.send(result);
       } catch (error) {
-        fastify.log.error(error, 'Model sync endpoint failed');
+        request.log.error({ error }, 'Manual model sync failed');
 
-        // Create audit log for failure
-        await fastify.dbUtils.query(
-          `INSERT INTO audit_logs (user_id, action, resource_type, metadata, success, error_message)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [
-            user.userId,
-            'MODELS_SYNC',
-            'MODEL',
-            JSON.stringify({ forceUpdate, markUnavailable }),
-            false,
-            (error as Error).message,
-          ],
-        );
-
-        return reply.status(500).send({
-          error: {
-            code: 'INTERNAL_ERROR',
-            message: 'Failed to synchronize models',
-          },
+        // Return error with details
+        const errorMessage = error instanceof Error ? error.message : 'Sync failed';
+        return reply.code(500).send({
+          success: false,
+          totalModels: 0,
+          newModels: 0,
+          updatedModels: 0,
+          unavailableModels: 0,
+          errors: [errorMessage],
+          syncedAt: new Date().toISOString(),
         });
       }
     },

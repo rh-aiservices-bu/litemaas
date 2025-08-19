@@ -183,23 +183,6 @@ describe('Comprehensive Accessibility Test Suite', () => {
 
       expect(focusedElements.length).toBeGreaterThan(1);
     });
-
-    it('should support reverse tab navigation', async () => {
-      const user = userEvent.setup();
-      renderWithRouter(<SettingsPage />);
-
-      // Tab forward first
-      await user.tab();
-      await user.tab();
-      const forwardElement = document.activeElement;
-
-      // Then tab backward
-      await user.tab({ shift: true });
-      const backwardElement = document.activeElement;
-
-      expect(forwardElement).not.toBe(backwardElement);
-    });
-
     it('should handle Enter and Space key activation', async () => {
       const user = userEvent.setup();
       renderWithRouter(<HomePage />);

@@ -19,7 +19,10 @@
     "apiKeys": "API密钥",
     "usage": "使用情况",
     "chatbot": "聊天机器人游乐场",
-    "settings": "设置"
+    "admin": {
+      "users": "用户",
+      "settings": "设置"
+    }
   },
   "pages": {
     "home": {
@@ -245,6 +248,7 @@
         "selectedModels": "选定的模型",
         "modelsSelected": "已选择{{count}}个模型",
         "keyCreatedSuccess": "{{name}}已成功创建",
+        "keyUpdatedSuccess": "{{name}} 已成功更新",
         "keyDeleted": "{{name}}已被删除",
         "copyToClipboard": "{{label}}已复制到剪贴板",
         "secureRetrievalMessage": "点击上方的眼睛图标安全地检索您的完整LiteLLM API密钥。出于安全原因，这需要最近的身份验证并受速率限制。所有密钥检索都会被记录以供审计。",
@@ -302,10 +306,14 @@
         "validationError": "验证错误",
         "nameRequired": "API密钥名称是必需的",
         "modelsRequired": "请从您的活动订阅中选择至少一个模型",
-        "pleaseFixFormErrors": "请修复表单错误并重试"
+        "pleaseFixFormErrors": "请修复表单错误并重试",
+        "updateError": "错误",
+        "updateErrorDesc": "更新API密钥失败。请重试。",
+        "updateSuccess": "API密钥已更新"
       },
       "modals": {
         "createTitle": "创建API密钥",
+        "editTitle": "编辑API密钥",
         "viewTitle": "API密钥详情",
         "deleteTitle": "删除API密钥",
         "createdTitle": "API密钥创建成功",
@@ -335,7 +343,8 @@
       "codeExample": {
         "role": "用户",
         "content": "你好，世界！"
-      }
+      },
+      "editKeyAriaLabel": "编辑API密钥 {{keyName}}"
     },
     "chatbot": {
       "title": "聊天机器人游乐场",
@@ -660,11 +669,30 @@
       "buttons": {
         "savePreferences": "保存偏好",
         "updateConfiguration": "更新配置"
-      }
+      },
+      "models": "模型",
+      "modelsDescription": "管理和同步来自LiteLLM的可用AI模型",
+      "refreshModels": "刷新模型",
+      "lastSync": "最后同步",
+      "syncTime": "{{time}}",
+      "syncInProgress": "同步中...",
+      "syncSuccess": "同步成功",
+      "syncSuccessDetails": "总共{{total}}个模型，{{new}}个新增，{{updated}}个更新",
+      "syncError": "同步错误",
+      "syncErrorGeneric": "无法同步模型。请重试。",
+      "syncErrors": "同步错误",
+      "adminRequired": "模型同步需要管理员权限",
+      "totalModels": "模型总数",
+      "newModels": "新增模型",
+      "updatedModels": "更新的模型"
     }
   },
   "ui": {
     "actions": {
+      "cancel": "取消",
+      "close": "关闭",
+      "save": "保存",
+      "saving": "保存中...",
       "tryAgain": "重试",
       "logout": "退出",
       "login": "使用OpenShift登录",
@@ -672,6 +700,9 @@
       "refresh": "刷新页面",
       "openSidebar": "打开导航侧边栏",
       "closeSidebar": "关闭导航侧边栏"
+    },
+    "pagination": {
+      "showing": "显示"
     },
     "theme": {
       "light": "浅色",
@@ -728,5 +759,114 @@
       "somethingWrong": "出现问题",
       "tryRefresh": "抱歉，发生了意外情况。请尝试刷新页面，如果问题仍然存在，请联系支持。"
     }
+  },
+  "users": {
+    "alerts": {
+      "admin": {
+        "description": "该用户具有管理员权限，可以完全访问系统。",
+        "title": "管理员账户"
+      },
+      "inactive": {
+        "description": "该用户账户当前处于非活动状态，无法访问系统。",
+        "title": "用户账户未激活"
+      }
+    },
+    "error": {
+      "load": "加载用户失败",
+      "loadDescription": "从服务器加载用户失败。",
+      "loadTitle": "加载用户时出错",
+      "tryAgain": "重试",
+      "update": "更新用户失败"
+    },
+    "filters": {
+      "adjustFilters": "尝试调整搜索词或筛选条件来查找用户。",
+      "allRoles": "所有角色",
+      "allStatus": "所有状态",
+      "clearAll": "清除所有筛选条件",
+      "noMatches": "没有用户匹配您的筛选条件",
+      "roleAriaLabel": "按角色筛选",
+      "statusAriaLabel": "按状态筛选"
+    },
+    "form": {
+      "username": "用户名",
+      "email": "邮箱",
+      "fullName": "全名",
+      "roles": "角色",
+      "status": "状态",
+      "lastLogin": "最后登录",
+      "createdAt": "创建时间",
+      "noRoles": "未分配角色",
+      "toggleRole": "切换{{role}}角色",
+      "toggleStatus": "切换用户活动状态",
+      "userInfo": "用户信息"
+    },
+    "loading": {
+      "description": "正在从服务器获取用户信息",
+      "title": "加载用户中..."
+    },
+    "modal": {
+      "close": "关闭",
+      "defaultTitle": "用户详情",
+      "edit": {
+        "title": "编辑用户"
+      },
+      "view": {
+        "title": "用户详情"
+      }
+    },
+    "notifications": {
+      "updateError": "更新失败",
+      "updateSuccess": "用户已更新",
+      "updateSuccessDesc": "用户信息已成功更新。"
+    },
+    "pageDescription": "管理组织中的用户、角色和权限",
+    "pagination": {
+      "of": "共",
+      "users": "用户"
+    },
+    "permissions": {
+      "accessDenied": "拒绝访问",
+      "noPermission": "您没有访问用户管理的权限。如果您认为这是错误，请联系管理员。"
+    },
+    "search": {
+      "ariaLabel": "搜索用户",
+      "placeholder": "搜索用户..."
+    },
+    "status": {
+      "oauthManaged": "状态由OAuth提供商管理。"
+    },
+    "table": {
+      "username": "用户名",
+      "email": "邮箱",
+      "fullName": "全名",
+      "roles": "角色",
+      "status": "状态",
+      "ariaLabel": "用户表格",
+      "caption": "包含用户名、邮箱、全名、角色和状态的{{count}}个用户表格。",
+      "moreRoles": "+{{count}}个更多",
+      "notProvided": "未提供"
+    },
+    "warnings": {
+      "roleConflict": "角色冲突",
+      "roleConflictDesc": "管理员和管理员（只读）角色冲突。管理员角色将优先。"
+    },
+    "actions": {
+      "edit": "编辑",
+      "view": "查看详情"
+    },
+    "empty": {
+      "title": "未找到用户",
+      "description": "没有用户符合您的搜索条件。"
+    },
+    "never": "从未"
+  },
+  "role": {
+    "admin": "管理员",
+    "adminReadonly": "管理员（只读）",
+    "user": "用户"
+  },
+  "status": {
+    "active": "活跃",
+    "inactive": "非活跃"
   }
 }

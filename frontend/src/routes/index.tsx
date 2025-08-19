@@ -11,6 +11,7 @@ import ApiKeysPage from '../pages/ApiKeysPage';
 import ChatbotPage from '../pages/ChatbotPage';
 import UsagePage from '../pages/UsagePage';
 import SettingsPage from '../pages/SettingsPage';
+import UsersPage from '../pages/UsersPage';
 import LoginPage from '../pages/LoginPage';
 import AuthCallbackPage from '../pages/AuthCallbackPage';
 
@@ -79,7 +80,11 @@ export const router = createBrowserRouter(
               element: <UsagePage />,
             },
             {
-              path: 'settings',
+              path: 'admin/users',
+              element: <UsersPage />,
+            },
+            {
+              path: 'admin/settings',
               element: <SettingsPage />,
             },
           ],
