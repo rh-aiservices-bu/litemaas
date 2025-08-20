@@ -1,6 +1,6 @@
 # LiteMaaS - AI Model Subscription Platform
 
-**LiteMaaS** is an enterprise-grade platform for managing AI model subscriptions, API keys, and usage tracking. It seamlessly integrates with LiteLLM to provide a unified interface for accessing multiple AI models with comprehensive budget management and team collaboration features.
+**LiteMaaS** is a proof-of-concept application for managing AI model subscriptions, API keys, and usage tracking. It seamlessly integrates with LiteLLM to provide a unified interface for accessing multiple AI models with comprehensive budget management and team collaboration features.
 
 ## 🎟️ Key Benefits
 
