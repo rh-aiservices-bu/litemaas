@@ -258,6 +258,61 @@ const adminNavItems = [
 )}
 ```
 
+## New User Defaults
+
+When a user logs in for the first time via OAuth, their account is created with default values regardless of their assigned role. These defaults ensure consistent initial experience and can be customized for different environments.
+
+### Default Values Applied
+
+All new users receive the following default limits:
+
+| Setting    | Default Value | Description                    |
+| ---------- | ------------- | ------------------------------ |
+| Max Budget | $100 USD      | Maximum spending limit         |
+| TPM Limit  | 1000          | Tokens per minute rate limit   |
+| RPM Limit  | 60            | Requests per minute rate limit |
+
+### Configuration
+
+These defaults are configurable via environment variables:
+
+```bash
+# Production settings - higher limits
+DEFAULT_USER_MAX_BUDGET=500
+DEFAULT_USER_TPM_LIMIT=5000
+DEFAULT_USER_RPM_LIMIT=300
+
+# Development settings - conservative limits
+DEFAULT_USER_MAX_BUDGET=50
+DEFAULT_USER_TPM_LIMIT=500
+DEFAULT_USER_RPM_LIMIT=30
+```
+
+See [Configuration Guide](../deployment/configuration.md#default-user-values) for complete documentation.
+
+### Role Independence
+
+These default values are applied **regardless of user role**:
+
+- **Admin users** get the same defaults as standard users
+- **Read-only admins** receive identical limits to other users
+- **Role changes** do not automatically update these values
+
+### Post-Creation Management
+
+After account creation, these values can be modified through:
+
+1. **Individual updates**: Admin users can modify limits for specific users
+2. **Bulk updates**: Admin API endpoint for updating all active users
+3. **Script-based updates**: Administrative scripts for mass changes
+
+```bash
+# Example: Update all users with new limits
+curl -X PUT /api/v1/admin/users/bulk-update \
+  -H "Authorization: Bearer admin-token" \
+  -d '{"maxBudget": 200, "tpmLimit": 2000, "rpmLimit": 100}'
+```
+
 ## Security Considerations
 
 ### Backend Enforcement

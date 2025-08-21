@@ -5,6 +5,11 @@
 
 import { DatabaseUtils } from '../types/common.types';
 
+// Get default values from environment or use hardcoded fallbacks
+const getDefaultUserMaxBudget = () => process.env.DEFAULT_USER_MAX_BUDGET || '100.00';
+const getDefaultUserTPMLimit = () => process.env.DEFAULT_USER_TPM_LIMIT || '10000';
+const getDefaultUserRPMLimit = () => process.env.DEFAULT_USER_RPM_LIMIT || '60';
+
 // Users table
 export const usersTable = `
 CREATE TABLE IF NOT EXISTS users (
@@ -16,9 +21,9 @@ CREATE TABLE IF NOT EXISTS users (
     oauth_id VARCHAR(255) NOT NULL,
     roles TEXT[] DEFAULT ARRAY['user'],
     is_active BOOLEAN DEFAULT true,
-    max_budget DECIMAL(10,2) DEFAULT 100.00,
-    tpm_limit INTEGER DEFAULT 10000,
-    rpm_limit INTEGER DEFAULT 60,
+    max_budget DECIMAL(10,2) DEFAULT ${getDefaultUserMaxBudget()},
+    tpm_limit INTEGER DEFAULT ${getDefaultUserTPMLimit()},
+    rpm_limit INTEGER DEFAULT ${getDefaultUserRPMLimit()},
     sync_status VARCHAR(20) DEFAULT 'pending' CHECK (sync_status IN ('pending', 'synced', 'error')),
     last_login_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -31,9 +36,9 @@ CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 CREATE INDEX IF NOT EXISTS idx_users_oauth ON users(oauth_provider, oauth_id);
 
 -- Add missing columns for existing tables
-ALTER TABLE users ADD COLUMN IF NOT EXISTS max_budget DECIMAL(10,2) DEFAULT 100.00;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS tpm_limit INTEGER DEFAULT 1000;
-ALTER TABLE users ADD COLUMN IF NOT EXISTS rpm_limit INTEGER DEFAULT 60;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS max_budget DECIMAL(10,2) DEFAULT ${getDefaultUserMaxBudget()};
+ALTER TABLE users ADD COLUMN IF NOT EXISTS tpm_limit INTEGER DEFAULT ${getDefaultUserTPMLimit()};
+ALTER TABLE users ADD COLUMN IF NOT EXISTS rpm_limit INTEGER DEFAULT ${getDefaultUserRPMLimit()};
 ALTER TABLE users ADD COLUMN IF NOT EXISTS sync_status VARCHAR(20) DEFAULT 'pending';
 
 -- Drop lite_llm_user_id column if it exists (no longer needed as id is used directly)

@@ -183,6 +183,7 @@ When a user logs in for the first time, the comprehensive default team implement
    - Create user in LiteLLM with mandatory team assignment
    - Uses team-based user existence detection
    - Assigns `teams: [DefaultTeamService.DEFAULT_TEAM_ID]`
+   - Applies configurable default values for budget and rate limits
 5. **Team Membership**:
    - Assign user to Default Team in database
    - Verify team membership for future operations
@@ -195,18 +196,20 @@ When a user logs in for the first time, the comprehensive default team implement
 // Ensure default team exists before user creation
 await this.defaultTeamService.ensureDefaultTeamExists();
 
-// User creation includes team assignment
+// User creation includes team assignment with configurable defaults
 const liteLLMUser = await this.liteLLMService.createUser({
   user_id: user.id,
   user_alias: user.username,
   user_email: user.email,
   user_role: 'internal_user',
-  max_budget: DEFAULT_USER_BUDGET,
-  tpm_limit: DEFAULT_TPM_LIMIT,
-  rpm_limit: DEFAULT_RPM_LIMIT,
+  max_budget: Number(this.fastify.config.DEFAULT_USER_MAX_BUDGET), // Configurable via env var
+  tpm_limit: Number(this.fastify.config.DEFAULT_USER_TPM_LIMIT), // Configurable via env var
+  rpm_limit: Number(this.fastify.config.DEFAULT_USER_RPM_LIMIT), // Configurable via env var
   teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
 });
 ```
+
+**Configuration**: The default values (`DEFAULT_USER_MAX_BUDGET`, `DEFAULT_USER_TPM_LIMIT`, `DEFAULT_USER_RPM_LIMIT`) can be customized via environment variables. See [Configuration Guide](../deployment/configuration.md#default-user-values) for details.
 
 #### Error Handling (Fully Implemented 2025-07-30)
 
