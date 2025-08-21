@@ -159,8 +159,9 @@ class ModelsService {
     return apiClient.get<CapabilitiesResponse>('/models/capabilities');
   }
 
-  async refreshModels(): Promise<void> {
-    return apiClient.post('/models/refresh');
+  async refreshModels(): Promise<any> {
+    const response = await apiClient.post('/models/sync', {});
+    return response;
   }
 }
 

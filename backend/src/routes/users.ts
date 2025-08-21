@@ -473,7 +473,6 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     Params: Static<typeof IdParamSchema>;
     Body: {
       roles?: string[];
-      isActive?: boolean;
     };
   }>('/:id', {
     schema: {
@@ -485,7 +484,6 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
         type: 'object',
         properties: {
           roles: { type: 'array', items: { type: 'string' } },
-          isActive: { type: 'boolean' },
         },
       },
       response: {
@@ -495,23 +493,17 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     preHandler: [fastify.authenticate, fastify.requirePermission('users:write')],
     handler: async (request, _reply) => {
       const { id } = request.params;
-      const { roles, isActive } = request.body;
+      const { roles } = request.body;
       const currentUser = (request as AuthenticatedRequest).user;
 
       try {
-        // Prevent self-deactivation
-        if (id === currentUser.userId && isActive === false) {
-          throw fastify.createValidationError('Cannot deactivate your own account');
-        }
-
         const updatedUser = await fastify.dbUtils.queryOne(
           `UPDATE users SET 
            roles = COALESCE($1, roles),
-           is_active = COALESCE($2, is_active),
            updated_at = NOW()
-           WHERE id = $3
+           WHERE id = $2
            RETURNING id, username, email, full_name, roles, created_at`,
-          [roles ? `{${roles.join(',')}}` : null, isActive ?? null, id],
+          [roles ? `{${roles.join(',')}}` : null, id],
         );
 
         if (!updatedUser) {
@@ -522,13 +514,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
            VALUES ($1, $2, $3, $4, $5)`,
-          [
-            currentUser.userId,
-            'USER_UPDATE',
-            'USER',
-            id,
-            JSON.stringify({ changes: { roles, isActive } }),
-          ],
+          [currentUser.userId, 'USER_UPDATE', 'USER', id, JSON.stringify({ changes: { roles } })],
         );
 
         return {

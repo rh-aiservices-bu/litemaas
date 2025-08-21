@@ -51,6 +51,7 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 - **[Authentication Flow](features/authentication-flow.md)** - OAuth integration details
 - **[Chatbot Implementation](development/chatbot-implementation.md)** - AI chatbot integration
 - **[Model Sync](development/model-sync.md)** - Model synchronization processes
+- **[RBAC](features/user-roles-administration.md)** - Administration roles
 
 ## 🎯 Quick Links by Role
 

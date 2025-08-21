@@ -19,7 +19,10 @@
     "apiKeys": "Clés API",
     "usage": "Utilisation",
     "chatbot": "Terrain de Jeu du Chatbot",
-    "settings": "Paramètres"
+    "admin": {
+      "users": "Utilisateurs",
+      "settings": "Paramètres"
+    }
   },
   "pages": {
     "home": {
@@ -245,6 +248,7 @@
         "selectedModels": "Modèles sélectionnés",
         "modelsSelected": "{{count}} modèle(s) sélectionné(s)",
         "keyCreatedSuccess": "{{name}} a été créé avec succès",
+        "keyUpdatedSuccess": "{{name}} a été mise à jour avec succès",
         "keyDeleted": "{{name}} a été supprimé",
         "copyToClipboard": "{{label}} copié dans le presse-papiers",
         "secureRetrievalMessage": "Cliquez sur l'icône œil ci-dessus pour récupérer en toute sécurité votre clé API LiteLLM complète. Pour des raisons de sécurité, cela nécessite une authentification récente et est limité en débit. Toutes les récupérations de clés sont enregistrées à des fins d'audit.",
@@ -299,6 +303,9 @@
         "retrieveSuccess": "Clé API Récupérée",
         "retrieveError": "Erreur lors de la Récupération de la Clé API",
         "retrieveErrorDesc": "Échec de la récupération de la clé API",
+        "updateError": "Erreur",
+        "updateErrorDesc": "Échec de la mise à jour de la clé API. Veuillez réessayer.",
+        "updateSuccess": "Clé API Mise à Jour",
         "validationError": "Erreur de Validation",
         "nameRequired": "Le nom de la clé API est requis",
         "modelsRequired": "Veuillez sélectionner au moins un modèle parmi vos abonnements actifs",
@@ -306,6 +313,7 @@
       },
       "modals": {
         "createTitle": "Créer une Clé API",
+        "editTitle": "Modifier la Clé API",
         "viewTitle": "Détails de la Clé API",
         "deleteTitle": "Supprimer la Clé API",
         "createdTitle": "Clé API Créée avec Succès",
@@ -335,7 +343,8 @@
       "codeExample": {
         "role": "utilisateur",
         "content": "Bonjour, monde !"
-      }
+      },
+      "editKeyAriaLabel": "Modifier la clé API {{keyName}}"
     },
     "chatbot": {
       "title": "Terrain de Jeu du Chatbot",
@@ -660,10 +669,28 @@
       "buttons": {
         "savePreferences": "Sauvegarder les Préférences",
         "updateConfiguration": "Mettre à jour la Configuration"
-      }
+      },
+      "models": "Modèles",
+      "modelsDescription": "Gérer et synchroniser les modèles d'IA disponibles depuis LiteLLM",
+      "refreshModels": "Actualiser les modèles",
+      "lastSync": "Dernière synchronisation",
+      "syncTime": "{{time}}",
+      "syncInProgress": "Synchronisation en cours...",
+      "syncSuccess": "Synchronisation réussie",
+      "syncSuccessDetails": "{{total}} modèles au total, {{new}} nouveaux, {{updated}} mis à jour",
+      "syncError": "Erreur de synchronisation",
+      "syncErrorGeneric": "Impossible de synchroniser les modèles. Veuillez réessayer.",
+      "syncErrors": "Erreurs de synchronisation",
+      "adminRequired": "Privilèges administrateur requis pour la synchronisation des modèles",
+      "totalModels": "Total des modèles",
+      "newModels": "Nouveaux modèles",
+      "updatedModels": "Modèles mis à jour"
     }
   },
   "ui": {
+    "pagination": {
+      "showing": "Affichage"
+    },
     "actions": {
       "tryAgain": "Réessayer",
       "logout": "Se déconnecter",
@@ -671,7 +698,11 @@
       "browse": "Parcourir",
       "refresh": "Actualiser la page",
       "openSidebar": "Ouvrir la barre latérale de navigation",
-      "closeSidebar": "Fermer la barre latérale de navigation"
+      "closeSidebar": "Fermer la barre latérale de navigation",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "close": "Fermer",
+      "saving": "Enregistrement..."
     },
     "theme": {
       "light": "Clair",
@@ -728,5 +759,114 @@
       "somethingWrong": "Quelque chose s'est mal passé",
       "tryRefresh": "Nous sommes désolés, mais quelque chose d'inattendu s'est produit. Veuillez essayer d'actualiser la page ou contacter le support si le problème persiste."
     }
+  },
+  "role": {
+    "admin": "Administrateur",
+    "adminReadonly": "Administrateur (Lecture seule)",
+    "user": "Utilisateur"
+  },
+  "users": {
+    "pageDescription": "Gérer les utilisateurs, rôles et permissions dans votre organisation",
+    "permissions": {
+      "accessDenied": "Accès Refusé",
+      "noPermission": "Vous n'avez pas la permission d'accéder à la gestion des utilisateurs. Contactez votre administrateur si vous pensez qu'il s'agit d'une erreur."
+    },
+    "loading": {
+      "title": "Chargement des Utilisateurs...",
+      "description": "Récupération des informations utilisateur depuis le serveur"
+    },
+    "pagination": {
+      "of": "sur",
+      "users": "utilisateurs"
+    },
+    "table": {
+      "username": "Nom d'utilisateur",
+      "email": "E-mail",
+      "fullName": "Nom complet",
+      "roles": "Rôles",
+      "status": "Statut",
+      "ariaLabel": "Tableau des utilisateurs",
+      "caption": "Tableau de {{count}} utilisateurs avec nom d'utilisateur, e-mail, nom complet, rôles et statut.",
+      "moreRoles": "+{{count}} de plus",
+      "notProvided": "Non fourni"
+    },
+    "actions": {
+      "edit": "Modifier",
+      "view": "Voir les Détails"
+    },
+    "modal": {
+      "edit": {
+        "title": "Modifier l'Utilisateur"
+      },
+      "view": {
+        "title": "Détails de l'Utilisateur"
+      },
+      "defaultTitle": "Détails de l'Utilisateur",
+      "close": "Fermer"
+    },
+    "form": {
+      "username": "Nom d'utilisateur",
+      "email": "E-mail",
+      "fullName": "Nom complet",
+      "roles": "Rôles",
+      "status": "Statut",
+      "lastLogin": "Dernière connexion",
+      "createdAt": "Créé le",
+      "userInfo": "Informations Utilisateur",
+      "noRoles": "Aucun rôle assigné",
+      "toggleRole": "Basculer le rôle {{role}}",
+      "toggleStatus": "Basculer le statut actif de l'utilisateur"
+    },
+    "search": {
+      "placeholder": "Rechercher des utilisateurs...",
+      "ariaLabel": "Rechercher des utilisateurs"
+    },
+    "filters": {
+      "roleAriaLabel": "Filtrer par rôle",
+      "statusAriaLabel": "Filtrer par statut",
+      "allRoles": "Tous les Rôles",
+      "allStatus": "Tous les Statuts",
+      "clearAll": "Effacer tous les filtres",
+      "noMatches": "Aucun utilisateur ne correspond à vos filtres",
+      "adjustFilters": "Essayez d'ajuster vos termes de recherche ou filtres pour trouver des utilisateurs."
+    },
+    "empty": {
+      "title": "Aucun utilisateur trouvé",
+      "description": "Aucun utilisateur ne correspond à vos critères de recherche."
+    },
+    "error": {
+      "load": "Échec du chargement des utilisateurs",
+      "loadTitle": "Erreur lors du Chargement des Utilisateurs",
+      "loadDescription": "Échec du chargement des utilisateurs depuis le serveur.",
+      "tryAgain": "Réessayer",
+      "update": "Échec de la mise à jour de l'utilisateur"
+    },
+    "notifications": {
+      "updateSuccess": "Utilisateur Mis à Jour",
+      "updateSuccessDesc": "Les informations utilisateur ont été mises à jour avec succès.",
+      "updateError": "Échec de la Mise à Jour"
+    },
+    "warnings": {
+      "roleConflict": "Conflit de Rôles",
+      "roleConflictDesc": "Les rôles Administrateur et Administrateur-lecture seule sont en conflit. Le rôle Administrateur aura la priorité."
+    },
+    "alerts": {
+      "inactive": {
+        "title": "Compte Utilisateur Inactif",
+        "description": "Ce compte utilisateur est actuellement inactif et ne peut pas accéder au système."
+      },
+      "admin": {
+        "title": "Compte Administrateur",
+        "description": "Cet utilisateur a des privilèges d'administrateur et un accès complet au système."
+      }
+    },
+    "status": {
+      "oauthManaged": "Statut géré par le fournisseur OAuth."
+    },
+    "never": "Jamais"
+  },
+  "status": {
+    "active": "Actif",
+    "inactive": "Inactif"
   }
 }

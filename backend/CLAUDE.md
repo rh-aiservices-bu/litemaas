@@ -4,7 +4,7 @@
 
 ## 🎯 Backend Overview
 
-**@litemaas/backend** - Fastify-based API server with PostgreSQL, OAuth2/JWT authentication, and LiteLLM integration.
+**@litemaas/backend** - Fastify-based API server with PostgreSQL, OAuth2/JWT authentication, role-based access control, and LiteLLM integration.
 
 ## 📁 Backend Structure
 
@@ -30,15 +30,16 @@ backend/
 │   │   ├── swagger.ts    # API documentation
 │   │   └── subscription-hooks.ts # Subscription lifecycle
 │   ├── routes/            # API endpoints (flat structure)
-│   │   ├── auth.ts       # OAuth flow endpoints
-│   │   ├── auth-user.ts  # User profile endpoints
-│   │   ├── models.ts     # Model management
-│   │   ├── subscriptions.ts # Subscription CRUD
-│   │   ├── api-keys.ts   # API key management
-│   │   ├── users.ts      # User management
-│   │   ├── usage.ts      # Usage tracking
-│   │   ├── config.ts     # Configuration endpoints
-│   │   ├── health.ts     # Health check
+│   │   ├── auth.ts       # OAuth flow endpoints (/api/auth)
+│   │   ├── auth-user.ts  # User profile endpoints (/api/v1/auth)
+│   │   ├── models.ts     # Model management (/api/v1/models)
+│   │   ├── subscriptions.ts # Subscription CRUD (/api/v1/subscriptions)
+│   │   ├── api-keys.ts   # API key management (/api/v1/api-keys)
+│   │   ├── users.ts      # User management (/api/v1/users)
+│   │   ├── admin.ts      # Admin endpoints (/api/v1/admin)
+│   │   ├── usage.ts      # Usage tracking (/api/v1/usage)
+│   │   ├── config.ts     # Configuration endpoints (/api/v1/config)
+│   │   ├── health.ts     # Health check (/api/v1/health)
 │   │   └── index.ts      # Route registration
 │   ├── schemas/           # TypeBox validation schemas
 │   │   ├── common.ts     # Common schemas (UUID, pagination)
@@ -108,7 +109,7 @@ Fastify plugins are registered in specific order:
 
 ### Core Tables
 
-- **users** - User accounts with OAuth integration
+- **users** - User accounts with OAuth integration and roles array
 - **teams** - Team collaboration (includes Default Team)
 - **models** - AI models synced from LiteLLM
 - **subscriptions** - User-model subscriptions
@@ -116,6 +117,8 @@ Fastify plugins are registered in specific order:
 - **api_key_models** - Many-to-many API key to model mapping
 - **usage_logs** - Request and token usage tracking
 - **audit_logs** - Security and compliance logging
+- **user_roles** - Role assignments and permissions (stored in users.roles array)
+- **admin_actions** - Administrator action auditing
 
 ### Key Relationships
 
@@ -127,12 +130,48 @@ api_keys <-> models (many-to-many via api_key_models)
 subscriptions -> models (many-to-one)
 ```
 
-## 🔐 Authentication Flow
+## 🔐 Authentication & Authorization
 
 ### OAuth2 Flow (Primary)
 
 ```
-/api/auth/login -> OAuth provider -> /api/auth/callback -> JWT token
+/api/auth/login -> OAuth provider -> /api/auth/callback -> JWT token with roles
+```
+
+### Role-Based Access Control (RBAC)
+
+Three-tier role hierarchy with OpenShift group mapping:
+
+```
+admin > adminReadonly > user
+```
+
+#### Role Definitions
+
+- **`admin`**: Full system access including user management and system operations
+- **`adminReadonly`**: Read access to all data and system information
+- **`user`**: Standard access to own resources only
+
+#### OpenShift Group Mapping
+
+```typescript
+const GROUP_ROLE_MAPPING = {
+  'litemaas-admins': 'admin',
+  'litemaas-readonly': 'adminReadonly',
+  'litemaas-users': 'user',
+};
+```
+
+#### Multi-Role Support
+
+Users can have multiple roles; most powerful role determines permissions:
+
+```typescript
+// User with admin role has full access
+user.roles = ['admin', 'user'] -> Effective role: admin
+
+// Read-only admin cannot perform write operations
+user.roles = ['adminReadonly', 'user'] -> Can view all, cannot modify
 ```
 
 ### API Key Authentication
@@ -152,6 +191,15 @@ MOCK_AUTH=true -> Auto-login as test user (dev only)
 ### BaseService Inheritance
 
 All services extend `BaseService` for consistent patterns:
+
+#### Core Services
+
+- **RBACService**: Role-based access control and permission validation
+- **OAuthService**: OAuth2 integration with role assignment from OpenShift groups
+- **ApiKeyService**: API key management with user permission checks
+- **SubscriptionService**: Subscription management with role-based data filtering
+- **UsageStatsService**: Usage analytics with admin/user data scoping
+- **AdminService**: Administrative operations (admin role required)
 
 ```typescript
 export abstract class BaseService {
@@ -260,6 +308,58 @@ npm run build           # TypeScript compilation
 }
 ```
 
+### Role-Based Route Protection
+
+```typescript
+// Admin-only endpoints
+fastify.register(adminRoutes, {
+  preHandler: [authenticateUser, requireRole(['admin', 'adminReadonly'])],
+});
+
+// Write operations require full admin
+fastify.post('/admin/users', {
+  preHandler: [authenticateUser, requireRole(['admin'])],
+  handler: createUser,
+});
+
+// User resource endpoints with ownership validation
+fastify.get('/subscriptions', {
+  preHandler: [authenticateUser, validateResourceAccess],
+  handler: getSubscriptions,
+});
+```
+
+### Admin Features
+
+#### User Management
+
+```typescript
+// List all users (admin/adminReadonly)
+GET /api/v1/admin/users
+
+// Create user (admin only)
+POST /api/v1/admin/users
+
+// Update user roles (admin only)
+PUT /api/v1/admin/users/:id
+
+// Deactivate user (admin only)
+DELETE /api/v1/admin/users/:id
+```
+
+#### System Operations
+
+```typescript
+// System status (admin/adminReadonly)
+GET / api / v1 / admin / system / status;
+
+// Model synchronization (admin only)
+POST / api / v1 / admin / sync / models;
+
+// Global sync operations (admin only)
+POST / api / v1 / integration / sync;
+```
+
 ### Error Handling Strategy
 
 - Graceful "already exists" handling in user/team creation
@@ -273,8 +373,64 @@ npm run build           # TypeScript compilation
 {
   global: { max: 100, timeWindow: '1 minute' },
   authenticated: { max: 1000, timeWindow: '1 minute' },
-  apiKey: { max: 10000, timeWindow: '1 minute' }
+  apiKey: { max: 10000, timeWindow: '1 minute' },
+  admin: { max: 5000, timeWindow: '1 minute' } // Higher limits for admin
 }
+```
+
+### Security Features
+
+#### Role Validation
+
+```typescript
+// Middleware validates user roles on every request
+const requireRole = (allowedRoles: string[]) => {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    const userRoles = request.user?.roles || [];
+
+    // Check if user has any of the required roles
+    const hasRequiredRole = allowedRoles.some((role) => userRoles.includes(role));
+
+    if (!hasRequiredRole) {
+      throw new ForbiddenError('Insufficient permissions');
+    }
+  };
+};
+```
+
+#### Data Access Control
+
+```typescript
+// Filter data based on user role
+const filterUserData = (user: User, requestedUserId?: string) => {
+  // Admin can access any user's data
+  if (user.roles.includes('admin') || user.roles.includes('adminReadonly')) {
+    return requestedUserId || 'all';
+  }
+
+  // Regular users can only access their own data
+  if (requestedUserId && requestedUserId !== user.id) {
+    throw new ForbiddenError("Cannot access other users' data");
+  }
+
+  return user.id;
+};
+```
+
+#### Audit Logging
+
+```typescript
+// All admin actions are logged
+const auditAdminAction = async (action: string, userId: string, details: object) => {
+  await auditService.log({
+    action,
+    userId,
+    timestamp: new Date(),
+    details,
+    userAgent: request.headers['user-agent'],
+    ipAddress: request.ip,
+  });
+};
 ```
 
 ## 📊 Performance Targets
@@ -301,6 +457,10 @@ OAUTH_CLIENT_SECRET=client-secret
 # LiteLLM Integration
 LITELLM_API_URL=http://localhost:4000
 LITELLM_API_KEY=sk-litellm-key
+
+# Role-Based Access Control
+DEFAULT_USER_ROLES=["user"]
+ADMIN_BOOTSTRAP_USERS=admin@company.com,system@company.com
 
 # Development
 MOCK_AUTH=false

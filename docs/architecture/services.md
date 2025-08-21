@@ -322,31 +322,61 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ---
 
-### RBACService
+### RBACService ✅ **UPDATED 2025-08-19**
 
-**Purpose**: Permission and role management
+**Purpose**: Role-based access control and permission management
 
 **Responsibilities**:
 
-- Define and enforce role-based permissions
-- Check user authorization for resources
-- Manage role assignments
-- Handle permission inheritance
-- Audit permission changes
+- Enforce three-tier role hierarchy: `admin > adminReadonly > user`
+- Validate user permissions for API endpoints and resources
+- Handle role-based filtering for data access
+- Manage role assignments during OAuth flow
+- Audit all permission and role changes
+- Support multi-role users with hierarchical precedence
+
+**Role Hierarchy Implementation**:
+
+```typescript
+// Role precedence (highest to lowest)
+const ROLE_HIERARCHY = ['admin', 'adminReadonly', 'user'];
+
+// Get most powerful role for user
+getMostPowerfulRole(roles: string[]): string {
+  for (const role of ROLE_HIERARCHY) {
+    if (roles.includes(role)) return role;
+  }
+  return 'user'; // default fallback
+}
+```
 
 **Dependencies**:
 
-- Database for role storage
-- User context from authentication
-- Audit logging service
+- Database for role storage in users.roles array
+- User context from JWT authentication
+- Audit logging service for role changes
+- OAuth service for role assignment during login
 
 **Key Operations**:
 
-- `checkPermission()` - Verify user has required permission
-- `assignRole()` - Grant role to user
-- `getRolePermissions()` - List permissions for role
-- `enforceAccess()` - Apply access control
-- `auditPermissionChange()` - Log permission modifications
+- `checkPermission(user, resource, action)` - Verify user can perform action
+- `hasRole(user, role)` - Check if user has specific role
+- `canAccessAdminFeatures(user)` - Check for admin/adminReadonly access
+- `filterResourcesByRole(user, resources)` - Apply role-based data filtering
+- `enforceApiAccess(user, endpoint)` - Validate API endpoint access
+- `auditRoleChange(user, oldRoles, newRoles, changedBy)` - Log role modifications
+
+**Role-Based Permissions**:
+
+- **admin**: Full system access, user management, all CRUD operations
+- **adminReadonly**: Read access to all data, no modifications allowed
+- **user**: Access only to own resources, standard user operations
+
+**Frontend Integration**:
+
+- Provides role hierarchy logic used by `getMostPowerfulRole()` in Layout component
+- Supports conditional UI rendering based on user roles
+- Handles multi-role users by displaying most powerful role
 
 ---
 

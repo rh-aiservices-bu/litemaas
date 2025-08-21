@@ -56,6 +56,10 @@ OAUTH_ISSUER=https://oauth-openshift.apps.your-cluster.com
 OAUTH_CALLBACK_URL=http://localhost:8080/api/auth/callback
 OAUTH_MOCK_ENABLED=true  # Use mock OAuth in development
 
+# Role-Based Access Control
+DEFAULT_USER_ROLES=["user"]
+ADMIN_BOOTSTRAP_USERS=admin@company.com,developer@company.com
+
 # Development mode
 NODE_ENV=development
 LOG_LEVEL=debug
@@ -174,21 +178,68 @@ Recommended extensions for the best development experience:
 
 By default, development uses mock OAuth to avoid needing a real OpenShift cluster:
 
-1. **Mock Users**: Three pre-configured test users are available:
-   - Admin: `admin@example.com` (admin role)
-   - User: `user@example.com` (user role)
-   - ReadOnly: `readonly@example.com` (readonly role)
+1. **Mock Users**: Three pre-configured test users with different roles:
+   - **Admin**: `admin@example.com` - Full system access (roles: ["admin", "user"])
+   - **Read-Only Admin**: `readonly@example.com` - View-only admin access (roles: ["adminReadonly", "user"])
+   - **Standard User**: `user@example.com` - Standard user access (roles: ["user"])
 
 2. **Using Mock OAuth**:
    - Click "Login with OpenShift" on the login page
    - Select a mock user from the list
-   - You'll be automatically logged in with that user's permissions
+   - You'll be automatically logged in with that user's roles
+   - **Admin users** will see additional navigation items and admin features
+   - **Role display** appears in the left sidebar showing the most powerful role
 
-### Real OpenShift OAuth
+3. **Testing Role-Based Access**:
 
-To test with a real OpenShift cluster:
+   **As Admin User**:
 
-1. **Create OAuth Client** in OpenShift:
+   ```bash
+   # Login as admin@example.com
+   # Navigate to /admin/users (should be accessible)
+   # Try creating/editing users (should work)
+   # Check sidebar shows "Administrator" role
+   ```
+
+   **As Read-Only Admin**:
+
+   ```bash
+   # Login as readonly@example.com
+   # Navigate to /admin/users (should be accessible)
+   # Try creating/editing users (should show "Access Denied")
+   # Check sidebar shows "Administrator (Read-only)" role
+   ```
+
+   **As Standard User**:
+
+   ```bash
+   # Login as user@example.com
+   # Try navigating to /admin/* (should redirect or show error)
+   # Only see own subscriptions/API keys
+   # Check sidebar shows "User" role
+   ```
+
+### Real OpenShift OAuth with Role Mapping
+
+To test with a real OpenShift cluster including role-based access:
+
+1. **Create OpenShift Groups for Role Mapping**:
+
+   ```bash
+   # Create admin group
+   oc adm groups new litemaas-admins
+   oc adm groups add-users litemaas-admins admin@company.com developer@company.com
+
+   # Create read-only admin group
+   oc adm groups new litemaas-readonly
+   oc adm groups add-users litemaas-readonly readonly-admin@company.com
+
+   # Create users group (optional - users get this role by default)
+   oc adm groups new litemaas-users
+   oc adm groups add-users litemaas-users user1@company.com user2@company.com
+   ```
+
+2. **Create OAuth Client** in OpenShift:
 
    ```bash
    oc create -f - <<EOF
@@ -203,19 +254,80 @@ To test with a real OpenShift cluster:
    EOF
    ```
 
-2. **Update Environment**:
+3. **Update Environment**:
 
    ```env
    OAUTH_MOCK_ENABLED=false
    OAUTH_CLIENT_ID=litemaas
    OAUTH_CLIENT_SECRET=your-secret-here
    OAUTH_ISSUER=https://oauth-openshift.apps.your-cluster.com
+
+   # Role configuration
+   DEFAULT_USER_ROLES=["user"]
+   ADMIN_BOOTSTRAP_USERS=admin@company.com,developer@company.com
    ```
 
-3. **Test Login**:
+4. **Test Role-Based Login**:
    - Click "Login with OpenShift"
    - You'll be redirected to OpenShift login
-   - After authentication, you'll return to LiteMaaS
+   - After authentication, roles are assigned based on OpenShift group membership:
+     - **litemaas-admins group** → `admin` role + full access
+     - **litemaas-readonly group** → `adminReadonly` role + read-only admin access
+     - **litemaas-users group** → `user` role + standard access
+     - **No specific group** → `user` role (default)
+   - Check your role display in the sidebar and test appropriate access levels
+
+## Admin User Setup for Development
+
+### Creating Your First Admin User
+
+1. **Using Mock OAuth** (Recommended for development):
+
+   ```bash
+   # Set OAUTH_MOCK_ENABLED=true in backend/.env
+   # Login as admin@example.com from the mock user selection
+   ```
+
+2. **Using Real OpenShift OAuth**:
+
+   ```bash
+   # Add your email to the admin bootstrap list in backend/.env:
+   ADMIN_BOOTSTRAP_USERS=your-email@company.com
+
+   # Add yourself to the litemaas-admins OpenShift group:
+   oc adm groups add-users litemaas-admins your-email@company.com
+
+   # Login through OAuth - you'll automatically get admin role
+   ```
+
+3. **Verify Admin Access**:
+   ```bash
+   # After login, check that you can access admin features:
+   # - Navigate to http://localhost:3000/admin/users
+   # - Sidebar should show "Administrator" role
+   # - Admin menu items should be visible in navigation
+   ```
+
+### Testing Multi-User Scenarios
+
+```bash
+# Test with different user types simultaneously using different browsers:
+
+# Browser 1: Login as admin@example.com
+# - Full access to all features
+# - Can create/edit users
+# - Can trigger system operations
+
+# Browser 2: Login as readonly@example.com
+# - Can view all users and data
+# - Cannot modify anything
+# - Gets "Access Denied" on write operations
+
+# Browser 3: Login as user@example.com
+# - Can only see own resources
+# - Cannot access /admin/* paths
+# - Limited to standard user operations
+```
 
 ## Common Development Tasks
 
@@ -260,6 +372,9 @@ The frontend includes a translation checker script to ensure all locales are syn
 # Check translation completeness for all languages
 cd frontend && npm run check:translations
 
+# Role-specific testing
+npm run test:roles  # Run role-based access control tests
+
 # The script will:
 # - Compare all translation files with English (source of truth)
 # - Report completeness percentage for each language
@@ -272,6 +387,16 @@ cd frontend && npm run check:translations
 
 - Supported languages: English (en), Spanish (es), French (fr), German (de), Italian (it), Japanese (ja), Korean (ko), Chinese (zh), Elvish (elv)
 - All translation files must maintain the same JSON structure and key ordering as the English source
+- **Role translations** are available under the `role` key:
+  ```json
+  {
+    "role": {
+      "admin": "Administrator",
+      "adminReadonly": "Administrator (Read-only)",
+      "user": "User"
+    }
+  }
+  ```
 
 ### Building for Production
 
@@ -321,14 +446,19 @@ If the frontend can't reach the backend:
 
 ## Next Steps
 
+- **Role-Based Development**: Read [User Roles Guide](../features/user-roles-administration.md) for RBAC implementation
+- **Authentication Setup**: Review [Authentication Guide](../deployment/authentication.md) for OAuth and role configuration
 - Read the [Backend Development Guide](backend-guide.md)
 - Review [UI Guidelines](./pf6-guide/README.md) for frontend work
-- Check [API Reference](../api/README.md) for endpoint documentation
+- Check [API Reference](../api/rest-api.md) for endpoint documentation with role requirements
 - Join the development chat for questions
 
 ## Useful Links
 
+- **[User Roles & Administration](../features/user-roles-administration.md)** - Role-based access control guide
+- **[Authentication Setup](../deployment/authentication.md)** - OAuth and role configuration
 - [Configuration Reference](../deployment/configuration.md)
 - [Architecture Overview](../architecture/overview.md)
+- [API Reference](../api/rest-api.md) - Endpoints with role requirements
 - [Contributing Guide](../../CONTRIBUTING.md)
 - [Project Plan](../../PROJECT_PLAN.md)

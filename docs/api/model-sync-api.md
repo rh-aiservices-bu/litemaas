@@ -182,6 +182,105 @@ Administrators can trigger manual synchronization at any time using the sync API
 - Testing synchronization process
 - Updating models after LiteLLM configuration changes
 
+## Frontend Integration
+
+### Admin Settings Page
+
+The model sync API is integrated with the frontend through the Admin Settings page (`/admin/settings`), providing a user-friendly interface for triggering manual synchronization.
+
+#### JavaScript Service Integration
+
+**Location**: `frontend/src/services/models.service.ts`
+
+```javascript
+class ModelsService {
+  async refreshModels() {
+    const response = await apiClient.post('/models/sync');
+    return response;
+  }
+}
+```
+
+#### API Usage in Frontend
+
+The Settings page calls the sync API and handles the response:
+
+```javascript
+const handleRefreshModels = async () => {
+  try {
+    const result = await modelsService.refreshModels();
+
+    // Display success notification
+    addNotification({
+      variant: 'success',
+      title: 'Models synchronized successfully',
+      description: `${result.totalModels} total models (${result.newModels} new, ${result.updatedModels} updated)`,
+    });
+
+    // Update UI with sync results
+    setLastSyncResult({
+      success: true,
+      totalModels: result.totalModels,
+      newModels: result.newModels,
+      updatedModels: result.updatedModels,
+      syncedAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    // Handle sync errors
+    addNotification({
+      variant: 'danger',
+      title: 'Failed to synchronize models',
+      description: error.message,
+    });
+  }
+};
+```
+
+#### Response Processing
+
+The frontend processes the API response to provide user feedback:
+
+- **Success Response**: Shows sync statistics and updates UI
+- **Error Response**: Displays error message and maintains previous state
+- **Loading State**: Shows progress indicator during sync operation
+
+#### Role-Based Access
+
+Frontend integration respects the API's role requirements:
+
+| User Role       | API Access                 | UI Behavior                            |
+| --------------- | -------------------------- | -------------------------------------- |
+| `admin`         | ✅ Can call `/models/sync` | Button enabled, receives notifications |
+| `adminReadonly` | ❌ 403 Forbidden           | Button disabled with tooltip           |
+| `user`          | ❌ No page access          | Cannot access Settings page            |
+
+#### Error Handling
+
+The frontend handles various API error scenarios:
+
+```javascript
+// Connection errors
+catch (error) {
+  if (error.response?.status === 500) {
+    showError('Sync failed: ' + error.response.data.error.message);
+  } else if (error.response?.status === 403) {
+    showError('Access denied: Admin permissions required');
+  } else {
+    showError('Network error: Unable to connect to server');
+  }
+}
+```
+
+#### User Experience Features
+
+1. **Real-time Feedback**: Loading spinners and progress indicators
+2. **Detailed Results**: Statistics breakdown after sync completion
+3. **Error Details**: Specific error messages and troubleshooting hints
+4. **Accessibility**: WCAG 2.1 AA compliant with screen reader support
+5. **Internationalization**: Translated to 9 languages
+
+For complete frontend implementation details, see [Admin Settings Documentation](../features/admin-settings.md).
+
 ## Data Mapping
 
 ### LiteLLM to Database Field Mapping

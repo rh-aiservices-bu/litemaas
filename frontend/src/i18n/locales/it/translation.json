@@ -19,7 +19,10 @@
     "apiKeys": "Chiavi API",
     "usage": "Utilizzo",
     "chatbot": "Area Giochi del Chatbot",
-    "settings": "Impostazioni"
+    "admin": {
+      "users": "Utenti",
+      "settings": "Impostazioni"
+    }
   },
   "pages": {
     "home": {
@@ -245,6 +248,7 @@
         "selectedModels": "Modelli selezionati",
         "modelsSelected": "{{count}} modello/i selezionato/i",
         "keyCreatedSuccess": "{{name}} è stata creata con successo",
+        "keyUpdatedSuccess": "{{name}} è stata aggiornata con successo",
         "keyDeleted": "{{name}} è stata eliminata",
         "copyToClipboard": "{{label}} copiato negli appunti",
         "secureRetrievalMessage": "Clicca sull'icona occhio sopra per recuperare in modo sicuro la tua chiave API LiteLLM completa. Per motivi di sicurezza, questo richiede autenticazione recente ed è limitato nella frequenza. Tutti i recuperi di chiavi sono registrati per scopi di audit.",
@@ -302,10 +306,14 @@
         "validationError": "Errore di Validazione",
         "nameRequired": "Il nome della chiave API è richiesto",
         "modelsRequired": "Seleziona almeno un modello dai tuoi abbonamenti attivi",
-        "pleaseFixFormErrors": "Correggi gli errori del modulo e riprova"
+        "pleaseFixFormErrors": "Correggi gli errori del modulo e riprova",
+        "updateError": "Errore",
+        "updateErrorDesc": "Impossibile aggiornare la chiave API. Riprova.",
+        "updateSuccess": "Chiave API Aggiornata"
       },
       "modals": {
         "createTitle": "Crea Chiave API",
+        "editTitle": "Modifica Chiave API",
         "viewTitle": "Dettagli Chiave API",
         "deleteTitle": "Elimina Chiave API",
         "createdTitle": "Chiave API Creata con Successo",
@@ -327,6 +335,7 @@
       },
       "viewKeyAriaLabel": "Visualizza dettagli per la chiave API {{keyName}}",
       "deleteKeyAriaLabel": "Elimina chiave API {{keyName}}",
+      "editKeyAriaLabel": "Modifica chiave API {{keyName}}",
       "hideKeyAriaLabel": "Nascondi valore chiave API per {{keyName}}",
       "showKeyAriaLabel": "Mostra valore chiave API per {{keyName}}",
       "copyKeyAriaLabel": "Copia valore chiave API per {{keyName}} negli appunti",
@@ -660,11 +669,33 @@
       "buttons": {
         "savePreferences": "Salva Preferenze",
         "updateConfiguration": "Aggiorna Configurazione"
-      }
+      },
+      "models": "Modelli",
+      "modelsDescription": "Gestisci e sincronizza i modelli AI disponibili da LiteLLM",
+      "refreshModels": "Aggiorna modelli",
+      "lastSync": "Ultima sincronizzazione",
+      "syncTime": "{{time}}",
+      "syncInProgress": "Sincronizzazione in corso...",
+      "syncSuccess": "Sincronizzazione riuscita",
+      "syncSuccessDetails": "{{total}} modelli totali, {{new}} nuovi, {{updated}} aggiornati",
+      "syncError": "Errore di sincronizzazione",
+      "syncErrorGeneric": "Impossibile sincronizzare i modelli. Riprova.",
+      "syncErrors": "Errori di sincronizzazione",
+      "adminRequired": "Privilegi di amministratore richiesti per la sincronizzazione dei modelli",
+      "totalModels": "Modelli totali",
+      "newModels": "Nuovi modelli",
+      "updatedModels": "Modelli aggiornati"
     }
   },
   "ui": {
+    "pagination": {
+      "showing": "Visualizzazione"
+    },
     "actions": {
+      "cancel": "Annulla",
+      "close": "Chiudi",
+      "save": "Salva",
+      "saving": "Salvataggio...",
       "tryAgain": "Riprova",
       "logout": "Esci",
       "login": "Accedi con OpenShift",
@@ -728,5 +759,114 @@
       "somethingWrong": "Qualcosa è andato storto",
       "tryRefresh": "Ci dispiace, ma si è verificato qualcosa di inaspettato. Prova ad aggiornare la pagina o contatta il supporto se il problema persiste."
     }
+  },
+  "role": {
+    "admin": "Amministratore",
+    "adminReadonly": "Amministratore (Sola lettura)",
+    "user": "Utente"
+  },
+  "users": {
+    "alerts": {
+      "admin": {
+        "description": "Questo utente ha privilegi di amministratore e accesso completo al sistema.",
+        "title": "Account Amministratore"
+      },
+      "inactive": {
+        "description": "Questo account utente è attualmente inattivo e non può accedere al sistema.",
+        "title": "Account Utente Inattivo"
+      }
+    },
+    "error": {
+      "load": "Impossibile caricare gli utenti",
+      "loadDescription": "Impossibile caricare gli utenti dal server.",
+      "loadTitle": "Errore nel Caricamento Utenti",
+      "tryAgain": "Riprova",
+      "update": "Impossibile aggiornare l'utente"
+    },
+    "filters": {
+      "adjustFilters": "Prova ad aggiustare i tuoi termini di ricerca o filtri per trovare utenti.",
+      "allRoles": "Tutti i Ruoli",
+      "allStatus": "Tutti gli Stati",
+      "clearAll": "Cancella tutti i filtri",
+      "noMatches": "Nessun utente corrisponde ai tuoi filtri",
+      "roleAriaLabel": "Filtra per ruolo",
+      "statusAriaLabel": "Filtra per stato"
+    },
+    "form": {
+      "username": "Nome utente",
+      "email": "Email",
+      "fullName": "Nome completo",
+      "roles": "Ruoli",
+      "status": "Stato",
+      "lastLogin": "Ultimo accesso",
+      "createdAt": "Creato il",
+      "userInfo": "Informazioni Utente",
+      "noRoles": "Nessun ruolo assegnato",
+      "toggleRole": "Attiva/disattiva ruolo {{role}}",
+      "toggleStatus": "Attiva/disattiva stato utente attivo"
+    },
+    "loading": {
+      "description": "Recupero informazioni utente dal server",
+      "title": "Caricamento Utenti..."
+    },
+    "modal": {
+      "edit": {
+        "title": "Modifica utente"
+      },
+      "view": {
+        "title": "Dettagli utente"
+      },
+      "defaultTitle": "Dettagli Utente",
+      "close": "Chiudi"
+    },
+    "notifications": {
+      "updateError": "Aggiornamento Fallito",
+      "updateSuccess": "Utente Aggiornato",
+      "updateSuccessDesc": "Le informazioni utente sono state aggiornate con successo."
+    },
+    "pageDescription": "Gestisci utenti, ruoli e permessi nella tua organizzazione",
+    "pagination": {
+      "of": "di",
+      "users": "utenti"
+    },
+    "permissions": {
+      "accessDenied": "Accesso Negato",
+      "noPermission": "Non hai il permesso di accedere alla gestione utenti. Contatta il tuo amministratore se credi che questo sia un errore."
+    },
+    "search": {
+      "placeholder": "Cerca utenti...",
+      "ariaLabel": "Cerca utenti"
+    },
+    "status": {
+      "oauthManaged": "Stato gestito dal provider OAuth."
+    },
+    "warnings": {
+      "roleConflict": "Conflitto di Ruoli",
+      "roleConflictDesc": "I ruoli Amministratore e Amministratore-sola lettura sono in conflitto. Il ruolo Amministratore avrà precedenza."
+    },
+    "table": {
+      "ariaLabel": "Tabella utenti",
+      "caption": "Tabella di {{count}} utenti con nome utente, email, nome completo, ruoli e stato.",
+      "moreRoles": "+{{count}} di più",
+      "notProvided": "Non fornito",
+      "username": "Nome utente",
+      "email": "Email",
+      "fullName": "Nome completo",
+      "roles": "Ruoli",
+      "status": "Stato"
+    },
+    "actions": {
+      "edit": "Modifica",
+      "view": "Visualizza dettagli"
+    },
+    "empty": {
+      "title": "Nessun utente trovato",
+      "description": "Nessun utente corrisponde ai tuoi criteri di ricerca."
+    },
+    "never": "Mai"
+  },
+  "status": {
+    "active": "Attivo",
+    "inactive": "Inattivo"
   }
 }
