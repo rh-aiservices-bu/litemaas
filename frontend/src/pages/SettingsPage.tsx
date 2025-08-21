@@ -187,10 +187,7 @@ const SettingsPage: React.FC = () => {
 
       addNotification({
         variant: result.failedCount > 0 ? 'warning' : 'success',
-        title:
-          result.failedCount > 0
-            ? t('pages.settings.bulkUpdatePartial')
-            : t('pages.settings.bulkUpdateSuccess'),
+        title: successMessage,
         description: successMessage,
       });
     } catch (error) {

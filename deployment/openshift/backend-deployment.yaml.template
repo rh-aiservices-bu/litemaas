@@ -112,11 +112,19 @@ spec:
                   name: backend-secret
                   key: litellm-api-key
 
-            # Rate Limiting
+            # Backend API Rate Limiting (NOT for LLM requests)
             - name: RATE_LIMIT_MAX
               value: '1000'
             - name: RATE_LIMIT_TIME_WINDOW
               value: '5m'
+
+            # Default User Values Configuration
+            - name: DEFAULT_USER_MAX_BUDGET
+              value: '100'
+            - name: DEFAULT_USER_TPM_LIMIT
+              value: '100000'
+            - name: DEFAULT_USER_RPM_LIMIT
+              value: '120'
 
           resources:
             requests:

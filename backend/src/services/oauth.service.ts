@@ -377,9 +377,9 @@ export class OAuthService {
         user_email: user.email,
         user_alias: user.username,
         user_role: user.roles.includes('admin') ? 'proxy_admin' : 'internal_user',
-        max_budget: 100, // Default budget - can be customized via environment
-        tpm_limit: 10000, // Default TPM limit
-        rpm_limit: 60, // Default RPM limit
+        max_budget: Number(this.fastify.config.DEFAULT_USER_MAX_BUDGET), // Configurable via DEFAULT_USER_MAX_BUDGET env var
+        tpm_limit: Number(this.fastify.config.DEFAULT_USER_TPM_LIMIT), // Configurable via DEFAULT_USER_TPM_LIMIT env var
+        rpm_limit: Number(this.fastify.config.DEFAULT_USER_RPM_LIMIT), // Configurable via DEFAULT_USER_RPM_LIMIT env var
         auto_create_key: false, // Don't auto-create key during user creation
         teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
       });

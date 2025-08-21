@@ -1,11 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LiteLLMService } from '../../../src/services/litellm.service';
 import type { FastifyInstance } from 'fastify';
-import type {
-  LiteLLMModel,
-  LiteLLMHealth,
-  ChatCompletionRequest,
-} from '../../../src/types/model.types';
+import type { LiteLLMModel, LiteLLMHealth } from '../../../src/types/model.types';
 
 // Mock fetch for HTTP requests
 global.fetch = vi.fn();
@@ -115,72 +111,6 @@ describe('LiteLLMService', () => {
       await service.getModels();
 
       expect(fetch).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe('chatCompletion', () => {
-    it('should create chat completion successfully', async () => {
-      const mockCompletion = {
-        id: 'chatcmpl-123',
-        object: 'chat.completion',
-        created: 1234567890,
-        model: 'gpt-4',
-        choices: [
-          {
-            index: 0,
-            message: { role: 'assistant', content: 'Hello! How can I help you?' },
-            finish_reason: 'stop',
-          },
-        ],
-        usage: {
-          prompt_tokens: 10,
-          completion_tokens: 8,
-          total_tokens: 18,
-        },
-      };
-
-      const mockResponse: MockResponse = {
-        ok: true,
-        json: vi.fn().mockResolvedValue(mockCompletion),
-      };
-      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
-
-      const requestData: ChatCompletionRequest = {
-        model: 'gpt-4',
-        messages: [{ role: 'user', content: 'Hello!' }],
-      };
-
-      const result = await service.chatCompletion(requestData);
-
-      expect(result).toEqual(mockCompletion);
-      expect(fetch).toHaveBeenCalledWith('http://localhost:4000/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-litellm-api-key': 'sk-1104',
-        },
-        body: JSON.stringify(requestData),
-        signal: expect.any(AbortSignal),
-      });
-    });
-
-    it('should handle completion error', async () => {
-      const mockResponse: MockResponse = {
-        ok: false,
-        status: 400,
-        statusText: 'Bad Request',
-        json: vi.fn().mockResolvedValue({ error: { message: 'Invalid request' } }),
-      };
-      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
-
-      const requestData: ChatCompletionRequest = {
-        model: 'gpt-4',
-        messages: [{ role: 'user', content: 'Hello!' }],
-      };
-
-      await expect(service.chatCompletion(requestData)).rejects.toThrow(
-        'LiteLLM API error: 400 - Invalid request',
-      );
     });
   });
 

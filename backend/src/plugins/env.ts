@@ -38,6 +38,11 @@ const envSchema = Type.Object({
   // Rate Limiting
   RATE_LIMIT_MAX: Type.String({ default: '100' }),
   RATE_LIMIT_TIME_WINDOW: Type.String({ default: '1m' }),
+
+  // Default User Values
+  DEFAULT_USER_MAX_BUDGET: Type.String({ default: '100' }),
+  DEFAULT_USER_TPM_LIMIT: Type.String({ default: '100000' }),
+  DEFAULT_USER_RPM_LIMIT: Type.String({ default: '120' }),
 });
 
 const envPlugin: FastifyPluginAsync = async (fastify) => {

@@ -37,7 +37,7 @@ npm install
 cp backend/.env.example backend/.env
 
 # Edit backend/.env with your configuration
-# See Configuration Guide for all options
+# See docs/deployment/configuration.md for all available options
 ```
 
 Minimum backend configuration:
@@ -59,6 +59,11 @@ OAUTH_MOCK_ENABLED=true  # Use mock OAuth in development
 # Role-Based Access Control
 DEFAULT_USER_ROLES=["user"]
 ADMIN_BOOTSTRAP_USERS=admin@company.com,developer@company.com
+
+# Default User Values (optional - customizes new user limits)
+DEFAULT_USER_MAX_BUDGET=100      # Budget in USD
+DEFAULT_USER_TPM_LIMIT=1000      # Tokens per minute
+DEFAULT_USER_RPM_LIMIT=60        # Requests per minute
 
 # Development mode
 NODE_ENV=development
