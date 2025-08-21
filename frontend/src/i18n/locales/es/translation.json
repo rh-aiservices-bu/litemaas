@@ -10,7 +10,8 @@
     "error": "Error",
     "notAvailable": "N/D",
     "lineChart": "gráfico de líneas",
-    "dataPoints": "puntos de datos"
+    "dataPoints": "puntos de datos",
+    "cancel": "Cancelar"
   },
   "nav": {
     "home": "Inicio",
@@ -19,7 +20,10 @@
     "apiKeys": "Claves API",
     "usage": "Uso",
     "chatbot": "Área de Juegos del Chatbot",
-    "settings": "Configuración"
+    "admin": {
+      "users": "Usuarios",
+      "settings": "Configuración"
+    }
   },
   "pages": {
     "home": {
@@ -246,6 +250,7 @@
         "modelsSelected": "{{count}} modelo(s) seleccionado(s)",
         "keyCreatedSuccess": "{{name}} se creó exitosamente",
         "keyDeleted": "{{name}} fue eliminada",
+        "keyUpdatedSuccess": "{{name}} ha sido actualizada exitosamente",
         "copyToClipboard": "{{label}} copiado al portapapeles",
         "secureRetrievalMessage": "Haz clic en el ícono del ojo arriba para recuperar de forma segura tu clave API completa de LiteLLM. Por motivos de seguridad, esto requiere autenticación reciente y tiene límite de velocidad. Todas las recuperaciones de claves se registran para fines de auditoría.",
         "keyCreatedMessage": "Tu clave API se creó exitosamente.",
@@ -296,6 +301,9 @@
         "deleteSuccess": "Clave API Eliminada",
         "deleteError": "Error",
         "deleteErrorDesc": "No se pudo eliminar la clave API. Por favor, inténtalo de nuevo.",
+        "updateError": "Error",
+        "updateErrorDesc": "Error al actualizar la clave API. Por favor, inténtalo de nuevo.",
+        "updateSuccess": "Clave API Actualizada",
         "retrieveSuccess": "Clave API Recuperada",
         "retrieveError": "Error Recuperando Clave API",
         "retrieveErrorDesc": "No se pudo recuperar la clave API",
@@ -308,6 +316,7 @@
         "createTitle": "Crear Clave API",
         "viewTitle": "Detalles de Clave API",
         "deleteTitle": "Eliminar Clave API",
+        "editTitle": "Editar Clave API",
         "createdTitle": "Clave API Creada Exitosamente",
         "success": "¡Éxito!",
         "warning": "Advertencia",
@@ -327,6 +336,7 @@
       },
       "viewKeyAriaLabel": "Ver detalles para la clave API {{keyName}}",
       "deleteKeyAriaLabel": "Eliminar clave API {{keyName}}",
+      "editKeyAriaLabel": "Editar clave API {{keyName}}",
       "hideKeyAriaLabel": "Ocultar valor de clave API para {{keyName}}",
       "showKeyAriaLabel": "Mostrar valor de clave API para {{keyName}}",
       "copyKeyAriaLabel": "Copiar valor de clave API para {{keyName}} al portapapeles",
@@ -636,6 +646,48 @@
     },
     "settings": {
       "title": "Configuración",
+      "models": "Gestión de Modelos",
+      "modelsDescription": "Sincronizar modelos de IA desde LiteLLM para asegurar que tengas acceso a los últimos modelos disponibles.",
+      "refreshModels": "Actualizar Modelos desde LiteLLM",
+      "lastSync": "Última Sincronización",
+      "syncTime": "Hora",
+      "syncInProgress": "Sincronizando modelos...",
+      "syncSuccess": "Modelos sincronizados exitosamente",
+      "syncSuccessDetails": "{{total}} modelos totales ({{new}} nuevos, {{updated}} actualizados)",
+      "syncError": "Error al sincronizar modelos",
+      "syncErrorGeneric": "Ocurrió un error mientras se sincronizaban los modelos. Por favor, inténtalo de nuevo.",
+      "syncErrors": "Errores",
+      "adminRequired": "Se requiere acceso de administrador para sincronizar modelos",
+      "totalModels": "Modelos Totales",
+      "newModels": "Modelos Nuevos",
+      "updatedModels": "Modelos Actualizados",
+      "limitsManagement": "Gestión de Límites",
+      "limitsDescription": "Establecer límites de recursos predeterminados para todos los usuarios del sistema. Los cambios se aplicarán a todos los usuarios activos.",
+      "maxBudgetLabel": "Presupuesto Máximo ($)",
+      "maxBudgetHelper": "Límite máximo de gasto por usuario en dólares",
+      "tpmLimitLabel": "Límite TPM",
+      "tpmLimitHelper": "Máximo de tokens por minuto para cada usuario",
+      "rpmLimitLabel": "Límite RPM",
+      "rpmLimitHelper": "Máximo de solicitudes por minuto para cada usuario",
+      "applyToAllUsers": "Aplicar a Todos los Usuarios",
+      "confirmBulkUpdate": "¿Aplicar Límites a Todos los Usuarios?",
+      "confirmBulkUpdateMessage": "Esto actualizará todos los usuarios activos con los límites especificados. Esta acción no se puede deshacer.",
+      "confirmApply": "Aplicar Cambios",
+      "changesToApply": "Cambios a aplicar",
+      "leaveEmptyToKeep": "Dejar vacío para mantener el valor actual",
+      "bulkUpdateSuccess": "{{count}} usuarios actualizados exitosamente",
+      "bulkUpdatePartial": "{{success}} usuarios actualizados, {{failed}} fallaron",
+      "bulkUpdateError": "Error al actualizar límites de usuario",
+      "bulkUpdateErrorGeneric": "Ocurrió un error mientras se actualizaban los límites de usuario. Por favor, inténtalo de nuevo.",
+      "noValuesProvided": "Por favor, proporciona al menos un valor de límite",
+      "noValuesProvidedDescription": "Debes especificar al menos un límite para actualizar.",
+      "processing": "Actualizando usuarios...",
+      "lastLimitsUpdate": "Última Actualización de Límites",
+      "updateTime": "Hora de Actualización",
+      "totalUsersUpdated": "Usuarios Totales",
+      "successfulUpdates": "Exitosos",
+      "failedUpdates": "Fallidos",
+      "updateErrors": "Errores de Actualización",
       "userPreferences": "Preferencias de Usuario",
       "apiConfiguration": "Configuración API",
       "forms": {
@@ -663,7 +715,119 @@
       }
     }
   },
+  "role": {
+    "admin": "Administrador",
+    "adminReadonly": "Administrador (Solo lectura)",
+    "user": "Usuario"
+  },
+  "users": {
+    "pageDescription": "Gestionar usuarios, roles y permisos en toda tu organización",
+    "permissions": {
+      "accessDenied": "Acceso Denegado",
+      "noPermission": "No tienes permisos para acceder a la gestión de usuarios. Contacta con tu administrador si crees que esto es un error."
+    },
+    "loading": {
+      "title": "Cargando Usuarios...",
+      "description": "Obteniendo información de usuarios del servidor"
+    },
+    "pagination": {
+      "of": "de",
+      "users": "usuarios"
+    },
+    "table": {
+      "username": "Nombre de usuario",
+      "email": "Correo electrónico",
+      "fullName": "Nombre completo",
+      "roles": "Roles",
+      "status": "Estado",
+      "ariaLabel": "Tabla de usuarios",
+      "caption": "Tabla de {{count}} usuarios con nombre de usuario, correo electrónico, nombre completo, roles y estado.",
+      "moreRoles": "+{{count}} más",
+      "notProvided": "No proporcionado"
+    },
+    "actions": {
+      "edit": "Editar",
+      "view": "Ver Detalles"
+    },
+    "modal": {
+      "edit": {
+        "title": "Editar Usuario"
+      },
+      "view": {
+        "title": "Detalles del Usuario"
+      },
+      "defaultTitle": "Detalles del Usuario",
+      "close": "Cerrar"
+    },
+    "form": {
+      "username": "Nombre de usuario",
+      "email": "Correo electrónico",
+      "fullName": "Nombre completo",
+      "roles": "Roles",
+      "status": "Estado",
+      "lastLogin": "Último acceso",
+      "createdAt": "Creado el",
+      "userInfo": "Información del Usuario",
+      "noRoles": "No hay roles asignados",
+      "toggleRole": "Alternar rol de {{role}}",
+      "toggleStatus": "Alternar estado activo del usuario"
+    },
+    "search": {
+      "placeholder": "Buscar usuarios...",
+      "ariaLabel": "Buscar usuarios"
+    },
+    "filters": {
+      "roleAriaLabel": "Filtrar por rol",
+      "statusAriaLabel": "Filtrar por estado",
+      "allRoles": "Todos los Roles",
+      "allStatus": "Todos los Estados",
+      "clearAll": "Limpiar todos los filtros",
+      "noMatches": "Ningún usuario coincide con tus filtros",
+      "adjustFilters": "Intenta ajustar tus términos de búsqueda o filtros para encontrar usuarios."
+    },
+    "empty": {
+      "title": "No se encontraron usuarios",
+      "description": "Ningún usuario coincide con tus criterios de búsqueda."
+    },
+    "error": {
+      "load": "Error al cargar usuarios",
+      "loadTitle": "Error Cargando Usuarios",
+      "loadDescription": "Error al cargar usuarios del servidor.",
+      "tryAgain": "Intentar de Nuevo",
+      "update": "Error al actualizar usuario"
+    },
+    "notifications": {
+      "updateSuccess": "Usuario Actualizado",
+      "updateSuccessDesc": "La información del usuario se ha actualizado exitosamente.",
+      "updateError": "Error de Actualización"
+    },
+    "warnings": {
+      "roleConflict": "Conflicto de Roles",
+      "roleConflictDesc": "Los roles de Administrador y Administrador de solo lectura entran en conflicto. El rol de Administrador tendrá precedencia."
+    },
+    "alerts": {
+      "inactive": {
+        "title": "Cuenta de Usuario Inactiva",
+        "description": "Esta cuenta de usuario está actualmente inactiva y no puede acceder al sistema."
+      },
+      "admin": {
+        "title": "Cuenta de Administrador",
+        "description": "Este usuario tiene privilegios de administrador y acceso completo al sistema."
+      }
+    },
+    "status": {
+      "oauthManaged": "Estado gestionado por el proveedor OAuth."
+    },
+    "never": "Nunca"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
   "ui": {
+    "pagination": {
+      "showing": "Mostrando"
+    },
     "actions": {
       "tryAgain": "Intentar de nuevo",
       "logout": "Cerrar sesión",
@@ -671,7 +835,11 @@
       "browse": "Explorar",
       "refresh": "Actualizar página",
       "openSidebar": "Abrir barra lateral de navegación",
-      "closeSidebar": "Cerrar barra lateral de navegación"
+      "closeSidebar": "Cerrar barra lateral de navegación",
+      "save": "Guardar",
+      "cancel": "Cancelar",
+      "close": "Cerrar",
+      "saving": "Guardando..."
     },
     "theme": {
       "light": "Claro",

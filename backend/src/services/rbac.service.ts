@@ -201,6 +201,21 @@ export class RBACService {
       isSystem: true,
     },
     {
+      id: 'admin-readonly',
+      name: 'Administrator (Read-only)',
+      description: 'Read-only access to admin features',
+      permissions: [
+        'admin:users', // View admin section
+        'users:read', // List and view users
+        'models:read',
+        'subscriptions:read',
+        'api_keys:read',
+        'usage:read',
+        'usage:export',
+      ],
+      isSystem: true,
+    },
+    {
       id: 'readonly',
       name: 'Read Only',
       description: 'Read-only access',

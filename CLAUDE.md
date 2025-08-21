@@ -19,8 +19,9 @@
 
 ### Tech Stack Summary
 
-- **Backend**: Fastify, TypeScript, PostgreSQL, OAuth2/JWT, LiteLLM integration
+- **Backend**: Fastify, TypeScript, PostgreSQL, OAuth2/JWT, RBAC, LiteLLM integration
 - **Frontend**: React, TypeScript, Vite, PatternFly 6, React Router, React Query
+- **Security**: Role-based access control with three-tier hierarchy (admin > adminReadonly > user)
 - **Testing**: Vitest, Playwright, K6
 - **i18n**: EN, ES, FR, DE, IT, JA, KO, ZH, ELV (9 languages)
 
@@ -69,10 +70,22 @@ litemaas/
 
 ## 🔧 Key Features
 
+### Role-Based Access Control (RBAC)
+
+**Three-Tier Hierarchy**: `admin > adminReadonly > user`
+
+- **OpenShift Integration**: Automatic role assignment from OpenShift groups
+- **Multi-Role Support**: Users can have multiple roles; most powerful determines access
+- **Frontend Role Display**: User's most powerful role shown in navigation with translations
+- **Admin Features**: Dedicated admin pages for user management and system operations
+- **Audit Trail**: All admin actions logged for compliance and security
+
 ### Backend (`@litemaas/backend`)
 
 - Fastify plugin architecture with PostgreSQL
 - OAuth2 + JWT authentication with API key support
+- **Role-based access control (RBAC)** with OpenShift group mapping
+- **Administrative endpoints** for user and system management
 - LiteLLM integration for model synchronization
 - Multi-model API key support with budget management
 - Team collaboration with Default Team pattern
@@ -83,6 +96,8 @@ _See [`backend/CLAUDE.md`](backend/CLAUDE.md) for implementation details_
 
 - React 18 with TypeScript and Vite
 - PatternFly 6 component library (`pf-v6-` prefix required)
+- **Role-based UI rendering** with conditional admin features
+- **User role display** in navigation sidebar with translation support
 - React Query for server state management
 - AI Chatbot integration with conversation management
 - Internationalization (9 languages supported)
@@ -128,9 +143,29 @@ See <https://github.com/anthropics/claude-code/issues/4711> for details.
 
 ## 🔒 Security & Performance
 
+### Authentication & Authorization
+
 - **Auth**: OAuth2 (OpenShift) + JWT + API keys + Development mock mode
-- **Security**: Rate limiting, CORS, CSP, encrypted storage
-- **Performance**: <200ms API response, <3s frontend load
+- **RBAC**: Three-tier role hierarchy with OpenShift group mapping:
+  ```
+  admin > adminReadonly > user
+  ```
+- **Role Assignment**: Automatic from OpenShift groups (`litemaas-admins`, `litemaas-readonly`, `litemaas-users`)
+- **Multi-Role Support**: Users can have multiple roles; most powerful determines permissions
+- **Resource Protection**: Role-based data access with admin oversight capabilities
+
+### Security Features
+
+- **API Endpoint Protection**: Role-based access control on all admin endpoints
+- **Data Isolation**: Users can only access own resources; admins can access all
+- **Audit Logging**: All admin actions and role changes logged
+- **Rate Limiting**: Role-specific rate limits (higher for admins)
+- **Security Headers**: CORS, CSP, encrypted storage
+
+### Performance Targets
+
+- **API Response**: <200ms (standard), <300ms (admin endpoints)
+- **Frontend Load**: <3s initial, <1s role-based navigation updates
 - **Testing**: Vitest, Playwright, K6 with 80%+ coverage requirement
 - **CI/CD**: GitHub Actions for automated testing and deployment
 
@@ -145,9 +180,32 @@ See <https://github.com/anthropics/claude-code/issues/4711> for details.
 
 ### Authentication Flows
 
-- **Production**: OAuth2 with OpenShift provider
-- **Development**: Mock auth mode for rapid development
-- **API Keys**: LiteLLM-compatible key generation
+- **Production**: OAuth2 with OpenShift provider + role assignment from groups
+- **Development**: Mock auth mode with configurable test user roles
+- **API Keys**: LiteLLM-compatible key generation with user role inheritance
+
+### Role-Based Features
+
+#### Admin Capabilities (`admin` role)
+
+- **User Management**: Create, update, deactivate users and assign roles
+- **System Operations**: Model synchronization, global sync operations
+- **Data Access**: View and modify all user resources
+- **System Monitoring**: Access to system status, metrics, and health checks
+
+#### Read-Only Admin (`adminReadonly` role)
+
+- **System Visibility**: View all users, data, and system information
+- **Monitoring Access**: System status, metrics, audit logs
+- **No Modifications**: Cannot create, update, or delete resources
+- **Reporting**: Access to usage analytics and system reports
+
+#### Standard User (`user` role)
+
+- **Personal Resources**: Manage own subscriptions, API keys, usage data
+- **Self-Service**: Update profile, preferences, and settings
+- **Model Access**: Subscribe to and use available AI models
+- **Limited Scope**: Cannot view other users or system information
 
 _For detailed implementation, see workspace-specific CLAUDE.md files_
 
@@ -174,12 +232,14 @@ docs/
 
 ### Quick References
 
+- **User Roles Guide**: `docs/features/user-roles-administration.md` - **RBAC system authority**
+- **Authentication Setup**: `docs/deployment/authentication.md` - **OAuth & role configuration**
 - **PatternFly 6**: `docs/development/pf6-guide/` - UI development authority
 - **Accessibility Guide**: `docs/development/accessibility/` - WCAG 2.1 AA compliance
-- **API Reference**: `docs/api/rest-api.md` - Complete endpoint documentation
+- **API Reference**: `docs/api/rest-api.md` - Complete endpoint documentation with role requirements
 - **Database Schema**: `docs/architecture/database-schema.md` - Table structures
 - **Environment Config**: `docs/deployment/configuration.md` - All env variables
-- **Development Setup**: `docs/development/setup.md` - Getting started
+- **Development Setup**: `docs/development/setup.md` - Getting started with admin user setup
 - **Chatbot Implementation**: `docs/development/chatbot-implementation.md` - AI chat features
 
 ## 🎯 For AI Assistants
@@ -188,7 +248,19 @@ When working on:
 
 - **Backend tasks** → Load `backend/CLAUDE.md` for Fastify/service details
 - **Frontend tasks** → Load `frontend/CLAUDE.md` for React/PatternFly details
+- **Role/Admin tasks** → Load `docs/features/user-roles-administration.md` for RBAC details
+- **Authentication tasks** → Load `docs/deployment/authentication.md` for OAuth/role setup
 - **Full-stack tasks** → Start with this file, then load specific contexts as needed
+
+### Security Note for AI Assistants
+
+⚠️ **Role-Based Development**: When implementing features that involve user roles or administrative functions:
+
+1. **Always implement backend validation first** - Frontend role checks are UX only
+2. **Use role hierarchy** - Check for most powerful role when multiple roles exist
+3. **Follow data access patterns** - Users see own data, admins see all data
+4. **Test with different roles** - Verify access control with user, adminReadonly, and admin accounts
+5. **Document role requirements** - Clearly specify which roles can access new endpoints/features
 
 ---
 

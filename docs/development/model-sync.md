@@ -324,6 +324,120 @@ const MOCK_MODELS = [
 ];
 ```
 
+## Frontend Integration
+
+### Admin Settings Page
+
+The model sync functionality is exposed to administrators through the Settings page at `/admin/settings`.
+
+**Location**: `frontend/src/pages/SettingsPage.tsx`
+
+#### Implementation Overview
+
+The Settings page provides a **Models Management** panel that allows administrators to trigger manual model synchronization:
+
+```typescript
+// Role-based access control
+const canSync = user?.roles?.includes('admin') ?? false;
+
+// Sync handler
+const handleRefreshModels = async () => {
+  if (!canSync) return;
+
+  setIsLoading(true);
+  try {
+    const result = await modelsService.refreshModels();
+    setLastSyncResult(result);
+
+    addNotification({
+      variant: 'success',
+      title: 'Models synchronized successfully',
+      description: `${result.totalModels} total models (${result.newModels} new, ${result.updatedModels} updated)`,
+    });
+  } catch (error) {
+    addNotification({
+      variant: 'danger',
+      title: 'Failed to synchronize models',
+      description: error.message,
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
+```
+
+#### Service Integration
+
+**Location**: `frontend/src/services/models.service.ts`
+
+The frontend communicates with the sync API through the models service:
+
+```typescript
+class ModelsService {
+  async refreshModels(): Promise<any> {
+    const response = await apiClient.post('/models/sync');
+    return response;
+  }
+}
+```
+
+#### Role-Based UI Behavior
+
+| User Role       | Access Level | Button State          | Notifications                      |
+| --------------- | ------------ | --------------------- | ---------------------------------- |
+| `admin`         | Full access  | Enabled               | Receives sync result notifications |
+| `adminReadonly` | View only    | Disabled with tooltip | No sync notifications              |
+| `user`          | No access    | Cannot access page    | N/A                                |
+
+#### UI Features
+
+1. **Manual Sync Button**: Triggers immediate model synchronization
+2. **Loading State**: Shows progress during sync operation
+3. **Results Display**: Shows detailed sync statistics after completion
+4. **Error Handling**: Displays error messages and details
+5. **Role Tooltips**: Explains disabled functionality for admin-readonly users
+
+#### Sync Result Display
+
+After a successful sync, the UI displays:
+
+- **Total Models**: Complete count in database
+- **New Models**: Models added during sync
+- **Updated Models**: Models modified during sync
+- **Sync Timestamp**: When synchronization completed
+- **Error Details**: Any specific sync failures
+
+#### Translation Support
+
+All UI text is internationalized with keys under `pages.settings`:
+
+```json
+{
+  "pages": {
+    "settings": {
+      "models": "Models Management",
+      "refreshModels": "Refresh Models from LiteLLM",
+      "syncInProgress": "Synchronizing models...",
+      "syncSuccess": "Models synchronized successfully",
+      "syncError": "Failed to synchronize models",
+      "adminRequired": "Admin access required to sync models"
+    }
+  }
+}
+```
+
+Supported in all 9 languages: EN, ES, FR, DE, IT, JA, KO, ZH, ELV
+
+#### Testing
+
+The Settings page includes comprehensive test coverage:
+
+- **Unit Tests**: `frontend/src/test/components/SettingsPage.test.tsx`
+- **Accessibility Tests**: `frontend/src/test/components/SettingsPage.accessibility.test.tsx`
+- **Role-based Testing**: Admin, admin-readonly, and user scenarios
+- **API Integration**: Success and error response handling
+- **WCAG Compliance**: Full accessibility test suite
+
 ## Production Deployment
 
 ### Pre-deployment Checklist

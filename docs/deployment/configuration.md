@@ -8,7 +8,8 @@ This document consolidates all environment variables used in the LiteMaaS applic
 - [OAuth Configuration](#oauth-configuration)
 - [JWT Configuration](#jwt-configuration)
 - [LiteLLM Integration](#litellm-integration)
-- [Security & Rate Limiting](#security--rate-limiting)
+- [Backend API Protection](#backend-api-protection)
+- [Default User Values](#default-user-values)
 - [Server Configuration](#server-configuration)
 - [Frontend Configuration](#frontend-configuration-vite)
 - [Environment Templates](#environment-templates)
@@ -180,29 +181,88 @@ LITELLM_RETRY_DELAY=2000
 - `database_wins`: Database data takes precedence
 - `merge`: Attempt to merge conflicts (not yet implemented)
 
-## Security & Rate Limiting
+## Backend API Protection
 
-| Variable                   | Description                     | Default                                                       | Required |
-| -------------------------- | ------------------------------- | ------------------------------------------------------------- | -------- |
-| `ADMIN_API_KEYS`           | Comma-separated admin API keys  | -                                                             | No       |
-| `RATE_LIMIT_MAX`           | Max requests per time window    | `100`                                                         | No       |
-| `RATE_LIMIT_TIME_WINDOW`   | Rate limit time window          | `1m`                                                          | No       |
-| `ALLOWED_FRONTEND_ORIGINS` | Comma-separated allowed origins | `localhost:3000,localhost:3001,127.0.0.1:3000,127.0.0.1:3001` | No       |
+> **Important**: These settings protect the LiteMaaS backend management API endpoints (user management, API key creation, etc.). They do NOT affect LLM request rate limits, which are configured in LiteLLM using the TPM/RPM values from the Default User Values section.
+
+| Variable                   | Description                              | Default                                                       | Required |
+| -------------------------- | ---------------------------------------- | ------------------------------------------------------------- | -------- |
+| `ADMIN_API_KEYS`           | Comma-separated admin API keys           | -                                                             | No       |
+| `RATE_LIMIT_MAX`           | Max backend API requests per time window | `100`                                                         | No       |
+| `RATE_LIMIT_TIME_WINDOW`   | Backend API rate limit time window       | `1m`                                                          | No       |
+| `ALLOWED_FRONTEND_ORIGINS` | Comma-separated allowed origins          | `localhost:3000,localhost:3001,127.0.0.1:3000,127.0.0.1:3001` | No       |
 
 ### Example
 
 ```bash
 ADMIN_API_KEYS=admin-key-1,admin-key-2,admin-key-3
-RATE_LIMIT_MAX=200
-RATE_LIMIT_TIME_WINDOW=5m
+
+# Backend API rate limiting (protects management endpoints)
+RATE_LIMIT_MAX=200                    # 200 backend API calls per time window
+RATE_LIMIT_TIME_WINDOW=5m             # 5 minute window
+
 ALLOWED_FRONTEND_ORIGINS=app.example.com,staging.example.com
 ```
+
+### What Backend Rate Limiting Protects
+
+These limits apply to LiteMaaS management operations:
+
+- **User management**: Creating/updating users, role assignments
+- **API key operations**: Creating, rotating, listing API keys
+- **Subscription management**: Creating/updating model subscriptions
+- **Model synchronization**: Syncing models from LiteLLM
+- **Admin operations**: Bulk updates, system configuration
+- **Usage queries**: Fetching usage statistics and reports
+
+**Not affected**: Actual LLM requests to AI models (handled by LiteLLM directly)
 
 ### Rate Limit Time Window Formats
 
 - Minutes: `1m`, `5m`, `15m`
 - Hours: `1h`, `2h`
 - Seconds: `30s`, `60s`
+
+## Default User Values
+
+These variables control the default limits assigned to new users when they first log into LiteMaaS via OAuth. These values are applied during user creation in both the LiteMaaS database and LiteLLM.
+
+| Variable                  | Description                       | Default | Required |
+| ------------------------- | --------------------------------- | ------- | -------- |
+| `DEFAULT_USER_MAX_BUDGET` | Default budget limit (USD)        | `100`   | No       |
+| `DEFAULT_USER_TPM_LIMIT`  | Default tokens per minute limit   | `1000`  | No       |
+| `DEFAULT_USER_RPM_LIMIT`  | Default requests per minute limit | `60`    | No       |
+
+### Example
+
+```bash
+# Production settings - higher limits
+DEFAULT_USER_MAX_BUDGET=500
+DEFAULT_USER_TPM_LIMIT=5000
+DEFAULT_USER_RPM_LIMIT=300
+
+# Development settings - conservative limits
+DEFAULT_USER_MAX_BUDGET=50
+DEFAULT_USER_TPM_LIMIT=500
+DEFAULT_USER_RPM_LIMIT=30
+```
+
+### Important Notes
+
+- **Existing users**: These settings do not affect existing users
+- **Fallback behavior**: If not set, system uses hardcoded defaults shown above
+- **Admin override**: Administrators can bulk update user limits via the admin API
+- **Per-user customization**: Individual user limits can be modified after account creation
+- **LLM vs Backend**: These TPM/RPM limits control LLM requests through LiteLLM. For backend API protection, see [Backend API Protection](#backend-api-protection) section
+
+### User Creation Flow
+
+When a user logs in for the first time:
+
+1. **Database record**: Created with configured default values
+2. **LiteLLM user**: Created with same default values
+3. **Team assignment**: User is assigned to the default team
+4. **Inheritance**: User inherits team-level settings where applicable
 
 ## Server Configuration
 

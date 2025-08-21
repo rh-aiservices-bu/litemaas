@@ -19,7 +19,10 @@
     "apiKeys": "APIキー",
     "usage": "使用状況",
     "chatbot": "チャットボットプレイグラウンド",
-    "settings": "設定"
+    "admin": {
+      "users": "ユーザー",
+      "settings": "設定"
+    }
   },
   "pages": {
     "home": {
@@ -186,6 +189,7 @@
       "createKey": "APIキーを作成",
       "creating": "作成中...",
       "editKey": "編集",
+      "editKeyAriaLabel": "APIキー{{keyName}}を編集",
       "updateKey": "更新",
       "updating": "更新中...",
       "deleteKey": "削除",
@@ -245,6 +249,7 @@
         "selectedModels": "選択されたモデル",
         "modelsSelected": "{{count}}個のモデルが選択されました",
         "keyCreatedSuccess": "{{name}}が正常に作成されました",
+        "keyUpdatedSuccess": "{{name}}が正常に更新されました",
         "keyDeleted": "{{name}}が削除されました",
         "copyToClipboard": "{{label}}をクリップボードにコピーしました",
         "secureRetrievalMessage": "上の目のアイコンをクリックして、完全なLiteLLM APIキーを安全に取得してください。セキュリティ上の理由から、最近の認証が必要で、レート制限されています。すべてのキー取得は監査目的で記録されます。",
@@ -290,6 +295,9 @@
         "loadErrorDesc": "サーバーからAPIキーを読み込めませんでした。",
         "loadModelError": "エラー",
         "loadModelErrorDesc": "サブスクライブ済みモデルの読み込みに失敗しました。",
+        "updateError": "エラー",
+        "updateErrorDesc": "APIキーの更新に失敗しました。もう一度お試しください。",
+        "updateSuccess": "APIキーが更新されました",
         "createSuccess": "APIキー作成済み",
         "createError": "エラー",
         "createErrorDesc": "APIキーの作成に失敗しました。もう一度お試しください。",
@@ -306,6 +314,7 @@
       },
       "modals": {
         "createTitle": "APIキーを作成",
+        "editTitle": "APIキーを編集",
         "viewTitle": "APIキー詳細",
         "deleteTitle": "APIキーを削除",
         "createdTitle": "APIキーが正常に作成されました",
@@ -660,11 +669,30 @@
       "buttons": {
         "savePreferences": "設定を保存",
         "updateConfiguration": "設定を更新"
-      }
+      },
+      "models": "モデル",
+      "modelsDescription": "LiteLLMから利用可能なAIモデルを管理・同期",
+      "refreshModels": "モデルを更新",
+      "lastSync": "最終同期",
+      "syncTime": "{{time}}",
+      "syncInProgress": "同期中...",
+      "syncSuccess": "同期成功",
+      "syncSuccessDetails": "合計{{total}}モデル、{{new}}個新規、{{updated}}個更新",
+      "syncError": "同期エラー",
+      "syncErrorGeneric": "モデルを同期できません。もう一度お試しください。",
+      "syncErrors": "同期エラー",
+      "adminRequired": "モデル同期には管理者権限が必要です",
+      "totalModels": "総モデル数",
+      "newModels": "新規モデル",
+      "updatedModels": "更新されたモデル"
     }
   },
   "ui": {
     "actions": {
+      "cancel": "キャンセル",
+      "close": "閉じる",
+      "save": "保存",
+      "saving": "保存中...",
       "tryAgain": "再試行",
       "logout": "ログアウト",
       "login": "OpenShiftでログイン",
@@ -672,6 +700,9 @@
       "refresh": "ページを更新",
       "openSidebar": "ナビゲーションサイドバーを開く",
       "closeSidebar": "ナビゲーションサイドバーを閉じる"
+    },
+    "pagination": {
+      "showing": "表示中"
     },
     "theme": {
       "light": "ライト",
@@ -728,5 +759,114 @@
       "somethingWrong": "問題が発生しました",
       "tryRefresh": "申し訳ございませんが、予期しない問題が発生しました。ページを更新するか、問題が続く場合はサポートにお問い合わせください。"
     }
+  },
+  "role": {
+    "admin": "管理者",
+    "adminReadonly": "管理者（読み取り専用）",
+    "user": "ユーザー"
+  },
+  "users": {
+    "pageDescription": "組織内のユーザー、役割、権限を管理",
+    "alerts": {
+      "admin": {
+        "title": "管理者アカウント",
+        "description": "このユーザーは管理者権限を持ち、システム全体にアクセスできます。"
+      },
+      "inactive": {
+        "title": "ユーザーアカウントが無効",
+        "description": "このユーザーアカウントは現在無効で、システムにアクセスできません。"
+      }
+    },
+    "error": {
+      "loadTitle": "ユーザー読み込みエラー",
+      "loadDescription": "サーバーからユーザーの読み込みに失敗しました。",
+      "tryAgain": "再試行",
+      "load": "ユーザーの読み込みに失敗しました",
+      "update": "ユーザーの更新に失敗しました"
+    },
+    "filters": {
+      "allRoles": "すべての役割",
+      "allStatus": "すべてのステータス",
+      "clearAll": "すべてのフィルターをクリア",
+      "noMatches": "フィルターに一致するユーザーがいません",
+      "adjustFilters": "検索条件やフィルターを調整してユーザーを見つけてください。",
+      "roleAriaLabel": "役割でフィルター",
+      "statusAriaLabel": "ステータスでフィルター"
+    },
+    "form": {
+      "username": "ユーザー名",
+      "email": "メール",
+      "fullName": "フルネーム",
+      "roles": "ロール",
+      "status": "ステータス",
+      "lastLogin": "最終ログイン",
+      "createdAt": "作成日",
+      "noRoles": "割り当てられた役割がありません",
+      "toggleRole": "{{role}}の役割を切り替え",
+      "toggleStatus": "ユーザーアクティブステータスを切り替え",
+      "userInfo": "ユーザー情報"
+    },
+    "loading": {
+      "title": "ユーザーを読み込み中...",
+      "description": "サーバーからユーザー情報を取得中"
+    },
+    "modal": {
+      "close": "閉じる",
+      "defaultTitle": "ユーザー詳細",
+      "edit": {
+        "title": "ユーザーを編集"
+      },
+      "view": {
+        "title": "ユーザー詳細"
+      }
+    },
+    "notifications": {
+      "updateError": "更新に失敗",
+      "updateSuccess": "ユーザーが更新されました",
+      "updateSuccessDesc": "ユーザー情報が正常に更新されました。"
+    },
+    "pagination": {
+      "of": "/",
+      "users": "ユーザー"
+    },
+    "permissions": {
+      "accessDenied": "アクセス拒否",
+      "noPermission": "ユーザー管理へのアクセス権限がありません。エラーだと思われる場合は管理者にお問い合わせください。"
+    },
+    "search": {
+      "ariaLabel": "ユーザーを検索",
+      "placeholder": "ユーザーを検索..."
+    },
+    "status": {
+      "oauthManaged": "ステータスはOAuthプロバイダによって管理されています。"
+    },
+    "table": {
+      "username": "ユーザー名",
+      "email": "メール",
+      "fullName": "フルネーム",
+      "roles": "ロール",
+      "status": "ステータス",
+      "ariaLabel": "ユーザーテーブル",
+      "caption": "ユーザー名、メール、フルネーム、役割、ステータスを含む{{count}}ユーザーのテーブル。",
+      "moreRoles": "+{{count}}その他",
+      "notProvided": "提供されていません"
+    },
+    "warnings": {
+      "roleConflict": "役割の競合",
+      "roleConflictDesc": "管理者と管理者（読み取り専用）の役割が競合しています。管理者の役割が優先されます。"
+    },
+    "actions": {
+      "edit": "編集",
+      "view": "詳細を表示"
+    },
+    "empty": {
+      "title": "ユーザーが見つかりません",
+      "description": "検索条件に一致するユーザーがありません。"
+    },
+    "never": "なし"
+  },
+  "status": {
+    "active": "アクティブ",
+    "inactive": "非アクティブ"
   }
 }

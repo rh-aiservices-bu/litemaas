@@ -1,6 +1,6 @@
 {
   "name": "litemaas",
-  "version": "0.0.10",
+  "version": "0.0.12",
   "description": "LiteLLM User Application - Model subscription and management platform",
   "private": true,
   "workspaces": [
@@ -23,7 +23,9 @@
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
-    "rimraf": "^5.0.5"
+    "rimraf": "^5.0.5",
+    "vitest": "1.6.1",
+    "typescript": "^5.8.3"
   },
   "engines": {
     "node": ">=18.0.0",

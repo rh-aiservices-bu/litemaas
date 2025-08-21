@@ -1,13 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { BaseService } from './base.service.js';
-import {
-  LiteLLMModel,
-  LiteLLMHealth,
-  LiteLLMError,
-  LiteLLMConfig,
-  ChatCompletionRequest,
-  ChatCompletionResponse,
-} from '../types/model.types.js';
+import { LiteLLMModel, LiteLLMHealth, LiteLLMError, LiteLLMConfig } from '../types/model.types.js';
 import {
   LiteLLMKeyGenerationRequest,
   LiteLLMKeyGenerationResponse,
@@ -968,48 +961,6 @@ export class LiteLLMService extends BaseService {
       return await this.makeRequest<LiteLLMTeamResponse>(`/team/info?team_id=${teamId}`);
     } catch (error) {
       this.fastify.log.error(error, 'Failed to get team info');
-      throw error;
-    }
-  }
-
-  // LLM Operations
-  async chatCompletion(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
-    if (this.config.enableMocking) {
-      const mockResponse: ChatCompletionResponse = {
-        id: `chatcmpl-mock-${Math.random().toString(36).substring(2, 15)}`,
-        object: 'chat.completion',
-        created: Math.floor(Date.now() / 1000),
-        model: request.model,
-        choices: [
-          {
-            index: 0,
-            message: {
-              role: 'assistant',
-              content: `This is a mock response for model ${request.model}. Your message was: "${request.messages[request.messages.length - 1]?.content}"`,
-            },
-            finish_reason: 'stop',
-          },
-        ],
-        usage: {
-          prompt_tokens: request.messages.reduce((sum, msg) => sum + msg.content.length / 4, 0),
-          completion_tokens: 50,
-          total_tokens: 0,
-        },
-      };
-
-      mockResponse.usage.total_tokens =
-        mockResponse.usage.prompt_tokens + mockResponse.usage.completion_tokens;
-
-      return this.createMockResponse(mockResponse);
-    }
-
-    try {
-      return await this.makeRequest<ChatCompletionResponse>('/chat/completions', {
-        method: 'POST',
-        body: request,
-      });
-    } catch (error) {
-      this.fastify.log.error(error, 'Failed to create chat completion');
       throw error;
     }
   }

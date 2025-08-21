@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
 import { DatabaseRow, QueryParameter, QueryResult, DatabaseClient } from '../types/common.types.js';
+import { LiteLLMIntegrationService } from '../services/litellm-integration.service';
 
 const databasePlugin: FastifyPluginAsync = async (fastify) => {
   let mockMode = false;
@@ -35,41 +36,38 @@ const databasePlugin: FastifyPluginAsync = async (fastify) => {
           // Don't fail the startup, but log the error
         }
 
-        // Run initial model synchronization
+        // Sync models on startup
         try {
           const { ModelSyncService } = await import('../services/model-sync.service');
           const modelSyncService = new ModelSyncService(fastify);
-
-          fastify.log.info('Starting initial model synchronization...');
           const syncResult = await modelSyncService.syncModels({
             forceUpdate: false,
             markUnavailable: true,
           });
 
-          if (syncResult.success) {
-            fastify.log.info(
-              {
-                totalModels: syncResult.totalModels,
-                newModels: syncResult.newModels,
-                updatedModels: syncResult.updatedModels,
-                unavailableModels: syncResult.unavailableModels,
-              },
-              'Initial model synchronization completed successfully',
-            );
-          } else {
-            fastify.log.warn(
-              {
-                errors: syncResult.errors,
-              },
-              'Initial model synchronization completed with errors',
-            );
-          }
+          fastify.log.info({
+            msg: 'Initial model sync completed',
+            ...syncResult,
+          });
         } catch (syncError) {
-          fastify.log.warn(
-            syncError as Error,
-            'Failed to perform initial model synchronization - models may be out of date',
-          );
-          // Don't fail the startup, but log the warning
+          fastify.log.error({ error: syncError }, 'Failed to sync models on startup');
+          // Don't fail startup - continue with cached models
+        }
+
+        // Initialize LiteLLM integration service for auto-sync
+        const litellmIntegrationService = new LiteLLMIntegrationService(fastify);
+
+        // Start auto-sync if enabled
+        const autoSyncEnabled = process.env.LITELLM_AUTO_SYNC === 'true';
+        if (autoSyncEnabled) {
+          fastify.log.info('Starting automatic model synchronization service');
+          litellmIntegrationService.startAutoSync();
+
+          // Register cleanup on server shutdown
+          fastify.addHook('onClose', async () => {
+            fastify.log.info('Stopping automatic model synchronization service');
+            litellmIntegrationService.stopAutoSync();
+          });
         }
       } catch (error) {
         fastify.log.warn(

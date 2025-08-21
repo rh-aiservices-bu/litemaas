@@ -10,7 +10,8 @@
     "error": "Error",
     "notAvailable": "N/A",
     "lineChart": "line chart",
-    "dataPoints": "data points"
+    "dataPoints": "data points",
+    "cancel": "Cancel"
   },
   "nav": {
     "home": "Home",
@@ -19,7 +20,10 @@
     "apiKeys": "API Keys",
     "usage": "Usage",
     "chatbot": "Chatbot Playground",
-    "settings": "Settings"
+    "admin": {
+      "users": "Users",
+      "settings": "Settings"
+    }
   },
   "pages": {
     "home": {
@@ -476,31 +480,48 @@
     },
     "settings": {
       "title": "Settings",
-      "userPreferences": "User Preferences",
-      "apiConfiguration": "API Configuration",
-      "forms": {
-        "displayName": "Display Name",
-        "displayNamePlaceholder": "Enter your display name",
-        "displayNameHelperText": "This name will be displayed in your profile and throughout the application",
-        "emailNotifications": "Email Notifications",
-        "emailNotificationsHelperText": "Receive notifications about subscription changes, usage alerts, and security updates",
-        "emailNotificationsAriaLabel": "Toggle email notifications on or off",
-        "autoRefreshDashboard": "Auto-refresh Dashboard",
-        "autoRefreshHelperText": "Automatically refresh dashboard data every 30 seconds",
-        "autoRefreshAriaLabel": "Toggle automatic dashboard refresh on or off",
-        "enabled": "Enabled",
-        "disabled": "Disabled",
-        "defaultModelProvider": "Default Model Provider",
-        "rateLimitLabel": "Rate Limit (requests/minute)",
-        "rateLimitHelperText": "This limit is set by your subscription plan and cannot be modified",
-        "timeoutLabel": "Timeout (seconds)",
-        "providerPlaceholder": "OpenAI, Anthropic, etc.",
-        "openShiftAI": "OpenShift AI"
-      },
-      "buttons": {
-        "savePreferences": "Save Preferences",
-        "updateConfiguration": "Update Configuration"
-      }
+      "models": "Models Management",
+      "modelsDescription": "Synchronize AI models from LiteLLM to ensure you have access to the latest available models.",
+      "refreshModels": "Refresh Models from LiteLLM",
+      "lastSync": "Last Synchronization",
+      "syncTime": "Time",
+      "syncInProgress": "Synchronizing models...",
+      "syncSuccess": "Models synchronized successfully",
+      "syncSuccessDetails": "{{total}} total models ({{new}} new, {{updated}} updated)",
+      "syncError": "Failed to synchronize models",
+      "syncErrorGeneric": "An error occurred while synchronizing models. Please try again.",
+      "syncErrors": "Errors",
+      "adminRequired": "Admin access required to sync models",
+      "totalModels": "Total Models",
+      "newModels": "New Models",
+      "updatedModels": "Updated Models",
+      "limitsManagement": "Limits Management",
+      "limitsDescription": "Set default resource limits for all users in the system. Changes will apply to all active users.",
+      "maxBudgetLabel": "Maximum Budget ($)",
+      "maxBudgetHelper": "Maximum spending limit per user in dollars",
+      "tpmLimitLabel": "TPM Limit",
+      "tpmLimitHelper": "Maximum tokens per minute for each user",
+      "rpmLimitLabel": "RPM Limit",
+      "rpmLimitHelper": "Maximum requests per minute for each user",
+      "applyToAllUsers": "Apply to All Users",
+      "confirmBulkUpdate": "Apply Limits to All Users?",
+      "confirmBulkUpdateMessage": "This will update all active users with the specified limits. This action cannot be undone.",
+      "confirmApply": "Apply Changes",
+      "changesToApply": "Changes to apply",
+      "leaveEmptyToKeep": "Leave empty to keep current value",
+      "bulkUpdateSuccess": "Successfully updated {{count}} users",
+      "bulkUpdatePartial": "Updated {{success}} users, {{failed}} failed",
+      "bulkUpdateError": "Failed to update user limits",
+      "bulkUpdateErrorGeneric": "An error occurred while updating user limits. Please try again.",
+      "noValuesProvided": "Please provide at least one limit value",
+      "noValuesProvidedDescription": "You must specify at least one limit to update.",
+      "processing": "Updating users...",
+      "lastLimitsUpdate": "Last Limits Update",
+      "updateTime": "Update Time",
+      "totalUsersUpdated": "Total Users",
+      "successfulUpdates": "Successful",
+      "failedUpdates": "Failed",
+      "updateErrors": "Update Errors"
     },
     "chatbot": {
       "title": "Chatbot Playground",
@@ -681,9 +702,126 @@
       }
     }
   },
+  "role": {
+    "admin": "Administrator",
+    "adminReadonly": "Administrator (Read-only)",
+    "user": "User"
+  },
+  "users": {
+    "pageDescription": "Manage users, roles, and permissions across your organization",
+    "permissions": {
+      "accessDenied": "Access Denied",
+      "noPermission": "You don't have permission to access user management. Contact your administrator if you believe this is an error."
+    },
+    "loading": {
+      "title": "Loading Users...",
+      "description": "Retrieving user information from the server"
+    },
+    "pagination": {
+      "of": "of",
+      "users": "users"
+    },
+    "table": {
+      "username": "Username",
+      "email": "Email",
+      "fullName": "Full Name",
+      "roles": "Roles",
+      "status": "Status",
+      "ariaLabel": "Users table",
+      "caption": "Table of {{count}} users with username, email, full name, roles, and status.",
+      "moreRoles": "+{{count}} more",
+      "notProvided": "Not provided"
+    },
+    "actions": {
+      "edit": "Edit",
+      "view": "View Details"
+    },
+    "modal": {
+      "edit": {
+        "title": "Edit User"
+      },
+      "view": {
+        "title": "User Details"
+      },
+      "defaultTitle": "User Details",
+      "close": "Close"
+    },
+    "form": {
+      "username": "Username",
+      "email": "Email",
+      "fullName": "Full Name",
+      "roles": "Roles",
+      "status": "Status",
+      "lastLogin": "Last Login",
+      "createdAt": "Created At",
+      "userInfo": "User Information",
+      "noRoles": "No roles assigned",
+      "toggleRole": "Toggle {{role}} role",
+      "toggleStatus": "Toggle user active status"
+    },
+    "search": {
+      "placeholder": "Search users...",
+      "ariaLabel": "Search users"
+    },
+    "filters": {
+      "roleAriaLabel": "Filter by role",
+      "statusAriaLabel": "Filter by status",
+      "allRoles": "All Roles",
+      "allStatus": "All Status",
+      "clearAll": "Clear all filters",
+      "noMatches": "No users match your filters",
+      "adjustFilters": "Try adjusting your search terms or filters to find users."
+    },
+    "empty": {
+      "title": "No users found",
+      "description": "No users match your search criteria."
+    },
+    "error": {
+      "load": "Failed to load users",
+      "loadTitle": "Error Loading Users",
+      "loadDescription": "Failed to load users from the server.",
+      "tryAgain": "Try Again",
+      "update": "Failed to update user"
+    },
+    "notifications": {
+      "updateSuccess": "User Updated",
+      "updateSuccessDesc": "User information has been updated successfully.",
+      "updateError": "Update Failed"
+    },
+    "warnings": {
+      "roleConflict": "Role Conflict",
+      "roleConflictDesc": "Admin and Admin-readonly roles conflict. Admin role will take precedence."
+    },
+    "alerts": {
+      "inactive": {
+        "title": "User Account Inactive",
+        "description": "This user account is currently inactive and cannot access the system."
+      },
+      "admin": {
+        "title": "Administrator Account",
+        "description": "This user has administrator privileges and full system access."
+      }
+    },
+    "status": {
+      "oauthManaged": "Status managed by OAuth provider."
+    },
+    "never": "Never"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
   "ui": {
     "actions": {
-      "tryAgain": "Try Again"
+      "tryAgain": "Try Again",
+      "notImplemented": "Not Yet Implemented",
+      "save": "Save",
+      "cancel": "Cancel",
+      "close": "Close",
+      "saving": "Saving..."
+    },
+    "pagination": {
+      "showing": "Showing"
     },
     "theme": {
       "light": "Light",
@@ -715,7 +853,11 @@
       "refresh": "Refresh Page",
       "tryAgain": "Try Again",
       "openSidebar": "Open navigation sidebar",
-      "closeSidebar": "Close navigation sidebar"
+      "closeSidebar": "Close navigation sidebar",
+      "save": "Save",
+      "cancel": "Cancel",
+      "close": "Close",
+      "saving": "Saving..."
     },
     "accessibility": {
       "skipToMain": "Skip to main content",

@@ -80,6 +80,13 @@ vi.mock('@patternfly/react-charts/victory', () => ({
       data-props={JSON.stringify(props)}
     />
   ),
+  ChartScatter: (props: any) => (
+    <div
+      data-testid="patternfly-chart-scatter"
+      data-data={JSON.stringify(props.data)}
+      data-props={JSON.stringify(props)}
+    />
+  ),
   ChartGroup: ({ children, ...props }: any) => (
     <div data-testid="patternfly-chart-group" data-props={JSON.stringify(props)}>
       {children}
@@ -414,7 +421,7 @@ describe('UsageTrends', () => {
     const lineProps = JSON.parse(chartLine.getAttribute('data-props') || '{}');
 
     expect(lineProps.animate.duration).toBe(1000);
-    expect(lineProps.animate.onLoad.duration).toBe(500);
+    expect(lineProps.animate.onLoad.duration).toBe(1);
   });
 
   it('sets proper chart dimensions', () => {

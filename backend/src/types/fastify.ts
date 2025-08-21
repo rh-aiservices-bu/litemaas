@@ -37,6 +37,11 @@ declare module 'fastify' {
       // Rate Limiting
       RATE_LIMIT_MAX: string;
       RATE_LIMIT_TIME_WINDOW: string;
+
+      // Default User Values
+      DEFAULT_USER_MAX_BUDGET: string;
+      DEFAULT_USER_TPM_LIMIT: string;
+      DEFAULT_USER_RPM_LIMIT: string;
     };
 
     // Remove custom logger interface to avoid conflict with Fastify's built-in logger
