@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
-import SettingsPage from '../../pages/SettingsPage';
+import ToolsPage from '../../pages/ToolsPage';
 import { User } from '../../services/auth.service';
 
 // Mock the dependencies
@@ -43,9 +43,9 @@ vi.mock('../../contexts/NotificationContext', () => ({
   })),
 }));
 
-describe('SettingsPage - Simple Test', () => {
+describe('ToolsPage - Simple Test', () => {
   it('should render without crashing', () => {
-    render(<SettingsPage />);
-    expect(screen.getByText('Settings')).toBeInTheDocument();
+    render(<ToolsPage />);
+    expect(screen.getByText('Tools')).toBeInTheDocument();
   });
 });

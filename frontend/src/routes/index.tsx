@@ -10,7 +10,7 @@ import SubscriptionsPage from '../pages/SubscriptionsPage';
 import ApiKeysPage from '../pages/ApiKeysPage';
 import ChatbotPage from '../pages/ChatbotPage';
 import UsagePage from '../pages/UsagePage';
-import SettingsPage from '../pages/SettingsPage';
+import ToolsPage from '../pages/ToolsPage';
 import UsersPage from '../pages/UsersPage';
 import LoginPage from '../pages/LoginPage';
 import AuthCallbackPage from '../pages/AuthCallbackPage';
@@ -84,8 +84,8 @@ export const router = createBrowserRouter(
               element: <UsersPage />,
             },
             {
-              path: 'admin/settings',
-              element: <SettingsPage />,
+              path: 'admin/tools',
+              element: <ToolsPage />,
             },
           ],
         },

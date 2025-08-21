@@ -22,7 +22,7 @@
     "chatbot": "Chatbot Playground",
     "admin": {
       "users": "Users",
-      "settings": "Settings"
+      "tools": "Tools"
     }
   },
   "pages": {
@@ -478,8 +478,8 @@
       },
       "metricsUpdated": "Usage metrics updated. {{requests}} total requests, {{tokens}} total tokens, {{cost}} total cost"
     },
-    "settings": {
-      "title": "Settings",
+    "tools": {
+      "title": "Tools",
       "models": "Models Management",
       "modelsDescription": "Synchronize AI models from LiteLLM to ensure you have access to the latest available models.",
       "refreshModels": "Refresh Models from LiteLLM",

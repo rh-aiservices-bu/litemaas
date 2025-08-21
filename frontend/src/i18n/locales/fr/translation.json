@@ -21,7 +21,7 @@
     "chatbot": "Terrain de Jeu du Chatbot",
     "admin": {
       "users": "Utilisateurs",
-      "settings": "Paramètres"
+      "tools": "Outils"
     }
   },
   "pages": {
@@ -643,8 +643,8 @@
       },
       "metricsUpdated": "Métriques d'utilisation mises à jour. {{requests}} requêtes totales, {{tokens}} tokens totaux, {{cost}} coût total"
     },
-    "settings": {
-      "title": "Paramètres",
+    "tools": {
+      "title": "Outils",
       "userPreferences": "Préférences Utilisateur",
       "apiConfiguration": "Configuration API",
       "forms": {

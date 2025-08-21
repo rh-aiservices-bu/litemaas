@@ -21,7 +21,7 @@
     "chatbot": "Glingad-Celeb",
     "admin": {
       "users": "Users",
-      "settings": "Govannen"
+      "tools": "Echad"
     }
   },
   "pages": {
@@ -643,8 +643,8 @@
       },
       "metricsUpdated": "Aerlinn-govaded edwen. {{requests}} pedi îl, {{tokens}} têw îl, {{cost}} cost îl"
     },
-    "settings": {
-      "title": "Govannen",
+    "tools": {
+      "title": "Echad",
       "userPreferences": "Aduiadan-Muin",
       "apiConfiguration": "API-Orthad",
       "forms": {

@@ -118,61 +118,61 @@ CREATE TABLE users (
 
 ## Permissions Matrix
 
-| Feature                 | admin | adminReadonly | user |
-| ----------------------- | ----- | ------------- | ---- |
-| **User Management**     |
-| View all users          | ✅    | ✅            | ❌   |
-| Create/modify users     | ✅    | ❌            | ❌   |
-| Assign/modify roles     | ✅    | ❌            | ❌   |
-| **Data Access**         |
-| View own data           | ✅    | ✅            | ✅   |
-| View all user data      | ✅    | ✅            | ❌   |
-| Modify own data         | ✅    | ❌            | ✅   |
-| Modify all data         | ✅    | ❌            | ❌   |
-| **System Operations**   |
-| System configuration    | ✅    | ❌            | ❌   |
-| View system logs        | ✅    | ✅            | ❌   |
-| Model synchronization   | ✅    | ❌            | ❌   |
-| **API Access**          |
-| Admin endpoints         | ✅    | Limited       | ❌   |
-| User endpoints          | ✅    | ✅            | ✅   |
-| System endpoints        | ✅    | ❌            | ❌   |
-| **Admin Settings Page** |
-| Access Settings page    | ✅    | ✅            | ❌   |
-| Trigger model sync      | ✅    | ❌            | ❌   |
-| View sync results       | ✅    | ✅            | ❌   |
+| Feature               | admin | adminReadonly | user |
+| --------------------- | ----- | ------------- | ---- |
+| **User Management**   |
+| View all users        | ✅    | ✅            | ❌   |
+| Create/modify users   | ✅    | ❌            | ❌   |
+| Assign/modify roles   | ✅    | ❌            | ❌   |
+| **Data Access**       |
+| View own data         | ✅    | ✅            | ✅   |
+| View all user data    | ✅    | ✅            | ❌   |
+| Modify own data       | ✅    | ❌            | ✅   |
+| Modify all data       | ✅    | ❌            | ❌   |
+| **System Operations** |
+| System configuration  | ✅    | ❌            | ❌   |
+| View system logs      | ✅    | ✅            | ❌   |
+| Model synchronization | ✅    | ❌            | ❌   |
+| **API Access**        |
+| Admin endpoints       | ✅    | Limited       | ❌   |
+| User endpoints        | ✅    | ✅            | ✅   |
+| System endpoints      | ✅    | ❌            | ❌   |
+| **Admin Tools Page**  |
+| Access Tools page     | ✅    | ✅            | ❌   |
+| Trigger model sync    | ✅    | ❌            | ❌   |
+| View sync results     | ✅    | ✅            | ❌   |
 
-## Admin Settings Page Access
+## Admin Tools Page Access
 
-The Admin Settings page (`/admin/settings`) provides role-based access to system management tools, with different capabilities for each admin role type.
+The Admin Tools page (`/admin/tools`) provides role-based access to system management tools, with different capabilities for each admin role type.
 
 ### Access Control
 
 #### Admin Users (`admin` role)
 
-- **Full access** to the Settings page at `/admin/settings`
+- **Full access** to the Tools page at `/admin/tools`
 - **Can trigger manual model sync**: Refresh button is enabled
 - **View detailed sync results**: Access to all sync statistics and error details
 - **Real-time sync monitoring**: Can monitor sync progress and receive notifications
 
 #### Admin-Readonly Users (`adminReadonly` role)
 
-- **View-only access** to the Settings page at `/admin/settings`
+- **View-only access** to the Tools page at `/admin/tools`
 - **Cannot trigger sync**: Refresh button is disabled with tooltip explanation
 - **View sync results**: Can see sync statistics and error details from previous syncs
 - **Monitor sync history**: Track when syncs were last performed by admin users
 
 #### Standard Users (`user` role)
 
-- **No access** to the Settings page
-- Attempts to navigate to `/admin/settings` result in redirect or 403 error
+- **No access** to the Tools page
+- Attempts to navigate to `/admin/tools` result in redirect or 403 error
 - Cannot view or interact with any admin settings functionality
 
-### Settings Page Features by Role
+### Tools Page Features by Role
 
 | Feature                         | admin | adminReadonly | user |
 | ------------------------------- | ----- | ------------- | ---- |
-| Access `/admin/settings` page   | ✅    | ✅            | ❌   |
+| Access `/admin/tools` page      | ✅    | ✅            | ❌   |
 | View Models Management panel    | ✅    | ✅            | ❌   |
 | Click "Refresh Models" button   | ✅    | ❌ (disabled) | ❌   |
 | See sync progress/loading state | ✅    | ❌            | ❌   |
@@ -182,7 +182,7 @@ The Admin Settings page (`/admin/settings`) provides role-based access to system
 
 ### UI Implementation Details
 
-The Settings page implements role-based functionality through conditional rendering:
+The Tools page implements role-based functionality through conditional rendering:
 
 ```typescript
 // Check if user has admin permission (not admin-readonly)
@@ -204,7 +204,7 @@ const canSync = user?.roles?.includes('admin') ?? false;
 )}
 ```
 
-For complete Settings page documentation, see [Admin Settings Guide](./admin-settings.md).
+For complete Tools page documentation, see [Admin Tools Guide](./admin-tools.md).
 
 ## API Role Requirements
 

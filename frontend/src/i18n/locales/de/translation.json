@@ -21,7 +21,7 @@
     "chatbot": "Chatbot-Spielplatz",
     "admin": {
       "users": "Benutzer",
-      "settings": "Einstellungen"
+      "tools": "Werkzeuge"
     }
   },
   "pages": {
@@ -643,8 +643,8 @@
       },
       "metricsUpdated": "Nutzungsmetriken aktualisiert. {{requests}} Gesamtanfragen, {{tokens}} Gesamttoken, {{cost}} Gesamtkosten"
     },
-    "settings": {
-      "title": "Einstellungen",
+    "tools": {
+      "title": "Werkzeuge",
       "userPreferences": "Benutzereinstellungen",
       "apiConfiguration": "API-Konfiguration",
       "forms": {

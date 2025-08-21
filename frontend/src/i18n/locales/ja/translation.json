@@ -21,7 +21,7 @@
     "chatbot": "チャットボットプレイグラウンド",
     "admin": {
       "users": "ユーザー",
-      "settings": "設定"
+      "tools": "ツール"
     }
   },
   "pages": {
@@ -643,8 +643,8 @@
       },
       "metricsUpdated": "使用状況メトリクスが更新されました。{{requests}}総リクエスト、{{tokens}}総トークン、{{cost}}総コスト"
     },
-    "settings": {
-      "title": "設定",
+    "tools": {
+      "title": "ツール",
       "userPreferences": "ユーザー設定",
       "apiConfiguration": "API設定",
       "forms": {

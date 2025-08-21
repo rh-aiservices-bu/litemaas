@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '../test-utils';
 import userEvent from '@testing-library/user-event';
 import { axe, toHaveNoViolations } from 'jest-axe';
-import SettingsPage from '../../pages/SettingsPage';
+import ToolsPage from '../../pages/ToolsPage';
 import { useAuth } from '../../contexts/AuthContext';
 import { modelsService } from '../../services/models.service';
 import { User } from '../../services/auth.service';
@@ -63,7 +63,7 @@ const createMockAuthContext = (user: User | null) => ({
   refreshUser: vi.fn(),
 });
 
-describe('SettingsPage Accessibility', () => {
+describe('ToolsPage Accessibility', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -72,7 +72,7 @@ describe('SettingsPage Accessibility', () => {
     it('should meet WCAG 2.1 AA standards for admin users', async () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      const { container } = render(<SettingsPage />);
+      const { container } = render(<ToolsPage />);
       const results = await axe(container);
 
       expect(results).toHaveNoViolations();
@@ -81,7 +81,7 @@ describe('SettingsPage Accessibility', () => {
     it('should meet WCAG 2.1 AA standards for admin-readonly users', async () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin-readonly'])));
 
-      const { container } = render(<SettingsPage />);
+      const { container } = render(<ToolsPage />);
       const results = await axe(container);
 
       expect(results).toHaveNoViolations();
@@ -92,7 +92,7 @@ describe('SettingsPage Accessibility', () => {
     it('should support keyboard navigation for admin users', async () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
 
@@ -108,7 +108,7 @@ describe('SettingsPage Accessibility', () => {
     it('should support keyboard navigation for admin-readonly users with disabled button', async () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin-readonly'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
 
@@ -125,7 +125,7 @@ describe('SettingsPage Accessibility', () => {
     it('should handle Space key activation for admin users', async () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       refreshButton.focus();
@@ -138,7 +138,7 @@ describe('SettingsPage Accessibility', () => {
     it('should maintain logical tab order', async () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       // Get all focusable elements
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
@@ -153,7 +153,7 @@ describe('SettingsPage Accessibility', () => {
     it('should have proper ARIA labels on interactive elements', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       expect(refreshButton).toHaveAttribute('type', 'button');
@@ -162,7 +162,7 @@ describe('SettingsPage Accessibility', () => {
     it('should have proper ARIA attributes on disabled button for admin-readonly', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin-readonly'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       expect(refreshButton).toHaveAttribute('aria-disabled', 'true');
@@ -171,11 +171,11 @@ describe('SettingsPage Accessibility', () => {
     it('should have proper heading hierarchy', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       // Main page heading (h1)
       const mainHeading = screen.getByRole('heading', { level: 1 });
-      expect(mainHeading).toHaveTextContent('Settings');
+      expect(mainHeading).toHaveTextContent('Tools');
     });
 
     it('should have proper description list structure for sync results', async () => {
@@ -191,7 +191,7 @@ describe('SettingsPage Accessibility', () => {
       });
 
       const user = userEvent.setup();
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       // Trigger sync to show results
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
@@ -220,7 +220,7 @@ describe('SettingsPage Accessibility', () => {
       mockRefreshModels.mockReturnValue(syncPromise);
 
       const user = userEvent.setup();
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(refreshButton);
@@ -248,7 +248,7 @@ describe('SettingsPage Accessibility', () => {
     it('should not trap focus inappropriately', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
 
@@ -272,7 +272,7 @@ describe('SettingsPage Accessibility', () => {
       mockRefreshModels.mockReturnValue(syncPromise);
 
       const user = userEvent.setup();
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(refreshButton);
@@ -312,7 +312,7 @@ describe('SettingsPage Accessibility', () => {
       });
 
       const user = userEvent.setup();
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(refreshButton);
@@ -328,7 +328,7 @@ describe('SettingsPage Accessibility', () => {
     it('should have descriptive button text', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       // Button text should be descriptive
       const refreshButton = screen.getByRole('button', { name: /refresh models from litellm/i });
@@ -340,7 +340,7 @@ describe('SettingsPage Accessibility', () => {
       mockRefreshModels.mockRejectedValue(new Error('Network timeout'));
 
       const user = userEvent.setup();
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(refreshButton);
@@ -357,7 +357,7 @@ describe('SettingsPage Accessibility', () => {
     it('should have informative help text', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       expect(
         screen.getByText(

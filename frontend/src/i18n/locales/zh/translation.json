@@ -21,7 +21,7 @@
     "chatbot": "聊天机器人游乐场",
     "admin": {
       "users": "用户",
-      "settings": "设置"
+      "tools": "工具"
     }
   },
   "pages": {
@@ -643,8 +643,8 @@
       },
       "metricsUpdated": "使用指标已更新。{{requests}}总请求，{{tokens}}总令牌，{{cost}}总成本"
     },
-    "settings": {
-      "title": "设置",
+    "tools": {
+      "title": "工具",
       "userPreferences": "用户偏好",
       "apiConfiguration": "API配置",
       "forms": {

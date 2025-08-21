@@ -22,7 +22,7 @@
     "chatbot": "Área de Juegos del Chatbot",
     "admin": {
       "users": "Usuarios",
-      "settings": "Configuración"
+      "tools": "Herramientas"
     }
   },
   "pages": {
@@ -644,8 +644,8 @@
       },
       "metricsUpdated": "Métricas de uso actualizadas. {{requests}} solicitudes totales, {{tokens}} tokens totales, {{cost}} costo total"
     },
-    "settings": {
-      "title": "Configuración",
+    "tools": {
+      "title": "Herramientas",
       "models": "Gestión de Modelos",
       "modelsDescription": "Sincronizar modelos de IA desde LiteLLM para asegurar que tengas acceso a los últimos modelos disponibles.",
       "refreshModels": "Actualizar Modelos desde LiteLLM",

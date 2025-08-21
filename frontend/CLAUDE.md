@@ -49,7 +49,7 @@ frontend/
 │   │   ├── SubscriptionsPage.tsx # Subscription management
 │   │   ├── ApiKeysPage.tsx # API key management
 │   │   ├── UsagePage.tsx # Usage analytics
-│   │   ├── SettingsPage.tsx # User settings
+│   │   ├── ToolsPage.tsx    # Admin tools
 │   │   ├── ChatbotPage.tsx # AI chatbot interface
 │   │   ├── LoginPage.tsx # Authentication
 │   │   └── AuthCallbackPage.tsx # OAuth callback
@@ -214,7 +214,7 @@ const routes = [
   { path: '/subscriptions', element: <SubscriptionsPage /> },
   { path: '/api-keys', element: <ApiKeysPage /> },
   { path: '/usage', element: <UsagePage /> },
-  { path: '/settings', element: <SettingsPage /> },
+  { path: '/admin/tools', element: <ToolsPage /> },
   // Admin routes (role-protected)
   { path: '/admin', element: <AdminPage />, requiredRoles: ['admin', 'adminReadonly'] },
   { path: '/admin/users', element: <UserManagementPage />, requiredRoles: ['admin', 'adminReadonly'] },

@@ -21,7 +21,7 @@
     "chatbot": "챗봇 플레이그라운드",
     "admin": {
       "users": "사용자",
-      "settings": "설정"
+      "tools": "도구"
     }
   },
   "pages": {
@@ -645,8 +645,8 @@
       },
       "metricsUpdated": "사용량 메트릭이 업데이트되었습니다. {{requests}}개 총 요청, {{tokens}}개 총 토큰, {{cost}} 총 비용"
     },
-    "settings": {
-      "title": "설정",
+    "tools": {
+      "title": "도구",
       "userPreferences": "사용자 환경설정",
       "apiConfiguration": "API 구성",
       "forms": {

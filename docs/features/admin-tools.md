@@ -1,12 +1,12 @@
-# Admin Settings Page
+# Admin Tools Page
 
 ## Overview
 
-The Admin Settings page (`/admin/settings`) provides administrative tools for managing LiteMaaS system configurations. Currently, it focuses on **Models Management**, allowing administrators to manually synchronize AI models from LiteLLM.
+The Admin Tools page (`/admin/tools`) provides administrative tools for managing LiteMaaS system configurations. Currently, it focuses on **Models Management**, allowing administrators to manually synchronize AI models from LiteLLM.
 
 ### Access Requirements
 
-The Settings page is restricted to users with administrative privileges:
+The Tools page is restricted to users with administrative privileges:
 
 - **Admin users**: Full access with ability to trigger synchronization
 - **Admin-readonly users**: View-only access to sync information and statistics
@@ -14,7 +14,7 @@ The Settings page is restricted to users with administrative privileges:
 
 ## Models Management Panel
 
-The Models Management panel is the primary feature of the Settings page, providing control over model synchronization between LiteLLM and the LiteMaaS database.
+The Models Management panel is the primary feature of the Tools page, providing control over model synchronization between LiteLLM and the LiteMaaS database.
 
 ### Purpose
 
@@ -39,7 +39,7 @@ Manual synchronization is useful when:
 
 #### How to Trigger Sync
 
-1. Navigate to `/admin/settings` in the LiteMaaS interface
+1. Navigate to `/admin/tools` in the LiteMaaS interface
 2. Locate the **Models Management** panel
 3. Click the **"Refresh Models from LiteLLM"** button
 4. Wait for the synchronization to complete

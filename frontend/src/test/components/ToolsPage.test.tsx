@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '../test-utils';
 import userEvent from '@testing-library/user-event';
-import SettingsPage from '../../pages/SettingsPage';
+import ToolsPage from '../../pages/ToolsPage';
 import { useAuth } from '../../contexts/AuthContext';
 import { modelsService } from '../../services/models.service';
 import { User } from '../../services/auth.service';
@@ -59,18 +59,18 @@ const createMockAuthContext = (user: User | null) => ({
   refreshUser: vi.fn(),
 });
 
-describe('SettingsPage', () => {
+describe('ToolsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   describe('Component Rendering', () => {
-    it('should render Settings page title and Models Management panel', () => {
+    it('should render Tools page title and Models Management panel', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
-      expect(screen.getByText('Settings')).toBeInTheDocument();
+      expect(screen.getByText('Tools')).toBeInTheDocument();
       expect(screen.getByText('Models Management')).toBeInTheDocument();
       expect(screen.getByText('Refresh Models from LiteLLM')).toBeInTheDocument();
     });
@@ -78,7 +78,7 @@ describe('SettingsPage', () => {
     it('should display refresh button for admin users', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       expect(refreshButton).toBeInTheDocument();
@@ -88,7 +88,7 @@ describe('SettingsPage', () => {
     it('should display disabled refresh button with tooltip for admin-readonly users', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin-readonly'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       expect(refreshButton).toBeInTheDocument();
@@ -98,7 +98,7 @@ describe('SettingsPage', () => {
     it('should render description text', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       expect(
         screen.getByText(
@@ -125,7 +125,7 @@ describe('SettingsPage', () => {
         syncedAt: '2024-01-01T10:00:00Z',
       });
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(refreshButton);
@@ -141,7 +141,7 @@ describe('SettingsPage', () => {
       });
       mockRefreshModels.mockReturnValue(syncPromise);
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(refreshButton);
@@ -178,7 +178,7 @@ describe('SettingsPage', () => {
         syncedAt: '2024-01-01T10:00:00Z',
       });
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(refreshButton);
@@ -203,7 +203,7 @@ describe('SettingsPage', () => {
 
     it('should not trigger sync when admin-readonly clicks disabled button', async () => {
       const user = userEvent.setup();
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       expect(refreshButton).toHaveAttribute('aria-disabled', 'true');
@@ -216,7 +216,7 @@ describe('SettingsPage', () => {
 
     it('should show tooltip on hover for admin-readonly users', async () => {
       const user = userEvent.setup();
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
 
@@ -245,7 +245,7 @@ describe('SettingsPage', () => {
       };
       mockRefreshModels.mockResolvedValue(mockSyncResult);
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(refreshButton);
@@ -265,7 +265,7 @@ describe('SettingsPage', () => {
       const errorMessage = 'Failed to connect to LiteLLM';
       mockRefreshModels.mockRejectedValue(new Error(errorMessage));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(refreshButton);
@@ -283,7 +283,7 @@ describe('SettingsPage', () => {
       const user = userEvent.setup();
       mockRefreshModels.mockRejectedValue('Network error');
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(refreshButton);
@@ -315,7 +315,7 @@ describe('SettingsPage', () => {
         syncedAt: '2024-01-01T15:30:00Z',
       });
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(refreshButton);
@@ -346,7 +346,7 @@ describe('SettingsPage', () => {
         syncedAt: testDate,
       });
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(refreshButton);
@@ -363,7 +363,7 @@ describe('SettingsPage', () => {
     it('should handle user with admin role', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       expect(refreshButton).not.toBeDisabled();
@@ -374,7 +374,7 @@ describe('SettingsPage', () => {
         createMockAuthContext(createMockUser(['user', 'admin', 'other-role'])),
       );
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       expect(refreshButton).not.toBeDisabled();
@@ -383,7 +383,7 @@ describe('SettingsPage', () => {
     it('should handle user with admin-readonly role', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin-readonly'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       expect(refreshButton).toHaveAttribute('aria-disabled');
@@ -392,7 +392,7 @@ describe('SettingsPage', () => {
     it('should handle user with no admin roles', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['user'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       expect(refreshButton).toHaveAttribute('aria-disabled');
@@ -401,7 +401,7 @@ describe('SettingsPage', () => {
     it('should handle user with no roles', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser([])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       expect(refreshButton).toHaveAttribute('aria-disabled');
@@ -410,7 +410,7 @@ describe('SettingsPage', () => {
     it('should handle null user', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(null));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       const refreshButton = screen.getByRole('button', { name: /refresh models/i });
       expect(refreshButton).toHaveAttribute('aria-disabled');
@@ -423,10 +423,10 @@ describe('SettingsPage', () => {
     });
 
     it('should render all required translation keys', () => {
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       // Main page elements
-      expect(screen.getByText('Settings')).toBeInTheDocument();
+      expect(screen.getByText('Tools')).toBeInTheDocument();
       expect(screen.getByText('Models Management')).toBeInTheDocument();
       expect(
         screen.getByText(
@@ -439,7 +439,7 @@ describe('SettingsPage', () => {
     it('should render tooltip translation key for disabled button', () => {
       mockUseAuth.mockReturnValue(createMockAuthContext(createMockUser(['admin-readonly'])));
 
-      render(<SettingsPage />);
+      render(<ToolsPage />);
 
       expect(screen.getByText('Refresh Models from LiteLLM')).toBeInTheDocument();
     });

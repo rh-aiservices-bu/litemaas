@@ -21,7 +21,7 @@
     "chatbot": "Area Giochi del Chatbot",
     "admin": {
       "users": "Utenti",
-      "settings": "Impostazioni"
+      "tools": "Strumenti"
     }
   },
   "pages": {
@@ -643,8 +643,8 @@
       },
       "metricsUpdated": "Metriche di utilizzo aggiornate. {{requests}} richieste totali, {{tokens}} token totali, {{cost}} costo totale"
     },
-    "settings": {
-      "title": "Impostazioni",
+    "tools": {
+      "title": "Strumenti",
       "userPreferences": "Preferenze Utente",
       "apiConfiguration": "Configurazione API",
       "forms": {

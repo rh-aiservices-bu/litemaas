@@ -34,7 +34,7 @@ vi.mock('../../contexts/NotificationContext', () => ({
 
 // Import pages for comprehensive testing
 import HomePage from '../../pages/HomePage';
-import SettingsPage from '../../pages/SettingsPage';
+import ToolsPage from '../../pages/ToolsPage';
 
 // Import standardized router utilities
 import { createTestRouter } from '../test-utils';
@@ -96,8 +96,8 @@ describe('Comprehensive Accessibility Test Suite', () => {
     });
     */
 
-    it('should meet WCAG 2.1 AA standards on SettingsPage', async () => {
-      const { container } = renderWithRouter(<SettingsPage />);
+    it('should meet WCAG 2.1 AA standards on ToolsPage', async () => {
+      const { container } = renderWithRouter(<ToolsPage />);
 
       const results = await axe(container, {
         runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21aa'] },
@@ -137,7 +137,7 @@ describe('Comprehensive Accessibility Test Suite', () => {
     */
 
     it('should validate form accessibility', async () => {
-      const { container } = renderWithRouter(<SettingsPage />);
+      const { container } = renderWithRouter(<ToolsPage />);
 
       const results = await axe(container, {
         runOnly: {
@@ -209,7 +209,7 @@ describe('Comprehensive Accessibility Test Suite', () => {
     });
 
     it('should support arrow key navigation where appropriate', async () => {
-      renderWithRouter(<SettingsPage />);
+      renderWithRouter(<ToolsPage />);
 
       // Look for elements that should support arrow key navigation
       const radioGroups = document.querySelectorAll('[role="radiogroup"]');
@@ -258,7 +258,7 @@ describe('Comprehensive Accessibility Test Suite', () => {
     });
 
     it('should have proper ARIA labels and descriptions', () => {
-      renderWithRouter(<SettingsPage />);
+      renderWithRouter(<ToolsPage />);
 
       // Check form controls have proper labeling
       const inputs = document.querySelectorAll('input:not([type="hidden"]), select, textarea');
@@ -313,7 +313,7 @@ describe('Comprehensive Accessibility Test Suite', () => {
     });
 
     it('should manage focus for modal or overlay patterns', () => {
-      renderWithRouter(<SettingsPage />);
+      renderWithRouter(<ToolsPage />);
 
       // Look for modal patterns
       const modals = document.querySelectorAll('[role="dialog"], [role="alertdialog"]');
@@ -328,7 +328,7 @@ describe('Comprehensive Accessibility Test Suite', () => {
     });
 
     it('should handle focus trapping in appropriate contexts', () => {
-      renderWithRouter(<SettingsPage />);
+      renderWithRouter(<ToolsPage />);
 
       // Check for elements that should trap focus
       const dialogs = document.querySelectorAll('[role="dialog"]');
@@ -349,7 +349,7 @@ describe('Comprehensive Accessibility Test Suite', () => {
 
   describe('Error State Accessibility', () => {
     it('should handle form validation errors accessibly', async () => {
-      renderWithRouter(<SettingsPage />);
+      renderWithRouter(<ToolsPage />);
 
       // Look for form fields that might have validation
       const requiredInputs = document.querySelectorAll(
@@ -367,7 +367,7 @@ describe('Comprehensive Accessibility Test Suite', () => {
     });
 
     it('should announce errors to screen readers', () => {
-      renderWithRouter(<SettingsPage />);
+      renderWithRouter(<ToolsPage />);
 
       // Check for error announcement regions
       const errorRegions = document.querySelectorAll('[role="alert"], [aria-live="assertive"]');
@@ -404,7 +404,7 @@ describe('Comprehensive Accessibility Test Suite', () => {
     */
 
     it('should handle high contrast mode appropriately', () => {
-      renderWithRouter(<SettingsPage />);
+      renderWithRouter(<ToolsPage />);
 
       // Check that elements don't rely solely on color
       const buttons = document.querySelectorAll('button');
@@ -460,10 +460,10 @@ describe('Comprehensive Accessibility Test Suite', () => {
 
     // TODO: Fix voice control patterns test for accessible name validation
     // Issue: expected '' to be truthy - some interactive elements missing accessible names
-    // Problem: Elements on SettingsPage without aria-label, text content, or placeholder attributes
+    // Problem: Elements on ToolsPage without aria-label, text content, or placeholder attributes
     /*
     it('should support voice control patterns', () => {
-      renderWithRouter(<SettingsPage />);
+      renderWithRouter(<ToolsPage />);
       
       // Interactive elements should have discoverable names
       const buttons = document.querySelectorAll('button');
