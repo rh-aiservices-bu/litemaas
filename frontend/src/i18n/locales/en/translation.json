@@ -496,7 +496,7 @@
       "newModels": "New Models",
       "updatedModels": "Updated Models",
       "limitsManagement": "Limits Management",
-      "limitsDescription": "Set default resource limits for all users in the system. Changes will apply to all active users.",
+      "limitsDescription": "Set resource limits for all users in the system. Changes will apply to all active users. Defaults for new users won't change.",
       "maxBudgetLabel": "Maximum Budget ($)",
       "maxBudgetHelper": "Maximum spending limit per user in dollars",
       "tpmLimitLabel": "TPM Limit",

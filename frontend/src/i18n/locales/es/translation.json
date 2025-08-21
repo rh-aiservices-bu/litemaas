@@ -687,32 +687,7 @@
       "totalUsersUpdated": "Usuarios Totales",
       "successfulUpdates": "Exitosos",
       "failedUpdates": "Fallidos",
-      "updateErrors": "Errores de Actualización",
-      "userPreferences": "Preferencias de Usuario",
-      "apiConfiguration": "Configuración API",
-      "forms": {
-        "displayName": "Nombre para Mostrar",
-        "displayNamePlaceholder": "Introduce tu nombre para mostrar",
-        "displayNameHelperText": "Este nombre se mostrará en tu perfil y a través de la aplicación",
-        "emailNotifications": "Notificaciones por Email",
-        "emailNotificationsHelperText": "Recibir notificaciones sobre cambios de suscripción, alertas de uso y actualizaciones de seguridad",
-        "emailNotificationsAriaLabel": "Activar o desactivar notificaciones por email",
-        "autoRefreshDashboard": "Actualización Automática del Panel",
-        "autoRefreshHelperText": "Actualizar automáticamente los datos del panel cada 30 segundos",
-        "autoRefreshAriaLabel": "Activar o desactivar la actualización automática del panel",
-        "enabled": "Habilitado",
-        "disabled": "Deshabilitado",
-        "defaultModelProvider": "Proveedor de Modelo Predeterminado",
-        "rateLimitLabel": "Límite de Velocidad (solicitudes/minuto)",
-        "rateLimitHelperText": "Este límite está establecido por tu plan de suscripción y no se puede modificar",
-        "timeoutLabel": "Tiempo de Espera (segundos)",
-        "providerPlaceholder": "OpenAI, Anthropic, etc.",
-        "openShiftAI": "OpenShift AI"
-      },
-      "buttons": {
-        "savePreferences": "Guardar Preferencias",
-        "updateConfiguration": "Actualizar Configuración"
-      }
+      "updateErrors": "Errores de Actualización"
     }
   },
   "role": {
