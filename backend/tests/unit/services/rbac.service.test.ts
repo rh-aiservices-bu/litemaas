@@ -53,6 +53,7 @@ describe('RBACService', () => {
       expect(adminReadonlyRole!.isSystem).toBe(true);
       expect(adminReadonlyRole!.permissions).toEqual([
         'admin:users',
+        'admin:banners:read',
         'users:read',
         'models:read',
         'subscriptions:read',

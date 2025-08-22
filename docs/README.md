@@ -41,6 +41,7 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 - **[Setup Guide](development/setup.md)** - Local development environment
 - **[Backend Guide](development/backend-guide.md)** - Fastify development
 - **[UI Guidelines](development/pf6-guide/README.md)** - PatternFly 6 best practices
+- **[Translation Management](development/translation-management.md)** - i18n and translation tools
 - **[Migration Notes](development/migration-notes.md)** - Database migrations
 - **[Accessibility Guide](development/accessibility/README.md)** - WCAG 2.1 AA compliance and testing
 

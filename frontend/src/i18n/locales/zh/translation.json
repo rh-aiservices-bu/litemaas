@@ -171,18 +171,18 @@
         "suspended": "订阅已暂停",
         "expired": "订阅已过期"
       },
-      "status": {
-        "active": "活跃",
-        "suspended": "已暂停",
-        "expired": "已过期",
-        "pending": "待处理"
-      },
       "ariaLabels": {
         "status": "状态"
       },
       "pricingLabels": {
         "input": "输入",
         "output": "输出"
+      },
+      "status": {
+        "active": "活跃",
+        "suspended": "已暂停",
+        "expired": "已过期",
+        "pending": "待处理"
       }
     },
     "apiKeys": {
@@ -298,6 +298,9 @@
         "createSuccess": "API密钥已创建",
         "createError": "错误",
         "createErrorDesc": "创建API密钥失败。请重试。",
+        "updateSuccess": "API密钥已更新",
+        "updateError": "错误",
+        "updateErrorDesc": "更新API密钥失败。请重试。",
         "deleteSuccess": "API密钥已删除",
         "deleteError": "错误",
         "deleteErrorDesc": "删除API密钥失败。请重试。",
@@ -307,10 +310,7 @@
         "validationError": "验证错误",
         "nameRequired": "API密钥名称是必需的",
         "modelsRequired": "请从您的活动订阅中选择至少一个模型",
-        "pleaseFixFormErrors": "请修复表单错误并重试",
-        "updateError": "错误",
-        "updateErrorDesc": "更新API密钥失败。请重试。",
-        "updateSuccess": "API密钥已更新"
+        "pleaseFixFormErrors": "请修复表单错误并重试"
       },
       "modals": {
         "createTitle": "创建API密钥",
@@ -335,6 +335,7 @@
         "generatedKeyDetailsCaption": "显示新创建的API密钥'{{keyName}}'详情的表格，包括分配的模型和过期日期"
       },
       "viewKeyAriaLabel": "查看API密钥{{keyName}}的详情",
+      "editKeyAriaLabel": "编辑API密钥 {{keyName}}",
       "deleteKeyAriaLabel": "删除API密钥{{keyName}}",
       "hideKeyAriaLabel": "隐藏{{keyName}}的API密钥值",
       "showKeyAriaLabel": "显示{{keyName}}的API密钥值",
@@ -344,173 +345,6 @@
       "codeExample": {
         "role": "用户",
         "content": "你好，世界！"
-      },
-      "editKeyAriaLabel": "编辑API密钥 {{keyName}}"
-    },
-    "chatbot": {
-      "title": "聊天机器人游乐场",
-      "subtitle": "使用直接聊天界面测试和与AI模型交互",
-      "loading": "加载聊天机器人中...",
-      "description": "使用交互式聊天界面测试您的API密钥和模型",
-      "configuration": {
-        "title": "配置",
-        "apiKey": "选择API密钥",
-        "apiKeyPlaceholder": "选择要测试的API密钥",
-        "model": "选择模型",
-        "modelPlaceholder": "选择要测试的模型",
-        "advancedSettings": "高级设置",
-        "temperature": "温度",
-        "temperatureHelp": "控制随机性（0=确定性，2=创造性）",
-        "maxTokens": "最大令牌数",
-        "maxTokensHelp": "最大响应长度",
-        "systemPrompt": "系统提示",
-        "systemPromptHelp": "设置助手行为",
-        "systemPromptPlaceholder": "输入系统提示（可选）",
-        "streaming": "流式传输",
-        "streamingEnabled": "启用实时流式传输",
-        "modelsLabel": "模型",
-        "selectApiKey": "选择API密钥...",
-        "selectModel": "选择模型...",
-        "temperatureDescription": "控制随机性（当前：{{value}}）"
-      },
-      "quickTests": {
-        "title": "快速测试",
-        "codeGen": "代码生成",
-        "translation": "翻译",
-        "summary": "摘要",
-        "jsonFormat": "JSON响应",
-        "creative": "创意写作",
-        "problemSolving": "问题解决",
-        "dataAnalysis": "数据分析",
-        "roleplay": "角色扮演",
-        "custom": "我的提示"
-      },
-      "chat": {
-        "welcomeTitle": "模型测试助手",
-        "welcomeDescription": "开始对话来测试您选择的模型和API密钥",
-        "placeholder": "输入您的消息...",
-        "send": "发送",
-        "clear": "清除聊天",
-        "export": "导出",
-        "savePrompt": "保存提示",
-        "sending": "发送中...",
-        "emptyConversation": "暂无消息。请在下方输入消息开始对话。",
-        "clearConversation": "清除对话",
-        "configureFirst": "请先配置API密钥和模型",
-        "selectModelFirst": "请选择API密钥和模型以开始聊天",
-        "stop": "停止",
-        "stopGeneration": "停止生成",
-        "streamingInProgress": "流式传输进行中..."
-      },
-      "responseInfo": {
-        "title": "响应指标",
-        "tokens": "令牌",
-        "promptTokens": "提示",
-        "completionTokens": "完成",
-        "totalTokens": "总计",
-        "responseTime": "响应时间",
-        "tokenUsage": "令牌使用",
-        "estimatedCost": "预估成本",
-        "timeToFirstToken": "到第一个令牌的时间",
-        "tokensPerSecond": "令牌/秒",
-        "tokensPerSecondUnit": "令牌/秒",
-        "prompt": "提示",
-        "completion": "完成",
-        "viewRaw": "查看原始响应",
-        "hideRaw": "隐藏原始响应",
-        "noData": "暂无响应指标",
-        "noResponse": "暂无可用的响应数据"
-      },
-      "export": {
-        "title": "导出对话",
-        "format": "选择格式",
-        "json": "JSON",
-        "markdown": "Markdown",
-        "download": "下载",
-        "cancel": "取消",
-        "filename": "文件名"
-      },
-      "savePromptModal": {
-        "title": "保存提示",
-        "name": "提示名称",
-        "namePlaceholder": "为此提示输入名称",
-        "description": "描述（可选）",
-        "descriptionPlaceholder": "描述此提示的用途",
-        "save": "保存",
-        "cancel": "取消"
-      },
-      "prompts": {
-        "builtIn": "内置模板",
-        "custom": "我保存的提示",
-        "noCustomPrompts": "暂无保存的提示",
-        "usePrompt": "使用此提示",
-        "deletePrompt": "删除提示",
-        "confirmDelete": "您确定要删除此提示吗？"
-      },
-      "validation": {
-        "noApiKey": "请选择API密钥",
-        "noModel": "请选择模型",
-        "emptyMessage": "请输入消息",
-        "promptNameRequired": "提示名称为必填项",
-        "promptNameExists": "此名称的提示已存在"
-      },
-      "errors": {
-        "requestFailed": "请求失败",
-        "invalidResponse": "服务器返回无效响应",
-        "networkError": "网络错误。请检查您的连接并重试。",
-        "authError": "身份验证失败。请检查您的API密钥。",
-        "rateLimitError": "速率限制超出。请稍后重试。",
-        "validationError": "验证错误。请检查您的输入。",
-        "serverError": "服务器错误。请稍后重试。",
-        "timeoutError": "请求超时。请重试。",
-        "unexpectedError": "发生了意外错误",
-        "keyRetrievalFailed": "获取API密钥失败",
-        "keyRetrievalFailedDesc": "无法获取完整的API密钥。请检查您的身份验证并重试。",
-        "loadDataFailed": "加载数据失败",
-        "loadModelsFailed": "加载模型失败",
-        "sendFailed": "发送消息失败",
-        "chatError": "聊天错误"
-      },
-      "notifications": {
-        "promptSaved": "提示已保存",
-        "promptSavedDesc": "您的提示已成功保存",
-        "promptDeleted": "提示已删除",
-        "promptDeletedDesc": "提示已被删除",
-        "conversationCleared": "对话已清除",
-        "conversationClearedDesc": "聊天记录已被清除",
-        "conversationExported": "对话已导出",
-        "conversationExportedDesc": "您的对话已成功导出",
-        "messageSent": "消息已发送",
-        "apiError": "API错误",
-        "keyRetrieved": "API密钥已获取",
-        "keyRetrievedDesc": "您的完整API密钥已安全获取",
-        "savePromptError": "保存提示错误",
-        "deletePromptError": "删除提示错误",
-        "exportError": "导出错误"
-      },
-      "success": {
-        "messageSent": "消息已发送",
-        "responseReceived": "响应已成功接收",
-        "conversationCleared": "对话已清除"
-      },
-      "welcome": {
-        "title": "欢迎使用聊天机器人游乐场",
-        "description": "从上方的配置面板选择API密钥和模型，然后开始聊天以直接测试您的AI模型"
-      },
-      "accessibility": {
-        "configurationPanel": "聊天机器人设置的配置面板",
-        "chatInterface": "用于测试AI模型的聊天界面",
-        "responseInfoPanel": "显示指标的响应信息面板",
-        "messageHistory": "消息历史",
-        "sendMessage": "向AI模型发送消息",
-        "clearConversation": "清除对话中的所有消息",
-        "exportConversation": "将对话导出为文件",
-        "saveCurrentPrompt": "将当前消息保存为提示模板",
-        "selectApiKey": "选择用于身份验证的API密钥",
-        "selectModel": "选择用于测试的AI模型",
-        "adjustTemperature": "调整温度以控制响应创造性",
-        "setMaxTokens": "设置响应长度的最大令牌数",
-        "enterSystemPrompt": "输入系统提示以指导模型行为"
       }
     },
     "usage": {
@@ -687,22 +521,364 @@
       "totalUsersUpdated": "用户总数",
       "successfulUpdates": "成功",
       "failedUpdates": "失败",
-      "updateErrors": "更新错误"
+      "updateErrors": "更新错误",
+      "bannerManagement": "横幅管理",
+      "bannerDescription": "创建和管理显示在应用程序顶部的公告，面向所有用户。",
+      "bannerStatus": "横幅状态",
+      "showBanner": "显示横幅",
+      "hideBanner": "隐藏横幅",
+      "bannerStatusHelper": "切换以向所有用户显示或隐藏横幅",
+      "bannerContent": "横幅内容",
+      "bannerContentPlaceholder": "在此输入您的公告文本...",
+      "bannerEnglishRequired": "英文内容是必需的（其他语言是可选的）",
+      "bannerStyle": "横幅样式",
+      "bannerStyleHelper": "选择最适合您公告类型的视觉样式",
+      "bannerStyleAriaLabel": "选择横幅样式",
+      "variantInfo": "信息（蓝色）",
+      "variantWarning": "警告（橙色）",
+      "variantDanger": "危险（红色）",
+      "variantSuccess": "成功（绿色）",
+      "variantDefault": "默认（灰色）",
+      "allowDismiss": "允许用户关闭",
+      "allowDismissHelper": "启用后，用户可以在其会话中关闭横幅",
+      "enableMarkdown": "启用基础Markdown",
+      "enableMarkdownHelper": "在横幅内容中支持**粗体**文本和[链接](URL)",
+      "saveBanner": "保存横幅",
+      "deactivateBanner": "停用横幅",
+      "saving": "保存中...",
+      "bannerSaved": "横幅保存成功",
+      "bannerSavedDescription": "横幅公告已更新，将立即向用户显示",
+      "bannerSaveError": "保存横幅失败",
+      "bannerSaveErrorGeneric": "保存横幅时发生错误。请重试。",
+      "bannerValidationError": "验证错误",
+      "bannerName": "横幅名称",
+      "bannerNameRequired": "横幅名称是必需的",
+      "bannerNamePlaceholder": "为此横幅输入描述性名称",
+      "createNewBanner": "创建新横幅",
+      "createBanner": "创建横幅",
+      "editBanner": "编辑横幅",
+      "deleteBanner": "删除横幅",
+      "bannersTableAriaLabel": "横幅管理表格",
+      "visibility": "可见性",
+      "variant": "类型",
+      "lastUpdated": "最后更新",
+      "actions": "操作",
+      "visible": "可见",
+      "hidden": "隐藏",
+      "pending": "待处理",
+      "toggleVisibility": "切换{{name}}的可见性",
+      "noBannersFound": "未找到横幅。创建您的第一个横幅以开始。",
+      "confirmDeleteBanner": "删除横幅",
+      "confirmDeleteBannerMessage": "您确定要删除\"{{name}}\"吗？",
+      "deleteWarning": "此操作无法撤销。",
+      "bannerDeleted": "横幅已删除",
+      "bannerDeletedDescription": "横幅已成功删除。",
+      "bannerDeleteError": "删除横幅失败",
+      "bannerDeleteErrorGeneric": "删除横幅时发生错误。请重试。",
+      "bannerCreated": "横幅已创建",
+      "bannerCreatedDescription": "横幅已成功创建。",
+      "applyChanges": "应用更改",
+      "applying": "正在应用更改...",
+      "changesApplied": "更改已应用",
+      "changesAppliedDescription": "横幅可见性更改已成功应用。",
+      "applyChangesError": "应用更改失败",
+      "applyChangesErrorGeneric": "应用更改时发生错误。请重试。",
+      "bannerVisibilityNote": "可见性在表格级别管理",
+      "bannerVisibilityNoteDescription": "使用表格中的可见性切换来显示/隐藏横幅。一次只能显示一个横幅。",
+      "dismissalResetTitle": "关闭重置",
+      "dismissalResetNote": "注意：保存任何更改都会使横幅再次对所有之前关闭它的用户可见。",
+      "noContent": "无内容"
+    },
+    "chatbot": {
+      "title": "聊天机器人游乐场",
+      "subtitle": "使用直接聊天界面测试和与AI模型交互",
+      "description": "使用交互式聊天界面测试您的API密钥和模型",
+      "loading": "加载聊天机器人中...",
+      "configuration": {
+        "title": "配置",
+        "apiKey": "选择API密钥",
+        "selectApiKey": "选择API密钥...",
+        "model": "选择模型",
+        "selectModel": "选择模型...",
+        "temperature": "温度",
+        "temperatureDescription": "控制随机性（当前：{{value}}）",
+        "maxTokens": "最大令牌数",
+        "systemPrompt": "系统提示",
+        "systemPromptPlaceholder": "输入系统提示（可选）",
+        "streaming": "流式传输",
+        "streamingEnabled": "启用实时流式传输",
+        "modelsLabel": "模型",
+        "advancedSettings": "高级设置",
+        "apiKeyPlaceholder": "选择要测试的API密钥",
+        "modelPlaceholder": "选择要测试的模型",
+        "temperatureHelp": "控制随机性（0=确定性，2=创造性）",
+        "maxTokensHelp": "最大响应长度",
+        "systemPromptHelp": "设置助手行为"
+      },
+      "chat": {
+        "selectModelFirst": "请选择API密钥和模型以开始聊天",
+        "placeholder": "输入您的消息...",
+        "configureFirst": "请先配置API密钥和模型",
+        "clear": "清除聊天",
+        "clearConversation": "清除对话",
+        "send": "发送",
+        "sending": "发送中...",
+        "stop": "停止",
+        "stopGeneration": "停止生成",
+        "streamingInProgress": "流式传输进行中...",
+        "emptyConversation": "暂无消息。请在下方输入消息开始对话。",
+        "export": "导出",
+        "savePrompt": "保存提示",
+        "welcomeTitle": "模型测试助手",
+        "welcomeDescription": "开始对话来测试您选择的模型和API密钥"
+      },
+      "welcome": {
+        "title": "欢迎使用聊天机器人游乐场",
+        "description": "从上方的配置面板选择API密钥和模型，然后开始聊天以直接测试您的AI模型"
+      },
+      "responseInfo": {
+        "title": "响应指标",
+        "responseTime": "响应时间",
+        "tokenUsage": "令牌使用",
+        "estimatedCost": "预估成本",
+        "noData": "暂无响应指标",
+        "timeToFirstToken": "到第一个令牌的时间",
+        "tokensPerSecond": "令牌/秒",
+        "tokensPerSecondUnit": "令牌/秒",
+        "prompt": "提示",
+        "completion": "完成",
+        "completionTokens": "完成",
+        "promptTokens": "提示",
+        "tokens": "令牌",
+        "totalTokens": "总计",
+        "hideRaw": "隐藏原始响应",
+        "viewRaw": "查看原始响应",
+        "noResponse": "暂无可用的响应数据"
+      },
+      "errors": {
+        "loadDataFailed": "加载数据失败",
+        "loadModelsFailed": "加载模型失败",
+        "sendFailed": "发送消息失败",
+        "chatError": "聊天错误",
+        "keyRetrievalFailed": "获取API密钥失败",
+        "keyRetrievalFailedDesc": "无法获取完整的API密钥。请检查您的身份验证并重试。",
+        "requestFailed": "请求失败",
+        "invalidResponse": "服务器返回无效响应",
+        "networkError": "网络错误。请检查您的连接并重试。",
+        "authError": "身份验证失败。请检查您的API密钥。",
+        "rateLimitError": "速率限制超出。请稍后重试。",
+        "validationError": "验证错误。请检查您的输入。",
+        "serverError": "服务器错误。请稍后重试。",
+        "timeoutError": "请求超时。请重试。",
+        "unexpectedError": "发生了意外错误"
+      },
+      "success": {
+        "messageSent": "消息已发送",
+        "responseReceived": "响应已成功接收",
+        "conversationCleared": "对话已清除"
+      },
+      "quickTests": {
+        "title": "快速测试",
+        "codeGen": "代码生成",
+        "translation": "翻译",
+        "summary": "摘要",
+        "jsonFormat": "JSON响应",
+        "creative": "创意写作",
+        "problemSolving": "问题解决",
+        "dataAnalysis": "数据分析",
+        "roleplay": "角色扮演",
+        "custom": "我的提示"
+      },
+      "prompts": {
+        "builtIn": "内置模板",
+        "custom": "我保存的提示",
+        "noCustomPrompts": "暂无保存的提示",
+        "usePrompt": "使用此提示",
+        "deletePrompt": "删除提示",
+        "confirmDelete": "您确定要删除此提示吗？"
+      },
+      "export": {
+        "title": "导出对话",
+        "format": "选择格式",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "download": "下载",
+        "cancel": "取消",
+        "filename": "文件名"
+      },
+      "savePromptModal": {
+        "title": "保存提示",
+        "name": "提示名称",
+        "namePlaceholder": "为此提示输入名称",
+        "description": "描述（可选）",
+        "descriptionPlaceholder": "描述此提示的用途",
+        "save": "保存",
+        "cancel": "取消"
+      },
+      "validation": {
+        "noApiKey": "请选择API密钥",
+        "noModel": "请选择模型",
+        "emptyMessage": "请输入消息",
+        "promptNameRequired": "提示名称为必填项",
+        "promptNameExists": "此名称的提示已存在"
+      },
+      "notifications": {
+        "promptSaved": "提示已保存",
+        "promptSavedDesc": "您的提示已成功保存",
+        "promptDeleted": "提示已删除",
+        "promptDeletedDesc": "提示已被删除",
+        "conversationCleared": "对话已清除",
+        "conversationClearedDesc": "聊天记录已被清除",
+        "conversationExported": "对话已导出",
+        "conversationExportedDesc": "您的对话已成功导出",
+        "messageSent": "消息已发送",
+        "apiError": "API错误",
+        "keyRetrieved": "API密钥已获取",
+        "keyRetrievedDesc": "您的完整API密钥已安全获取",
+        "savePromptError": "保存提示错误",
+        "deletePromptError": "删除提示错误",
+        "exportError": "导出错误"
+      },
+      "accessibility": {
+        "configurationPanel": "聊天机器人设置的配置面板",
+        "chatInterface": "用于测试AI模型的聊天界面",
+        "responseInfoPanel": "显示指标的响应信息面板",
+        "messageHistory": "消息历史",
+        "sendMessage": "向AI模型发送消息",
+        "clearConversation": "清除对话中的所有消息",
+        "exportConversation": "将对话导出为文件",
+        "saveCurrentPrompt": "将当前消息保存为提示模板",
+        "selectApiKey": "选择用于身份验证的API密钥",
+        "selectModel": "选择用于测试的AI模型",
+        "adjustTemperature": "调整温度以控制响应创造性",
+        "setMaxTokens": "设置响应长度的最大令牌数",
+        "enterSystemPrompt": "输入系统提示以指导模型行为"
+      }
     }
+  },
+  "role": {
+    "admin": "管理员",
+    "adminReadonly": "管理员（只读）",
+    "user": "用户"
+  },
+  "users": {
+    "pageDescription": "管理组织中的用户、角色和权限",
+    "permissions": {
+      "accessDenied": "拒绝访问",
+      "noPermission": "您没有访问用户管理的权限。如果您认为这是错误，请联系管理员。"
+    },
+    "loading": {
+      "title": "加载用户中...",
+      "description": "正在从服务器获取用户信息"
+    },
+    "pagination": {
+      "of": "共",
+      "users": "用户"
+    },
+    "table": {
+      "username": "用户名",
+      "email": "邮箱",
+      "fullName": "全名",
+      "roles": "角色",
+      "status": "状态",
+      "ariaLabel": "用户表格",
+      "caption": "包含用户名、邮箱、全名、角色和状态的{{count}}个用户表格。",
+      "moreRoles": "+{{count}}个更多",
+      "notProvided": "未提供"
+    },
+    "actions": {
+      "edit": "编辑",
+      "view": "查看详情"
+    },
+    "modal": {
+      "edit": {
+        "title": "编辑用户"
+      },
+      "view": {
+        "title": "用户详情"
+      },
+      "defaultTitle": "用户详情",
+      "close": "关闭"
+    },
+    "form": {
+      "username": "用户名",
+      "email": "邮箱",
+      "fullName": "全名",
+      "roles": "角色",
+      "status": "状态",
+      "lastLogin": "最后登录",
+      "createdAt": "创建时间",
+      "userInfo": "用户信息",
+      "noRoles": "未分配角色",
+      "toggleRole": "切换{{role}}角色",
+      "toggleStatus": "切换用户活动状态"
+    },
+    "search": {
+      "placeholder": "搜索用户...",
+      "ariaLabel": "搜索用户"
+    },
+    "filters": {
+      "roleAriaLabel": "按角色筛选",
+      "statusAriaLabel": "按状态筛选",
+      "allRoles": "所有角色",
+      "allStatus": "所有状态",
+      "clearAll": "清除所有筛选条件",
+      "noMatches": "没有用户匹配您的筛选条件",
+      "adjustFilters": "尝试调整搜索词或筛选条件来查找用户。"
+    },
+    "empty": {
+      "title": "未找到用户",
+      "description": "没有用户符合您的搜索条件。"
+    },
+    "error": {
+      "load": "加载用户失败",
+      "loadTitle": "加载用户时出错",
+      "loadDescription": "从服务器加载用户失败。",
+      "tryAgain": "重试",
+      "update": "更新用户失败"
+    },
+    "notifications": {
+      "updateSuccess": "用户已更新",
+      "updateSuccessDesc": "用户信息已成功更新。",
+      "updateError": "更新失败"
+    },
+    "warnings": {
+      "roleConflict": "角色冲突",
+      "roleConflictDesc": "管理员和管理员（只读）角色冲突。管理员角色将优先。"
+    },
+    "alerts": {
+      "inactive": {
+        "title": "用户账户未激活",
+        "description": "该用户账户当前处于非活动状态，无法访问系统。"
+      },
+      "admin": {
+        "title": "管理员账户",
+        "description": "该用户具有管理员权限，可以完全访问系统。"
+      }
+    },
+    "status": {
+      "oauthManaged": "状态由OAuth提供商管理。"
+    },
+    "never": "从未"
+  },
+  "status": {
+    "active": "活跃",
+    "inactive": "非活跃"
   },
   "ui": {
     "actions": {
+      "browse": "浏览",
       "cancel": "取消",
       "close": "关闭",
+      "closeSidebar": "关闭导航侧边栏",
+      "login": "使用OpenShift登录",
+      "logout": "退出",
+      "notImplemented": "尚未实现",
+      "openSidebar": "打开导航侧边栏",
+      "refresh": "刷新页面",
       "save": "保存",
       "saving": "保存中...",
-      "tryAgain": "重试",
-      "logout": "退出",
-      "login": "使用OpenShift登录",
-      "browse": "浏览",
-      "refresh": "刷新页面",
-      "openSidebar": "打开导航侧边栏",
-      "closeSidebar": "关闭导航侧边栏"
+      "tryAgain": "重试"
     },
     "pagination": {
       "showing": "显示"
@@ -762,114 +938,5 @@
       "somethingWrong": "出现问题",
       "tryRefresh": "抱歉，发生了意外情况。请尝试刷新页面，如果问题仍然存在，请联系支持。"
     }
-  },
-  "users": {
-    "alerts": {
-      "admin": {
-        "description": "该用户具有管理员权限，可以完全访问系统。",
-        "title": "管理员账户"
-      },
-      "inactive": {
-        "description": "该用户账户当前处于非活动状态，无法访问系统。",
-        "title": "用户账户未激活"
-      }
-    },
-    "error": {
-      "load": "加载用户失败",
-      "loadDescription": "从服务器加载用户失败。",
-      "loadTitle": "加载用户时出错",
-      "tryAgain": "重试",
-      "update": "更新用户失败"
-    },
-    "filters": {
-      "adjustFilters": "尝试调整搜索词或筛选条件来查找用户。",
-      "allRoles": "所有角色",
-      "allStatus": "所有状态",
-      "clearAll": "清除所有筛选条件",
-      "noMatches": "没有用户匹配您的筛选条件",
-      "roleAriaLabel": "按角色筛选",
-      "statusAriaLabel": "按状态筛选"
-    },
-    "form": {
-      "username": "用户名",
-      "email": "邮箱",
-      "fullName": "全名",
-      "roles": "角色",
-      "status": "状态",
-      "lastLogin": "最后登录",
-      "createdAt": "创建时间",
-      "noRoles": "未分配角色",
-      "toggleRole": "切换{{role}}角色",
-      "toggleStatus": "切换用户活动状态",
-      "userInfo": "用户信息"
-    },
-    "loading": {
-      "description": "正在从服务器获取用户信息",
-      "title": "加载用户中..."
-    },
-    "modal": {
-      "close": "关闭",
-      "defaultTitle": "用户详情",
-      "edit": {
-        "title": "编辑用户"
-      },
-      "view": {
-        "title": "用户详情"
-      }
-    },
-    "notifications": {
-      "updateError": "更新失败",
-      "updateSuccess": "用户已更新",
-      "updateSuccessDesc": "用户信息已成功更新。"
-    },
-    "pageDescription": "管理组织中的用户、角色和权限",
-    "pagination": {
-      "of": "共",
-      "users": "用户"
-    },
-    "permissions": {
-      "accessDenied": "拒绝访问",
-      "noPermission": "您没有访问用户管理的权限。如果您认为这是错误，请联系管理员。"
-    },
-    "search": {
-      "ariaLabel": "搜索用户",
-      "placeholder": "搜索用户..."
-    },
-    "status": {
-      "oauthManaged": "状态由OAuth提供商管理。"
-    },
-    "table": {
-      "username": "用户名",
-      "email": "邮箱",
-      "fullName": "全名",
-      "roles": "角色",
-      "status": "状态",
-      "ariaLabel": "用户表格",
-      "caption": "包含用户名、邮箱、全名、角色和状态的{{count}}个用户表格。",
-      "moreRoles": "+{{count}}个更多",
-      "notProvided": "未提供"
-    },
-    "warnings": {
-      "roleConflict": "角色冲突",
-      "roleConflictDesc": "管理员和管理员（只读）角色冲突。管理员角色将优先。"
-    },
-    "actions": {
-      "edit": "编辑",
-      "view": "查看详情"
-    },
-    "empty": {
-      "title": "未找到用户",
-      "description": "没有用户符合您的搜索条件。"
-    },
-    "never": "从未"
-  },
-  "role": {
-    "admin": "管理员",
-    "adminReadonly": "管理员（只读）",
-    "user": "用户"
-  },
-  "status": {
-    "active": "活跃",
-    "inactive": "非活跃"
   }
 }

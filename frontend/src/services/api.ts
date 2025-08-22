@@ -19,12 +19,33 @@ class ApiClient {
     });
 
     this.client.interceptors.request.use(
-      (config) => {
+      async (config) => {
         // Check for admin bypass first
         const adminUser = localStorage.getItem('litemaas_admin_user');
         if (adminUser) {
-          // For admin bypass, don't send any authorization header
-          // The backend should handle requests without auth for development
+          // For admin bypass, generate a development JWT token
+          try {
+            const user = JSON.parse(adminUser);
+            const tokenResponse = await fetch('/api/auth/dev-token', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                username: user.username,
+                roles: user.roles,
+              }),
+            });
+
+            if (tokenResponse.ok) {
+              const tokenData = await tokenResponse.json();
+              config.headers.Authorization = `Bearer ${tokenData.access_token}`;
+            } else {
+              console.warn('Failed to generate dev token, proceeding without auth');
+            }
+          } catch (error) {
+            console.warn('Error generating dev token:', error);
+          }
           return config;
         }
 

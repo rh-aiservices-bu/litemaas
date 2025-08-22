@@ -101,7 +101,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         request.body as DevTokenRequestBody;
 
       const user = {
-        id: 'dev-user-1',
+        id: '550e8400-e29b-41d4-a716-446655440001', // Use the seeded frontend user ID
         username,
         email: `${username}@litemaas.local`,
         name: 'Development User',
@@ -109,10 +109,15 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       };
 
       try {
-        const tokenPair = await fastify.generateTokenPair(user);
+        const accessToken = fastify.generateToken({
+          userId: user.id,
+          username: user.username,
+          email: user.email,
+          roles: user.roles,
+        });
 
         return {
-          access_token: tokenPair.accessToken,
+          access_token: accessToken,
           token_type: 'Bearer',
           expires_in: 86400, // 24 hours
           user: {
@@ -207,13 +212,32 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         // Clear the state now that authentication is successful
         fastify.oauthHelpers.clearState(state);
 
-        // Generate JWT token
-        const token = fastify.generateToken({
-          userId: user.id,
-          username: user.username,
-          email: user.email,
-          roles: user.roles,
-        });
+        // Generate JWT token (even for mock mode)
+        let token: string;
+
+        // Check if this is a mock token (development mode)
+        if (tokenResponse.access_token && tokenResponse.access_token.startsWith('mock_token_')) {
+          fastify.log.debug(
+            { userId: user.id, mockToken: tokenResponse.access_token },
+            'Generating JWT for mock authentication',
+          );
+
+          // Generate proper JWT token for mock authentication
+          token = fastify.generateToken({
+            userId: user.id,
+            username: user.username,
+            email: user.email,
+            roles: user.roles,
+          });
+        } else {
+          // Generate JWT token for real OAuth flow
+          token = fastify.generateToken({
+            userId: user.id,
+            username: user.username,
+            email: user.email,
+            roles: user.roles,
+          });
+        }
 
         // Create audit log
         await fastify.dbUtils.query(

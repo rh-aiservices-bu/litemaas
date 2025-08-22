@@ -131,6 +131,17 @@ vi.mock('../../components/AlertToastGroup', () => ({
 // Mock axios for GitHub API
 vi.mock('axios', () => ({
   default: {
+    create: vi.fn(() => ({
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      post: vi.fn().mockResolvedValue({ data: {} }),
+      put: vi.fn().mockResolvedValue({ data: {} }),
+      patch: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      interceptors: {
+        request: { use: vi.fn() },
+        response: { use: vi.fn() },
+      },
+    })),
     get: vi.fn().mockResolvedValue({
       data: { stargazers_count: 42, forks_count: 7 },
     }),
