@@ -3,12 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   PageSection,
   Title,
-  Card,
-  CardBody,
-  Grid,
-  GridItem,
   Button,
-  Divider,
   Alert,
   Tooltip,
   Flex,
@@ -25,6 +20,11 @@ import {
   Modal,
   ModalVariant,
   ModalBody,
+  Tabs,
+  Tab,
+  TabTitleText,
+  TabContent,
+  TabContentBody,
 } from '@patternfly/react-core';
 import { SyncAltIcon, UsersIcon } from '@patternfly/react-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -52,6 +52,7 @@ const ToolsPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const [isLoading, setIsLoading] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
+  const [activeTabKey, setActiveTabKey] = useState<string | number>('models');
 
   // Limits Management state
   const [isLimitsLoading, setIsLimitsLoading] = useState(false);
@@ -68,6 +69,11 @@ const ToolsPage: React.FC = () => {
   // Check if user has admin permission (not admin-readonly)
   const canSync = user?.roles?.includes('admin') ?? false;
   const canUpdateLimits = user?.roles?.includes('admin') ?? false;
+
+  // Tab handler
+  const handleTabClick = (_event: React.MouseEvent, tabIndex: string | number) => {
+    setActiveTabKey(tabIndex);
+  };
 
   const handleRefreshModels = async () => {
     if (!canSync) return;
@@ -223,16 +229,11 @@ const ToolsPage: React.FC = () => {
         </Title>
       </PageSection>
       <PageSection>
-        <Grid hasGutter>
-          {/* Models Management Panel */}
-          <GridItem span={12}>
-            <Card>
-              <CardBody>
-                <Title headingLevel="h2" size="lg">
-                  {t('pages.tools.models')}
-                </Title>
-                <Divider style={{ margin: '1rem 0' }} />
-
+        <Tabs activeKey={activeTabKey} onSelect={handleTabClick}>
+          {/* Models Management Tab */}
+          <Tab eventKey="models" title={<TabTitleText>{t('pages.tools.models')}</TabTitleText>}>
+            <TabContent id="models-tab-content" style={{ paddingTop: '10px' }}>
+              <TabContentBody>
                 <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
                   <FlexItem>
                     <p>{t('pages.tools.modelsDescription')}</p>
@@ -297,20 +298,18 @@ const ToolsPage: React.FC = () => {
                     )}
                   </FlexItem>
                 </Flex>
-              </CardBody>
-            </Card>
-          </GridItem>
+              </TabContentBody>
+            </TabContent>
+          </Tab>
 
-          {/* Limits Management Panel */}
+          {/* Limits Management Tab */}
           {canUpdateLimits && (
-            <GridItem span={12}>
-              <Card>
-                <CardBody>
-                  <Title headingLevel="h2" size="lg">
-                    {t('pages.tools.limitsManagement')}
-                  </Title>
-                  <Divider style={{ margin: '1rem 0' }} />
-
+            <Tab
+              eventKey="limits"
+              title={<TabTitleText>{t('pages.tools.limitsManagement')}</TabTitleText>}
+            >
+              <TabContent id="limits-tab-content" style={{ paddingTop: '10px' }}>
+                <TabContentBody>
                   <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
                     <FlexItem>
                       <p>{t('pages.tools.limitsDescription')}</p>
@@ -432,11 +431,11 @@ const ToolsPage: React.FC = () => {
                       </Form>
                     </FlexItem>
                   </Flex>
-                </CardBody>
-              </Card>
-            </GridItem>
+                </TabContentBody>
+              </TabContent>
+            </Tab>
           )}
-        </Grid>
+        </Tabs>
 
         {/* Confirmation Modal */}
         <Modal
