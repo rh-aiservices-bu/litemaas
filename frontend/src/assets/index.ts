@@ -1,8 +1,7 @@
 // Images
 export { default as LogoTitle } from './images/logo-title.svg';
 export { default as AvatarPlaceholder } from './images/avatar-placeholder.svg';
-export { default as Favicon } from './images/litemaas_favicon_optimized.svg';
-export { default as FaviconOriginal } from './images/litemaas_favicon.svg';
+export { default as Favicon } from './images/litemaas_favicon.svg';
 export { default as starLogo } from './images/star.svg';
 export { default as starLogoWhite } from './images/star-white.svg';
 export { default as githubLogo } from './images/github-mark.svg';

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from 'react-query';
 import Layout from '../components/Layout';
 
 // Mock react-i18next
@@ -92,6 +93,17 @@ vi.mock('../components/AlertToastGroup', () => ({
 // Mock axios
 vi.mock('axios', () => ({
   default: {
+    create: vi.fn(() => ({
+      get: vi.fn().mockResolvedValue({ data: {} }),
+      post: vi.fn().mockResolvedValue({ data: {} }),
+      put: vi.fn().mockResolvedValue({ data: {} }),
+      patch: vi.fn().mockResolvedValue({ data: {} }),
+      delete: vi.fn().mockResolvedValue({ data: {} }),
+      interceptors: {
+        request: { use: vi.fn() },
+        response: { use: vi.fn() },
+      },
+    })),
     get: vi.fn().mockResolvedValue({
       data: { stargazers_count: 10, forks_count: 5 },
     }),
@@ -99,8 +111,15 @@ vi.mock('axios', () => ({
 }));
 
 describe('Layout Component (Simplified)', () => {
+  let queryClient: QueryClient;
+
   beforeEach(() => {
     vi.clearAllMocks();
+
+    // Setup QueryClient
+    queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
 
     // Mock localStorage
     Object.defineProperty(window, 'localStorage', {
@@ -114,32 +133,40 @@ describe('Layout Component (Simplified)', () => {
     });
   });
 
+  const renderLayout = () => {
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <Layout />
+      </QueryClientProvider>,
+    );
+  };
+
   it('renders without crashing', () => {
-    render(<Layout />);
+    renderLayout();
     // Look for actual PatternFly classes since real components are rendering
     expect(document.querySelector('.pf-v6-c-page')).toBeInTheDocument();
   });
 
   it('renders main content outlet', () => {
-    render(<Layout />);
+    renderLayout();
     expect(screen.getByTestId('outlet')).toBeInTheDocument();
     expect(screen.getByText('Main Content')).toBeInTheDocument();
   });
 
   it('renders masthead with brand', () => {
-    render(<Layout />);
+    renderLayout();
     expect(document.querySelector('.pf-v6-c-masthead')).toBeInTheDocument();
     expect(document.querySelector('.pf-v6-c-masthead__brand')).toBeInTheDocument();
   });
 
   it('renders sidebar with navigation', () => {
-    render(<Layout />);
+    renderLayout();
     // The sidebar and nav are rendered
     expect(document.querySelector('.pf-v6-c-nav')).toBeInTheDocument();
   });
 
   it('renders notification components', () => {
-    render(<Layout />);
+    renderLayout();
     expect(screen.getByTestId('notification-badge')).toBeInTheDocument();
     // Note: notification-drawer might not be visible initially
     expect(screen.getByTestId('toast-group')).toBeInTheDocument();
@@ -149,7 +176,7 @@ describe('Layout Component (Simplified)', () => {
 
   it('toggles sidebar when menu button is clicked', async () => {
     const user = userEvent.setup();
-    render(<Layout />);
+    renderLayout();
 
     // Find the actual menu button
     const menuButton = document.querySelector('button[aria-controls="main-navigation"]');
@@ -163,7 +190,7 @@ describe('Layout Component (Simplified)', () => {
   });
 
   it('handles theme toggle', () => {
-    render(<Layout />);
+    renderLayout();
 
     const themeToggle = document.querySelector('.pf-v6-c-toggle-group');
     expect(themeToggle).toBeInTheDocument();
@@ -171,7 +198,7 @@ describe('Layout Component (Simplified)', () => {
 
   it('opens notification drawer', async () => {
     const user = userEvent.setup();
-    render(<Layout />);
+    renderLayout();
 
     const notificationButton = screen.getByTestId('notification-badge');
     await user.click(notificationButton);
@@ -181,7 +208,7 @@ describe('Layout Component (Simplified)', () => {
   });
 
   it('renders user avatar and dropdowns', () => {
-    render(<Layout />);
+    renderLayout();
 
     // Look for actual PatternFly components
     const avatar = document.querySelector('.pf-v6-c-avatar');
@@ -193,14 +220,14 @@ describe('Layout Component (Simplified)', () => {
   });
 
   it('renders toolbar components', () => {
-    render(<Layout />);
+    renderLayout();
 
     expect(document.querySelector('.pf-v6-c-toolbar')).toBeInTheDocument();
     expect(document.querySelector('.pf-v6-c-toolbar__content')).toBeInTheDocument();
   });
 
   it('renders language and theme controls', () => {
-    render(<Layout />);
+    renderLayout();
 
     // Theme toggle
     const themeToggle = document.querySelector('.pf-v6-c-toggle-group');
@@ -212,13 +239,13 @@ describe('Layout Component (Simplified)', () => {
   });
 
   it('uses translations', () => {
-    render(<Layout />);
+    renderLayout();
 
     expect(mockT).toHaveBeenCalled();
   });
 
   it('has proper component structure', () => {
-    render(<Layout />);
+    renderLayout();
 
     // Verify PatternFly structure
     expect(document.querySelector('.pf-v6-c-page')).toBeInTheDocument();

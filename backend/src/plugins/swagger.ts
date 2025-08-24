@@ -38,6 +38,8 @@ const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
         { name: 'API Keys', description: 'API key management' },
         { name: 'Usage', description: 'Usage statistics and analytics' },
         { name: 'Health', description: 'Health checks and monitoring' },
+        { name: 'Banners', description: 'Banner announcements and management' },
+        { name: 'Admin', description: 'Administrative operations' },
         { name: 'General', description: 'General API endpoints' },
       ],
     },

@@ -1,12 +1,17 @@
-# LiteMaaS - AI Model Subscription Platform
+<!-- markdownlint-disable-next-line MD033 MD041 -->
+<div align="center"> <!-- markdownlint-disable-next-line MD033 -->
+<img alt="Octobean logo" width="150" height="150" src="./img/octobean.svg">
+</div>
 
-**LiteMaaS** is a proof-of-concept application for managing AI model subscriptions, API keys, and usage tracking. It seamlessly integrates with LiteLLM to provide a unified interface for accessing multiple AI models with comprehensive budget management and team collaboration features.
+# LiteMaaS - Models as a Service Platform
+
+**LiteMaaS** is a proof-of-concept application for managing LLM subscriptions, API keys, and usage tracking. It seamlessly integrates with LiteLLM to provide a unified interface for accessing multiple LLMs with comprehensive budget management and team collaboration features.
 
 ## 🎟️ Key Benefits
 
 - **Self-Service**: Users can independently manage subscriptions and API keys
-- **Multi-Model Access**: One API key can access multiple AI models
-- **Budget Control**: Set spending limits at user, team, and API key levels (upcoming feature)
+- **Multi-Model Access**: One API key can access multiple models
+- **Budget Control**: Set spending limits at user, team, and API key levels
 - **Usage Analytics**: Real-time tracking of token usage and costs
 - **Team Collaboration**: Share budgets and manage access across teams (upcoming feature)
 - **Enterprise Security**: OAuth2 authentication with OpenShift support

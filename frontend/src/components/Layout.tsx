@@ -51,8 +51,10 @@ import {
 import { appConfig } from '../config/navigation';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
+import { BannerProvider } from '../contexts/BannerContext';
 import { NotificationDrawer, NotificationBadgeButton } from './NotificationDrawer';
 import { AlertToastGroup } from './AlertToastGroup';
+import { BannerAnnouncement } from './BannerAnnouncement';
 import axios from 'axios';
 
 const Layout: React.FC = () => {
@@ -621,7 +623,7 @@ const Layout: React.FC = () => {
   );
 
   return (
-    <>
+    <BannerProvider>
       {/* Skip Navigation Links */}
       <div>
         <a href="#main-content" className="skip-link">
@@ -652,10 +654,13 @@ const Layout: React.FC = () => {
             </DrawerPanelContent>
           }
         >
-          <DrawerContentBody>{mainContent}</DrawerContentBody>
+          <DrawerContentBody>
+            <BannerAnnouncement />
+            {mainContent}
+          </DrawerContentBody>
         </DrawerContent>
       </Drawer>
-    </>
+    </BannerProvider>
   );
 };
 

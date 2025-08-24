@@ -9,6 +9,7 @@ import usageRoutes from './usage';
 import healthRoutes from './health';
 import configRoutes from './config';
 import adminRoutes from './admin';
+import bannerRoutes from './banners';
 
 const routes: FastifyPluginAsync = async (fastify) => {
   // Register all route handlers
@@ -28,6 +29,9 @@ const routes: FastifyPluginAsync = async (fastify) => {
 
   // Admin endpoints
   await fastify.register(adminRoutes, { prefix: '/admin' });
+
+  // Banner endpoints
+  await fastify.register(bannerRoutes, { prefix: '/banners' });
 
   // Root endpoint
   fastify.get('/', {
