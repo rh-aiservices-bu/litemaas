@@ -83,14 +83,18 @@ const ToolsPage: React.FC = () => {
   );
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
-  // Check if user has admin permission (not admin-readonly)
-  const canSync = user?.roles?.includes('admin') ?? false;
-  const canUpdateLimits = user?.roles?.includes('admin') ?? false;
-  const canManageBanners = user?.roles?.includes('admin') ?? false;
+  // Check permissions - separate view from modify access
+  const canSync = user?.roles?.includes('admin') ?? false; // Only full admins can sync
+  const canViewLimits =
+    (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
+  const canUpdateLimits = user?.roles?.includes('admin') ?? false; // Only full admins can modify
+  const canViewBanners =
+    (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
+  const canManageBanners = user?.roles?.includes('admin') ?? false; // Only full admins can modify
 
   // Fetch all banners for admin management
   const { data: allBanners = [] } = useQuery(['allBanners'], () => bannerService.getAllBanners(), {
-    enabled: canManageBanners,
+    enabled: canViewBanners,
     staleTime: 30 * 1000, // 30 seconds
     cacheTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -468,7 +472,7 @@ const ToolsPage: React.FC = () => {
           </Tab>
 
           {/* Limits Management Tab */}
-          {canUpdateLimits && (
+          {canViewLimits && (
             <Tab
               eventKey="limits"
               title={<TabTitleText>{t('pages.tools.limitsManagement')}</TabTitleText>}
@@ -550,6 +554,7 @@ const ToolsPage: React.FC = () => {
                             value={limitsFormData.maxBudget}
                             onChange={(_event, value) => handleLimitsFormChange('maxBudget', value)}
                             placeholder={t('pages.tools.leaveEmptyToKeep')}
+                            isDisabled={!canUpdateLimits}
                           />
                           <FormHelperText>{t('pages.tools.maxBudgetHelper')}</FormHelperText>
                         </FormGroup>
@@ -563,6 +568,7 @@ const ToolsPage: React.FC = () => {
                             value={limitsFormData.tpmLimit}
                             onChange={(_event, value) => handleLimitsFormChange('tpmLimit', value)}
                             placeholder={t('pages.tools.leaveEmptyToKeep')}
+                            isDisabled={!canUpdateLimits}
                           />
                           <FormHelperText>{t('pages.tools.tpmLimitHelper')}</FormHelperText>
                         </FormGroup>
@@ -576,6 +582,7 @@ const ToolsPage: React.FC = () => {
                             value={limitsFormData.rpmLimit}
                             onChange={(_event, value) => handleLimitsFormChange('rpmLimit', value)}
                             placeholder={t('pages.tools.leaveEmptyToKeep')}
+                            isDisabled={!canUpdateLimits}
                           />
                           <FormHelperText>{t('pages.tools.rpmLimitHelper')}</FormHelperText>
                         </FormGroup>
@@ -585,7 +592,7 @@ const ToolsPage: React.FC = () => {
                             variant="primary"
                             icon={<UsersIcon />}
                             onClick={handleLimitsFormSubmit}
-                            isDisabled={isLimitsLoading}
+                            isDisabled={!canUpdateLimits || isLimitsLoading}
                             isLoading={isLimitsLoading}
                           >
                             {isLimitsLoading
@@ -602,7 +609,7 @@ const ToolsPage: React.FC = () => {
           )}
 
           {/* Banner Management Tab */}
-          {canManageBanners && (
+          {canViewBanners && (
             <Tab
               eventKey="banners"
               title={<TabTitleText>{t('pages.tools.bannerManagement')}</TabTitleText>}
@@ -620,7 +627,7 @@ const ToolsPage: React.FC = () => {
                         variant="primary"
                         icon={<PlusIcon />}
                         onClick={handleCreateBanner}
-                        isDisabled={isBannerLoading}
+                        isDisabled={!canManageBanners || isBannerLoading}
                       >
                         {t('pages.tools.createNewBanner')}
                       </Button>
@@ -635,11 +642,12 @@ const ToolsPage: React.FC = () => {
                         onEdit={handleEditBanner}
                         onDelete={handleDeleteBanner}
                         hasUnsavedChanges={hasUnsavedChanges}
+                        readOnly={!canManageBanners}
                       />
                     </FlexItem>
 
                     {/* Apply Changes Button */}
-                    {hasUnsavedChanges && (
+                    {hasUnsavedChanges && canManageBanners && (
                       <FlexItem>
                         <Button
                           variant="primary"
@@ -722,6 +730,7 @@ const ToolsPage: React.FC = () => {
           }}
           onSave={handleModalSave}
           isLoading={isBannerLoading}
+          canEdit={canManageBanners}
         />
       </PageSection>
     </>

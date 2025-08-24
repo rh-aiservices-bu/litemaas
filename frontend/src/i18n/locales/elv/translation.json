@@ -11,7 +11,9 @@
     "notAvailable": "Ú-úir",
     "lineChart": "Minithith-rîn",
     "dataPoints": "Gwaed-vuin",
-    "cancel": "Daeglos"
+    "cancel": "Daeglos",
+    "view": "Cen",
+    "close": "Hortho"
   },
   "nav": {
     "home": "Eru",

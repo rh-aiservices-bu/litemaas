@@ -90,6 +90,7 @@ export const appConfig: AppConfig = {
           element: ToolsPage,
           label: 'nav.admin.tools',
           icon: CogIcon,
+          requiredRoles: ['admin', 'admin-readonly'],
         },
       ],
     },

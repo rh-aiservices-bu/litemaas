@@ -11,7 +11,9 @@
     "notAvailable": "N/A",
     "lineChart": "선 차트",
     "dataPoints": "데이터 포인트",
-    "cancel": "취소"
+    "cancel": "취소",
+    "view": "보기",
+    "close": "닫기"
   },
   "nav": {
     "home": "홈",

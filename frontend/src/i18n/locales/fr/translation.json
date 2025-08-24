@@ -11,7 +11,9 @@
     "notAvailable": "N/D",
     "lineChart": "graphique linéaire",
     "dataPoints": "points de données",
-    "cancel": "Annuler"
+    "cancel": "Annuler",
+    "view": "Voir",
+    "close": "Fermer"
   },
   "nav": {
     "home": "Accueil",

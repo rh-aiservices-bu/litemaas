@@ -11,7 +11,9 @@
     "notAvailable": "N/A",
     "lineChart": "折れ線グラフ",
     "dataPoints": "データポイント",
-    "cancel": "キャンセル"
+    "cancel": "キャンセル",
+    "view": "表示",
+    "close": "閉じる"
   },
   "nav": {
     "home": "ホーム",
