@@ -15,7 +15,7 @@ import SubscriptionsPage from '../pages/SubscriptionsPage';
 import ApiKeysPage from '../pages/ApiKeysPage';
 import ChatbotPage from '../pages/ChatbotPage';
 import UsagePage from '../pages/UsagePage';
-import SettingsPage from '../pages/SettingsPage';
+import ToolsPage from '../pages/ToolsPage';
 import UsersPage from '../pages/UsersPage';
 
 import { AppConfig } from '../types/navigation';
@@ -85,10 +85,10 @@ export const appConfig: AppConfig = {
           requiredRoles: ['admin', 'admin-readonly'],
         },
         {
-          id: 'settings',
-          path: '/admin/settings',
-          element: SettingsPage,
-          label: 'nav.admin.settings',
+          id: 'tools',
+          path: '/admin/tools',
+          element: ToolsPage,
+          label: 'nav.admin.tools',
           icon: CogIcon,
         },
       ],
@@ -146,9 +146,9 @@ export const appConfig: AppConfig = {
       requiredRoles: ['admin', 'admin-readonly'],
     },
     {
-      id: 'settings',
-      label: 'nav.admin.settings',
-      path: '/admin/settings',
+      id: 'tools',
+      label: 'nav.admin.tools',
+      path: '/admin/tools',
       icon: CogIcon,
       requiredRoles: ['admin', 'admin-readonly'],
     },

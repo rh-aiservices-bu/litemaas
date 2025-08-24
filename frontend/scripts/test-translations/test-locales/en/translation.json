@@ -1,0 +1,62 @@
+{
+  "common": {
+    "title": "Application Title",
+    "subtitle": "Application Subtitle",
+    "description": "This is a description",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close"
+  },
+  "navigation": {
+    "home": "Home",
+    "about": "About",
+    "contact": "Contact",
+    "settings": "Settings"
+  },
+  "navigation": {
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "user": {
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "role": "Role",
+    "status": "Active"
+  },
+  "user": {
+    "created": "Created",
+    "updated": "Updated",
+    "status": "Inactive"
+  },
+  "messages": {
+    "success": "Operation successful",
+    "error": "An error occurred",
+    "warning": "Warning message",
+    "info": "Information message"
+  },
+  "forms": {
+    "validation": {
+      "required": "This field is required",
+      "email": "Invalid email format",
+      "minLength": "Too short"
+    },
+    "submit": "Submit Form",
+    "reset": "Reset Form"
+  },
+  "duplicate": "First value",
+  "duplicate": "Second value",
+  "duplicate": "Third value",
+  "nested": {
+    "duplicate": "Nested first",
+    "duplicate": "Nested second",
+    "other": "Other value"
+  },
+  "features": {
+    "feature1": "Feature One",
+    "feature2": "Feature Two",
+    "feature3": "Feature Three"
+  }
+}

@@ -10,7 +10,8 @@
     "error": "Errore",
     "notAvailable": "N/D",
     "lineChart": "grafico a linee",
-    "dataPoints": "punti dati"
+    "dataPoints": "punti dati",
+    "cancel": "Annulla"
   },
   "nav": {
     "home": "Home",
@@ -21,7 +22,7 @@
     "chatbot": "Area Giochi del Chatbot",
     "admin": {
       "users": "Utenti",
-      "settings": "Impostazioni"
+      "tools": "Strumenti"
     }
   },
   "pages": {
@@ -297,6 +298,9 @@
         "createSuccess": "Chiave API Creata",
         "createError": "Errore",
         "createErrorDesc": "Impossibile creare la chiave API. Riprova.",
+        "updateSuccess": "Chiave API Aggiornata",
+        "updateError": "Errore",
+        "updateErrorDesc": "Impossibile aggiornare la chiave API. Riprova.",
         "deleteSuccess": "Chiave API Eliminata",
         "deleteError": "Errore",
         "deleteErrorDesc": "Impossibile eliminare la chiave API. Riprova.",
@@ -306,10 +310,7 @@
         "validationError": "Errore di Validazione",
         "nameRequired": "Il nome della chiave API è richiesto",
         "modelsRequired": "Seleziona almeno un modello dai tuoi abbonamenti attivi",
-        "pleaseFixFormErrors": "Correggi gli errori del modulo e riprova",
-        "updateError": "Errore",
-        "updateErrorDesc": "Impossibile aggiornare la chiave API. Riprova.",
-        "updateSuccess": "Chiave API Aggiornata"
+        "pleaseFixFormErrors": "Correggi gli errori del modulo e riprova"
       },
       "modals": {
         "createTitle": "Crea Chiave API",
@@ -334,8 +335,8 @@
         "generatedKeyDetailsCaption": "Tabella che mostra dettagli per la chiave API appena creata '{{keyName}}' inclusi modelli assegnati e data di scadenza"
       },
       "viewKeyAriaLabel": "Visualizza dettagli per la chiave API {{keyName}}",
-      "deleteKeyAriaLabel": "Elimina chiave API {{keyName}}",
       "editKeyAriaLabel": "Modifica chiave API {{keyName}}",
+      "deleteKeyAriaLabel": "Elimina chiave API {{keyName}}",
       "hideKeyAriaLabel": "Nascondi valore chiave API per {{keyName}}",
       "showKeyAriaLabel": "Mostra valore chiave API per {{keyName}}",
       "copyKeyAriaLabel": "Copia valore chiave API per {{keyName}} negli appunti",
@@ -344,172 +345,6 @@
       "codeExample": {
         "role": "utente",
         "content": "Ciao, mondo!"
-      }
-    },
-    "chatbot": {
-      "title": "Area Giochi del Chatbot",
-      "subtitle": "Testa e interagisci con i modelli di IA usando un'interfaccia di chat diretta",
-      "loading": "Caricamento chatbot...",
-      "description": "Testa le tue chiavi API e modelli con un'interfaccia di chat interattiva",
-      "configuration": {
-        "title": "Configurazione",
-        "apiKey": "Seleziona Chiave API",
-        "selectApiKey": "Seleziona una chiave API...",
-        "apiKeyPlaceholder": "Scegli una chiave API da testare",
-        "model": "Seleziona Modello",
-        "selectModel": "Seleziona un modello...",
-        "modelPlaceholder": "Scegli un modello da testare",
-        "advancedSettings": "Impostazioni Avanzate",
-        "temperature": "Temperatura",
-        "temperatureDescription": "Controlla la casualità (attuale: {{value}})",
-        "temperatureHelp": "Controlla la casualità (0=deterministico, 2=creativo)",
-        "maxTokens": "Token Massimi",
-        "maxTokensHelp": "Lunghezza massima della risposta",
-        "systemPrompt": "Prompt di Sistema",
-        "systemPromptPlaceholder": "Prompt di sistema opzionale per guidare il comportamento dell'IA...",
-        "systemPromptHelp": "Imposta il comportamento dell'assistente",
-        "streaming": "Streaming in tempo reale",
-        "streamingEnabled": "Abilita streaming in tempo reale",
-        "modelsLabel": "modelli"
-      },
-      "quickTests": {
-        "title": "Test Rapidi",
-        "codeGen": "Generazione Codice",
-        "translation": "Traduzione",
-        "summary": "Riassunto",
-        "jsonFormat": "Risposta JSON",
-        "creative": "Scrittura Creativa",
-        "problemSolving": "Risoluzione Problemi",
-        "dataAnalysis": "Analisi Dati",
-        "roleplay": "Gioco di Ruolo",
-        "custom": "I Miei Prompt"
-      },
-      "chat": {
-        "welcomeTitle": "Assistente Test Modelli",
-        "welcomeDescription": "Inizia una conversazione per testare il tuo modello e chiave API selezionati",
-        "selectModelFirst": "Seleziona una chiave API e un modello per iniziare a chattare",
-        "placeholder": "Scrivi qui il tuo messaggio...",
-        "configureFirst": "Configura prima la chiave API e il modello",
-        "send": "Invia",
-        "clear": "Cancella",
-        "clearConversation": "Cancella conversazione",
-        "export": "Esporta",
-        "savePrompt": "Salva Prompt",
-        "sending": "Invio in corso...",
-        "stop": "Ferma",
-        "stopGeneration": "Ferma generazione",
-        "streamingInProgress": "Streaming in corso...",
-        "emptyConversation": "Nessun messaggio ancora. Inizia scrivendo un messaggio qui sotto."
-      },
-      "welcome": {
-        "title": "Benvenuto nell'Area Giochi del Chatbot",
-        "description": "Seleziona una chiave API e un modello dal pannello di configurazione sopra, poi inizia a chattare per testare direttamente i tuoi modelli di IA."
-      },
-      "responseInfo": {
-        "title": "Metriche di Risposta",
-        "tokens": "Token",
-        "promptTokens": "Prompt",
-        "completionTokens": "Completamento",
-        "totalTokens": "Totale",
-        "responseTime": "Tempo di Risposta",
-        "tokenUsage": "Uso Token",
-        "estimatedCost": "Costo Stimato",
-        "timeToFirstToken": "Tempo al Primo Token",
-        "tokensPerSecond": "Token/Secondo",
-        "tokensPerSecondUnit": "token/s",
-        "prompt": "prompt",
-        "completion": "completamento",
-        "viewRaw": "Visualizza Risposta Grezza",
-        "hideRaw": "Nascondi Risposta Grezza",
-        "noData": "Nessuna metrica di risposta disponibile ancora",
-        "noResponse": "Nessun dato di risposta disponibile"
-      },
-      "export": {
-        "title": "Esporta Conversazione",
-        "format": "Seleziona Formato",
-        "json": "JSON",
-        "markdown": "Markdown",
-        "download": "Scarica",
-        "cancel": "Annulla",
-        "filename": "Nome file"
-      },
-      "savePromptModal": {
-        "title": "Salva Prompt",
-        "name": "Nome Prompt",
-        "namePlaceholder": "Inserisci un nome per questo prompt",
-        "description": "Descrizione (opzionale)",
-        "descriptionPlaceholder": "Descrivi a cosa serve questo prompt",
-        "save": "Salva",
-        "cancel": "Annulla"
-      },
-      "prompts": {
-        "builtIn": "Modelli Integrati",
-        "custom": "I Miei Prompt Salvati",
-        "noCustomPrompts": "Nessun prompt salvato ancora",
-        "usePrompt": "Usa Questo Prompt",
-        "deletePrompt": "Elimina Prompt",
-        "confirmDelete": "Sei sicuro di voler eliminare questo prompt?"
-      },
-      "validation": {
-        "noApiKey": "Seleziona una chiave API",
-        "noModel": "Seleziona un modello",
-        "emptyMessage": "Inserisci un messaggio",
-        "promptNameRequired": "Il nome del prompt è richiesto",
-        "promptNameExists": "Esiste già un prompt con questo nome"
-      },
-      "errors": {
-        "requestFailed": "Richiesta fallita",
-        "invalidResponse": "Risposta non valida dal server",
-        "networkError": "Errore di rete. Controlla la tua connessione e riprova.",
-        "authError": "Autenticazione fallita. Controlla la tua chiave API.",
-        "rateLimitError": "Limite di frequenza superato. Attendi e riprova.",
-        "validationError": "Errore di validazione. Controlla il tuo input.",
-        "serverError": "Errore del server. Riprova più tardi.",
-        "timeoutError": "Timeout della richiesta. Riprova.",
-        "unexpectedError": "Si è verificato un errore inaspettato",
-        "keyRetrievalFailed": "Impossibile recuperare la chiave API",
-        "keyRetrievalFailedDesc": "Impossibile recuperare la chiave API completa. Controlla la tua autenticazione e riprova.",
-        "loadDataFailed": "Caricamento dati fallito",
-        "loadModelsFailed": "Caricamento modelli fallito",
-        "sendFailed": "Invio messaggio fallito",
-        "chatError": "Errore chat"
-      },
-      "notifications": {
-        "promptSaved": "Prompt Salvato",
-        "promptSavedDesc": "Il tuo prompt è stato salvato con successo",
-        "promptDeleted": "Prompt Eliminato",
-        "promptDeletedDesc": "Il prompt è stato eliminato",
-        "conversationCleared": "Conversazione Cancellata",
-        "conversationClearedDesc": "La cronologia della chat è stata cancellata",
-        "conversationExported": "Conversazione Esportata",
-        "conversationExportedDesc": "La tua conversazione è stata esportata con successo",
-        "messageSent": "Messaggio Inviato",
-        "apiError": "Errore API",
-        "keyRetrieved": "Chiave API Recuperata",
-        "keyRetrievedDesc": "La tua chiave API completa è stata recuperata in sicurezza",
-        "savePromptError": "Errore Salvataggio Prompt",
-        "deletePromptError": "Errore Eliminazione Prompt",
-        "exportError": "Errore Esportazione"
-      },
-      "success": {
-        "messageSent": "Messaggio inviato",
-        "responseReceived": "Risposta ricevuta con successo",
-        "conversationCleared": "Conversazione cancellata"
-      },
-      "accessibility": {
-        "configurationPanel": "Pannello di configurazione per le impostazioni del chatbot",
-        "chatInterface": "Interfaccia di chat per testare modelli AI",
-        "responseInfoPanel": "Pannello informazioni risposta che mostra le metriche",
-        "messageHistory": "Cronologia messaggi",
-        "sendMessage": "Invia messaggio al modello AI",
-        "clearConversation": "Cancella tutti i messaggi nella conversazione",
-        "exportConversation": "Esporta conversazione su file",
-        "saveCurrentPrompt": "Salva messaggio corrente come template prompt",
-        "selectApiKey": "Seleziona chiave API per autenticazione",
-        "selectModel": "Seleziona modello AI per test",
-        "adjustTemperature": "Regola temperatura per creatività risposta",
-        "setMaxTokens": "Imposta token massimi per lunghezza risposta",
-        "enterSystemPrompt": "Inserisci prompt sistema per guidare comportamento modello"
       }
     },
     "usage": {
@@ -643,66 +478,410 @@
       },
       "metricsUpdated": "Metriche di utilizzo aggiornate. {{requests}} richieste totali, {{tokens}} token totali, {{cost}} costo totale"
     },
-    "settings": {
-      "title": "Impostazioni",
-      "userPreferences": "Preferenze Utente",
-      "apiConfiguration": "Configurazione API",
-      "forms": {
-        "displayName": "Nome Visualizzato",
-        "displayNamePlaceholder": "Inserisci il tuo nome visualizzato",
-        "displayNameHelperText": "Questo nome sarà mostrato nel tuo profilo e in tutta l'applicazione",
-        "emailNotifications": "Notifiche Email",
-        "emailNotificationsHelperText": "Ricevi notifiche sui cambiamenti di abbonamento, avvisi di utilizzo e aggiornamenti di sicurezza",
-        "emailNotificationsAriaLabel": "Attiva o disattiva le notifiche email",
-        "autoRefreshDashboard": "Aggiornamento Automatico Dashboard",
-        "autoRefreshHelperText": "Aggiorna automaticamente i dati della dashboard ogni 30 secondi",
-        "autoRefreshAriaLabel": "Attiva o disattiva l'aggiornamento automatico della dashboard",
-        "enabled": "Abilitato",
-        "disabled": "Disabilitato",
-        "defaultModelProvider": "Provider Modello Predefinito",
-        "rateLimitLabel": "Limite di Frequenza (richieste/minuto)",
-        "rateLimitHelperText": "Questo limite è impostato dal tuo piano di abbonamento e non può essere modificato",
-        "timeoutLabel": "Timeout (secondi)",
-        "providerPlaceholder": "OpenAI, Anthropic, ecc.",
-        "openShiftAI": "OpenShift AI"
+    "tools": {
+      "title": "Strumenti",
+      "models": "Gestione Modelli",
+      "modelsDescription": "Sincronizza i modelli AI da LiteLLM per assicurarti di avere accesso agli ultimi modelli disponibili.",
+      "refreshModels": "Aggiorna Modelli da LiteLLM",
+      "lastSync": "Ultima Sincronizzazione",
+      "syncTime": "Ora",
+      "syncInProgress": "Sincronizzazione modelli in corso...",
+      "syncSuccess": "Modelli sincronizzati con successo",
+      "syncSuccessDetails": "{{total}} modelli totali ({{new}} nuovi, {{updated}} aggiornati)",
+      "syncError": "Sincronizzazione modelli fallita",
+      "syncErrorGeneric": "Si è verificato un errore durante la sincronizzazione dei modelli. Riprova.",
+      "syncErrors": "Errori",
+      "adminRequired": "Accesso amministratore richiesto per sincronizzare i modelli",
+      "totalModels": "Modelli Totali",
+      "newModels": "Nuovi Modelli",
+      "updatedModels": "Modelli Aggiornati",
+      "limitsManagement": "Gestione Limiti",
+      "limitsDescription": "Imposta limiti di risorse per tutti gli utenti nel sistema. Le modifiche si applicheranno a tutti gli utenti attivi. I valori predefiniti per i nuovi utenti non cambieranno.",
+      "maxBudgetLabel": "Budget Massimo ($)",
+      "maxBudgetHelper": "Limite massimo di spesa per utente in dollari",
+      "tpmLimitLabel": "Limite TPM",
+      "tpmLimitHelper": "Massimo token per minuto per ogni utente",
+      "rpmLimitLabel": "Limite RPM",
+      "rpmLimitHelper": "Massime richieste per minuto per ogni utente",
+      "applyToAllUsers": "Applica a Tutti gli Utenti",
+      "confirmBulkUpdate": "Applicare Limiti a Tutti gli Utenti?",
+      "confirmBulkUpdateMessage": "Questo aggiornerà tutti gli utenti attivi con i limiti specificati. Questa azione non può essere annullata.",
+      "confirmApply": "Applica Modifiche",
+      "changesToApply": "Modifiche da applicare",
+      "leaveEmptyToKeep": "Lascia vuoto per mantenere il valore corrente",
+      "bulkUpdateSuccess": "{{count}} utenti aggiornati con successo",
+      "bulkUpdatePartial": "{{success}} utenti aggiornati, {{failed}} falliti",
+      "bulkUpdateError": "Aggiornamento limiti utente fallito",
+      "bulkUpdateErrorGeneric": "Si è verificato un errore durante l'aggiornamento dei limiti utente. Riprova.",
+      "noValuesProvided": "Fornisci almeno un valore di limite",
+      "noValuesProvidedDescription": "Devi specificare almeno un limite da aggiornare.",
+      "processing": "Aggiornamento utenti in corso...",
+      "lastLimitsUpdate": "Ultimo Aggiornamento Limiti",
+      "updateTime": "Ora Aggiornamento",
+      "totalUsersUpdated": "Utenti Totali",
+      "successfulUpdates": "Riusciti",
+      "failedUpdates": "Falliti",
+      "updateErrors": "Errori di Aggiornamento",
+      "bannerManagement": "Gestione Banner",
+      "bannerDescription": "Crea e gestisci annunci che appaiono nella parte superiore dell'applicazione per tutti gli utenti.",
+      "bannerStatus": "Stato del Banner",
+      "showBanner": "Mostra Banner",
+      "hideBanner": "Nascondi Banner",
+      "bannerStatusHelper": "Attiva/disattiva per mostrare o nascondere il banner per tutti gli utenti",
+      "bannerContent": "Contenuto del Banner",
+      "bannerContentPlaceholder": "Inserisci il testo del tuo annuncio qui...",
+      "bannerEnglishRequired": "Il contenuto in inglese è obbligatorio (altre lingue sono opzionali)",
+      "bannerStyle": "Stile del Banner",
+      "bannerStyleHelper": "Scegli lo stile visivo che meglio si adatta al tipo di annuncio",
+      "bannerStyleAriaLabel": "Seleziona stile del banner",
+      "variantInfo": "Info (Blu)",
+      "variantWarning": "Avvertimento (Arancione)",
+      "variantDanger": "Pericolo (Rosso)",
+      "variantSuccess": "Successo (Verde)",
+      "variantDefault": "Predefinito (Grigio)",
+      "allowDismiss": "Consenti agli utenti di chiudere",
+      "allowDismissHelper": "Quando abilitato, gli utenti possono chiudere il banner per la loro sessione",
+      "enableMarkdown": "Abilita markdown di base",
+      "enableMarkdownHelper": "Supporta testo **grassetto** e [link](URL) nel contenuto del banner",
+      "saveBanner": "Salva Banner",
+      "deactivateBanner": "Disattiva Banner",
+      "saving": "Salvataggio...",
+      "bannerSaved": "Banner salvato con successo",
+      "bannerSavedDescription": "L'annuncio del banner è stato aggiornato e sarà visibile agli utenti immediatamente",
+      "bannerSaveError": "Errore nel salvataggio del banner",
+      "bannerSaveErrorGeneric": "Si è verificato un errore durante il salvataggio del banner. Riprova.",
+      "bannerValidationError": "Errore di Validazione",
+      "bannerName": "Nome del Banner",
+      "bannerNameRequired": "Il nome del banner è obbligatorio",
+      "bannerNamePlaceholder": "Inserisci un nome descrittivo per questo banner",
+      "createNewBanner": "Crea Nuovo Banner",
+      "createBanner": "Crea Banner",
+      "editBanner": "Modifica Banner",
+      "deleteBanner": "Elimina Banner",
+      "bannersTableAriaLabel": "Tabella di gestione banner",
+      "visibility": "Visibilità",
+      "variant": "Tipo",
+      "lastUpdated": "Ultimo Aggiornamento",
+      "actions": "Azioni",
+      "visible": "Visibile",
+      "hidden": "Nascosto",
+      "pending": "In attesa",
+      "toggleVisibility": "Attiva/disattiva visibilità per {{name}}",
+      "noBannersFound": "Nessun banner trovato. Crea il tuo primo banner per iniziare.",
+      "confirmDeleteBanner": "Elimina Banner",
+      "confirmDeleteBannerMessage": "Sei sicuro di voler eliminare \"{{name}}\"?",
+      "deleteWarning": "Questa azione non può essere annullata.",
+      "bannerDeleted": "Banner eliminato",
+      "bannerDeletedDescription": "Il banner è stato eliminato con successo.",
+      "bannerDeleteError": "Errore nell'eliminazione del banner",
+      "bannerDeleteErrorGeneric": "Si è verificato un errore durante l'eliminazione del banner. Riprova.",
+      "bannerCreated": "Banner creato",
+      "bannerCreatedDescription": "Il banner è stato creato con successo.",
+      "applyChanges": "Applica Modifiche",
+      "applying": "Applicazione modifiche...",
+      "changesApplied": "Modifiche applicate",
+      "changesAppliedDescription": "Le modifiche alla visibilità del banner sono state applicate con successo.",
+      "applyChangesError": "Errore nell'applicazione delle modifiche",
+      "applyChangesErrorGeneric": "Si è verificato un errore durante l'applicazione delle modifiche. Riprova.",
+      "bannerVisibilityNote": "La visibilità è gestita a livello di tabella",
+      "bannerVisibilityNoteDescription": "Usa gli interruttori di visibilità nella tabella per mostrare/nascondere i banner. Solo un banner può essere visibile alla volta.",
+      "dismissalResetTitle": "Reset Chiusura",
+      "dismissalResetNote": "Nota: Salvare qualsiasi modifica renderà il banner nuovamente visibile a tutti gli utenti che lo avevano precedentemente chiuso.",
+      "noContent": "Nessun contenuto"
+    },
+    "chatbot": {
+      "title": "Area Giochi del Chatbot",
+      "subtitle": "Testa e interagisci con i modelli di IA usando un'interfaccia di chat diretta",
+      "description": "Testa le tue chiavi API e modelli con un'interfaccia di chat interattiva",
+      "loading": "Caricamento chatbot...",
+      "configuration": {
+        "title": "Configurazione",
+        "apiKey": "Seleziona Chiave API",
+        "selectApiKey": "Seleziona una chiave API...",
+        "model": "Seleziona Modello",
+        "selectModel": "Seleziona un modello...",
+        "temperature": "Temperatura",
+        "temperatureDescription": "Controlla la casualità (attuale: {{value}})",
+        "maxTokens": "Token Massimi",
+        "systemPrompt": "Prompt di Sistema",
+        "systemPromptPlaceholder": "Prompt di sistema opzionale per guidare il comportamento dell'IA...",
+        "streaming": "Streaming in tempo reale",
+        "streamingEnabled": "Abilita streaming in tempo reale",
+        "modelsLabel": "modelli",
+        "advancedSettings": "Impostazioni Avanzate",
+        "apiKeyPlaceholder": "Scegli una chiave API da testare",
+        "modelPlaceholder": "Scegli un modello da testare",
+        "temperatureHelp": "Controlla la casualità (0=deterministico, 2=creativo)",
+        "maxTokensHelp": "Lunghezza massima della risposta",
+        "systemPromptHelp": "Imposta il comportamento dell'assistente"
       },
-      "buttons": {
-        "savePreferences": "Salva Preferenze",
-        "updateConfiguration": "Aggiorna Configurazione"
+      "chat": {
+        "selectModelFirst": "Seleziona una chiave API e un modello per iniziare a chattare",
+        "placeholder": "Scrivi qui il tuo messaggio...",
+        "configureFirst": "Configura prima la chiave API e il modello",
+        "clear": "Cancella",
+        "clearConversation": "Cancella conversazione",
+        "send": "Invia",
+        "sending": "Invio in corso...",
+        "stop": "Ferma",
+        "stopGeneration": "Ferma generazione",
+        "streamingInProgress": "Streaming in corso...",
+        "emptyConversation": "Nessun messaggio ancora. Inizia scrivendo un messaggio qui sotto.",
+        "export": "Esporta",
+        "savePrompt": "Salva Prompt",
+        "welcomeTitle": "Assistente Test Modelli",
+        "welcomeDescription": "Inizia una conversazione per testare il tuo modello e chiave API selezionati"
       },
-      "models": "Modelli",
-      "modelsDescription": "Gestisci e sincronizza i modelli AI disponibili da LiteLLM",
-      "refreshModels": "Aggiorna modelli",
-      "lastSync": "Ultima sincronizzazione",
-      "syncTime": "{{time}}",
-      "syncInProgress": "Sincronizzazione in corso...",
-      "syncSuccess": "Sincronizzazione riuscita",
-      "syncSuccessDetails": "{{total}} modelli totali, {{new}} nuovi, {{updated}} aggiornati",
-      "syncError": "Errore di sincronizzazione",
-      "syncErrorGeneric": "Impossibile sincronizzare i modelli. Riprova.",
-      "syncErrors": "Errori di sincronizzazione",
-      "adminRequired": "Privilegi di amministratore richiesti per la sincronizzazione dei modelli",
-      "totalModels": "Modelli totali",
-      "newModels": "Nuovi modelli",
-      "updatedModels": "Modelli aggiornati"
+      "welcome": {
+        "title": "Benvenuto nell'Area Giochi del Chatbot",
+        "description": "Seleziona una chiave API e un modello dal pannello di configurazione sopra, poi inizia a chattare per testare direttamente i tuoi modelli di IA."
+      },
+      "responseInfo": {
+        "title": "Metriche di Risposta",
+        "responseTime": "Tempo di Risposta",
+        "tokenUsage": "Uso Token",
+        "estimatedCost": "Costo Stimato",
+        "noData": "Nessuna metrica di risposta disponibile ancora",
+        "timeToFirstToken": "Tempo al Primo Token",
+        "tokensPerSecond": "Token/Secondo",
+        "tokensPerSecondUnit": "token/s",
+        "prompt": "prompt",
+        "completion": "completamento",
+        "completionTokens": "Completamento",
+        "promptTokens": "Prompt",
+        "tokens": "Token",
+        "totalTokens": "Totale",
+        "hideRaw": "Nascondi Risposta Grezza",
+        "viewRaw": "Visualizza Risposta Grezza",
+        "noResponse": "Nessun dato di risposta disponibile"
+      },
+      "errors": {
+        "loadDataFailed": "Caricamento dati fallito",
+        "loadModelsFailed": "Caricamento modelli fallito",
+        "sendFailed": "Invio messaggio fallito",
+        "chatError": "Errore chat",
+        "keyRetrievalFailed": "Impossibile recuperare la chiave API",
+        "keyRetrievalFailedDesc": "Impossibile recuperare la chiave API completa. Controlla la tua autenticazione e riprova.",
+        "requestFailed": "Richiesta fallita",
+        "invalidResponse": "Risposta non valida dal server",
+        "networkError": "Errore di rete. Controlla la tua connessione e riprova.",
+        "authError": "Autenticazione fallita. Controlla la tua chiave API.",
+        "rateLimitError": "Limite di frequenza superato. Attendi e riprova.",
+        "validationError": "Errore di validazione. Controlla il tuo input.",
+        "serverError": "Errore del server. Riprova più tardi.",
+        "timeoutError": "Timeout della richiesta. Riprova.",
+        "unexpectedError": "Si è verificato un errore inaspettato"
+      },
+      "success": {
+        "messageSent": "Messaggio inviato",
+        "responseReceived": "Risposta ricevuta con successo",
+        "conversationCleared": "Conversazione cancellata"
+      },
+      "quickTests": {
+        "title": "Test Rapidi",
+        "codeGen": "Generazione Codice",
+        "translation": "Traduzione",
+        "summary": "Riassunto",
+        "jsonFormat": "Risposta JSON",
+        "creative": "Scrittura Creativa",
+        "problemSolving": "Risoluzione Problemi",
+        "dataAnalysis": "Analisi Dati",
+        "roleplay": "Gioco di Ruolo",
+        "custom": "I Miei Prompt"
+      },
+      "prompts": {
+        "builtIn": "Modelli Integrati",
+        "custom": "I Miei Prompt Salvati",
+        "noCustomPrompts": "Nessun prompt salvato ancora",
+        "usePrompt": "Usa Questo Prompt",
+        "deletePrompt": "Elimina Prompt",
+        "confirmDelete": "Sei sicuro di voler eliminare questo prompt?"
+      },
+      "export": {
+        "title": "Esporta Conversazione",
+        "format": "Seleziona Formato",
+        "json": "JSON",
+        "markdown": "Markdown",
+        "download": "Scarica",
+        "cancel": "Annulla",
+        "filename": "Nome file"
+      },
+      "savePromptModal": {
+        "title": "Salva Prompt",
+        "name": "Nome Prompt",
+        "namePlaceholder": "Inserisci un nome per questo prompt",
+        "description": "Descrizione (opzionale)",
+        "descriptionPlaceholder": "Descrivi a cosa serve questo prompt",
+        "save": "Salva",
+        "cancel": "Annulla"
+      },
+      "validation": {
+        "noApiKey": "Seleziona una chiave API",
+        "noModel": "Seleziona un modello",
+        "emptyMessage": "Inserisci un messaggio",
+        "promptNameRequired": "Il nome del prompt è richiesto",
+        "promptNameExists": "Esiste già un prompt con questo nome"
+      },
+      "notifications": {
+        "promptSaved": "Prompt Salvato",
+        "promptSavedDesc": "Il tuo prompt è stato salvato con successo",
+        "promptDeleted": "Prompt Eliminato",
+        "promptDeletedDesc": "Il prompt è stato eliminato",
+        "conversationCleared": "Conversazione Cancellata",
+        "conversationClearedDesc": "La cronologia della chat è stata cancellata",
+        "conversationExported": "Conversazione Esportata",
+        "conversationExportedDesc": "La tua conversazione è stata esportata con successo",
+        "messageSent": "Messaggio Inviato",
+        "apiError": "Errore API",
+        "keyRetrieved": "Chiave API Recuperata",
+        "keyRetrievedDesc": "La tua chiave API completa è stata recuperata in sicurezza",
+        "savePromptError": "Errore Salvataggio Prompt",
+        "deletePromptError": "Errore Eliminazione Prompt",
+        "exportError": "Errore Esportazione"
+      },
+      "accessibility": {
+        "configurationPanel": "Pannello di configurazione per le impostazioni del chatbot",
+        "chatInterface": "Interfaccia di chat per testare modelli AI",
+        "responseInfoPanel": "Pannello informazioni risposta che mostra le metriche",
+        "messageHistory": "Cronologia messaggi",
+        "sendMessage": "Invia messaggio al modello AI",
+        "clearConversation": "Cancella tutti i messaggi nella conversazione",
+        "exportConversation": "Esporta conversazione su file",
+        "saveCurrentPrompt": "Salva messaggio corrente come template prompt",
+        "selectApiKey": "Seleziona chiave API per autenticazione",
+        "selectModel": "Seleziona modello AI per test",
+        "adjustTemperature": "Regola temperatura per creatività risposta",
+        "setMaxTokens": "Imposta token massimi per lunghezza risposta",
+        "enterSystemPrompt": "Inserisci prompt sistema per guidare comportamento modello"
+      }
     }
   },
-  "ui": {
+  "role": {
+    "admin": "Amministratore",
+    "adminReadonly": "Amministratore (Sola lettura)",
+    "user": "Utente"
+  },
+  "users": {
+    "pageDescription": "Gestisci utenti, ruoli e permessi nella tua organizzazione",
+    "permissions": {
+      "accessDenied": "Accesso Negato",
+      "noPermission": "Non hai il permesso di accedere alla gestione utenti. Contatta il tuo amministratore se credi che questo sia un errore."
+    },
+    "loading": {
+      "title": "Caricamento Utenti...",
+      "description": "Recupero informazioni utente dal server"
+    },
     "pagination": {
-      "showing": "Visualizzazione"
+      "of": "di",
+      "users": "utenti"
+    },
+    "table": {
+      "username": "Nome utente",
+      "email": "Email",
+      "fullName": "Nome completo",
+      "roles": "Ruoli",
+      "status": "Stato",
+      "ariaLabel": "Tabella utenti",
+      "caption": "Tabella di {{count}} utenti con nome utente, email, nome completo, ruoli e stato.",
+      "moreRoles": "+{{count}} di più",
+      "notProvided": "Non fornito"
     },
     "actions": {
+      "edit": "Modifica",
+      "view": "Visualizza dettagli"
+    },
+    "modal": {
+      "edit": {
+        "title": "Modifica utente"
+      },
+      "view": {
+        "title": "Dettagli utente"
+      },
+      "defaultTitle": "Dettagli Utente",
+      "close": "Chiudi"
+    },
+    "form": {
+      "username": "Nome utente",
+      "email": "Email",
+      "fullName": "Nome completo",
+      "roles": "Ruoli",
+      "status": "Stato",
+      "lastLogin": "Ultimo accesso",
+      "createdAt": "Creato il",
+      "userInfo": "Informazioni Utente",
+      "noRoles": "Nessun ruolo assegnato",
+      "toggleRole": "Attiva/disattiva ruolo {{role}}",
+      "toggleStatus": "Attiva/disattiva stato utente attivo"
+    },
+    "search": {
+      "placeholder": "Cerca utenti...",
+      "ariaLabel": "Cerca utenti"
+    },
+    "filters": {
+      "roleAriaLabel": "Filtra per ruolo",
+      "statusAriaLabel": "Filtra per stato",
+      "allRoles": "Tutti i Ruoli",
+      "allStatus": "Tutti gli Stati",
+      "clearAll": "Cancella tutti i filtri",
+      "noMatches": "Nessun utente corrisponde ai tuoi filtri",
+      "adjustFilters": "Prova ad aggiustare i tuoi termini di ricerca o filtri per trovare utenti."
+    },
+    "empty": {
+      "title": "Nessun utente trovato",
+      "description": "Nessun utente corrisponde ai tuoi criteri di ricerca."
+    },
+    "error": {
+      "load": "Impossibile caricare gli utenti",
+      "loadTitle": "Errore nel Caricamento Utenti",
+      "loadDescription": "Impossibile caricare gli utenti dal server.",
+      "tryAgain": "Riprova",
+      "update": "Impossibile aggiornare l'utente"
+    },
+    "notifications": {
+      "updateSuccess": "Utente Aggiornato",
+      "updateSuccessDesc": "Le informazioni utente sono state aggiornate con successo.",
+      "updateError": "Aggiornamento Fallito"
+    },
+    "warnings": {
+      "roleConflict": "Conflitto di Ruoli",
+      "roleConflictDesc": "I ruoli Amministratore e Amministratore-sola lettura sono in conflitto. Il ruolo Amministratore avrà precedenza."
+    },
+    "alerts": {
+      "inactive": {
+        "title": "Account Utente Inattivo",
+        "description": "Questo account utente è attualmente inattivo e non può accedere al sistema."
+      },
+      "admin": {
+        "title": "Account Amministratore",
+        "description": "Questo utente ha privilegi di amministratore e accesso completo al sistema."
+      }
+    },
+    "status": {
+      "oauthManaged": "Stato gestito dal provider OAuth."
+    },
+    "never": "Mai"
+  },
+  "status": {
+    "active": "Attivo",
+    "inactive": "Inattivo"
+  },
+  "ui": {
+    "actions": {
+      "browse": "Sfoglia",
       "cancel": "Annulla",
       "close": "Chiudi",
+      "closeSidebar": "Chiudi barra laterale di navigazione",
+      "login": "Accedi con OpenShift",
+      "logout": "Esci",
+      "notImplemented": "Non ancora implementato",
+      "openSidebar": "Apri barra laterale di navigazione",
+      "refresh": "Aggiorna pagina",
       "save": "Salva",
       "saving": "Salvataggio...",
-      "tryAgain": "Riprova",
-      "logout": "Esci",
-      "login": "Accedi con OpenShift",
-      "browse": "Sfoglia",
-      "refresh": "Aggiorna pagina",
-      "openSidebar": "Apri barra laterale di navigazione",
-      "closeSidebar": "Chiudi barra laterale di navigazione"
+      "tryAgain": "Riprova"
+    },
+    "pagination": {
+      "showing": "Visualizzazione"
     },
     "theme": {
       "light": "Chiaro",
@@ -759,114 +938,5 @@
       "somethingWrong": "Qualcosa è andato storto",
       "tryRefresh": "Ci dispiace, ma si è verificato qualcosa di inaspettato. Prova ad aggiornare la pagina o contatta il supporto se il problema persiste."
     }
-  },
-  "role": {
-    "admin": "Amministratore",
-    "adminReadonly": "Amministratore (Sola lettura)",
-    "user": "Utente"
-  },
-  "users": {
-    "alerts": {
-      "admin": {
-        "description": "Questo utente ha privilegi di amministratore e accesso completo al sistema.",
-        "title": "Account Amministratore"
-      },
-      "inactive": {
-        "description": "Questo account utente è attualmente inattivo e non può accedere al sistema.",
-        "title": "Account Utente Inattivo"
-      }
-    },
-    "error": {
-      "load": "Impossibile caricare gli utenti",
-      "loadDescription": "Impossibile caricare gli utenti dal server.",
-      "loadTitle": "Errore nel Caricamento Utenti",
-      "tryAgain": "Riprova",
-      "update": "Impossibile aggiornare l'utente"
-    },
-    "filters": {
-      "adjustFilters": "Prova ad aggiustare i tuoi termini di ricerca o filtri per trovare utenti.",
-      "allRoles": "Tutti i Ruoli",
-      "allStatus": "Tutti gli Stati",
-      "clearAll": "Cancella tutti i filtri",
-      "noMatches": "Nessun utente corrisponde ai tuoi filtri",
-      "roleAriaLabel": "Filtra per ruolo",
-      "statusAriaLabel": "Filtra per stato"
-    },
-    "form": {
-      "username": "Nome utente",
-      "email": "Email",
-      "fullName": "Nome completo",
-      "roles": "Ruoli",
-      "status": "Stato",
-      "lastLogin": "Ultimo accesso",
-      "createdAt": "Creato il",
-      "userInfo": "Informazioni Utente",
-      "noRoles": "Nessun ruolo assegnato",
-      "toggleRole": "Attiva/disattiva ruolo {{role}}",
-      "toggleStatus": "Attiva/disattiva stato utente attivo"
-    },
-    "loading": {
-      "description": "Recupero informazioni utente dal server",
-      "title": "Caricamento Utenti..."
-    },
-    "modal": {
-      "edit": {
-        "title": "Modifica utente"
-      },
-      "view": {
-        "title": "Dettagli utente"
-      },
-      "defaultTitle": "Dettagli Utente",
-      "close": "Chiudi"
-    },
-    "notifications": {
-      "updateError": "Aggiornamento Fallito",
-      "updateSuccess": "Utente Aggiornato",
-      "updateSuccessDesc": "Le informazioni utente sono state aggiornate con successo."
-    },
-    "pageDescription": "Gestisci utenti, ruoli e permessi nella tua organizzazione",
-    "pagination": {
-      "of": "di",
-      "users": "utenti"
-    },
-    "permissions": {
-      "accessDenied": "Accesso Negato",
-      "noPermission": "Non hai il permesso di accedere alla gestione utenti. Contatta il tuo amministratore se credi che questo sia un errore."
-    },
-    "search": {
-      "placeholder": "Cerca utenti...",
-      "ariaLabel": "Cerca utenti"
-    },
-    "status": {
-      "oauthManaged": "Stato gestito dal provider OAuth."
-    },
-    "warnings": {
-      "roleConflict": "Conflitto di Ruoli",
-      "roleConflictDesc": "I ruoli Amministratore e Amministratore-sola lettura sono in conflitto. Il ruolo Amministratore avrà precedenza."
-    },
-    "table": {
-      "ariaLabel": "Tabella utenti",
-      "caption": "Tabella di {{count}} utenti con nome utente, email, nome completo, ruoli e stato.",
-      "moreRoles": "+{{count}} di più",
-      "notProvided": "Non fornito",
-      "username": "Nome utente",
-      "email": "Email",
-      "fullName": "Nome completo",
-      "roles": "Ruoli",
-      "status": "Stato"
-    },
-    "actions": {
-      "edit": "Modifica",
-      "view": "Visualizza dettagli"
-    },
-    "empty": {
-      "title": "Nessun utente trovato",
-      "description": "Nessun utente corrisponde ai tuoi criteri di ricerca."
-    },
-    "never": "Mai"
-  },
-  "status": {
-    "active": "Attivo",
-    "inactive": "Inattivo"
   }
 }

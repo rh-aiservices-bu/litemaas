@@ -133,6 +133,22 @@ export class RBACService {
       action: 'delete',
     },
 
+    // Banner permissions
+    {
+      id: 'admin:banners:read',
+      name: 'Read Banners',
+      description: 'View all banner announcements',
+      resource: 'banners',
+      action: 'read',
+    },
+    {
+      id: 'admin:banners:write',
+      name: 'Manage Banners',
+      description: 'Create, update, and delete banner announcements',
+      resource: 'banners',
+      action: 'write',
+    },
+
     // Admin permissions
     {
       id: 'admin:system',
@@ -167,6 +183,8 @@ export class RBACService {
         'admin:system',
         'admin:users',
         'admin:audit',
+        'admin:banners:read',
+        'admin:banners:write',
         'users:read',
         'users:write',
         'users:delete',
@@ -206,6 +224,7 @@ export class RBACService {
       description: 'Read-only access to admin features',
       permissions: [
         'admin:users', // View admin section
+        'admin:banners:read', // View banners in admin
         'users:read', // List and view users
         'models:read',
         'subscriptions:read',

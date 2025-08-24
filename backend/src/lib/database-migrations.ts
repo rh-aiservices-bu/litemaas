@@ -330,6 +330,85 @@ CREATE INDEX IF NOT EXISTS idx_oauth_sessions_user_id ON oauth_sessions(user_id)
 CREATE INDEX IF NOT EXISTS idx_oauth_sessions_expires_at ON oauth_sessions(expires_at);
 `;
 
+// Banner announcements table
+export const bannerAnnouncementsTable = `
+CREATE TABLE IF NOT EXISTS banner_announcements (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Core fields
+    name VARCHAR(100) NOT NULL DEFAULT 'Untitled Banner',
+    is_active BOOLEAN DEFAULT false,
+    priority INTEGER DEFAULT 0,
+    
+    -- Content (JSON for i18n support)
+    content JSONB NOT NULL DEFAULT '{}',
+    
+    -- Styling and behavior
+    variant VARCHAR(20) DEFAULT 'info' 
+        CHECK (variant IN ('info', 'warning', 'danger', 'success', 'default')),
+    is_dismissible BOOLEAN DEFAULT false,
+    dismiss_duration_hours INTEGER,
+    
+    -- Scheduling (for future enhancement)
+    start_date TIMESTAMP WITH TIME ZONE,
+    end_date TIMESTAMP WITH TIME ZONE,
+    
+    -- Targeting (for future enhancement)
+    target_roles TEXT[],
+    target_user_ids UUID[],
+    
+    -- Rich content support
+    link_url VARCHAR(500),
+    link_text JSONB,
+    markdown_enabled BOOLEAN DEFAULT false,
+    
+    -- Audit fields
+    created_by UUID REFERENCES users(id),
+    updated_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Add name column for existing tables (migration for backward compatibility)
+ALTER TABLE banner_announcements ADD COLUMN IF NOT EXISTS name VARCHAR(100) NOT NULL DEFAULT 'Untitled Banner';
+
+CREATE INDEX IF NOT EXISTS idx_banner_active ON banner_announcements(is_active, priority DESC)
+    WHERE is_active = true;
+CREATE INDEX IF NOT EXISTS idx_banner_created_by ON banner_announcements(created_by);
+CREATE INDEX IF NOT EXISTS idx_banner_updated_by ON banner_announcements(updated_by);
+CREATE INDEX IF NOT EXISTS idx_banner_name ON banner_announcements(name);
+`;
+
+// User banner dismissals table
+export const userBannerDismissalsTable = `
+CREATE TABLE IF NOT EXISTS user_banner_dismissals (
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    banner_id UUID REFERENCES banner_announcements(id) ON DELETE CASCADE,
+    dismissed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (user_id, banner_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_banner_dismissals_user_id ON user_banner_dismissals(user_id);
+CREATE INDEX IF NOT EXISTS idx_user_banner_dismissals_banner_id ON user_banner_dismissals(banner_id);
+`;
+
+// Banner audit log table
+export const bannerAuditLogTable = `
+CREATE TABLE IF NOT EXISTS banner_audit_log (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    banner_id UUID REFERENCES banner_announcements(id) ON DELETE CASCADE,
+    action VARCHAR(20) NOT NULL, -- 'create', 'update', 'delete', 'activate', 'deactivate'
+    changed_by UUID REFERENCES users(id),
+    previous_state JSONB,
+    new_state JSONB,
+    changed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_banner_audit_log_banner_id ON banner_audit_log(banner_id);
+CREATE INDEX IF NOT EXISTS idx_banner_audit_log_changed_by ON banner_audit_log(changed_by);
+CREATE INDEX IF NOT EXISTS idx_banner_audit_log_changed_at ON banner_audit_log(changed_at);
+`;
+
 // Updated triggers for updated_at columns
 export const updatedAtTriggers = `
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -351,6 +430,9 @@ CREATE TRIGGER update_models_updated_at BEFORE UPDATE ON models FOR EACH ROW EXE
 
 DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON subscriptions;
 CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON subscriptions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+DROP TRIGGER IF EXISTS update_banner_announcements_updated_at ON banner_announcements;
+CREATE TRIGGER update_banner_announcements_updated_at BEFORE UPDATE ON banner_announcements FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 `;
 
 // Default team creation
@@ -458,6 +540,15 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
 
     console.log('🔐 Creating oauth_sessions table...');
     await dbUtils.query(oauthSessionsTable);
+
+    console.log('📢 Creating banner_announcements table...');
+    await dbUtils.query(bannerAnnouncementsTable);
+
+    console.log('🚫 Creating user_banner_dismissals table...');
+    await dbUtils.query(userBannerDismissalsTable);
+
+    console.log('📝 Creating banner_audit_log table...');
+    await dbUtils.query(bannerAuditLogTable);
 
     console.log('⚡ Creating triggers...');
     await dbUtils.query(updatedAtTriggers);

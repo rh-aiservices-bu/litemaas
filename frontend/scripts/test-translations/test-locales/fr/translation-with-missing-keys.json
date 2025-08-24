@@ -1,0 +1,55 @@
+{
+  "navigation": {
+    "home": "Accueil",
+    "about": "À propos",
+    "contact": "Contact",
+    "profile": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Profile",
+    "logout": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Logout"
+  },
+  "common": {
+    "title": "Titre de l'application",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier",
+    "subtitle": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Application Subtitle",
+    "description": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: This is a description",
+    "delete": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Delete",
+    "close": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Close"
+  },
+  "messages": {
+    "success": "Opération réussie",
+    "error": "Une erreur s'est produite",
+    "warning": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Warning message",
+    "info": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Information message"
+  },
+  "user": {
+    "name": "Nom",
+    "email": "Courriel",
+    "created": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Created",
+    "updated": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Updated",
+    "status": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Inactive"
+  },
+  "forms": {
+    "submit": "Soumettre le formulaire",
+    "validation": {
+      "required": "Ce champ est requis",
+      "email": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Invalid email format",
+      "minLength": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Too short"
+    },
+    "reset": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Reset Form"
+  },
+  "duplicate": "Deuxième valeur",
+  "extraKey": "This key is not in source",
+  "anotherExtra": {
+    "nested": "Another extra nested key"
+  },
+  "nested": {
+    "other": "Autre valeur",
+    "duplicate": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Nested second"
+  },
+  "features": {
+    "feature1": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Feature One",
+    "feature2": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Feature Two",
+    "feature3": "🔴 MISSING TRANSLATION - PLEASE TRANSLATE: Feature Three"
+  }
+}

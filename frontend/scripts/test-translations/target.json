@@ -1,0 +1,36 @@
+{
+  "navigation": {
+    "home": "Accueil",
+    "about": "À propos",
+    "contact": "Contact"
+  },
+  "common": {
+    "title": "Titre de l'application",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "edit": "Modifier"
+  },
+  "messages": {
+    "success": "Opération réussie",
+    "error": "Une erreur s'est produite"
+  },
+  "user": {
+    "name": "Nom",
+    "email": "Courriel"
+  },
+  "forms": {
+    "submit": "Soumettre le formulaire",
+    "validation": {
+      "required": "Ce champ est requis"
+    }
+  },
+  "duplicate": "Première valeur",
+  "duplicate": "Deuxième valeur",
+  "extraKey": "This key is not in source",
+  "anotherExtra": {
+    "nested": "Another extra nested key"
+  },
+  "nested": {
+    "other": "Autre valeur"
+  }
+}

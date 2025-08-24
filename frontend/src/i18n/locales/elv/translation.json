@@ -10,7 +10,8 @@
     "error": "Ohtar",
     "notAvailable": "Ú-úir",
     "lineChart": "Minithith-rîn",
-    "dataPoints": "Gwaed-vuin"
+    "dataPoints": "Gwaed-vuin",
+    "cancel": "Daeglos"
   },
   "nav": {
     "home": "Eru",
@@ -21,7 +22,7 @@
     "chatbot": "Glingad-Celeb",
     "admin": {
       "users": "Users",
-      "settings": "Govannen"
+      "tools": "Echad"
     }
   },
   "pages": {
@@ -170,18 +171,18 @@
         "suspended": "Glaemscaul Daer",
         "expired": "Glaemscaul Firn"
       },
-      "status": {
-        "active": "Fîr",
-        "suspended": "Daer",
-        "expired": "Firn",
-        "pending": "Dar"
-      },
       "ariaLabels": {
         "status": "Estar"
       },
       "pricingLabels": {
         "input": "Minno",
         "output": "Toltha"
+      },
+      "status": {
+        "active": "Fîr",
+        "suspended": "Daer",
+        "expired": "Firn",
+        "pending": "Dar"
       }
     },
     "apiKeys": {
@@ -296,10 +297,10 @@
         "loadModelErrorDesc": "Ú-ern lain glaemscaul-echuin.",
         "createSuccess": "Anguirel-API Band",
         "createError": "Ohtar",
+        "createErrorDesc": "Ú-ern banda anguirel-API. Anno prestanno.",
+        "updateSuccess": "Anguirel-API Orthant",
         "updateError": "Ohtar",
         "updateErrorDesc": "Orthad anguirel-API fuin. Eredio egor.",
-        "updateSuccess": "Anguirel-API Orthant",
-        "createErrorDesc": "Ú-ern banda anguirel-API. Anno prestanno.",
         "deleteSuccess": "Anguirel-API Orthad",
         "deleteError": "Ohtar",
         "deleteErrorDesc": "Ú-ern orthad anguirel-API. Anno prestanno.",
@@ -344,172 +345,6 @@
       "codeExample": {
         "role": "aduiadan",
         "content": "Suilad, arda!"
-      }
-    },
-    "chatbot": {
-      "title": "Glingad-Celeb",
-      "subtitle": "Prestanno a anglenna IA-echuin dan thîn-glingad-gwedh",
-      "loading": "Lain prestann-glingad...",
-      "description": "Prestanno anguirel-API a echuin dan glingad gwedh-vuin",
-      "configuration": {
-        "title": "Orthad",
-        "apiKey": "Edhello Anguirel-API",
-        "apiKeyPlaceholder": "Edhello anguirel-API nan prestanno",
-        "model": "Edhello Echui",
-        "modelPlaceholder": "Edhello echui nan prestanno",
-        "advancedSettings": "Orthad Govannon",
-        "temperature": "Lûn-rond",
-        "temperatureHelp": "Orthad randui (0=thand, 2=dagor-vuin)",
-        "maxTokens": "Têw Uir",
-        "maxTokensHelp": "Dandollen and uir",
-        "systemPrompt": "Orthad-Peth",
-        "systemPromptHelp": "Gwaedho orthad-uin caran",
-        "systemPromptPlaceholder": "Minno orthad-peth (muindor)",
-        "streaming": "Thîn-rannol",
-        "streamingEnabled": "Orthad thîn-rannol anann",
-        "modelsLabel": "echuin",
-        "selectApiKey": "Edhello anguirel-API...",
-        "selectModel": "Edhello echui...",
-        "temperatureDescription": "Orthad dhûr-gwalh (hinan: {{value}})"
-      },
-      "quickTests": {
-        "title": "Prestann Thand",
-        "codeGen": "Coe-Banda",
-        "translation": "Lam-Thelia",
-        "summary": "Echannen",
-        "jsonFormat": "JSON Dandollen",
-        "creative": "Dagor-Vuin Teitha",
-        "problemSolving": "Ohtar-Gwa",
-        "dataAnalysis": "Gwaed-Minithia",
-        "roleplay": "Echad-Dagor",
-        "custom": "Nin Pethain"
-      },
-      "chat": {
-        "welcomeTitle": "Echui-Prestann Orthad-Uin",
-        "welcomeDescription": "Togo glingad ad prestanno echui a anguirel-API edhellen",
-        "placeholder": "Teitha peth...",
-        "send": "Anno",
-        "clear": "Thuia Glingad",
-        "export": "Edwen",
-        "savePrompt": "Goda Peth",
-        "sending": "Bêd anno...",
-        "emptyConversation": "Uíin peth. Togo teithant peth mi-muin.",
-        "clearConversation": "Heb a gýn sael",
-        "configureFirst": "Prestanno a anglenna egor",
-        "selectModelFirst": "Anann anglenna-echuin egor",
-        "stop": "Daro",
-        "stopGeneration": "Daro anglenna-garch",
-        "streamingInProgress": "Sír-glân an lân"
-      },
-      "responseInfo": {
-        "title": "Dandollen-Gwaed",
-        "tokens": "Têw",
-        "promptTokens": "Peth",
-        "completionTokens": "Echannen",
-        "totalTokens": "Îl",
-        "responseTime": "Dandollen-Lû",
-        "tokenUsage": "Têw Aerlinn",
-        "estimatedCost": "Vuin Minnen",
-        "viewRaw": "Tira Crún Dandollen",
-        "hideRaw": "Thuia Crún Dandollen",
-        "noResponse": "Uíin dandollen-gwaed uír",
-        "timeToFirstToken": "Lû na Têw Minui",
-        "tokensPerSecond": "Têw hen Lhûn",
-        "tokensPerSecondUnit": "têw/lhûn",
-        "prompt": "peth",
-        "completion": "echannen",
-        "noData": "úin gwaed úir"
-      },
-      "export": {
-        "title": "Edwen Glingad",
-        "format": "Edhello Echad",
-        "json": "JSON",
-        "markdown": "Teith-Tegil",
-        "download": "Duin",
-        "cancel": "Maetho",
-        "filename": "Teith-eneth"
-      },
-      "savePromptModal": {
-        "title": "Goda Peth",
-        "name": "Peth-Eneth",
-        "namePlaceholder": "Minno eneth nan peth sin",
-        "description": "Orthael (muindor)",
-        "descriptionPlaceholder": "Orthaelio aníron peth sin",
-        "save": "Goda",
-        "cancel": "Maetho"
-      },
-      "prompts": {
-        "builtIn": "Echuin Thurin",
-        "custom": "Nin Pethain Goda",
-        "noCustomPrompts": "Uin pethain goda",
-        "usePrompt": "Aníra Peth Sin",
-        "deletePrompt": "Orthad Peth",
-        "confirmDelete": "Uir orthad peth sin?"
-      },
-      "validation": {
-        "noApiKey": "Anno edhello anguirel-API",
-        "noModel": "Anno edhello echui",
-        "emptyMessage": "Anno teitha peth",
-        "promptNameRequired": "Aníra peth-eneth",
-        "promptNameExists": "Uir peth dan eneth sin"
-      },
-      "errors": {
-        "requestFailed": "Pedo fael",
-        "invalidResponse": "Dandollen-bêl o thurin",
-        "networkError": "Thâur ohtar. Anno doro gwedh a prestanno.",
-        "authError": "Auth-fael. Anno doro anguirel-API.",
-        "rateLimitError": "Rond-lim thand. Anno dar a prestanno.",
-        "validationError": "Tírad ohtar. Anno doro minnen.",
-        "serverError": "Thurin ohtar. Anno prestanno min.",
-        "timeoutError": "Pedo lû firn. Anno prestanno.",
-        "unexpectedError": "Ú-prestann ohtar orthant",
-        "keyRetrievalFailed": "Anguirel-API dotha fael",
-        "keyRetrievalFailedDesc": "Ú-ern dotha anguirel-API îl. Anno doro auth a prestanno.",
-        "chatError": "Glingad ohtar",
-        "loadDataFailed": "Gwaed lain fael",
-        "loadModelsFailed": "Echuin lain fael",
-        "sendFailed": "Anno fael"
-      },
-      "success": {
-        "messageSent": "Peth Anno",
-        "responseReceived": "Dandollen dotha prestann",
-        "conversationCleared": "Glingad Thuia"
-      },
-      "welcome": {
-        "title": "Mae govannen dan Glingad-Celeb",
-        "description": "Edhello anguirel-API a echui o orthad-rond anann, mae togo glingad ad prestanno IA-echuin istui"
-      },
-      "notifications": {
-        "promptSaved": "Peth Goda",
-        "promptSavedDesc": "Uin peth goda prestann",
-        "promptDeleted": "Peth Orthad",
-        "promptDeletedDesc": "I peth orthad",
-        "conversationCleared": "Glingad Thuia",
-        "conversationClearedDesc": "Glingad-rimm thuia",
-        "conversationExported": "Glingad Edwen",
-        "conversationExportedDesc": "Uin glingad edwen prestann",
-        "messageSent": "Peth Anno",
-        "apiError": "API Ohtar",
-        "keyRetrieved": "Anguirel-API Dotha",
-        "keyRetrievedDesc": "Uin anguirel-API îl dotha díheno",
-        "savePromptError": "Goda Peth Ohtar",
-        "deletePromptError": "Orthad Peth Ohtar",
-        "exportError": "Edwen Ohtar"
-      },
-      "accessibility": {
-        "configurationPanel": "Orthad-rond nan glingad-orthad",
-        "chatInterface": "Glingad-gwedh nan prestanno echuin isui",
-        "responseInfoPanel": "Dandollen-gwaed-rond tira govaded",
-        "messageHistory": "Peth-rimm",
-        "sendMessage": "Anno peth na echui isui",
-        "clearConversation": "Thuia îl peth mi glingad",
-        "exportConversation": "Edwen glingad na teith",
-        "saveCurrentPrompt": "Goda peth hinan sui peth-echad",
-        "selectApiKey": "Edhello anguirel-API nan auth",
-        "selectModel": "Edhello echui isui nan prestanno",
-        "adjustTemperature": "Orthad lûn-rond nan dandollen dagor-vuin",
-        "setMaxTokens": "Gwaedho têw uir nan dandollen and",
-        "enterSystemPrompt": "Minno orthad-peth ad linna echui caran"
       }
     },
     "usage": {
@@ -643,58 +478,410 @@
       },
       "metricsUpdated": "Aerlinn-govaded edwen. {{requests}} pedi îl, {{tokens}} têw îl, {{cost}} cost îl"
     },
-    "settings": {
-      "title": "Govannen",
-      "userPreferences": "Aduiadan-Muin",
-      "apiConfiguration": "API-Orthad",
-      "forms": {
-        "displayName": "Tira-Eneth",
-        "displayNamePlaceholder": "Minno tira-eneth",
-        "displayNameHelperText": "Eneth sin tira mi rond-gannen a îl prestann",
-        "emailNotifications": "Lam-Thûl",
-        "emailNotificationsHelperText": "Dotha thûl am glaemscaul-thîl, aerlinn-balruin a edraith-edwen",
-        "emailNotificationsAriaLabel": "Orthad pe thuia lam-thûl",
-        "autoRefreshDashboard": "Minithith Athra-Vuin",
-        "autoRefreshHelperText": "Athra minithith-gwaed hen 30 lhûn",
-        "autoRefreshAriaLabel": "Orthad pe thuia minithith athra-vuin",
-        "enabled": "Orthad",
-        "disabled": "Thuiad",
-        "defaultModelProvider": "Echui-Aphad Anann",
-        "rateLimitLabel": "Rond-Lim (pedi hen vuilin)",
-        "rateLimitHelperText": "I lim sin gwaedh dan glaemscaul-echad a ú-ern thelia",
-        "timeoutLabel": "Lû-Methed (eiliad)",
-        "providerPlaceholder": "OpenAI, Anthropic, sí",
-        "openShiftAI": "OpenShift AI"
-      },
-      "buttons": {
-        "savePreferences": "Goda Muin",
-        "updateConfiguration": "Edwen Orthad"
-      },
-      "models": "Echuin",
-      "modelsDescription": "Orthad a sinhronatha echuin isui úir o LiteLLM",
-      "refreshModels": "Athra echuin",
-      "lastSync": "Methen sinhron",
-      "syncTime": "{{time}}",
-      "syncInProgress": "Sinhron vi prestann...",
-      "syncSuccess": "Sinhron prestann",
-      "syncSuccessDetails": "{{total}} echuin îl, {{new}} vuin, {{updated}} edraith",
-      "syncError": "Sinhron ohtar",
-      "syncErrorGeneric": "Ú-ern sinhronatha echuin. Anno prestanno.",
-      "syncErrors": "Sinhron ohtarin",
-      "adminRequired": "Aran-baur aníra na echuin-sinhron",
+    "tools": {
+      "title": "Echad",
+      "models": "Echuin Vellyn",
+      "modelsDescription": "Sinhronatha isui echuin o LiteLLM na thirad în dalitha na echuin sui vuin.",
+      "refreshModels": "Athra Echuin o LiteLLM",
+      "lastSync": "Methen Sinhron",
+      "syncTime": "Lû",
+      "syncInProgress": "Sinhronatha echuin...",
+      "syncSuccess": "Echuin sinhron sui prestannen",
+      "syncSuccessDetails": "{{total}} echuin îl ({{new}} vuin, {{updated}} edraith)",
+      "syncError": "Echuin sinhron fael",
+      "syncErrorGeneric": "Ohtar renia an sinhronatha echuin. Anno prestanno erin.",
+      "syncErrors": "Ohtarin",
+      "adminRequired": "Aran-baur aníra na sinhronatha echuin",
       "totalModels": "Echuin îl",
-      "newModels": "Echuin vuin",
-      "updatedModels": "Echuin edraith"
+      "newModels": "Echuin Vuin",
+      "updatedModels": "Echuin Edraith",
+      "limitsManagement": "Limmad Vellyn",
+      "limitsDescription": "Orthatha limmad-gelair na îl aduiain mi rond. Ceird thuiar na îl aduiain orthad. Anann aduiain vuin ú-ceird.",
+      "maxBudgetLabel": "Vahamal Linn ($)",
+      "maxBudgetHelper": "Vahamal cost-lim na aduiadan hen dolari",
+      "tpmLimitLabel": "TPM Lim",
+      "tpmLimitHelper": "Vahamal têw na vuin hen aduiadan",
+      "rpmLimitLabel": "RPM Lim",
+      "rpmLimitHelper": "Vahamal pedi na vuin hen aduiadan",
+      "applyToAllUsers": "Thuia na Îl Aduiain",
+      "confirmBulkUpdate": "Thuia Limmad na Îl Aduiain?",
+      "confirmBulkUpdateMessage": "Sí edrain îl aduiain orthad oh limmad anírannen. I said ú-ern daer.",
+      "confirmApply": "Thuia Ceird",
+      "changesToApply": "Ceird na thuio",
+      "leaveEmptyToKeep": "Awartha lim na mí vaethen fair",
+      "bulkUpdateSuccess": "{{count}} aduiain edrain sui prestannen",
+      "bulkUpdatePartial": "{{success}} aduiain edrain, {{failed}} fael",
+      "bulkUpdateError": "Aduiain-limmad edrain fael",
+      "bulkUpdateErrorGeneric": "Ohtar renia an edraina aduiain-limmad. Anno prestanno erin.",
+      "noValuesProvided": "Anno rhenia limmad-fair min",
+      "noValuesProvidedDescription": "Rhenia etel limmad na edraina.",
+      "processing": "Edraina aduiain...",
+      "lastLimitsUpdate": "Methen Limmad-Edraith",
+      "updateTime": "Lû Edraith",
+      "totalUsersUpdated": "Aduiain îl",
+      "successfulUpdates": "Prestannen",
+      "failedUpdates": "Faelen",
+      "updateErrors": "Edraith Ohtarin",
+      "bannerManagement": "Tawar Orthad Faer",
+      "bannerDescription": "Orthor ar thûr i feer i thilin vi baran in aear na hain elei dúnedain.",
+      "bannerStatus": "Stad in Faer",
+      "showBanner": "Teitha Faer",
+      "hideBanner": "Thuia Faer",
+      "bannerStatusHelper": "Prestanno i-dhorthain na hain elei dúnedain",
+      "bannerContent": "Narn Faer",
+      "bannerContentPlaceholder": "Teithado dhaw na phen...",
+      "bannerEnglishRequired": "Rochon Adûnaig (aenyn hain eglain sui thillen)",
+      "bannerStyle": "Goth Faer",
+      "bannerStyleHelper": "Edhwenno i ngoth-vaethad si maer dan aran-thaw",
+      "bannerStyleAriaLabel": "Edhwenno goth faer",
+      "variantInfo": "Glaer (Luin)",
+      "variantWarning": "Balch (Galadh)",
+      "variantDanger": "Peredhel (Caran)",
+      "variantSuccess": "Orthad (Calen)",
+      "variantDefault": "Bauglin (Mith)",
+      "allowDismiss": "Linna elei na thynd",
+      "allowDismissHelper": "Pen orthad, elei ylf na thynd i faer na i uin thuin",
+      "enableMarkdown": "Ortho thent-dadben",
+      "enableMarkdownHelper": "Dortha **tulus** tengwar a [thain](URL) vi narn faer",
+      "saveBanner": "Glaw Faer",
+      "deactivateBanner": "Úgarno Faer",
+      "saving": "I-nglaw...",
+      "bannerSaved": "Faer glammed sui aranuil",
+      "bannerSavedDescription": "I faer dhaw thûl úrn ar teithedan na elei tulus",
+      "bannerSaveError": "Fael na nglawar faer",
+      "bannerSaveErrorGeneric": "Gweith orthant pen gladhon i faer. Prestanno.",
+      "bannerValidationError": "Gweith Orthin",
+      "bannerName": "Eneth Faer",
+      "bannerNameRequired": "Rochon eneth faer",
+      "bannerNamePlaceholder": "Teithado eneth dannen han faer",
+      "createNewBanner": "Ortho Faer Gin",
+      "createBanner": "Ortho Faer",
+      "editBanner": "Dadben Faer",
+      "deleteBanner": "Neledh Faer",
+      "bannersTableAriaLabel": "Tâl orthad faer",
+      "visibility": "Tiruith",
+      "variant": "Math",
+      "lastUpdated": "Orthanc Duin",
+      "actions": "Gyrth",
+      "visible": "Tiria",
+      "hidden": "Thurin",
+      "pending": "Dair",
+      "toggleVisibility": "Prestanno tiruith {{name}}",
+      "noBannersFound": "Ú-faer trened. Ortho pen faer na thûl.",
+      "confirmDeleteBanner": "Neledh Faer",
+      "confirmDeleteBannerMessage": "Sui cîn awarnen na neledh \"{{name}}\"?",
+      "deleteWarning": "An ûl ú-dhorthad.",
+      "bannerDeleted": "Faer neledh",
+      "bannerDeletedDescription": "I faer neledhenni sui orthad.",
+      "bannerDeleteError": "Fael na neledh faer",
+      "bannerDeleteErrorGeneric": "Gweith orthant pen neledh i faer. Prestanno.",
+      "bannerCreated": "Faer orthannen",
+      "bannerCreatedDescription": "I faer orthannen sui aranuil.",
+      "applyChanges": "Dadben Edraith",
+      "applying": "I-nadebon edraith...",
+      "changesApplied": "Edraith dadbennin",
+      "changesAppliedDescription": "I faer tiruith edraith dadbennin sui aranuil.",
+      "applyChangesError": "Fael na dadben edraith",
+      "applyChangesErrorGeneric": "Gweith orthant pen dadben i edraith. Prestanno.",
+      "bannerVisibilityNote": "Tiruith orthad na dûr tâl",
+      "bannerVisibilityNoteDescription": "Breithio i tiruith prestannon na tâl na theithedar/thuiar faer. Minui faer ylf tiria.",
+      "dismissalResetTitle": "Awest Thynd",
+      "dismissalResetNote": "Teith: Gladhon aenyn edraith dadbeno i faer sui tiria na hain elei i thynd uin.",
+      "noContent": "Û narn"
+    },
+    "chatbot": {
+      "title": "Glingad-Celeb",
+      "subtitle": "Prestanno a anglenna IA-echuin dan thîn-glingad-gwedh",
+      "description": "Prestanno anguirel-API a echuin dan glingad gwedh-vuin",
+      "loading": "Lain prestann-glingad...",
+      "configuration": {
+        "title": "Orthad",
+        "apiKey": "Edhello Anguirel-API",
+        "selectApiKey": "Edhello anguirel-API...",
+        "model": "Edhello Echui",
+        "selectModel": "Edhello echui...",
+        "temperature": "Lûn-rond",
+        "temperatureDescription": "Orthad dhûr-gwalh (hinan: {{value}})",
+        "maxTokens": "Têw Uir",
+        "systemPrompt": "Orthad-Peth",
+        "systemPromptPlaceholder": "Minno orthad-peth (muindor)",
+        "streaming": "Thîn-rannol",
+        "streamingEnabled": "Orthad thîn-rannol anann",
+        "modelsLabel": "echuin",
+        "advancedSettings": "Orthad Govannon",
+        "apiKeyPlaceholder": "Edhello anguirel-API nan prestanno",
+        "modelPlaceholder": "Edhello echui nan prestanno",
+        "temperatureHelp": "Orthad randui (0=thand, 2=dagor-vuin)",
+        "maxTokensHelp": "Dandollen and uir",
+        "systemPromptHelp": "Gwaedho orthad-uin caran"
+      },
+      "chat": {
+        "selectModelFirst": "Anann anglenna-echuin egor",
+        "placeholder": "Teitha peth...",
+        "configureFirst": "Prestanno a anglenna egor",
+        "clear": "Thuia Glingad",
+        "clearConversation": "Heb a gýn sael",
+        "send": "Anno",
+        "sending": "Bêd anno...",
+        "stop": "Daro",
+        "stopGeneration": "Daro anglenna-garch",
+        "streamingInProgress": "Sír-glân an lân",
+        "emptyConversation": "Uíin peth. Togo teithant peth mi-muin.",
+        "export": "Edwen",
+        "savePrompt": "Goda Peth",
+        "welcomeTitle": "Echui-Prestann Orthad-Uin",
+        "welcomeDescription": "Togo glingad ad prestanno echui a anguirel-API edhellen"
+      },
+      "welcome": {
+        "title": "Mae govannen dan Glingad-Celeb",
+        "description": "Edhello anguirel-API a echui o orthad-rond anann, mae togo glingad ad prestanno IA-echuin istui"
+      },
+      "responseInfo": {
+        "title": "Dandollen-Gwaed",
+        "responseTime": "Dandollen-Lû",
+        "tokenUsage": "Têw Aerlinn",
+        "estimatedCost": "Vuin Minnen",
+        "noData": "úin gwaed úir",
+        "timeToFirstToken": "Lû na Têw Minui",
+        "tokensPerSecond": "Têw hen Lhûn",
+        "tokensPerSecondUnit": "têw/lhûn",
+        "prompt": "peth",
+        "completion": "echannen",
+        "completionTokens": "Echannen",
+        "promptTokens": "Peth",
+        "tokens": "Têw",
+        "totalTokens": "Îl",
+        "hideRaw": "Thuia Crún Dandollen",
+        "viewRaw": "Tira Crún Dandollen",
+        "noResponse": "Uíin dandollen-gwaed uír"
+      },
+      "errors": {
+        "loadDataFailed": "Gwaed lain fael",
+        "loadModelsFailed": "Echuin lain fael",
+        "sendFailed": "Anno fael",
+        "chatError": "Glingad ohtar",
+        "keyRetrievalFailed": "Anguirel-API dotha fael",
+        "keyRetrievalFailedDesc": "Ú-ern dotha anguirel-API îl. Anno doro auth a prestanno.",
+        "requestFailed": "Pedo fael",
+        "invalidResponse": "Dandollen-bêl o thurin",
+        "networkError": "Thâur ohtar. Anno doro gwedh a prestanno.",
+        "authError": "Auth-fael. Anno doro anguirel-API.",
+        "rateLimitError": "Rond-lim thand. Anno dar a prestanno.",
+        "validationError": "Tírad ohtar. Anno doro minnen.",
+        "serverError": "Thurin ohtar. Anno prestanno min.",
+        "timeoutError": "Pedo lû firn. Anno prestanno.",
+        "unexpectedError": "Ú-prestann ohtar orthant"
+      },
+      "success": {
+        "messageSent": "Peth Anno",
+        "responseReceived": "Dandollen dotha prestann",
+        "conversationCleared": "Glingad Thuia"
+      },
+      "quickTests": {
+        "title": "Prestann Thand",
+        "codeGen": "Coe-Banda",
+        "translation": "Lam-Thelia",
+        "summary": "Echannen",
+        "jsonFormat": "JSON Dandollen",
+        "creative": "Dagor-Vuin Teitha",
+        "problemSolving": "Ohtar-Gwa",
+        "dataAnalysis": "Gwaed-Minithia",
+        "roleplay": "Echad-Dagor",
+        "custom": "Nin Pethain"
+      },
+      "prompts": {
+        "builtIn": "Echuin Thurin",
+        "custom": "Nin Pethain Goda",
+        "noCustomPrompts": "Uin pethain goda",
+        "usePrompt": "Aníra Peth Sin",
+        "deletePrompt": "Orthad Peth",
+        "confirmDelete": "Uir orthad peth sin?"
+      },
+      "export": {
+        "title": "Edwen Glingad",
+        "format": "Edhello Echad",
+        "json": "JSON",
+        "markdown": "Teith-Tegil",
+        "download": "Duin",
+        "cancel": "Maetho",
+        "filename": "Teith-eneth"
+      },
+      "savePromptModal": {
+        "title": "Goda Peth",
+        "name": "Peth-Eneth",
+        "namePlaceholder": "Minno eneth nan peth sin",
+        "description": "Orthael (muindor)",
+        "descriptionPlaceholder": "Orthaelio aníron peth sin",
+        "save": "Goda",
+        "cancel": "Maetho"
+      },
+      "validation": {
+        "noApiKey": "Anno edhello anguirel-API",
+        "noModel": "Anno edhello echui",
+        "emptyMessage": "Anno teitha peth",
+        "promptNameRequired": "Aníra peth-eneth",
+        "promptNameExists": "Uir peth dan eneth sin"
+      },
+      "notifications": {
+        "promptSaved": "Peth Goda",
+        "promptSavedDesc": "Uin peth goda prestann",
+        "promptDeleted": "Peth Orthad",
+        "promptDeletedDesc": "I peth orthad",
+        "conversationCleared": "Glingad Thuia",
+        "conversationClearedDesc": "Glingad-rimm thuia",
+        "conversationExported": "Glingad Edwen",
+        "conversationExportedDesc": "Uin glingad edwen prestann",
+        "messageSent": "Peth Anno",
+        "apiError": "API Ohtar",
+        "keyRetrieved": "Anguirel-API Dotha",
+        "keyRetrievedDesc": "Uin anguirel-API îl dotha díheno",
+        "savePromptError": "Goda Peth Ohtar",
+        "deletePromptError": "Orthad Peth Ohtar",
+        "exportError": "Edwen Ohtar"
+      },
+      "accessibility": {
+        "configurationPanel": "Orthad-rond nan glingad-orthad",
+        "chatInterface": "Glingad-gwedh nan prestanno echuin isui",
+        "responseInfoPanel": "Dandollen-gwaed-rond tira govaded",
+        "messageHistory": "Peth-rimm",
+        "sendMessage": "Anno peth na echui isui",
+        "clearConversation": "Thuia îl peth mi glingad",
+        "exportConversation": "Edwen glingad na teith",
+        "saveCurrentPrompt": "Goda peth hinan sui peth-echad",
+        "selectApiKey": "Edhello anguirel-API nan auth",
+        "selectModel": "Edhello echui isui nan prestanno",
+        "adjustTemperature": "Orthad lûn-rond nan dandollen dagor-vuin",
+        "setMaxTokens": "Gwaedho têw uir nan dandollen and",
+        "enterSystemPrompt": "Minno orthad-peth ad linna echui caran"
+      }
     }
+  },
+  "role": {
+    "admin": "Aran",
+    "adminReadonly": "Aran (Cano-meth)",
+    "user": "Aduiadan"
+  },
+  "users": {
+    "pageDescription": "Orthad adan, barad a phenin trennen orthad-hen",
+    "permissions": {
+      "accessDenied": "Minno Gwedh",
+      "noPermission": "Úan phenin na adan-orthad minno. Pendelo adaroniel ben maeth sí meth."
+    },
+    "loading": {
+      "title": "Onno Adan...",
+      "description": "Onno adan-thirin ab estel"
+    },
+    "pagination": {
+      "of": "ab",
+      "users": "adan"
+    },
+    "table": {
+      "username": "Aduiadan-eneth",
+      "email": "Lam-thûl",
+      "fullName": "Eneth Anann",
+      "roles": "Barad",
+      "status": "Thad",
+      "ariaLabel": "Tâur-adan",
+      "caption": "Tâur dan {{count}} adan dan hannas, postrod, eru-ennas, barad a thad.",
+      "moreRoles": "+{{count}} brand",
+      "notProvided": "Ú-faeron"
+    },
+    "actions": {
+      "edit": "Orthad",
+      "view": "Tira Vuin"
+    },
+    "modal": {
+      "edit": {
+        "title": "Orthad Aduiadan"
+      },
+      "view": {
+        "title": "Aduiadan Vuin"
+      },
+      "defaultTitle": "Adan-Thirin",
+      "close": "Thynd"
+    },
+    "form": {
+      "username": "Aduiadan-eneth",
+      "email": "Lam-thúl",
+      "fullName": "Eneth Anann",
+      "roles": "Barad",
+      "status": "Thad",
+      "lastLogin": "Methed Minno",
+      "createdAt": "Banda Îuil",
+      "userInfo": "Adan-Thirin",
+      "noRoles": "Ú-varad estannen",
+      "toggleRole": "Hae varad {{role}}",
+      "toggleStatus": "Hae thad-adan"
+    },
+    "search": {
+      "placeholder": "Hiraeth aduiadan...",
+      "ariaLabel": "Hiraeth adan"
+    },
+    "filters": {
+      "roleAriaLabel": "Estelio dan varad",
+      "statusAriaLabel": "Estelio dan thad",
+      "allRoles": "Coth Barad",
+      "allStatus": "Coth Thad",
+      "clearAll": "Thynja coth estelio",
+      "noMatches": "Ú-adan orthad erin estelio",
+      "adjustFilters": "Eredio hae paich si ha estelio hir adan."
+    },
+    "empty": {
+      "title": "Ú-adan ennen",
+      "description": "Ú-adan orthad erin hiraeth-orthael."
+    },
+    "error": {
+      "load": "Onnad aduiadan fuin",
+      "loadTitle": "Ohtar ned Onnad Adan",
+      "loadDescription": "Onnad adan ab estel fuin.",
+      "tryAgain": "Eredio Egor",
+      "update": "Orthad aduiadan fuin"
+    },
+    "notifications": {
+      "updateSuccess": "Adan Orthant",
+      "updateSuccessDesc": "Adan-thirin orthant sui chenin.",
+      "updateError": "Orthad Fuin"
+    },
+    "warnings": {
+      "roleConflict": "Varad-Glaemscaul",
+      "roleConflictDesc": "Aran a Aran-leithron barad glaemscatha. Aran-varad tiri orthor."
+    },
+    "alerts": {
+      "inactive": {
+        "title": "Orthad-Adan Firn",
+        "description": "Sí orthad-adan firn úan a ú-beleg minna sistem."
+      },
+      "admin": {
+        "title": "Orthad-Aran",
+        "description": "Sí adan aran-barad nan a herth sistem thurin."
+      }
+    },
+    "status": {
+      "oauthManaged": "Thad orthad dan OAuth-telir."
+    },
+    "never": "Úin"
+  },
+  "status": {
+    "active": "Fîr",
+    "inactive": "Firn"
   },
   "ui": {
     "actions": {
-      "tryAgain": "Anno prestanno",
-      "notImplemented": "Ú-úrn orthad",
-      "save": "Glaw",
+      "browse": "Leithio",
       "cancel": "Daeglos",
       "close": "Thynd",
-      "saving": "I-nglaw..."
+      "closeSidebar": "Thelia linna-orthad",
+      "login": "Minno dan OpenShift",
+      "logout": "Edan",
+      "notImplemented": "Lá onnad",
+      "openSidebar": "Pân linna-orthad",
+      "refresh": "Athra-band",
+      "save": "Glaw",
+      "saving": "I-nglaw...",
+      "tryAgain": "Anno prestanno"
+    },
+    "pagination": {
+      "showing": "Tirúva"
     },
     "theme": {
       "light": "Galad",
@@ -747,134 +934,9 @@
         "dotted": "tithen"
       }
     },
-    "actions": {
-      "logout": "Edan",
-      "login": "Minno dan OpenShift",
-      "browse": "Leithio",
-      "refresh": "Athra-band",
-      "tryAgain": "Anno prestanno",
-      "openSidebar": "Pân linna-orthad",
-      "closeSidebar": "Thelia linna-orthad",
-      "save": "Glaw",
-      "cancel": "Daeglos",
-      "close": "Thynd",
-      "saving": "I-nglaw..."
-    },
     "errors": {
       "somethingWrong": "Rhein ohtar orthant",
       "tryRefresh": "Goheno, nan rhein ú-prestann orthant. Anno athra-band i band pe pado na orthad-uin sui ohtar dartha."
-    },
-    "pagination": {
-      "showing": "Tirúva"
     }
-  },
-  "role": {
-    "admin": "Aran",
-    "adminReadonly": "Aran (Cano-meth)",
-    "user": "Aduiadan"
-  },
-  "status": {
-    "active": "Fîr",
-    "inactive": "Firn"
-  },
-  "users": {
-    "alerts": {
-      "admin": {
-        "description": "Sí adan aran-barad nan a herth sistem thurin.",
-        "title": "Orthad-Aran"
-      },
-      "inactive": {
-        "description": "Sí orthad-adan firn úan a ú-beleg minna sistem.",
-        "title": "Orthad-Adan Firn"
-      }
-    },
-    "error": {
-      "load": "Onnad aduiadan fuin",
-      "loadTitle": "Ohtar ned Onnad Adan",
-      "loadDescription": "Onnad adan ab estel fuin.",
-      "tryAgain": "Eredio Egor",
-      "update": "Orthad aduiadan fuin"
-    },
-    "filters": {
-      "adjustFilters": "Eredio hae paich si ha estelio hir adan.",
-      "allRoles": "Coth Barad",
-      "allStatus": "Coth Thad",
-      "clearAll": "Thynja coth estelio",
-      "noMatches": "Ú-adan orthad erin estelio",
-      "roleAriaLabel": "Estelio dan varad",
-      "statusAriaLabel": "Estelio dan thad"
-    },
-    "form": {
-      "noRoles": "Ú-varad estannen",
-      "toggleRole": "Hae varad {{role}}",
-      "toggleStatus": "Hae thad-adan",
-      "userInfo": "Adan-Thirin",
-      "username": "Aduiadan-eneth",
-      "email": "Lam-thúl",
-      "fullName": "Eneth Anann",
-      "roles": "Barad",
-      "status": "Thad",
-      "lastLogin": "Methed Minno",
-      "createdAt": "Banda Îuil"
-    },
-    "loading": {
-      "description": "Onno adan-thirin ab estel",
-      "title": "Onno Adan..."
-    },
-    "modal": {
-      "edit": {
-        "title": "Orthad Aduiadan"
-      },
-      "view": {
-        "title": "Aduiadan Vuin"
-      },
-      "close": "Thynd",
-      "defaultTitle": "Adan-Thirin"
-    },
-    "notifications": {
-      "updateError": "Orthad Fuin",
-      "updateSuccess": "Adan Orthant",
-      "updateSuccessDesc": "Adan-thirin orthant sui chenin."
-    },
-    "pageDescription": "Orthad adan, barad a phenin trennen orthad-hen",
-    "pagination": {
-      "of": "ab",
-      "users": "adan"
-    },
-    "permissions": {
-      "accessDenied": "Minno Gwedh",
-      "noPermission": "Úan phenin na adan-orthad minno. Pendelo adaroniel ben maeth sí meth."
-    },
-    "search": {
-      "placeholder": "Hiraeth aduiadan...",
-      "ariaLabel": "Hiraeth adan"
-    },
-    "status": {
-      "oauthManaged": "Thad orthad dan OAuth-telir."
-    },
-    "table": {
-      "ariaLabel": "Tâur-adan",
-      "caption": "Tâur dan {{count}} adan dan hannas, postrod, eru-ennas, barad a thad.",
-      "moreRoles": "+{{count}} brand",
-      "notProvided": "Ú-faeron",
-      "username": "Aduiadan-eneth",
-      "email": "Lam-thûl",
-      "fullName": "Eneth Anann",
-      "roles": "Barad",
-      "status": "Thad"
-    },
-    "warnings": {
-      "roleConflict": "Varad-Glaemscaul",
-      "roleConflictDesc": "Aran a Aran-leithron barad glaemscatha. Aran-varad tiri orthor."
-    },
-    "actions": {
-      "edit": "Orthad",
-      "view": "Tira Vuin"
-    },
-    "empty": {
-      "title": "Ú-adan ennen",
-      "description": "Ú-adan orthad erin hiraeth-orthael."
-    },
-    "never": "Úin"
   }
 }

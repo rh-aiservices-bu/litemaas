@@ -3,12 +3,7 @@ import { useTranslation } from 'react-i18next';
 import {
   PageSection,
   Title,
-  Card,
-  CardBody,
-  Grid,
-  GridItem,
   Button,
-  Divider,
   Alert,
   Tooltip,
   Flex,
@@ -25,16 +20,26 @@ import {
   Modal,
   ModalVariant,
   ModalBody,
+  Tabs,
+  Tab,
+  TabTitleText,
+  TabContent,
+  TabContentBody,
 } from '@patternfly/react-core';
-import { SyncAltIcon, UsersIcon } from '@patternfly/react-icons';
+import { SyncAltIcon, UsersIcon, PlusIcon } from '@patternfly/react-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useBanners } from '../contexts/BannerContext';
 import { modelsService } from '../services/models.service';
+import { bannerService } from '../services/banners.service';
 import {
   adminService,
   type BulkUpdateUserLimitsRequest,
   type BulkUpdateUserLimitsResponse,
 } from '../services/admin.service';
+import type { SimpleBannerUpdateRequest, CreateBannerRequest, Banner } from '../types/banners';
+import { BannerEditModal, BannerTable } from '../components/banners';
+import { useQuery, useQueryClient } from 'react-query';
 
 interface SyncResult {
   success: boolean;
@@ -46,12 +51,15 @@ interface SyncResult {
   syncedAt: string;
 }
 
-const SettingsPage: React.FC = () => {
+const ToolsPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const { addNotification } = useNotifications();
+  const { updateBanner, bulkUpdateVisibility } = useBanners();
+  const queryClient = useQueryClient();
   const [isLoading, setIsLoading] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
+  const [activeTabKey, setActiveTabKey] = useState<string | number>('models');
 
   // Limits Management state
   const [isLimitsLoading, setIsLimitsLoading] = useState(false);
@@ -65,9 +73,32 @@ const SettingsPage: React.FC = () => {
     null,
   );
 
+  // Banner Management state
+  const [isBannerLoading, setIsBannerLoading] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
+  const [isCreateMode, setIsCreateMode] = useState(false);
+  const [pendingVisibilityChanges, setPendingVisibilityChanges] = useState<Map<string, boolean>>(
+    new Map(),
+  );
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
   // Check if user has admin permission (not admin-readonly)
   const canSync = user?.roles?.includes('admin') ?? false;
   const canUpdateLimits = user?.roles?.includes('admin') ?? false;
+  const canManageBanners = user?.roles?.includes('admin') ?? false;
+
+  // Fetch all banners for admin management
+  const { data: allBanners = [] } = useQuery(['allBanners'], () => bannerService.getAllBanners(), {
+    enabled: canManageBanners,
+    staleTime: 30 * 1000, // 30 seconds
+    cacheTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  // Tab handler
+  const handleTabClick = (_event: React.MouseEvent, tabIndex: string | number) => {
+    setActiveTabKey(tabIndex);
+  };
 
   const handleRefreshModels = async () => {
     if (!canSync) return;
@@ -91,8 +122,8 @@ const SettingsPage: React.FC = () => {
 
       addNotification({
         variant: 'success',
-        title: t('pages.settings.syncSuccess'),
-        description: t('pages.settings.syncSuccessDetails', {
+        title: t('pages.tools.syncSuccess'),
+        description: t('pages.tools.syncSuccessDetails', {
           total: syncResult.totalModels,
           new: syncResult.newModels,
           updated: syncResult.updatedModels,
@@ -102,8 +133,8 @@ const SettingsPage: React.FC = () => {
       console.error('Failed to sync models:', error);
       addNotification({
         variant: 'danger',
-        title: t('pages.settings.syncError'),
-        description: error instanceof Error ? error.message : t('pages.settings.syncErrorGeneric'),
+        title: t('pages.tools.syncError'),
+        description: error instanceof Error ? error.message : t('pages.tools.syncErrorGeneric'),
       });
     } finally {
       setIsLoading(false);
@@ -135,8 +166,8 @@ const SettingsPage: React.FC = () => {
     if (!hasValues) {
       addNotification({
         variant: 'warning',
-        title: t('pages.settings.noValuesProvided'),
-        description: t('pages.settings.noValuesProvidedDescription'),
+        title: t('pages.tools.noValuesProvided'),
+        description: t('pages.tools.noValuesProvidedDescription'),
       });
       return;
     }
@@ -177,11 +208,11 @@ const SettingsPage: React.FC = () => {
       // Show success notification
       const successMessage =
         result.failedCount > 0
-          ? t('pages.settings.bulkUpdatePartial', {
+          ? t('pages.tools.bulkUpdatePartial', {
               success: result.successCount,
               failed: result.failedCount,
             })
-          : t('pages.settings.bulkUpdateSuccess', {
+          : t('pages.tools.bulkUpdateSuccess', {
               count: result.successCount,
             });
 
@@ -194,12 +225,152 @@ const SettingsPage: React.FC = () => {
       console.error('Failed to update user limits:', error);
       addNotification({
         variant: 'danger',
-        title: t('pages.settings.bulkUpdateError'),
+        title: t('pages.tools.bulkUpdateError'),
         description:
-          error instanceof Error ? error.message : t('pages.settings.bulkUpdateErrorGeneric'),
+          error instanceof Error ? error.message : t('pages.tools.bulkUpdateErrorGeneric'),
       });
     } finally {
       setIsLimitsLoading(false);
+    }
+  };
+
+  // Banner Management handlers
+  const handleCreateBanner = () => {
+    setIsCreateMode(true);
+    setEditingBanner(null);
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditBanner = (banner: Banner) => {
+    setIsCreateMode(false);
+    setEditingBanner(banner);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteBanner = async (bannerId: string) => {
+    if (!canManageBanners) return;
+
+    try {
+      setIsBannerLoading(true);
+      await bannerService.deleteBanner(bannerId);
+
+      // Refresh the banners list
+      queryClient.invalidateQueries(['allBanners']);
+
+      addNotification({
+        variant: 'success',
+        title: t('pages.tools.bannerDeleted'),
+        description: t('pages.tools.bannerDeletedDescription'),
+      });
+    } catch (error) {
+      console.error('Failed to delete banner:', error);
+      addNotification({
+        variant: 'danger',
+        title: t('pages.tools.bannerDeleteError'),
+        description:
+          error instanceof Error ? error.message : t('pages.tools.bannerDeleteErrorGeneric'),
+      });
+    } finally {
+      setIsBannerLoading(false);
+    }
+  };
+
+  const handleVisibilityToggle = (bannerId: string, isVisible: boolean) => {
+    // Update pending changes
+    const newPendingChanges = new Map(pendingVisibilityChanges);
+
+    // Check if more than one banner would be visible
+    if (isVisible) {
+      // First, set all others to false in pending changes
+      allBanners.forEach((banner) => {
+        if (banner.id !== bannerId) {
+          newPendingChanges.set(banner.id, false);
+        }
+      });
+    }
+
+    newPendingChanges.set(bannerId, isVisible);
+    setPendingVisibilityChanges(newPendingChanges);
+    setHasUnsavedChanges(true);
+  };
+
+  const handleApplyChanges = async () => {
+    if (!canManageBanners || pendingVisibilityChanges.size === 0) return;
+
+    try {
+      setIsBannerLoading(true);
+
+      // Convert Map to plain object for API call
+      const visibilityUpdates: Record<string, boolean> = {};
+      pendingVisibilityChanges.forEach((isVisible, bannerId) => {
+        visibilityUpdates[bannerId] = isVisible;
+      });
+
+      // Use the context's bulkUpdateVisibility instead of direct service call
+      await bulkUpdateVisibility(visibilityUpdates);
+
+      // Clear pending changes
+      setPendingVisibilityChanges(new Map());
+      setHasUnsavedChanges(false);
+
+      // Refresh the banners list for the admin table
+      queryClient.invalidateQueries(['allBanners']);
+
+      // Note: Success notification is handled by the context
+    } catch (error) {
+      console.error('Failed to apply visibility changes:', error);
+      // Error notification is handled by the context
+    } finally {
+      setIsBannerLoading(false);
+    }
+  };
+
+  const handleModalSave = async (data: CreateBannerRequest) => {
+    if (!canManageBanners) return;
+
+    try {
+      setIsBannerLoading(true);
+
+      if (isCreateMode) {
+        await bannerService.createBanner(data);
+        addNotification({
+          variant: 'success',
+          title: t('pages.tools.bannerCreated'),
+          description: t('pages.tools.bannerCreatedDescription'),
+        });
+      } else if (editingBanner) {
+        const updates: SimpleBannerUpdateRequest = {
+          name: data.name,
+          isActive: editingBanner.isActive, // Keep current visibility state
+          content: data.content,
+          variant: data.variant || 'info',
+          isDismissible: data.isDismissible,
+          markdownEnabled: data.markdownEnabled,
+        };
+
+        await updateBanner(editingBanner.id, updates);
+        addNotification({
+          variant: 'success',
+          title: t('pages.tools.bannerSaved'),
+          description: t('pages.tools.bannerSavedDescription'),
+        });
+      }
+
+      // Close modal and refresh data
+      setIsEditModalOpen(false);
+      setEditingBanner(null);
+      queryClient.invalidateQueries(['allBanners']);
+    } catch (error) {
+      console.error('Failed to save banner:', error);
+      addNotification({
+        variant: 'danger',
+        title: t('pages.tools.bannerSaveError'),
+        description:
+          error instanceof Error ? error.message : t('pages.tools.bannerSaveErrorGeneric'),
+      });
+      throw error; // Re-throw to prevent modal from closing
+    } finally {
+      setIsBannerLoading(false);
     }
   };
 
@@ -211,7 +382,7 @@ const SettingsPage: React.FC = () => {
       isAriaDisabled={!canSync || isLoading}
       isLoading={isLoading}
     >
-      {isLoading ? t('pages.settings.syncInProgress') : t('pages.settings.refreshModels')}
+      {isLoading ? t('pages.tools.syncInProgress') : t('pages.tools.refreshModels')}
     </Button>
   );
 
@@ -219,60 +390,51 @@ const SettingsPage: React.FC = () => {
     <>
       <PageSection variant="secondary">
         <Title headingLevel="h1" size="2xl">
-          {t('pages.settings.title')}
+          {t('pages.tools.title')}
         </Title>
       </PageSection>
       <PageSection>
-        <Grid hasGutter>
-          {/* Models Management Panel */}
-          <GridItem span={12}>
-            <Card>
-              <CardBody>
-                <Title headingLevel="h2" size="lg">
-                  {t('pages.settings.models')}
-                </Title>
-                <Divider style={{ margin: '1rem 0' }} />
-
+        <Tabs activeKey={activeTabKey} onSelect={handleTabClick}>
+          {/* Models Management Tab */}
+          <Tab eventKey="models" title={<TabTitleText>{t('pages.tools.models')}</TabTitleText>}>
+            <TabContent id="models-tab-content" style={{ paddingTop: '10px' }}>
+              <TabContentBody>
                 <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
                   <FlexItem>
-                    <p>{t('pages.settings.modelsDescription')}</p>
+                    <p>{t('pages.tools.modelsDescription')}</p>
                   </FlexItem>
 
                   {lastSyncResult && (
                     <FlexItem>
                       <Alert
                         variant={lastSyncResult.success ? 'success' : 'warning'}
-                        title={t('pages.settings.lastSync')}
+                        title={t('pages.tools.lastSync')}
                         isInline
                       >
                         <DescriptionList isHorizontal>
                           <DescriptionListGroup>
-                            <DescriptionListTerm>
-                              {t('pages.settings.syncTime')}
-                            </DescriptionListTerm>
+                            <DescriptionListTerm>{t('pages.tools.syncTime')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               {formatSyncTime(lastSyncResult.syncedAt)}
                             </DescriptionListDescription>
                           </DescriptionListGroup>
                           <DescriptionListGroup>
                             <DescriptionListTerm>
-                              {t('pages.settings.totalModels')}
+                              {t('pages.tools.totalModels')}
                             </DescriptionListTerm>
                             <DescriptionListDescription>
                               {lastSyncResult.totalModels}
                             </DescriptionListDescription>
                           </DescriptionListGroup>
                           <DescriptionListGroup>
-                            <DescriptionListTerm>
-                              {t('pages.settings.newModels')}
-                            </DescriptionListTerm>
+                            <DescriptionListTerm>{t('pages.tools.newModels')}</DescriptionListTerm>
                             <DescriptionListDescription>
                               {lastSyncResult.newModels}
                             </DescriptionListDescription>
                           </DescriptionListGroup>
                           <DescriptionListGroup>
                             <DescriptionListTerm>
-                              {t('pages.settings.updatedModels')}
+                              {t('pages.tools.updatedModels')}
                             </DescriptionListTerm>
                             <DescriptionListDescription>
                               {lastSyncResult.updatedModels}
@@ -281,7 +443,7 @@ const SettingsPage: React.FC = () => {
                         </DescriptionList>
                         {lastSyncResult.errors.length > 0 && (
                           <div style={{ marginTop: '1rem' }}>
-                            <strong>{t('pages.settings.syncErrors')}:</strong>
+                            <strong>{t('pages.tools.syncErrors')}:</strong>
                             <ul style={{ marginTop: '0.5rem' }}>
                               {lastSyncResult.errors.map((error, index) => (
                                 <li key={index}>{error}</li>
@@ -297,40 +459,38 @@ const SettingsPage: React.FC = () => {
                     {canSync ? (
                       syncButton
                     ) : (
-                      <Tooltip content={t('pages.settings.adminRequired')}>{syncButton}</Tooltip>
+                      <Tooltip content={t('pages.tools.adminRequired')}>{syncButton}</Tooltip>
                     )}
                   </FlexItem>
                 </Flex>
-              </CardBody>
-            </Card>
-          </GridItem>
+              </TabContentBody>
+            </TabContent>
+          </Tab>
 
-          {/* Limits Management Panel */}
+          {/* Limits Management Tab */}
           {canUpdateLimits && (
-            <GridItem span={12}>
-              <Card>
-                <CardBody>
-                  <Title headingLevel="h2" size="lg">
-                    {t('pages.settings.limitsManagement')}
-                  </Title>
-                  <Divider style={{ margin: '1rem 0' }} />
-
+            <Tab
+              eventKey="limits"
+              title={<TabTitleText>{t('pages.tools.limitsManagement')}</TabTitleText>}
+            >
+              <TabContent id="limits-tab-content" style={{ paddingTop: '10px' }}>
+                <TabContentBody>
                   <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
                     <FlexItem>
-                      <p>{t('pages.settings.limitsDescription')}</p>
+                      <p>{t('pages.tools.limitsDescription')}</p>
                     </FlexItem>
 
                     {lastLimitsUpdate && (
                       <FlexItem>
                         <Alert
                           variant={lastLimitsUpdate.failedCount > 0 ? 'warning' : 'success'}
-                          title={t('pages.settings.lastLimitsUpdate')}
+                          title={t('pages.tools.lastLimitsUpdate')}
                           isInline
                         >
                           <DescriptionList isHorizontal>
                             <DescriptionListGroup>
                               <DescriptionListTerm>
-                                {t('pages.settings.updateTime')}
+                                {t('pages.tools.updateTime')}
                               </DescriptionListTerm>
                               <DescriptionListDescription>
                                 {formatSyncTime(lastLimitsUpdate.processedAt)}
@@ -338,7 +498,7 @@ const SettingsPage: React.FC = () => {
                             </DescriptionListGroup>
                             <DescriptionListGroup>
                               <DescriptionListTerm>
-                                {t('pages.settings.totalUsersUpdated')}
+                                {t('pages.tools.totalUsersUpdated')}
                               </DescriptionListTerm>
                               <DescriptionListDescription>
                                 {lastLimitsUpdate.totalUsers}
@@ -346,7 +506,7 @@ const SettingsPage: React.FC = () => {
                             </DescriptionListGroup>
                             <DescriptionListGroup>
                               <DescriptionListTerm>
-                                {t('pages.settings.successfulUpdates')}
+                                {t('pages.tools.successfulUpdates')}
                               </DescriptionListTerm>
                               <DescriptionListDescription>
                                 {lastLimitsUpdate.successCount}
@@ -355,7 +515,7 @@ const SettingsPage: React.FC = () => {
                             {lastLimitsUpdate.failedCount > 0 && (
                               <DescriptionListGroup>
                                 <DescriptionListTerm>
-                                  {t('pages.settings.failedUpdates')}
+                                  {t('pages.tools.failedUpdates')}
                                 </DescriptionListTerm>
                                 <DescriptionListDescription>
                                   {lastLimitsUpdate.failedCount}
@@ -365,7 +525,7 @@ const SettingsPage: React.FC = () => {
                           </DescriptionList>
                           {lastLimitsUpdate.errors.length > 0 && (
                             <div style={{ marginTop: '1rem' }}>
-                              <strong>{t('pages.settings.updateErrors')}:</strong>
+                              <strong>{t('pages.tools.updateErrors')}:</strong>
                               <ul style={{ marginTop: '0.5rem' }}>
                                 {lastLimitsUpdate.errors.map((error, index) => (
                                   <li key={index}>
@@ -381,7 +541,7 @@ const SettingsPage: React.FC = () => {
 
                     <FlexItem>
                       <Form>
-                        <FormGroup label={t('pages.settings.maxBudgetLabel')} fieldId="max-budget">
+                        <FormGroup label={t('pages.tools.maxBudgetLabel')} fieldId="max-budget">
                           <TextInput
                             id="max-budget"
                             type="number"
@@ -389,12 +549,12 @@ const SettingsPage: React.FC = () => {
                             step="0.01"
                             value={limitsFormData.maxBudget}
                             onChange={(_event, value) => handleLimitsFormChange('maxBudget', value)}
-                            placeholder={t('pages.settings.leaveEmptyToKeep')}
+                            placeholder={t('pages.tools.leaveEmptyToKeep')}
                           />
-                          <FormHelperText>{t('pages.settings.maxBudgetHelper')}</FormHelperText>
+                          <FormHelperText>{t('pages.tools.maxBudgetHelper')}</FormHelperText>
                         </FormGroup>
 
-                        <FormGroup label={t('pages.settings.tpmLimitLabel')} fieldId="tpm-limit">
+                        <FormGroup label={t('pages.tools.tpmLimitLabel')} fieldId="tpm-limit">
                           <TextInput
                             id="tpm-limit"
                             type="number"
@@ -402,12 +562,12 @@ const SettingsPage: React.FC = () => {
                             step="1"
                             value={limitsFormData.tpmLimit}
                             onChange={(_event, value) => handleLimitsFormChange('tpmLimit', value)}
-                            placeholder={t('pages.settings.leaveEmptyToKeep')}
+                            placeholder={t('pages.tools.leaveEmptyToKeep')}
                           />
-                          <FormHelperText>{t('pages.settings.tpmLimitHelper')}</FormHelperText>
+                          <FormHelperText>{t('pages.tools.tpmLimitHelper')}</FormHelperText>
                         </FormGroup>
 
-                        <FormGroup label={t('pages.settings.rpmLimitLabel')} fieldId="rpm-limit">
+                        <FormGroup label={t('pages.tools.rpmLimitLabel')} fieldId="rpm-limit">
                           <TextInput
                             id="rpm-limit"
                             type="number"
@@ -415,9 +575,9 @@ const SettingsPage: React.FC = () => {
                             step="1"
                             value={limitsFormData.rpmLimit}
                             onChange={(_event, value) => handleLimitsFormChange('rpmLimit', value)}
-                            placeholder={t('pages.settings.leaveEmptyToKeep')}
+                            placeholder={t('pages.tools.leaveEmptyToKeep')}
                           />
-                          <FormHelperText>{t('pages.settings.rpmLimitHelper')}</FormHelperText>
+                          <FormHelperText>{t('pages.tools.rpmLimitHelper')}</FormHelperText>
                         </FormGroup>
 
                         <ActionGroup>
@@ -429,44 +589,106 @@ const SettingsPage: React.FC = () => {
                             isLoading={isLimitsLoading}
                           >
                             {isLimitsLoading
-                              ? t('pages.settings.processing')
-                              : t('pages.settings.applyToAllUsers')}
+                              ? t('pages.tools.processing')
+                              : t('pages.tools.applyToAllUsers')}
                           </Button>
                         </ActionGroup>
                       </Form>
                     </FlexItem>
                   </Flex>
-                </CardBody>
-              </Card>
-            </GridItem>
+                </TabContentBody>
+              </TabContent>
+            </Tab>
           )}
-        </Grid>
+
+          {/* Banner Management Tab */}
+          {canManageBanners && (
+            <Tab
+              eventKey="banners"
+              title={<TabTitleText>{t('pages.tools.bannerManagement')}</TabTitleText>}
+            >
+              <TabContent id="banners-tab-content" style={{ paddingTop: '10px' }}>
+                <TabContentBody>
+                  <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
+                    <FlexItem>
+                      <p>{t('pages.tools.bannerDescription')}</p>
+                    </FlexItem>
+
+                    {/* Create Banner Button */}
+                    <FlexItem>
+                      <Button
+                        variant="primary"
+                        icon={<PlusIcon />}
+                        onClick={handleCreateBanner}
+                        isDisabled={isBannerLoading}
+                      >
+                        {t('pages.tools.createNewBanner')}
+                      </Button>
+                    </FlexItem>
+
+                    {/* Banner Table */}
+                    <FlexItem>
+                      <BannerTable
+                        banners={allBanners}
+                        pendingChanges={pendingVisibilityChanges}
+                        onVisibilityToggle={handleVisibilityToggle}
+                        onEdit={handleEditBanner}
+                        onDelete={handleDeleteBanner}
+                        hasUnsavedChanges={hasUnsavedChanges}
+                      />
+                    </FlexItem>
+
+                    {/* Apply Changes Button */}
+                    {hasUnsavedChanges && (
+                      <FlexItem>
+                        <Button
+                          variant="primary"
+                          onClick={handleApplyChanges}
+                          isLoading={isBannerLoading}
+                          isDisabled={isBannerLoading}
+                        >
+                          {isBannerLoading
+                            ? t('pages.tools.applying')
+                            : t('pages.tools.applyChanges')}
+                        </Button>
+                      </FlexItem>
+                    )}
+                    {/* Info Alert */}
+                    <Alert variant="info" isInline title={t('pages.tools.bannerVisibilityNote')}>
+                      {t('pages.tools.bannerVisibilityNoteDescription')}
+                    </Alert>
+                  </Flex>
+                </TabContentBody>
+              </TabContent>
+            </Tab>
+          )}
+        </Tabs>
 
         {/* Confirmation Modal */}
         <Modal
           variant={ModalVariant.medium}
-          title={t('pages.settings.confirmBulkUpdate')}
+          title={t('pages.tools.confirmBulkUpdate')}
           isOpen={showConfirmModal}
           onClose={() => setShowConfirmModal(false)}
         >
           <ModalBody>
-            <p style={{ marginBottom: '1rem' }}>{t('pages.settings.confirmBulkUpdateMessage')}</p>
+            <p style={{ marginBottom: '1rem' }}>{t('pages.tools.confirmBulkUpdateMessage')}</p>
             <div style={{ marginBottom: '1.5rem' }}>
-              <strong>{t('pages.settings.changesToApply')}:</strong>
+              <strong>{t('pages.tools.changesToApply')}:</strong>
               <ul style={{ marginTop: '0.5rem', marginLeft: '1rem' }}>
                 {limitsFormData.maxBudget && (
                   <li style={{ marginBottom: '0.25rem' }}>
-                    {t('pages.settings.maxBudgetLabel')}: ${limitsFormData.maxBudget}
+                    {t('pages.tools.maxBudgetLabel')}: ${limitsFormData.maxBudget}
                   </li>
                 )}
                 {limitsFormData.tpmLimit && (
                   <li style={{ marginBottom: '0.25rem' }}>
-                    {t('pages.settings.tpmLimitLabel')}: {limitsFormData.tpmLimit}
+                    {t('pages.tools.tpmLimitLabel')}: {limitsFormData.tpmLimit}
                   </li>
                 )}
                 {limitsFormData.rpmLimit && (
                   <li style={{ marginBottom: '0.25rem' }}>
-                    {t('pages.settings.rpmLimitLabel')}: {limitsFormData.rpmLimit}
+                    {t('pages.tools.rpmLimitLabel')}: {limitsFormData.rpmLimit}
                   </li>
                 )}
               </ul>
@@ -480,7 +702,7 @@ const SettingsPage: React.FC = () => {
               }}
             >
               <Button variant="primary" onClick={handleConfirmLimitsUpdate}>
-                {t('pages.settings.confirmApply')}
+                {t('pages.tools.confirmApply')}
               </Button>
               <Button variant="link" onClick={() => setShowConfirmModal(false)}>
                 {t('common.cancel')}
@@ -488,9 +710,22 @@ const SettingsPage: React.FC = () => {
             </div>
           </ModalBody>
         </Modal>
+
+        {/* Banner Edit Modal */}
+        <BannerEditModal
+          isOpen={isEditModalOpen}
+          mode={isCreateMode ? 'create' : 'edit'}
+          banner={editingBanner || undefined}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditingBanner(null);
+          }}
+          onSave={handleModalSave}
+          isLoading={isBannerLoading}
+        />
       </PageSection>
     </>
   );
 };
 
-export default SettingsPage;
+export default ToolsPage;

@@ -49,7 +49,7 @@ frontend/
 │   │   ├── SubscriptionsPage.tsx # Subscription management
 │   │   ├── ApiKeysPage.tsx # API key management
 │   │   ├── UsagePage.tsx # Usage analytics
-│   │   ├── SettingsPage.tsx # User settings
+│   │   ├── ToolsPage.tsx    # Admin tools
 │   │   ├── ChatbotPage.tsx # AI chatbot interface
 │   │   ├── LoginPage.tsx # Authentication
 │   │   └── AuthCallbackPage.tsx # OAuth callback
@@ -214,7 +214,7 @@ const routes = [
   { path: '/subscriptions', element: <SubscriptionsPage /> },
   { path: '/api-keys', element: <ApiKeysPage /> },
   { path: '/usage', element: <UsagePage /> },
-  { path: '/settings', element: <SettingsPage /> },
+  { path: '/admin/tools', element: <ToolsPage /> },
   // Admin routes (role-protected)
   { path: '/admin', element: <AdminPage />, requiredRoles: ['admin', 'adminReadonly'] },
   { path: '/admin/users', element: <UserManagementPage />, requiredRoles: ['admin', 'adminReadonly'] },
@@ -268,6 +268,48 @@ function Component() {
   );
 }
 ```
+
+### Translation Management Tools
+
+The project includes an enhanced translation checker script for managing translations across all 9 supported languages. See [Translation Management Guide](../docs/development/translation-management.md) for comprehensive documentation.
+
+#### Common Translation Commands
+
+```bash
+# Check for missing keys (basic check)
+npm run check:translations
+
+# Check for duplicate keys in source language
+npm run check:translations -- --check-duplicates
+
+# Fix duplicates and reorder keys with missing translation markers (no backup)
+npm run check:translations -- --fix-duplicates --reorder --missing-strategy=mark --no-backup
+
+# Target specific language
+npm run check:translations -- --language=fr --reorder --no-backup
+
+# Show all available options
+npm run check:translations -- --help
+```
+
+#### Important Notes for AI Assistants
+
+⚠️ **Always check for duplicate keys before making translation changes**:
+
+- Use `npm run check:translations -- --check-duplicates` to detect issues
+- Fix with `npm run check:translations -- --fix-duplicates` if found
+- Use `--no-backup` to skip backups (recommended when using git versioning)
+
+✅ **Duplicate Handling (Working Correctly)**:
+
+- **Object duplicates**: Properties are merged correctly from all occurrences
+- **Leaf duplicates**: Resolved based on strategy (first/last)
+- Both types are handled automatically by the script
+
+**Translation file locations**: `src/i18n/locales/{language}/translation.json`
+**Missing translation marker**: `🔴 MISSING TRANSLATION - PLEASE TRANSLATE: [English text]`
+**Strategy options**: `--strategy=first|last` - affects leaf key resolution
+**Backup options**: `--no-backup` - skip backup creation (use git versioning)
 
 ## 🎯 Component Patterns
 

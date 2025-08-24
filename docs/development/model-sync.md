@@ -326,15 +326,15 @@ const MOCK_MODELS = [
 
 ## Frontend Integration
 
-### Admin Settings Page
+### Admin Tools Page
 
-The model sync functionality is exposed to administrators through the Settings page at `/admin/settings`.
+The model sync functionality is exposed to administrators through the Tools page at `/admin/tools`.
 
-**Location**: `frontend/src/pages/SettingsPage.tsx`
+**Location**: `frontend/src/pages/ToolsPage.tsx`
 
 #### Implementation Overview
 
-The Settings page provides a **Models Management** panel that allows administrators to trigger manual model synchronization:
+The Tools page provides a **Models Management** panel that allows administrators to trigger manual model synchronization:
 
 ```typescript
 // Role-based access control
@@ -409,12 +409,12 @@ After a successful sync, the UI displays:
 
 #### Translation Support
 
-All UI text is internationalized with keys under `pages.settings`:
+All UI text is internationalized with keys under `pages.tools`:
 
 ```json
 {
   "pages": {
-    "settings": {
+    "tools": {
       "models": "Models Management",
       "refreshModels": "Refresh Models from LiteLLM",
       "syncInProgress": "Synchronizing models...",
@@ -430,10 +430,10 @@ Supported in all 9 languages: EN, ES, FR, DE, IT, JA, KO, ZH, ELV
 
 #### Testing
 
-The Settings page includes comprehensive test coverage:
+The Tools page includes comprehensive test coverage:
 
-- **Unit Tests**: `frontend/src/test/components/SettingsPage.test.tsx`
-- **Accessibility Tests**: `frontend/src/test/components/SettingsPage.accessibility.test.tsx`
+- **Unit Tests**: `frontend/src/test/components/ToolsPage.test.tsx`
+- **Accessibility Tests**: `frontend/src/test/components/ToolsPage.accessibility.test.tsx`
 - **Role-based Testing**: Admin, admin-readonly, and user scenarios
 - **API Integration**: Success and error response handling
 - **WCAG Compliance**: Full accessibility test suite

@@ -232,7 +232,7 @@ describe('Navigation Configuration', () => {
         'nav.chatbot',
         'nav.usage',
         'nav.admin.users',
-        'nav.admin.settings',
+        'nav.admin.tools',
       ];
 
       appConfig.navigation
