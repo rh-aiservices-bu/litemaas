@@ -11,6 +11,7 @@ import ApiKeysPage from '../pages/ApiKeysPage';
 import ChatbotPage from '../pages/ChatbotPage';
 import UsagePage from '../pages/UsagePage';
 import ToolsPage from '../pages/ToolsPage';
+import AdminModelsPage from '../pages/AdminModelsPage';
 import UsersPage from '../pages/UsersPage';
 import LoginPage from '../pages/LoginPage';
 import AuthCallbackPage from '../pages/AuthCallbackPage';
@@ -78,6 +79,10 @@ export const router = createBrowserRouter(
             {
               path: 'usage',
               element: <UsagePage />,
+            },
+            {
+              path: 'admin/models',
+              element: <AdminModelsPage />,
             },
             {
               path: 'admin/users',
