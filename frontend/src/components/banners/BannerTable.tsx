@@ -24,6 +24,7 @@ interface BannerTableProps {
   onEdit: (banner: Banner) => void;
   onDelete: (bannerId: string) => void;
   hasUnsavedChanges: boolean;
+  readOnly?: boolean;
 }
 
 const BannerTable: React.FC<BannerTableProps> = ({
@@ -33,6 +34,7 @@ const BannerTable: React.FC<BannerTableProps> = ({
   onEdit,
   onDelete,
   hasUnsavedChanges: _hasUnsavedChanges,
+  readOnly = false,
 }) => {
   const { t } = useTranslation();
   const [deleteConfirmModal, setDeleteConfirmModal] = useState<{
@@ -163,6 +165,7 @@ const BannerTable: React.FC<BannerTableProps> = ({
                           aria-label={t('pages.tools.toggleVisibility', { name: banner.name })}
                           isChecked={effectiveVisibility}
                           onChange={(_event, checked) => onVisibilityToggle(banner.id, checked)}
+                          isDisabled={readOnly}
                         />
                       </FlexItem>
                       <FlexItem>
@@ -208,7 +211,7 @@ const BannerTable: React.FC<BannerTableProps> = ({
                           aria-label={t('pages.tools.editBanner', { name: banner.name })}
                           size="sm"
                         >
-                          {t('pages.apiKeys.editKey')}
+                          {readOnly ? t('common.view') : t('pages.apiKeys.editKey')}
                         </Button>
                       </FlexItem>
                       <FlexItem>
@@ -218,6 +221,7 @@ const BannerTable: React.FC<BannerTableProps> = ({
                           onClick={() => handleDeleteClick(banner)}
                           aria-label={t('pages.tools.deleteBanner', { name: banner.name })}
                           size="sm"
+                          isDisabled={readOnly}
                         >
                           {t('pages.apiKeys.deleteKey')}
                         </Button>

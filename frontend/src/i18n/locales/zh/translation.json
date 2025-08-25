@@ -11,7 +11,9 @@
     "notAvailable": "N/A",
     "lineChart": "折线图",
     "dataPoints": "数据点",
-    "cancel": "取消"
+    "cancel": "取消",
+    "view": "查看",
+    "close": "关闭"
   },
   "nav": {
     "home": "首页",

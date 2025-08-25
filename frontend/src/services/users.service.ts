@@ -99,18 +99,15 @@ export class UsersService {
   /**
    * Check if the current user can modify users (admin permissions)
    * This is a client-side helper to determine UI visibility
+   * Note: admin-readonly can read users but cannot modify them
    */
   canModifyUsers(currentUser?: { roles: string[] }): boolean {
     if (!currentUser?.roles) {
       return false;
     }
 
-    // Check for admin role or specific users:write permission
-    return (
-      currentUser.roles.includes('admin') ||
-      currentUser.roles.includes('users:write') ||
-      currentUser.roles.some((role) => role.startsWith('admin:'))
-    );
+    // Only full admins can modify users, not admin-readonly
+    return currentUser.roles.includes('admin') || currentUser.roles.includes('users:write');
   }
 
   /**
@@ -139,6 +136,7 @@ export class UsersService {
 
     return (
       currentUser.roles.includes('admin') ||
+      currentUser.roles.includes('admin-readonly') ||
       currentUser.roles.includes('users:read') ||
       currentUser.roles.some((role) => role.startsWith('admin:'))
     );

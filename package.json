@@ -1,6 +1,6 @@
 {
   "name": "litemaas",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "LiteLLM User Application - Model subscription and management platform",
   "private": true,
   "workspaces": [
