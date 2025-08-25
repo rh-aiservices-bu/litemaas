@@ -187,7 +187,7 @@ vi user-values.env
 
 ```bash
 LITEMAAS_VERSION=0.0.7
-CLUSTER_DOMAIN_NAME=apps.your-cluster.example.com
+CLUSTER_DOMAIN_NAME=your-cluster.example.com
 NAMESPACE=litemaas
 PG_ADMIN_PASSWORD=your-secure-db-password
 JWT_SECRET=your-secure-jwt-secret-64-chars
