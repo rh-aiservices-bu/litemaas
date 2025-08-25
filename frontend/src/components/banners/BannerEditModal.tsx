@@ -30,6 +30,7 @@ interface BannerEditModalProps {
   onClose: () => void;
   onSave: (data: CreateBannerRequest) => Promise<void>;
   isLoading?: boolean;
+  canEdit?: boolean;
 }
 
 const BannerEditModal: React.FC<BannerEditModalProps> = ({
@@ -39,6 +40,7 @@ const BannerEditModal: React.FC<BannerEditModalProps> = ({
   onClose,
   onSave,
   isLoading = false,
+  canEdit = true,
 }) => {
   const { t } = useTranslation();
 
@@ -174,7 +176,13 @@ const BannerEditModal: React.FC<BannerEditModalProps> = ({
   return (
     <Modal
       variant={ModalVariant.large}
-      title={mode === 'create' ? t('pages.tools.createNewBanner') : t('pages.tools.editBanner')}
+      title={
+        !canEdit && mode === 'edit'
+          ? t('pages.tools.viewBanner')
+          : mode === 'create'
+            ? t('pages.tools.createNewBanner')
+            : t('pages.tools.editBanner')
+      }
       isOpen={isOpen}
       onClose={onClose}
     >
@@ -190,6 +198,7 @@ const BannerEditModal: React.FC<BannerEditModalProps> = ({
               placeholder={t('pages.tools.bannerNamePlaceholder')}
               isRequired
               validated={errors.name ? 'error' : 'default'}
+              isDisabled={!canEdit}
             />
             {errors.name && <FormHelperText>{errors.name}</FormHelperText>}
           </FormGroup>
@@ -219,6 +228,7 @@ const BannerEditModal: React.FC<BannerEditModalProps> = ({
                       placeholder={t('pages.tools.bannerContentPlaceholder')}
                       isRequired={lang.key === 'en'}
                       validated={errors.content && lang.key === 'en' ? 'error' : 'default'}
+                      isDisabled={!canEdit}
                     />
                     {lang.key === 'en' && (
                       <FormHelperText>{t('pages.tools.bannerEnglishRequired')}</FormHelperText>
@@ -247,6 +257,7 @@ const BannerEditModal: React.FC<BannerEditModalProps> = ({
                   ref={toggleRef}
                   onClick={() => setIsVariantSelectOpen(!isVariantSelectOpen)}
                   isExpanded={isVariantSelectOpen}
+                  isDisabled={!canEdit}
                   aria-label={t('pages.tools.bannerStyleAriaLabel')}
                 >
                   {formData.variant === 'info' && t('pages.tools.variantInfo')}
@@ -275,6 +286,7 @@ const BannerEditModal: React.FC<BannerEditModalProps> = ({
               label={t('pages.tools.allowDismiss')}
               isChecked={formData.isDismissible}
               onChange={(_event, checked) => handleFormChange('isDismissible', checked)}
+              isDisabled={!canEdit}
             />
             <FormHelperText>
               {t('pages.tools.allowDismissHelper')}&nbsp;
@@ -291,6 +303,7 @@ const BannerEditModal: React.FC<BannerEditModalProps> = ({
               label={t('pages.tools.enableMarkdown')}
               isChecked={formData.markdownEnabled}
               onChange={(_event, checked) => handleFormChange('markdownEnabled', checked)}
+              isDisabled={!canEdit}
             />
             <FormHelperText>{t('pages.tools.enableMarkdownHelper')}</FormHelperText>
           </FormGroup>
@@ -305,18 +318,20 @@ const BannerEditModal: React.FC<BannerEditModalProps> = ({
             justifyContent: 'flex-end',
           }}
         >
-          <Button
-            key="save"
-            variant="primary"
-            type="submit"
-            form="banner-form"
-            isLoading={isLoading}
-            isDisabled={isLoading}
-          >
-            {mode === 'create' ? t('pages.tools.createBanner') : t('pages.tools.saveBanner')}
-          </Button>
+          {canEdit && (
+            <Button
+              key="save"
+              variant="primary"
+              type="submit"
+              form="banner-form"
+              isLoading={isLoading}
+              isDisabled={isLoading}
+            >
+              {mode === 'create' ? t('pages.tools.createBanner') : t('pages.tools.saveBanner')}
+            </Button>
+          )}
           <Button key="cancel" variant="link" onClick={onClose} isDisabled={isLoading}>
-            {t('common.cancel')}
+            {canEdit ? t('common.cancel') : t('common.close')}
           </Button>
         </div>
       </ModalBody>

@@ -63,7 +63,7 @@ const Layout: React.FC = () => {
   // Helper function to get the most powerful role
   const getMostPowerfulRole = (roles: string[]): string => {
     if (roles.includes('admin')) return 'admin';
-    if (roles.includes('adminReadonly')) return 'adminReadonly';
+    if (roles.includes('admin-readonly')) return 'adminReadonly';
     if (roles.includes('user')) return 'user';
     return 'user'; // default fallback
   };

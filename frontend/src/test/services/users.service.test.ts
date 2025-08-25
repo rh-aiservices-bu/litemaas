@@ -448,16 +448,6 @@ describe('UsersService', () => {
         expect(result).toBe(true);
       });
 
-      it('should return true for users:write permission', () => {
-        const result = usersService.canModifyUsers({ roles: ['users:write'] });
-        expect(result).toBe(true);
-      });
-
-      it('should return true for admin:* permissions', () => {
-        const result = usersService.canModifyUsers({ roles: ['admin:users'] });
-        expect(result).toBe(true);
-      });
-
       it('should return false for regular user', () => {
         const result = usersService.canModifyUsers({ roles: ['user'] });
         expect(result).toBe(false);

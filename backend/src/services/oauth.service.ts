@@ -291,18 +291,42 @@ export class OAuthService {
       administrators: ['admin', 'user'],
       'litemaas-users': ['user'],
       developers: ['user'],
-      'litemaas-readonly': ['readonly'],
-      viewers: ['readonly'],
+      'litemaas-readonly': ['admin-readonly', 'user'],
+      viewers: ['admin-readonly', 'user'],
     };
 
     const roles = new Set<string>();
+
+    // Always add 'user' as base role
+    roles.add('user');
 
     for (const group of groups) {
       const mappedRoles = roleMapping[group] || [];
       mappedRoles.forEach((role) => roles.add(role));
     }
 
-    return roles.size > 0 ? Array.from(roles) : ['user'];
+    return Array.from(roles);
+  }
+
+  /**
+   * Merges existing user roles with OpenShift group-derived roles.
+   * Application-set roles take precedence - if a user has been explicitly granted
+   * a role through the application, it's preserved even if not in OpenShift groups.
+   * OpenShift groups provide additional roles on top of existing ones.
+   */
+  private mergeRoles(existingRoles: string[], openShiftRoles: string[]): string[] {
+    const allRoles = new Set<string>();
+
+    // Always ensure 'user' role is present as base
+    allRoles.add('user');
+
+    // Add all existing roles (application-set roles are preserved)
+    existingRoles.forEach((role) => allRoles.add(role));
+
+    // Add OpenShift-derived roles (additive, doesn't remove existing roles)
+    openShiftRoles.forEach((role) => allRoles.add(role));
+
+    return Array.from(allRoles);
   }
 
   /**
@@ -419,7 +443,7 @@ export class OAuthService {
     fullName?: string;
     roles: string[];
   }> {
-    const roles = this.mapGroupsToRoles(userInfo.groups || []);
+    const openShiftRoles = this.mapGroupsToRoles(userInfo.groups || []);
 
     // Check if user exists in database
     const existingUser = await this.fastify.dbUtils.queryOne(
@@ -436,7 +460,11 @@ export class OAuthService {
     };
 
     if (existingUser) {
-      // Update existing user - pass roles array directly for PostgreSQL array column
+      // Merge existing roles with OpenShift group roles
+      const existingRoles = Array.isArray(existingUser.roles) ? existingUser.roles : [];
+      const mergedRoles = this.mergeRoles(existingRoles, openShiftRoles);
+
+      // Update existing user - pass merged roles array directly for PostgreSQL array column
       await this.fastify.dbUtils.query(
         `UPDATE users SET 
          username = $1, email = $2, full_name = $3, roles = $4, last_login_at = NOW(), updated_at = NOW()
@@ -445,7 +473,7 @@ export class OAuthService {
           userInfo.preferred_username,
           userInfo.email || null,
           userInfo.name || null,
-          roles,
+          mergedRoles,
           existingUser.id as string,
         ],
       );
@@ -455,10 +483,10 @@ export class OAuthService {
         username: userInfo.preferred_username,
         email: userInfo.email || userInfo.preferred_username,
         fullName: userInfo.name,
-        roles,
+        roles: mergedRoles,
       };
     } else {
-      // Create new user - pass roles array directly for PostgreSQL array column
+      // Create new user - for new users, OpenShift roles become their initial roles
       const newUser = await this.fastify.dbUtils.queryOne<DatabaseUser>(
         `INSERT INTO users (username, email, full_name, oauth_provider, oauth_id, roles, last_login_at)
          VALUES ($1, $2, $3, $4, $5, $6, NOW())
@@ -469,7 +497,7 @@ export class OAuthService {
           userInfo.name || null,
           'openshift',
           userInfo.sub,
-          roles, // Pass array directly, PostgreSQL will handle the formatting
+          openShiftRoles, // Pass array directly, PostgreSQL will handle the formatting
         ],
       );
 
@@ -482,7 +510,7 @@ export class OAuthService {
         username: newUser.username,
         email: newUser.email,
         fullName: newUser.full_name,
-        roles,
+        roles: openShiftRoles,
       };
     }
 
