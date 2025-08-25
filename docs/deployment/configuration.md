@@ -39,7 +39,7 @@ DB_CONNECTION_TIMEOUT=10000
 | `OAUTH_CLIENT_ID`     | OpenShift OAuth client ID     | -                                         | Yes      |
 | `OAUTH_CLIENT_SECRET` | OpenShift OAuth client secret | -                                         | Yes      |
 | `OAUTH_ISSUER`        | OAuth provider URL            | -                                         | Yes      |
-| `OAUTH_CALLBACK_URL`  | OAuth callback URL            | `http://localhost:8080/api/auth/callback` | No       |
+| `OAUTH_CALLBACK_URL`  | OAuth callback URL            | `http://localhost:8081/api/auth/callback` | No       |
 
 ### OAuth Flow Architecture
 
@@ -64,8 +64,8 @@ The `OAUTH_CALLBACK_URL` must **always** point to `/api/auth/callback` through y
 | Environment          | Example Value                               | Notes                              |
 | -------------------- | ------------------------------------------- | ---------------------------------- |
 | Development (Vite)   | `http://localhost:3000/api/auth/callback`   | Vite dev server proxies to backend |
-| Development (Direct) | `http://localhost:8080/api/auth/callback`   | Running backend directly           |
-| Container Test       | `http://localhost:8080/api/auth/callback`   | NGINX proxies to backend           |
+| Development (Direct) | `http://localhost:8081/api/auth/callback`   | Running backend directly           |
+| Container Test       | `http://localhost:8081/api/auth/callback`   | NGINX proxies to backend           |
 | Production           | `https://app.example.com/api/auth/callback` | Through load balancer/ingress      |
 
 **Dynamic Callback URL Detection (Enhanced)**:
@@ -79,7 +79,7 @@ As of the latest update, the backend implements intelligent OAuth callback URL h
 **How It Works**:
 
 ```
-1. User initiates login → Backend detects origin (e.g., http://localhost:8080)
+1. User initiates login → Backend detects origin (e.g., http://localhost:8081)
 2. Backend stores callback URL with state → Uses for authorization request
 3. OAuth provider redirects to callback → Backend retrieves stored URL
 4. Token exchange uses same URL → Ensures redirect_uri matches exactly
@@ -120,7 +120,7 @@ secret: your-secret-here
 redirectURIs:
   # Development environments
   - http://localhost:3000/api/auth/callback # Vite dev server
-  - http://localhost:8080/api/auth/callback # Direct backend / Container
+  - http://localhost:8081/api/auth/callback # Direct backend / Container
   - http://localhost:8081/api/auth/callback # Backend on alt port
   # Production
   - https://app.example.com/api/auth/callback # Production domain
@@ -299,7 +299,7 @@ These variables are used during the frontend build process and must be prefixed 
 
 | Variable                  | Description                  | Default                 | Required |
 | ------------------------- | ---------------------------- | ----------------------- | -------- |
-| `VITE_API_URL`            | Backend API URL              | `http://localhost:8080` | Yes      |
+| `VITE_API_URL`            | Backend API URL              | `http://localhost:8081` | Yes      |
 | `VITE_OAUTH_CLIENT_ID`    | OAuth client ID for frontend | -                       | Yes      |
 | `VITE_OAUTH_REDIRECT_URL` | OAuth redirect URL           | -                       | Yes      |
 | `VITE_APP_NAME`           | Application name             | `LiteMaaS`              | No       |
@@ -326,7 +326,7 @@ DATABASE_URL=postgresql://postgres:postgres@localhost:5432/litemaas_dev
 # OAuth (Mock/Development)
 OAUTH_CLIENT_ID=dev-client
 OAUTH_CLIENT_SECRET=dev-secret
-OAUTH_ISSUER=http://localhost:8080
+OAUTH_ISSUER=http://localhost:8081
 
 # JWT
 JWT_SECRET=development-secret-key-not-for-production
@@ -340,7 +340,7 @@ LOG_LEVEL=debug
 NODE_ENV=development
 
 # Frontend
-VITE_API_URL=http://localhost:8080
+VITE_API_URL=http://localhost:8081
 VITE_OAUTH_CLIENT_ID=dev-client
 VITE_OAUTH_REDIRECT_URL=http://localhost:3000/auth/callback
 ```

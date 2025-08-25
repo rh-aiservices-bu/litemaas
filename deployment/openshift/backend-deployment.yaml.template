@@ -105,7 +105,7 @@ spec:
 
             # LiteLLM Integration
             - name: LITELLM_API_URL
-              value: 'https://litellm-${NAMESPACE}.apps.${CLUSTER_DOMAIN_NAME}'
+              value: 'https://litellm-${NAMESPACE}.${CLUSTER_DOMAIN_NAME}'
             - name: LITELLM_API_KEY
               valueFrom:
                 secretKeyRef:

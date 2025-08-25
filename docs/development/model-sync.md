@@ -497,7 +497,7 @@ curl -I $LITELLM_API_URL/model/info
 docker logs litemaas-backend
 
 # Test manual sync
-curl -X POST localhost:8080/api/v1/models/sync
+curl -X POST localhost:8081/api/v1/models/sync
 ```
 
 ### Configuration Validation

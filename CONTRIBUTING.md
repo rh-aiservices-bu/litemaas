@@ -319,7 +319,7 @@ Use our issue templates:
 
 - Backend: Use `LOG_LEVEL=debug` for verbose logging
 - Frontend: Use React Developer Tools
-- API: Use Swagger UI at <http://localhost:8080/docs>
+- API: Use Swagger UI at <http://localhost:8081/docs>
 
 ### Performance
 

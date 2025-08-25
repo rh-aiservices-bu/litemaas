@@ -42,6 +42,11 @@ RUN dnf update -y && \
     dnf install -y gettext && \
     dnf clean all
 
+# Ensure /run is writable by any OpenShift-assigned UID
+RUN mkdir -p /run \
+    && chown -R root:0 /run \
+    && chmod -R g+rwX /run
+
 USER 1001
 
 # Copy built files from builder stage to the nginx default document root

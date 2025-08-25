@@ -15,16 +15,16 @@ OpenShift provides OAuth 2.0 authentication through its built-in OAuth server. T
 
 ### 1. Authorization Code Flow
 
-```
+```text
 User → Frontend → OAuth Authorize → OpenShift → Callback → Backend → JWT → Frontend
 ```
 
 ### 2. Key Endpoints
 
-- **OAuth Server**: `https://oauth-openshift.apps.{cluster-domain}`
+- **OAuth Server**: `https://oauth-openshift.apps.your-cluster.example.com`
   - Authorization: `/oauth/authorize`
   - Token: `/oauth/token`
-- **API Server**: `https://api.{cluster-domain}:6443`
+- **API Server**: `https://api.your-cluster.example.com:6443`
   - User Info: `/apis/user.openshift.io/v1/users/~`
 
 ### 3. Required Parameters
@@ -78,7 +78,7 @@ User → Frontend → OAuth Authorize → OpenShift → Callback → Backend →
 OAUTH_CLIENT_ID=litemaas
 OAUTH_CLIENT_SECRET=your-secret-here
 OAUTH_ISSUER=https://oauth-openshift.apps.your-cluster.com
-OAUTH_CALLBACK_URL=http://localhost:8080/api/auth/callback
+OAUTH_CALLBACK_URL=http://localhost:8081/api/auth/callback
 
 # Development Mock
 OAUTH_MOCK_ENABLED=true  # Set to false for production
@@ -93,7 +93,7 @@ metadata:
   name: litemaas
 secret: your-secret-here
 redirectURIs:
-  - http://localhost:8080/api/auth/callback # Development
+  - http://localhost:8081/api/auth/callback # Development
   - https://litemaas.apps.your-cluster.com/api/auth/callback # Production
 grantMethod: prompt # or 'auto' for automatic approval
 ```

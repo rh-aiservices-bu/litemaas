@@ -53,7 +53,7 @@ JWT_SECRET=development-secret-key-change-in-production
 OAUTH_CLIENT_ID=litemaas
 OAUTH_CLIENT_SECRET=dev-secret
 OAUTH_ISSUER=https://oauth-openshift.apps.your-cluster.com
-OAUTH_CALLBACK_URL=http://localhost:8080/api/auth/callback
+OAUTH_CALLBACK_URL=http://localhost:8081/api/auth/callback
 OAUTH_MOCK_ENABLED=true  # Use mock OAuth in development
 
 # Role-Based Access Control
@@ -254,7 +254,7 @@ To test with a real OpenShift cluster including role-based access:
      name: litemaas
    secret: your-secret-here
    redirectURIs:
-   - http://localhost:8080/api/auth/callback
+   - http://localhost:8081/api/auth/callback
    grantMethod: prompt
    EOF
    ```

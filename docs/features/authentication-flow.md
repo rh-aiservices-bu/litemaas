@@ -85,7 +85,7 @@ sequenceDiagram
     Browser->>OpenShift: Redirect to authUrl
     User->>OpenShift: Enter credentials
 
-    Note over OpenShift: OAuth callback configured as<br/>http://localhost:8080/api/auth/callback
+    Note over OpenShift: OAuth callback configured as<br/>http://localhost:8081/api/auth/callback
 
     OpenShift->>Browser: Redirect to callback URL
     Browser->>NGINX (port 8080): GET /api/auth/callback?code=xxx
@@ -116,7 +116,7 @@ sequenceDiagram
 1. **Development Mode**:
    - Single Fastify process serves both frontend and backend
    - Direct communication, no proxy needed
-   - OAuth callback URL: `http://localhost:8080/api/auth/callback`
+   - OAuth callback URL: `http://localhost:8081/api/auth/callback`
 
 2. **Container/Production Mode**:
    - NGINX as single entry point (port 8080)
@@ -142,8 +142,8 @@ Register ALL possible callback URLs with your OAuth provider:
 | Environment          | Callback URLs to Register                                                              | Notes                         |
 | -------------------- | -------------------------------------------------------------------------------------- | ----------------------------- |
 | Development (Vite)   | `http://localhost:3000/api/auth/callback`                                              | Vite dev server on port 3000  |
-| Development (Direct) | `http://localhost:8080/api/auth/callback`<br>`http://localhost:8081/api/auth/callback` | Direct backend access         |
-| Container (NGINX)    | `http://localhost:8080/api/auth/callback`                                              | NGINX on port 8080            |
+| Development (Direct) | `http://localhost:8081/api/auth/callback`<br>`http://localhost:8081/api/auth/callback` | Direct backend access         |
+| Container (NGINX)    | `http://localhost:8081/api/auth/callback`                                              | NGINX on port 8080            |
 | Production           | `https://your-domain.com/api/auth/callback`                                            | Through ingress/load balancer |
 
 The application will automatically select the correct callback URL based on the request origin. The backend's relative redirect (`/auth/callback`) ensures the browser is redirected to the correct frontend route regardless of the deployment environment.
@@ -325,7 +325,7 @@ OAUTH_MOCK_ENABLED=true
 OAUTH_CLIENT_ID=litemaas
 OAUTH_CLIENT_SECRET=your-secret-here
 OAUTH_ISSUER=https://oauth-openshift.apps.cluster.com
-OAUTH_CALLBACK_URL=http://localhost:8080/api/auth/callback
+OAUTH_CALLBACK_URL=http://localhost:8081/api/auth/callback
 
 # Development
 OAUTH_MOCK_ENABLED=true  # Set to false for production
@@ -347,7 +347,7 @@ metadata:
 secret: your-secret-here
 redirectURIs:
   - http://localhost:3000/api/auth/callback # Development (Vite)
-  - http://localhost:8080/api/auth/callback # Development (Direct) / Container
+  - http://localhost:8081/api/auth/callback # Development (Direct) / Container
   - http://localhost:8081/api/auth/callback # Backend Direct Access
   - https://your-domain/api/auth/callback # Production
 grantMethod: prompt

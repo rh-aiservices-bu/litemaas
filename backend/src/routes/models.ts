@@ -68,6 +68,19 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
       };
     }
 
+    // Add admin fields from LiteLLM
+    result.apiBase = model.litellm_params.api_base;
+    result.inputCostPerToken = inputCost;
+    result.outputCostPerToken = outputCost;
+    result.tpm = model.litellm_params.tpm;
+    result.rpm = model.litellm_params.rpm;
+    result.maxTokens = model.model_info.max_tokens;
+    result.supportsVision = model.model_info.supports_vision || false;
+    result.supportsFunctionCalling = model.model_info.supports_function_calling || false;
+    result.supportsParallelFunctionCalling =
+      model.model_info.supports_parallel_function_calling || false;
+    result.supportsToolChoice = model.model_info.supports_tool_choice || false;
+
     return result;
   };
 
@@ -84,6 +97,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         supportsFunctionCalling: model.model_info.supports_function_calling,
         supportsParallelFunctionCalling: model.model_info.supports_parallel_function_calling,
         supportsVision: model.model_info.supports_vision,
+        supportsToolChoice: model.model_info.supports_tool_choice,
         supportsAssistantApi: model.model_info.supports_assistant_api,
         accessGroups: model.model_info.access_groups,
         accessViaTeamIds: model.model_info.access_via_team_ids,
@@ -132,6 +146,21 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
                       unit: { type: 'string' },
                     },
                   },
+                  isActive: { type: 'boolean' },
+                  createdAt: { type: 'string' },
+                  updatedAt: { type: 'string' },
+                  // Admin fields
+                  apiBase: { type: 'string' },
+                  backendModelName: { type: 'string' },
+                  inputCostPerToken: { type: 'number' },
+                  outputCostPerToken: { type: 'number' },
+                  tpm: { type: 'number' },
+                  rpm: { type: 'number' },
+                  maxTokens: { type: 'number' },
+                  supportsVision: { type: 'boolean' },
+                  supportsFunctionCalling: { type: 'boolean' },
+                  supportsParallelFunctionCalling: { type: 'boolean' },
+                  supportsToolChoice: { type: 'boolean' },
                 },
               },
             },
@@ -168,7 +197,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
               id: String(model.id),
               name: String(model.name),
               provider: String(model.provider),
-              description: String(model.description),
+              description: model.description ? String(model.description) : '',
               capabilities: (model.features as string[]) || [],
               contextLength: Number(model.context_length),
               pricing:
@@ -182,6 +211,24 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
               isActive: model.availability === 'available',
               createdAt: new Date(String(model.created_at)),
               updatedAt: new Date(String(model.updated_at)),
+              // Admin fields
+              apiBase: model.api_base ? String(model.api_base) : undefined,
+              backendModelName: model.backend_model_name
+                ? String(model.backend_model_name)
+                : undefined,
+              inputCostPerToken: model.input_cost_per_token
+                ? Number(model.input_cost_per_token)
+                : undefined,
+              outputCostPerToken: model.output_cost_per_token
+                ? Number(model.output_cost_per_token)
+                : undefined,
+              tpm: model.tpm ? Number(model.tpm) : undefined,
+              rpm: model.rpm ? Number(model.rpm) : undefined,
+              maxTokens: model.max_tokens ? Number(model.max_tokens) : undefined,
+              supportsVision: Boolean(model.supports_vision),
+              supportsFunctionCalling: Boolean(model.supports_function_calling),
+              supportsParallelFunctionCalling: Boolean(model.supports_parallel_function_calling),
+              supportsToolChoice: Boolean(model.supports_tool_choice),
             }));
 
             fastify.log.debug({ count: models.length }, 'Using synchronized models from database');

@@ -67,7 +67,7 @@ JWT_EXPIRES_IN=24h
 OAUTH_CLIENT_ID=your-client-id
 OAUTH_CLIENT_SECRET=your-client-secret
 OAUTH_ISSUER=https://oauth-openshift.apps.your-cluster.com
-OAUTH_CALLBACK_URL=http://localhost:8080/api/auth/callback
+OAUTH_CALLBACK_URL=http://localhost:8081/api/auth/callback
 
 # Admin API Keys (comma-separated)
 ADMIN_API_KEYS=ltm_admin_dev123456789,ltm_admin_test987654321
@@ -110,7 +110,7 @@ CORS_ORIGIN=https://your-production-domain
      name: litemaas
    secret: your-client-secret-here
    redirectURIs:
-     - 'http://localhost:8080/api/auth/callback' # Development
+     - 'http://localhost:8081/api/auth/callback' # Development
      - 'https://your-domain/api/auth/callback' # Production
    grantMethod: prompt
    ```
@@ -154,7 +154,7 @@ CORS_ORIGIN=https://your-production-domain
 
    ```bash
    # Initiate login - returns auth URL
-   curl -X POST http://localhost:8080/api/auth/login
+   curl -X POST http://localhost:8081/api/auth/login
 
    # Response:
    # {"authUrl":"https://oauth-openshift.apps.cluster.com/oauth/authorize?..."}
@@ -167,7 +167,7 @@ CORS_ORIGIN=https://your-production-domain
    ```bash
    # Get user profile (requires JWT token from OAuth)
    curl -H "Authorization: Bearer <jwt-token>" \
-        http://localhost:8080/api/v1/auth/me
+        http://localhost:8081/api/v1/auth/me
 
    # Response should include roles array:
    # {
@@ -198,24 +198,24 @@ npm run check-backend
 
 ```bash
 # Should return 200
-curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/models
-curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/models/providers
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/api/models
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/api/models/providers
 ```
 
 #### Test Protected Endpoints (Auth Required)
 
 ```bash
 # Without auth - should return 401
-curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/subscriptions
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/api/subscriptions
 
 # With admin key - should return 200
 curl -s -H "Authorization: Bearer ltm_admin_dev123456789" \
-     -o /dev/null -w "%{http_code}" http://localhost:8080/api/subscriptions
+     -o /dev/null -w "%{http_code}" http://localhost:8081/api/subscriptions
 
 # With frontend bypass (dev mode) - should return 200
 curl -s -H "Origin: http://localhost:3000" \
      -H "User-Agent: Mozilla/5.0" \
-     -o /dev/null -w "%{http_code}" http://localhost:8080/api/subscriptions
+     -o /dev/null -w "%{http_code}" http://localhost:8081/api/subscriptions
 ```
 
 ### 3. Frontend Integration Testing
@@ -239,7 +239,7 @@ curl -s -H "Origin: http://localhost:3000" \
 
 ```bash
 # Create a new API key via API (requires JWT token)
-curl -X POST "http://localhost:8080/api/api-keys" \
+curl -X POST "http://localhost:8081/api/api-keys" \
   -H "Authorization: Bearer <your-jwt-token>" \
   -H "Content-Type: application/json" \
   -d '{
@@ -260,7 +260,7 @@ curl -X POST "http://localhost:8080/api/api-keys" \
 
 ```bash
 # Retrieve full API key securely (rate limited)
-curl -X POST "http://localhost:8080/api/api-keys/key_123/retrieve-key" \
+curl -X POST "http://localhost:8081/api/api-keys/key_123/retrieve-key" \
   -H "Authorization: Bearer <your-jwt-token>" \
   -H "Content-Type: application/json"
 
@@ -278,7 +278,7 @@ curl -X POST "http://localhost:8080/api/api-keys/key_123/retrieve-key" \
 # Test rate limiting (should fail after 5 requests/minute)
 for i in {1..6}; do
   echo "Request $i:"
-  curl -X POST "http://localhost:8080/api/api-keys/key_123/retrieve-key" \
+  curl -X POST "http://localhost:8081/api/api-keys/key_123/retrieve-key" \
     -H "Authorization: Bearer <your-jwt-token>" \
     -H "Content-Type: application/json"
   echo ""
@@ -315,15 +315,15 @@ USER_TOKEN="<jwt-token-from-standard-user-login>"
 
 # Test user can access own resources - should return 200
 curl -H "Authorization: Bearer $USER_TOKEN" \
-     "http://localhost:8080/api/v1/subscriptions"
+     "http://localhost:8081/api/v1/subscriptions"
 
 # Test user cannot access admin endpoints - should return 403
 curl -H "Authorization: Bearer $USER_TOKEN" \
-     "http://localhost:8080/api/v1/admin/users"
+     "http://localhost:8081/api/v1/admin/users"
 
 # Test user cannot access other users' resources - should return 403
 curl -H "Authorization: Bearer $USER_TOKEN" \
-     "http://localhost:8080/api/v1/subscriptions?userId=another-user-id"
+     "http://localhost:8081/api/v1/subscriptions?userId=another-user-id"
 ```
 
 #### Test Read-Only Admin Access
@@ -334,23 +334,23 @@ READONLY_ADMIN_TOKEN="<jwt-token-from-readonly-admin-login>"
 
 # Test read-only admin can view all users - should return 200
 curl -H "Authorization: Bearer $READONLY_ADMIN_TOKEN" \
-     "http://localhost:8080/api/v1/admin/users"
+     "http://localhost:8081/api/v1/admin/users"
 
 # Test read-only admin can view system status - should return 200
 curl -H "Authorization: Bearer $READONLY_ADMIN_TOKEN" \
-     "http://localhost:8080/api/v1/admin/system/status"
+     "http://localhost:8081/api/v1/admin/system/status"
 
 # Test read-only admin cannot create users - should return 403
 curl -X POST \
      -H "Authorization: Bearer $READONLY_ADMIN_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"username": "test@example.com", "email": "test@example.com"}' \
-     "http://localhost:8080/api/v1/admin/users"
+     "http://localhost:8081/api/v1/admin/users"
 
 # Test read-only admin cannot modify system - should return 403
 curl -X POST \
      -H "Authorization: Bearer $READONLY_ADMIN_TOKEN" \
-     "http://localhost:8080/api/v1/admin/sync/models"
+     "http://localhost:8081/api/v1/admin/sync/models"
 ```
 
 #### Test Full Admin Access
@@ -361,7 +361,7 @@ ADMIN_TOKEN="<jwt-token-from-admin-login>"
 
 # Test admin can view all users - should return 200
 curl -H "Authorization: Bearer $ADMIN_TOKEN" \
-     "http://localhost:8080/api/v1/admin/users"
+     "http://localhost:8081/api/v1/admin/users"
 
 # Test admin can create users - should return 201
 curl -X POST \
@@ -373,18 +373,18 @@ curl -X POST \
        "fullName": "New Test User",
        "roles": ["user"]
      }' \
-     "http://localhost:8080/api/v1/admin/users"
+     "http://localhost:8081/api/v1/admin/users"
 
 # Test admin can trigger system operations - should return 200
 curl -X POST \
      -H "Authorization: Bearer $ADMIN_TOKEN" \
      -H "Content-Type: application/json" \
      -d '{"forceSync": true}' \
-     "http://localhost:8080/api/v1/admin/sync/models"
+     "http://localhost:8081/api/v1/admin/sync/models"
 
 # Test admin can access any user's resources - should return 200
 curl -H "Authorization: Bearer $ADMIN_TOKEN" \
-     "http://localhost:8080/api/v1/subscriptions?userId=any-user-id"
+     "http://localhost:8081/api/v1/subscriptions?userId=any-user-id"
 ```
 
 #### Test Multi-Role User Behavior
@@ -395,11 +395,11 @@ MULTI_ROLE_TOKEN="<jwt-token-from-multi-role-user>"
 
 # Verify user has admin access (most powerful role wins)
 curl -H "Authorization: Bearer $MULTI_ROLE_TOKEN" \
-     "http://localhost:8080/api/v1/admin/users"
+     "http://localhost:8081/api/v1/admin/users"
 
 # Check that user profile shows multiple roles
 curl -H "Authorization: Bearer $MULTI_ROLE_TOKEN" \
-     "http://localhost:8080/api/v1/auth/me"
+     "http://localhost:8081/api/v1/auth/me"
 
 # Expected response:
 # {
@@ -479,7 +479,7 @@ npm run dev
    ```bash
    curl -H "Origin: http://localhost:3000" \
         -H "User-Agent: Mozilla/5.0" \
-        http://localhost:8080/api/subscriptions
+        http://localhost:8081/api/subscriptions
    ```
 
 ### Issue: OAuth Login Not Working

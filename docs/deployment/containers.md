@@ -15,7 +15,7 @@ The LiteMaaS application consists of four main containers:
 
 LiteMaaS containers can be deployed in multiple ways:
 
-- **[OpenShift/Kubernetes](#openshift-kubernetes-deployment)** - Enterprise container orchestration (recommended for production)
+- **[OpenShift/Kubernetes](#openshiftkubernetes-deployment)** - Enterprise container orchestration (recommended for production)
 - **[Docker/Podman Compose](#dockerpodman-compose-deployment)** - Local development and small deployments
 - **[Manual Container Deployment](#manual-container-deployment)** - Individual container management
 
@@ -206,8 +206,8 @@ LiteMaaS includes comprehensive Kubernetes manifests and Kustomize configuration
 oc apply -k deployment/openshift/
 
 # Access applications at:
-# - LiteMaaS: https://litemaas-<namespace>.apps.<cluster-domain>
-# - LiteLLM UI: https://litellm-<namespace>.apps.<cluster-domain>
+# - LiteMaaS: https://litemaas-<namespace>.<cluster-domain>
+# - LiteLLM UI: https://litellm-<namespace>.<cluster-domain>
 ```
 
 ### Features Included
@@ -463,8 +463,8 @@ Register ALL possible callback URLs with your OAuth provider:
 | Environment          | Callback URLs to Register                                                              | Notes                         |
 | -------------------- | -------------------------------------------------------------------------------------- | ----------------------------- |
 | Development (Vite)   | `http://localhost:3000/api/auth/callback`                                              | Vite dev server on port 3000  |
-| Development (Direct) | `http://localhost:8080/api/auth/callback`<br>`http://localhost:8081/api/auth/callback` | Direct backend access         |
-| Container (NGINX)    | `http://localhost:8080/api/auth/callback`                                              | NGINX on port 8080            |
+| Development (Direct) | `http://localhost:8081/api/auth/callback`<br>`http://localhost:8081/api/auth/callback` | Direct backend access         |
+| Container (NGINX)    | `http://localhost:8081/api/auth/callback`                                              | NGINX on port 8080            |
 | Production           | `https://your-domain.com/api/auth/callback`                                            | Through ingress/load balancer |
 
 ##### Example OAuth Provider Configuration
@@ -478,7 +478,7 @@ metadata:
 secret: your-secret-here
 redirectURIs:
   - http://localhost:3000/api/auth/callback # Vite development
-  - http://localhost:8080/api/auth/callback # Container/Direct
+  - http://localhost:8081/api/auth/callback # Container/Direct
   - http://localhost:8081/api/auth/callback # Backend direct
   - https://your-domain.com/api/auth/callback # Production
 grantMethod: prompt
@@ -592,8 +592,8 @@ podman run -d --name backend \
   -e OAUTH_CLIENT_ID=your-client \
   -e OAUTH_CLIENT_SECRET=your-secret \
   -e OAUTH_ISSUER=https://oauth.provider \
-  -e OAUTH_CALLBACK_URL=http://localhost:8080/api/auth/callback \
-  -e CORS_ORIGIN=http://localhost:8080 \
+  -e OAUTH_CALLBACK_URL=http://localhost:8081/api/auth/callback \
+  -e CORS_ORIGIN=http://localhost:8081 \
   -e LOG_LEVEL=debug \
   -p 8081:8080 \
   litemaas-backend
@@ -608,10 +608,10 @@ podman run -d --name frontend \
 ```
 
 2. **Verify OAuth flow:**
-   - Navigate to `http://localhost:8080`
+   - Navigate to `http://localhost:8081`
    - Click login
    - Should redirect to OAuth provider
-   - After login, should return to `http://localhost:8080/home`
+   - After login, should return to `http://localhost:8081/home`
 
 ### Security Considerations
 

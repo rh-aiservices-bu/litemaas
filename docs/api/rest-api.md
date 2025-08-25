@@ -2,7 +2,7 @@
 
 ## Base URL
 
-- Development: `http://localhost:8080`
+- Development: `http://localhost:8081`
 - Production: `https://api.litemaas.com`
 
 ## API Structure
@@ -754,7 +754,7 @@ Error Responses:
 **Usage Example**:
 
 ```bash
-curl -X POST "http://localhost:8080/api/api-keys/key_456/retrieve-key" \
+curl -X POST "http://localhost:8081/api/api-keys/key_456/retrieve-key" \
   -H "Authorization: Bearer <your-jwt-token>" \
   -H "Content-Type: application/json"
 ```

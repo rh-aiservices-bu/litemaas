@@ -52,7 +52,7 @@ Before starting, gather the following information:
 - OpenShift cluster API endpoint
 - Your OpenShift login credentials
 - Desired namespace/project name (default: `litemaas`)
-- Cluster's default domain (e.g., `apps.cluster.example.com`)
+- Cluster's default domain, afterwards identified as `<your-cluster-domain>`. E.g.: `apps.your-cluster.example.com`
 
 ## Architecture Overview
 
@@ -65,16 +65,16 @@ The LiteMaaS deployment consists of four main components:
 
 ### Network Architecture
 
-```
+```text
 Internet → OpenShift Router → Routes → Services → Pods
                            ↓
-                    Frontend Route (litemaas-<namespace>.apps.<cluster>)
-                    LiteLLM Route (litellm-<namespace>.apps.<cluster>)
+                    Frontend Route (litemaas-<namespace>.<cluster-domain>)
+                    LiteLLM Route (litellm-<namespace>.<cluster-domain>)
 ```
 
 ### Data Flow
 
-```
+```text
 User → Frontend → Backend → PostgreSQL
                      ↓
               LiteLLM Service → External AI APIs
@@ -109,7 +109,7 @@ LiteMaaS uses OpenShift's built-in OAuth for authentication. Follow these steps 
      name: litemaas-oauth-client
    secret: <your_secret>
    redirectURIs:
-     - 'https://litemaas-<your-namespace>.apps.<your-cluster-domain>/api/auth/callback'
+     - 'https://litemaas-<your-namespace>.<your-cluster-domain>/api/auth/callback'
    grantMethod: auto
    ```
 
@@ -186,8 +186,8 @@ vi user-values.env
 **Edit `user-values.env`** with your specific values:
 
 ```bash
-LITEMAAS_VERSION=0.0.7
-CLUSTER_DOMAIN_NAME=your-cluster.example.com
+LITEMAAS_VERSION=0.0.18
+CLUSTER_DOMAIN_NAME=apps.your-cluster.example.com
 NAMESPACE=litemaas
 PG_ADMIN_PASSWORD=your-secure-db-password
 JWT_SECRET=your-secure-jwt-secret-64-chars
@@ -297,7 +297,7 @@ oc get pods
 oc logs -l app=postgres --tail=50
 
 # Test database connectivity from backend
-oc exec deployment/backend -- curl -f http://localhost:8080/api/v1/health
+oc exec deployment/backend -- curl -f http://localhost:8081/api/v1/health
 ```
 
 ### Step 2: Access LiteLLM Administration UI
@@ -311,7 +311,7 @@ oc exec deployment/backend -- curl -f http://localhost:8080/api/v1/health
 
 2. Open the LiteLLM UI in your browser:
 
-   ```
+   ```text
    https://litellm-litemaas.apps.cluster.example.com
    ```
 
@@ -347,7 +347,7 @@ oc exec deployment/backend -- curl -f http://localhost:8080/api/v1/health
 
 2. Open LiteMaaS in your browser:
 
-   ```
+   ```text
    https://litemaas-litemaas.apps.cluster.example.com
    ```
 
@@ -359,13 +359,13 @@ After successful deployment, you can access:
 
 ### LiteMaaS Main Application
 
-- **URL**: `https://litemaas-<namespace>.apps.<cluster-domain>`
+- **URL**: `https://litemaas-<namespace>.<cluster-domain>`
 - **Purpose**: Main user interface for model subscriptions and API key management
 - **Authentication**: OpenShift OAuth
 
 ### LiteLLM Administration UI
 
-- **URL**: `https://litellm-<namespace>.apps.<cluster-domain>`
+- **URL**: `https://litellm-<namespace>.<cluster-domain>`
 - **Purpose**: Model configuration and monitoring
 - **Authentication**: Username/password (admin UI)
 

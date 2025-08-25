@@ -16,6 +16,7 @@ import ApiKeysPage from '../pages/ApiKeysPage';
 import ChatbotPage from '../pages/ChatbotPage';
 import UsagePage from '../pages/UsagePage';
 import ToolsPage from '../pages/ToolsPage';
+import AdminModelsPage from '../pages/AdminModelsPage';
 import UsersPage from '../pages/UsersPage';
 
 import { AppConfig } from '../types/navigation';
@@ -77,6 +78,14 @@ export const appConfig: AppConfig = {
       label: 'Admin',
       routes: [
         {
+          id: 'admin-models',
+          path: '/admin/models',
+          element: AdminModelsPage,
+          label: 'nav.admin.models',
+          icon: CubesIcon,
+          requiredRoles: ['admin', 'admin-readonly'],
+        },
+        {
           id: 'admin-users',
           path: '/admin/users',
           element: UsersPage,
@@ -137,6 +146,13 @@ export const appConfig: AppConfig = {
       id: 'admin-separator',
       label: '',
       isGroup: true,
+      requiredRoles: ['admin', 'admin-readonly'],
+    },
+    {
+      id: 'admin-models',
+      label: 'nav.admin.models',
+      path: '/admin/models',
+      icon: CubesIcon,
       requiredRoles: ['admin', 'admin-readonly'],
     },
     {

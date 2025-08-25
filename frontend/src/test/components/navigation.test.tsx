@@ -69,7 +69,7 @@ describe('Navigation Configuration', () => {
 
   it('has correct navigation structure', () => {
     expect(appConfig.navigation).toBeDefined();
-    expect(appConfig.navigation).toHaveLength(9); // Home, Models, Subscriptions, API Keys, Chatbot, Usage, Users, Settings
+    expect(appConfig.navigation).toHaveLength(10); // Home, Models, Subscriptions, API Keys, Chatbot, Usage, Users, Settings
   });
 
   describe('Route Configuration', () => {
@@ -233,6 +233,7 @@ describe('Navigation Configuration', () => {
         'nav.usage',
         'nav.admin.users',
         'nav.admin.tools',
+        'nav.admin.models',
       ];
 
       appConfig.navigation

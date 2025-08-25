@@ -10,6 +10,18 @@ export interface Model {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  // Admin-specific fields extracted from LiteLLM
+  apiBase?: string;
+  backendModelName?: string; // The backend model name used in LiteLLM (e.g., gpt-4-turbo)
+  inputCostPerToken?: number;
+  outputCostPerToken?: number;
+  tpm?: number; // tokens per minute
+  rpm?: number; // requests per minute
+  maxTokens?: number;
+  supportsVision?: boolean;
+  supportsFunctionCalling?: boolean;
+  supportsParallelFunctionCalling?: boolean;
+  supportsToolChoice?: boolean;
 }
 
 export interface ModelPricing {
@@ -36,6 +48,18 @@ export interface CreateModelDto {
   contextLength?: number;
   pricing?: ModelPricing;
   metadata?: Record<string, any>;
+  // Admin-specific fields
+  apiBase?: string;
+  backendModelName?: string; // The backend model name used in LiteLLM
+  inputCostPerToken?: number;
+  outputCostPerToken?: number;
+  tpm?: number;
+  rpm?: number;
+  maxTokens?: number;
+  supportsVision?: boolean;
+  supportsFunctionCalling?: boolean;
+  supportsParallelFunctionCalling?: boolean;
+  supportsToolChoice?: boolean;
 }
 
 export interface UpdateModelDto {
@@ -46,6 +70,18 @@ export interface UpdateModelDto {
   pricing?: ModelPricing;
   metadata?: Record<string, any>;
   isActive?: boolean;
+  // Admin-specific fields
+  apiBase?: string;
+  backendModelName?: string; // The backend model name used in LiteLLM
+  inputCostPerToken?: number;
+  outputCostPerToken?: number;
+  tpm?: number;
+  rpm?: number;
+  maxTokens?: number;
+  supportsVision?: boolean;
+  supportsFunctionCalling?: boolean;
+  supportsParallelFunctionCalling?: boolean;
+  supportsToolChoice?: boolean;
 }
 
 export interface ModelListParams {
@@ -79,6 +115,7 @@ export interface LiteLLMModel {
     supports_vision?: boolean;
     supports_function_calling?: boolean;
     supports_parallel_function_calling?: boolean;
+    supports_tool_choice?: boolean;
     supports_assistant_api?: boolean;
     access_via_team_ids?: string[];
     input_cost_per_token?: number;
@@ -101,6 +138,7 @@ export interface EnhancedModel extends Model {
     source?: string;
     supports_function_calling?: boolean;
     supports_parallel_function_calling?: boolean;
+    supports_tool_choice?: boolean;
     supports_vision?: boolean;
     supports_assistant_api?: boolean;
   };

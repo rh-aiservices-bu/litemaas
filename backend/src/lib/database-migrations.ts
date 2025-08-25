@@ -115,13 +115,28 @@ CREATE TABLE IF NOT EXISTS models (
     availability VARCHAR(50) DEFAULT 'available',
     version VARCHAR(50),
     metadata JSONB DEFAULT '{}',
+    -- Admin-specific fields extracted from LiteLLM
+    api_base VARCHAR(500),
+    tpm INTEGER,
+    rpm INTEGER,
+    max_tokens INTEGER,
+    litellm_model_id VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Add missing admin columns for existing tables
+ALTER TABLE models ADD COLUMN IF NOT EXISTS api_base VARCHAR(500);
+ALTER TABLE models ADD COLUMN IF NOT EXISTS tpm INTEGER;
+ALTER TABLE models ADD COLUMN IF NOT EXISTS rpm INTEGER;
+ALTER TABLE models ADD COLUMN IF NOT EXISTS max_tokens INTEGER;
+ALTER TABLE models ADD COLUMN IF NOT EXISTS litellm_model_id VARCHAR(255);
+ALTER TABLE models ADD COLUMN IF NOT EXISTS backend_model_name VARCHAR(255);
+
 CREATE INDEX IF NOT EXISTS idx_models_provider ON models(provider);
 CREATE INDEX IF NOT EXISTS idx_models_category ON models(category);
 CREATE INDEX IF NOT EXISTS idx_models_availability ON models(availability);
+CREATE INDEX IF NOT EXISTS idx_models_litellm_model_id ON models(litellm_model_id);
 `;
 
 // Subscriptions table
@@ -499,6 +514,25 @@ ON CONFLICT (team_id, user_id) DO NOTHING;
 CREATE INDEX IF NOT EXISTS idx_team_members_default_team ON team_members(team_id) WHERE team_id = '00000000-0000-0000-0000-000000000001'::UUID;
 `;
 
+// Populate litellm_model_id from metadata migration
+export const litellmModelIdMigration = `
+-- Populate litellm_model_id column from existing metadata for models that don't have it set
+UPDATE models 
+SET litellm_model_id = metadata->'litellm_model_info'->>'id'
+WHERE litellm_model_id IS NULL 
+  AND metadata->'litellm_model_info'->>'id' IS NOT NULL 
+  AND metadata->'litellm_model_info'->>'id' != '';
+
+-- Log the migration results
+DO $$
+DECLARE 
+    updated_count INTEGER;
+BEGIN
+    GET DIAGNOSTICS updated_count = ROW_COUNT;
+    RAISE NOTICE 'Populated litellm_model_id for % models from metadata', updated_count;
+END $$;
+`;
+
 // Main migration function
 export const applyMigrations = async (dbUtils: DatabaseUtils) => {
   console.log('🚀 Starting database migrations...');
@@ -555,6 +589,9 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
 
     console.log('👥 Creating default team and assigning users...');
     await dbUtils.query(defaultTeamMigration);
+
+    console.log('🔧 Populating litellm_model_id from metadata...');
+    await dbUtils.query(litellmModelIdMigration);
 
     console.log('✅ Database migrations completed successfully!');
   } catch (error) {

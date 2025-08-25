@@ -76,12 +76,13 @@ oc apply -k .
 
 After successful deployment:
 
-- **LiteMaaS Application**: `https://litemaas-<namespace>.apps.<cluster-domain>`
-- **LiteLLM Admin UI**: `https://litellm-<namespace>.apps.<cluster-domain>`
+- **LiteMaaS Application**: `https://litemaas-<namespace>.<cluster-domain>`
+- **LiteLLM Admin UI**: `https://litellm-<namespace>.<cluster-domain>`
 
 ## Post-Deployment tasks
 
-- Connect to LiteLLM dashboard and create Models
+- ~~Connect to LiteLLM dashboard and create Models~~
+- You can now use LiteMaaS to directly create the models, no need to connect to LiteLLM directly.
 - Wait for the backend to sync models, or start a Rollout of the deployment to initiate the refresh.
 
 ## Support

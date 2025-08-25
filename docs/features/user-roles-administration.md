@@ -434,7 +434,7 @@ Admin access is monitored and logged:
 ```bash
 # Check user roles in development
 curl -H "Authorization: Bearer $JWT_TOKEN" \
-  http://localhost:8080/api/auth/me
+  http://localhost:8081/api/auth/me
 
 # Response should include roles array
 {
