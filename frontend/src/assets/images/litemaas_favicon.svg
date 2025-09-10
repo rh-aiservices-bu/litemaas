@@ -9,7 +9,7 @@
    id="svg1"
    xml:space="preserve"
    inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
-   sodipodi:docname="octobean_llm_color.svg"
+   sodipodi:docname="litemaas_favicon.svg"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
@@ -24,7 +24,7 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      inkscape:zoom="0.48062733"
-     inkscape:cx="224.70632"
+     inkscape:cx="225.74663"
      inkscape:cy="312.09212"
      inkscape:window-width="1920"
      inkscape:window-height="1011"
@@ -149,14 +149,4 @@
          id="tspan14"
          style="fill:#000000;stroke-width:1.0795"
          x="73.993515"
-         y="197.47318" /></text><text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:17.7821px;font-family:'Red Hat Mono';-inkscape-font-specification:'Red Hat Mono';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#000000;fill-opacity:1;stroke-width:6.04592"
-       x="73.594627"
-       y="209.33702"
-       id="text15"><tspan
-         sodipodi:role="line"
-         id="tspan15"
-         style="font-weight:bold;stroke-width:6.04592"
-         x="73.594627"
-         y="209.33702">LLM</tspan></text></g></svg>
+         y="197.47318" /></text></g></svg>

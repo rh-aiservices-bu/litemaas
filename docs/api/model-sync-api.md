@@ -66,7 +66,7 @@ Manually trigger model synchronization from LiteLLM to the database.
 #### Example
 
 ```bash
-curl -X POST http://localhost:8080/api/v1/models/sync \
+curl -X POST http://localhost:8081/api/v1/models/sync \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
@@ -97,7 +97,7 @@ Get model synchronization statistics and status.
 
 ```bash
 curl -H "Authorization: Bearer YOUR_TOKEN" \
-  http://localhost:8080/api/v1/models/sync/stats
+  http://localhost:8081/api/v1/models/sync/stats
 ```
 
 ### GET /api/v1/models/validate
@@ -121,7 +121,7 @@ Validate model data integrity and check for inconsistencies.
 
 ```bash
 curl -H "Authorization: Bearer YOUR_TOKEN" \
-  http://localhost:8080/api/v1/models/validate
+  http://localhost:8081/api/v1/models/validate
 ```
 
 ### GET /api/v1/models/health
@@ -157,7 +157,7 @@ Check the health status of the model synchronization system.
 #### Example
 
 ```bash
-curl http://localhost:8080/api/v1/models/health
+curl http://localhost:8081/api/v1/models/health
 ```
 
 ## Synchronization Process

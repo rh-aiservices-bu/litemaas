@@ -32,6 +32,7 @@ import {
   Alert,
   Bullseye,
   Stack,
+  Label,
 } from '@patternfly/react-core';
 import {
   CubesIcon,
@@ -42,6 +43,7 @@ import {
 } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
 import { subscriptionsService, Subscription } from '../services/subscriptions.service';
+import { getModelFlairs } from '../utils/flairColors';
 
 const SubscriptionsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -172,8 +174,7 @@ const SubscriptionsPage: React.FC = () => {
       <Stack hasGutter>
         <Content component={ContentVariants.small}>
           {t('pages.subscriptions.pricingLabels.input')}: ${inputCostPerMillion.toFixed(2)}/1M{' '}
-          {t('pages.usage.metrics.tokens')}
-          <br />
+          {t('pages.usage.metrics.tokens')} {t('pages.models.pricing.separator')}{' '}
           {t('pages.subscriptions.pricingLabels.output')}: ${outputCostPerMillion.toFixed(2)}/1M{' '}
           {t('pages.usage.metrics.tokens')}
         </Content>
@@ -322,21 +323,34 @@ const SubscriptionsPage: React.FC = () => {
                           </FlexItem>
                           <FlexItem>{getStatusBadge(subscription.status)}</FlexItem>
                         </Flex>
-                        {/* 
-                        <Content
-                          component={ContentVariants.small}
-                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
-                        >
-                          {t('pages.subscriptions.byProvider', { provider: subscription.provider })}
-                        </Content>
-                         */}
                       </CardTitle>
                       <CardBody>
                         <Flex
                           direction={{ default: 'column' }}
                           spaceItems={{ default: 'spaceItemsSm' }}
                         >
+                          <FlexItem>
+                            <Content component={ContentVariants.small}>
+                              {t('pages.models.contextLabel')}{' '}
+                              {subscription.modelContextLength
+                                ? subscription.modelContextLength.toLocaleString()
+                                : 'N/A'}{' '}
+                              {t('pages.models.units.tokens')}
+                            </Content>
+                          </FlexItem>
                           <FlexItem>{getPricingInfo(subscription)}</FlexItem>
+                          <FlexItem>
+                            <Flex
+                              spaceItems={{ default: 'spaceItemsSm' }}
+                              flexWrap={{ default: 'wrap' }}
+                            >
+                              {getModelFlairs(subscription).map(({ key, label, color }) => (
+                                <FlexItem key={key}>
+                                  <Label color={color}>{label}</Label>
+                                </FlexItem>
+                              ))}
+                            </Flex>
+                          </FlexItem>
                           {/* TODO: Implement token usage
                           <FlexItem>
                             <Progress
@@ -381,7 +395,10 @@ const SubscriptionsPage: React.FC = () => {
                         </Flex>
                       </CardBody>
                       <CardFooter>
-                        <Flex spaceItems={{ default: 'spaceItemsSm' }}>
+                        <Flex
+                          direction={{ default: 'column' }}
+                          spaceItems={{ default: 'spaceItemsSm' }}
+                        >
                           <FlexItem>
                             <Button
                               variant="primary"
@@ -438,40 +455,70 @@ const SubscriptionsPage: React.FC = () => {
                 {selectedSubscription?.modelName}
               </Title>
             </FlexItem>
-            <FlexItem>
+            {/*             <FlexItem>
               {selectedSubscription && getStatusBadge(selectedSubscription.status)}
-            </FlexItem>
+            </FlexItem> */}
           </Flex>
-          <Content
-            component={ContentVariants.p}
-            style={{ color: 'var(--pf-v6-global--Color--200)' }}
-          >
-            {t('pages.subscriptions.detailsTitle')}
-          </Content>
+          <>
+            {selectedSubscription && selectedSubscription.modelDescription && (
+              <Content component={ContentVariants.p}>
+                {selectedSubscription.modelDescription}
+              </Content>
+            )}
+          </>
         </ModalHeader>
         <ModalBody>
           {selectedSubscription && (
             <>
-              <DescriptionList isHorizontal>
-                {/*                 
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('pages.subscriptions.provider')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {selectedSubscription.provider}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
- */}
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('pages.subscriptions.pricing')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {getPricingInfo(selectedSubscription)}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
+              <Content
+                component={ContentVariants.h4}
+                style={{ color: 'var(--pf-v6-global--Color--200)', marginBottom: '1rem' }}
+              >
+                {t('pages.subscriptions.detailsTitle')}
+              </Content>
 
+              <DescriptionList isHorizontal>
                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('pages.subscriptions.statusLabel')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     {getStatusBadge(selectedSubscription.status)}
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+                <DescriptionListGroup>
+                  <DescriptionListTerm>{t('pages.subscriptions.created')}</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    {new Date(selectedSubscription.createdAt).toLocaleDateString()}
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+                <DescriptionListGroup>
+                  <DescriptionListTerm>{t('pages.subscriptions.pricing')}</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    {selectedSubscription.pricing
+                      ? `${t('pages.models.pricing.input')}: $${(selectedSubscription.pricing.inputCostPerToken * 1000000).toFixed(2)}/1M ${t('pages.usage.metrics.tokens')} ${t('pages.models.pricing.separator')} ${t('pages.models.pricing.output')}: $${(selectedSubscription.pricing.outputCostPerToken * 1000000).toFixed(2)}/1M ${t('pages.usage.metrics.tokens')}`
+                      : t('pages.models.pricingLabel')}
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+
+                <DescriptionListGroup>
+                  <DescriptionListTerm>{t('pages.models.modal.contextLength')}</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    {selectedSubscription.modelContextLength
+                      ? selectedSubscription.modelContextLength.toLocaleString()
+                      : 'N/A'}{' '}
+                    {t('pages.models.modal.tokens')}
+                  </DescriptionListDescription>
+                </DescriptionListGroup>
+
+                <DescriptionListGroup>
+                  <DescriptionListTerm>{t('pages.models.modal.features')}</DescriptionListTerm>
+                  <DescriptionListDescription>
+                    <Flex spaceItems={{ default: 'spaceItemsSm' }} flexWrap={{ default: 'wrap' }}>
+                      {getModelFlairs(selectedSubscription).map(({ key, label, color }) => (
+                        <FlexItem key={key}>
+                          <Label color={color}>{label}</Label>
+                        </FlexItem>
+                      ))}
+                    </Flex>
                   </DescriptionListDescription>
                 </DescriptionListGroup>
                 {/* TODO Implement quotas and token counts
@@ -583,12 +630,6 @@ const SubscriptionsPage: React.FC = () => {
                   </DescriptionListDescription>
                 </DescriptionListGroup>
  */}
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('pages.subscriptions.created')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {new Date(selectedSubscription.createdAt).toLocaleDateString()}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
 
                 {/*
                  <DescriptionListGroup>

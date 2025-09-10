@@ -50,6 +50,7 @@ import {
   ScreenReaderAnnouncement,
   useScreenReaderAnnouncement,
 } from '../components/ScreenReaderAnnouncement';
+import { getModelFlairs } from '../utils/flairColors';
 
 const ModelsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -506,28 +507,13 @@ const ModelsPage: React.FC = () => {
                           </FlexItem>
                           <FlexItem>{getSubscriptionBadge(model.id)}</FlexItem>
                         </Flex>
-                        {/* TODO: implement model description
-                         <Content
-                          component={ContentVariants.small}
-                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
-                        >
-                          by {model.provider}
-                        </Content> 
-                        */}
                       </CardTitle>
                     </CardHeader>
                     <CardBody>
-                      {/*
-                      <Content component={ContentVariants.p} style={{ marginBottom: '1rem' }}>
-                        {model.description}
-                      </Content> */}
                       <Flex
                         direction={{ default: 'column' }}
                         spaceItems={{ default: 'spaceItemsSm' }}
                       >
-                        <FlexItem>
-                          <Label color="blue">{model.category}</Label>
-                        </FlexItem>
                         <FlexItem>
                           <Content component={ContentVariants.small}>
                             {t('pages.models.contextLabel')}{' '}
@@ -546,18 +532,11 @@ const ModelsPage: React.FC = () => {
                     </CardBody>
                     <CardFooter>
                       <Flex spaceItems={{ default: 'spaceItemsSm' }} flexWrap={{ default: 'wrap' }}>
-                        {model.features.slice(0, 3).map((feature, index) => (
-                          <FlexItem key={index}>
-                            <Label color="grey">{feature}</Label>
+                        {getModelFlairs(model).map(({ key, label, color }) => (
+                          <FlexItem key={key}>
+                            <Label color={color}>{label}</Label>
                           </FlexItem>
                         ))}
-                        {model.features.length > 3 && (
-                          <FlexItem>
-                            <Label color="grey">
-                              {t('pages.models.moreFeatures', { count: model.features.length - 3 })}
-                            </Label>
-                          </FlexItem>
-                        )}
                       </Flex>
                     </CardFooter>
                   </Card>
@@ -614,42 +593,15 @@ const ModelsPage: React.FC = () => {
             </FlexItem>
             <FlexItem>{selectedModel && getSubscriptionBadge(selectedModel.id)}</FlexItem>
           </Flex>
-          {/* TODO: Model Description
-          <Content
-            component={ContentVariants.p}
-            style={{ color: 'var(--pf-v6-global--Color--200)' }}
-          >
-            Provided by {selectedModel?.provider} • Version {selectedModel?.version}
-          </Content>
-          */}
         </ModalHeader>
         <ModalBody>
           {selectedModel && (
             <>
-              {/*               
               <Content component={ContentVariants.p} style={{ marginBottom: '1.5rem' }}>
                 {selectedModel.description}
               </Content>
-               */}
-
-              <Stack hasGutter style={{ marginBottom: '1.5rem' }}>
-                {/* TODO: Fix provider source                 
-                <Content>
-                  <strong>Provider:</strong> {selectedModel.provider}
-                </Content>
-                */}
-
-                <Content>{t('pages.models.modal.subscribeInfo')}</Content>
-              </Stack>
 
               <DescriptionList isHorizontal>
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('pages.models.modal.category')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    <Label color="blue">{selectedModel.category}</Label>
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-
                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('pages.models.modal.contextLength')}</DescriptionListTerm>
                   <DescriptionListDescription>
@@ -686,15 +638,18 @@ const ModelsPage: React.FC = () => {
                   <DescriptionListTerm>{t('pages.models.modal.features')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     <Flex spaceItems={{ default: 'spaceItemsSm' }} flexWrap={{ default: 'wrap' }}>
-                      {selectedModel.features.map((feature, index) => (
-                        <FlexItem key={index}>
-                          <Label color="grey">{feature}</Label>
+                      {getModelFlairs(selectedModel).map(({ key, label, color }) => (
+                        <FlexItem key={key}>
+                          <Label color={color}>{label}</Label>
                         </FlexItem>
                       ))}
                     </Flex>
                   </DescriptionListDescription>
                 </DescriptionListGroup>
               </DescriptionList>
+              <Content style={{ marginTop: '1.5rem' }}>
+                {t('pages.models.modal.subscribeInfo')}
+              </Content>
 
               {selectedModel.availability === 'unavailable' && (
                 <div

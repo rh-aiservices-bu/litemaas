@@ -126,7 +126,8 @@ export class ModelSyncService {
    */
   private async getExistingModels(): Promise<any[]> {
     const result = await this.fastify.dbUtils.query(`
-      SELECT id, name, provider, updated_at, availability
+      SELECT id, name, provider, updated_at, availability, 
+             api_base, tpm, rpm, max_tokens
       FROM models
       ORDER BY id
     `);
@@ -148,7 +149,14 @@ export class ModelSyncService {
         ? litellmModel.litellm_params.model.split('/')[0]
         : 'unknown');
 
-    const description = `${modelName}`;
+    // Extract backend model name from litellm_params.model
+    // Format is usually "openai/gpt-4-turbo" or "provider/backend_model_name"
+    const backendModelName = litellmModel.litellm_params?.model?.includes('/')
+      ? litellmModel.litellm_params.model.split('/')[1]
+      : litellmModel.litellm_params?.model || null;
+
+    // Don't set a default description for synced models - let users add their own
+    const description = null;
     const contextLength = litellmModel.model_info?.max_tokens;
     const inputCostPerToken =
       litellmModel.model_info?.input_cost_per_token ||
@@ -157,16 +165,25 @@ export class ModelSyncService {
       litellmModel.model_info?.output_cost_per_token ||
       litellmModel.litellm_params?.output_cost_per_token;
 
+    // Extract admin-specific fields
+    const apiBase = litellmModel.litellm_params?.api_base;
+    const tpm = litellmModel.litellm_params?.tpm;
+    const rpm = litellmModel.litellm_params?.rpm;
+    const maxTokens = litellmModel.model_info?.max_tokens;
+    const litellmModelId = litellmModel.model_info?.id;
+
     // Extract capabilities
     const supportsVision = litellmModel.model_info?.supports_vision || false;
     const supportsFunctionCalling = litellmModel.model_info?.supports_function_calling || false;
     const supportsParallelFunctionCalling =
       litellmModel.model_info?.supports_parallel_function_calling || false;
+    const supportsToolChoice = litellmModel.model_info?.supports_tool_choice || false;
 
     // Build features array
     const features = [];
     if (supportsFunctionCalling) features.push('function_calling');
     if (supportsParallelFunctionCalling) features.push('parallel_function_calling');
+    if (supportsToolChoice) features.push('tool_choice');
     if (supportsVision) features.push('vision');
     features.push('chat'); // Assume all models support chat
 
@@ -177,8 +194,9 @@ export class ModelSyncService {
         input_cost_per_token, output_cost_per_token, supports_vision,
         supports_function_calling, supports_tool_choice,
         supports_parallel_function_calling, supports_streaming,
-        features, availability, version, metadata
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)
+        features, availability, version, metadata,
+        api_base, tpm, rpm, max_tokens, litellm_model_id, backend_model_name
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
     `,
       [
         modelId,
@@ -191,7 +209,7 @@ export class ModelSyncService {
         outputCostPerToken,
         supportsVision,
         supportsFunctionCalling,
-        false, // supports_tool_choice - not provided by LiteLLM
+        supportsToolChoice,
         supportsParallelFunctionCalling,
         true, // supports_streaming - default to true
         features,
@@ -201,10 +219,16 @@ export class ModelSyncService {
           litellm_model_info: litellmModel.model_info,
           litellm_params: litellmModel.litellm_params,
         }),
+        apiBase,
+        tpm,
+        rpm,
+        maxTokens,
+        litellmModelId,
+        backendModelName,
       ],
     );
 
-    this.fastify.log.debug({ modelId }, 'Inserted new model');
+    this.fastify.log.debug({ modelId, backendModelName }, 'Inserted new model');
   }
 
   /**
@@ -220,7 +244,13 @@ export class ModelSyncService {
       (litellmModel.litellm_params?.model?.includes('/')
         ? litellmModel.litellm_params.model.split('/')[0]
         : 'unknown');
-    const description = `${modelName} model from ${provider}`;
+
+    // Extract backend model name from litellm_params.model
+    const backendModelName = litellmModel.litellm_params?.model?.includes('/')
+      ? litellmModel.litellm_params.model.split('/')[1]
+      : litellmModel.litellm_params?.model || null;
+
+    // Don't override existing description during sync - let users manage their own descriptions
     const contextLength = litellmModel.model_info?.max_tokens;
     const inputCostPerToken =
       litellmModel.model_info?.input_cost_per_token ||
@@ -233,10 +263,12 @@ export class ModelSyncService {
     const supportsFunctionCalling = litellmModel.model_info?.supports_function_calling || false;
     const supportsParallelFunctionCalling =
       litellmModel.model_info?.supports_parallel_function_calling || false;
+    const supportsToolChoice = litellmModel.model_info?.supports_tool_choice || false;
 
     const features = [];
     if (supportsFunctionCalling) features.push('function_calling');
     if (supportsParallelFunctionCalling) features.push('parallel_function_calling');
+    if (supportsToolChoice) features.push('tool_choice');
     if (supportsVision) features.push('vision');
     features.push('chat');
 
@@ -247,7 +279,8 @@ export class ModelSyncService {
         SELECT input_cost_per_token, output_cost_per_token, availability, 
                context_length, supports_vision, supports_function_calling,
                supports_tool_choice, supports_parallel_function_calling,
-               supports_streaming, features, version, metadata
+               supports_streaming, features, version, metadata,
+               api_base, tpm, rpm, max_tokens, description, backend_model_name
         FROM models WHERE id = $1
       `,
         [modelId],
@@ -258,12 +291,28 @@ export class ModelSyncService {
       }
     }
 
+    // Extract admin-specific fields (same as in insertModel)
+    const apiBase = litellmModel.litellm_params?.api_base;
+    const tpm = litellmModel.litellm_params?.tpm;
+    const rpm = litellmModel.litellm_params?.rpm;
+    const maxTokens = litellmModel.model_info?.max_tokens;
+    const litellmModelId = litellmModel.model_info?.id;
+
+    // Get existing model to preserve user-set description and backend_model_name
+    const existing = await this.fastify.dbUtils.queryOne(
+      `SELECT description, backend_model_name FROM models WHERE id = $1`,
+      [modelId],
+    );
+    const preservedDescription = existing?.description || null;
+    // Only update backend_model_name if it's not already set (preserve user-set values)
+    const finalBackendModelName = existing?.backend_model_name || backendModelName;
+
     await this.fastify.dbUtils.query(
       `
       UPDATE models SET
         name = $2,
         provider = $3,
-        description = $4,
+        description = COALESCE($4, description),
         category = $5,
         context_length = $6,
         input_cost_per_token = $7,
@@ -277,6 +326,12 @@ export class ModelSyncService {
         availability = $15,
         version = $16,
         metadata = $17,
+        api_base = $18,
+        tpm = $19,
+        rpm = $20,
+        max_tokens = $21,
+        litellm_model_id = $22,
+        backend_model_name = $23,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
     `,
@@ -284,14 +339,14 @@ export class ModelSyncService {
         modelId,
         modelName,
         provider,
-        description,
+        preservedDescription,
         'Language Model',
         contextLength,
         inputCostPerToken,
         outputCostPerToken,
         supportsVision,
         supportsFunctionCalling,
-        false, // supports_tool_choice
+        supportsToolChoice,
         supportsParallelFunctionCalling,
         true, // supports_streaming
         features,
@@ -301,10 +356,19 @@ export class ModelSyncService {
           litellm_model_info: litellmModel.model_info,
           litellm_params: litellmModel.litellm_params,
         }),
+        apiBase,
+        tpm,
+        rpm,
+        maxTokens,
+        litellmModelId,
+        finalBackendModelName,
       ],
     );
 
-    this.fastify.log.debug({ modelId }, 'Updated existing model');
+    this.fastify.log.debug(
+      { modelId, backendModelName: finalBackendModelName },
+      'Updated existing model',
+    );
     return true;
   }
 
@@ -351,13 +415,21 @@ export class ModelSyncService {
     const supportsFunctionCalling = litellmModel.model_info?.supports_function_calling || false;
     const supportsParallelFunctionCalling =
       litellmModel.model_info?.supports_parallel_function_calling || false;
+    const supportsToolChoice = litellmModel.model_info?.supports_tool_choice || false;
 
     // Build expected features
     const expectedFeatures = [];
     if (supportsFunctionCalling) expectedFeatures.push('function_calling');
     if (supportsParallelFunctionCalling) expectedFeatures.push('parallel_function_calling');
+    if (supportsToolChoice) expectedFeatures.push('tool_choice');
     if (supportsVision) expectedFeatures.push('vision');
     expectedFeatures.push('chat');
+
+    // Extract admin fields from LiteLLM model
+    const apiBase = litellmModel.litellm_params?.api_base;
+    const tpm = litellmModel.litellm_params?.tpm;
+    const rpm = litellmModel.litellm_params?.rpm;
+    const maxTokens = litellmModel.model_info?.max_tokens;
 
     return (
       existing.availability === 'available' &&
@@ -366,10 +438,16 @@ export class ModelSyncService {
       Math.abs(existingPrice.output - newPrice.output) < 0.0000000001 &&
       existing.supports_vision === supportsVision &&
       existing.supports_function_calling === supportsFunctionCalling &&
+      existing.supports_tool_choice === supportsToolChoice &&
       existing.supports_parallel_function_calling === supportsParallelFunctionCalling &&
       existing.supports_streaming === true && // We always set this to true
       JSON.stringify(existing.features || []) === JSON.stringify(expectedFeatures) &&
-      existing.version === '1.0' // We always set this to 1.0
+      existing.version === '1.0' && // We always set this to 1.0
+      // Compare admin fields
+      existing.api_base === (apiBase || null) &&
+      existing.tpm === (tpm || null) &&
+      existing.rpm === (rpm || null) &&
+      existing.max_tokens === (maxTokens || null)
     );
   }
 

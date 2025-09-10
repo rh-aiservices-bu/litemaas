@@ -84,7 +84,7 @@ export interface UpdateSubscriptionDto {
   metadata?: SubscriptionMetadata;
 }
 
-export interface SubscriptionDetails extends Subscription {
+export interface SubscriptionDetails extends EnhancedSubscription {
   user?: {
     username: string;
     email: string;
@@ -92,13 +92,6 @@ export interface SubscriptionDetails extends Subscription {
   model?: {
     name: string;
     provider: string;
-  };
-  remainingRequests: number;
-  remainingTokens: number;
-  pricing?: {
-    inputCostPerToken: number;
-    outputCostPerToken: number;
-    currency: string;
   };
 }
 
@@ -163,6 +156,14 @@ export interface EnhancedSubscription extends Subscription {
   lastSyncAt?: Date;
   syncStatus?: 'synced' | 'pending' | 'error';
   syncError?: string;
+
+  // Model details for UI display
+  modelDescription?: string;
+  modelContextLength?: number;
+  modelSupportsVision?: boolean;
+  modelSupportsFunctionCalling?: boolean;
+  modelSupportsParallelFunctionCalling?: boolean;
+  modelSupportsToolChoice?: boolean;
 }
 
 export interface EnhancedCreateSubscriptionDto extends CreateSubscriptionDto {

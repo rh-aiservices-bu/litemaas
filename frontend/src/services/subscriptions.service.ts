@@ -26,6 +26,14 @@ export interface Subscription {
   features: string[];
   createdAt: string;
   expiresAt?: string;
+
+  // Model details for UI display
+  modelDescription?: string;
+  modelContextLength?: number;
+  supportsVision?: boolean;
+  supportsFunctionCalling?: boolean;
+  supportsParallelFunctionCalling?: boolean;
+  supportsToolChoice?: boolean;
 }
 
 // Backend response interface
@@ -61,6 +69,14 @@ interface BackendSubscriptionDetails {
   metadata?: {
     features?: string[];
   };
+
+  // Model details for UI display
+  modelDescription?: string;
+  modelContextLength?: number;
+  modelSupportsVision?: boolean;
+  modelSupportsFunctionCalling?: boolean;
+  modelSupportsParallelFunctionCalling?: boolean;
+  modelSupportsToolChoice?: boolean;
 }
 
 interface BackendSubscriptionsResponse {
@@ -124,6 +140,14 @@ class SubscriptionsService {
       features: backend.metadata?.features || [],
       createdAt: backend.createdAt,
       expiresAt: backend.expiresAt,
+
+      // Model details for UI display
+      modelDescription: backend.modelDescription,
+      modelContextLength: backend.modelContextLength,
+      supportsVision: backend.modelSupportsVision,
+      supportsFunctionCalling: backend.modelSupportsFunctionCalling,
+      supportsParallelFunctionCalling: backend.modelSupportsParallelFunctionCalling,
+      supportsToolChoice: backend.modelSupportsToolChoice,
     };
   }
 

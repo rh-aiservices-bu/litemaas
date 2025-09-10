@@ -154,6 +154,13 @@ export class SubscriptionService extends BaseService {
       },
       lastSyncAt: new Date(Date.now() - 30 * 60 * 1000),
       syncStatus: 'synced',
+      // Model details for UI display
+      modelDescription: 'GPT-4o is our most advanced multimodal model with vision capabilities.',
+      modelContextLength: 128000,
+      modelSupportsVision: true,
+      modelSupportsFunctionCalling: true,
+      modelSupportsParallelFunctionCalling: true,
+      modelSupportsToolChoice: true,
     },
     {
       id: 'sub-mock-2',
@@ -208,6 +215,13 @@ export class SubscriptionService extends BaseService {
       },
       lastSyncAt: new Date(Date.now() - 15 * 60 * 1000),
       syncStatus: 'synced',
+      // Model details for UI display
+      modelDescription: 'Claude 3.5 Sonnet excels at complex reasoning and creative tasks.',
+      modelContextLength: 200000,
+      modelSupportsVision: true,
+      modelSupportsFunctionCalling: true,
+      modelSupportsParallelFunctionCalling: false,
+      modelSupportsToolChoice: true,
     },
     {
       id: 'sub-mock-3',
@@ -270,6 +284,13 @@ export class SubscriptionService extends BaseService {
       lastSyncAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
       syncStatus: 'error',
       syncError: 'Budget limit exceeded',
+      // Model details for UI display
+      modelDescription: 'Llama 3.1 8B Instant is a fast and efficient language model.',
+      modelContextLength: 8192,
+      modelSupportsVision: false,
+      modelSupportsFunctionCalling: true,
+      modelSupportsParallelFunctionCalling: false,
+      modelSupportsToolChoice: false,
     },
   ];
 
@@ -445,7 +466,13 @@ export class SubscriptionService extends BaseService {
     try {
       let query = `
         SELECT s.*, m.name as model_name, m.provider, 
-               m.input_cost_per_token, m.output_cost_per_token
+               m.input_cost_per_token, m.output_cost_per_token,
+               m.description as model_description,
+               m.context_length as model_context_length,
+               m.supports_vision as model_supports_vision,
+               m.supports_function_calling as model_supports_function_calling,
+               m.supports_parallel_function_calling as model_supports_parallel_function_calling,
+               m.supports_tool_choice as model_supports_tool_choice
         FROM subscriptions s
         LEFT JOIN models m ON s.model_id = m.id
         WHERE s.user_id = $1
@@ -1608,6 +1635,15 @@ export class SubscriptionService extends BaseService {
         : undefined,
       syncStatus: (subscription.sync_status as 'error' | 'synced' | 'pending') || 'pending',
       syncError: subscription.sync_error as string,
+
+      // Model details for UI display
+      modelDescription: subscription.model_description as string,
+      modelContextLength: subscription.model_context_length as number,
+      modelSupportsVision: subscription.model_supports_vision as boolean,
+      modelSupportsFunctionCalling: subscription.model_supports_function_calling as boolean,
+      modelSupportsParallelFunctionCalling:
+        subscription.model_supports_parallel_function_calling as boolean,
+      modelSupportsToolChoice: subscription.model_supports_tool_choice as boolean,
     };
 
     return enhanced;

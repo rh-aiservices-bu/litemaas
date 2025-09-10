@@ -231,18 +231,6 @@ describe('ModelsPage', () => {
       expect(screen.getByText(/Output.*\$0\.00006.*per token/)).toBeInTheDocument();
     }
   });
-
-  it('should display model features as labels', async () => {
-    render(<ModelsPage />);
-
-    await waitFor(() => {
-      expect(screen.getByText('GPT-4')).toBeInTheDocument();
-    });
-
-    expect(screen.getByText('Code Generation')).toBeInTheDocument();
-    expect(screen.getByText('Creative Writing')).toBeInTheDocument();
-  });
-
   it('should handle unavailable models correctly', async () => {
     // Mock a model that's unavailable
     const unavailableModel: Model = {

@@ -279,9 +279,9 @@ const Layout: React.FC = () => {
             // Handle separator items (render as Divider)
             if (navItem.isGroup) {
               return (
-                <div>
-                  <Divider key={navItem.id} component="li" />
-                  <Content component={ContentVariants.h4}>
+                <div key={navItem.id}>
+                  <Divider component="li" />
+                  <Content key="role-display" component={ContentVariants.h4}>
                     {user?.roles ? t('role.' + getMostPowerfulRole(user.roles)) : ''}
                   </Content>
                 </div>
