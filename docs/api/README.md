@@ -38,7 +38,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 
 ### Base URL
 
-- Development: `http://localhost:8080/api`
+- Development: `http://localhost:8081/api`
 - Production: `https://api.your-domain.com/api`
 
 ### Authentication

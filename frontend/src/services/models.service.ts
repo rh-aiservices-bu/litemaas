@@ -13,6 +13,22 @@ export interface BackendModel {
     output: number;
     unit: string;
   };
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  // Admin-specific fields
+  apiBase?: string;
+  backendModelName?: string;
+  inputCostPerToken?: number;
+  outputCostPerToken?: number;
+  tpm?: number;
+  rpm?: number;
+  maxTokens?: number;
+  supportsVision?: boolean;
+  supportsFunctionCalling?: boolean;
+  supportsParallelFunctionCalling?: boolean;
+  supportsToolChoice?: boolean;
+  litellmModelId?: string;
 }
 
 // Frontend Model interface (matching what components expect)
@@ -30,6 +46,19 @@ export interface Model {
   features: string[];
   availability: 'available' | 'limited' | 'unavailable';
   version: string;
+  // Admin-specific fields
+  apiBase?: string;
+  backendModelName?: string;
+  inputCostPerToken?: number;
+  outputCostPerToken?: number;
+  tpm?: number;
+  rpm?: number;
+  maxTokens?: number;
+  supportsVision?: boolean;
+  supportsFunctionCalling?: boolean;
+  supportsParallelFunctionCalling?: boolean;
+  supportsToolChoice?: boolean;
+  litellmModelId?: string;
 }
 
 export interface ModelsResponse {
@@ -69,6 +98,7 @@ class ModelsService {
       function_calling: 'Function Calling',
       parallel_function_calling: 'Parallel Functions',
       vision: 'Vision',
+      tool_choice: 'Tool Choice',
     };
 
     const features = backendModel.capabilities.map((cap) => featureMap[cap] || cap);
@@ -111,6 +141,19 @@ class ModelsService {
       features,
       availability,
       version,
+      // Preserve admin-specific fields
+      apiBase: backendModel.apiBase,
+      backendModelName: backendModel.backendModelName,
+      inputCostPerToken: backendModel.inputCostPerToken,
+      outputCostPerToken: backendModel.outputCostPerToken,
+      tpm: backendModel.tpm,
+      rpm: backendModel.rpm,
+      maxTokens: backendModel.maxTokens,
+      supportsVision: backendModel.supportsVision,
+      supportsFunctionCalling: backendModel.supportsFunctionCalling,
+      supportsParallelFunctionCalling: backendModel.supportsParallelFunctionCalling,
+      supportsToolChoice: backendModel.supportsToolChoice,
+      litellmModelId: backendModel.litellmModelId,
     };
   }
 
@@ -139,6 +182,7 @@ class ModelsService {
     }
 
     const response = await apiClient.get<ModelsResponse>(`/models?${params}`);
+    console.log(response);
 
     return {
       models: response.data.map(this.convertBackendModel),

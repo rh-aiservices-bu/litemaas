@@ -36,7 +36,7 @@ services:
 
   # LiteLLM Service
   litellm:
-    image: ghcr.io/berriai/litellm:main-stable
+    image: ghcr.io/berriai/litellm-non_root:main-v1.74.7-stable
     container_name: litellm-service
     restart: unless-stopped
     depends_on:
@@ -59,7 +59,7 @@ services:
     userns_mode: keep-id
     volumes:
       - ./data/litellm:/app/data:Z
-      - ./litellm-config.yaml:/app/config.yaml:ro # Optional: mount config file
+      - ./litellm-config.yaml:/app/config.yaml:ro,Z # Optional: mount config file
     networks:
       - litemaas-network
     extra_hosts:
@@ -70,3 +70,6 @@ networks:
   litemaas-network:
     driver: bridge
     name: litemaas-network
+
+x-podman:
+  in_pod: false

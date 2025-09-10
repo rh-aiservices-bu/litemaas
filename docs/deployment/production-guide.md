@@ -16,7 +16,7 @@ metadata:
 secret: <generate-secure-secret>
 redirectURIs:
   - https://<your-production-domain>/api/auth/callback
-  - http://localhost:8080/api/auth/callback # For local testing
+  - http://localhost:8081/api/auth/callback # For local testing
 grantMethod: auto
 ```
 

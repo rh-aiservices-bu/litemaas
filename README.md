@@ -179,8 +179,8 @@ Deploy to OpenShift or Kubernetes using the provided manifests and Kustomize con
 oc apply -k deployment/openshift/
 
 # Access at:
-# - LiteMaaS: https://litemaas-<namespace>.apps.<cluster-domain>
-# - LiteLLM UI: https://litellm-<namespace>.apps.<cluster-domain>
+# - LiteMaaS: https://litemaas-<namespace>.<cluster-domain>
+# - LiteLLM UI: https://litellm-<namespace>.<cluster-domain>
 ```
 
 **📚 Complete Guide**: [OpenShift Deployment Guide](docs/deployment/openshift-deployment.md)

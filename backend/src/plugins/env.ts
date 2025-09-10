@@ -6,7 +6,7 @@ const envSchema = Type.Object({
   // Server
   NODE_ENV: Type.String({ default: 'development' }),
   HOST: Type.String({ default: '0.0.0.0' }),
-  PORT: Type.String({ default: '8080' }),
+  PORT: Type.String({ default: '8081' }),
   LOG_LEVEL: Type.String({ default: 'info' }),
 
   // CORS
@@ -26,7 +26,7 @@ const envSchema = Type.Object({
   OAUTH_CLIENT_ID: Type.String(),
   OAUTH_CLIENT_SECRET: Type.String(),
   OAUTH_ISSUER: Type.String(),
-  OAUTH_CALLBACK_URL: Type.String({ default: 'http://localhost:8080/api/auth/callback' }),
+  OAUTH_CALLBACK_URL: Type.String({ default: 'http://localhost:8081/api/auth/callback' }),
 
   // LiteLLM
   LITELLM_API_URL: Type.String({ default: 'http://localhost:4000' }),

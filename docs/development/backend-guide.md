@@ -72,22 +72,22 @@ PGDEBUG=1 npm run dev:backend
 curl -I $LITELLM_API_URL/model/info
 
 # Trigger manual sync (requires admin token)
-curl -X POST localhost:8080/api/v1/models/sync \
+curl -X POST localhost:8081/api/v1/models/sync \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json"
 
 # Check sync health and last sync time
-curl localhost:8080/api/v1/models/health
+curl localhost:8081/api/v1/models/health
 ```
 
 #### Authentication Problems
 
 ```bash
 # Test OAuth config (mock mode in development)
-curl localhost:8080/api/v1/auth/config
+curl localhost:8081/api/v1/auth/config
 
 # Validate JWT token
-curl -H "Authorization: Bearer $TOKEN" localhost:8080/api/v1/auth/me
+curl -H "Authorization: Bearer $TOKEN" localhost:8081/api/v1/auth/me
 ```
 
 #### Database Connection Issues
@@ -97,7 +97,7 @@ curl -H "Authorization: Bearer $TOKEN" localhost:8080/api/v1/auth/me
 psql $DATABASE_URL -c "SELECT 1"
 
 # Check connection pool status
-curl localhost:8080/api/v1/health/database
+curl localhost:8081/api/v1/health/database
 ```
 
 ## Backend-Specific Configuration
@@ -131,8 +131,8 @@ k6 run load-test.js
 
 ## Quick Reference
 
-- **API Docs**: http://localhost:8080/docs (Swagger UI)
-- **Health Check**: http://localhost:8080/api/v1/health
+- **API Docs**: http://localhost:8081/docs (Swagger UI)
+- **Health Check**: http://localhost:8081/api/v1/health
 - **Default Port**: 8080
 - **Database**: PostgreSQL with auto-migration
 - **Logger**: Pino with structured JSON output

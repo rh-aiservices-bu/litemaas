@@ -197,7 +197,7 @@ export class LiteLLMService extends BaseService {
   private async makeRequest<T>(
     endpoint: string,
     options: {
-      method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+      method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
       body?: any;
       headers?: Record<string, string>;
     } = {},
@@ -1151,6 +1151,59 @@ export class LiteLLMService extends BaseService {
         timeout: this.config.timeout,
       },
     };
+  }
+
+  async createModel(modelData: any): Promise<any> {
+    const url = '/model/new';
+
+    try {
+      this.fastify.log.info({ modelData }, 'Creating model in LiteLLM');
+      const response = await this.makeRequest<any>(url, {
+        method: 'POST',
+        body: modelData,
+      });
+
+      this.fastify.log.info({ modelName: modelData.model_name }, 'Model created successfully');
+      return response;
+    } catch (error) {
+      this.fastify.log.error({ error, modelData }, 'Failed to create model');
+      throw error;
+    }
+  }
+
+  async updateModel(modelId: string, modelData: any): Promise<any> {
+    const url = `/model/${modelId}/update`;
+
+    try {
+      this.fastify.log.info({ modelId, modelData }, 'Updating model in LiteLLM');
+      const response = await this.makeRequest<any>(url, {
+        method: 'PATCH',
+        body: modelData,
+      });
+
+      this.fastify.log.info({ modelId }, 'Model updated successfully');
+      return response;
+    } catch (error) {
+      this.fastify.log.error({ error, modelId, modelData }, 'Failed to update model');
+      throw error;
+    }
+  }
+
+  async deleteModel(modelId: string): Promise<void> {
+    const url = `/model/delete`;
+
+    try {
+      this.fastify.log.info({ modelId }, 'Deleting model from LiteLLM');
+      await this.makeRequest<void>(url, {
+        method: 'POST',
+        body: { id: modelId },
+      });
+
+      this.fastify.log.info({ modelId }, 'Model deleted successfully');
+    } catch (error) {
+      this.fastify.log.error({ error, modelId }, 'Failed to delete model');
+      throw error;
+    }
   }
 
   async clearCache(pattern?: string): Promise<void> {

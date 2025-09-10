@@ -3,7 +3,9 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "types": ["node", "vitest/globals"]
+    "types": ["node", "vitest/globals"],
+    "moduleResolution": "node",
+    "ignoreDeprecations": "5.0"
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "tests", "coverage"]

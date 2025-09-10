@@ -89,16 +89,16 @@ CORS_ORIGIN=http://localhost:3000,http://localhost:3001
 
 ```bash
 # Test protected endpoint without auth (should return 401)
-curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/subscriptions
+curl -s -o /dev/null -w "%{http_code}" http://localhost:8081/api/subscriptions
 
 # Test with admin API key (should return 200)
-curl -s -H "Authorization: Bearer ltm_admin_dev123456789" -o /dev/null -w "%{http_code}" http://localhost:8080/api/subscriptions
+curl -s -H "Authorization: Bearer ltm_admin_dev123456789" -o /dev/null -w "%{http_code}" http://localhost:8081/api/subscriptions
 
 # Test with invalid key (should return 401)
-curl -s -H "Authorization: Bearer invalid_key" -o /dev/null -w "%{http_code}" http://localhost:8080/api/subscriptions
+curl -s -H "Authorization: Bearer invalid_key" -o /dev/null -w "%{http_code}" http://localhost:8081/api/subscriptions
 
 # Test frontend bypass in development (should return 200)
-curl -s -H "Origin: http://localhost:3001" -o /dev/null -w "%{http_code}" http://localhost:8080/api/subscriptions
+curl -s -H "Origin: http://localhost:3001" -o /dev/null -w "%{http_code}" http://localhost:8081/api/subscriptions
 ```
 
 ---

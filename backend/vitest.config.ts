@@ -26,7 +26,7 @@ export default defineConfig({
       DATABASE_URL: 'postgresql://test:test@localhost:5432/litemaas_test',
       OAUTH_CLIENT_ID: 'test-client-id',
       OAUTH_CLIENT_SECRET: 'test-client-secret',
-      OAUTH_ISSUER: 'http://localhost:8080',
+      OAUTH_ISSUER: 'http://localhost:8081',
     },
   },
 });

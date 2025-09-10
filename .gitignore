@@ -85,3 +85,6 @@ data/litellm/
 .serena
 # Dev tools generated files
 dev-tools/schema-export.sql
+
+# Playwright
+.playwright-mcp
