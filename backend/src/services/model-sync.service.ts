@@ -151,8 +151,10 @@ export class ModelSyncService {
 
     // Extract backend model name from litellm_params.model
     // Format is usually "openai/gpt-4-turbo" or "provider/backend_model_name"
+    // For complex model names like "openai/RedHatAI/Qwen2.5-Coder-7B-FP8-dynamic",
+    // we need to preserve everything after the provider prefix
     const backendModelName = litellmModel.litellm_params?.model?.includes('/')
-      ? litellmModel.litellm_params.model.split('/')[1]
+      ? litellmModel.litellm_params.model.split('/').slice(1).join('/')
       : litellmModel.litellm_params?.model || null;
 
     // Don't set a default description for synced models - let users add their own
@@ -246,9 +248,12 @@ export class ModelSyncService {
         : 'unknown');
 
     // Extract backend model name from litellm_params.model
+    // For complex model names like "openai/RedHatAI/Qwen2.5-Coder-7B-FP8-dynamic",
+    // we need to preserve everything after the provider prefix
     const backendModelName = litellmModel.litellm_params?.model?.includes('/')
-      ? litellmModel.litellm_params.model.split('/')[1]
+      ? litellmModel.litellm_params.model.split('/').slice(1).join('/')
       : litellmModel.litellm_params?.model || null;
+    this.fastify.log.info(backendModelName);
 
     // Don't override existing description during sync - let users manage their own descriptions
     const contextLength = litellmModel.model_info?.max_tokens;
@@ -287,6 +292,7 @@ export class ModelSyncService {
       );
 
       if (existing && this.modelsEqual(existing, litellmModel)) {
+        this.fastify.log.info("No update needed");
         return false; // No update needed
       }
     }
@@ -298,14 +304,13 @@ export class ModelSyncService {
     const maxTokens = litellmModel.model_info?.max_tokens;
     const litellmModelId = litellmModel.model_info?.id;
 
-    // Get existing model to preserve user-set description and backend_model_name
+    // Get existing model to preserve user-set description only
+    // Always update backend_model_name to match LiteLLM exactly
     const existing = await this.fastify.dbUtils.queryOne(
-      `SELECT description, backend_model_name FROM models WHERE id = $1`,
+      `SELECT description FROM models WHERE id = $1`,
       [modelId],
     );
     const preservedDescription = existing?.description || null;
-    // Only update backend_model_name if it's not already set (preserve user-set values)
-    const finalBackendModelName = existing?.backend_model_name || backendModelName;
 
     await this.fastify.dbUtils.query(
       `
@@ -361,14 +366,11 @@ export class ModelSyncService {
         rpm,
         maxTokens,
         litellmModelId,
-        finalBackendModelName,
+        backendModelName,
       ],
     );
 
-    this.fastify.log.debug(
-      { modelId, backendModelName: finalBackendModelName },
-      'Updated existing model',
-    );
+    this.fastify.log.debug({ modelId, backendModelName }, 'Updated existing model');
     return true;
   }
 
@@ -427,6 +429,9 @@ export class ModelSyncService {
 
     // Extract admin fields from LiteLLM model
     const apiBase = litellmModel.litellm_params?.api_base;
+    const backendModelName = litellmModel.litellm_params?.model?.includes('/')
+      ? litellmModel.litellm_params.model.split('/').slice(1).join('/')
+      : litellmModel.litellm_params?.model || null;
     const tpm = litellmModel.litellm_params?.tpm;
     const rpm = litellmModel.litellm_params?.rpm;
     const maxTokens = litellmModel.model_info?.max_tokens;
@@ -445,6 +450,7 @@ export class ModelSyncService {
       existing.version === '1.0' && // We always set this to 1.0
       // Compare admin fields
       existing.api_base === (apiBase || null) &&
+      existing.backend_model_name === (backendModelName || null) &&
       existing.tpm === (tpm || null) &&
       existing.rpm === (rpm || null) &&
       existing.max_tokens === (maxTokens || null)
