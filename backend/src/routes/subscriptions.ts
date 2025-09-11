@@ -8,6 +8,7 @@ import {
   AuthenticatedRequest,
 } from '../types';
 import { SubscriptionService } from '../services/subscription.service';
+import { ApplicationError } from '../utils/errors';
 
 const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
   // Initialize subscription service
@@ -27,7 +28,10 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         properties: {
           page: { type: 'number', minimum: 1, default: 1 },
           limit: { type: 'number', minimum: 1, maximum: 100, default: 20 },
-          status: { type: 'string', enum: ['active', 'suspended', 'cancelled', 'expired'] },
+          status: {
+            type: 'string',
+            enum: ['active', 'suspended', 'cancelled', 'expired', 'inactive'],
+          },
           modelId: { type: 'string' },
         },
       },
@@ -117,7 +121,13 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to list subscriptions');
-        throw fastify.createError(500, 'Failed to list subscriptions');
+        // Re-throw ApplicationError instances as-is
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+        // For other errors, include original message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to list subscriptions: ${errorMessage}`);
       }
     },
   });
@@ -329,7 +339,10 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
       body: {
         type: 'object',
         properties: {
-          status: { type: 'string', enum: ['active', 'suspended', 'cancelled'] },
+          status: {
+            type: 'string',
+            enum: ['active', 'suspended', 'cancelled', 'expired', 'inactive'],
+          },
           quotaRequests: { type: 'number', minimum: 1 },
           quotaTokens: { type: 'number', minimum: 1 },
           expiresAt: { type: 'string', format: 'date-time' },
@@ -590,7 +603,13 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         return stats;
       } catch (error) {
         fastify.log.error(error, 'Failed to get subscription statistics');
-        throw fastify.createError(500, 'Failed to get subscription statistics');
+        // Re-throw ApplicationError instances as-is
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+        // For other errors, include original message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to get subscription statistics: ${errorMessage}`);
       }
     },
   });
@@ -678,7 +697,13 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to reset quotas');
-        throw fastify.createError(500, 'Failed to reset quotas');
+        // Re-throw ApplicationError instances as-is
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+        // For other errors, include original message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to reset quotas: ${errorMessage}`);
       }
     },
   });

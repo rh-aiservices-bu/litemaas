@@ -205,7 +205,7 @@ export class BannerService extends BaseService {
     if (this.shouldUseMockData()) {
       const mockBanner = this.getMockBanners().find((b) => b.id === bannerId);
       if (!mockBanner) {
-        throw new Error('Banner not found');
+        throw this.createNotFoundError('Banner', bannerId, 'Banner not found in mock data');
       }
       const updatedBanner = { ...mockBanner, ...updates, updatedBy: adminUserId };
       return this.createMockResponse(updatedBanner);
@@ -219,7 +219,7 @@ export class BannerService extends BaseService {
       // Get current state for audit
       const currentState = await this.getBannerById(bannerId);
       if (!currentState) {
-        throw new Error('Banner not found');
+        throw this.createNotFoundError('Banner', bannerId, 'Banner not found or has been deleted');
       }
 
       // If this banner is being set to active, deactivate all other banners first
@@ -289,7 +289,12 @@ export class BannerService extends BaseService {
       }
 
       if (updateFields.length === 0) {
-        throw new Error('No fields to update');
+        throw this.createValidationError(
+          'No fields to update',
+          'updates',
+          updates,
+          'Please provide at least one field to update',
+        );
       }
 
       // Always update updatedBy and updatedAt
@@ -307,7 +312,11 @@ export class BannerService extends BaseService {
       const updateResult = await client.query<BannerDbRow>(updateQuery, updateValues);
 
       if (updateResult.rows.length === 0) {
-        throw new Error('Banner not found');
+        throw this.createNotFoundError(
+          'Banner',
+          bannerId,
+          'Banner not found or could not be updated',
+        );
       }
 
       const banner = this.mapBannerFromDb(updateResult.rows[0]);
@@ -368,7 +377,12 @@ export class BannerService extends BaseService {
       // First, check if more than one banner is being set to active
       const activeBanners = Object.entries(visibilityUpdates).filter(([, isActive]) => isActive);
       if (activeBanners.length > 1) {
-        throw new Error('Only one banner can be active at a time');
+        throw this.createValidationError(
+          'Only one banner can be active at a time',
+          'activeBanners',
+          activeBanners.length,
+          'Deactivate other banners before activating a new one',
+        );
       }
 
       // If setting one banner to active, deactivate all others first
@@ -489,7 +503,7 @@ export class BannerService extends BaseService {
       // Get current state for audit
       const currentState = await this.getBannerById(bannerId);
       if (!currentState) {
-        throw new Error('Banner not found');
+        throw this.createNotFoundError('Banner', bannerId, 'Banner not found or has been deleted');
       }
 
       // Create audit log before deletion
@@ -500,7 +514,7 @@ export class BannerService extends BaseService {
       const deleteResult = await client.query(deleteQuery, [bannerId]);
 
       if (deleteResult.rowCount === 0) {
-        throw new Error('Banner not found');
+        throw this.createNotFoundError('Banner', bannerId, 'Banner not found or already deleted');
       }
 
       await client.query('COMMIT');

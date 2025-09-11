@@ -41,18 +41,41 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 - **[Setup Guide](development/setup.md)** - Local development environment
 - **[Backend Guide](development/backend-guide.md)** - Fastify development
 - **[UI Guidelines](development/pf6-guide/README.md)** - PatternFly 6 best practices
+- **[Error Handling Guide](development/error-handling.md)** - Comprehensive error handling patterns
 - **[Translation Management](development/translation-management.md)** - i18n and translation tools
 - **[Migration Notes](development/migration-notes.md)** - Database migrations
+- **[Model Sync Fix](development/fix-model-sync-implementation.md)** - Model sync implementation fixes
+- **[Test Chatbot Plan](development/test-chatbot-implementation-plan.md)** - Chatbot implementation planning
 - **[Accessibility Guide](development/accessibility/README.md)** - WCAG 2.1 AA compliance and testing
+  - **[ARIA Live Regions](development/accessibility/aria-live-regions.md)** - Screen reader announcements
+  - **[Accessibility Patterns](development/accessibility/patterns.md)** - Common accessibility patterns
+  - **[Frontend Testing](development/accessibility/frontend-testing.md)** - Accessibility testing
+  - **[Testing Guide](development/accessibility/testing-guide.md)** - Comprehensive testing approaches
 
 #### ✨ Features
 
 - **[Multi-Model API Keys](features/multi-model-api-keys-implementation.md)** - Enhanced API key system
 - **[Default Team](features/default-team-implementation.md)** - Team-based user management
 - **[Authentication Flow](features/authentication-flow.md)** - OAuth integration details
-- **[Chatbot Implementation](development/chatbot-implementation.md)** - AI chatbot integration
-- **[Model Sync](development/model-sync.md)** - Model synchronization processes
 - **[RBAC](features/user-roles-administration.md)** - Administration roles
+- **[Admin Tools](features/admin-tools.md)** - Administrative tools and model sync
+- **[Chatbot Implementation](development/chatbot-implementation.md)** - AI chatbot integration
+- **[Test Chatbot](features/test-chatbot.md)** - Chatbot testing guide
+- **[Chatbot Enhancements](features/chatbot-future-enhancements.md)** - Future chatbot features
+- **[Model Sync](development/model-sync.md)** - Model synchronization processes
+
+#### 📁 Archive & History
+
+- **[Changelogs](archive/changelogs/)** - Feature update and API change histories
+  - **[API Key Features](archive/changelogs/api-key-edit-feature-2025-01.md)** - API key editing features
+  - **[Multi-Model Keys](archive/changelogs/multi-model-api-keys-changelog.md)** - Multi-model API key changes
+- **[Debug & Analysis](archive/debug/)** - Historical debug sessions and analysis
+  - **[Auth Debug Logs](archive/debug/auth-debug-logs.md)** - Authentication debugging
+  - **[Security Test Results](archive/debug/security-test-results.md)** - Security testing results
+  - **[Workflow Analysis](archive/debug/workflow-analysis.md)** - Development workflow analysis
+- **[Historical Documentation](archive/)** - Legacy architecture and planning docs
+  - **[Error Handling Architecture](archive/error-handling-architecture.md)** - Original error handling design
+  - **[Implementation Plans](archive/project-planning/implementation-plan-phase9.md)** - Historical planning documents
 
 ## 🎯 Quick Links by Role
 
@@ -125,3 +148,46 @@ See our [Contributing Guide](../CONTRIBUTING.md) for information on:
 - **Documentation**: You're here!
 - **Issues**: [GitHub Issues](https://github.com/rh-aiservices-bu/litemaas/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/rh-aiservices-bu/litemaas/discussions)
+
+## 🤖 For AI Assistants (Claude)
+
+### Quick Document Lookup
+
+- **Error Handling**: `docs/development/error-handling.md`
+- **Admin Features**: `docs/features/admin-tools.md`
+- **User Roles/RBAC**: `docs/features/user-roles-administration.md`
+- **PatternFly 6 Components**: `docs/development/pf6-guide/`
+- **Accessibility Testing**: `docs/development/accessibility/`
+- **API Documentation**: `docs/api/rest-api.md`
+- **Authentication Setup**: `docs/deployment/authentication.md`
+- **Chatbot Implementation**: `docs/development/chatbot-implementation.md`
+- **Archive/History**: `docs/archive/`
+
+### Document Discovery Commands
+
+```bash
+# Find all documentation files
+find docs -name "*.md" | sort
+
+# Search for content across all docs
+grep -r "search_term" docs/
+
+# List files by category
+ls docs/development/     # Development guides
+ls docs/features/        # Feature documentation
+ls docs/api/            # API documentation
+ls docs/deployment/     # Deployment guides
+ls docs/archive/        # Historical documents
+
+# Recent documentation changes
+git log --oneline docs/
+```
+
+### Navigation Tips
+
+- **Start with**: `docs/README.md` (this file) for complete index
+- **Development**: Begin with `docs/development/setup.md`
+- **Architecture**: Review `docs/architecture/overview.md`
+- **Specific features**: Check `docs/features/` directory
+- **API integration**: See `docs/api/` directory
+- **Production deployment**: Use `docs/deployment/` guides

@@ -258,6 +258,12 @@ const AdminModelsPage: React.FC = () => {
       }
     }
 
+    // API key is required only when creating a new model
+    // When editing, it's optional - only validate if a value is provided
+    if (isCreateModalOpen && !formData.api_key.trim()) {
+      errors.api_key = t('models.admin.apiKeyIsRequired');
+    }
+
     if (displayInputCost < 0) {
       errors.input_cost_per_token = t('models.admin.inputCostCannotBeNegative');
     }
@@ -417,6 +423,9 @@ const AdminModelsPage: React.FC = () => {
 
   const models = modelsResponse?.models || [];
 
+  // Check if we have an empty models state (initial setup)
+  const isEmptyState = !isLoading && !error && models.length === 0;
+
   return (
     <>
       <PageSection variant="secondary">
@@ -443,11 +452,14 @@ const AdminModelsPage: React.FC = () => {
       </PageSection>
       <PageSection>
         {/* Models Table */}
-        {models.length === 0 ? (
+        {isEmptyState ? (
           <EmptyState variant={EmptyStateVariant.lg}>
             <CubesIcon className="pf-v6-u-mb-lg" />
+            <Title headingLevel="h3" size="lg">
+              {t('models.admin.noModelsAvailableYet')}
+            </Title>
             <EmptyStateBody>
-              {t('models.admin.noModelsFound')}{' '}
+              {t('models.admin.noModelsFoundDescription')}{' '}
               {canModifyModels && t('models.admin.createYourFirstModelToGetStarted')}
             </EmptyStateBody>
             {canModifyModels && (
@@ -668,15 +680,28 @@ const AdminModelsPage: React.FC = () => {
                   </FormGroup>
                 </GridItem>
                 <GridItem span={12}>
-                  <FormGroup label={t('models.admin.apiKeyOptional')} fieldId="api-key">
+                  <FormGroup
+                    label={t('models.admin.apiKey')}
+                    isRequired={isCreateModalOpen}
+                    fieldId="api-key"
+                  >
                     <TextInput
                       id="api-key"
                       type="password"
                       value={formData.api_key}
                       onChange={(_event, value) => setFormData({ ...formData, api_key: value })}
                       validated={formErrors.api_key ? 'error' : 'default'}
-                      placeholder={t('models.admin.enterApiKeyForThisEndpointOptional')}
+                      placeholder={
+                        isCreateModalOpen
+                          ? t('models.admin.enterApiKey')
+                          : t('models.admin.editApiKeyPlaceholder')
+                      }
                     />
+                    {formErrors.api_key && (
+                      <HelperText>
+                        <HelperTextItem variant="error">{formErrors.api_key}</HelperTextItem>
+                      </HelperText>
+                    )}
                   </FormGroup>
                 </GridItem>
                 <GridItem span={6}>

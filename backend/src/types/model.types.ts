@@ -204,5 +204,9 @@ export interface LiteLLMError {
     type?: string;
     code?: string;
   };
-  detail?: string;
+  detail?:
+    | string
+    | {
+        error?: string;
+      };
 }

@@ -9,5 +9,8 @@ export { ProtectedRoute } from './ProtectedRoute';
 export { ScreenReaderAnnouncement, useScreenReaderAnnouncement } from './ScreenReaderAnnouncement';
 export { default as UserEditModal } from './UserEditModal';
 
+// Error components
+export * from './errors';
+
 // Chart components
 export * from './charts';

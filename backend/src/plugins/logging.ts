@@ -45,11 +45,15 @@ const loggingPlugin: FastifyPluginAsync = async (fastify) => {
         {
           method: request.method,
           url: request.url,
-          error: {
-            message: error.message,
-            stack: error.stack,
-            statusCode: error.statusCode,
-          },
+          error:
+            error instanceof Error
+              ? {
+                  message: error.message,
+                  stack: error.stack,
+                  statusCode: error.statusCode,
+                  name: error.name,
+                }
+              : error, // Log the full error object if it's not an Error instance
         },
         'Request error',
       );

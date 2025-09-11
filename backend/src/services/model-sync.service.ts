@@ -7,6 +7,11 @@ export interface ModelSyncResult {
   newModels: number;
   updatedModels: number;
   unavailableModels: number;
+  cascadeStatistics: {
+    subscriptionsDeactivated: number;
+    apiKeyModelAssociationsRemoved: number;
+    orphanedApiKeysDeactivated: number;
+  };
   errors: string[];
   syncedAt: string;
 }
@@ -37,6 +42,11 @@ export class ModelSyncService {
       newModels: 0,
       updatedModels: 0,
       unavailableModels: 0,
+      cascadeStatistics: {
+        subscriptionsDeactivated: 0,
+        apiKeyModelAssociationsRemoved: 0,
+        orphanedApiKeysDeactivated: 0,
+      },
       errors: [],
       syncedAt: new Date().toISOString(),
     };
@@ -49,8 +59,9 @@ export class ModelSyncService {
       result.totalModels = litellmModels.length;
 
       if (litellmModels.length === 0) {
-        result.errors.push('No models received from LiteLLM');
-        return result;
+        this.fastify.log.info(
+          'No models found in LiteLLM - will mark all local models as unavailable',
+        );
       }
 
       // Get existing models from database
@@ -91,8 +102,14 @@ export class ModelSyncService {
         );
         for (const modelId of unavailableModelIds) {
           try {
-            await this.markModelUnavailable(modelId);
+            const cascadeResult = await this.markModelUnavailable(modelId);
             result.unavailableModels++;
+            result.cascadeStatistics.subscriptionsDeactivated +=
+              cascadeResult.subscriptionsDeactivated;
+            result.cascadeStatistics.apiKeyModelAssociationsRemoved +=
+              cascadeResult.apiKeyModelAssociationsRemoved;
+            result.cascadeStatistics.orphanedApiKeysDeactivated +=
+              cascadeResult.orphanedApiKeysDeactivated;
           } catch (error) {
             this.fastify.log.error({ modelId, error }, 'Failed to mark model as unavailable');
             result.errors.push(
@@ -151,8 +168,10 @@ export class ModelSyncService {
 
     // Extract backend model name from litellm_params.model
     // Format is usually "openai/gpt-4-turbo" or "provider/backend_model_name"
+    // For complex model names like "openai/RedHatAI/Qwen2.5-Coder-7B-FP8-dynamic",
+    // we need to preserve everything after the provider prefix
     const backendModelName = litellmModel.litellm_params?.model?.includes('/')
-      ? litellmModel.litellm_params.model.split('/')[1]
+      ? litellmModel.litellm_params.model.split('/').slice(1).join('/')
       : litellmModel.litellm_params?.model || null;
 
     // Don't set a default description for synced models - let users add their own
@@ -246,9 +265,12 @@ export class ModelSyncService {
         : 'unknown');
 
     // Extract backend model name from litellm_params.model
+    // For complex model names like "openai/RedHatAI/Qwen2.5-Coder-7B-FP8-dynamic",
+    // we need to preserve everything after the provider prefix
     const backendModelName = litellmModel.litellm_params?.model?.includes('/')
-      ? litellmModel.litellm_params.model.split('/')[1]
+      ? litellmModel.litellm_params.model.split('/').slice(1).join('/')
       : litellmModel.litellm_params?.model || null;
+    this.fastify.log.info(backendModelName);
 
     // Don't override existing description during sync - let users manage their own descriptions
     const contextLength = litellmModel.model_info?.max_tokens;
@@ -280,13 +302,15 @@ export class ModelSyncService {
                context_length, supports_vision, supports_function_calling,
                supports_tool_choice, supports_parallel_function_calling,
                supports_streaming, features, version, metadata,
-               api_base, tpm, rpm, max_tokens, description, backend_model_name
+               api_base, tpm, rpm, max_tokens, description, backend_model_name,
+               litellm_model_id
         FROM models WHERE id = $1
       `,
         [modelId],
       );
 
       if (existing && this.modelsEqual(existing, litellmModel)) {
+        this.fastify.log.info('No update needed');
         return false; // No update needed
       }
     }
@@ -298,14 +322,13 @@ export class ModelSyncService {
     const maxTokens = litellmModel.model_info?.max_tokens;
     const litellmModelId = litellmModel.model_info?.id;
 
-    // Get existing model to preserve user-set description and backend_model_name
+    // Get existing model to preserve user-set description only
+    // Always update backend_model_name to match LiteLLM exactly
     const existing = await this.fastify.dbUtils.queryOne(
-      `SELECT description, backend_model_name FROM models WHERE id = $1`,
+      `SELECT description FROM models WHERE id = $1`,
       [modelId],
     );
     const preservedDescription = existing?.description || null;
-    // Only update backend_model_name if it's not already set (preserve user-set values)
-    const finalBackendModelName = existing?.backend_model_name || backendModelName;
 
     await this.fastify.dbUtils.query(
       `
@@ -361,31 +384,161 @@ export class ModelSyncService {
         rpm,
         maxTokens,
         litellmModelId,
-        finalBackendModelName,
+        backendModelName,
       ],
     );
 
-    this.fastify.log.debug(
-      { modelId, backendModelName: finalBackendModelName },
-      'Updated existing model',
-    );
+    this.fastify.log.debug({ modelId, backendModelName, litellmModelId }, 'Updated existing model');
     return true;
   }
 
   /**
-   * Mark a model as unavailable
+   * Mark a model as unavailable with cascade operations
+   * Returns statistics about the cascade operations performed
    */
-  private async markModelUnavailable(modelId: string): Promise<void> {
-    await this.fastify.dbUtils.query(
-      `
-      UPDATE models 
-      SET availability = 'unavailable', updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1 AND availability != 'unavailable'
-    `,
-      [modelId],
-    );
+  private async markModelUnavailable(modelId: string): Promise<{
+    subscriptionsDeactivated: number;
+    apiKeyModelAssociationsRemoved: number;
+    orphanedApiKeysDeactivated: number;
+  }> {
+    const cascadeResult = {
+      subscriptionsDeactivated: 0,
+      apiKeyModelAssociationsRemoved: 0,
+      orphanedApiKeysDeactivated: 0,
+    };
 
-    this.fastify.log.debug({ modelId }, 'Marked model as unavailable');
+    // Use database transaction for atomicity
+    const client = await this.fastify.pg.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // 1. Mark the model as unavailable (existing behavior)
+      const modelResult = await client.query(
+        `
+        UPDATE models 
+        SET availability = 'unavailable', updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1 AND availability != 'unavailable'
+        RETURNING id
+      `,
+        [modelId],
+      );
+
+      // If model wasn't updated (already unavailable), skip cascade operations
+      if (modelResult.rows.length === 0) {
+        await client.query('COMMIT');
+        this.fastify.log.debug(
+          { modelId },
+          'Model already unavailable, no cascade operations needed',
+        );
+        return cascadeResult;
+      }
+
+      // 2. Mark subscriptions as inactive
+      const subscriptionsResult = await client.query(
+        `
+        UPDATE subscriptions 
+        SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
+        WHERE model_id = $1 AND status = 'active'
+        RETURNING id
+      `,
+        [modelId],
+      );
+      cascadeResult.subscriptionsDeactivated = subscriptionsResult.rows.length;
+
+      // 3. Remove model associations from API keys
+      const apiKeyModelsResult = await client.query(
+        `
+        DELETE FROM api_key_models 
+        WHERE model_id = $1
+        RETURNING api_key_id
+      `,
+        [modelId],
+      );
+      cascadeResult.apiKeyModelAssociationsRemoved = apiKeyModelsResult.rows.length;
+
+      // 4. Deactivate orphaned API keys (keys with no remaining models)
+      const orphanedKeysResult = await client.query(
+        `
+        UPDATE api_keys 
+        SET is_active = false, updated_at = CURRENT_TIMESTAMP
+        WHERE id IN (
+          SELECT ak.id 
+          FROM api_keys ak
+          LEFT JOIN api_key_models akm ON ak.id = akm.api_key_id
+          WHERE akm.api_key_id IS NULL AND ak.is_active = true
+        )
+        RETURNING id
+      `,
+      );
+      cascadeResult.orphanedApiKeysDeactivated = orphanedKeysResult.rows.length;
+
+      // 5. Create audit log for the model unavailability operation
+      const metadata = {
+        modelId,
+        cascadeStatistics: cascadeResult,
+        operation: 'model_sync_cascade',
+        timestamp: new Date().toISOString(),
+      };
+
+      await client.query(
+        `
+        INSERT INTO audit_logs (action, resource_type, resource_id, metadata, success)
+        VALUES ($1, $2, $3, $4, $5)
+      `,
+        ['MODEL_MARKED_UNAVAILABLE_WITH_CASCADE', 'MODEL', modelId, JSON.stringify(metadata), true],
+      );
+
+      await client.query('COMMIT');
+
+      this.fastify.log.info(
+        {
+          modelId,
+          cascadeResult,
+        },
+        'Marked model as unavailable with cascade operations completed',
+      );
+
+      return cascadeResult;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      this.fastify.log.error(
+        { modelId, error },
+        'Failed to mark model as unavailable with cascade operations - transaction rolled back',
+      );
+
+      // Create audit log for the failed operation
+      try {
+        await this.fastify.dbUtils.query(
+          `
+          INSERT INTO audit_logs (action, resource_type, resource_id, metadata, success, error_message)
+          VALUES ($1, $2, $3, $4, $5, $6)
+        `,
+          [
+            'MODEL_MARKED_UNAVAILABLE_WITH_CASCADE',
+            'MODEL',
+            modelId,
+            JSON.stringify({
+              modelId,
+              operation: 'model_sync_cascade',
+              timestamp: new Date().toISOString(),
+              error: 'Transaction failed and was rolled back',
+            }),
+            false,
+            error instanceof Error ? error.message : String(error),
+          ],
+        );
+      } catch (auditError) {
+        this.fastify.log.error(
+          { auditError },
+          'Failed to create audit log for failed cascade operation',
+        );
+      }
+
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   /**
@@ -427,9 +580,13 @@ export class ModelSyncService {
 
     // Extract admin fields from LiteLLM model
     const apiBase = litellmModel.litellm_params?.api_base;
+    const backendModelName = litellmModel.litellm_params?.model?.includes('/')
+      ? litellmModel.litellm_params.model.split('/').slice(1).join('/')
+      : litellmModel.litellm_params?.model || null;
     const tpm = litellmModel.litellm_params?.tpm;
     const rpm = litellmModel.litellm_params?.rpm;
     const maxTokens = litellmModel.model_info?.max_tokens;
+    const litellmModelId = litellmModel.model_info?.id;
 
     return (
       existing.availability === 'available' &&
@@ -445,9 +602,12 @@ export class ModelSyncService {
       existing.version === '1.0' && // We always set this to 1.0
       // Compare admin fields
       existing.api_base === (apiBase || null) &&
+      existing.backend_model_name === (backendModelName || null) &&
       existing.tpm === (tpm || null) &&
       existing.rpm === (rpm || null) &&
-      existing.max_tokens === (maxTokens || null)
+      existing.max_tokens === (maxTokens || null) &&
+      // CRITICAL: Compare litellm_model_id to detect when a model has been recreated
+      existing.litellm_model_id === (litellmModelId || null)
     );
   }
 

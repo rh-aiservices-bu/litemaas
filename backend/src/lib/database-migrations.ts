@@ -146,7 +146,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     model_id VARCHAR(255) NOT NULL REFERENCES models(id),
     team_id UUID REFERENCES teams(id),
-    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended', 'cancelled', 'expired')),
+    status VARCHAR(20) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'suspended', 'cancelled', 'expired', 'inactive')),
     quota_requests INTEGER NOT NULL DEFAULT 0,
     quota_tokens INTEGER NOT NULL DEFAULT 0,
     used_requests INTEGER DEFAULT 0,
@@ -179,6 +179,16 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_lite_llm_key_value ON subscriptions
 COMMENT ON COLUMN subscriptions.lite_llm_key_value IS 'The actual LiteLLM key value for this subscription';
 `;
 
+// Migration to update subscriptions status constraint to include 'inactive'
+export const updateSubscriptionsStatusConstraint = `
+-- Drop existing constraint if it exists
+ALTER TABLE subscriptions DROP CONSTRAINT IF EXISTS subscriptions_status_check;
+
+-- Add updated constraint with 'inactive' status
+ALTER TABLE subscriptions ADD CONSTRAINT subscriptions_status_check 
+CHECK (status IN ('active', 'suspended', 'cancelled', 'expired', 'inactive'));
+`;
+
 // API Keys table
 export const apiKeysTable = `
 CREATE TABLE IF NOT EXISTS api_keys (
@@ -200,6 +210,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
     expires_at TIMESTAMP WITH TIME ZONE,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     revoked_at TIMESTAMP WITH TIME ZONE,
     last_sync_at TIMESTAMP WITH TIME ZONE,
     sync_status VARCHAR(20) DEFAULT 'pending' CHECK (sync_status IN ('synced', 'pending', 'error')),
@@ -215,6 +226,9 @@ CREATE INDEX IF NOT EXISTS idx_api_keys_lite_llm_key_value ON api_keys(lite_llm_
 CREATE INDEX IF NOT EXISTS idx_api_keys_is_active ON api_keys(is_active);
 
 COMMENT ON COLUMN api_keys.lite_llm_key_value IS 'The actual LiteLLM key value for this API key';
+
+-- Add missing updated_at column for existing api_keys table
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
 `;
 
 // API Key Models junction table
@@ -446,6 +460,9 @@ CREATE TRIGGER update_models_updated_at BEFORE UPDATE ON models FOR EACH ROW EXE
 DROP TRIGGER IF EXISTS update_subscriptions_updated_at ON subscriptions;
 CREATE TRIGGER update_subscriptions_updated_at BEFORE UPDATE ON subscriptions FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
+DROP TRIGGER IF EXISTS update_api_keys_updated_at ON api_keys;
+CREATE TRIGGER update_api_keys_updated_at BEFORE UPDATE ON api_keys FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
 DROP TRIGGER IF EXISTS update_banner_announcements_updated_at ON banner_announcements;
 CREATE TRIGGER update_banner_announcements_updated_at BEFORE UPDATE ON banner_announcements FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 `;
@@ -553,6 +570,9 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
 
     console.log('📝 Creating subscriptions table...');
     await dbUtils.query(subscriptionsTable);
+
+    console.log('🔄 Updating subscriptions status constraint...');
+    await dbUtils.query(updateSubscriptionsStatusConstraint);
 
     console.log('🔑 Creating api_keys table...');
     await dbUtils.query(apiKeysTable);
