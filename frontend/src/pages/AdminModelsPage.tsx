@@ -417,6 +417,9 @@ const AdminModelsPage: React.FC = () => {
 
   const models = modelsResponse?.models || [];
 
+  // Check if we have an empty models state (initial setup)
+  const isEmptyState = !isLoading && !error && models.length === 0;
+
   return (
     <>
       <PageSection variant="secondary">
@@ -443,11 +446,14 @@ const AdminModelsPage: React.FC = () => {
       </PageSection>
       <PageSection>
         {/* Models Table */}
-        {models.length === 0 ? (
+        {isEmptyState ? (
           <EmptyState variant={EmptyStateVariant.lg}>
             <CubesIcon className="pf-v6-u-mb-lg" />
+            <Title headingLevel="h3" size="lg">
+              {t('models.admin.noModelsAvailableYet')}
+            </Title>
             <EmptyStateBody>
-              {t('models.admin.noModelsFound')}{' '}
+              {t('models.admin.noModelsFoundDescription')}{' '}
               {canModifyModels && t('models.admin.createYourFirstModelToGetStarted')}
             </EmptyStateBody>
             {canModifyModels && (
