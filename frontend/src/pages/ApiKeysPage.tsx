@@ -207,6 +207,18 @@ const ApiKeysPage: React.FC = () => {
     loadConfig(); // Load configuration including LiteLLM API URL
   }, []);
 
+  // Reload models when page gains focus (e.g., after subscribing to new models)
+  useEffect(() => {
+    const handleFocus = () => {
+      loadModels();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   // Sync selectedApiKey with updated apiKeys state to reflect key visibility changes in modal
   useEffect(() => {
     if (selectedApiKey && apiKeys.length > 0) {
