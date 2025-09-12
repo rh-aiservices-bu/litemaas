@@ -430,6 +430,10 @@ const ApiKeysPage: React.FC = () => {
     if (triggerElement) {
       createModalTriggerRef.current = triggerElement;
     }
+
+    // ✅ Refresh models list to ensure newly subscribed models appear
+    loadModels();
+
     setIsCreateModalOpen(true);
   };
 
@@ -576,6 +580,10 @@ const ApiKeysPage: React.FC = () => {
     if (triggerElement) {
       createModalTriggerRef.current = triggerElement;
     }
+
+    // ✅ Refresh models list to ensure newly subscribed models appear
+    loadModels();
+
     setIsCreateModalOpen(true);
   };
 

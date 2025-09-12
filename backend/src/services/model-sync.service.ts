@@ -49,8 +49,9 @@ export class ModelSyncService {
       result.totalModels = litellmModels.length;
 
       if (litellmModels.length === 0) {
-        result.errors.push('No models received from LiteLLM');
-        return result;
+        this.fastify.log.info(
+          'No models found in LiteLLM - will mark all local models as unavailable',
+        );
       }
 
       // Get existing models from database
@@ -292,7 +293,7 @@ export class ModelSyncService {
       );
 
       if (existing && this.modelsEqual(existing, litellmModel)) {
-        this.fastify.log.info("No update needed");
+        this.fastify.log.info('No update needed');
         return false; // No update needed
       }
     }
