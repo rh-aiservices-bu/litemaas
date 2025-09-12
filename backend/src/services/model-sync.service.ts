@@ -7,6 +7,11 @@ export interface ModelSyncResult {
   newModels: number;
   updatedModels: number;
   unavailableModels: number;
+  cascadeStatistics: {
+    subscriptionsDeactivated: number;
+    apiKeyModelAssociationsRemoved: number;
+    orphanedApiKeysDeactivated: number;
+  };
   errors: string[];
   syncedAt: string;
 }
@@ -37,6 +42,11 @@ export class ModelSyncService {
       newModels: 0,
       updatedModels: 0,
       unavailableModels: 0,
+      cascadeStatistics: {
+        subscriptionsDeactivated: 0,
+        apiKeyModelAssociationsRemoved: 0,
+        orphanedApiKeysDeactivated: 0,
+      },
       errors: [],
       syncedAt: new Date().toISOString(),
     };
@@ -92,8 +102,14 @@ export class ModelSyncService {
         );
         for (const modelId of unavailableModelIds) {
           try {
-            await this.markModelUnavailable(modelId);
+            const cascadeResult = await this.markModelUnavailable(modelId);
             result.unavailableModels++;
+            result.cascadeStatistics.subscriptionsDeactivated +=
+              cascadeResult.subscriptionsDeactivated;
+            result.cascadeStatistics.apiKeyModelAssociationsRemoved +=
+              cascadeResult.apiKeyModelAssociationsRemoved;
+            result.cascadeStatistics.orphanedApiKeysDeactivated +=
+              cascadeResult.orphanedApiKeysDeactivated;
           } catch (error) {
             this.fastify.log.error({ modelId, error }, 'Failed to mark model as unavailable');
             result.errors.push(
@@ -376,19 +392,152 @@ export class ModelSyncService {
   }
 
   /**
-   * Mark a model as unavailable
+   * Mark a model as unavailable with cascade operations
+   * Returns statistics about the cascade operations performed
    */
-  private async markModelUnavailable(modelId: string): Promise<void> {
-    await this.fastify.dbUtils.query(
-      `
-      UPDATE models 
-      SET availability = 'unavailable', updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1 AND availability != 'unavailable'
-    `,
-      [modelId],
-    );
+  private async markModelUnavailable(modelId: string): Promise<{
+    subscriptionsDeactivated: number;
+    apiKeyModelAssociationsRemoved: number;
+    orphanedApiKeysDeactivated: number;
+  }> {
+    const cascadeResult = {
+      subscriptionsDeactivated: 0,
+      apiKeyModelAssociationsRemoved: 0,
+      orphanedApiKeysDeactivated: 0,
+    };
 
-    this.fastify.log.debug({ modelId }, 'Marked model as unavailable');
+    // Use database transaction for atomicity
+    const client = await this.fastify.pg.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // 1. Mark the model as unavailable (existing behavior)
+      const modelResult = await client.query(
+        `
+        UPDATE models 
+        SET availability = 'unavailable', updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1 AND availability != 'unavailable'
+        RETURNING id
+      `,
+        [modelId],
+      );
+
+      // If model wasn't updated (already unavailable), skip cascade operations
+      if (modelResult.rows.length === 0) {
+        await client.query('COMMIT');
+        this.fastify.log.debug(
+          { modelId },
+          'Model already unavailable, no cascade operations needed',
+        );
+        return cascadeResult;
+      }
+
+      // 2. Mark subscriptions as inactive
+      const subscriptionsResult = await client.query(
+        `
+        UPDATE subscriptions 
+        SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
+        WHERE model_id = $1 AND status = 'active'
+        RETURNING id
+      `,
+        [modelId],
+      );
+      cascadeResult.subscriptionsDeactivated = subscriptionsResult.rows.length;
+
+      // 3. Remove model associations from API keys
+      const apiKeyModelsResult = await client.query(
+        `
+        DELETE FROM api_key_models 
+        WHERE model_id = $1
+        RETURNING api_key_id
+      `,
+        [modelId],
+      );
+      cascadeResult.apiKeyModelAssociationsRemoved = apiKeyModelsResult.rows.length;
+
+      // 4. Deactivate orphaned API keys (keys with no remaining models)
+      const orphanedKeysResult = await client.query(
+        `
+        UPDATE api_keys 
+        SET is_active = false, updated_at = CURRENT_TIMESTAMP
+        WHERE id IN (
+          SELECT ak.id 
+          FROM api_keys ak
+          LEFT JOIN api_key_models akm ON ak.id = akm.api_key_id
+          WHERE akm.api_key_id IS NULL AND ak.is_active = true
+        )
+        RETURNING id
+      `,
+      );
+      cascadeResult.orphanedApiKeysDeactivated = orphanedKeysResult.rows.length;
+
+      // 5. Create audit log for the model unavailability operation
+      const metadata = {
+        modelId,
+        cascadeStatistics: cascadeResult,
+        operation: 'model_sync_cascade',
+        timestamp: new Date().toISOString(),
+      };
+
+      await client.query(
+        `
+        INSERT INTO audit_logs (action, resource_type, resource_id, metadata, success)
+        VALUES ($1, $2, $3, $4, $5)
+      `,
+        ['MODEL_MARKED_UNAVAILABLE_WITH_CASCADE', 'MODEL', modelId, JSON.stringify(metadata), true],
+      );
+
+      await client.query('COMMIT');
+
+      this.fastify.log.info(
+        {
+          modelId,
+          cascadeResult,
+        },
+        'Marked model as unavailable with cascade operations completed',
+      );
+
+      return cascadeResult;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      this.fastify.log.error(
+        { modelId, error },
+        'Failed to mark model as unavailable with cascade operations - transaction rolled back',
+      );
+
+      // Create audit log for the failed operation
+      try {
+        await this.fastify.dbUtils.query(
+          `
+          INSERT INTO audit_logs (action, resource_type, resource_id, metadata, success, error_message)
+          VALUES ($1, $2, $3, $4, $5, $6)
+        `,
+          [
+            'MODEL_MARKED_UNAVAILABLE_WITH_CASCADE',
+            'MODEL',
+            modelId,
+            JSON.stringify({
+              modelId,
+              operation: 'model_sync_cascade',
+              timestamp: new Date().toISOString(),
+              error: 'Transaction failed and was rolled back',
+            }),
+            false,
+            error instanceof Error ? error.message : String(error),
+          ],
+        );
+      } catch (auditError) {
+        this.fastify.log.error(
+          { auditError },
+          'Failed to create audit log for failed cascade operation',
+        );
+      }
+
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   /**

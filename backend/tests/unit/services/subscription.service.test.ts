@@ -37,7 +37,16 @@ describe('SubscriptionService', () => {
   };
 
   beforeEach(() => {
+    // Create mock PostgreSQL client
+    const mockClient = {
+      query: vi.fn(),
+      release: vi.fn(),
+    };
+
     mockFastify = {
+      pg: {
+        connect: vi.fn().mockResolvedValue(mockClient),
+      },
       dbUtils: {
         queryOne: vi.fn(),
         queryMany: vi.fn(),
@@ -229,32 +238,120 @@ describe('SubscriptionService', () => {
 
   describe('cancelSubscription', () => {
     it('should cancel an active subscription', async () => {
-      const mockQueryOne = vi
-        .fn()
-        .mockResolvedValueOnce(mockSubscription) // First getSubscription call
-        .mockResolvedValueOnce(mockSubscription); // Second getSubscription call before delete
-      const mockQueryMany = vi.fn().mockResolvedValue([]); // No linked API keys
-      const mockQuery = vi.fn().mockResolvedValue({ rowCount: 1 }); // Delete successful
-      mockFastify.dbUtils!.queryOne = mockQueryOne;
-      mockFastify.dbUtils!.queryMany = mockQueryMany;
-      mockFastify.dbUtils!.query = mockQuery;
+      const mockClient = await (mockFastify.pg! as any).connect();
+
+      // Mock queries for the new implementation
+      mockClient.query
+        .mockResolvedValueOnce('BEGIN') // Transaction start
+        .mockResolvedValueOnce({ rows: [mockSubscription] }) // Get subscription
+        .mockResolvedValueOnce(undefined) // Update subscription to inactive
+        .mockResolvedValueOnce({ rows: [] }) // Get affected API keys (none)
+        .mockResolvedValueOnce(undefined) // Insert audit log
+        .mockResolvedValueOnce('COMMIT'); // Transaction commit
 
       const result = await service.cancelSubscription(mockSubscription.id, mockUser.id);
 
-      expect(result.status).toBe('cancelled');
-      expect(mockQuery).toHaveBeenCalledWith(
-        'DELETE FROM subscriptions WHERE id = $1 AND user_id = $2',
+      expect(result.status).toBe('inactive');
+      expect(mockClient.query).toHaveBeenCalledWith('BEGIN');
+      expect(mockClient.query).toHaveBeenCalledWith(
+        `SELECT s.*, m.name as model_name, m.provider 
+         FROM subscriptions s
+         LEFT JOIN models m ON s.model_id = m.id
+         WHERE s.id = $1 AND s.user_id = $2`,
         [mockSubscription.id, mockUser.id],
       );
+      expect(mockClient.query).toHaveBeenCalledWith(
+        `UPDATE subscriptions 
+         SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
+         WHERE id = $1`,
+        [mockSubscription.id],
+      );
+      expect(mockClient.query).toHaveBeenCalledWith('COMMIT');
+      expect(mockClient.release).toHaveBeenCalled();
     });
 
     it('should throw error for non-existent subscription', async () => {
-      const mockQueryOne = vi.fn().mockResolvedValueOnce(null);
-      mockFastify.dbUtils!.queryOne = mockQueryOne;
+      const mockClient = await (mockFastify.pg! as any).connect();
+
+      mockClient.query
+        .mockResolvedValueOnce('BEGIN') // Transaction start
+        .mockResolvedValueOnce({ rows: [] }); // No subscription found
 
       await expect(service.cancelSubscription('non-existent', mockUser.id)).rejects.toThrow(
         'Subscription not found',
       );
+
+      expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
+      expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    it('should handle API key cascading on subscription cancellation', async () => {
+      const mockClient = await (mockFastify.pg! as any).connect();
+      const mockApiKey = {
+        id: 'api-key-123',
+        lite_llm_key_value: 'llm-key-123',
+        name: 'Test Key',
+        all_models: ['gpt-4', 'gpt-3.5'],
+      };
+
+      // Mock LiteLLM service methods
+      mockLiteLLMService.updateKey = vi.fn().mockResolvedValue(undefined);
+      mockLiteLLMService.deleteKey = vi.fn().mockResolvedValue(undefined);
+
+      mockClient.query
+        .mockResolvedValueOnce('BEGIN') // Transaction start
+        .mockResolvedValueOnce({ rows: [mockSubscription] }) // Get subscription
+        .mockResolvedValueOnce(undefined) // Update subscription to inactive
+        .mockResolvedValueOnce({ rows: [mockApiKey] }) // Get affected API keys
+        .mockResolvedValueOnce(undefined) // Delete model from api_key_models
+        .mockResolvedValueOnce({ rows: [{ model_id: 'gpt-3.5' }] }) // Remaining models
+        .mockResolvedValueOnce(undefined) // Insert audit log
+        .mockResolvedValueOnce('COMMIT'); // Transaction commit
+
+      const result = await service.cancelSubscription(mockSubscription.id, mockUser.id);
+
+      expect(result.status).toBe('inactive');
+      expect(mockLiteLLMService.updateKey).toHaveBeenCalledWith('llm-key-123', {
+        models: ['gpt-3.5'],
+      });
+      expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    it('should deactivate API key when no models remain after cancellation', async () => {
+      const mockClient = await (mockFastify.pg! as any).connect();
+      const mockApiKey = {
+        id: 'api-key-123',
+        lite_llm_key_value: 'llm-key-123',
+        name: 'Test Key',
+        all_models: ['gpt-4'], // Only has the cancelled model
+      };
+
+      // Mock LiteLLM service methods
+      mockLiteLLMService.deleteKey = vi.fn().mockResolvedValue(undefined);
+
+      mockClient.query
+        .mockResolvedValueOnce('BEGIN') // Transaction start
+        .mockResolvedValueOnce({ rows: [mockSubscription] }) // Get subscription
+        .mockResolvedValueOnce(undefined) // Update subscription to inactive
+        .mockResolvedValueOnce({ rows: [mockApiKey] }) // Get affected API keys
+        .mockResolvedValueOnce(undefined) // Delete model from api_key_models
+        .mockResolvedValueOnce({ rows: [] }) // No remaining models
+        .mockResolvedValueOnce(undefined) // Deactivate API key
+        .mockResolvedValueOnce(undefined) // Insert audit log
+        .mockResolvedValueOnce('COMMIT'); // Transaction commit
+
+      const result = await service.cancelSubscription(mockSubscription.id, mockUser.id);
+
+      expect(result.status).toBe('inactive');
+      expect(mockLiteLLMService.deleteKey).toHaveBeenCalledWith('llm-key-123');
+      // Check that the API key was deactivated (7th call based on test output)
+      const calls = mockClient.query.mock.calls;
+      const deactivateKeyCall = calls.find(
+        (call) => call[0].includes('UPDATE api_keys') && call[0].includes('is_active = false'),
+      );
+      expect(deactivateKeyCall).toBeTruthy();
+      expect(deactivateKeyCall[1]).toEqual(['api-key-123']);
+      expect(mockClient.release).toHaveBeenCalled();
     });
   });
 

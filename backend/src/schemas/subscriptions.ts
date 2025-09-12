@@ -16,6 +16,7 @@ export const SubscriptionStatusEnum = Type.Union([
   Type.Literal('suspended'),
   Type.Literal('cancelled'),
   Type.Literal('expired'),
+  Type.Literal('inactive'),
 ]);
 
 export const SubscriptionSchema = Type.Object({
@@ -73,7 +74,13 @@ export const CreateSubscriptionSchema = Type.Object({
 export const UpdateSubscriptionSchema = Type.Object({
   quota: Type.Optional(Type.Partial(SubscriptionQuotaSchema)),
   status: Type.Optional(
-    Type.Union([Type.Literal('active'), Type.Literal('suspended'), Type.Literal('cancelled')]),
+    Type.Union([
+      Type.Literal('active'),
+      Type.Literal('suspended'),
+      Type.Literal('cancelled'),
+      Type.Literal('expired'),
+      Type.Literal('inactive'),
+    ]),
   ),
   expiresAt: Type.Optional(TimestampSchema),
 });

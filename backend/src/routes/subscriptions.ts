@@ -27,7 +27,10 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         properties: {
           page: { type: 'number', minimum: 1, default: 1 },
           limit: { type: 'number', minimum: 1, maximum: 100, default: 20 },
-          status: { type: 'string', enum: ['active', 'suspended', 'cancelled', 'expired'] },
+          status: {
+            type: 'string',
+            enum: ['active', 'suspended', 'cancelled', 'expired', 'inactive'],
+          },
           modelId: { type: 'string' },
         },
       },
@@ -329,7 +332,10 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
       body: {
         type: 'object',
         properties: {
-          status: { type: 'string', enum: ['active', 'suspended', 'cancelled'] },
+          status: {
+            type: 'string',
+            enum: ['active', 'suspended', 'cancelled', 'expired', 'inactive'],
+          },
           quotaRequests: { type: 'number', minimum: 1 },
           quotaTokens: { type: 'number', minimum: 1 },
           expiresAt: { type: 'string', format: 'date-time' },

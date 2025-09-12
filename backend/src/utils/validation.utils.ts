@@ -138,7 +138,7 @@ export class ValidationUtils {
    * @returns true if valid status, false otherwise
    */
   static isValidSubscriptionStatus(status: string): boolean {
-    const validStatuses = ['pending', 'active', 'suspended', 'cancelled', 'expired'];
+    const validStatuses = ['pending', 'active', 'suspended', 'cancelled', 'expired', 'inactive'];
     return validStatuses.includes(status);
   }
 
