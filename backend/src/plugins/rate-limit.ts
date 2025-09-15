@@ -25,17 +25,20 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
       request: FastifyRequest,
       context: { ban: boolean; after: string; max: number; ttl: number },
     ) => {
+      // Create a flat error response structure that @fastify/rate-limit can send directly
+      // @fastify/rate-limit will automatically set this to 429 status
       return {
-        error: {
-          code: 'RATE_LIMITED',
-          message: `Too many requests. Limit: ${context.max} per ${rateLimitTimeWindow}`,
-          details: {
-            limit: context.max,
-            timeWindow: rateLimitTimeWindow,
-            remaining: context.ttl,
-          },
+        code: 'RATE_LIMITED',
+        message: `Too many requests. Limit: ${context.max} per ${rateLimitTimeWindow}`,
+        statusCode: 429,
+        details: {
+          limit: context.max,
+          timeWindow: rateLimitTimeWindow,
+          remaining: context.ttl,
+          suggestion: `Please wait ${Math.ceil(context.ttl / 1000)} seconds before trying again`,
         },
         requestId: request.id,
+        timestamp: new Date().toISOString(),
       };
     },
     skipOnError: false,

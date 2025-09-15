@@ -44,6 +44,7 @@ import {
 } from '@patternfly/react-core';
 import { CatalogIcon, FilterIcon, InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { modelsService, Model } from '../services/models.service';
 import { subscriptionsService } from '../services/subscriptions.service';
 import {
@@ -55,6 +56,7 @@ import { getModelFlairs } from '../utils/flairColors';
 const ModelsPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
+  const { handleError } = useErrorHandler();
   const { announcement, announce } = useScreenReaderAnnouncement();
 
   const [models, setModels] = useState<Model[]>([]);
@@ -70,6 +72,7 @@ const ModelsPage: React.FC = () => {
   const [subscriptions, setSubscriptions] = useState<Set<string>>(new Set());
   const modalTriggerRef = useRef<HTMLElement | null>(null);
   const modalPrimaryButtonRef = useRef<HTMLButtonElement>(null);
+  const isInitialMountRef = useRef(true);
 
   // Set initial focus and focus trap for modal
   useEffect(() => {
@@ -193,14 +196,11 @@ const ModelsPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to load models:', err);
+      // Use centralized error handler which will display proper rate limit messages
+      handleError(err);
       setError(t('pages.models.notifications.loadFailed'));
       // Announce error to screen readers with assertive priority
       announce(t('pages.models.notifications.loadFailed'), 'assertive');
-      addNotification({
-        title: t('pages.models.notifications.loadError'),
-        description: t('pages.models.notifications.loadErrorDesc'),
-        variant: 'danger',
-      });
     } finally {
       setLoading(false);
     }
@@ -210,10 +210,16 @@ const ModelsPage: React.FC = () => {
   useEffect(() => {
     loadModels();
     loadSubscriptions();
+    isInitialMountRef.current = false; // Mark initial mount as complete
   }, []);
 
   // Reload when filters or pagination change
   useEffect(() => {
+    // Skip on initial mount to prevent duplicate API calls
+    if (isInitialMountRef.current) {
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
       loadModels(true); // Reset to page 1 when filters change
     }, 300); // Debounce search

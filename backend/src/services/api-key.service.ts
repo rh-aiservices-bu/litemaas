@@ -200,12 +200,19 @@ export class ApiKeyService extends BaseService {
         );
 
         if (!subscription) {
-          throw this.fastify.createNotFoundError('Subscription not found');
+          throw this.createNotFoundError(
+            'Subscription',
+            request.subscriptionId,
+            'Subscription not found. Please verify the subscription exists and is accessible',
+          );
         }
 
         if (subscription.status !== 'active') {
-          throw this.fastify.createValidationError(
+          throw this.createValidationError(
             `Cannot create API key for ${subscription.status} subscription`,
+            'subscriptionStatus',
+            subscription.status,
+            'Subscription must be active to create API keys',
           );
         }
 
@@ -220,7 +227,12 @@ export class ApiKeyService extends BaseService {
         modelIds = request.modelIds;
 
         if (!modelIds || modelIds.length === 0) {
-          throw this.fastify.createValidationError('At least one model must be selected');
+          throw this.createValidationError(
+            'At least one model must be selected',
+            'modelIds',
+            modelIds,
+            'Please select at least one model for the API key',
+          );
         }
       }
 
@@ -280,8 +292,11 @@ export class ApiKeyService extends BaseService {
       const invalidModels = modelIds.filter((id) => !validModelIds.includes(id));
 
       if (invalidModels.length > 0) {
-        throw this.fastify.createValidationError(
+        throw this.createValidationError(
           `You do not have active subscriptions for the following models: ${invalidModels.join(', ')}`,
+          'modelIds',
+          invalidModels,
+          'Please ensure you have active subscriptions for all selected models',
         );
       }
 
@@ -293,8 +308,11 @@ export class ApiKeyService extends BaseService {
 
       const maxKeysPerUser = 10;
       if (existingKeysCount && parseInt(String(existingKeysCount.count)) >= maxKeysPerUser) {
-        throw this.fastify.createValidationError(
+        throw this.createValidationError(
           `Maximum ${maxKeysPerUser} active API keys allowed per user`,
+          'activeKeysCount',
+          existingKeysCount.count,
+          `Please revoke some existing API keys before creating new ones. Current limit: ${maxKeysPerUser}`,
         );
       }
 
@@ -334,7 +352,11 @@ export class ApiKeyService extends BaseService {
 
       // FIXED: Validate that we got a proper LiteLLM key and extract correct prefix
       if (!liteLLMResponse || !liteLLMResponse.key) {
-        throw this.fastify.createError(500, 'Failed to generate LiteLLM API key - no key returned');
+        throw this.createNotFoundError(
+          'LiteLLM API key',
+          undefined,
+          'Failed to generate LiteLLM API key. Please try again or contact support',
+        );
       }
 
       // FIXED: Extract prefix from the actual LiteLLM key instead of local key
@@ -587,7 +609,7 @@ export class ApiKeyService extends BaseService {
     if (this.shouldUseMockData()) {
       const mockKey = this.MOCK_API_KEYS.find((k) => k.id === keyId);
       if (!mockKey) {
-        throw this.fastify.createNotFoundError('API key not found');
+        throw this.createNotFoundError('API key', keyId, 'API key not found in mock data');
       }
       // Generate a mock key based on the keyPrefix and id
       return `${mockKey.keyPrefix}-${mockKey.id.replace('key-mock-', 'mockkey')}`;
@@ -604,20 +626,38 @@ export class ApiKeyService extends BaseService {
       );
 
       if (!apiKey) {
-        throw this.fastify.createNotFoundError('API key not found');
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'API key not found or you do not have permission to access it',
+        );
       }
 
       // Additional security checks
       if (!apiKey.is_active) {
-        throw this.fastify.createError(403, 'API key is inactive');
+        throw this.createValidationError(
+          'API key is inactive',
+          'isActive',
+          false,
+          'This API key has been deactivated and cannot be used',
+        );
       }
 
       if (apiKey.expires_at && new Date(String(apiKey.expires_at)) < new Date()) {
-        throw this.fastify.createError(403, 'API key has expired');
+        throw this.createValidationError(
+          'API key has expired',
+          'expiresAt',
+          apiKey.expires_at,
+          'Please create a new API key to continue using the service',
+        );
       }
 
       if (!apiKey.lite_llm_key_value) {
-        throw this.fastify.createError(404, 'No LiteLLM key associated with this API key');
+        throw this.createNotFoundError(
+          'LiteLLM key',
+          keyId,
+          'No LiteLLM key associated with this API key. Please sync with LiteLLM',
+        );
       }
 
       // Create comprehensive audit log for key retrieval
@@ -871,11 +911,20 @@ export class ApiKeyService extends BaseService {
     try {
       const apiKey = await this.getApiKey(keyId, userId);
       if (!apiKey) {
-        throw this.fastify.createNotFoundError('API key');
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'API key not found or you do not have permission to access it',
+        );
       }
 
       if (!apiKey.liteLLMKeyId) {
-        throw this.fastify.createValidationError('API key is not integrated with LiteLLM');
+        throw this.createValidationError(
+          'API key is not integrated with LiteLLM',
+          'liteLLMKeyId',
+          apiKey.liteLLMKeyId,
+          'Please sync this API key with LiteLLM first',
+        );
       }
 
       // Get current info from LiteLLM
@@ -934,7 +983,11 @@ export class ApiKeyService extends BaseService {
       );
 
       if (!updatedApiKey) {
-        throw this.fastify.createNotFoundError('API key');
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'Failed to update API key. It may have been deleted',
+        );
       }
 
       return this.mapToEnhancedApiKey(updatedApiKey, undefined, liteLLMInfo);
@@ -958,7 +1011,11 @@ export class ApiKeyService extends BaseService {
     try {
       const apiKey = await this.getApiKey(keyId, userId);
       if (!apiKey) {
-        throw this.fastify.createNotFoundError('API key');
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'API key not found or you do not have permission to access it',
+        );
       }
 
       // Try to get real-time data from LiteLLM if available
@@ -1006,11 +1063,20 @@ export class ApiKeyService extends BaseService {
     try {
       const apiKey = await this.getApiKey(keyId, userId);
       if (!apiKey) {
-        throw this.fastify.createNotFoundError('API key');
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'API key not found or you do not have permission to access it',
+        );
       }
 
       if (!apiKey.isActive) {
-        throw this.fastify.createValidationError('Cannot update inactive API key');
+        throw this.createValidationError(
+          'Cannot update inactive API key',
+          'isActive',
+          false,
+          'Reactivate the API key before making updates',
+        );
       }
 
       // Update in LiteLLM if integrated
@@ -1074,7 +1140,11 @@ export class ApiKeyService extends BaseService {
       );
 
       if (!updatedApiKey) {
-        throw this.fastify.createNotFoundError('API key');
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'Failed to update API key. It may have been deleted',
+        );
       }
 
       return this.mapToEnhancedApiKey(updatedApiKey);
@@ -1092,11 +1162,20 @@ export class ApiKeyService extends BaseService {
     try {
       const apiKey = await this.getApiKey(keyId, userId);
       if (!apiKey) {
-        throw this.fastify.createNotFoundError('API key');
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'API key not found or you do not have permission to access it',
+        );
       }
 
       if (!apiKey.isActive) {
-        throw this.fastify.createValidationError('Cannot update inactive API key');
+        throw this.createValidationError(
+          'Cannot update inactive API key',
+          'isActive',
+          false,
+          'Reactivate the API key before making updates',
+        );
       }
 
       // Get the full LiteLLM key for the update call
@@ -1233,7 +1312,11 @@ export class ApiKeyService extends BaseService {
       );
 
       if (!updatedApiKey) {
-        throw this.fastify.createNotFoundError('API key');
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'Failed to update API key. It may have been deleted',
+        );
       }
 
       return this.mapToEnhancedApiKey(updatedApiKey);
@@ -1356,7 +1439,11 @@ export class ApiKeyService extends BaseService {
     try {
       const apiKey = await this.getApiKey(keyId, userId);
       if (!apiKey) {
-        throw this.fastify.createNotFoundError('API key');
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'API key not found or you do not have permission to access it',
+        );
       }
 
       // Delete from LiteLLM if integrated
@@ -1537,7 +1624,11 @@ export class ApiKeyService extends BaseService {
       // First verify the API key belongs to the user
       const apiKey = await this.getApiKey(keyId, userId);
       if (!apiKey) {
-        throw this.fastify.createNotFoundError('API key');
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'API key not found or you do not have permission to access it',
+        );
       }
 
       // Get total requests

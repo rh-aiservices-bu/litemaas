@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ToastNotification } from '../components/AlertToastGroup';
 
@@ -44,9 +44,33 @@ interface NotificationProviderProps {
 export const NotificationProvider: React.FC<NotificationProviderProps> = ({ children }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [toastNotifications, setToastNotifications] = useState<ToastNotification[]>([]);
+  const lastNotificationRef = useRef<{ title: string; description?: string; timestamp: number }>({
+    title: '',
+    description: '',
+    timestamp: 0,
+  });
 
   const addNotification = useCallback(
     (notification: Omit<Notification, 'id' | 'timestamp' | 'isRead'>) => {
+      const now = Date.now();
+
+      // Deduplicate notifications - prevent identical notifications within 500ms
+      // This handles React StrictMode double rendering and parallel API calls
+      if (
+        lastNotificationRef.current.title === notification.title &&
+        lastNotificationRef.current.description === notification.description &&
+        now - lastNotificationRef.current.timestamp < 500
+      ) {
+        return; // Skip duplicate notification
+      }
+
+      // Update last notification reference
+      lastNotificationRef.current = {
+        title: notification.title,
+        description: notification.description,
+        timestamp: now,
+      };
+
       const newNotification: Notification = {
         ...notification,
         id: uuidv4(),

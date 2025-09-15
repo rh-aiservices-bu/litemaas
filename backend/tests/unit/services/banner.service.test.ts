@@ -294,9 +294,10 @@ describe('BannerService', () => {
     it('should throw error for non-existent mock banner', async () => {
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(true);
 
+      // Updated error message expectation to match ApplicationError format
       await expect(
         service.updateBanner('non-existent', updateRequest, 'admin-123'),
-      ).rejects.toThrow('Banner not found');
+      ).rejects.toThrow("Banner with ID 'non-existent' not found");
     });
 
     it('should update banner in database when not using mock data', async () => {
@@ -349,9 +350,10 @@ describe('BannerService', () => {
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
       vi.spyOn(service, 'getBannerById').mockResolvedValue(null);
 
+      // Updated error message expectation to match ApplicationError format
       await expect(
         service.updateBanner('non-existent', updateRequest, 'admin-123'),
-      ).rejects.toThrow('Banner not found');
+      ).rejects.toThrow("Banner with ID 'non-existent' not found");
     });
 
     it('should throw error when no fields to update', async () => {
@@ -493,8 +495,9 @@ describe('BannerService', () => {
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
       vi.spyOn(service, 'getBannerById').mockResolvedValue(null);
 
+      // Updated error message expectation to match ApplicationError format
       await expect(service.deleteBanner('non-existent', 'admin-123')).rejects.toThrow(
-        'Banner not found',
+        "Banner with ID 'non-existent' not found",
       );
     });
 
@@ -520,8 +523,9 @@ describe('BannerService', () => {
         .mockResolvedValueOnce(undefined) // Audit log INSERT
         .mockResolvedValueOnce({ rowCount: 0 }); // DELETE (no rows affected)
 
+      // Updated error message expectation to match ApplicationError format
       await expect(service.deleteBanner('banner-123', 'admin-123')).rejects.toThrow(
-        'Banner not found',
+        "Banner with ID 'banner-123' not found",
       );
 
       expect(mockPgClient.query).toHaveBeenCalledWith('ROLLBACK');

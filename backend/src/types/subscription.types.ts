@@ -5,6 +5,7 @@ export enum SubscriptionStatus {
   SUSPENDED = 'suspended',
   CANCELLED = 'cancelled',
   EXPIRED = 'expired',
+  INACTIVE = 'inactive',
 }
 
 export interface Subscription {

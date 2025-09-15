@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { OAuthUserInfo, OAuthTokenResponse } from '../types';
 import { LiteLLMService } from './litellm.service';
 import { DefaultTeamService } from './default-team.service';
+import { BaseService } from './base.service';
 
 export interface MockUser {
   id: string;
@@ -47,14 +48,13 @@ const MOCK_USERS: MockUser[] = [
   },
 ];
 
-export class OAuthService {
-  private fastify: FastifyInstance;
+export class OAuthService extends BaseService {
   private isMockEnabled: boolean;
   private liteLLMService: LiteLLMService;
   private defaultTeamService: DefaultTeamService;
 
   constructor(fastify: FastifyInstance, liteLLMService?: LiteLLMService) {
-    this.fastify = fastify;
+    super(fastify);
     this.isMockEnabled =
       process.env.OAUTH_MOCK_ENABLED === 'true' || process.env.NODE_ENV === 'development';
     this.liteLLMService = liteLLMService || new LiteLLMService(fastify);
@@ -162,7 +162,12 @@ export class OAuthService {
         },
         'Failed to exchange code for token',
       );
-      throw this.fastify.createError(400, 'Failed to exchange authorization code');
+      throw this.createValidationError(
+        'Failed to exchange authorization code',
+        'code',
+        undefined,
+        'The authorization code may be expired or invalid. Please try logging in again',
+      );
     }
 
     const tokenResponse = await response.json();
@@ -230,7 +235,10 @@ export class OAuthService {
         },
         'Failed to get user info from OpenShift',
       );
-      throw this.fastify.createError(401, 'Failed to get user information');
+      throw this.createUnauthorizedError(
+        'Failed to get user information',
+        'Unable to retrieve user details from authentication provider. Please try logging in again',
+      );
     }
 
     const userResponse = await response.json();
@@ -502,7 +510,11 @@ export class OAuthService {
       );
 
       if (!newUser) {
-        throw new Error('Failed to create user');
+        throw this.createNotFoundError(
+          'User',
+          userInfo.sub,
+          'Failed to create user account. Please contact support if this issue persists',
+        );
       }
 
       user = {

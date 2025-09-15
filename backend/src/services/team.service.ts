@@ -269,7 +269,12 @@ export class TeamService extends BaseService {
       );
 
       if (existingTeam) {
-        throw this.fastify.createValidationError(`Team with name '${name}' already exists`);
+        throw this.createAlreadyExistsError(
+          'Team',
+          'name',
+          name,
+          'Please choose a different team name',
+        );
       }
 
       // Create team in LiteLLM first
@@ -316,7 +321,11 @@ export class TeamService extends BaseService {
       );
 
       if (!teamResult) {
-        throw new Error('Failed to create team');
+        throw this.createNotFoundError(
+          'Team',
+          undefined,
+          'Failed to create team. Please check the team details and try again',
+        );
       }
 
       // Add creator as admin
@@ -370,7 +379,11 @@ export class TeamService extends BaseService {
 
       const createdTeam = await this.getTeam(String(teamResult.id), userId);
       if (!createdTeam) {
-        throw new Error('Failed to retrieve newly created team');
+        throw this.createNotFoundError(
+          'Team',
+          String(teamResult.id),
+          'Created team could not be retrieved. Please refresh the page',
+        );
       }
       return createdTeam;
     } catch (error) {
@@ -572,7 +585,11 @@ export class TeamService extends BaseService {
       // Verify user has admin access
       const hasAccess = await this.checkTeamAccess(teamId, userId, 'admin');
       if (!hasAccess) {
-        throw this.fastify.createForbiddenError('Insufficient permissions to update team');
+        throw this.createForbiddenError(
+          'Insufficient permissions to update team',
+          'team:admin',
+          'Only team administrators can update team details',
+        );
       }
 
       const {
@@ -600,7 +617,12 @@ export class TeamService extends BaseService {
           [name, teamId],
         );
         if (existingTeam) {
-          throw this.fastify.createValidationError(`Team with name '${name}' already exists`);
+          throw this.createAlreadyExistsError(
+            'Team',
+            'name',
+            name,
+            'Please choose a different team name',
+          );
         }
         updateFields.push(`name = $${paramIndex++}`);
         params.push(name);
@@ -654,7 +676,11 @@ export class TeamService extends BaseService {
       if (updateFields.length === 0) {
         const team = await this.getTeam(teamId, userId);
         if (!team) {
-          throw new Error('Team not found');
+          throw this.createNotFoundError(
+            'Team',
+            teamId,
+            'Team not found or you do not have permission to access it',
+          );
         }
         return team;
       }
@@ -704,7 +730,11 @@ export class TeamService extends BaseService {
 
       const teamWithMembers = await this.getTeam(teamId, userId);
       if (!teamWithMembers) {
-        throw new Error('Failed to retrieve updated team');
+        throw this.createNotFoundError(
+          'Team',
+          teamId,
+          'Updated team could not be retrieved. Please refresh the page',
+        );
       }
       return teamWithMembers;
     } catch (error) {
@@ -722,7 +752,11 @@ export class TeamService extends BaseService {
       // Verify admin has access
       const hasAccess = await this.checkTeamAccess(teamId, adminUserId, 'admin');
       if (!hasAccess) {
-        throw this.fastify.createForbiddenError('Insufficient permissions to add team members');
+        throw this.createForbiddenError(
+          'Insufficient permissions to add team members',
+          'team:admin',
+          'Only team administrators can add members',
+        );
       }
 
       const { userId, role } = assignment;
@@ -734,7 +768,12 @@ export class TeamService extends BaseService {
       );
 
       if (existingMember) {
-        throw this.fastify.createValidationError('User is already a member of this team');
+        throw this.createAlreadyExistsError(
+          'Team membership',
+          'userId',
+          userId,
+          'This user is already a member of the team',
+        );
       }
 
       // Verify user exists
@@ -744,7 +783,11 @@ export class TeamService extends BaseService {
       );
 
       if (!user) {
-        throw this.fastify.createNotFoundError('User');
+        throw this.createNotFoundError(
+          'User',
+          userId,
+          'User not found. Please verify the user ID exists',
+        );
       }
 
       // Add member
@@ -756,7 +799,11 @@ export class TeamService extends BaseService {
       );
 
       if (!member) {
-        throw new Error('Failed to add team member');
+        throw this.createNotFoundError(
+          'Team member',
+          `${userId} in team ${teamId}`,
+          'Failed to add team member. Please verify the user exists and try again',
+        );
       }
 
       // Create audit log
@@ -807,7 +854,11 @@ export class TeamService extends BaseService {
       // Verify admin has access
       const hasAccess = await this.checkTeamAccess(teamId, adminUserId, 'admin');
       if (!hasAccess) {
-        throw this.fastify.createForbiddenError('Insufficient permissions to remove team members');
+        throw this.createForbiddenError(
+          'Insufficient permissions to remove team members',
+          'team:admin',
+          'Only team administrators can remove members',
+        );
       }
 
       // Check if member exists
@@ -817,7 +868,11 @@ export class TeamService extends BaseService {
       );
 
       if (!member) {
-        throw this.fastify.createNotFoundError('Team member');
+        throw this.createNotFoundError(
+          'Team member',
+          `${userId} in team ${teamId}`,
+          'Team member not found or already removed',
+        );
       }
 
       // Prevent removing the last admin
@@ -828,7 +883,12 @@ export class TeamService extends BaseService {
         );
 
         if (!adminCount || parseInt(String(adminCount.count)) <= 1) {
-          throw this.fastify.createValidationError('Cannot remove the last admin from the team');
+          throw this.createValidationError(
+            'Cannot remove the last admin from the team',
+            'role',
+            'admin',
+            'Assign admin role to another member before removing this admin',
+          );
         }
       }
 
@@ -875,7 +935,11 @@ export class TeamService extends BaseService {
       // Verify admin has access
       const hasAccess = await this.checkTeamAccess(teamId, adminUserId, 'admin');
       if (!hasAccess) {
-        throw this.fastify.createForbiddenError('Insufficient permissions to update member roles');
+        throw this.createForbiddenError(
+          'Insufficient permissions to update member roles',
+          'team:admin',
+          'Only team administrators can change member roles',
+        );
       }
 
       // Get current member info
@@ -888,7 +952,11 @@ export class TeamService extends BaseService {
       );
 
       if (!member) {
-        throw this.fastify.createNotFoundError('Team member');
+        throw this.createNotFoundError(
+          'Team member',
+          `${userId} in team ${teamId}`,
+          'Team member not found. They may not be part of this team',
+        );
       }
 
       // If changing from admin, ensure not the last admin
@@ -899,7 +967,12 @@ export class TeamService extends BaseService {
         );
 
         if (!adminCount || parseInt(String(adminCount.count)) <= 1) {
-          throw this.fastify.createValidationError('Cannot remove admin role from the last admin');
+          throw this.createValidationError(
+            'Cannot remove admin role from the last admin',
+            'role',
+            'admin',
+            'Assign admin role to another member first',
+          );
         }
       }
 
@@ -911,7 +984,11 @@ export class TeamService extends BaseService {
       );
 
       if (!updatedMember) {
-        throw new Error('Failed to update team member role');
+        throw this.createNotFoundError(
+          'Team member',
+          `${userId} in team ${teamId}`,
+          'Failed to update team member role. The member may no longer exist',
+        );
       }
 
       // Create audit log
@@ -963,12 +1040,20 @@ export class TeamService extends BaseService {
       // Verify user has access
       const hasAccess = await this.checkTeamAccess(teamId, userId);
       if (!hasAccess) {
-        throw this.fastify.createForbiddenError('Insufficient permissions to view team budget');
+        throw this.createForbiddenError(
+          'Insufficient permissions to view team budget',
+          'team:read',
+          'You must be a team member to view budget information',
+        );
       }
 
       const team = await this.getTeam(teamId, userId);
       if (!team) {
-        throw this.fastify.createNotFoundError('Team');
+        throw this.createNotFoundError(
+          'Team',
+          teamId,
+          'Team not found or you do not have permission to access it',
+        );
       }
 
       // Try to get real-time data from LiteLLM if available
@@ -1021,16 +1106,29 @@ export class TeamService extends BaseService {
       // Verify user has admin access
       const hasAccess = await this.checkTeamAccess(teamId, userId, 'admin');
       if (!hasAccess) {
-        throw this.fastify.createForbiddenError('Insufficient permissions to sync team');
+        throw this.createForbiddenError(
+          'Insufficient permissions to sync team',
+          'team:admin',
+          'Only team administrators can sync with LiteLLM',
+        );
       }
 
       const team = await this.getTeam(teamId, userId);
       if (!team) {
-        throw this.fastify.createNotFoundError('Team');
+        throw this.createNotFoundError(
+          'Team',
+          teamId,
+          'Team not found or you do not have permission to access it',
+        );
       }
 
       if (!team.liteLLMTeamId) {
-        throw this.fastify.createValidationError('Team is not integrated with LiteLLM');
+        throw this.createValidationError(
+          'Team is not integrated with LiteLLM',
+          'liteLLMTeamId',
+          team.liteLLMTeamId,
+          'Please contact support to enable LiteLLM integration for this team',
+        );
       }
 
       const changes: TeamSyncResponse['changes'] = {};
@@ -1105,12 +1203,20 @@ export class TeamService extends BaseService {
       // Verify user has admin access
       const hasAccess = await this.checkTeamAccess(teamId, userId, 'admin');
       if (!hasAccess) {
-        throw this.fastify.createForbiddenError('Insufficient permissions to delete team');
+        throw this.createForbiddenError(
+          'Insufficient permissions to delete team',
+          'team:admin',
+          'Only team administrators can delete teams',
+        );
       }
 
       const team = await this.getTeam(teamId, userId);
       if (!team) {
-        throw this.fastify.createNotFoundError('Team');
+        throw this.createNotFoundError(
+          'Team',
+          teamId,
+          'Team not found or you do not have permission to access it',
+        );
       }
 
       // Check if team has active subscriptions or resources
@@ -1120,8 +1226,11 @@ export class TeamService extends BaseService {
       );
 
       if (activeSubscriptions && parseInt(activeSubscriptions.count as string) > 0) {
-        throw this.fastify.createValidationError(
-          'Cannot delete team with active subscriptions. Please cancel or transfer them first.',
+        throw this.createValidationError(
+          'Cannot delete team with active subscriptions',
+          'activeSubscriptions',
+          activeSubscriptions.count,
+          'Please cancel or transfer all active subscriptions before deleting the team',
         );
       }
 

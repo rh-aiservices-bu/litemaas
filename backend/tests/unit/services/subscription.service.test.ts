@@ -37,7 +37,16 @@ describe('SubscriptionService', () => {
   };
 
   beforeEach(() => {
+    // Create mock PostgreSQL client
+    const mockClient = {
+      query: vi.fn(),
+      release: vi.fn(),
+    };
+
     mockFastify = {
+      pg: {
+        connect: vi.fn().mockResolvedValue(mockClient),
+      },
       dbUtils: {
         queryOne: vi.fn(),
         queryMany: vi.fn(),
@@ -97,9 +106,10 @@ describe('SubscriptionService', () => {
         modelId: 'gpt-4',
       };
 
+      // Updated to match new ApplicationError format: "Subscription with modelId 'gpt-4' already exists"
       await expect(
         service.createEnhancedSubscription(mockUser.id, subscriptionData),
-      ).rejects.toThrow('Subscription already exists for model');
+      ).rejects.toThrow("Subscription with modelId 'gpt-4' already exists");
     });
 
     it('should validate model exists', async () => {
@@ -113,9 +123,10 @@ describe('SubscriptionService', () => {
         modelId: 'invalid-model',
       };
 
+      // Updated to match new ApplicationError format: "Model with ID 'invalid-model' not found"
       await expect(
         service.createEnhancedSubscription(mockUser.id, subscriptionData),
-      ).rejects.toThrow('Model invalid-model not found');
+      ).rejects.toThrow("Model with ID 'invalid-model' not found");
     });
 
     it('should allow custom quotas when provided', async () => {
@@ -133,56 +144,154 @@ describe('SubscriptionService', () => {
       expect(result.quotaRequests).toBe(50000);
       expect(result.quotaTokens).toBe(5000000);
     });
+
+    it('should reactivate an inactive subscription instead of creating new one', async () => {
+      // Mock the service to NOT use mock data so it goes through database logic
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+      // Create a mock inactive subscription
+      const inactiveSubscription = {
+        ...mockSubscription,
+        status: 'inactive',
+        id: 'sub-inactive-123',
+        quota_requests: 5000, // Old quota values
+        quota_tokens: 500000,
+        used_requests: 0,
+        used_tokens: 0,
+      };
+
+      // Mock database calls - need to handle the multiple calls from createEnhancedSubscription
+      const mockQueryOne = vi
+        .fn()
+        .mockResolvedValueOnce(inactiveSubscription) // First call: check existing subscription in createSubscription
+        .mockResolvedValueOnce({
+          // Second call: updated subscription from createSubscription
+          ...inactiveSubscription,
+          status: 'active',
+          quota_requests: 15000, // New quota values
+          quota_tokens: 1500000,
+          updated_at: new Date(),
+        })
+        .mockResolvedValueOnce({
+          // Third call: final subscription update in createEnhancedSubscription
+          ...inactiveSubscription,
+          status: 'active',
+          quota_requests: 15000,
+          quota_tokens: 1500000,
+          used_requests: 0,
+          used_tokens: 0,
+          updated_at: new Date(),
+        });
+
+      const mockQuery = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+      mockFastify.dbUtils!.queryOne = mockQueryOne;
+      mockFastify.dbUtils!.query = mockQuery;
+
+      // Mock calculateNextResetDate method
+      vi.spyOn(service, 'calculateNextResetDate' as any).mockReturnValue(new Date());
+
+      // Mock LiteLLM sync utilities
+      const mockEnsureUserExists = vi.fn().mockResolvedValue(undefined);
+      vi.doMock('../../../src/utils/litellm-sync.utils', () => ({
+        LiteLLMSyncUtils: {
+          ensureUserExistsInLiteLLM: mockEnsureUserExists,
+        },
+      }));
+
+      const subscriptionData = {
+        modelId: 'gpt-4',
+        quotaRequests: 15000,
+        quotaTokens: 1500000,
+      };
+
+      const result = await service.createEnhancedSubscription(mockUser.id, subscriptionData);
+
+      // Verify the subscription was reactivated, not created
+      expect(result).toBeDefined();
+      expect(result.status).toBe('active');
+      expect(result.quotaRequests).toBe(15000);
+      expect(result.quotaTokens).toBe(1500000);
+    });
+
+    it('should prevent creating new subscription when active one exists', async () => {
+      // Mock the service to NOT use mock data so it goes through database logic
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+      // Mock an active subscription exists
+      const activeSubscription = { ...mockSubscription, status: 'active' };
+      const mockQueryOne = vi.fn().mockResolvedValueOnce(activeSubscription);
+      mockFastify.dbUtils!.queryOne = mockQueryOne;
+
+      const subscriptionData = {
+        modelId: 'gpt-4',
+      };
+
+      // Updated to match new ApplicationError format: "Subscription with modelId 'gpt-4' already exists"
+      await expect(
+        service.createEnhancedSubscription(mockUser.id, subscriptionData),
+      ).rejects.toThrow("Subscription with modelId 'gpt-4' already exists");
+    });
+
+    it('should prevent creating new subscription when suspended one exists', async () => {
+      // Mock the service to NOT use mock data so it goes through database logic
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+      // Mock a suspended subscription exists
+      const suspendedSubscription = { ...mockSubscription, status: 'suspended' };
+      const mockQueryOne = vi.fn().mockResolvedValueOnce(suspendedSubscription);
+      mockFastify.dbUtils!.queryOne = mockQueryOne;
+
+      const subscriptionData = {
+        modelId: 'gpt-4',
+      };
+
+      // Updated to match new ApplicationError format: "Subscription with modelId 'gpt-4' already exists"
+      await expect(
+        service.createEnhancedSubscription(mockUser.id, subscriptionData),
+      ).rejects.toThrow("Subscription with modelId 'gpt-4' already exists");
+    });
   });
 
   describe('getUserSubscriptions', () => {
     it('should return all subscriptions for a user with pricing information', async () => {
-      const mockSubscriptions = [
-        { ...mockSubscription, id: 'sub-1', model_id: 'gpt-4' },
-        { ...mockSubscription, id: 'sub-2', model_id: 'claude-3-opus' },
-      ];
-      const mockCountResult = { count: '2' };
-      const mockQueryMany = vi.fn().mockResolvedValue(mockSubscriptions);
-      const mockQueryOne = vi.fn().mockResolvedValue(mockCountResult);
-      mockFastify.dbUtils!.queryMany = mockQueryMany;
-      mockFastify.dbUtils!.queryOne = mockQueryOne;
+      // Force the service to use mock data instead of database mocks
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(true);
 
       const result = await service.getUserSubscriptions(mockUser.id);
 
-      // Service is using mock data, so we get the mock subscriptions instead
-      expect(result.data).toHaveLength(3); // Mock data has 3 subscriptions
+      // Service is using mock data and returns only active subscriptions by default
+      // Mock data: 2 active (gpt-4o, claude-3-5-sonnet), 1 suspended (llama), 1 inactive (gpt-3.5)
+      // Default behavior excludes inactive, so should return 2 active + 1 suspended = 3
+      expect(result.data).toHaveLength(3); // 2 active + 1 suspended (excludes 1 inactive)
       expect(result.total).toBe(3);
       expect(result.data[0].modelId).toBe('gpt-4o');
       expect(result.data[1].modelId).toBe('claude-3-5-sonnet-20241022');
-      // Using mock data, so no database queries are made
+      expect(result.data[2].modelId).toBe('llama-3.1-8b-instant'); // The suspended one
     });
 
     it('should filter by status when provided', async () => {
-      const mockQueryMany = vi.fn().mockResolvedValue([mockSubscription]);
-      const mockQueryOne = vi.fn().mockResolvedValue({ count: '1' });
-      mockFastify.dbUtils!.queryMany = mockQueryMany;
-      mockFastify.dbUtils!.queryOne = mockQueryOne;
+      // Force the service to use mock data instead of database mocks
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(true);
 
       const result = await service.getUserSubscriptions(mockUser.id, { status: 'active' });
 
-      // Service is using mock data, so the query won't be called
-      expect(result.data).toHaveLength(2); // Active mock subscriptions
+      // Service is using mock data and filtering by status='active'
+      // Mock data has 2 subscriptions with status='active' (gpt-4o, claude-3-5-sonnet)
+      expect(result.data).toHaveLength(2); // 2 active mock subscriptions
+      expect(result.total).toBe(2);
+      expect(result.data[0].modelId).toBe('gpt-4o');
+      expect(result.data[1].modelId).toBe('claude-3-5-sonnet-20241022');
     });
 
     it('should include pricing information in results', async () => {
-      const subscriptionWithPricing = {
-        ...mockSubscription,
-        input_cost_per_token: 0.00003,
-        output_cost_per_token: 0.00006,
-      };
-      const mockQueryMany = vi.fn().mockResolvedValue([subscriptionWithPricing]);
-      const mockQueryOne = vi.fn().mockResolvedValue({ count: '1' });
-      mockFastify.dbUtils!.queryMany = mockQueryMany;
-      mockFastify.dbUtils!.queryOne = mockQueryOne;
+      // Force the service to use mock data instead of database mocks
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(true);
 
       const result = await service.getUserSubscriptions(mockUser.id);
 
       // Service is using mock data, pricing comes from metadata
+      // The first mock subscription (gpt-4o) has pricing: inputCostPer1kTokens: 0.01, outputCostPer1kTokens: 0.03
       expect(result.data[0].metadata).toHaveProperty('inputCostPer1kTokens', 0.01);
       expect(result.data[0].metadata).toHaveProperty('outputCostPer1kTokens', 0.03);
     });
@@ -223,38 +332,126 @@ describe('SubscriptionService', () => {
         service.updateSubscription('non-existent', mockUser.id, {
           quotaRequests: 20000,
         }),
-      ).rejects.toThrow('Subscription not found');
+      ).rejects.toThrow("Subscription with ID 'non-existent' not found");
     });
   });
 
   describe('cancelSubscription', () => {
     it('should cancel an active subscription', async () => {
-      const mockQueryOne = vi
-        .fn()
-        .mockResolvedValueOnce(mockSubscription) // First getSubscription call
-        .mockResolvedValueOnce(mockSubscription); // Second getSubscription call before delete
-      const mockQueryMany = vi.fn().mockResolvedValue([]); // No linked API keys
-      const mockQuery = vi.fn().mockResolvedValue({ rowCount: 1 }); // Delete successful
-      mockFastify.dbUtils!.queryOne = mockQueryOne;
-      mockFastify.dbUtils!.queryMany = mockQueryMany;
-      mockFastify.dbUtils!.query = mockQuery;
+      const mockClient = await (mockFastify.pg! as any).connect();
+
+      // Mock queries for the new implementation
+      mockClient.query
+        .mockResolvedValueOnce('BEGIN') // Transaction start
+        .mockResolvedValueOnce({ rows: [mockSubscription] }) // Get subscription
+        .mockResolvedValueOnce(undefined) // Update subscription to inactive
+        .mockResolvedValueOnce({ rows: [] }) // Get affected API keys (none)
+        .mockResolvedValueOnce(undefined) // Insert audit log
+        .mockResolvedValueOnce('COMMIT'); // Transaction commit
 
       const result = await service.cancelSubscription(mockSubscription.id, mockUser.id);
 
-      expect(result.status).toBe('cancelled');
-      expect(mockQuery).toHaveBeenCalledWith(
-        'DELETE FROM subscriptions WHERE id = $1 AND user_id = $2',
+      expect(result.status).toBe('inactive');
+      expect(mockClient.query).toHaveBeenCalledWith('BEGIN');
+      expect(mockClient.query).toHaveBeenCalledWith(
+        `SELECT s.*, m.name as model_name, m.provider 
+         FROM subscriptions s
+         LEFT JOIN models m ON s.model_id = m.id
+         WHERE s.id = $1 AND s.user_id = $2`,
         [mockSubscription.id, mockUser.id],
       );
+      expect(mockClient.query).toHaveBeenCalledWith(
+        `UPDATE subscriptions 
+         SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
+         WHERE id = $1`,
+        [mockSubscription.id],
+      );
+      expect(mockClient.query).toHaveBeenCalledWith('COMMIT');
+      expect(mockClient.release).toHaveBeenCalled();
     });
 
     it('should throw error for non-existent subscription', async () => {
-      const mockQueryOne = vi.fn().mockResolvedValueOnce(null);
-      mockFastify.dbUtils!.queryOne = mockQueryOne;
+      const mockClient = await (mockFastify.pg! as any).connect();
+
+      mockClient.query
+        .mockResolvedValueOnce('BEGIN') // Transaction start
+        .mockResolvedValueOnce({ rows: [] }); // No subscription found
 
       await expect(service.cancelSubscription('non-existent', mockUser.id)).rejects.toThrow(
-        'Subscription not found',
+        "Subscription with ID 'non-existent' not found",
       );
+
+      expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
+      expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    it('should handle API key cascading on subscription cancellation', async () => {
+      const mockClient = await (mockFastify.pg! as any).connect();
+      const mockApiKey = {
+        id: 'api-key-123',
+        lite_llm_key_value: 'llm-key-123',
+        name: 'Test Key',
+        all_models: ['gpt-4', 'gpt-3.5'],
+      };
+
+      // Mock LiteLLM service methods
+      mockLiteLLMService.updateKey = vi.fn().mockResolvedValue(undefined);
+      mockLiteLLMService.deleteKey = vi.fn().mockResolvedValue(undefined);
+
+      mockClient.query
+        .mockResolvedValueOnce('BEGIN') // Transaction start
+        .mockResolvedValueOnce({ rows: [mockSubscription] }) // Get subscription
+        .mockResolvedValueOnce(undefined) // Update subscription to inactive
+        .mockResolvedValueOnce({ rows: [mockApiKey] }) // Get affected API keys
+        .mockResolvedValueOnce(undefined) // Delete model from api_key_models
+        .mockResolvedValueOnce({ rows: [{ model_id: 'gpt-3.5' }] }) // Remaining models
+        .mockResolvedValueOnce(undefined) // Insert audit log
+        .mockResolvedValueOnce('COMMIT'); // Transaction commit
+
+      const result = await service.cancelSubscription(mockSubscription.id, mockUser.id);
+
+      expect(result.status).toBe('inactive');
+      expect(mockLiteLLMService.updateKey).toHaveBeenCalledWith('llm-key-123', {
+        models: ['gpt-3.5'],
+      });
+      expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    it('should deactivate API key when no models remain after cancellation', async () => {
+      const mockClient = await (mockFastify.pg! as any).connect();
+      const mockApiKey = {
+        id: 'api-key-123',
+        lite_llm_key_value: 'llm-key-123',
+        name: 'Test Key',
+        all_models: ['gpt-4'], // Only has the cancelled model
+      };
+
+      // Mock LiteLLM service methods
+      mockLiteLLMService.deleteKey = vi.fn().mockResolvedValue(undefined);
+
+      mockClient.query
+        .mockResolvedValueOnce('BEGIN') // Transaction start
+        .mockResolvedValueOnce({ rows: [mockSubscription] }) // Get subscription
+        .mockResolvedValueOnce(undefined) // Update subscription to inactive
+        .mockResolvedValueOnce({ rows: [mockApiKey] }) // Get affected API keys
+        .mockResolvedValueOnce(undefined) // Delete model from api_key_models
+        .mockResolvedValueOnce({ rows: [] }) // No remaining models
+        .mockResolvedValueOnce(undefined) // Deactivate API key
+        .mockResolvedValueOnce(undefined) // Insert audit log
+        .mockResolvedValueOnce('COMMIT'); // Transaction commit
+
+      const result = await service.cancelSubscription(mockSubscription.id, mockUser.id);
+
+      expect(result.status).toBe('inactive');
+      expect(mockLiteLLMService.deleteKey).toHaveBeenCalledWith('llm-key-123');
+      // Check that the API key was deactivated (7th call based on test output)
+      const calls = mockClient.query.mock.calls;
+      const deactivateKeyCall = calls.find(
+        (call) => call[0].includes('UPDATE api_keys') && call[0].includes('is_active = false'),
+      );
+      expect(deactivateKeyCall).toBeTruthy();
+      expect(deactivateKeyCall[1]).toEqual(['api-key-123']);
+      expect(mockClient.release).toHaveBeenCalled();
     });
   });
 

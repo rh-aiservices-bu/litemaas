@@ -9,6 +9,7 @@ import {
 import { LiteLLMModel } from '../types/model.types';
 import { LiteLLMService } from '../services/litellm.service';
 import { ModelSyncService } from '../services/model-sync.service';
+import { ApplicationError } from '../utils/errors';
 
 const modelsRoutes: FastifyPluginAsync = async (fastify) => {
   // Initialize services
@@ -84,26 +85,6 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     return result;
   };
 
-  const convertToModelDetails = (model: LiteLLMModel): ModelDetails => {
-    const baseModel = convertLiteLLMModel(model);
-    return {
-      ...baseModel,
-      metadata: {
-        modelInfoId: model.model_info.id,
-        litellmProvider: model.litellm_params.custom_llm_provider,
-        apiBase: model.litellm_params.api_base,
-        modelPath: model.litellm_params.model,
-        maxTokens: model.model_info.max_tokens,
-        supportsFunctionCalling: model.model_info.supports_function_calling,
-        supportsParallelFunctionCalling: model.model_info.supports_parallel_function_calling,
-        supportsVision: model.model_info.supports_vision,
-        supportsToolChoice: model.model_info.supports_tool_choice,
-        supportsAssistantApi: model.model_info.supports_assistant_api,
-        accessGroups: model.model_info.access_groups,
-        accessViaTeamIds: model.model_info.access_via_team_ids,
-      },
-    };
-  };
   // List models
   fastify.get<{
     Querystring: ModelListParams;
@@ -376,7 +357,13 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to retrieve models');
-        throw fastify.createError(500, 'Failed to retrieve models');
+        // Re-throw ApplicationError instances as-is
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+        // For other errors, include original message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to retrieve models: ${errorMessage}`);
       }
     },
   });
@@ -435,17 +422,59 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
       const { id } = request.params;
 
       try {
-        const model = await liteLLMService.getModelById(id);
+        // First, query local database for the model
+        const dbResult = await fastify.dbUtils.query('SELECT * FROM models WHERE id = $1', [id]);
 
-        if (!model) {
-          throw fastify.createNotFoundError('Model');
+        if (dbResult.rows.length > 0) {
+          // Model found in local database, convert to ModelDetails format
+          const model = dbResult.rows[0];
+          const modelDetails: ModelDetails = {
+            id: String(model.id),
+            name: String(model.name),
+            provider: String(model.provider),
+            description: model.description ? String(model.description) : '',
+            capabilities: (model.features as string[]) || [],
+            contextLength: Number(model.context_length),
+            pricing:
+              model.input_cost_per_token || model.output_cost_per_token
+                ? {
+                    input: Number(model.input_cost_per_token) || 0,
+                    output: Number(model.output_cost_per_token) || 0,
+                    unit: 'per_1k_tokens' as const,
+                  }
+                : undefined,
+            isActive: model.availability === 'available',
+            createdAt: new Date(String(model.created_at)),
+            updatedAt: new Date(String(model.updated_at)),
+            // Additional metadata fields for ModelDetails
+            metadata: {
+              litellmModelId: model.litellm_model_id ? String(model.litellm_model_id) : undefined,
+              apiBase: model.api_base ? String(model.api_base) : undefined,
+              backendModelName: model.backend_model_name
+                ? String(model.backend_model_name)
+                : undefined,
+              maxTokens: model.max_tokens ? Number(model.max_tokens) : undefined,
+              supportsVision: Boolean(model.supports_vision),
+              supportsFunctionCalling: Boolean(model.supports_function_calling),
+              supportsParallelFunctionCalling: Boolean(model.supports_parallel_function_calling),
+              supportsToolChoice: Boolean(model.supports_tool_choice),
+              inputCostPerToken: model.input_cost_per_token
+                ? Number(model.input_cost_per_token)
+                : undefined,
+              outputCostPerToken: model.output_cost_per_token
+                ? Number(model.output_cost_per_token)
+                : undefined,
+              tpm: model.tpm ? Number(model.tpm) : undefined,
+              rpm: model.rpm ? Number(model.rpm) : undefined,
+            },
+          };
+
+          fastify.log.info({ modelId: id }, 'Model details retrieved from database');
+          return modelDetails;
         }
 
-        const modelDetails = convertToModelDetails(model);
-
-        fastify.log.info({ modelId: id }, 'Model details retrieved successfully');
-
-        return modelDetails;
+        // Model not found in database
+        throw fastify.createNotFoundError('Model');
       } catch (error) {
         fastify.log.error(error, 'Failed to retrieve model details');
 

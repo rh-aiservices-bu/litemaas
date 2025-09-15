@@ -42,12 +42,14 @@ import {
   TimesCircleIcon,
 } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { subscriptionsService, Subscription } from '../services/subscriptions.service';
 import { getModelFlairs } from '../utils/flairColors';
 
 const SubscriptionsPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
+  const { handleError } = useErrorHandler();
   const navigate = useNavigate();
 
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -105,11 +107,8 @@ const SubscriptionsPage: React.FC = () => {
       setSubscriptions(response.data);
     } catch (err) {
       console.error('Failed to load subscriptions:', err);
-      addNotification({
-        title: t('pages.subscriptions.notifications.loadError'),
-        description: t('pages.subscriptions.notifications.loadErrorDesc'),
-        variant: 'danger',
-      });
+      // Use centralized error handler which will display proper rate limit messages
+      handleError(err);
     } finally {
       setLoading(false);
     }

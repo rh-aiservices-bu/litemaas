@@ -42,6 +42,7 @@ import {
 } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td, Caption } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { usageService, UsageMetrics, UsageFilters } from '../services/usage.service';
 import { apiKeysService, ApiKey } from '../services/apiKeys.service';
 import { UsageTrends, ModelDistributionChart } from '../components/charts';
@@ -58,6 +59,7 @@ import {
 const UsagePage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
+  const { handleError } = useErrorHandler();
   const { announcement, announce } = useScreenReaderAnnouncement();
 
   const [metrics, setMetrics] = useState<UsageMetrics | null>(null);
@@ -92,11 +94,8 @@ const UsagePage: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to load API keys:', err);
-      addNotification({
-        title: t('pages.usage.notifications.apiKeysLoadError'),
-        description: t('pages.usage.notifications.apiKeysLoadErrorDesc'),
-        variant: 'danger',
-      });
+      // Use centralized error handler which will display proper rate limit messages
+      handleError(err);
     } finally {
       setLoadingApiKeys(false);
     }
@@ -158,14 +157,11 @@ const UsagePage: React.FC = () => {
       );
     } catch (err) {
       console.error('Failed to load usage metrics:', err);
+      // Use centralized error handler which will display proper rate limit messages
+      handleError(err);
       setError(t('pages.usage.notifications.loadFailed'));
       // Announce error to screen readers with assertive priority
       announce(t('pages.usage.notifications.loadFailed'), 'assertive');
-      addNotification({
-        title: t('pages.usage.notifications.loadError'),
-        description: t('pages.usage.notifications.loadErrorDesc'),
-        variant: 'danger',
-      });
     } finally {
       setLoading(false);
     }
@@ -250,11 +246,8 @@ const UsagePage: React.FC = () => {
       });
     } catch (err) {
       console.error('Failed to export usage data:', err);
-      addNotification({
-        title: t('pages.usage.notifications.exportFailed'),
-        description: t('pages.usage.notifications.exportFailedDesc'),
-        variant: 'danger',
-      });
+      // Use centralized error handler which will display proper rate limit messages
+      handleError(err);
     }
   };
 

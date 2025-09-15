@@ -58,7 +58,7 @@ interface CountResult {
 }
 
 export interface UpdateSubscriptionRequest {
-  status?: 'active' | 'suspended' | 'cancelled';
+  status?: 'active' | 'suspended' | 'cancelled' | 'expired' | 'inactive';
   quotaRequests?: number;
   quotaTokens?: number;
   expiresAt?: Date;
@@ -71,7 +71,7 @@ export interface SubscriptionDetails {
   modelId: string;
   modelName?: string;
   provider?: string;
-  status: 'pending' | 'active' | 'suspended' | 'cancelled' | 'expired';
+  status: 'pending' | 'active' | 'suspended' | 'cancelled' | 'expired' | 'inactive';
   quotaRequests: number;
   quotaTokens: number;
   usedRequests: number;
@@ -292,6 +292,74 @@ export class SubscriptionService extends BaseService {
       modelSupportsParallelFunctionCalling: false,
       modelSupportsToolChoice: false,
     },
+    {
+      id: 'sub-mock-4',
+      userId: 'dev-user-1',
+      modelId: 'gpt-3.5-turbo',
+      modelName: 'GPT-3.5 Turbo',
+      provider: 'openai',
+      status: SubscriptionStatus.INACTIVE,
+      quotaRequests: 5000,
+      quotaTokens: 500000,
+      usedRequests: 0,
+      usedTokens: 0,
+      remainingRequests: 5000,
+      remainingTokens: 500000,
+      utilizationPercent: {
+        requests: 0,
+        tokens: 0,
+      },
+      resetAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+      createdAt: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000),
+      updatedAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      metadata: {
+        inputCostPer1kTokens: 0.001,
+        outputCostPer1kTokens: 0.002,
+        currency: 'USD',
+      },
+      // Enhanced LiteLLM integration fields
+      liteLLMInfo: {
+        keyId: 'sk-litellm-mock-key-4',
+        teamId: 'team-prod',
+        maxBudget: 100,
+        currentSpend: 0,
+        budgetDuration: 'monthly',
+        tpmLimit: 5000,
+        rpmLimit: 50,
+        allowedModels: ['gpt-3.5-turbo'],
+        spendResetAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        budgetUtilization: 0,
+      },
+      budgetInfo: {
+        maxBudget: 100,
+        currentSpend: 0,
+        remainingBudget: 100,
+        budgetUtilization: 0,
+        spendResetAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      },
+      rateLimits: {
+        tpmLimit: 5000,
+        rpmLimit: 50,
+        currentTpm: 0,
+        currentRpm: 0,
+      },
+      teamId: 'team-prod',
+      teamInfo: {
+        id: 'team-prod',
+        name: 'Production Team',
+        role: 'member',
+      },
+      lastSyncAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+      syncStatus: 'synced',
+      // Model details for UI display
+      modelDescription: 'GPT-3.5 Turbo is no longer available (inactive model).',
+      modelContextLength: 16385,
+      modelSupportsVision: false,
+      modelSupportsFunctionCalling: true,
+      modelSupportsParallelFunctionCalling: false,
+      modelSupportsToolChoice: true,
+    },
   ];
 
   constructor(fastify: FastifyInstance, liteLLMService?: LiteLLMService) {
@@ -322,23 +390,94 @@ export class SubscriptionService extends BaseService {
       // Validate model exists
       const model = await this.liteLLMService.getModelById(modelId);
       if (!model) {
-        throw this.fastify.createValidationError(`Model ${modelId} not found`);
+        throw this.createNotFoundError(
+          'Model',
+          modelId,
+          'Model not found. Please check the model ID and ensure it exists in the system',
+        );
       }
 
-      // Check for existing subscription (any status)
-      const existingSubscription = await this.fastify.dbUtils.queryOne(
-        `SELECT id FROM subscriptions 
+      // Check for existing subscription with status
+      const existingSubscription = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
+        `SELECT * FROM subscriptions 
          WHERE user_id = $1 AND model_id = $2`,
         [userId, modelId],
       );
 
       if (existingSubscription) {
-        throw this.fastify.createValidationError(
-          `Subscription already exists for model ${modelId}. Use the existing subscription or cancel it first.`,
-        );
+        // If subscription is inactive, reactivate it with new parameters
+        if (existingSubscription.status === 'inactive') {
+          const updatedSubscription = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
+            `UPDATE subscriptions 
+             SET status = $1, quota_requests = $2, quota_tokens = $3,
+                 expires_at = $4, reset_at = $5, max_budget = $6,
+                 budget_duration = $7, tpm_limit = $8, rpm_limit = $9,
+                 team_id = $10, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $11
+             RETURNING *`,
+            [
+              'active',
+              quotaRequests,
+              quotaTokens,
+              expiresAt || null,
+              this.calculateNextResetDate(),
+              maxBudget || null,
+              budgetDuration || null,
+              tpmLimit || null,
+              rpmLimit || null,
+              teamId || null,
+              existingSubscription.id,
+            ],
+          );
+
+          if (!updatedSubscription) {
+            throw this.createNotFoundError(
+              'Subscription',
+              existingSubscription.id,
+              'Unable to reactivate subscription. The subscription may have been deleted',
+            );
+          }
+
+          // Create audit log for reactivation
+          await this.fastify.dbUtils.query(
+            `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [
+              userId,
+              'SUBSCRIPTION_REACTIVATED',
+              'SUBSCRIPTION',
+              updatedSubscription.id,
+              JSON.stringify({
+                modelId: updatedSubscription.model_id,
+                quotaRequests,
+                quotaTokens,
+                previousStatus: 'inactive',
+              }),
+            ],
+          );
+
+          this.fastify.log.info(
+            {
+              userId,
+              subscriptionId: updatedSubscription.id,
+              modelId,
+            },
+            'Subscription reactivated from inactive status',
+          );
+
+          return this.mapToEnhancedSubscription(updatedSubscription);
+        } else {
+          // Subscription exists but is not inactive (active, suspended, etc.)
+          throw this.createAlreadyExistsError(
+            'Subscription',
+            'modelId',
+            modelId,
+            'A subscription for this model already exists. Use the existing subscription or cancel it first',
+          );
+        }
       }
 
-      // Create subscription with enhanced fields
+      // Create new subscription if none exists
       const subscription = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
         `INSERT INTO subscriptions (
           user_id, model_id, status, quota_requests, quota_tokens, 
@@ -363,7 +502,11 @@ export class SubscriptionService extends BaseService {
       );
 
       if (!subscription) {
-        throw new Error('Failed to create subscription');
+        throw this.createNotFoundError(
+          'Subscription',
+          modelId,
+          'Failed to create subscription. Please verify the model ID and try again',
+        );
       }
 
       // Create audit log
@@ -434,9 +577,10 @@ export class SubscriptionService extends BaseService {
       modelId?: string;
       page?: number;
       limit?: number;
+      includeInactive?: boolean;
     } = {},
   ): Promise<{ data: EnhancedSubscription[]; total: number }> {
-    const { status, modelId, page = 1, limit = 20 } = options;
+    const { status, modelId, page = 1, limit = 20, includeInactive = false } = options;
     const offset = (page - 1) * limit;
 
     // Use mock data if database is not available
@@ -445,6 +589,11 @@ export class SubscriptionService extends BaseService {
 
       // Filter mock data based on options
       let filteredSubscriptions = [...this.MOCK_SUBSCRIPTIONS];
+
+      // Exclude inactive subscriptions by default unless explicitly including them or filtering by status
+      if (!includeInactive && !status) {
+        filteredSubscriptions = filteredSubscriptions.filter((sub) => sub.status !== 'inactive');
+      }
 
       if (status) {
         filteredSubscriptions = filteredSubscriptions.filter((sub) => sub.status === status);
@@ -479,6 +628,12 @@ export class SubscriptionService extends BaseService {
       `;
       const params: any[] = [userId];
 
+      // Exclude inactive subscriptions by default unless explicitly including them or filtering by status
+      if (!includeInactive && !status) {
+        query += ` AND s.status != $${params.length + 1}`;
+        params.push('inactive');
+      }
+
       if (status) {
         query += ` AND s.status = $${params.length + 1}`;
         params.push(status);
@@ -496,6 +651,12 @@ export class SubscriptionService extends BaseService {
       let countQuery = 'SELECT COUNT(*) FROM subscriptions WHERE user_id = $1';
       const countParams = [userId];
 
+      // Exclude inactive subscriptions by default unless explicitly including them or filtering by status
+      if (!includeInactive && !status) {
+        countQuery += ` AND status != $${countParams.length + 1}`;
+        countParams.push('inactive');
+      }
+
       if (status) {
         countQuery += ` AND status = $${countParams.length + 1}`;
         countParams.push(status);
@@ -512,7 +673,11 @@ export class SubscriptionService extends BaseService {
       ]);
 
       if (!countResult) {
-        throw new Error('Failed to get subscription count');
+        throw this.createNotFoundError(
+          'Subscription count',
+          undefined,
+          'Unable to retrieve subscription count from database',
+        );
       }
       return {
         data: subscriptions.map((sub) => this.mapToEnhancedSubscription(sub)),
@@ -533,7 +698,11 @@ export class SubscriptionService extends BaseService {
       // Validate subscription ownership
       const existing = await this.getSubscription(subscriptionId, userId);
       if (!existing) {
-        throw this.fastify.createNotFoundError('Subscription');
+        throw this.createNotFoundError(
+          'Subscription',
+          subscriptionId,
+          'Subscription not found. Please verify the subscription ID',
+        );
       }
 
       const {
@@ -648,68 +817,168 @@ export class SubscriptionService extends BaseService {
   }
 
   async cancelSubscription(subscriptionId: string, userId: string): Promise<EnhancedSubscription> {
+    const client = await this.fastify.pg.connect();
+
     try {
-      const subscription = await this.getSubscription(subscriptionId, userId);
-      if (!subscription) {
-        throw this.fastify.createNotFoundError('Subscription');
-      }
+      await client.query('BEGIN');
 
-      if (['cancelled', 'expired'].includes(subscription.status)) {
-        throw this.fastify.createValidationError(`Subscription is already ${subscription.status}`);
-      }
-
-      // NEW: Check for linked active API keys before allowing cancellation
-      const linkedApiKeys = await this.fastify.dbUtils.queryMany(
-        `SELECT id, name, key_prefix 
-         FROM api_keys 
-         WHERE subscription_id = $1 AND is_active = true`,
-        [subscriptionId],
-      );
-
-      if (linkedApiKeys.length > 0) {
-        // Build a descriptive error message with API key details
-        const keyDetails = linkedApiKeys
-          .map((key) => `${key.name || 'Unnamed'} (${key.key_prefix}***)`)
-          .join(', ');
-
-        const errorMessage =
-          linkedApiKeys.length === 1
-            ? `Cannot cancel subscription: There is 1 active API key linked to this subscription (${keyDetails}). Please delete the API key first, then cancel the subscription.`
-            : `Cannot cancel subscription: There are ${linkedApiKeys.length} active API keys linked to this subscription (${keyDetails}). Please delete all API keys first, then cancel the subscription.`;
-
-        throw this.fastify.createValidationError(errorMessage);
-      }
-
-      // If no active API keys are linked, proceed with deletion
-      // First get the subscription data before deletion for the response
-      const subscriptionToDelete = await this.getSubscription(subscriptionId, userId);
-      if (!subscriptionToDelete) {
-        throw this.fastify.createNotFoundError('Subscription');
-      }
-
-      // Delete the subscription from the database
-      const deleteResult = await this.fastify.dbUtils.query(
-        'DELETE FROM subscriptions WHERE id = $1 AND user_id = $2',
+      // 1. Get subscription details including model_id
+      const subscription = await client.query(
+        `SELECT s.*, m.name as model_name, m.provider 
+         FROM subscriptions s
+         LEFT JOIN models m ON s.model_id = m.id
+         WHERE s.id = $1 AND s.user_id = $2`,
         [subscriptionId, userId],
       );
 
-      // Check if deletion was successful
-      if (deleteResult.rowCount === 0) {
-        throw this.fastify.createNotFoundError('Subscription');
+      if (!subscription.rows[0]) {
+        throw this.createNotFoundError(
+          'Subscription',
+          subscriptionId,
+          'Subscription not found or access denied',
+        );
       }
 
-      this.fastify.log.info({ subscriptionId, userId }, 'Subscription deleted successfully');
+      const sub = subscription.rows[0];
 
-      // Return the subscription data with cancelled status for frontend compatibility
-      // This allows the frontend to show the cancellation was successful
-      return {
-        ...subscriptionToDelete,
-        status: SubscriptionStatus.CANCELLED,
-        updatedAt: new Date(),
-      };
+      if (['cancelled', 'expired', 'inactive'].includes(sub.status)) {
+        throw this.createValidationError(
+          `Cannot cancel subscription that is already ${sub.status}`,
+          'status',
+          sub.status,
+          'Only active or suspended subscriptions can be cancelled',
+        );
+      }
+
+      const modelId = sub.model_id;
+
+      // 2. Mark subscription as inactive (not delete!)
+      await client.query(
+        `UPDATE subscriptions 
+         SET status = 'inactive', updated_at = CURRENT_TIMESTAMP
+         WHERE id = $1`,
+        [subscriptionId],
+      );
+
+      // 3. Get all user's API keys that have this model
+      const affectedKeys = await client.query(
+        `SELECT DISTINCT ak.id, ak.lite_llm_key_value, ak.name,
+                ARRAY_AGG(akm.model_id) as all_models
+         FROM api_keys ak
+         JOIN api_key_models akm ON ak.id = akm.api_key_id
+         WHERE ak.user_id = $1 AND ak.is_active = true
+         GROUP BY ak.id, ak.lite_llm_key_value, ak.name
+         HAVING $2 = ANY(ARRAY_AGG(akm.model_id))`,
+        [userId, modelId],
+      );
+
+      // 4. Process each affected API key
+      for (const key of affectedKeys.rows) {
+        // Remove the cancelled model from this key
+        await client.query(
+          `DELETE FROM api_key_models 
+           WHERE api_key_id = $1 AND model_id = $2`,
+          [key.id, modelId],
+        );
+
+        // Check remaining models for this key
+        const remainingModels = await client.query(
+          `SELECT model_id FROM api_key_models WHERE api_key_id = $1`,
+          [key.id],
+        );
+
+        if (remainingModels.rows.length === 0) {
+          // No models left - deactivate the key
+          await client.query(
+            `UPDATE api_keys 
+             SET is_active = false, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $1`,
+            [key.id],
+          );
+
+          // Delete from LiteLLM (can't exist without models)
+          if (key.lite_llm_key_value && this.liteLLMService) {
+            try {
+              await this.liteLLMService.deleteKey(key.lite_llm_key_value);
+            } catch (error) {
+              this.fastify.log.warn(
+                { keyId: key.id, error },
+                'Failed to delete orphaned key from LiteLLM',
+              );
+            }
+          }
+
+          this.fastify.log.info(
+            { keyId: key.id, keyName: key.name },
+            'API key deactivated due to no remaining models after subscription cancellation',
+          );
+        } else {
+          // Update LiteLLM key to remove the cancelled model
+          const newModelIds = remainingModels.rows.map((r) => r.model_id);
+
+          if (key.lite_llm_key_value && this.liteLLMService) {
+            try {
+              await this.liteLLMService.updateKey(key.lite_llm_key_value, {
+                models: newModelIds,
+              });
+            } catch (error) {
+              this.fastify.log.warn(
+                { keyId: key.id, error },
+                'Failed to update LiteLLM key after subscription cancellation',
+              );
+            }
+          }
+
+          this.fastify.log.info(
+            { keyId: key.id, removedModel: modelId, remainingModels: newModelIds },
+            'API key updated to remove cancelled model',
+          );
+        }
+      }
+
+      // 5. Create audit log
+      await client.query(
+        `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          userId,
+          'SUBSCRIPTION_CANCELLED',
+          'SUBSCRIPTION',
+          subscriptionId,
+          JSON.stringify({
+            modelId,
+            affectedApiKeys: affectedKeys.rows.length,
+            keysDeactivated: affectedKeys.rows.filter(
+              (k) => !k.all_models.some((m: any) => m !== modelId),
+            ).length,
+          }),
+        ],
+      );
+
+      await client.query('COMMIT');
+
+      this.fastify.log.info(
+        {
+          subscriptionId,
+          userId,
+          modelId,
+          affectedApiKeys: affectedKeys.rows.length,
+        },
+        'Subscription cancelled and marked as inactive',
+      );
+
+      // Return the subscription with updated status
+      return this.mapToEnhancedSubscription({
+        ...sub,
+        status: 'inactive',
+        updated_at: new Date(),
+      });
     } catch (error) {
+      await client.query('ROLLBACK');
       this.fastify.log.error(error, 'Failed to cancel subscription');
       throw error;
+    } finally {
+      client.release();
     }
   }
 
@@ -717,7 +986,11 @@ export class SubscriptionService extends BaseService {
     try {
       const subscription = await this.getSubscription(subscriptionId, userId);
       if (!subscription) {
-        throw this.fastify.createNotFoundError('Subscription');
+        throw this.createNotFoundError(
+          'Subscription',
+          subscriptionId,
+          'Subscription not found or access denied',
+        );
       }
 
       return {
@@ -1114,11 +1387,20 @@ export class SubscriptionService extends BaseService {
     try {
       const subscription = await this.getSubscription(subscriptionId, userId);
       if (!subscription) {
-        throw this.fastify.createNotFoundError('Subscription');
+        throw this.createNotFoundError(
+          'Subscription',
+          subscriptionId,
+          'Subscription not found or access denied',
+        );
       }
 
       if (!subscription.liteLLMInfo?.keyId) {
-        throw this.fastify.createValidationError('Subscription is not integrated with LiteLLM');
+        throw this.createValidationError(
+          'Subscription is not integrated with LiteLLM',
+          'liteLLMInfo.keyId',
+          subscription.liteLLMInfo?.keyId,
+          'Please sync the subscription with LiteLLM first',
+        );
       }
 
       const changes: SubscriptionSyncResponse['changes'] = {};
@@ -1213,7 +1495,11 @@ export class SubscriptionService extends BaseService {
     try {
       const subscription = await this.getSubscription(subscriptionId, userId);
       if (!subscription) {
-        throw this.fastify.createNotFoundError('Subscription');
+        throw this.createNotFoundError(
+          'Subscription',
+          subscriptionId,
+          'Subscription not found or access denied',
+        );
       }
 
       // Try to get real-time data from LiteLLM if available
@@ -1268,7 +1554,11 @@ export class SubscriptionService extends BaseService {
     try {
       const subscription = await this.getSubscription(subscriptionId, userId);
       if (!subscription) {
-        throw this.fastify.createNotFoundError('Subscription');
+        throw this.createNotFoundError(
+          'Subscription',
+          subscriptionId,
+          'Subscription not found or access denied',
+        );
       }
 
       if (this.shouldUseMockData()) {
@@ -1414,7 +1704,12 @@ export class SubscriptionService extends BaseService {
               }
               break;
             default:
-              throw new Error(`Unknown operation: ${operationType}`);
+              throw this.createValidationError(
+                `Unknown bulk operation type: ${operationType}`,
+                'operationType',
+                operationType,
+                'Valid operations are: activate, deactivate, suspend, update_quota, transfer_team',
+              );
           }
 
           results.push({ subscriptionId, success: true });

@@ -1,5 +1,4 @@
 import {
-  Alert,
   Badge,
   Bullseye,
   Button,
@@ -54,6 +53,7 @@ import '@patternfly/chatbot/dist/css/main.css';
 
 // Services and Types
 import { useNotifications } from '../contexts/NotificationContext';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { ApiKey, apiKeysService } from '../services/apiKeys.service';
 import { chatService } from '../services/chat.service';
 import { configService } from '../services/config.service';
@@ -74,6 +74,7 @@ import orb from '../../src/assets/images/orb.svg';
 const ChatbotPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
+  const { handleError } = useErrorHandler();
 
   // Configuration State
   const [configuration, setConfiguration] = useState<ChatbotConfiguration>({
@@ -107,9 +108,6 @@ const ChatbotPage: React.FC = () => {
   const [isLoadingModels, setIsLoadingModels] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
-  // Error State
-  const [error, setError] = useState<string | null>(null);
-
   // API Key Management State
   const [fullKeyCache, setFullKeyCache] = useState<Map<string, string>>(new Map());
 
@@ -138,7 +136,6 @@ const ChatbotPage: React.FC = () => {
     const loadInitialData = async () => {
       try {
         setIsLoading(true);
-        setError(null);
 
         // Load API keys
         const response = await apiKeysService.getApiKeys(1, 100); // Load first 100 keys
@@ -157,19 +154,14 @@ const ChatbotPage: React.FC = () => {
         setModels(modelsResponse.models);
       } catch (err) {
         console.error('Error loading initial data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load data');
-        addNotification({
-          title: t('pages.chatbot.errors.loadDataFailed'),
-          description: err instanceof Error ? err.message : 'Unknown error',
-          variant: 'danger',
-        });
+        handleError(err);
       } finally {
         setIsLoading(false);
       }
     };
 
     loadInitialData();
-  }, [t, addNotification]);
+  }, [t, handleError]);
 
   // Load configuration from backend
   useEffect(() => {
@@ -196,7 +188,6 @@ const ChatbotPage: React.FC = () => {
 
       try {
         setIsLoadingModels(true);
-        setError(null);
 
         // Filter models by API key's supported models
         const filtered = models
@@ -219,18 +210,14 @@ const ChatbotPage: React.FC = () => {
         }
       } catch (err) {
         console.error('Error loading available models:', err);
-        addNotification({
-          title: t('pages.chatbot.errors.loadModelsFailed'),
-          description: err instanceof Error ? err.message : 'Unknown error',
-          variant: 'warning',
-        });
+        handleError(err);
       } finally {
         setIsLoadingModels(false);
       }
     };
 
     loadAvailableModels();
-  }, [selectedApiKey, models, configuration.selectedModel, t, addNotification]);
+  }, [selectedApiKey, models, configuration.selectedModel, t, handleError]);
 
   // Retrieve full API key for actual usage
   const retrieveFullKey = useCallback(
@@ -255,7 +242,7 @@ const ChatbotPage: React.FC = () => {
         throw new Error(error.message || t('pages.chatbot.errors.keyRetrievalFailedDesc'));
       }
     },
-    [fullKeyCache, t, addNotification],
+    [fullKeyCache, t, handleError],
   );
 
   // Handle message sending
@@ -269,7 +256,6 @@ const ChatbotPage: React.FC = () => {
       const newMessages = [...messages, userMessage];
       setMessages(newMessages);
       setIsSending(true);
-      setError(null);
       setStreamingTTFT(null); // Reset TTFT for new message
 
       try {
@@ -299,11 +285,7 @@ const ChatbotPage: React.FC = () => {
         try {
           apiKeyToUse = await retrieveFullKey(selectedApiKey.id);
         } catch (error: any) {
-          addNotification({
-            variant: 'danger',
-            title: t('pages.chatbot.errors.keyRetrievalFailed'),
-            description: error.message || t('pages.chatbot.errors.keyRetrievalFailedDesc'),
-          });
+          handleError(error);
           setIsSending(false);
           return;
         }
@@ -382,44 +364,38 @@ const ChatbotPage: React.FC = () => {
       } catch (err) {
         console.error('Error sending message:', err);
 
-        let errorMessage = 'Unknown error';
-        let isAborted = false;
-
         if (err && typeof err === 'object' && 'message' in err) {
           const chatError = err as ChatError;
-          errorMessage = chatError.message;
-          isAborted = chatError.type === 'aborted';
-        }
+          const isAborted = chatError.type === 'aborted';
 
-        if (isAborted) {
-          // Handle aborted stream - no notifications, just clear any existing error
-          setError(null);
-          // Don't remove messages or reset streaming state - content is already preserved
+          if (isAborted) {
+            // Handle aborted stream - no notifications
+            // Don't remove messages or reset streaming state - content is already preserved
+          } else {
+            // Handle real errors
+            // Always call handleError for proper notification
+            handleError(err);
+
+            // Remove the user message if sending failed
+            setMessages(messages);
+
+            // Reset streaming state if it was streaming
+            setStreamingState({
+              isStreaming: false,
+              streamingMessageId: null,
+              streamingContent: '',
+              abortController: null,
+            });
+          }
         } else {
-          // Handle real errors
-          setError(errorMessage);
-          addNotification({
-            title: t('pages.chatbot.errors.sendFailed'),
-            description: errorMessage,
-            variant: 'danger',
-          });
-
-          // Remove the user message if sending failed
-          setMessages(messages);
-
-          // Reset streaming state if it was streaming
-          setStreamingState({
-            isStreaming: false,
-            streamingMessageId: null,
-            streamingContent: '',
-            abortController: null,
-          });
+          // Handle errors that don't match the expected ChatError structure
+          handleError(err);
         }
       } finally {
         setIsSending(false);
       }
     },
-    [messages, selectedApiKey, configuration, litellmApiUrl, retrieveFullKey, t, addNotification],
+    [messages, selectedApiKey, configuration, litellmApiUrl, retrieveFullKey, t, handleError],
   );
 
   // Handle stopping streaming
@@ -464,7 +440,6 @@ const ChatbotPage: React.FC = () => {
 
     setMessages([]);
     setLastResponseMetrics(null);
-    setError(null);
     setStreamingTTFT(null);
     setStreamingState({
       isStreaming: false,
@@ -472,12 +447,10 @@ const ChatbotPage: React.FC = () => {
       streamingContent: '',
       abortController: null,
     });
-    /* 
     addNotification({
       title: t('pages.chatbot.success.conversationCleared'),
       variant: 'info',
     });
-     */
   }, [streamingState.abortController, t, addNotification]);
 
   // Render configuration panel
@@ -886,16 +859,6 @@ const ChatbotPage: React.FC = () => {
                     </ChatbotContent>
 
                     <ChatbotFooter>
-                      {error && (
-                        <Alert
-                          variant="danger"
-                          title={t('pages.chatbot.errors.chatError')}
-                          isInline
-                          className="pf-v6-u-mb-md"
-                        >
-                          {error}
-                        </Alert>
-                      )}
                       <MessageBar
                         onSendMessage={(message) => handleSendMessage(String(message))}
                         isDisabled={

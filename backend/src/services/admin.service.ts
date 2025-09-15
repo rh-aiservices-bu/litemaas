@@ -56,7 +56,12 @@ export class AdminService extends BaseService {
 
     // Validate that at least one update is provided
     if (!updates.maxBudget && !updates.tpmLimit && !updates.rpmLimit) {
-      throw new Error('At least one limit value must be provided');
+      throw this.createValidationError(
+        'At least one limit value must be provided',
+        'updates',
+        updates,
+        'Please provide at least one of: maxBudget, tpmLimit, or rpmLimit',
+      );
     }
 
     if (this.shouldUseMockData()) {
