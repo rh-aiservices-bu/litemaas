@@ -194,6 +194,27 @@ export class LiteLLMService extends BaseService {
     }
   }
 
+  private isNoModelsConfiguredError(errorData: LiteLLMError): boolean {
+    const errorMessage = 'LLM Model List not loaded in';
+
+    // Check for error in detail object format: { detail: { error: "message" } }
+    if (typeof errorData.detail === 'object' && errorData.detail?.error) {
+      return errorData.detail.error.includes(errorMessage);
+    }
+
+    // Check for error in detail string format: { detail: "message" }
+    if (typeof errorData.detail === 'string') {
+      return errorData.detail.includes(errorMessage);
+    }
+
+    // Check for error in standard error format: { error: { message: "message" } }
+    if (errorData.error?.message) {
+      return errorData.error.message.includes(errorMessage);
+    }
+
+    return false;
+  }
+
   private async makeRequest<T>(
     endpoint: string,
     options: {
@@ -203,7 +224,11 @@ export class LiteLLMService extends BaseService {
     } = {},
   ): Promise<T> {
     if (this.isCircuitBreakerTripped()) {
-      throw new Error('Circuit breaker is open - LiteLLM service unavailable');
+      throw this.createNotFoundError(
+        'LiteLLM service',
+        undefined,
+        'LiteLLM service is temporarily unavailable due to circuit breaker. Please try again later',
+      );
     }
 
     const { method = 'GET', body, headers = {} } = options;
@@ -247,8 +272,25 @@ export class LiteLLMService extends BaseService {
 
         if (!response.ok) {
           const errorData = (await response.json()) as LiteLLMError;
-          throw new Error(
+
+          // Special handling for LiteLLM fresh installation with no models configured
+          if (
+            response.status === 500 &&
+            endpoint === '/model/info' &&
+            this.isNoModelsConfiguredError(errorData)
+          ) {
+            this.fastify.log.info(
+              'LiteLLM has no models configured - treating as empty model list',
+            );
+            // Return empty data array structure that matches expected LiteLLM response
+            return { data: [] } as T;
+          }
+
+          throw this.createValidationError(
             `LiteLLM API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`,
+            'response',
+            response.status,
+            'Check your request parameters and try again',
           );
         }
 

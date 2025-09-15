@@ -54,6 +54,7 @@ import {
 } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useErrorHandler } from '../hooks/useErrorHandler';
 import { apiKeysService, ApiKey, CreateApiKeyRequest } from '../services/apiKeys.service';
 import { subscriptionsService } from '../services/subscriptions.service';
 import { modelsService, Model } from '../services/models.service';
@@ -62,6 +63,7 @@ import { configService } from '../services/config.service';
 const ApiKeysPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
+  const { handleError } = useErrorHandler();
 
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,26 +116,9 @@ const ApiKeysPage: React.FC = () => {
       setApiKeys(response.data);
     } catch (err: any) {
       console.error('Failed to load API keys:', err);
-      let errorMessage = t('pages.apiKeys.notifications.loadErrorDesc');
-
-      // Extract error message from Axios error response
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.error) {
-        errorMessage =
-          typeof err.response.data.error === 'string'
-            ? err.response.data.error
-            : err.response.data.error.message || errorMessage;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-
-      setError(errorMessage);
-      addNotification({
-        title: t('pages.apiKeys.notifications.loadError'),
-        description: errorMessage,
-        variant: 'danger',
-      });
+      // Use centralized error handler which will display proper rate limit messages
+      handleError(err);
+      setError(t('pages.apiKeys.notifications.loadErrorDesc'));
     } finally {
       setLoading(false);
     }
@@ -177,25 +162,8 @@ const ApiKeysPage: React.FC = () => {
       setModels(validModels);
     } catch (err: any) {
       console.error('Failed to load subscribed models:', err);
-      let errorMessage = t('pages.apiKeys.notifications.loadModelErrorDesc');
-
-      // Extract error message from Axios error response
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.error) {
-        errorMessage =
-          typeof err.response.data.error === 'string'
-            ? err.response.data.error
-            : err.response.data.error.message || errorMessage;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-
-      addNotification({
-        title: t('pages.apiKeys.notifications.loadModelError'),
-        description: errorMessage,
-        variant: 'danger',
-      });
+      // Use centralized error handler which will display proper rate limit messages
+      handleError(err);
     } finally {
       setLoadingModels(false);
     }
@@ -205,6 +173,18 @@ const ApiKeysPage: React.FC = () => {
     loadApiKeys();
     loadModels(); // ✅ Load models on component mount
     loadConfig(); // Load configuration including LiteLLM API URL
+  }, []);
+
+  // Reload models when page gains focus (e.g., after subscribing to new models)
+  useEffect(() => {
+    const handleFocus = () => {
+      loadModels();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Sync selectedApiKey with updated apiKeys state to reflect key visibility changes in modal
@@ -418,6 +398,10 @@ const ApiKeysPage: React.FC = () => {
     if (triggerElement) {
       createModalTriggerRef.current = triggerElement;
     }
+
+    // ✅ Refresh models list to ensure newly subscribed models appear
+    loadModels();
+
     setIsCreateModalOpen(true);
   };
 
@@ -564,6 +548,10 @@ const ApiKeysPage: React.FC = () => {
     if (triggerElement) {
       createModalTriggerRef.current = triggerElement;
     }
+
+    // ✅ Refresh models list to ensure newly subscribed models appear
+    loadModels();
+
     setIsCreateModalOpen(true);
   };
 

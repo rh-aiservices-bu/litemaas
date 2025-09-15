@@ -521,11 +521,76 @@ VITE_DEFAULT_LOCALE=en
 VITE_SUPPORTED_LOCALES=en,es,fr,de,it,ja,ko,zh,elv
 ```
 
+## 🚨 Error Handling Architecture
+
+The frontend implements comprehensive error handling using the `useErrorHandler` hook with automatic notifications, retry logic, and error boundaries.
+
+### useErrorHandler Hook
+
+```typescript
+import { useErrorHandler } from '../hooks/useErrorHandler';
+
+function Component() {
+  const { handleError, handleValidationError, withErrorHandler } = useErrorHandler();
+
+  // Basic error handling with notifications
+  const handleAction = async () => {
+    try {
+      await apiService.performAction();
+    } catch (error) {
+      handleError(error);
+    }
+  };
+
+  // Specialized validation error handling
+  const handleFormSubmit = async (data: FormData) => {
+    try {
+      await apiService.submitForm(data);
+    } catch (error) {
+      handleValidationError(error);
+    }
+  };
+
+  // Higher-order error handler with retry
+  const handleClick = withErrorHandler(
+    async () => await apiService.performAction(),
+    { enableRetry: true, maxRetries: 3 }
+  );
+}
+```
+
+### Key Features
+
+- **Specialized handlers**: `handleValidationError`, `handleNetworkError`, `handleAuthError`
+- **Higher-order wrapper**: `withErrorHandler` for automatic error handling
+- **PatternFly 6 integration**: Consistent notifications with proper ARIA support
+- **Retry mechanisms**: Automatic retry for transient errors
+- **Error boundaries**: Global and component-level error isolation
+- **React Query integration**: Automatic error handling for data fetching
+- **Internationalization**: Error messages support all 9 languages
+
+### Error Boundaries
+
+```typescript
+// Global error boundary
+<ErrorBoundary fallback={<ErrorPage />}>
+  <App />
+</ErrorBoundary>
+
+// Component-level error boundary
+<ComponentErrorBoundary componentName="UserProfile">
+  <UserProfileComponent />
+</ComponentErrorBoundary>
+```
+
+For comprehensive examples, patterns, and best practices, see [`docs/development/error-handling.md`](../docs/development/error-handling.md).
+
 ## 📚 Related Documentation
 
 - Root [`CLAUDE.md`](../CLAUDE.md) - Project overview
 - Backend [`CLAUDE.md`](../backend/CLAUDE.md) - Backend context
 - [`docs/development/pf6-guide/`](../docs/development/pf6-guide/) - **PatternFly 6 Guide (AUTHORITATIVE)**
 - [`docs/development/accessibility/`](../docs/development/accessibility/) - **Accessibility Guide (WCAG 2.1 AA)**
+- [`docs/development/error-handling.md`](../docs/development/error-handling.md) - Error handling best practices
 - [`docs/development/`](../docs/development/) - Development setup
 - [`docs/architecture/`](../docs/architecture/) - System design

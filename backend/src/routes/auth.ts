@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from 'fastify';
 import { Static } from '@sinclair/typebox';
 import { AuthenticatedRequest } from '../types';
 import { LoginResponseSchema, AuthCallbackQuerySchema, TokenResponseSchema } from '../schemas';
+import { ApplicationError } from '../utils/errors';
 
 interface DevTokenRequestBody {
   username?: string;
@@ -129,7 +130,13 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to generate development token');
-        throw fastify.createError(500, 'Failed to generate token');
+        // Re-throw ApplicationError instances as-is
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+        // For other errors, include original message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to generate token: ${errorMessage}`);
       }
     },
   });

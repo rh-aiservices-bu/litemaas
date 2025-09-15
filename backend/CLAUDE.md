@@ -470,6 +470,42 @@ NODE_ENV=development
 
 See `docs/deployment/configuration.md` for complete list.
 
+## 🚨 Error Handling Architecture
+
+The backend implements comprehensive error handling using structured `ApplicationError` classes and `BaseService` integration.
+
+### ApplicationError Class
+
+```typescript
+import { ApplicationError } from '../utils/errors';
+
+// Factory methods for common error types
+ApplicationError.notFound('User', userId);
+ApplicationError.validation('Invalid email format', 'email', email);
+ApplicationError.alreadyExists('User', 'email', email);
+ApplicationError.unauthorized('Authentication required');
+ApplicationError.forbidden('Access denied', 'admin');
+```
+
+### BaseService Integration
+
+All services extend `BaseService` with built-in error handling methods:
+
+- **Validation helpers**: `validateUUID()`, `validateEmail()`, `validateRequiredFields()`
+- **Error creation**: `createNotFoundError()`, `createValidationError()`, `createAlreadyExistsError()`
+- **Database error mapping**: Automatic PostgreSQL error code translation
+- **Query wrappers**: `executeQuery()`, `executeQueryOne()`, `executeTransaction()`
+
+### Key Features
+
+- **Standardized responses**: Consistent error format across all APIs
+- **Database integration**: Automatic mapping of PostgreSQL constraint violations
+- **Internationalization**: Error messages support all 9 languages
+- **Retry logic**: Retryable errors marked for client retry mechanisms
+- **Contextual logging**: Request correlation IDs and operation context
+
+For comprehensive examples, patterns, and best practices, see [`docs/development/error-handling.md`](../docs/development/error-handling.md).
+
 ## 📚 Related Documentation
 
 - Root [`CLAUDE.md`](../CLAUDE.md) - Project overview
@@ -477,3 +513,4 @@ See `docs/deployment/configuration.md` for complete list.
 - [`docs/api/`](../docs/api/) - API documentation
 - [`docs/architecture/`](../docs/architecture/) - System design
 - [`docs/deployment/`](../docs/deployment/) - Deployment guides
+- [`docs/development/error-handling.md`](../docs/development/error-handling.md) - Error handling best practices

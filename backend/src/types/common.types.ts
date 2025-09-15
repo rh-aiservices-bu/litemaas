@@ -15,24 +15,9 @@ export interface PaginatedResponse<T> {
   pagination: PaginationMeta;
 }
 
-export interface ErrorResponse {
-  error: {
-    code: string;
-    message: string;
-    details?: Record<string, any>;
-  };
-  requestId: string;
-}
-
-export enum ErrorCode {
-  UNAUTHORIZED = 'UNAUTHORIZED',
-  FORBIDDEN = 'FORBIDDEN',
-  NOT_FOUND = 'NOT_FOUND',
-  VALIDATION_ERROR = 'VALIDATION_ERROR',
-  QUOTA_EXCEEDED = 'QUOTA_EXCEEDED',
-  RATE_LIMITED = 'RATE_LIMITED',
-  INTERNAL_ERROR = 'INTERNAL_ERROR',
-}
+// Re-export error types from dedicated error types module
+export type { ErrorResponse, ErrorDetails } from './error.types';
+export { ErrorCode } from '../utils/errors';
 
 export interface TimePeriod {
   start: Date;
@@ -73,7 +58,11 @@ export interface QueryResult<T = DatabaseRow> {
 export interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
-  error?: ErrorResponse['error'];
+  error?: {
+    code: string;
+    message: string;
+    details?: Record<string, any>;
+  };
 }
 
 export interface DatabaseUtils {

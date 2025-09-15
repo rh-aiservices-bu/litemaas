@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { JWTPayload } from '../types';
+import { BaseService } from './base.service';
 
 export interface RefreshToken {
   id: string;
@@ -18,12 +19,11 @@ export interface TokenPair {
   refreshExpiresIn: number;
 }
 
-export class TokenService {
-  private fastify: FastifyInstance;
+export class TokenService extends BaseService {
   private refreshTokenExpiry: number = 7 * 24 * 60 * 60 * 1000; // 7 days
 
   constructor(fastify: FastifyInstance) {
-    this.fastify = fastify;
+    super(fastify);
   }
 
   async generateTokenPair(user: {
@@ -67,7 +67,11 @@ export class TokenService {
     );
 
     if (!refreshTokenResult) {
-      throw new Error('Failed to create refresh token');
+      throw this.createNotFoundError(
+        'Refresh token',
+        userId,
+        'Failed to create refresh token for user. Please try logging in again',
+      );
     }
 
     return {

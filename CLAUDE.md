@@ -209,6 +209,25 @@ See <https://github.com/anthropics/claude-code/issues/4711> for details.
 
 _For detailed implementation, see workspace-specific CLAUDE.md files_
 
+## 🚨 Error Handling Architecture
+
+LiteMaaS implements a comprehensive error handling system that provides consistent error processing, user-friendly messages, and resilient operation across both backend and frontend.
+
+### Key Features
+
+- **Structured Backend Errors**: `ApplicationError` class with standardized codes and user-friendly messages
+- **React Error Handling**: `useErrorHandler` hook with automatic notifications and retry logic
+- **Internationalization**: Error messages support all 9 languages (EN, ES, FR, DE, IT, JA, KO, ZH, ELV)
+- **Development Support**: Enhanced error logging and debugging in development mode
+- **Production Resilience**: Graceful fallbacks and circuit breaker patterns for external services
+- **Accessibility**: Screen reader announcements and WCAG-compliant error messaging
+
+### Implementation Details
+
+- **Backend**: See [`backend/CLAUDE.md`](backend/CLAUDE.md) for ApplicationError class, BaseService patterns, and database error mapping
+- **Frontend**: See [`frontend/CLAUDE.md`](frontend/CLAUDE.md) for useErrorHandler hook, error boundaries, and notification integration
+- **Best Practices**: See [`docs/development/error-handling.md`](docs/development/error-handling.md) for comprehensive developer guide
+
 ## 📚 Documentation Structure
 
 ### AI Context Files (Start Here)

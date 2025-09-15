@@ -15,6 +15,7 @@ import {
 } from '../schemas/api-keys';
 import { ApiKeyService } from '../services/api-key.service';
 import { LiteLLMService } from '../services/litellm.service';
+import { ApplicationError } from '../utils/errors';
 
 // Error type for proper error handling
 interface ErrorWithStatusCode extends Error {
@@ -105,7 +106,13 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to list API keys');
-        throw fastify.createError(500, 'Failed to list API keys');
+        // Re-throw ApplicationError instances as-is
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+        // For other errors, include original message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to list API keys: ${errorMessage}`);
       }
     },
   });
@@ -542,7 +549,13 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         return stats;
       } catch (error) {
         fastify.log.error(error, 'Failed to get API key statistics');
-        throw fastify.createError(500, 'Failed to get API key statistics');
+        // Re-throw ApplicationError instances as-is
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+        // For other errors, include original message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to get API key statistics: ${errorMessage}`);
       }
     },
   });
@@ -590,7 +603,13 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         return validation;
       } catch (error) {
         fastify.log.error(error, 'Failed to validate API key');
-        throw fastify.createError(500, 'Failed to validate API key');
+        // Re-throw ApplicationError instances as-is
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+        // For other errors, include original message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to validate API key: ${errorMessage}`);
       }
     },
   });
@@ -666,7 +685,13 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to cleanup expired API keys');
-        throw fastify.createError(500, 'Failed to cleanup expired API keys');
+        // Re-throw ApplicationError instances as-is
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+        // For other errors, include original message
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to cleanup expired API keys: ${errorMessage}`);
       }
     },
   });
