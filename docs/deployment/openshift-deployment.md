@@ -115,6 +115,8 @@ LiteMaaS uses OpenShift's built-in OAuth for authentication. Follow these steps 
 
 4. Click **Create**
 
+**Alternatively** save the above as a file `litemass-oauth.yaml` and apply with `oc apply -f litemass-oauth.yaml` 
+
 ### Step 4: Retrieve OAuth Information
 
 After creating the OAuth client, you'll need:
@@ -299,7 +301,7 @@ oc get pods
 oc logs -l app=postgres --tail=50
 
 # Test database connectivity from backend
-oc exec deployment/backend -- curl -f http://localhost:8081/api/v1/health/reeady
+oc exec deployment/backend -- curl -f http://localhost:8080/api/v1/health/ready
 ```
 
 ### Step 2: Access LiteLLM Administration UI
