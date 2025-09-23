@@ -292,15 +292,19 @@ oc get pods
 
 ### Step 1: Verify Database Initialization
 
+(optional, if this does not work the rest won't have deployed...)
+
 ```bash
 # Check PostgreSQL logs
 oc logs -l app=postgres --tail=50
 
 # Test database connectivity from backend
-oc exec deployment/backend -- curl -f http://localhost:8081/api/v1/health
+oc exec deployment/backend -- curl -f http://localhost:8081/api/v1/health/reeady
 ```
 
 ### Step 2: Access LiteLLM Administration UI
+
+(optional, LiteLLM access not needed anymore)
 
 1. Get the LiteLLM route URL:
 
@@ -319,24 +323,7 @@ oc exec deployment/backend -- curl -f http://localhost:8081/api/v1/health
    - **Username**: admin (or value of `LITELLM_UI_USERNAME`)
    - **Password**: (value of `LITELLM_UI_PASSWORD`)
 
-### Step 3: Configure Initial Models in LiteLLM
-
-1. In the LiteLLM UI, navigate to **Models**
-2. Add your first AI model (example for OpenAI):
-
-   ```json
-   {
-     "model_name": "gpt-4",
-     "litellm_params": {
-       "model": "gpt-4",
-       "api_key": "your-openai-api-key"
-     }
-   }
-   ```
-
-3. Test the model configuration
-
-### Step 4: Verify LiteMaaS Application
+### Step 3: Verify LiteMaaS Application
 
 1. Get the frontend route URL:
 
