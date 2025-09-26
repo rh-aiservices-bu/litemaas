@@ -1364,6 +1364,132 @@ Response:
 }
 ```
 
+## External API Integration Patterns
+
+The LiteMaaS system integrates with external AI model APIs for configuration validation and model discovery. This section documents the expected integration patterns and API structures.
+
+### Model Configuration Testing
+
+The frontend Model Configuration Testing feature validates external AI model endpoints by making direct API calls. This testing capability enables administrators to verify model configurations before creating or updating models in LiteMaaS.
+
+#### External API Endpoint Structure
+
+Model configuration testing expects external AI APIs to follow the standard OpenAI-compatible format:
+
+**Endpoint**: `GET {API_BASE_URL}/models`
+**Authentication**: Bearer token authorization
+
+#### Expected Request Format
+
+```http
+GET /models HTTP/1.1
+Host: external-api-provider.com
+Authorization: Bearer {API_KEY}
+Content-Type: application/json
+```
+
+#### Expected Response Format
+
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "model-name-1",
+      "object": "model",
+      "created": 1758888561,
+      "owned_by": "provider",
+      "root": "/mnt/models",
+      "parent": null,
+      "max_model_len": 32768,
+      "permission": [
+        {
+          "id": "modelperm-5d4ee142ac7449a38f452494577c7e2a",
+          "object": "model_permission",
+          "created": 1758888561,
+          "allow_create_engine": false,
+          "allow_sampling": true,
+          "allow_logprobs": true,
+          "allow_search_indices": false,
+          "allow_view": true,
+          "allow_fine_tuning": false,
+          "organization": "*",
+          "group": null,
+          "is_blocking": false
+        }
+      ]
+    },
+    {
+      "id": "model-name-2",
+      "object": "model",
+      "created": 1758888562,
+      "owned_by": "provider",
+      // ... additional model properties
+    }
+  ]
+}
+```
+
+#### Error Response Handling
+
+Configuration testing handles various error scenarios from external APIs:
+
+**Authentication Errors (HTTP 401/403)**:
+```json
+{
+  "error": {
+    "message": "Invalid authentication credentials",
+    "type": "authentication_error",
+    "code": "invalid_api_key"
+  }
+}
+```
+
+**Network/Connectivity Errors**:
+- Connection timeouts
+- DNS resolution failures
+- SSL certificate errors
+- Network unreachable errors
+
+**Server Errors (HTTP 5xx)**:
+```json
+{
+  "error": {
+    "message": "Internal server error",
+    "type": "server_error",
+    "code": "internal_error"
+  }
+}
+```
+
+#### Model Validation Process
+
+1. **Field Validation**: Ensure required fields are present (API Base URL, API Key, Backend Model Name)
+2. **HTTP Request**: Make GET request to `{API_BASE_URL}/models`
+3. **Authentication**: Use Bearer token authentication with provided API key
+4. **Response Parsing**: Extract model list from `data` array
+5. **Model Verification**: Check if specified model name exists in returned model IDs
+6. **Result Reporting**: Display success or specific error messages
+
+#### Integration Security Considerations
+
+- **HTTPS Enforcement**: All external API calls should use HTTPS
+- **API Key Protection**: Keys are used for validation only, not stored permanently
+- **Error Sanitization**: Error messages don't expose sensitive configuration details
+- **Request Timeout**: Implement reasonable timeout limits for external API calls
+- **Rate Limiting**: Consider implementing rate limiting for test requests
+
+#### Frontend Implementation Notes
+
+The model configuration testing is implemented in `AdminModelsPage.tsx` with:
+- State management for testing progress and results
+- Automatic clearing of results when form data changes
+- Proper error categorization and user feedback
+- Loading states and button disable logic
+- Internationalized error messages
+
+For detailed implementation, see [Model Configuration Testing Documentation](../features/model-configuration-testing.md).
+
 ## Error Responses
 
 All errors follow consistent format:

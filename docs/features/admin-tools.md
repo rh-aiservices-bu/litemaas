@@ -14,7 +14,7 @@ The Tools page is restricted to users with administrative privileges:
 
 ## Models Management Panel
 
-The Models Management panel is the primary feature of the Tools page, providing control over model synchronization between LiteLLM and the LiteMaaS database.
+The Models Management panel is the primary feature of the Tools page, providing control over model synchronization between LiteLLM and the LiteMaaS database. It also includes model configuration testing capabilities for validating new model setups.
 
 ### Purpose
 
@@ -36,6 +36,54 @@ Manual synchronization is useful when:
 - Automatic sync has failed or seems outdated
 - You want to verify model availability immediately
 - Testing new model configurations
+
+## Model Configuration Testing
+
+In addition to manual synchronization, the admin interface includes a **Test Configuration** feature for validating model configurations before creation. This feature is accessible through the Create/Edit Model modal on the Admin → Models page.
+
+### Purpose
+
+Model configuration testing allows administrators to:
+
+- **Validate Connectivity**: Test if API endpoints are reachable and responsive
+- **Verify Authentication**: Confirm API keys have proper access permissions
+- **Check Model Availability**: Ensure specified models exist at the configured endpoints
+- **Prevent Configuration Errors**: Catch setup issues before model creation
+- **Improve Setup Reliability**: Provide immediate feedback during model configuration
+
+### How to Use Test Configuration
+
+1. Navigate to **Admin → Models** in the LiteMaaS interface
+2. Click **Create Model** or edit an existing model
+3. Fill in the required configuration fields:
+   - **API Base URL**: Base URL of the AI model service
+   - **API Key**: Authentication key for accessing the service
+   - **Backend Model Name**: Exact model name as it appears in the service
+4. Click the **Test Configuration** button (located left of Create/Cancel buttons)
+5. Review the test results displayed above the action buttons
+
+### Test Results and Error Handling
+
+#### Success Scenario
+- **✅ Connection Successful**: "Connection successful! You can create the model."
+- Indicates the endpoint is reachable, authentication works, and the model exists
+
+#### Error Scenarios
+- **❌ Cannot Contact Endpoint**: Network issues or invalid URL
+- **❌ Authentication Failed**: Invalid API key or insufficient permissions
+- **⚠️ Model Not Available**: Model name not found in endpoint's model list
+  - Shows up to 5 available model suggestions
+
+### Technical Details
+
+The test configuration feature:
+- Connects to `{API_BASE_URL}/models` endpoint
+- Uses Bearer token authentication with the provided API key
+- Parses the JSON response to extract available model IDs from the `data` array
+- Verifies the specified model name exists in the returned list
+- Handles various error conditions with specific user-friendly messages
+
+For complete technical documentation, see [Model Configuration Testing](model-configuration-testing.md).
 
 #### How to Trigger Sync
 
