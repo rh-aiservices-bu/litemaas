@@ -80,7 +80,7 @@ For implementation examples, see [`docs/development/pf6-guide/`](../docs/develop
 
 ```bash
 # Development server with HMR
-npm run dev             # Starts on http://localhost:5173
+npm run dev             # Starts on http://localhost:3000
 
 # Building
 npm run build          # Production build
