@@ -103,7 +103,14 @@
       "title": "Gestione Modelli",
       "tpmMustBeAtLeast_1": "TPM deve essere almeno 1",
       "tpmTokensPerMinute": "TPM (Token per Minuto)",
-      "updateModelFailed": "Aggiornamento Modello Fallito"
+      "updateModelFailed": "Aggiornamento Modello Fallito",
+      "testConfiguration": "Testa Configurazione",
+      "testingConfiguration": "Testando configurazione...",
+      "connectionSuccessful": "Connessione riuscita! Puoi creare il modello.",
+      "cannotContactEndpoint": "Impossibile contattare l'endpoint",
+      "authenticationFailed": "Autenticazione fallita",
+      "modelNotAvailable": "Modello non disponibile a questo endpoint",
+      "availableModels": "Modelli disponibili:"
     },
     "loading": {
       "description": "Recupero informazioni modelli dal server",
