@@ -128,7 +128,7 @@ const ApiKeysPage: React.FC = () => {
   const loadConfig = async () => {
     try {
       const config = await configService.getConfig();
-      setLitellmApiUrl(config.litellmApiUrl);
+      setLitellmApiUrl(config.litellmApiUrl ?? 'https://api.litemaas.com');
     } catch (err) {
       console.error('Failed to load configuration:', err);
       // Keep default value if config load fails
@@ -805,7 +805,7 @@ const ApiKeysPage: React.FC = () => {
                             <FlexItem>
                               <Content
                                 component={ContentVariants.small}
-                                style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                                style={{ color: 'var(--pf-t--global--text--color--subtle)' }}
                               >
                                 {apiKey.description}
                               </Content>
@@ -820,7 +820,10 @@ const ApiKeysPage: React.FC = () => {
                         >
                           <FlexItem>
                             <code
-                              style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}
+                              style={{
+                                fontFamily: 'monospace',
+                                fontSize: 'var(--pf-t--global--font--size--sm)',
+                              }}
                               id={`key-${apiKey.id}-description`}
                               aria-label={
                                 visibleKeys.has(apiKey.id) && apiKey.fullKey
@@ -892,7 +895,7 @@ const ApiKeysPage: React.FC = () => {
                           ) : (
                             <Content
                               component={ContentVariants.small}
-                              style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                              style={{ color: 'var(--pf-t--global--text--color--subtle)' }}
                             >
                               {t('pages.apiKeys.noModelsAssigned')}
                             </Content>
@@ -1271,10 +1274,10 @@ const ApiKeysPage: React.FC = () => {
                     <code
                       style={{
                         fontFamily: 'monospace',
-                        fontSize: '0.875rem',
+                        fontSize: 'var(--pf-t--global--font--size--sm)',
                         padding: '0.5rem',
-                        backgroundColor: 'var(--pf-v6-global--BackgroundColor--200)',
-                        border: '1px solid var(--pf-v6-global--BorderColor--100)',
+                        backgroundColor: 'var(--pf-t--global--background--color--200)',
+                        border: '1px solid var(--pf-t--global--border--color--default)',
                         borderRadius: '3px',
                         display: 'block',
                         wordBreak: 'break-all',
@@ -1637,7 +1640,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                 style={{ marginBottom: '1rem' }}
               >
                 <FlexItem>
-                  <ExclamationTriangleIcon color="var(--pf-v6-global--danger--color--100)" />
+                  <ExclamationTriangleIcon color="var(--pf-t--global--color--status--danger--default)" />
                 </FlexItem>
                 <FlexItem>
                   <Content component={ContentVariants.p}>

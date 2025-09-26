@@ -662,7 +662,7 @@ const ModelsPage: React.FC = () => {
                   style={{
                     marginTop: '1rem',
                     padding: '1rem',
-                    backgroundColor: 'var(--pf-v6-global--danger--color--100)',
+                    backgroundColor: 'var(--pf-t--global--color--status--danger--default)',
                     borderRadius: '4px',
                   }}
                 >
@@ -671,7 +671,7 @@ const ModelsPage: React.FC = () => {
                     spaceItems={{ default: 'spaceItemsSm' }}
                   >
                     <FlexItem>
-                      <InfoCircleIcon color="var(--pf-v6-global--danger--color--200)" />
+                      <InfoCircleIcon color="var(--pf-t--global--color--status--danger--default)" />
                     </FlexItem>
                     <FlexItem>
                       <Content>{t('pages.models.modelUnavailable')}</Content>

@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor, act } from '../test-utils';
 import { vi } from 'vitest';
 import LoginPage from '../../pages/LoginPage';
 import { configService } from '../../services/config.service';
-import type { ConfigResponse } from '../../services/config.service';
+import type { BackendConfig } from '../../services/config.service';
 
 // Create mock functions that can be accessed in tests
 const mockLogin = vi.fn();
@@ -26,6 +26,9 @@ vi.mock('../../contexts/AuthContext', () => ({
 vi.mock('../../services/config.service', () => ({
   configService: {
     getConfig: vi.fn().mockResolvedValue({
+      version: '1.0.0',
+      usageCacheTtlMinutes: 60,
+      environment: 'development' as const,
       authMode: 'oauth',
       litellmApiUrl: 'http://localhost:4000',
     }),
@@ -39,14 +42,21 @@ vi.mock('../../assets', () => ({
 
 const mockConfigService = vi.mocked(configService);
 
+// Helper to create complete BackendConfig objects for tests
+const createMockConfig = (overrides?: Partial<BackendConfig>): BackendConfig => ({
+  version: '1.0.0',
+  usageCacheTtlMinutes: 60,
+  environment: 'development' as const,
+  authMode: 'oauth',
+  litellmApiUrl: 'http://localhost:4000',
+  ...overrides,
+});
+
 describe('LoginPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset the config service mock
-    mockConfigService.getConfig.mockResolvedValue({
-      authMode: 'oauth',
-      litellmApiUrl: 'http://localhost:4000',
-    });
+    mockConfigService.getConfig.mockResolvedValue(createMockConfig());
     // Reset login mocks to simple sync functions
     mockLogin.mockImplementation(() => {});
     mockLoginAsAdmin.mockImplementation(() => {});
@@ -54,10 +64,7 @@ describe('LoginPage', () => {
 
   describe('Basic rendering', () => {
     it('renders login page with brand and title', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'oauth',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig());
 
       await act(async () => {
         render(<LoginPage />);
@@ -74,10 +81,7 @@ describe('LoginPage', () => {
     });
 
     it('renders language selector dropdown', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'oauth',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig());
 
       await act(async () => {
         render(<LoginPage />);
@@ -102,10 +106,7 @@ describe('LoginPage', () => {
 
   describe('OAuth authentication flow', () => {
     it('calls login function when OAuth login button is clicked', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'oauth',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig());
 
       await act(async () => {
         render(<LoginPage />);
@@ -129,10 +130,7 @@ describe('LoginPage', () => {
     });
 
     it('does not show admin login in OAuth mode', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'oauth',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig());
 
       await act(async () => {
         render(<LoginPage />);
@@ -150,10 +148,7 @@ describe('LoginPage', () => {
     });
 
     it('handles OAuth login errors gracefully', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'oauth',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig());
 
       // Mock login to be a synchronous function that doesn't return a promise
       mockLogin.mockImplementation(() => {
@@ -187,10 +182,7 @@ describe('LoginPage', () => {
 
   describe('Mock authentication mode', () => {
     it('shows admin login option in mock mode', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'mock',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig({ authMode: 'mock' }));
 
       await act(async () => {
         render(<LoginPage />);
@@ -207,10 +199,7 @@ describe('LoginPage', () => {
     });
 
     it('calls loginAsAdmin when admin button is clicked', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'mock',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig({ authMode: 'mock' }));
 
       await act(async () => {
         render(<LoginPage />);
@@ -233,10 +222,7 @@ describe('LoginPage', () => {
     });
 
     it('shows both OAuth and admin login options in mock mode', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'mock',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig({ authMode: 'mock' }));
 
       render(<LoginPage />);
 
@@ -247,10 +233,7 @@ describe('LoginPage', () => {
     });
 
     it('renders divider between OAuth and admin login', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'mock',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig({ authMode: 'mock' }));
 
       render(<LoginPage />);
 
@@ -298,10 +281,7 @@ describe('LoginPage', () => {
 
   describe('Language selector functionality', () => {
     it('opens language dropdown when clicked', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'oauth',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig());
 
       await act(async () => {
         render(<LoginPage />);
@@ -330,10 +310,7 @@ describe('LoginPage', () => {
     });
 
     it('closes dropdown when language is selected', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'oauth',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig());
 
       await act(async () => {
         render(<LoginPage />);
@@ -371,10 +348,7 @@ describe('LoginPage', () => {
     });
 
     it('displays all supported languages', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'oauth',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig());
 
       await act(async () => {
         render(<LoginPage />);
@@ -417,10 +391,7 @@ describe('LoginPage', () => {
 
   describe('Accessibility', () => {
     it('has proper button labels and roles', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'mock',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig({ authMode: 'mock' }));
 
       render(<LoginPage />);
 
@@ -436,10 +407,7 @@ describe('LoginPage', () => {
     });
 
     it('has proper img alt text for branding', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'oauth',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig());
 
       render(<LoginPage />);
 
@@ -450,10 +418,7 @@ describe('LoginPage', () => {
     });
 
     it('has proper aria-label for language selector', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'oauth',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig());
 
       render(<LoginPage />);
 
@@ -466,10 +431,7 @@ describe('LoginPage', () => {
 
   describe('Button states and interactions', () => {
     it('maintains button state during interactions', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'mock',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig({ authMode: 'mock' }));
 
       render(<LoginPage />);
 
@@ -483,10 +445,7 @@ describe('LoginPage', () => {
     });
 
     it('handles rapid button clicks', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'mock',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig({ authMode: 'mock' }));
 
       await act(async () => {
         render(<LoginPage />);
@@ -511,10 +470,7 @@ describe('LoginPage', () => {
 
   describe('Component lifecycle', () => {
     it('loads config on mount', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'oauth',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig());
 
       render(<LoginPage />);
 
@@ -526,10 +482,7 @@ describe('LoginPage', () => {
     });
 
     it('handles component remount correctly', async () => {
-      mockConfigService.getConfig.mockResolvedValue({
-        authMode: 'oauth',
-        litellmApiUrl: 'http://localhost:4000',
-      });
+      mockConfigService.getConfig.mockResolvedValue(createMockConfig());
 
       const { unmount } = render(<LoginPage />);
       unmount();
@@ -541,8 +494,8 @@ describe('LoginPage', () => {
     });
 
     it('shows correct UI state transitions', async () => {
-      let configResolve: (config: ConfigResponse) => void;
-      const configPromise = new Promise<ConfigResponse>((resolve) => {
+      let configResolve: (config: BackendConfig) => void;
+      const configPromise = new Promise<BackendConfig>((resolve) => {
         configResolve = resolve;
       });
       mockConfigService.getConfig.mockReturnValue(configPromise);
@@ -556,7 +509,7 @@ describe('LoginPage', () => {
 
       // Resolve config
       await act(async () => {
-        configResolve!({ authMode: 'oauth', litellmApiUrl: 'http://localhost:4000' });
+        configResolve!(createMockConfig());
       });
 
       await waitFor(() => {

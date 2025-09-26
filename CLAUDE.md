@@ -26,11 +26,27 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 
 **Role-Based Access Control (RBAC)**: Three-tier hierarchy `admin > adminReadonly > user` with OpenShift integration.
 
+**Admin Usage Analytics** (Major feature - 2025 Q3): Enterprise-grade analytics with comprehensive system-wide visibility:
+
+- **Day-by-day incremental caching** with intelligent TTL (permanent historical, 5-min current day)
+- **Multi-dimensional filtering**: users, models, providers, API keys with cascading filter dependencies
+- **Trend analysis** with automatic comparison period calculations
+- **Rich visualizations**: usage trends, model distribution, weekly heatmap (component ready, integration pending)
+- **Data export**: CSV/JSON with filter preservation
+- **Configurable cache TTL** via ConfigContext integration with React Query
+
+**State Management**: React Context for auth/notifications/config, React Query for server state with dynamic cache TTL from backend configuration.
+
+**Shared Chart Utilities**: Consistent formatting, accessibility, and styling across all chart components via shared utility modules.
+
 For detailed features, see:
 
-- [`backend/CLAUDE.md`](backend/CLAUDE.md) - API implementation details
-- [`frontend/CLAUDE.md`](frontend/CLAUDE.md) - UI implementation details
+- [`backend/CLAUDE.md`](backend/CLAUDE.md) - API implementation, service layer, caching patterns
+- [`frontend/CLAUDE.md`](frontend/CLAUDE.md) - UI components, state management, PatternFly 6
 - [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md) - Complete RBAC guide
+- [`docs/features/admin-usage-analytics-implementation-plan.md`](docs/features/admin-usage-analytics-implementation-plan.md) - Comprehensive admin analytics implementation (2000 lines)
+- [`docs/development/chart-components-guide.md`](docs/development/chart-components-guide.md) - Chart component patterns and utilities
+- [`docs/development/pattern-reference.md`](docs/development/pattern-reference.md) - Authoritative code patterns and anti-patterns
 
 ## 🚀 Quick Start
 
@@ -38,7 +54,7 @@ For detailed features, see:
 
 ```bash
 npm install        # Install dependencies
-npm run dev        # Start both backend and frontend with auto-reload
+npm run dev        # Start both backend and frontend with auto-reload and logging
 ```
 
 **Production (OpenShift):**
@@ -57,6 +73,61 @@ _See `docs/development/` for detailed setup and `docs/deployment/configuration.m
 
 ## 🚨 CRITICAL DEVELOPMENT NOTES
 
+### Development Server and Logging Setup
+
+**⚠️ IMPORTANT FOR CLAUDE CODE AND AI ASSISTANTS**:
+
+The development servers are configured to run with hot-reload and write logs to files for AI assistant visibility.
+
+**Current Setup:**
+
+- **Backend**: Running on port 8081 with `tsx watch` and `pino-pretty` logging
+- **Frontend**: Running on port 3000 with Vite dev server
+- **Logs**: Both servers write to `logs/` directory in the monorepo root
+
+**For AI Assistants (Claude Code):**
+
+```bash
+# DO NOT start new server processes - they are already running!
+
+# To check backend logs (most recent 100 lines):
+tail -n 100 logs/backend.log
+
+# To check frontend logs:
+tail -n 100 logs/frontend.log
+
+# To watch logs in real-time:
+tail -f logs/backend.log
+tail -f logs/frontend.log
+
+# To search for errors:
+grep -i error logs/backend.log | tail -n 20
+grep -i error logs/frontend.log | tail -n 20
+
+# To check server status (if needed):
+curl http://localhost:8081/api/v1/health  # Backend health check
+curl http://localhost:3000          # Frontend dev server
+```
+
+**Server URLs:**
+
+- Backend API: `http://localhost:8081`
+- Frontend Dev Server: `http://localhost:3000`
+- API Documentation: `http://localhost:8081/docs`
+
+**Starting/Stopping Servers (for human developers):**
+
+```bash
+# Start with logging (recommended for AI-assisted development):
+npm run dev:logged
+
+# Start without logging (for regular development):
+npm run dev
+
+# Clear log files:
+npm run logs:clear
+```
+
 ### Bash Tool Limitation
 
 **⚠️ CRITICAL**: stderr redirects are broken in the Bash tool - you can't use `2>&1` in bash commands. The Bash tool will mangle the stderr redirect and pass a "2" as an arg, and you won't see stderr.
@@ -65,13 +136,23 @@ _See `docs/development/` for detailed setup and `docs/deployment/configuration.m
 
 See <https://github.com/anthropics/claude-code/issues/4711> for details.
 
-### Changes tests
+### Changes and Testing
 
-**IMPORTANT**: In development, both backend and frontend servers run with auto-reload enabled. Any code changes are automatically detected and applied without needing to restart the servers. In most cases YOU DON'T NEED to start or restart the servers. Backend is listening on port 8081, and frontend is listening on port 3000.
+**IMPORTANT**: In development, both backend and frontend servers run with auto-reload enabled. Any code changes are automatically detected and applied without needing to restart the servers.
 
-USE Playwright to test your modifications live.
+**YOU DON'T NEED TO**:
 
-## 🔒 Security & Authentication
+- Start new server processes (they're already running)
+- Restart servers after code changes (auto-reload handles this)
+- Run `npm run dev` again (servers are persistent)
+
+**INSTEAD, DO**:
+
+- Read the log files to see server output
+- Use Playwright to test your modifications live
+- Check the logs for compilation errors or runtime issues
+
+## 🔐 Security & Authentication
 
 **OAuth2 + JWT** with role-based access control. Three-tier hierarchy: `admin > adminReadonly > user`.
 
@@ -90,6 +171,21 @@ For details, see [`docs/deployment/authentication.md`](docs/deployment/authentic
 - **RBAC Guide**: [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md)
 
 ## 🎯 For AI Assistants
+
+### ⚠️ BEFORE YOU CODE - Server and Log Check
+
+**FIRST STEP**: Always check if servers are running and read recent logs:
+
+```bash
+# Check recent backend activity
+tail -n 50 logs/backend.log
+
+# Check recent frontend activity
+tail -n 50 logs/frontend.log
+
+# Look for any errors
+grep -i error logs/*.log | tail -n 20
+```
 
 ### ⚠️ BEFORE YOU CODE - Pattern Discovery Checklist
 
@@ -118,6 +214,26 @@ When working on:
 - **Role/Admin tasks** → Load `docs/features/user-roles-administration.md` for RBAC details
 - **Authentication tasks** → Load `docs/deployment/authentication.md` for OAuth/role setup
 - **Full-stack tasks** → Start with this file, then load specific contexts as needed
+
+### Debugging Workflow for AI Assistants
+
+1. **Check logs first** - Don't start new processes:
+
+   ```bash
+   tail -n 100 logs/backend.log
+   tail -n 100 logs/frontend.log
+   ```
+
+2. **If you see compilation errors** - Fix the code and check logs again (auto-reload will recompile)
+
+3. **If you see runtime errors** - Read the stack trace from logs and fix
+
+4. **If servers appear down** - Tell the user to restart manually:
+
+   ```bash
+   # User should run this, not the AI:
+   npm run dev:logged
+   ```
 
 ### Context7 Usage Guidelines
 

@@ -4,21 +4,19 @@
 :root {
   /* Use PatternFly 6 semantic tokens for typography */
   font-family: var(--pf-t--global--font--family--body);
-  font-size: 18px; /* Increased base font size to match ODH appearance */
   color: var(--pf-t--global--text--color--regular);
   background-color: var(--pf-t--global--background--color--primary--default);
 }
 
-/* Ensure html has proper font size - matches ODH sizing */
+/* Let PatternFly control base font size for responsive design */
 html {
-  font-size: 18px;
+  /* PatternFly 6 sets the base font size responsively */
 }
 
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-size: 18px; /* Ensure body inherits larger font size */
   line-height: 1.5; /* Better line height for readability */
 }
 
@@ -26,25 +24,25 @@ code {
   font-family: var(--pf-t--global--font--family--mono);
 }
 
-/* Ensure PatternFly components scale properly */
+/* Ensure PatternFly components use semantic design tokens */
 .pf-v6-c-page,
 .pf-v6-c-masthead,
 .pf-v6-c-page__sidebar,
 .pf-v6-c-nav,
 .pf-v6-c-toolbar {
-  font-size: 1rem; /* Use relative units based on our 18px base */
+  font-size: var(--pf-t--global--font--size--body--default);
 }
 
-/* Make buttons slightly larger to match ODH */
+/* Use PatternFly 6 semantic tokens for button sizing */
 .pf-v6-c-button {
-  font-size: 1rem;
-  padding: 0.5rem 1rem;
+  font-size: var(--pf-t--global--font--size--body--default);
+  padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md);
 }
 
 /* Adjust navigation item sizing */
 .pf-v6-c-nav__link {
-  font-size: 1rem;
-  padding: 0.75rem 1rem;
+  font-size: var(--pf-t--global--font--size--body--default);
+  padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md);
 }
 
 /* Reduce all padding/margin for tighter layout */
@@ -53,7 +51,7 @@ code {
 }
 
 .pf-v6-c-page__main-section {
-  padding-top: 1rem !important;
+  padding-top: var(--pf-t--global--spacer--md) !important;
 }
 
 /* Dark theme support - add class to html element */
@@ -68,12 +66,12 @@ code {
   left: 6px;
   background: var(--pf-t--global--background--color--primary--default);
   color: var(--pf-t--global--text--color--regular);
-  padding: 8px;
+  padding: var(--pf-t--global--spacer--sm);
   text-decoration: none;
   border: 1px solid var(--pf-t--global--border--color--default);
   border-radius: 4px;
   z-index: 1000;
-  font-size: 14px;
+  font-size: var(--pf-t--global--font--size--sm);
   font-weight: 500;
   transition: top 0.3s;
 }

@@ -1,15 +1,283 @@
 {
+  "admin": {
+    "usage": {
+      "tables": {
+        "models": {
+          "ariaLabel": "模型使用明细表",
+          "caption": "显示 {{count}} 个模型使用明细的表格",
+          "columns": {
+            "avgLatency": "平均延迟",
+            "cost": "成本",
+            "model": "模型",
+            "requests": "请求数",
+            "successRate": "成功率",
+            "tokens": "令牌数",
+            "users": "用户数"
+          },
+          "empty": {
+            "description": "所选时间段未找到使用数据",
+            "title": "无可用模型数据"
+          },
+          "pagination": {
+            "ariaLabel": "模型明细表分页"
+          },
+          "successRate": {
+            "high": "高成功率 (>95%)",
+            "low": "低成功率 (<90%)",
+            "medium": "中等成功率 (90-95%)"
+          }
+        },
+        "providers": {
+          "ariaLabel": "提供商使用明细表",
+          "caption": "显示 {{count}} 个提供商使用明细的表格",
+          "columns": {
+            "cost": "成本",
+            "models": "模型数",
+            "provider": "提供商",
+            "requests": "请求数",
+            "successRate": "成功率",
+            "tokens": "令牌数"
+          },
+          "empty": {
+            "description": "所选时间段未找到使用数据",
+            "title": "无可用提供商数据"
+          },
+          "pagination": {
+            "ariaLabel": "提供商明细表分页"
+          },
+          "successRate": {
+            "high": "高成功率 (>95%)",
+            "low": "低成功率 (<90%)",
+            "medium": "中等成功率 (90-95%)"
+          }
+        },
+        "users": {
+          "ariaLabel": "用户使用明细表",
+          "caption": "显示 {{count}} 个用户使用明细的表格",
+          "columns": {
+            "cost": "成本",
+            "lastActive": "最后活跃",
+            "requests": "请求数",
+            "tokens": "令牌数",
+            "user": "用户"
+          },
+          "empty": {
+            "description": "所选时间段未找到使用数据",
+            "title": "无可用用户数据"
+          },
+          "pagination": {
+            "ariaLabel": "用户明细表分页"
+          }
+        }
+      },
+      "timeAgo": {
+        "days": "{{count}} 天前",
+        "days_plural": "{{count}} 天前",
+        "hours": "{{count}} 小时前",
+        "hours_plural": "{{count}} 小时前",
+        "justNow": "刚刚",
+        "minutes": "{{count}} 分钟前",
+        "minutes_plural": "{{count}} 分钟前"
+      }
+    }
+  },
+  "adminUsage": {
+    "accessDenied": "访问被拒绝",
+    "activeUsers": "活跃用户",
+    "apiKeysCleared": "API 密钥筛选已禁用 - 请先选择用户",
+    "apiKeysFilterAdjusted": "API 密钥筛选可能已更改 - 请检查选择",
+    "apiKeysFilterAvailable": "API 密钥筛选现已可用",
+    "charts": {
+      "modelDistributionAriaLabel": "模型使用分布图表",
+      "modelUsageTrends": "模型使用趋势",
+      "modelUsageTrendsAriaDesc": "堆叠柱状图显示不同模型随时间的使用情况。显示的指标为 {{metric}}。",
+      "modelUsageTrendsAriaLabel": "按 {{metric}} 显示模型使用趋势随时间变化的堆叠图表",
+      "modelUsageTrendsDescription": "模型使用随时间的明细",
+      "noDataAvailable": "所选时间段无可用数据",
+      "noModelData": "无可用模型数据",
+      "noModelDataExplanation": "所选时间段无可用模型使用数据。",
+      "topUsers": "活跃用户",
+      "usageTrends": "使用趋势",
+      "usageTrendsDescription": "使用趋势随时间变化"
+    },
+    "completionTokens": "完成令牌",
+    "datePresets": {
+      "30d": "最近 30 天",
+      "7d": "最近 7 天",
+      "90d": "最近 90 天",
+      "custom": "自定义范围"
+    },
+    "dateRangeChanged": "日期范围已更改为 {{preset}}",
+    "dateRangeSelect": "日期范围选择",
+    "endDate": "结束日期",
+    "errors": {
+      "export": "导出使用数据失败",
+      "exportDescription": "导出活跃用户数据失败。",
+      "fetchMetrics": "加载使用指标失败",
+      "fetchModels": "加载模型明细失败",
+      "fetchProviders": "加载提供商明细失败",
+      "fetchUsers": "加载用户明细失败",
+      "refresh": "刷新今日数据失败"
+    },
+    "export": "导出",
+    "exportComplete": "使用数据已成功导出。",
+    "exportModal": {
+      "csvDescription": "最适合电子表格。兼容 Excel、Google Sheets 和其他数据分析工具。",
+      "csvFullName": "（逗号分隔值）",
+      "dateRange": "日期范围",
+      "downloaded": "使用数据已成功下载。",
+      "downloadFile": "下载导出文件",
+      "export": "导出",
+      "exportButton": "导出使用数据",
+      "exporting": "导出中...",
+      "format": "格式",
+      "from": "从",
+      "jsonDescription": "最适合开发者。用于程序化访问和 API 集成的结构化数据格式。",
+      "jsonFullName": "（JavaScript 对象表示法）",
+      "success": "导出成功",
+      "title": "导出使用数据",
+      "to": "到"
+    },
+    "exportStarting": "开始导出...",
+    "exportSuccess": "导出成功",
+    "filters": {
+      "apiKeys": "按 API 密钥筛选",
+      "apiKeysLoadError": "加载 API 密钥失败",
+      "apiKeysPlaceholder": "请先选择用户以按 API 密钥筛选",
+      "apiKeysPlaceholderActive": "所有 API 密钥（点击筛选）",
+      "clearApiKeysFilter": "清除 API 密钥筛选",
+      "clearModels": "清除模型选择",
+      "clearUsers": "清除用户选择",
+      "models": "按模型筛选",
+      "modelsPlaceholder": "所有模型（点击筛选）",
+      "noApiKeysAvailable": "所选用户没有可用的 API 密钥",
+      "noApiKeysFound": "未找到 \"{{query}}\" 的 API 密钥",
+      "noModelsFound": "未找到 \"{{query}}\" 的模型",
+      "noUsersFound": "未找到 \"{{query}}\" 的用户",
+      "searchModels": "搜索模型...",
+      "searchUsers": "搜索用户...",
+      "selectedApiKeys": "已选 API 密钥",
+      "selectedModels": "已选模型",
+      "selectedUsers": "已选用户",
+      "users": "按用户筛选",
+      "usersPlaceholder": "所有用户（点击筛选）"
+    },
+    "heatmap": {
+      "accessibility": {
+        "cellLabel": "{{dayName}}，{{date}}，{{value}}，占本周 {{percent}}",
+        "heatmapDescription": "热力图显示 {{weeks}} 周内按星期几的 {{metric}}"
+      },
+      "legend": {
+        "colorScale": "使用强度",
+        "noData": "无数据",
+        "zeroUsage": "零使用"
+      },
+      "table": {
+        "viewAsChart": "查看图表",
+        "viewAsTable": "查看表格",
+        "week": "周"
+      },
+      "tooltip": {
+        "noDataOutsideRange": "无数据（超出所选范围）",
+        "percentOfWeek": "占周总量的 {{percent}}%"
+      }
+    },
+    "loading": "加载指标中...",
+    "loadingModels": "加载模型数据中...",
+    "loadingProviders": "加载提供商数据中...",
+    "loadingUsers": "加载用户数据中...",
+    "metrics": {
+      "activeUsersAriaLabel": "{{total}} 个总用户中有 {{active}} 个活跃用户",
+      "noChange": "无变化",
+      "ofTotalUsers": "共 {{total}} 个",
+      "successRateAriaLabel": "成功率：{{percentage}}%",
+      "totalCostAriaLabel": "总成本：${{amount}}",
+      "totalRequestsAriaLabel": "总请求数：{{count}}",
+      "trendLabel": "趋势 {{direction}} {{change}}%"
+    },
+    "metricSelect": "指标选择",
+    "metricsOverview": "指标概览",
+    "modelBreakdown": "模型明细",
+    "modelFilterChanged": "按 {{count}} 个模型筛选",
+    "noData": "无可用数据",
+    "noModelData": "无可用模型数据",
+    "noModelsFound": "所选日期范围未找到模型。",
+    "noProviderData": "无可用提供商数据",
+    "noProvidersFound": "所选日期范围未找到提供商。",
+    "noUserData": "无可用用户数据",
+    "noUsersFound": "所选日期范围未找到用户。",
+    "promptTokens": "提示令牌",
+    "providerBreakdown": "提供商明细",
+    "refreshing": "刷新今日数据中...",
+    "refreshSuccess": "刷新成功",
+    "refreshToday": "刷新今日",
+    "requiresAdmin": "您没有权限查看管理员使用分析。",
+    "selectDateRange": "请选择日期范围以查看指标。",
+    "selectMetric": "选择指标",
+    "startDate": "开始日期",
+    "subtitle": "查看并分析所有用户、模型和提供商的使用情况",
+    "successRate": "成功率",
+    "tabChanged": "已切换到 {{tab}} 标签页",
+    "tableHeaders": {
+      "completionTokens": "完成<br />令牌",
+      "cost": "成本",
+      "promptTokens": "提示<br />令牌",
+      "requests": "请求数",
+      "tokens": "令牌数",
+      "user": "用户"
+    },
+    "tables": {
+      "topUsers": "按请求数和成本排名的活跃用户"
+    },
+    "tabs": {
+      "byModels": "按模型",
+      "byProviders": "按提供商",
+      "byUsers": "按用户",
+      "overview": "概览"
+    },
+    "tabsLabel": "使用分析标签页",
+    "title": "管理员使用分析",
+    "todayDataRefreshed": "今日使用数据已刷新。",
+    "topUsers": {
+      "csvHeaders": {
+        "costUsd": "成本（美元）",
+        "email": "邮箱",
+        "inputTokens": "输入令牌",
+        "outputTokens": "输出令牌",
+        "requests": "请求数",
+        "tokens": "令牌数",
+        "username": "用户名"
+      },
+      "export": "导出",
+      "exportAriaLabel": "下载活跃用户 CSV 文件",
+      "exportSuccess": "导出成功",
+      "exportSuccessDescription": "活跃用户数据已成功下载。"
+    },
+    "totalCost": "总成本",
+    "totalModels": "模型总数",
+    "totalProviders": "提供商总数",
+    "totalRequests": "总请求数",
+    "totalUsers": "用户总数",
+    "unknownUser": "未知用户",
+    "unknownUserDescription": "来自已删除或未映射 API 密钥的请求",
+    "usageHeatmapSubtitle": "所选周的使用热力图",
+    "userBreakdown": "用户明细",
+    "userFilterChanged": "按 {{count}} 个用户筛选",
+    "weeklyUsagePatterns": "每周使用模式"
+  },
   "common": {
     "anUnknownErrorOccurred": "发生了未知错误",
     "cancel": "取消",
     "chart": "图表",
     "close": "关闭",
+    "closeFullScreen": "关闭全屏视图",
     "create": "创建",
     "dataPoints": "数据点",
     "date": "日期",
     "day": "天",
     "delete": "删除",
     "error": "错误",
+    "expandToFullScreen": "展开至全屏",
     "export": "导出",
     "features": "特征",
     "label": "标签",
@@ -33,8 +301,12 @@
       "apiKeyIsRequired": "API密钥是必需的",
       "apiKeyOptional": "API密钥（可选）",
       "areYouSureYouWantToDeleteTheModel": "您确定要删除这个模型吗",
+      "authenticationFailed": "身份验证失败",
+      "availableModels": "可用模型：",
       "backendModelName": "后端模型名称",
       "backendModelNameIsRequired": "后端模型名称是必需的",
+      "cannotContactEndpoint": "无法联系端点",
+      "connectionSuccessful": "连接成功！您可以创建模型。",
       "createModel": "创建模型",
       "createModelFailed": "创建模型失败",
       "createYourFirstModelToGetStarted": "创建您的第一个模型开始使用。",
@@ -65,6 +337,7 @@
       "modelName": "模型名称",
       "modelNameCannotContainSpaces": "模型名称不能包含空格",
       "modelNameIsRequired": "模型名称是必需的",
+      "modelNotAvailable": "模型在此端点不可用",
       "modelsTable": "模型表",
       "modelUpdated": "模型已更新",
       "modelUpdatedSuccessfully": "模型更新成功",
@@ -99,18 +372,13 @@
         "tpm": "TPM",
         "visionSupport": "视觉支持"
       },
+      "testConfiguration": "测试配置",
+      "testingConfiguration": "正在测试配置...",
       "thisActionCannotBeUndoneAndWillRemoveTheModelFromLitellm": "此操作无法撤销，并将从 LiteLLM 中删除模型。",
       "title": "模型管理",
       "tpmMustBeAtLeast_1": "TPM必须至少1",
       "tpmTokensPerMinute": "TPM（每分钟令牌数）",
-      "updateModelFailed": "模型更新失败",
-      "testConfiguration": "测试配置",
-      "testingConfiguration": "正在测试配置...",
-      "connectionSuccessful": "连接成功！您可以创建模型。",
-      "cannotContactEndpoint": "无法联系端点",
-      "authenticationFailed": "身份验证失败",
-      "modelNotAvailable": "模型在此端点不可用",
-      "availableModels": "可用模型："
+      "updateModelFailed": "模型更新失败"
     },
     "loading": {
       "description": "从服务器获取模型信息",
@@ -125,6 +393,7 @@
     "admin": {
       "models": "模型管理",
       "tools": "工具",
+      "usage": "使用分析",
       "users": "用户"
     },
     "apiKeys": "API密钥",
@@ -882,6 +1151,7 @@
       "chartLegend": "包含数据系列信息的图表图例",
       "dataExported": "数据已导出到{{filename}}",
       "dataTableAlternative": "数据表格替代方案",
+      "dismissAnnouncement": "关闭公告",
       "exportChartData": "将图表数据导出为CSV",
       "legendPattern": "{{name}}系列以{{color}}颜色和{{pattern}}线条模式显示",
       "legendSummary": "图例包含{{count}}个项目：{{items}}",
@@ -899,6 +1169,7 @@
       "skipToNavigation": "跳转到导航",
       "switchedToChart": "已切换到图表视图",
       "switchedToTable": "已切换到表格视图",
+      "systemAnnouncement": "系统公告",
       "tableCaption": "{{title}}的数据表格",
       "tableNavigationInstructions": "使用箭头键在行和列之间导航，或使用Tab键移动到下一个交互元素。",
       "viewModeToggle": "在图表和表格视图之间切换"
@@ -916,6 +1187,9 @@
       "save": "保存",
       "saving": "保存中...",
       "tryAgain": "重试"
+    },
+    "avatar": {
+      "userAvatar": "用户头像"
     },
     "errors": {
       "details": "详情",
@@ -950,6 +1224,15 @@
         "url": "{{field}}必须是有效的URL"
       }
     },
+    "footer": {
+      "appBy": "应用由",
+      "forks": "复刻数：",
+      "githubLogo": "GitHub 标志",
+      "noVersion": "无版本",
+      "sourceOnGitHub": "GitHub 源代码",
+      "stars": "星标数：",
+      "version": "版本"
+    },
     "language": {
       "chinese": "中文",
       "elvish": "Edhellen",
@@ -962,10 +1245,21 @@
       "selector": "语言",
       "spanish": "Español"
     },
+    "navigation": {
+      "mainNavigation": "主导航",
+      "userMenu": "用户菜单"
+    },
     "notifications": {
       "clear": "清除所有",
+      "clearAll": "全部清除",
+      "drawerActions": "通知抽屉操作",
       "empty": "没有通知",
+      "markAllRead": "全部标记为已读",
       "markRead": "标记为已读",
+      "noNotificationsDescription": "当前没有通知。",
+      "noNotificationsFound": "未找到通知",
+      "notificationsLabel": "通知",
+      "notificationSrTitle": "通知",
       "title": "通知"
     },
     "pagination": {
@@ -973,8 +1267,11 @@
     },
     "theme": {
       "dark": "深色",
+      "darkThemeToggle": "深色主题切换",
       "light": "浅色",
-      "toggle": "切换主题"
+      "lightThemeToggle": "浅色主题切换",
+      "toggle": "切换主题",
+      "toggleGroup": "深色主题切换组"
     }
   },
   "users": {

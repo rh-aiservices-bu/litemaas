@@ -55,10 +55,11 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 
 #### ✨ Features
 
+- **[Admin Usage Analytics](features/admin-usage-analytics-implementation-plan.md)** - **[Major Feature - 2025 Q3]** Enterprise-grade analytics with day-by-day incremental caching, multi-dimensional filtering, and dynamic config integration (2000 lines comprehensive implementation plan)
 - **[Multi-Model API Keys](features/multi-model-api-keys-implementation.md)** - Enhanced API key system
 - **[Default Team](features/default-team-implementation.md)** - Team-based user management
 - **[Authentication Flow](features/authentication-flow.md)** - OAuth integration details
-- **[RBAC](features/user-roles-administration.md)** - Administration roles
+- **[RBAC](features/user-roles-administration.md)** - Administration roles and permissions
 - **[Admin Tools](features/admin-tools.md)** - Administrative tools and model sync
 - **[Model Configuration Testing](features/model-configuration-testing.md)** - Configuration validation feature
 - **[Chatbot Implementation](development/chatbot-implementation.md)** - AI chatbot integration

@@ -499,7 +499,7 @@ const UsersPage: React.FC = () => {
                                 component={ContentVariants.small}
                                 style={{
                                   fontStyle: 'italic',
-                                  color: 'var(--pf-v6-global--Color--200)',
+                                  color: 'var(--pf-t--global--text--color--subtle)',
                                 }}
                               >
                                 {t('users.table.notProvided')}

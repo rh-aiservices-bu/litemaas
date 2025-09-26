@@ -69,6 +69,31 @@ vi.mock('../../contexts/NotificationContext', () => ({
   }),
 }));
 
+// Mock config service to provide test configuration
+vi.mock('../../services/config.service', () => ({
+  configService: {
+    getConfig: vi.fn().mockResolvedValue({
+      version: '1.0.0-test',
+      usageCacheTTL: 300, // 5 minutes in seconds
+      environment: 'test',
+    }),
+  },
+}));
+
+// Mock config context
+vi.mock('../../contexts/ConfigContext', () => ({
+  useConfig: () => ({
+    config: {
+      version: '1.0.0-test',
+      usageCacheTTL: 300,
+      environment: 'test',
+    },
+    isLoading: false,
+    error: null,
+  }),
+  ConfigProvider: ({ children }: any) => children,
+}));
+
 // Mock assets
 vi.mock('../../assets', () => ({
   AvatarPlaceholder: 'data:image/svg+xml;base64,avatar',

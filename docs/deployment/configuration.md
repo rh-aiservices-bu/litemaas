@@ -151,16 +151,17 @@ JWT_EXPIRES_IN=7d
 
 ## LiteLLM Integration
 
-| Variable                      | Description                            | Default                 | Required |
-| ----------------------------- | -------------------------------------- | ----------------------- | -------- |
-| `LITELLM_API_URL`             | Primary LiteLLM API URL                | `http://localhost:4000` | No       |
-| `LITELLM_API_KEY`             | LiteLLM API key (if required)          | -                       | No       |
-| `LITELLM_AUTO_SYNC`           | Enable automatic model sync on startup | `true`                  | No       |
-| `LITELLM_SYNC_INTERVAL`       | Auto-sync interval (seconds)           | `60`                    | No       |
-| `LITELLM_CONFLICT_RESOLUTION` | Sync conflict resolution strategy      | `litellm_wins`          | No       |
-| `LITELLM_TIMEOUT`             | Request timeout (milliseconds)         | `30000`                 | No       |
-| `LITELLM_RETRIES`             | Number of retry attempts               | `3`                     | No       |
-| `LITELLM_RETRY_DELAY`         | Retry delay (milliseconds)             | `1000`                  | No       |
+| Variable                      | Description                                    | Default                 | Required |
+| ----------------------------- | ---------------------------------------------- | ----------------------- | -------- |
+| `LITELLM_API_URL`             | Primary LiteLLM API URL                        | `http://localhost:4000` | No       |
+| `LITELLM_API_KEY`             | LiteLLM API key (if required)                  | -                       | No       |
+| `LITELLM_AUTO_SYNC`           | Enable automatic model sync on startup         | `true`                  | No       |
+| `LITELLM_SYNC_INTERVAL`       | Auto-sync interval (seconds)                   | `60`                    | No       |
+| `LITELLM_CONFLICT_RESOLUTION` | Sync conflict resolution strategy              | `litellm_wins`          | No       |
+| `LITELLM_TIMEOUT`             | Request timeout (milliseconds)                 | `30000`                 | No       |
+| `LITELLM_RETRIES`             | Number of retry attempts                       | `3`                     | No       |
+| `LITELLM_RETRY_DELAY`         | Retry delay (milliseconds)                     | `1000`                  | No       |
+| `USAGE_CACHE_TTL_MINUTES`     | Cache TTL for current day usage data (minutes) | `5`                     | No       |
 
 ### Example
 
@@ -173,6 +174,11 @@ LITELLM_CONFLICT_RESOLUTION=database_wins
 LITELLM_TIMEOUT=60000
 LITELLM_RETRIES=5
 LITELLM_RETRY_DELAY=2000
+
+# Usage data cache TTL (affects both backend and frontend refresh rates)
+USAGE_CACHE_TTL_MINUTES=5    # Default: 5 minutes
+# USAGE_CACHE_TTL_MINUTES=2  # Faster refresh (more API calls to LiteLLM)
+# USAGE_CACHE_TTL_MINUTES=10 # Slower refresh (fewer API calls, less current data)
 ```
 
 ### Conflict Resolution Strategies

@@ -1178,7 +1178,7 @@ const ApiKeysPage: React.FC = () => {
       <div style={{
         maxHeight: '300px',
         overflowY: 'auto',
-        border: '1px solid var(--pf-v6-global--BorderColor--100)',
+        border: '1px solid var(--pf-t--global--border--color--default)',
         borderRadius: '3px',
         padding: '0.5rem'
       }}>
@@ -1202,12 +1202,12 @@ const ApiKeysPage: React.FC = () => {
                         <strong>{model.name}</strong> ({model.provider})
                       </FlexItem>
                       <FlexItem>
-                        <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+                        <Content component={ContentVariants.small} style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>
                           {model.description || 'No description available'}
                         </Content>
                       </FlexItem>
                       <FlexItem>
-                        <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+                        <Content component={ContentVariants.small} style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>
                           Usage: {model.usedRequests.toLocaleString()} / {model.quotaRequests.toLocaleString()} requests
                         </Content>
                       </FlexItem>
@@ -1357,7 +1357,7 @@ const ApiKeysPage: React.FC = () => {
                           </FlexItem>
                           {apiKey.description && (
                             <FlexItem>
-                              <Content component={ContentVariants.small} style={{ color: 'var(--pf-v6-global--Color--200)' }}>
+                              <Content component={ContentVariants.small} style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>
                                 {apiKey.description}
                               </Content>
                             </FlexItem>
@@ -1700,7 +1700,7 @@ const ApiKeysPage: React.FC = () => {
             <>
               <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsMd' }} style={{ marginBottom: '1rem' }}>
                 <FlexItem>
-                  <ExclamationTriangleIcon color="var(--pf-v6-global--danger-color--100)" />
+                  <ExclamationTriangleIcon color="var(--pf-t--global--color--status--danger--default)" />
                 </FlexItem>
                 <FlexItem>
                   <Content component={ContentVariants.p}>

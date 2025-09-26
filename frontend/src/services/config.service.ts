@@ -1,13 +1,24 @@
 import { apiClient } from './api';
 
-export interface ConfigResponse {
-  litellmApiUrl: string;
-  authMode: 'oauth' | 'mock';
+/**
+ * Backend configuration response
+ */
+export interface BackendConfig {
+  version: string;
+  usageCacheTtlMinutes: number;
+  environment: 'development' | 'production';
+  // Legacy fields for backwards compatibility
+  litellmApiUrl?: string;
+  authMode?: 'oauth' | 'mock';
 }
 
-export class ConfigService {
-  async getConfig(): Promise<ConfigResponse> {
-    return apiClient.get<ConfigResponse>('/config');
+class ConfigService {
+  /**
+   * Fetch public configuration from backend
+   * No authentication required
+   */
+  async getConfig(): Promise<BackendConfig> {
+    return apiClient.get<BackendConfig>('/config');
   }
 }
 

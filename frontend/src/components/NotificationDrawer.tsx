@@ -19,6 +19,7 @@ import {
   MenuToggle,
 } from '@patternfly/react-core';
 import { BellIcon, EllipsisVIcon } from '@patternfly/react-icons';
+import { useTranslation } from 'react-i18next';
 import { useNotifications } from '../contexts/NotificationContext';
 import { ScreenReaderAnnouncement } from './ScreenReaderAnnouncement';
 
@@ -28,6 +29,7 @@ interface NotificationDrawerProps {
 }
 
 export const NotificationDrawer: React.FC<NotificationDrawerProps> = (_props) => {
+  const { t } = useTranslation();
   const { notifications, markAsRead, markAllAsRead, removeNotification, clearAll } =
     useNotifications();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -55,10 +57,10 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = (_props) =>
   const notificationDrawerActions = (
     <>
       <DropdownItem key="markAllRead" onClick={markAllAsRead}>
-        Mark all read
+        {t('ui.notifications.markAllRead')}
       </DropdownItem>
       <DropdownItem key="clearAll" onClick={clearAll}>
-        Clear all
+        {t('ui.notifications.clearAll')}
       </DropdownItem>
     </>
   );
@@ -107,7 +109,7 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = (_props) =>
                 isExpanded={isDropdownOpen}
                 variant="plain"
                 onClick={onDropdownToggle}
-                aria-label="Notification drawer actions"
+                aria-label={t('ui.notifications.drawerActions')}
                 icon={<EllipsisVIcon />}
               />
             )}
@@ -120,14 +122,14 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = (_props) =>
             <EmptyState variant={EmptyStateVariant.sm}>
               <BellIcon
                 style={{
-                  fontSize: '3rem',
+                  fontSize: 'var(--pf-t--global--font--size--3xl)',
                   color: 'var(--pf-t--global--color--nonstatus--gray--default)',
                 }}
               />
               <Title headingLevel="h3" size="md">
-                No notifications found
+                {t('ui.notifications.noNotificationsFound')}
               </Title>
-              <EmptyStateBody>There are currently no notifications.</EmptyStateBody>
+              <EmptyStateBody>{t('ui.notifications.noNotificationsDescription')}</EmptyStateBody>
             </EmptyState>
           ) : (
             <NotificationDrawerList>
@@ -141,33 +143,18 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = (_props) =>
                   <NotificationDrawerListItemHeader
                     variant={notification.variant === 'default' ? 'custom' : notification.variant}
                     title={notification.title}
-                    srTitle="Notification"
+                    srTitle={t('ui.notifications.notificationSrTitle')}
                   >
-                    <Dropdown
-                      onSelect={() => removeNotification(notification.id)}
-                      toggle={(toggleRef) => (
-                        <MenuToggle
-                          ref={toggleRef}
-                          aria-label="Notification actions"
-                          variant="plain"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeNotification(notification.id);
-                          }}
-                        >
-                          ×
-                        </MenuToggle>
-                      )}
+                    <Button
+                      variant="plain"
+                      aria-label={`Remove notification: ${notification.title}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeNotification(notification.id);
+                      }}
                     >
-                      <DropdownList>
-                        <DropdownItem
-                          key="remove"
-                          onClick={() => removeNotification(notification.id)}
-                        >
-                          Remove
-                        </DropdownItem>
-                      </DropdownList>
-                    </Dropdown>
+                      ×
+                    </Button>
                   </NotificationDrawerListItemHeader>
                   <NotificationDrawerListItemBody
                     timestamp={notification.timestamp.toLocaleString()}
@@ -215,5 +202,12 @@ export const NotificationBadgeButton: React.FC<NotificationBadgeButtonProps> = (
   onClick,
   unreadCount,
 }) => {
-  return <NotificationBadge count={unreadCount} onClick={onClick} aria-label="Notifications" />;
+  const { t } = useTranslation();
+  return (
+    <NotificationBadge
+      count={unreadCount}
+      onClick={onClick}
+      aria-label={t('ui.notifications.notificationsLabel')}
+    />
+  );
 };

@@ -77,6 +77,7 @@ Thumbs.db
 data/
 data/postgres/
 data/litellm/
+example-data/
 
 # Claude
 **/.claude/settings.local.json

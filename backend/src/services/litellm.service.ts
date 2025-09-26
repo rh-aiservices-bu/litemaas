@@ -559,6 +559,43 @@ export class LiteLLMService extends BaseService {
     }
   }
 
+  /**
+   * Get key alias information from LiteLLM API
+   * Used for backfilling litellm_key_alias for existing keys
+   */
+  async getKeyAlias(apiKey: string): Promise<{ key_alias: string; key: string }> {
+    if (this.config.enableMocking) {
+      return this.createMockResponse({
+        key: apiKey,
+        key_alias: `mock_alias_${apiKey.slice(-8)}`,
+      });
+    }
+
+    try {
+      const response = await this.makeRequest<{
+        key: string;
+        info: {
+          key_name: string;
+          key_alias: string;
+          soft_budget_cooldown: boolean;
+          spend: number;
+          expires: string | null;
+          models: string[];
+        };
+      }>(`/key/info?key=${encodeURIComponent(apiKey)}`, {
+        method: 'GET',
+      });
+
+      return {
+        key: response.key,
+        key_alias: response.info.key_alias,
+      };
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to get key alias info');
+      throw error;
+    }
+  }
+
   // User Management
   async createUser(request: LiteLLMUserRequest): Promise<LiteLLMUserResponse> {
     this.fastify.log.info(
@@ -1044,6 +1081,7 @@ export class LiteLLMService extends BaseService {
       spend: number;
       tokens: number;
       requests: number;
+      breakdown?: any; // Full breakdown from LiteLLM including models, api_keys, providers
     }>;
   }> {
     const cacheKey = this.getCacheKey(`activity:${apiKeyHash}:${startDate}:${endDate}`);
@@ -1092,40 +1130,99 @@ export class LiteLLMService extends BaseService {
     }
 
     try {
-      const queryParams = new URLSearchParams();
-      if (startDate) queryParams.append('start_date', startDate);
-      if (endDate) queryParams.append('end_date', endDate);
-      if (apiKeyHash) queryParams.append('api_key', apiKeyHash);
+      // Pagination loop to fetch all pages of results
+      const allResults: any[] = [];
+      let currentPage = 1;
+      let hasMore = true;
+      let metadata: any = null;
 
-      const response = await this.makeRequest<any>(
-        `/user/daily/activity?${queryParams.toString()}`,
+      this.fastify.log.debug(
+        { startDate, endDate, apiKeyHash: apiKeyHash ? 'provided' : 'none' },
+        'LiteLLM: Starting paginated fetch for daily activity',
+      );
+
+      // Fetch all pages until no more data
+      while (hasMore) {
+        const queryParams = new URLSearchParams();
+        if (startDate) queryParams.append('start_date', startDate);
+        if (endDate) queryParams.append('end_date', endDate);
+        if (apiKeyHash) queryParams.append('api_key', apiKeyHash);
+        queryParams.append('page', currentPage.toString());
+        queryParams.append('page_size', '1000'); // Maximum allowed per LiteLLM API
+
+        const response = await this.makeRequest<any>(
+          `/user/daily/activity?${queryParams.toString()}`,
+          {
+            method: 'GET',
+          },
+        );
+
+        // Accumulate results from this page
+        const pageResults = response.results || [];
+        allResults.push(...pageResults);
+
+        // Store metadata (contains aggregated totals across all pages)
+        if (!metadata) {
+          metadata = response.metadata || {};
+        }
+
+        // Check if more pages exist
+        hasMore = response.metadata?.has_more === true;
+
+        // Log pagination progress
+        this.fastify.log.debug(
+          {
+            page: response.metadata?.page || currentPage,
+            totalPages: response.metadata?.total_pages,
+            resultsThisPage: pageResults.length,
+            totalResultsSoFar: allResults.length,
+            hasMore,
+          },
+          'LiteLLM: Fetched page of daily activity data',
+        );
+
+        currentPage++;
+
+        // Safety check: prevent infinite loops (shouldn't happen with has_more logic)
+        if (currentPage > 10000) {
+          this.fastify.log.error(
+            { currentPage, totalResults: allResults.length },
+            'LiteLLM: Pagination safety limit reached, stopping fetch',
+          );
+          break;
+        }
+      }
+
+      // Log final pagination summary
+      this.fastify.log.info(
         {
-          method: 'GET',
+          totalPages: currentPage - 1,
+          totalResults: allResults.length,
+          dateRange: { startDate, endDate },
         },
+        'LiteLLM: Completed paginated fetch for daily activity',
       );
 
       // Parse the response according to the actual LiteLLM format
-      const metadata = response.metadata || {};
-      const results = response.results || [];
-
-      // Aggregate metrics from all dates
+      // Metadata contains aggregated totals across ALL pages
       const totalSpend = metadata.total_spend || 0;
       const totalTokens = metadata.total_tokens || 0;
       const promptTokens = metadata.total_prompt_tokens || 0;
       const completionTokens = metadata.total_completion_tokens || 0;
       const apiRequests = metadata.total_api_requests || 0;
 
-      // Aggregate model breakdown
+      // Aggregate model breakdown from ALL results
       const modelBreakdown: { [key: string]: any } = {};
       const dailyMetrics: any[] = [];
 
-      results.forEach((dayResult: any) => {
-        // Add to daily metrics
+      allResults.forEach((dayResult: any) => {
+        // Add to daily metrics with full breakdown preserved
         dailyMetrics.push({
           date: dayResult.date,
           spend: dayResult.metrics?.spend || 0,
           tokens: dayResult.metrics?.total_tokens || 0,
           requests: dayResult.metrics?.api_requests || 0,
+          breakdown: dayResult.breakdown, // Preserve full breakdown including api_key_breakdown
         });
 
         // Aggregate model breakdown
@@ -1155,7 +1252,7 @@ export class LiteLLMService extends BaseService {
         completion_tokens: completionTokens,
         api_requests: apiRequests,
         by_model: Object.values(modelBreakdown),
-        daily_metrics: dailyMetrics,
+        daily_metrics: dailyMetrics, // Now includes full breakdown data
       };
 
       this.setCache(cacheKey, result);

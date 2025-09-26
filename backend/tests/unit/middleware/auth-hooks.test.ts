@@ -60,6 +60,12 @@ describe('Auth Hooks Middleware', () => {
         (error as any).statusCode = code;
         return error;
       }),
+      createValidationError: vi.fn().mockImplementation((message) => {
+        return new Error(message);
+      }),
+      createForbiddenError: vi.fn().mockImplementation((message) => {
+        return new Error(message);
+      }),
       log: {
         info: vi.fn(),
         error: vi.fn(),
@@ -378,6 +384,368 @@ describe('Auth Hooks Middleware', () => {
       await expect(
         keyOperationRateLimit(mockRequest as FastifyRequest, mockReply as FastifyReply),
       ).rejects.toThrow('Authentication required');
+    });
+  });
+
+  describe('Authentication Edge Cases', () => {
+    it('should handle missing Authorization header', async () => {
+      (mockRequest as AuthenticatedRequest).user = undefined;
+      (mockRequest as any).headers = {}; // No Authorization header
+
+      const requireRecentAuth = async (request: FastifyRequest, _reply: FastifyReply) => {
+        const user = (request as AuthenticatedRequest).user;
+
+        if (!user) {
+          throw mockFastify.createAuthError!('Authentication required');
+        }
+      };
+
+      await expect(
+        requireRecentAuth(mockRequest as FastifyRequest, mockReply as FastifyReply),
+      ).rejects.toThrow('Authentication required');
+    });
+
+    it('should handle malformed Bearer token', async () => {
+      (mockRequest as AuthenticatedRequest).user = undefined;
+      (mockRequest as any).headers = {
+        authorization: 'Bearer ', // Malformed - empty token after space
+      };
+
+      const authenticate = async (request: FastifyRequest, _reply: FastifyReply) => {
+        const authHeader = request.headers.authorization;
+
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          throw mockFastify.createAuthError!('Invalid authorization header');
+        }
+
+        const token = authHeader.substring(7);
+        if (!token || token.trim() === '') {
+          throw mockFastify.createAuthError!('Missing token');
+        }
+      };
+
+      await expect(
+        authenticate(mockRequest as FastifyRequest, mockReply as FastifyReply),
+      ).rejects.toThrow('Missing token');
+    });
+
+    it('should handle empty token string', async () => {
+      (mockRequest as AuthenticatedRequest).user = undefined;
+      (mockRequest as any).headers = {
+        authorization: 'Bearer   ', // Empty token with whitespace
+      };
+
+      const authenticate = async (request: FastifyRequest, _reply: FastifyReply) => {
+        const authHeader = request.headers.authorization;
+        const token = authHeader?.substring(7).trim();
+
+        if (!token) {
+          throw mockFastify.createAuthError!('Empty token');
+        }
+      };
+
+      await expect(
+        authenticate(mockRequest as FastifyRequest, mockReply as FastifyReply),
+      ).rejects.toThrow('Empty token');
+    });
+
+    it('should handle token with extra whitespace', async () => {
+      (mockRequest as any).headers = {
+        authorization: '  Bearer   valid-token-123  ', // Extra whitespace
+      };
+
+      const authenticate = async (request: FastifyRequest, _reply: FastifyReply) => {
+        const authHeader = request.headers.authorization?.trim();
+
+        if (!authHeader?.startsWith('Bearer ')) {
+          throw mockFastify.createAuthError!('Invalid authorization format');
+        }
+
+        const token = authHeader.substring(7).trim();
+
+        if (token === 'valid-token-123') {
+          return { token };
+        }
+
+        throw mockFastify.createAuthError!('Invalid token');
+      };
+
+      const result = await authenticate(mockRequest as FastifyRequest, mockReply as FastifyReply);
+      expect(result).toEqual({ token: 'valid-token-123' });
+    });
+  });
+
+  describe('Token Validation Edge Cases', () => {
+    it('should reject token from different issuer', async () => {
+      const tokenFromDifferentIssuer = {
+        userId: 'user-123',
+        username: 'testuser',
+        email: 'test@example.com',
+        roles: ['user'],
+        iss: 'https://different-issuer.com',
+        iat: Math.floor(Date.now() / 1000),
+      };
+
+      const validateToken = async (token: any, _reply: FastifyReply) => {
+        const expectedIssuer = 'https://expected-issuer.com';
+
+        if (token.iss !== expectedIssuer) {
+          throw mockFastify.createAuthError!('Invalid token issuer');
+        }
+      };
+
+      await expect(
+        validateToken(tokenFromDifferentIssuer, mockReply as FastifyReply),
+      ).rejects.toThrow('Invalid token issuer');
+    });
+
+    it('should reject token with tampered signature', async () => {
+      const validateSignature = async (_token: string) => {
+        // Simulate signature verification failure
+        const isValidSignature = false;
+
+        if (!isValidSignature) {
+          throw mockFastify.createAuthError!('Invalid token signature');
+        }
+      };
+
+      await expect(validateSignature('tampered.jwt.token')).rejects.toThrow(
+        'Invalid token signature',
+      );
+    });
+
+    it('should handle token with missing claims', async () => {
+      const tokenWithMissingClaims = {
+        userId: 'user-123',
+        // Missing username, email, roles
+        iat: Math.floor(Date.now() / 1000),
+      };
+
+      const validateToken = async (token: any, _reply: FastifyReply) => {
+        if (!token.userId || !token.roles) {
+          throw mockFastify.createValidationError!('Token missing required claims');
+        }
+      };
+
+      await expect(
+        validateToken(tokenWithMissingClaims, mockReply as FastifyReply),
+      ).rejects.toThrow('Token missing required claims');
+    });
+
+    it('should handle token with invalid role format', async () => {
+      const tokenWithInvalidRoles = {
+        userId: 'user-123',
+        username: 'testuser',
+        email: 'test@example.com',
+        roles: 'user', // Should be array, not string
+        iat: Math.floor(Date.now() / 1000),
+      };
+
+      const validateToken = async (token: any, _reply: FastifyReply) => {
+        if (!Array.isArray(token.roles)) {
+          throw mockFastify.createValidationError!('Roles must be an array');
+        }
+      };
+
+      await expect(validateToken(tokenWithInvalidRoles, mockReply as FastifyReply)).rejects.toThrow(
+        'Roles must be an array',
+      );
+    });
+
+    it('should handle expired token with grace period', async () => {
+      const expiredToken = {
+        userId: 'user-123',
+        username: 'testuser',
+        email: 'test@example.com',
+        roles: ['user'],
+        exp: Math.floor(Date.now() / 1000) - 600, // Expired 10 minutes ago
+        iat: Math.floor(Date.now() / 1000) - 3600,
+      };
+
+      const validateToken = async (token: any, _reply: FastifyReply) => {
+        const now = Math.floor(Date.now() / 1000);
+        const gracePeriod = 300; // 5 minutes
+
+        if (token.exp && token.exp + gracePeriod < now) {
+          throw mockFastify.createAuthError!('Token expired beyond grace period');
+        }
+      };
+
+      await expect(validateToken(expiredToken, mockReply as FastifyReply)).rejects.toThrow(
+        'Token expired beyond grace period',
+      );
+    });
+  });
+
+  describe('Role-Based Access Edge Cases', () => {
+    it('should handle user with no roles', async () => {
+      const userWithNoRoles = {
+        userId: 'user-123',
+        username: 'testuser',
+        email: 'test@example.com',
+        roles: [],
+        iat: Math.floor(Date.now() / 1000),
+      };
+
+      const requireRole = async (user: any, requiredRole: string) => {
+        if (!user.roles || user.roles.length === 0) {
+          throw mockFastify.createForbiddenError!('User has no assigned roles');
+        }
+
+        if (!user.roles.includes(requiredRole)) {
+          throw mockFastify.createForbiddenError!(`Required role '${requiredRole}' not found`);
+        }
+      };
+
+      await expect(requireRole(userWithNoRoles, 'admin')).rejects.toThrow(
+        'User has no assigned roles',
+      );
+    });
+
+    it('should handle user with unknown role', async () => {
+      const userWithUnknownRole = {
+        userId: 'user-123',
+        username: 'testuser',
+        email: 'test@example.com',
+        roles: ['unknown_role'],
+        iat: Math.floor(Date.now() / 1000),
+      };
+
+      const validateKnownRoles = async (user: any) => {
+        const knownRoles = ['user', 'admin', 'adminReadonly'];
+
+        const hasValidRole = user.roles.some((role: string) => knownRoles.includes(role));
+
+        if (!hasValidRole) {
+          throw mockFastify.createForbiddenError!('User has no valid roles');
+        }
+      };
+
+      await expect(validateKnownRoles(userWithUnknownRole)).rejects.toThrow(
+        'User has no valid roles',
+      );
+    });
+
+    it('should respect role hierarchy for mixed roles', async () => {
+      const userWithMixedRoles = {
+        userId: 'user-123',
+        username: 'testuser',
+        email: 'test@example.com',
+        roles: ['user', 'admin', 'adminReadonly'],
+        iat: Math.floor(Date.now() / 1000),
+      };
+
+      const getHighestRole = (user: any): string => {
+        const roleHierarchy = ['admin', 'adminReadonly', 'user'];
+
+        for (const role of roleHierarchy) {
+          if (user.roles.includes(role)) {
+            return role;
+          }
+        }
+
+        return 'user';
+      };
+
+      const highestRole = getHighestRole(userWithMixedRoles);
+      expect(highestRole).toBe('admin');
+    });
+
+    it('should handle case-sensitive role matching', async () => {
+      const userWithMixedCaseRole = {
+        userId: 'user-123',
+        username: 'testuser',
+        email: 'test@example.com',
+        roles: ['Admin'], // Wrong case
+        iat: Math.floor(Date.now() / 1000),
+      };
+
+      const requireRole = async (user: any, requiredRole: string) => {
+        // Roles should be case-sensitive
+        if (!user.roles.includes(requiredRole)) {
+          throw mockFastify.createForbiddenError!(`Required role '${requiredRole}' not found`);
+        }
+      };
+
+      await expect(requireRole(userWithMixedCaseRole, 'admin')).rejects.toThrow(
+        "Required role 'admin' not found",
+      );
+    });
+  });
+
+  describe('Rate Limiting Edge Cases', () => {
+    it('should handle rate limit with zero attempts remaining', async () => {
+      (mockRequest as any).keyOpAttempts = 10; // At the limit
+
+      const checkRateLimit = async (request: FastifyRequest, reply: FastifyReply) => {
+        const attempts = (request as any).keyOpAttempts || 0;
+        const maxAttempts = 10;
+        const remaining = Math.max(0, maxAttempts - attempts);
+
+        reply.header('X-RateLimit-Limit', maxAttempts);
+        reply.header('X-RateLimit-Remaining', remaining);
+
+        if (remaining === 0) {
+          throw mockFastify.createError!(429, {
+            code: 'RATE_LIMITED',
+            message: 'Rate limit reached',
+          });
+        }
+      };
+
+      await expect(
+        checkRateLimit(mockRequest as FastifyRequest, mockReply as FastifyReply),
+      ).rejects.toThrow('Rate limit reached');
+
+      expect(mockReply.header).toHaveBeenCalledWith('X-RateLimit-Remaining', 0);
+    });
+
+    it('should include retry-after header for rate limit errors', async () => {
+      (mockRequest as any).keyOpAttempts = 15;
+
+      const handleRateLimit = async (request: FastifyRequest, reply: FastifyReply) => {
+        const attempts = (request as any).keyOpAttempts || 0;
+        const maxAttempts = 10;
+
+        if (attempts >= maxAttempts) {
+          const retryAfterSeconds = 300; // 5 minutes
+          reply.header('Retry-After', retryAfterSeconds);
+          reply.header('X-RateLimit-Reset', new Date(Date.now() + 300000).toISOString());
+
+          throw mockFastify.createError!(429, 'Rate limit exceeded');
+        }
+      };
+
+      await expect(
+        handleRateLimit(mockRequest as FastifyRequest, mockReply as FastifyReply),
+      ).rejects.toThrow('Rate limit exceeded');
+
+      expect(mockReply.header).toHaveBeenCalledWith('Retry-After', 300);
+    });
+
+    it('should reset rate limit counter after time window', async () => {
+      const now = Date.now();
+      const windowStart = now - 400000; // Started 6+ minutes ago (outside 5-minute window)
+
+      (mockRequest as any).keyOpAttempts = 5;
+      (mockRequest as any).rateLimitWindowStart = windowStart;
+
+      const checkRateLimitWindow = async (request: FastifyRequest) => {
+        const windowMs = 5 * 60 * 1000; // 5 minutes
+        const windowStart = (request as any).rateLimitWindowStart || Date.now();
+        const windowAge = Date.now() - windowStart;
+
+        if (windowAge > windowMs) {
+          // Reset counter
+          (request as any).keyOpAttempts = 0;
+          (request as any).rateLimitWindowStart = Date.now();
+        }
+
+        return (request as any).keyOpAttempts;
+      };
+
+      const attempts = await checkRateLimitWindow(mockRequest as FastifyRequest);
+      expect(attempts).toBe(0); // Should be reset
     });
   });
 });

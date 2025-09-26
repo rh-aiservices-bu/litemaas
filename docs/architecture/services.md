@@ -1,6 +1,6 @@
 # Service Layer Architecture
 
-**Last Updated**: 2025-08-04 - Updated with simplified user ID management and correct LiteLLM usage tracking
+**Last Updated**: 2025-10-10 - Updated with admin usage analytics implementation and documentation review
 
 ## Overview
 
@@ -520,6 +520,148 @@ getMostPowerfulRole(roles: string[]): string {
 - ✅ **Fallback Strategy**: Returns local database data if LiteLLM unavailable
 - ✅ **Mock Data**: Provides realistic mock data in development mode
 
+---
+
+### AdminUsageStatsService ✅ **NEW 2025-09-29**
+
+**Purpose**: Comprehensive usage analytics for administrators
+
+**Extends**: BaseService
+
+**Responsibilities**:
+
+- Aggregate usage data across all users, models, and providers
+- Day-by-day incremental data collection from LiteLLM
+- Enrich LiteLLM data with user mapping from database
+- Calculate trends and comparison metrics
+- Support multi-dimensional filtering (users, models, providers, API keys)
+- Generate export data in CSV/JSON formats
+- Provide filter options based on actual usage data
+
+**Dependencies**:
+
+- DailyUsageCacheManager for performance optimization
+- LiteLLMService for raw usage data
+- Database for user/API key mapping
+- **ConfigContext integration**: Cache TTL configurable via backend `/api/v1/config` endpoint, used by frontend React Query `staleTime`
+
+**Key Operations**:
+
+- `getAnalytics(filters)` - Main analytics endpoint with comprehensive metrics
+- `getUserBreakdown(filters)` - Per-user metrics breakdown
+- `getModelBreakdown(filters)` - Per-model metrics breakdown
+- `getProviderBreakdown(filters)` - Per-provider metrics breakdown
+- `exportUsageData(filters, format)` - Export functionality (CSV/JSON)
+- `refreshTodayData()` - Force refresh current day cache
+- `getFilterOptions(dateRange)` - Get available filter options
+- `rebuildCacheFromRaw()` - Admin cache management utility
+
+**Caching Strategy**:
+
+- Historical days (>1 day old): Permanent cache
+- Current day: 5-minute cache refresh
+- Incremental day-by-day fetching from LiteLLM
+- Enriched data cached with user mappings
+
+**Data Enrichment Process**:
+
+1. Fetch raw data from LiteLLM `/user/daily/activity` endpoint
+2. Extract API key aliases from response
+3. Query database: `SELECT user_id, username, email FROM api_keys WHERE litellm_key_alias IN (...)`
+4. Map API keys to users
+5. Aggregate by user, model, provider
+6. Calculate trends with comparison periods
+7. Cache in `daily_usage_cache` table
+
+---
+
+### DailyUsageCacheManager ✅ **NEW 2025-09-29**
+
+**Purpose**: Efficient caching of daily usage data
+
+**Extends**: BaseService
+
+**Responsibilities**:
+
+- Cache daily usage data in database
+- Manage cache invalidation strategy
+- Handle historical vs current day caching
+- Optimize performance for date range queries
+- Provide cache maintenance utilities
+
+**Dependencies**:
+
+- Database connection for `daily_usage_cache` table
+- Date utilities for cache key generation
+- **Configuration**: TTL configurable via `USAGE_CACHE_TTL_MINUTES` environment variable, exposed through `/api/v1/config` endpoint
+
+**Key Operations**:
+
+- `getCachedDay(date)` - Retrieve cached daily data with stale detection
+- `cacheDay(date, data, isComplete)` - Store daily data with completion flag
+- `refreshCache(date)` - Force cache refresh for specific date
+- `cleanupOldCache(retentionDays)` - Maintenance task for data retention
+- `rebuildCache(startDate, endDate)` - Rebuild cache from raw data
+
+**Cache Strategy**:
+
+- **Historical days** (> 1 day old):
+  - Cached permanently (`is_complete = true`)
+  - Never refreshed unless explicitly rebuilt
+  - Serves as permanent historical record
+- **Current day**:
+  - 5-minute TTL (`is_complete = false`)
+  - Automatic stale detection based on `last_refreshed_at` timestamp
+  - Refreshed on demand or via scheduled job
+- **Missing days**:
+  - Fetched from LiteLLM on demand
+  - Immediately cached for future requests
+
+**Database Schema**:
+
+Uses `daily_usage_cache` table with columns:
+
+- `date` (DATE, PRIMARY KEY)
+- `raw_data` (JSONB) - Full LiteLLM API response
+- `enriched_data` (JSONB) - Enriched with user mappings
+- `is_complete` (BOOLEAN) - Cache completion flag
+- `last_refreshed_at` (TIMESTAMP) - For stale detection
+- `created_at` (TIMESTAMP) - Initial cache time
+
+---
+
+### AdminService ✅ **NEW 2025-09-29**
+
+**Purpose**: Admin-specific operations and utilities
+
+**Extends**: BaseService
+
+**Responsibilities**:
+
+- Admin-only endpoints and operations
+- System-wide management functions
+- Admin role validation and enforcement
+- Administrative utilities and maintenance tasks
+
+**Dependencies**:
+
+- RBACService for permission validation
+- Database for admin operations
+- Various services for system-wide operations
+
+**Key Operations**:
+
+- Admin-specific CRUD operations
+- System configuration management
+- User and team management utilities
+- Cache and data maintenance operations
+
+**Role Requirements**:
+
+- All operations require `admin` or `adminReadonly` role
+- Write operations require `admin` role only
+- Read-only admins have view-only access
+
 ## Utility Classes ✅ **NEW 2025-08-06**
 
 ### LiteLLMSyncUtils
@@ -645,6 +787,24 @@ getMostPowerfulRole(roles: string[]): string {
 6. **Extracts internal token from matched key**
 7. **LiteLLMService.getDailyActivity() uses token for usage query**
 8. **Falls back to local database if LiteLLM unavailable**
+
+### Admin Usage Analytics Flow (New 2025-10-08)
+
+1. **AdminUsagePage requests analytics with date range and dimension filters**
+2. **AdminUsageStatsService validates filters and date range**
+3. **DailyUsageCacheManager checks cache for each day in range**
+4. **For cached complete days (historical > 1 day), returns cached data immediately**
+5. **For current day or missing days, checks if stale (> 5 minutes since last refresh)**
+6. **If stale/missing, LiteLLMService.getDailyActivity() fetches from `/user/daily/activity`**
+7. **AdminUsageStatsService enriches raw data:**
+   - Extracts API key aliases from LiteLLM response
+   - Queries database: `SELECT user_id, username, email FROM api_keys WHERE litellm_key_alias IN (...)`
+   - Maps API keys to users, aggregates by user/model/provider
+8. **DailyUsageCacheManager updates cache with enriched data:**
+   - Historical days marked `is_complete = true` (permanent cache)
+   - Current day marked `is_complete = false` with TTL
+9. **AdminUsageStatsService calculates trends with comparison periods**
+10. **Returns comprehensive analytics to frontend with metrics, trends, and breakdowns**
 
 ## Error Handling
 

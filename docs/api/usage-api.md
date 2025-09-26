@@ -114,8 +114,8 @@ Retrieve aggregated usage statistics.
     "requests": 125000,
     "tokens": 8500000,
     "cost": 127.5,
-    "inputTokens": 5100000,
-    "outputTokens": 3400000,
+    "promptTokens": 5100000,
+    "completionTokens": 3400000,
     "averageLatency": 1200,
     "errorRate": 0.8,
     "successRate": 99.2
@@ -159,8 +159,8 @@ Retrieve usage data over time.
       "endTime": "2025-08-01T23:59:59Z",
       "totalRequests": 18000,
       "totalTokens": 1200000,
-      "totalInputTokens": 720000,
-      "totalOutputTokens": 480000,
+      "totalPromptTokens": 720000,
+      "totalCompletionTokens": 480000,
       "averageLatency": 1150,
       "errorRate": 0.5,
       "successRate": 99.5
@@ -284,33 +284,158 @@ Record real-time usage for API requests.
 
 ## Admin Endpoints
 
-### Get Global Usage Statistics
+Admin usage analytics provides comprehensive system-wide visibility with intelligent caching and multi-dimensional filtering.
 
-**Endpoint:** `GET /api/v1/usage/admin/global`
+### Architecture Overview
 
-**Required Permission:** `admin:usage`
+**Data Source**: LiteLLM `/user/daily/activity` endpoint
+**Caching Layer**: `daily_usage_cache` table with intelligent TTL strategy
+**Data Enrichment**: API key aliases mapped to users via local database
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| startDate | string | No | Start date |
-| endDate | string | No | End date |
-| granularity | string | No | hour, day, week, month |
-| aggregateBy | string | No | model, user, time |
+### Caching Strategy
 
-### Cleanup Old Usage Data
+The admin usage analytics system implements a sophisticated caching strategy optimized for both performance and data freshness:
 
-**Endpoint:** `POST /api/v1/usage/admin/cleanup`
+**Historical Days (> 1 day old)**:
 
-**Required Permission:** `admin:usage`
+- Cached permanently with `is_complete = true`
+- Never refreshed (immutable historical data)
+- Serves as permanent historical record
+
+**Current Day**:
+
+- 5-minute TTL with `is_complete = false`
+- Automatic stale detection based on `last_refreshed_at` timestamp
+- Refreshed on demand via `/refresh-today` endpoint
+- Auto-refreshed when data is older than 5 minutes
+
+**Missing Days**:
+
+- Fetched from LiteLLM on demand
+- Immediately cached for future requests
+- Prevents repeated API calls for same date range
+
+### Data Enrichment Process
+
+1. Fetch raw usage data from LiteLLM `/user/daily/activity`
+2. Extract API key aliases from response (`api_key` field)
+3. Query local database: `SELECT user_id, username, email FROM api_keys WHERE litellm_key_alias IN (...)`
+4. Map API keys to users and aggregate by:
+   - User (userId, username, email, role)
+   - Model (modelId, modelName, provider)
+   - Provider (provider name)
+5. Calculate trends with comparison periods
+6. Cache enriched data in `daily_usage_cache` table
+
+### Admin Analytics Endpoint
+
+**Endpoint:** `POST /api/v1/admin/usage/analytics`
+
+**Required Permission:** `admin:usage` (admin or adminReadonly role)
+
+**Description**: Comprehensive global usage metrics with trend analysis across all users
 
 **Request Body:**
 
 ```json
 {
-  "retentionDays": 90
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31",
+  "userIds": ["uuid1", "uuid2"], // Optional filter
+  "modelIds": ["gpt-4", "gpt-3.5"], // Optional filter
+  "providerIds": ["openai", "azure"], // Optional filter
+  "apiKeyIds": ["key1", "key2"] // Optional filter
 }
 ```
+
+**Response**: See [REST API Documentation](rest-api.md#admin-usage-analytics-apiv1adminusage) for complete response format.
+
+### User Breakdown Endpoint
+
+**Endpoint:** `GET /api/v1/admin/usage/by-user`
+
+**Required Permission:** `admin:usage`
+
+**Description**: Detailed usage metrics broken down by user
+
+**Query Parameters**: `startDate`, `endDate`, `modelIds[]`, `providerIds[]`
+
+### Model Breakdown Endpoint
+
+**Endpoint:** `GET /api/v1/admin/usage/by-model`
+
+**Required Permission:** `admin:usage`
+
+**Description**: Detailed usage metrics broken down by model
+
+**Query Parameters**: `startDate`, `endDate`, `userIds[]`, `providerIds[]`
+
+### Provider Breakdown Endpoint
+
+**Endpoint:** `GET /api/v1/admin/usage/by-provider`
+
+**Required Permission:** `admin:usage`
+
+**Description**: Detailed usage metrics broken down by provider
+
+**Query Parameters**: `startDate`, `endDate`, `userIds[]`, `modelIds[]`
+
+### Export Endpoint
+
+**Endpoint:** `GET /api/v1/admin/usage/export`
+
+**Required Permission:** `admin:usage`
+
+**Description**: Export comprehensive usage data in CSV or JSON format
+
+**Query Parameters**: `startDate`, `endDate`, `format` (csv/json), `userIds[]`, `modelIds[]`, `providerIds[]`
+
+### Refresh Today Endpoint
+
+**Endpoint:** `POST /api/v1/admin/usage/refresh-today`
+
+**Required Permission:** `admin:usage` (admin role only, not adminReadonly)
+
+**Description**: Force refresh of current day's usage data from LiteLLM
+
+**Response:**
+
+```json
+{
+  "message": "Current day usage data refreshed successfully",
+  "refreshedAt": "2024-01-31T16:45:30Z",
+  "status": "success"
+}
+```
+
+### Filter Options Endpoint
+
+**Endpoint:** `GET /api/v1/admin/usage/filter-options`
+
+**Required Permission:** `admin:usage`
+
+**Description**: Get available filter options based on actual usage data. Returns models and users with historical usage data in the specified date range.
+
+**Query Parameters**: `startDate`, `endDate`
+
+### Rebuild Cache Endpoint
+
+**Endpoint:** `POST /api/v1/admin/usage/rebuild-cache`
+
+**Required Permission:** `admin:usage` (admin role only)
+
+**Description**: Rebuild aggregated cache columns from raw_data. Useful for fixing stale aggregated data when raw data is correct.
+
+**Request Body (optional):**
+
+```json
+{
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31"
+}
+```
+
+**Note**: For complete API specifications including all request/response formats, see [REST API Documentation](rest-api.md#admin-usage-analytics-apiv1adminusage).
 
 ## Implementation Details
 
@@ -337,9 +462,20 @@ sequenceDiagram
 
 ### Caching Strategy
 
-- Usage data cached for 5 minutes
+**User Usage Endpoints** (`/api/v1/usage/metrics`, `/api/v1/usage/summary`):
+
+- Simple in-memory caching with 5-minute TTL
 - Cache key format: `usage:{userId}:{apiKeyId}:{startDate}:{endDate}`
-- Cache invalidated on new usage tracking
+- Cache invalidated on new usage tracking events
+
+**Admin Analytics Endpoints** (`/api/v1/admin/usage/*`):
+
+- Persistent database caching in `daily_usage_cache` table
+- Intelligent TTL strategy:
+  - Historical days (> 1 day): Permanent cache (`is_complete = true`)
+  - Current day: 5-minute TTL with stale detection (`is_complete = false`)
+  - Missing days: Fetched from LiteLLM on demand and cached
+- See [Admin Endpoints](#admin-endpoints) section for complete caching details
 
 ### Error Handling
 

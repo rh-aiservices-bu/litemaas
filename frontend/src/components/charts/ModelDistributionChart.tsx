@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChartDonut, ChartThemeColor } from '@patternfly/react-charts/victory';
+import { ChartDonut, ChartThemeColor, getCustomTheme } from '@patternfly/react-charts/victory';
 import { useTranslation } from 'react-i18next';
 import { DonutChartDataPoint, ModelBreakdownData } from '../../utils/chartDataTransformers';
 import AccessibleChart, { AccessibleChartData } from './AccessibleChart';
@@ -24,6 +24,28 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
   ariaLabel = 'Model usage distribution',
 }) => {
   const { t } = useTranslation();
+  const [containerWidth, setContainerWidth] = React.useState(600);
+  const resizeObserverRef = React.useRef<ResizeObserver | null>(null);
+
+  // Measure container width for responsive chart sizing using ref callback
+  // This pattern ensures ResizeObserver reconnects when element remounts (e.g., after view toggle)
+  const containerRef = React.useCallback((element: HTMLDivElement | null) => {
+    // Disconnect previous observer
+    if (resizeObserverRef.current) {
+      resizeObserverRef.current.disconnect();
+      resizeObserverRef.current = null;
+    }
+
+    // Setup new observer if element exists
+    if (element) {
+      resizeObserverRef.current = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          setContainerWidth(entry.contentRect.width);
+        }
+      });
+      resizeObserverRef.current.observe(element);
+    }
+  }, []);
 
   // Empty state
   if (!data || data.length === 0) {
@@ -49,10 +71,22 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
           }}
         >
           <div style={{ textAlign: 'center' }}>
-            <p style={{ fontSize: '14px', color: '#6a6e73', marginBottom: '8px' }}>
+            <p
+              style={{
+                fontSize: 'var(--pf-t--global--font--size--sm)',
+                color: 'var(--pf-t--global--text--color--subtle)',
+                marginBottom: '8px',
+              }}
+            >
               {t('pages.usage.charts.noDataTitle')}
             </p>
-            <p style={{ fontSize: '12px', color: '#8b8d8f', margin: 0 }}>
+            <p
+              style={{
+                fontSize: 'var(--pf-t--global--font--size--xs)',
+                color: 'var(--pf-t--global--text--color--subtle)',
+                margin: 0,
+              }}
+            >
               {t('pages.usage.charts.noDataDescription')}
             </p>
           </div>
@@ -64,46 +98,44 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
   // Calculate total requests
   const totalRequests = data.reduce((sum, item) => sum + item.y, 0);
 
-  // Prepare legend data
-  const legendData = data.map((item) => ({
-    name: `${item.x}: ${item.percentage.toFixed(1)}%`,
-  }));
+  // Get color scale from multiOrdered theme for consistent color assignment
+  const theme = getCustomTheme(ChartThemeColor.multiOrdered, {});
+  const colorScale = theme.pie?.colorScale || [];
 
   // Calculate chart width
-  const chartWidth = width === 'auto' ? 450 : width;
+  const chartWidth = width === 'auto' ? containerWidth : width;
   const chartHeight = size;
 
-  // Transform data for accessibility
-  const accessibleData: AccessibleChartData[] = data.map((item) => ({
-    label: item.x,
-    value: item.percentage.toFixed(1) + '%',
-    additionalInfo: {
-      requests: item.y.toString(),
-      percentage: item.percentage.toFixed(1) + '%',
-      rawValue: item.y.toString(),
-    },
-  }));
+  // Transform data for accessibility with raw values for export
+  const accessibleData: AccessibleChartData[] = data.map((item) => {
+    const model = modelBreakdown.find((m) => m.name === item.x);
 
-  // Find corresponding model breakdown data for additional info
-  const enrichedData: AccessibleChartData[] = accessibleData.map((item) => {
-    const model = modelBreakdown.find((m) => m.name === item.label);
-    if (model) {
-      return {
-        ...item,
-        additionalInfo: {
-          ...item.additionalInfo,
-          tokens:
-            model.tokens >= 1000000
-              ? `${(model.tokens / 1000000).toFixed(1)}M`
-              : model.tokens >= 1000
-                ? `${(model.tokens / 1000).toFixed(1)}K`
-                : model.tokens.toString(),
-          cost: `$${model.cost.toFixed(2)}`,
-        },
-      };
-    }
-    return item;
+    return {
+      label: item.x,
+      value: item.y, // Raw value (requests count) for proper sorting and export
+      additionalInfo: {
+        // Raw values for CSV export
+        requests: item.y,
+        percentage: item.percentage,
+        tokens: model?.tokens || 0,
+        cost: model?.cost || 0,
+        // Formatted values for display
+        requestsFormatted: item.y.toLocaleString(),
+        percentageFormatted: item.percentage.toFixed(1) + '%',
+        tokensFormatted: model?.tokens
+          ? model.tokens >= 1000000
+            ? `${(model.tokens / 1000000).toFixed(1)}M`
+            : model.tokens >= 1000
+              ? `${(model.tokens / 1000).toFixed(1)}K`
+              : model.tokens.toString()
+          : '0',
+        costFormatted: model?.cost ? `$${model.cost.toFixed(2)}` : '$0.00',
+      },
+    };
   });
+
+  // Alias for consistency (no longer need separate enrichment step)
+  const enrichedData = accessibleData;
 
   // Generate chart description and summary
   const chartDescription = t('pages.usage.charts.donutChartDescription');
@@ -133,7 +165,7 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
       ]}
       formatValue={(value) => value.toString()}
     >
-      <div style={{ display: 'flex', gap: '2rem', alignItems: 'center', flexWrap: 'wrap' }}>
+      <div ref={containerRef} style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}>
         {/* Donut Chart */}
         <div style={{ height: `${chartHeight}px`, width: `${chartWidth}px` }}>
           <ChartDonut
@@ -142,27 +174,63 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
             constrainToVisibleArea
             data={data}
             labels={({ datum }) => `${datum.x}: ${datum.percentage.toFixed(1)}%`}
-            legendData={showLegend ? legendData : undefined}
-            legendOrientation="vertical"
-            legendPosition="right"
             name="modelDistribution"
             padding={{
-              bottom: 20,
-              left: 20,
-              right: showLegend ? 180 : 20,
-              top: 20,
+              bottom: 10,
+              left: 10,
+              right: 10,
+              top: 10,
             }}
             subTitle={t('pages.usage.metrics.totalRequests')}
             title={totalRequests.toString()}
             themeColor={ChartThemeColor.multiOrdered}
             width={chartWidth}
             height={chartHeight}
-            animate={{
-              duration: 1000,
-              onLoad: { duration: 500 },
-            }}
           />
         </div>
+
+        {/* Custom Legend - Horizontal layout with wrapping */}
+        {showLegend && data.length > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              marginTop: '1rem',
+              width: '100%',
+            }}
+          >
+            {data.map((item, index) => (
+              <div
+                key={item.x}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                }}
+              >
+                <div
+                  style={{
+                    width: '12px',
+                    height: '12px',
+                    backgroundColor: colorScale[index % colorScale.length],
+                    borderRadius: '2px',
+                    flexShrink: 0,
+                  }}
+                  aria-hidden="true"
+                />
+                <span
+                  style={{
+                    fontSize: 'var(--pf-t--global--font--size--sm)',
+                    color: 'var(--pf-t--global--text--color--regular)',
+                  }}
+                >
+                  {item.x}: {item.percentage.toFixed(1)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Model Breakdown Table - Now handled by AccessibleChart in table view */}
         {showBreakdown && modelBreakdown.length > 0 && (
@@ -174,16 +242,44 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
             >
               <thead>
                 <tr style={{ borderBottom: '1px solid #e0e0e0' }}>
-                  <th style={{ padding: '8px', textAlign: 'left', fontSize: '12px' }} scope="col">
+                  <th
+                    style={{
+                      padding: '8px',
+                      textAlign: 'left',
+                      fontSize: 'var(--pf-t--global--font--size--xs)',
+                    }}
+                    scope="col"
+                  >
                     {t('pages.usage.tableHeaders.model')}
                   </th>
-                  <th style={{ padding: '8px', textAlign: 'right', fontSize: '12px' }} scope="col">
+                  <th
+                    style={{
+                      padding: '8px',
+                      textAlign: 'right',
+                      fontSize: 'var(--pf-t--global--font--size--xs)',
+                    }}
+                    scope="col"
+                  >
                     {t('pages.usage.tableHeaders.requests')}
                   </th>
-                  <th style={{ padding: '8px', textAlign: 'right', fontSize: '12px' }} scope="col">
+                  <th
+                    style={{
+                      padding: '8px',
+                      textAlign: 'right',
+                      fontSize: 'var(--pf-t--global--font--size--xs)',
+                    }}
+                    scope="col"
+                  >
                     {t('pages.usage.tableHeaders.tokens')}
                   </th>
-                  <th style={{ padding: '8px', textAlign: 'right', fontSize: '12px' }} scope="col">
+                  <th
+                    style={{
+                      padding: '8px',
+                      textAlign: 'right',
+                      fontSize: 'var(--pf-t--global--font--size--xs)',
+                    }}
+                    scope="col"
+                  >
                     {t('pages.usage.tableHeaders.cost')}
                   </th>
                 </tr>
@@ -193,21 +289,43 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
                   <tr key={index} style={{ borderBottom: '1px solid #f0f0f0' }}>
                     <th
                       scope="row"
-                      style={{ padding: '8px', fontSize: '11px', fontWeight: 'normal' }}
+                      style={{
+                        padding: '8px',
+                        fontSize: 'var(--pf-t--global--font--size--xs)',
+                        fontWeight: 'normal',
+                      }}
                     >
                       {model.name}
                     </th>
-                    <td style={{ padding: '8px', textAlign: 'right', fontSize: '11px' }}>
+                    <td
+                      style={{
+                        padding: '8px',
+                        textAlign: 'right',
+                        fontSize: 'var(--pf-t--global--font--size--xs)',
+                      }}
+                    >
                       {model.requests.toLocaleString()}
                     </td>
-                    <td style={{ padding: '8px', textAlign: 'right', fontSize: '11px' }}>
+                    <td
+                      style={{
+                        padding: '8px',
+                        textAlign: 'right',
+                        fontSize: 'var(--pf-t--global--font--size--xs)',
+                      }}
+                    >
                       {model.tokens >= 1000000
                         ? `${(model.tokens / 1000000).toFixed(1)}M`
                         : model.tokens >= 1000
                           ? `${(model.tokens / 1000).toFixed(1)}K`
                           : model.tokens.toString()}
                     </td>
-                    <td style={{ padding: '8px', textAlign: 'right', fontSize: '11px' }}>
+                    <td
+                      style={{
+                        padding: '8px',
+                        textAlign: 'right',
+                        fontSize: 'var(--pf-t--global--font--size--xs)',
+                      }}
+                    >
                       ${model.cost.toFixed(2)}
                     </td>
                   </tr>

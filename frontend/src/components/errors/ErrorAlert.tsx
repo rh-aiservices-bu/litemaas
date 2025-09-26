@@ -55,7 +55,7 @@ export const ErrorAlert: React.FC<ErrorAlertProps> = ({
   // Use suggestion as title if available, otherwise use message
   const title = error.suggestion || error.message;
 
-  // Build action buttons array
+  // Build action buttons for actionLinks (retry button only)
   const actionButtons: React.ReactNode[] = [];
 
   // Retry button for retryable errors
@@ -74,12 +74,12 @@ export const ErrorAlert: React.FC<ErrorAlertProps> = ({
     );
   }
 
-  // Close button
-  if (closable && onClose) {
-    actionButtons.push(
-      <AlertActionCloseButton key="close" title={t('common.close')} onClose={onClose} />,
-    );
-  }
+  // Close button - handled separately via actionClose prop (not actionLinks)
+  // AlertActionCloseButton requires Alert context, so it must use actionClose prop
+  const closeButton =
+    closable && onClose ? (
+      <AlertActionCloseButton title={t('common.close')} onClose={onClose} />
+    ) : undefined;
 
   // Build alert content
   const alertContent = (
@@ -164,6 +164,7 @@ export const ErrorAlert: React.FC<ErrorAlertProps> = ({
       variant={variant}
       title={title}
       className={className}
+      actionClose={closeButton}
       actionLinks={
         actionButtons.length > 0 ? (
           <Flex>

@@ -168,7 +168,7 @@ const ChatbotPage: React.FC = () => {
     const loadConfig = async () => {
       try {
         const config = await configService.getConfig();
-        setLitellmApiUrl(config.litellmApiUrl);
+        setLitellmApiUrl(config.litellmApiUrl ?? 'https://api.litemaas.com');
       } catch (err) {
         console.error('Failed to load configuration:', err);
         // Keep default value if config load fails
@@ -564,7 +564,7 @@ const ChatbotPage: React.FC = () => {
             label={`${t('pages.chatbot.configuration.temperature')}: ${configuration.settings.temperature}`}
           >
             {/* TODO: Put this in a helper
-          <div style={{ fontSize: 'var(--pf-v6-global--FontSize--sm)' }}>
+          <div style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
             {t('pages.chatbot.configuration.temperatureDescription', {
               value: configuration.settings.temperature,
             })}
@@ -653,7 +653,7 @@ const ChatbotPage: React.FC = () => {
                     <FontAwesomeIcon icon={faFlagCheckered} />
                   </SplitItem>
                   <SplitItem isFilled>
-                    <div style={{ fontSize: 'var(--pf-v6-global--FontSize--sm)' }}>
+                    <div style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
                       {t('pages.chatbot.responseInfo.timeToFirstToken')}:{' '}
                       {Math.round(streamingTTFT)}ms
                     </div>
@@ -671,7 +671,7 @@ const ChatbotPage: React.FC = () => {
                       <ClockIcon />
                     </SplitItem>
                     <SplitItem isFilled>
-                      <div style={{ fontSize: 'var(--pf-v6-global--FontSize--sm)' }}>
+                      <div style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
                         {t('pages.chatbot.responseInfo.responseTime')}:{' '}
                         {Math.round(lastResponseMetrics.responseTime)}ms
                       </div>
@@ -685,7 +685,7 @@ const ChatbotPage: React.FC = () => {
                       <CubesIcon />
                     </SplitItem>
                     <SplitItem isFilled>
-                      <div style={{ fontSize: 'var(--pf-v6-global--FontSize--sm)' }}>
+                      <div style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
                         {t('pages.chatbot.responseInfo.tokenUsage')}:{' '}
                         {lastResponseMetrics.tokens.total_tokens} (
                         {lastResponseMetrics.tokens.prompt_tokens}{' '}
@@ -703,7 +703,7 @@ const ChatbotPage: React.FC = () => {
                       <FontAwesomeIcon icon={faGauge} />
                     </SplitItem>
                     <SplitItem isFilled>
-                      <div style={{ fontSize: 'var(--pf-v6-global--FontSize--sm)' }}>
+                      <div style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
                         {t('pages.chatbot.responseInfo.tokensPerSecond')}:{' '}
                         {Math.round(
                           lastResponseMetrics.tokens.completion_tokens /
@@ -719,7 +719,7 @@ const ChatbotPage: React.FC = () => {
           </Flex>
         ) : (
           <div
-            style={{ fontSize: 'var(--pf-v6-global--FontSize--sm)' }}
+            style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}
             className="pf-v6-u-color-400"
           >
             {t('pages.chatbot.responseInfo.noData')}

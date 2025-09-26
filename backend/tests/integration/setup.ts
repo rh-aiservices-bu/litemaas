@@ -1,10 +1,5 @@
-// Mock JWT functionality since we don't need real JWT in tests
-const jwt = {
-  sign: (payload: any, secret: string) => {
-    // Return a simple base64-encoded payload for testing
-    return `mock-jwt-${Buffer.from(JSON.stringify(payload)).toString('base64')}`;
-  },
-};
+// Use real JWT library for proper signature verification in integration tests
+import jwt from 'jsonwebtoken';
 
 /**
  * Generate a test JWT token for authentication in integration tests
@@ -19,16 +14,16 @@ export function generateTestToken(
   iat: number = Math.floor(Date.now() / 1000),
 ): string {
   const payload = {
-    sub: userId,
+    userId, // Use userId field as expected by JWTPayload interface
+    username: 'testuser', // Add username field as expected by JWTPayload interface
     email: 'test@example.com',
-    name: 'Test User',
     roles,
     iat,
     exp: iat + 3600, // 1 hour expiry
   };
 
-  // Use a test secret for generating tokens
-  const testSecret = process.env.JWT_SECRET || 'test-secret-key';
+  // Use the same test secret as configured in vitest.config.ts
+  const testSecret = process.env.JWT_SECRET || 'test-secret-key-for-vitest-testing';
   return jwt.sign(payload, testSecret);
 }
 
@@ -43,15 +38,15 @@ export function generateExpiredToken(
   roles: string[] = ['user'],
 ): string {
   const payload = {
-    sub: userId,
+    userId, // Use userId field as expected by JWTPayload interface
+    username: 'testuser', // Add username field as expected by JWTPayload interface
     email: 'test@example.com',
-    name: 'Test User',
     roles,
     iat: Math.floor(Date.now() / 1000) - 7200, // 2 hours ago
     exp: Math.floor(Date.now() / 1000) - 3600, // 1 hour ago (expired)
   };
 
-  const testSecret = process.env.JWT_SECRET || 'test-secret-key';
+  const testSecret = process.env.JWT_SECRET || 'test-secret-key-for-vitest-testing';
   return jwt.sign(payload, testSecret);
 }
 

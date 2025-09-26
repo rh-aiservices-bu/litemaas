@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { AuthProvider } from '../contexts/AuthContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
+import { ConfigProvider } from '../contexts/ConfigContext';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import Layout from '../components/Layout';
 import HomePage from '../pages/HomePage';
@@ -12,6 +13,7 @@ import ChatbotPage from '../pages/ChatbotPage';
 import UsagePage from '../pages/UsagePage';
 import ToolsPage from '../pages/ToolsPage';
 import AdminModelsPage from '../pages/AdminModelsPage';
+import AdminUsagePage from '../pages/AdminUsagePage';
 import UsersPage from '../pages/UsersPage';
 import LoginPage from '../pages/LoginPage';
 import AuthCallbackPage from '../pages/AuthCallbackPage';
@@ -30,11 +32,13 @@ const queryClient = new QueryClient({
 // Root component that provides all contexts
 const Root = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <NotificationProvider>
-        <Outlet />
-      </NotificationProvider>
-    </AuthProvider>
+    <ConfigProvider>
+      <AuthProvider>
+        <NotificationProvider>
+          <Outlet />
+        </NotificationProvider>
+      </AuthProvider>
+    </ConfigProvider>
   </QueryClientProvider>
 );
 
@@ -83,6 +87,10 @@ export const router = createBrowserRouter(
             {
               path: 'admin/models',
               element: <AdminModelsPage />,
+            },
+            {
+              path: 'admin/usage',
+              element: <AdminUsagePage />,
             },
             {
               path: 'admin/users',

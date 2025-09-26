@@ -34,6 +34,9 @@ declare module 'fastify' {
       LITELLM_RETRIES: string;
       LITELLM_RETRY_DELAY: string;
 
+      // Usage Cache
+      USAGE_CACHE_TTL_MINUTES: string;
+
       // Rate Limiting
       RATE_LIMIT_MAX: string;
       RATE_LIMIT_TIME_WINDOW: string;

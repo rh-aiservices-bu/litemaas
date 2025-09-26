@@ -1,15 +1,283 @@
 {
+  "admin": {
+    "usage": {
+      "tables": {
+        "models": {
+          "ariaLabel": "Model usage breakdown table",
+          "caption": "Table showing usage breakdown for {{count}} models",
+          "columns": {
+            "avgLatency": "Avg Latency",
+            "cost": "Cost",
+            "model": "Model",
+            "requests": "Requests",
+            "successRate": "Success Rate",
+            "tokens": "Tokens",
+            "users": "Users"
+          },
+          "empty": {
+            "description": "No usage data found for the selected time period",
+            "title": "No model data available"
+          },
+          "pagination": {
+            "ariaLabel": "Model breakdown table pagination"
+          },
+          "successRate": {
+            "high": "High success rate (>95%)",
+            "low": "Low success rate (<90%)",
+            "medium": "Medium success rate (90-95%)"
+          }
+        },
+        "providers": {
+          "ariaLabel": "Provider usage breakdown table",
+          "caption": "Table showing usage breakdown for {{count}} providers",
+          "columns": {
+            "cost": "Cost",
+            "models": "Models",
+            "provider": "Provider",
+            "requests": "Requests",
+            "successRate": "Success Rate",
+            "tokens": "Tokens"
+          },
+          "empty": {
+            "description": "No usage data found for the selected time period",
+            "title": "No provider data available"
+          },
+          "pagination": {
+            "ariaLabel": "Provider breakdown table pagination"
+          },
+          "successRate": {
+            "high": "High success rate (>95%)",
+            "low": "Low success rate (<90%)",
+            "medium": "Medium success rate (90-95%)"
+          }
+        },
+        "users": {
+          "ariaLabel": "User usage breakdown table",
+          "caption": "Table showing usage breakdown for {{count}} users",
+          "columns": {
+            "cost": "Cost",
+            "lastActive": "Last Active",
+            "requests": "Requests",
+            "tokens": "Tokens",
+            "user": "User"
+          },
+          "empty": {
+            "description": "No usage data found for the selected time period",
+            "title": "No user data available"
+          },
+          "pagination": {
+            "ariaLabel": "User breakdown table pagination"
+          }
+        }
+      },
+      "timeAgo": {
+        "days": "{{count}} day ago",
+        "days_plural": "{{count}} days ago",
+        "hours": "{{count}} hour ago",
+        "hours_plural": "{{count}} hours ago",
+        "justNow": "Just now",
+        "minutes": "{{count}} minute ago",
+        "minutes_plural": "{{count}} minutes ago"
+      }
+    }
+  },
+  "adminUsage": {
+    "accessDenied": "Access Denied",
+    "activeUsers": "Active Users",
+    "apiKeysCleared": "API key filter disabled - select users first",
+    "apiKeysFilterAdjusted": "API key filter may have changed - please review selections",
+    "apiKeysFilterAvailable": "API key filter is now available",
+    "charts": {
+      "modelDistributionAriaLabel": "Model usage distribution chart",
+      "modelUsageTrends": "Model Usage Trends",
+      "modelUsageTrendsAriaDesc": "A stacked bar chart showing usage of different models over time. The metric displayed is {{metric}}.",
+      "modelUsageTrendsAriaLabel": "Stacked chart showing model usage trends over time by {{metric}}",
+      "modelUsageTrendsDescription": "Model usage breakdown over time",
+      "noDataAvailable": "No data available for the selected period",
+      "noModelData": "No model data available",
+      "noModelDataExplanation": "No model usage data available for the selected time period.",
+      "topUsers": "Top Users",
+      "usageTrends": "Usage Trends",
+      "usageTrendsDescription": "Usage trends over time"
+    },
+    "completionTokens": "Completion Tokens",
+    "datePresets": {
+      "30d": "Last 30 days",
+      "7d": "Last 7 days",
+      "90d": "Last 90 days",
+      "custom": "Custom range"
+    },
+    "dateRangeChanged": "Date range changed to {{preset}}",
+    "dateRangeSelect": "Date range selection",
+    "endDate": "End date",
+    "errors": {
+      "export": "Failed to export usage data",
+      "exportDescription": "Failed to export top users data.",
+      "fetchMetrics": "Failed to load usage metrics",
+      "fetchModels": "Failed to load model breakdown",
+      "fetchProviders": "Failed to load provider breakdown",
+      "fetchUsers": "Failed to load user breakdown",
+      "refresh": "Failed to refresh today's data"
+    },
+    "export": "Export",
+    "exportComplete": "Usage data has been exported successfully.",
+    "exportModal": {
+      "csvDescription": "Best for spreadsheets. Compatible with Excel, Google Sheets, and other data analysis tools.",
+      "csvFullName": "(Comma-Separated Values)",
+      "dateRange": "Date Range",
+      "downloaded": "Usage data has been downloaded successfully.",
+      "downloadFile": "Download export file",
+      "export": "Export",
+      "exportButton": "Export usage data",
+      "exporting": "Exporting...",
+      "format": "Format",
+      "from": "From",
+      "jsonDescription": "Best for developers. Structured data format for programmatic access and API integration.",
+      "jsonFullName": "(JavaScript Object Notation)",
+      "success": "Export successful",
+      "title": "Export Usage Data",
+      "to": "To"
+    },
+    "exportStarting": "Starting export...",
+    "exportSuccess": "Export successful",
+    "filters": {
+      "apiKeys": "Filter by API keys",
+      "apiKeysLoadError": "Failed to load API keys",
+      "apiKeysPlaceholder": "Select users first to filter by API keys",
+      "apiKeysPlaceholderActive": "All API keys (click to filter)",
+      "clearApiKeysFilter": "Clear API key filter",
+      "clearModels": "Clear model selection",
+      "clearUsers": "Clear user selection",
+      "models": "Filter by models",
+      "modelsPlaceholder": "All models (click to filter)",
+      "noApiKeysAvailable": "No API keys available for selected users",
+      "noApiKeysFound": "No API keys found for \"{{query}}\"",
+      "noModelsFound": "No models found for \"{{query}}\"",
+      "noUsersFound": "No users found for \"{{query}}\"",
+      "searchModels": "Search models...",
+      "searchUsers": "Search users...",
+      "selectedApiKeys": "Selected API keys",
+      "selectedModels": "Selected models",
+      "selectedUsers": "Selected users",
+      "users": "Filter by users",
+      "usersPlaceholder": "All users (click to filter)"
+    },
+    "heatmap": {
+      "accessibility": {
+        "cellLabel": "{{dayName}}, {{date}}, {{value}}, {{percent}} of week",
+        "heatmapDescription": "Heatmap showing {{metric}} by day of week across {{weeks}} weeks"
+      },
+      "legend": {
+        "colorScale": "Usage intensity",
+        "noData": "No data",
+        "zeroUsage": "Zero usage"
+      },
+      "table": {
+        "viewAsChart": "View as chart",
+        "viewAsTable": "View as table",
+        "week": "Week"
+      },
+      "tooltip": {
+        "noDataOutsideRange": "No data (outside selected range)",
+        "percentOfWeek": "{{percent}}% of week total"
+      }
+    },
+    "loading": "Loading metrics...",
+    "loadingModels": "Loading model data...",
+    "loadingProviders": "Loading provider data...",
+    "loadingUsers": "Loading user data...",
+    "metrics": {
+      "activeUsersAriaLabel": "{{active}} active users out of {{total}} total users",
+      "noChange": "No change",
+      "ofTotalUsers": "of {{total}} total",
+      "successRateAriaLabel": "Success rate: {{percentage}}%",
+      "totalCostAriaLabel": "Total cost: ${{amount}}",
+      "totalRequestsAriaLabel": "Total requests: {{count}}",
+      "trendLabel": "Trend {{direction}} by {{change}}%"
+    },
+    "metricSelect": "Metric selection",
+    "metricsOverview": "Metrics Overview",
+    "modelBreakdown": "Model Breakdown",
+    "modelFilterChanged": "Filtering by {{count}} model(s)",
+    "noData": "No data available",
+    "noModelData": "No model data available",
+    "noModelsFound": "No models found for the selected date range.",
+    "noProviderData": "No provider data available",
+    "noProvidersFound": "No providers found for the selected date range.",
+    "noUserData": "No user data available",
+    "noUsersFound": "No users found for the selected date range.",
+    "promptTokens": "Prompt Tokens",
+    "providerBreakdown": "Provider Breakdown",
+    "refreshing": "Refreshing today's data...",
+    "refreshSuccess": "Refresh successful",
+    "refreshToday": "Refresh Today",
+    "requiresAdmin": "You do not have permission to view admin usage analytics.",
+    "selectDateRange": "Please select a date range to view metrics.",
+    "selectMetric": "Select metric",
+    "startDate": "Start date",
+    "subtitle": "View and analyze usage across all users, models, and providers",
+    "successRate": "Success Rate",
+    "tabChanged": "Switched to {{tab}} tab",
+    "tableHeaders": {
+      "completionTokens": "Completion<br />Tokens",
+      "cost": "Cost",
+      "promptTokens": "Prompt<br />Tokens",
+      "requests": "Requests",
+      "tokens": "Tokens",
+      "user": "User"
+    },
+    "tables": {
+      "topUsers": "Top users by requests and cost"
+    },
+    "tabs": {
+      "byModels": "By Models",
+      "byProviders": "By Providers",
+      "byUsers": "By Users",
+      "overview": "Overview"
+    },
+    "tabsLabel": "Usage analytics tabs",
+    "title": "Admin Usage Analytics",
+    "todayDataRefreshed": "Today's usage data has been refreshed.",
+    "topUsers": {
+      "csvHeaders": {
+        "costUsd": "Cost (USD)",
+        "email": "Email",
+        "inputTokens": "Input Tokens",
+        "outputTokens": "Output Tokens",
+        "requests": "Requests",
+        "tokens": "Tokens",
+        "username": "Username"
+      },
+      "export": "Export",
+      "exportAriaLabel": "Download top users CSV file",
+      "exportSuccess": "Export successful",
+      "exportSuccessDescription": "Top users data has been downloaded successfully."
+    },
+    "totalCost": "Total Cost",
+    "totalModels": "Total Models",
+    "totalProviders": "Total Providers",
+    "totalRequests": "Total Requests",
+    "totalUsers": "Total Users",
+    "unknownUser": "Unknown User",
+    "unknownUserDescription": "Requests from deleted or unmapped API keys",
+    "usageHeatmapSubtitle": "Usage heatmap over selected week(s)",
+    "userBreakdown": "User Breakdown",
+    "userFilterChanged": "Filtering by {{count}} user(s)",
+    "weeklyUsagePatterns": "Weekly Usage Patterns"
+  },
   "common": {
     "anUnknownErrorOccurred": "An unknown error occurred",
     "cancel": "Cancel",
     "chart": "Chart",
     "close": "Close",
+    "closeFullScreen": "Close full screen view",
     "create": "Create",
     "dataPoints": "data points",
     "date": "Date",
     "day": "Day",
     "delete": "Delete",
     "error": "Error",
+    "expandToFullScreen": "Expand to full screen",
     "export": "Export",
     "features": "Features",
     "label": "Label",
@@ -33,8 +301,12 @@
       "apiKeyIsRequired": "API key is required",
       "apiKeyOptional": "API Key (Optional)",
       "areYouSureYouWantToDeleteTheModel": "Are you sure you want to delete the model",
+      "authenticationFailed": "Authentication failed",
+      "availableModels": "Available models:",
       "backendModelName": "Backend Model Name",
       "backendModelNameIsRequired": "Backend model name is required",
+      "cannotContactEndpoint": "Cannot contact the endpoint",
+      "connectionSuccessful": "Connection successful! You can create the model.",
       "createModel": "Create Model",
       "createModelFailed": "Create Model Failed",
       "createYourFirstModelToGetStarted": "Create your first model to get started.",
@@ -65,6 +337,7 @@
       "modelName": "Model Name",
       "modelNameCannotContainSpaces": "Model name cannot contain spaces",
       "modelNameIsRequired": "Model name is required",
+      "modelNotAvailable": "Model not available at this endpoint",
       "modelsTable": "Models table",
       "modelUpdated": "Model Updated",
       "modelUpdatedSuccessfully": "Model updated successfully",
@@ -99,18 +372,13 @@
         "tpm": "TPM",
         "visionSupport": "Vision Support"
       },
+      "testConfiguration": "Test Configuration",
+      "testingConfiguration": "Testing configuration...",
       "thisActionCannotBeUndoneAndWillRemoveTheModelFromLitellm": "This action cannot be undone and will remove the model from LiteLLM.",
       "title": "Model Management",
       "tpmMustBeAtLeast_1": "TPM must be at least 1",
       "tpmTokensPerMinute": "TPM (Tokens per Minute)",
-      "updateModelFailed": "Update Model Failed",
-      "testConfiguration": "Test Configuration",
-      "testingConfiguration": "Testing configuration...",
-      "connectionSuccessful": "Connection successful! You can create the model.",
-      "cannotContactEndpoint": "Cannot contact the endpoint",
-      "authenticationFailed": "Authentication failed",
-      "modelNotAvailable": "Model not available at this endpoint",
-      "availableModels": "Available models:"
+      "updateModelFailed": "Update Model Failed"
     },
     "loading": {
       "description": "Retrieving model information from the server",
@@ -125,6 +393,7 @@
     "admin": {
       "models": "Model Management",
       "tools": "Tools",
+      "usage": "Usage Analytics",
       "users": "Users"
     },
     "apiKeys": "API Keys",
@@ -744,7 +1013,7 @@
         "chartFocused": "{{chartType}} focused. Contains {{dataPoints}} data points. Use Tab to navigate chart controls or press T to toggle table view.",
         "dailyUsage": "Daily Usage",
         "detailedBreakdown": "Detailed Breakdown",
-        "donutChartDescription": "This donut chart shows the distribution of requests across different AI models",
+        "donutChartDescription": "Distribution of requests across models",
         "errorTypes": "Error Types",
         "legendDescription": "Visual representation of {{metricType}} data over time",
         "lineChartAriaLabel": "Line chart showing {{metric}} over time",
@@ -882,6 +1151,7 @@
       "chartLegend": "Chart legend with data series information",
       "dataExported": "Data exported to {{filename}}",
       "dataTableAlternative": "Data Table Alternative",
+      "dismissAnnouncement": "Dismiss announcement",
       "exportChartData": "Export chart data as CSV",
       "legendPattern": "{{name}} series shown in {{color}} color with {{pattern}} line pattern",
       "legendSummary": "Legend contains {{count}} items: {{items}}",
@@ -899,6 +1169,7 @@
       "skipToNavigation": "Skip to navigation",
       "switchedToChart": "Switched to chart view",
       "switchedToTable": "Switched to table view",
+      "systemAnnouncement": "System announcement",
       "tableCaption": "Data table for {{title}}",
       "tableNavigationInstructions": "Use arrow keys to navigate between rows and columns, or Tab to move to the next interactive element.",
       "viewModeToggle": "Toggle between chart and table view"
@@ -916,6 +1187,9 @@
       "save": "Save",
       "saving": "Saving...",
       "tryAgain": "Try Again"
+    },
+    "avatar": {
+      "userAvatar": "User Avatar"
     },
     "errors": {
       "details": "Details",
@@ -950,6 +1224,15 @@
         "url": "{{field}} must be a valid URL"
       }
     },
+    "footer": {
+      "appBy": "App by",
+      "forks": "Forks: ",
+      "githubLogo": "GitHub Logo",
+      "noVersion": "no version",
+      "sourceOnGitHub": "Source on GitHub",
+      "stars": "Stars: ",
+      "version": "version"
+    },
     "language": {
       "chinese": "中文",
       "elvish": "Edhellen",
@@ -962,10 +1245,21 @@
       "selector": "Language",
       "spanish": "Español"
     },
+    "navigation": {
+      "mainNavigation": "Main navigation",
+      "userMenu": "User menu"
+    },
     "notifications": {
       "clear": "Clear all",
+      "clearAll": "Clear all",
+      "drawerActions": "Notification drawer actions",
       "empty": "No notifications",
+      "markAllRead": "Mark all read",
       "markRead": "Mark as read",
+      "noNotificationsDescription": "There are currently no notifications.",
+      "noNotificationsFound": "No notifications found",
+      "notificationsLabel": "Notifications",
+      "notificationSrTitle": "Notification",
       "title": "Notifications"
     },
     "pagination": {
@@ -973,8 +1267,11 @@
     },
     "theme": {
       "dark": "Dark",
+      "darkThemeToggle": "dark theme toggle",
       "light": "Light",
-      "toggle": "Toggle theme"
+      "lightThemeToggle": "light theme toggle",
+      "toggle": "Toggle theme",
+      "toggleGroup": "Dark theme toggle group"
     }
   },
   "users": {

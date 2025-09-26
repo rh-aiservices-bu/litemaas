@@ -41,9 +41,12 @@ litemaas/
 │   │   │   ├── api-keys.ts   # API key management (/api/v1/api-keys)
 │   │   │   ├── users.ts      # User management (/api/v1/users)
 │   │   │   ├── admin.ts      # Admin endpoints (/api/v1/admin)
+│   │   │   ├── admin-models.ts # Admin model management (/api/v1/admin/models)
+│   │   │   ├── admin-usage.ts # Admin usage analytics (/api/v1/admin/usage)
 │   │   │   ├── usage.ts      # Usage tracking (/api/v1/usage)
 │   │   │   ├── config.ts     # Configuration endpoints (/api/v1/config)
 │   │   │   ├── health.ts     # Health check (/api/v1/health)
+│   │   │   ├── banners.ts    # Banner announcements (/api/v1/banners)
 │   │   │   └── index.ts      # Route registration
 │   │   ├── schemas/           # TypeBox validation schemas
 │   │   │   ├── common.ts     # Common schemas (UUID, pagination)
@@ -53,6 +56,7 @@ litemaas/
 │   │   │   ├── auth.ts       # Authentication schemas
 │   │   │   ├── users.ts      # User schemas
 │   │   │   ├── usage.ts      # Usage schemas
+│   │   │   ├── admin-usage.ts # Admin usage analytics schemas
 │   │   │   ├── health.ts     # Health check schemas
 │   │   │   └── index.ts      # Schema exports
 │   │   ├── services/          # Business logic layer
@@ -68,7 +72,9 @@ litemaas/
 │   │   │   ├── subscription.service.ts # Subscription management
 │   │   │   ├── team.service.ts # Team operations
 │   │   │   ├── token.service.ts # Token generation and validation
-│   │   │   └── usage-stats.service.ts # Usage analytics
+│   │   │   ├── usage-stats.service.ts # User usage analytics
+│   │   │   ├── admin-usage-stats.service.ts # Admin usage analytics with trends
+│   │   │   └── daily-usage-cache-manager.ts # Usage data caching manager
 │   │   ├── types/             # TypeScript definitions
 │   │   │   ├── fastify.ts    # Fastify decorators
 │   │   │   ├── api-key.types.ts # API key types
@@ -76,7 +82,8 @@ litemaas/
 │   │   │   ├── common.types.ts # Common types
 │   │   │   ├── model.types.ts # Model types
 │   │   │   ├── subscription.types.ts # Subscription types
-│   │   │   ├── usage.types.ts # Usage types
+│   │   │   ├── usage.types.ts # User usage types
+│   │   │   ├── admin-usage.types.ts # Admin usage analytics types
 │   │   │   ├── user.types.ts # User types
 │   │   │   └── index.ts      # Type exports
 │   │   ├── utils/             # Utility functions
@@ -89,9 +96,14 @@ litemaas/
 │   ├── tests/
 │   │   ├── fixtures/         # Test data and mocks
 │   │   ├── integration/      # API integration tests
+│   │   │   ├── admin-usage.test.ts # Admin usage analytics tests
+│   │   │   └── ... (other integration tests)
 │   │   ├── performance/      # K6 load testing
 │   │   ├── security/         # Auth and security tests
 │   │   └── unit/            # Service unit tests
+│   │       ├── services/
+│   │       │   ├── admin-usage-stats.service.test.ts # Admin analytics tests
+│   │       │   └── ... (other service tests)
 │   └── dist/                # TypeScript build output
 ├── frontend/                  # React Application
 │   ├── src/
@@ -99,6 +111,13 @@ litemaas/
 │   │   │   ├── images/       # Images and logos
 │   │   │   └── icons/        # Custom icons
 │   │   ├── components/        # Reusable components
+│   │   │   ├── admin/        # Admin-only components
+│   │   │   │   ├── MetricsOverview.tsx # Analytics metrics cards
+│   │   │   │   ├── UserFilterSelect.tsx # User multi-select filter
+│   │   │   │   ├── ApiKeyFilterSelect.tsx # API key filter (cascading)
+│   │   │   │   ├── TopUsersTable.tsx # Top users by usage table
+│   │   │   │   ├── ProviderBreakdownTable.tsx # Provider breakdown table
+│   │   │   │   └── index.ts  # Admin component exports
 │   │   │   ├── charts/       # Chart components (AccessibleChart, etc.)
 │   │   │   ├── AlertToastGroup.tsx # Toast notifications
 │   │   │   ├── ComponentErrorBoundary.tsx # Component-level error handling
@@ -133,7 +152,9 @@ litemaas/
 │   │   │   ├── SubscriptionsPage.tsx # Subscription management
 │   │   │   ├── ApiKeysPage.tsx # API key management
 │   │   │   ├── AdminModelsPage.tsx # Admin model management with configuration testing
-│   │   │   ├── UsagePage.tsx # Usage analytics
+│   │   │   ├── AdminUsagePage.tsx # Admin usage analytics (admin-only)
+│   │   │   ├── UsagePage.tsx # User usage analytics
+│   │   │   ├── UsersPage.tsx # User management (admin-only)
 │   │   │   ├── ToolsPage.tsx    # Admin tools
 │   │   │   ├── ChatbotPage.tsx # AI chatbot interface
 │   │   │   ├── LoginPage.tsx # Authentication
@@ -146,7 +167,8 @@ litemaas/
 │   │   │   ├── models.service.ts # Models API
 │   │   │   ├── subscriptions.service.ts # Subscriptions API
 │   │   │   ├── apiKeys.service.ts # API keys API
-│   │   │   ├── usage.service.ts # Usage analytics API
+│   │   │   ├── usage.service.ts # User usage analytics API
+│   │   │   ├── adminUsage.service.ts # Admin usage analytics API
 │   │   │   ├── chat.service.ts # Chatbot API
 │   │   │   ├── prompts.service.ts # Prompt management API
 │   │   │   └── config.service.ts # Configuration API

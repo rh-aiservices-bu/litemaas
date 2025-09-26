@@ -3,10 +3,57 @@ import { render, RenderOptions, act } from '@testing-library/react';
 import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { I18nextProvider } from 'react-i18next';
-import { AuthProvider } from '../contexts/AuthContext';
+import { AuthProvider, AuthContext } from '../contexts/AuthContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
+import { ConfigProvider } from '../contexts/ConfigContext';
 import { testI18n } from './i18n-test-setup';
 import type { Subscription } from '../services/subscriptions.service';
+import { vi } from 'vitest';
+
+// Mock ConfigContext module to provide synchronous config
+vi.mock('../contexts/ConfigContext', () => {
+  const React = require('react');
+
+  // Define mock config inside the factory to avoid hoisting issues
+  const mockConfig = {
+    version: '1.0.0-test',
+    usageCacheTTL: 300, // 5 minutes in seconds
+    environment: 'test',
+  };
+
+  const mockConfigContext = React.createContext({
+    config: mockConfig,
+    isLoading: false,
+    error: null,
+  });
+
+  return {
+    useConfig: () => {
+      const context = React.useContext(mockConfigContext);
+      if (!context) {
+        throw new Error('useConfig must be used within a ConfigProvider');
+      }
+      return context;
+    },
+    ConfigProvider: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(
+        mockConfigContext.Provider,
+        { value: { config: mockConfig, isLoading: false, error: null } },
+        children,
+      ),
+  };
+});
+
+// Mock config service to provide test configuration
+vi.mock('../services/config.service', () => ({
+  configService: {
+    getConfig: vi.fn().mockResolvedValue({
+      version: '1.0.0-test',
+      usageCacheTTL: 300,
+      environment: 'test',
+    }),
+  },
+}));
 
 // Create a new QueryClient for each test
 const createTestQueryClient = () =>
@@ -27,9 +74,11 @@ const AllTheProviders = ({ children }: { children: React.ReactNode }) => {
     {
       path: '/',
       element: (
-        <AuthProvider>
-          <NotificationProvider>{children}</NotificationProvider>
-        </AuthProvider>
+        <ConfigProvider>
+          <AuthProvider>
+            <NotificationProvider>{children}</NotificationProvider>
+          </AuthProvider>
+        </ConfigProvider>
       ),
     },
   ]);
@@ -95,9 +144,11 @@ export const renderWithProviders = (
         {
           path: '/*',
           element: (
-            <AuthProvider>
-              <NotificationProvider>{children}</NotificationProvider>
-            </AuthProvider>
+            <ConfigProvider>
+              <AuthProvider>
+                <NotificationProvider>{children}</NotificationProvider>
+              </AuthProvider>
+            </ConfigProvider>
           ),
         },
       ],
@@ -132,6 +183,110 @@ export const mockUser = {
   name: 'Test User',
   roles: ['user'],
   isAdmin: false,
+};
+
+// Mock admin user for testing
+export const mockAdminUser = {
+  id: 'admin-user-id',
+  email: 'admin@example.com',
+  name: 'Admin User',
+  roles: ['admin'],
+  isAdmin: true,
+};
+
+// Mock admin readonly user for testing
+export const mockAdminReadonlyUser = {
+  id: 'admin-readonly-user-id',
+  email: 'admin-readonly@example.com',
+  name: 'Admin Readonly User',
+  roles: ['admin-readonly'],
+  isAdmin: true,
+};
+
+/**
+ * Render component with custom auth state (no AuthProvider, direct context value)
+ *
+ * This is the recommended approach for testing components with different user roles.
+ * It avoids mock conflicts by directly providing the auth context value instead of
+ * using the AuthProvider component.
+ *
+ * @example
+ * // Test with admin user
+ * renderWithAuth(<AdminModelsPage />, {
+ *   user: mockAdminUser
+ * });
+ *
+ * @example
+ * // Test with adminReadonly user
+ * renderWithAuth(<AdminModelsPage />, {
+ *   user: mockAdminReadonlyUser
+ * });
+ *
+ * @example
+ * // Test with custom user
+ * renderWithAuth(<MyComponent />, {
+ *   user: { id: '123', email: 'test@example.com', roles: ['user'], isAdmin: false }
+ * });
+ */
+export const renderWithAuth = (
+  ui: ReactElement,
+  options?: Omit<RenderOptions, 'wrapper'> & {
+    user?: any;
+    initialEntries?: string[];
+    disableQueryClient?: boolean;
+  },
+) => {
+  const { user = mockUser, initialEntries, disableQueryClient, ...renderOptions } = options || {};
+
+  // Create mock auth context value matching AuthContextType interface
+  const authContextValue = {
+    user,
+    loading: false,
+    isAuthenticated: !!user,
+    login: vi.fn(),
+    loginAsAdmin: vi.fn(),
+    logout: vi.fn(async () => {}),
+    refreshUser: vi.fn(async () => {}),
+  };
+
+  const TestWrapper = ({ children }: { children: React.ReactNode }) => {
+    const queryClient = disableQueryClient ? null : createTestQueryClient();
+
+    const router = createTestRouter(
+      [
+        {
+          path: '/*',
+          element: (
+            <ConfigProvider>
+              <AuthContext.Provider value={authContextValue}>
+                <NotificationProvider>{children}</NotificationProvider>
+              </AuthContext.Provider>
+            </ConfigProvider>
+          ),
+        },
+      ],
+      { initialEntries: initialEntries || ['/'] },
+    );
+
+    const content = (
+      <I18nextProvider i18n={testI18n}>
+        <RouterProvider router={router} />
+      </I18nextProvider>
+    );
+
+    return queryClient ? (
+      <QueryClientProvider client={queryClient}>{content}</QueryClientProvider>
+    ) : (
+      content
+    );
+  };
+
+  let result: any;
+  act(() => {
+    result = render(ui, { wrapper: TestWrapper, ...renderOptions });
+  });
+
+  return result;
 };
 
 // Standard future flags for React Router v7 preparation

@@ -1,15 +1,283 @@
 {
+  "admin": {
+    "usage": {
+      "tables": {
+        "models": {
+          "ariaLabel": "모델 사용량 분석 테이블",
+          "caption": "{{count}}개 모델의 사용량 분석을 보여주는 테이블",
+          "columns": {
+            "avgLatency": "평균 레이턴시",
+            "cost": "비용",
+            "model": "모델",
+            "requests": "요청",
+            "successRate": "성공률",
+            "tokens": "토큰",
+            "users": "사용자"
+          },
+          "empty": {
+            "description": "선택한 기간에 대한 사용량 데이터를 찾을 수 없습니다",
+            "title": "사용 가능한 모델 데이터 없음"
+          },
+          "pagination": {
+            "ariaLabel": "모델 분석 테이블 페이지네이션"
+          },
+          "successRate": {
+            "high": "높은 성공률 (>95%)",
+            "low": "낮은 성공률 (<90%)",
+            "medium": "중간 성공률 (90-95%)"
+          }
+        },
+        "providers": {
+          "ariaLabel": "공급자 사용량 분석 테이블",
+          "caption": "{{count}}개 공급자의 사용량 분석을 보여주는 테이블",
+          "columns": {
+            "cost": "비용",
+            "models": "모델",
+            "provider": "공급자",
+            "requests": "요청",
+            "successRate": "성공률",
+            "tokens": "토큰"
+          },
+          "empty": {
+            "description": "선택한 기간에 대한 사용량 데이터를 찾을 수 없습니다",
+            "title": "사용 가능한 공급자 데이터 없음"
+          },
+          "pagination": {
+            "ariaLabel": "공급자 분석 테이블 페이지네이션"
+          },
+          "successRate": {
+            "high": "높은 성공률 (>95%)",
+            "low": "낮은 성공률 (<90%)",
+            "medium": "중간 성공률 (90-95%)"
+          }
+        },
+        "users": {
+          "ariaLabel": "사용자 사용량 분석 테이블",
+          "caption": "{{count}}명 사용자의 사용량 분석을 보여주는 테이블",
+          "columns": {
+            "cost": "비용",
+            "lastActive": "마지막 활동",
+            "requests": "요청",
+            "tokens": "토큰",
+            "user": "사용자"
+          },
+          "empty": {
+            "description": "선택한 기간에 대한 사용량 데이터를 찾을 수 없습니다",
+            "title": "사용 가능한 사용자 데이터 없음"
+          },
+          "pagination": {
+            "ariaLabel": "사용자 분석 테이블 페이지네이션"
+          }
+        }
+      },
+      "timeAgo": {
+        "days": "{{count}}일 전",
+        "days_plural": "{{count}}일 전",
+        "hours": "{{count}}시간 전",
+        "hours_plural": "{{count}}시간 전",
+        "justNow": "방금 전",
+        "minutes": "{{count}}분 전",
+        "minutes_plural": "{{count}}분 전"
+      }
+    }
+  },
+  "adminUsage": {
+    "accessDenied": "액세스 거부됨",
+    "activeUsers": "활성 사용자",
+    "apiKeysCleared": "API 키 필터 비활성화됨 - 먼저 사용자를 선택하세요",
+    "apiKeysFilterAdjusted": "API 키 필터가 변경되었을 수 있습니다 - 선택 사항을 확인해 주세요",
+    "apiKeysFilterAvailable": "이제 API 키 필터를 사용할 수 있습니다",
+    "charts": {
+      "modelDistributionAriaLabel": "모델 사용량 분포 차트",
+      "modelUsageTrends": "모델 사용량 추세",
+      "modelUsageTrendsAriaDesc": "시간 경과에 따른 여러 모델의 사용량을 보여주는 누적 막대 차트입니다. 표시된 메트릭은 {{metric}}입니다.",
+      "modelUsageTrendsAriaLabel": "{{metric}}별 시간 경과에 따른 모델 사용량 추세를 보여주는 누적 차트",
+      "modelUsageTrendsDescription": "시간 경과에 따른 모델 사용량 분석",
+      "noDataAvailable": "선택한 기간에 대한 데이터가 없습니다",
+      "noModelData": "사용 가능한 모델 데이터 없음",
+      "noModelDataExplanation": "선택한 기간에 대한 모델 사용량 데이터가 없습니다.",
+      "topUsers": "상위 사용자",
+      "usageTrends": "사용량 추세",
+      "usageTrendsDescription": "시간 경과에 따른 사용량 추세"
+    },
+    "completionTokens": "완성 토큰",
+    "datePresets": {
+      "30d": "지난 30일",
+      "7d": "지난 7일",
+      "90d": "지난 90일",
+      "custom": "사용자 정의 범위"
+    },
+    "dateRangeChanged": "날짜 범위가 {{preset}}(으)로 변경되었습니다",
+    "dateRangeSelect": "날짜 범위 선택",
+    "endDate": "종료일",
+    "errors": {
+      "export": "사용량 데이터 내보내기 실패",
+      "exportDescription": "상위 사용자 데이터 내보내기에 실패했습니다.",
+      "fetchMetrics": "사용량 메트릭 로드 실패",
+      "fetchModels": "모델 분석 로드 실패",
+      "fetchProviders": "공급자 분석 로드 실패",
+      "fetchUsers": "사용자 분석 로드 실패",
+      "refresh": "오늘 데이터 새로고침 실패"
+    },
+    "export": "내보내기",
+    "exportComplete": "사용량 데이터가 성공적으로 내보내졌습니다.",
+    "exportModal": {
+      "csvDescription": "스프레드시트에 적합합니다. Excel, Google Sheets 및 기타 데이터 분석 도구와 호환됩니다.",
+      "csvFullName": "(쉼표로 구분된 값)",
+      "dateRange": "날짜 범위",
+      "downloaded": "사용량 데이터가 성공적으로 다운로드되었습니다.",
+      "downloadFile": "내보내기 파일 다운로드",
+      "export": "내보내기",
+      "exportButton": "사용량 데이터 내보내기",
+      "exporting": "내보내는 중...",
+      "format": "형식",
+      "from": "시작",
+      "jsonDescription": "개발자에게 적합합니다. 프로그래밍 방식 액세스 및 API 통합을 위한 구조화된 데이터 형식입니다.",
+      "jsonFullName": "(JavaScript Object Notation)",
+      "success": "내보내기 성공",
+      "title": "사용량 데이터 내보내기",
+      "to": "종료"
+    },
+    "exportStarting": "내보내기를 시작합니다...",
+    "exportSuccess": "내보내기 성공",
+    "filters": {
+      "apiKeys": "API 키로 필터링",
+      "apiKeysLoadError": "API 키 로드 실패",
+      "apiKeysPlaceholder": "API 키로 필터링하려면 먼저 사용자를 선택하세요",
+      "apiKeysPlaceholderActive": "모든 API 키 (필터링하려면 클릭)",
+      "clearApiKeysFilter": "API 키 필터 지우기",
+      "clearModels": "모델 선택 지우기",
+      "clearUsers": "사용자 선택 지우기",
+      "models": "모델로 필터링",
+      "modelsPlaceholder": "모든 모델 (필터링하려면 클릭)",
+      "noApiKeysAvailable": "선택한 사용자에 대한 API 키가 없습니다",
+      "noApiKeysFound": "\"{{query}}\"에 대한 API 키를 찾을 수 없습니다",
+      "noModelsFound": "\"{{query}}\"에 대한 모델을 찾을 수 없습니다",
+      "noUsersFound": "\"{{query}}\"에 대한 사용자를 찾을 수 없습니다",
+      "searchModels": "모델 검색...",
+      "searchUsers": "사용자 검색...",
+      "selectedApiKeys": "선택된 API 키",
+      "selectedModels": "선택된 모델",
+      "selectedUsers": "선택된 사용자",
+      "users": "사용자로 필터링",
+      "usersPlaceholder": "모든 사용자 (필터링하려면 클릭)"
+    },
+    "heatmap": {
+      "accessibility": {
+        "cellLabel": "{{dayName}}, {{date}}, {{value}}, 주간 {{percent}}%",
+        "heatmapDescription": "{{weeks}}주에 걸친 요일별 {{metric}}을(를) 보여주는 히트맵"
+      },
+      "legend": {
+        "colorScale": "사용 강도",
+        "noData": "데이터 없음",
+        "zeroUsage": "사용량 없음"
+      },
+      "table": {
+        "viewAsChart": "차트로 보기",
+        "viewAsTable": "테이블로 보기",
+        "week": "주"
+      },
+      "tooltip": {
+        "noDataOutsideRange": "데이터 없음 (선택한 범위 외)",
+        "percentOfWeek": "주간 합계의 {{percent}}%"
+      }
+    },
+    "loading": "메트릭 로딩 중...",
+    "loadingModels": "모델 데이터 로딩 중...",
+    "loadingProviders": "공급자 데이터 로딩 중...",
+    "loadingUsers": "사용자 데이터 로딩 중...",
+    "metrics": {
+      "activeUsersAriaLabel": "전체 {{total}}명의 사용자 중 {{active}}명의 활성 사용자",
+      "noChange": "변화 없음",
+      "ofTotalUsers": "전체 {{total}}명 중",
+      "successRateAriaLabel": "성공률: {{percentage}}%",
+      "totalCostAriaLabel": "총 비용: ${{amount}}",
+      "totalRequestsAriaLabel": "총 요청: {{count}}회",
+      "trendLabel": "추세 {{direction}} {{change}}%"
+    },
+    "metricSelect": "메트릭 선택",
+    "metricsOverview": "메트릭 개요",
+    "modelBreakdown": "모델 분석",
+    "modelFilterChanged": "{{count}}개 모델로 필터링 중",
+    "noData": "사용 가능한 데이터 없음",
+    "noModelData": "사용 가능한 모델 데이터 없음",
+    "noModelsFound": "선택한 날짜 범위에 대한 모델을 찾을 수 없습니다.",
+    "noProviderData": "사용 가능한 공급자 데이터 없음",
+    "noProvidersFound": "선택한 날짜 범위에 대한 공급자를 찾을 수 없습니다.",
+    "noUserData": "사용 가능한 사용자 데이터 없음",
+    "noUsersFound": "선택한 날짜 범위에 대한 사용자를 찾을 수 없습니다.",
+    "promptTokens": "프롬프트 토큰",
+    "providerBreakdown": "공급자 분석",
+    "refreshing": "오늘 데이터를 새로고침하는 중...",
+    "refreshSuccess": "새로고침 성공",
+    "refreshToday": "오늘 새로고침",
+    "requiresAdmin": "관리자 사용량 분석을 볼 수 있는 권한이 없습니다.",
+    "selectDateRange": "메트릭을 보려면 날짜 범위를 선택하세요.",
+    "selectMetric": "메트릭 선택",
+    "startDate": "시작일",
+    "subtitle": "모든 사용자, 모델 및 공급자에 걸친 사용량 확인 및 분석",
+    "successRate": "성공률",
+    "tabChanged": "{{tab}} 탭으로 전환됨",
+    "tableHeaders": {
+      "completionTokens": "완성<br />토큰",
+      "cost": "비용",
+      "promptTokens": "프롬프트<br />토큰",
+      "requests": "요청",
+      "tokens": "토큰",
+      "user": "사용자"
+    },
+    "tables": {
+      "topUsers": "요청 및 비용별 상위 사용자"
+    },
+    "tabs": {
+      "byModels": "모델별",
+      "byProviders": "공급자별",
+      "byUsers": "사용자별",
+      "overview": "개요"
+    },
+    "tabsLabel": "사용량 분석 탭",
+    "title": "관리자 사용량 분석",
+    "todayDataRefreshed": "오늘의 사용량 데이터가 새로고침되었습니다.",
+    "topUsers": {
+      "csvHeaders": {
+        "costUsd": "비용 (USD)",
+        "email": "이메일",
+        "inputTokens": "입력 토큰",
+        "outputTokens": "출력 토큰",
+        "requests": "요청",
+        "tokens": "토큰",
+        "username": "사용자명"
+      },
+      "export": "내보내기",
+      "exportAriaLabel": "상위 사용자 CSV 파일 다운로드",
+      "exportSuccess": "내보내기 성공",
+      "exportSuccessDescription": "상위 사용자 데이터가 성공적으로 다운로드되었습니다."
+    },
+    "totalCost": "총 비용",
+    "totalModels": "총 모델 수",
+    "totalProviders": "총 공급자 수",
+    "totalRequests": "총 요청 수",
+    "totalUsers": "총 사용자 수",
+    "unknownUser": "알 수 없는 사용자",
+    "unknownUserDescription": "삭제되었거나 매핑되지 않은 API 키의 요청",
+    "usageHeatmapSubtitle": "선택한 주에 대한 사용량 히트맵",
+    "userBreakdown": "사용자 분석",
+    "userFilterChanged": "{{count}}명의 사용자로 필터링 중",
+    "weeklyUsagePatterns": "주간 사용 패턴"
+  },
   "common": {
     "anUnknownErrorOccurred": "알 수 없는 오류가 발생했습니다",
     "cancel": "취소",
     "chart": "차트",
     "close": "닫기",
+    "closeFullScreen": "전체 화면 보기 닫기",
     "create": "생성",
     "dataPoints": "데이터 포인트",
     "date": "날짜",
     "day": "일",
     "delete": "삭제",
     "error": "오류",
+    "expandToFullScreen": "전체 화면으로 확대",
     "export": "내보내기",
     "features": "특징",
     "label": "라벨",
@@ -33,8 +301,12 @@
       "apiKeyIsRequired": "API 키가 필수입니다",
       "apiKeyOptional": "API 키 (선택사항)",
       "areYouSureYouWantToDeleteTheModel": "모델을 삭제하시겠습니까",
+      "authenticationFailed": "인증 실패",
+      "availableModels": "사용 가능한 모델:",
       "backendModelName": "백엔드 모델 이름",
       "backendModelNameIsRequired": "백엔드 모델 이름이 필수입니다",
+      "cannotContactEndpoint": "엔드포인트에 연결할 수 없습니다",
+      "connectionSuccessful": "연결 성공! 모델을 생성할 수 있습니다.",
       "createModel": "모델 생성",
       "createModelFailed": "모델 생성 실패",
       "createYourFirstModelToGetStarted": "첫 번째 모델을 생성하여 시작하세요.",
@@ -65,6 +337,7 @@
       "modelName": "모델 이름",
       "modelNameCannotContainSpaces": "모델 이름에는 공백을 포함할 수 없습니다",
       "modelNameIsRequired": "모델 이름이 필수입니다",
+      "modelNotAvailable": "이 엔드포인트에서 모델을 사용할 수 없습니다",
       "modelsTable": "모델 테이블",
       "modelUpdated": "모델이 업데이트되었습니다",
       "modelUpdatedSuccessfully": "모델이 성공적으로 업데이트되었습니다",
@@ -99,18 +372,13 @@
         "tpm": "TPM",
         "visionSupport": "비전 지원"
       },
+      "testConfiguration": "구성 테스트",
+      "testingConfiguration": "구성 테스트 중...",
       "thisActionCannotBeUndoneAndWillRemoveTheModelFromLitellm": "이 작업은 실행 취소할 수 없으며 LiteLLM에서 모델을 제거합니다.",
       "title": "모델 관리",
       "tpmMustBeAtLeast_1": "TPM은 최소 1이어야 합니다",
       "tpmTokensPerMinute": "TPM (분당 토큰 수)",
-      "updateModelFailed": "모델 업데이트 실패",
-      "testConfiguration": "구성 테스트",
-      "testingConfiguration": "구성 테스트 중...",
-      "connectionSuccessful": "연결 성공! 모델을 생성할 수 있습니다.",
-      "cannotContactEndpoint": "엔드포인트에 연결할 수 없습니다",
-      "authenticationFailed": "인증 실패",
-      "modelNotAvailable": "이 엔드포인트에서 모델을 사용할 수 없습니다",
-      "availableModels": "사용 가능한 모델:"
+      "updateModelFailed": "모델 업데이트 실패"
     },
     "loading": {
       "description": "서버에서 모델 정보를 가져오는 중",
@@ -125,6 +393,7 @@
     "admin": {
       "models": "모델 관리",
       "tools": "도구",
+      "usage": "사용량 분석",
       "users": "사용자"
     },
     "apiKeys": "API 키",
@@ -882,6 +1151,7 @@
       "chartLegend": "데이터 시리즈 정보가 있는 차트 범례",
       "dataExported": "데이터가 {{filename}}으로 내보내졌습니다",
       "dataTableAlternative": "데이터 테이블 대안",
+      "dismissAnnouncement": "공지사항 닫기",
       "exportChartData": "차트 데이터를 CSV로 내보내기",
       "legendPattern": "{{name}} 시리즈는 {{color}} 색상과 {{pattern}} 선 패턴으로 표시됩니다",
       "legendSummary": "범례에는 {{count}}개 항목이 포함되어 있습니다: {{items}}",
@@ -899,6 +1169,7 @@
       "skipToNavigation": "네비게이션으로 바로가기",
       "switchedToChart": "차트 보기로 전환됨",
       "switchedToTable": "테이블 보기로 전환됨",
+      "systemAnnouncement": "시스템 공지사항",
       "tableCaption": "{{title}}의 데이터 테이블",
       "tableNavigationInstructions": "화살표 키를 사용하여 행과 열 사이를 탐색하거나, Tab을 사용하여 다음 대화형 요소로 이동하세요.",
       "viewModeToggle": "차트와 테이블 보기 전환"
@@ -916,6 +1187,9 @@
       "save": "저장",
       "saving": "저장 중...",
       "tryAgain": "다시 시도"
+    },
+    "avatar": {
+      "userAvatar": "사용자 아바타"
     },
     "errors": {
       "details": "세부사항",
@@ -950,6 +1224,15 @@
         "url": "{{field}}은(는) 유효한 URL이어야 합니다"
       }
     },
+    "footer": {
+      "appBy": "앱 제작자",
+      "forks": "포크: ",
+      "githubLogo": "GitHub 로고",
+      "noVersion": "버전 없음",
+      "sourceOnGitHub": "GitHub의 소스",
+      "stars": "스타: ",
+      "version": "버전"
+    },
     "language": {
       "chinese": "中文",
       "elvish": "Edhellen",
@@ -962,10 +1245,21 @@
       "selector": "언어",
       "spanish": "Español"
     },
+    "navigation": {
+      "mainNavigation": "주 네비게이션",
+      "userMenu": "사용자 메뉴"
+    },
     "notifications": {
       "clear": "모두 지우기",
+      "clearAll": "모두 지우기",
+      "drawerActions": "알림 드로어 작업",
       "empty": "알림 없음",
+      "markAllRead": "모두 읽음으로 표시",
       "markRead": "읽음으로 표시",
+      "noNotificationsDescription": "현재 알림이 없습니다.",
+      "noNotificationsFound": "알림을 찾을 수 없습니다",
+      "notificationsLabel": "알림",
+      "notificationSrTitle": "알림",
       "title": "알림"
     },
     "pagination": {
@@ -973,8 +1267,11 @@
     },
     "theme": {
       "dark": "다크",
+      "darkThemeToggle": "다크 테마 토글",
       "light": "라이트",
-      "toggle": "테마 전환"
+      "lightThemeToggle": "라이트 테마 토글",
+      "toggle": "테마 전환",
+      "toggleGroup": "다크 테마 토글 그룹"
     }
   },
   "users": {

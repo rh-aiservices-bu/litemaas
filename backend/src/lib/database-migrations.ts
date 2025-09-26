@@ -229,6 +229,12 @@ COMMENT ON COLUMN api_keys.lite_llm_key_value IS 'The actual LiteLLM key value f
 
 -- Add missing updated_at column for existing api_keys table
 ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP;
+
+-- Add litellm_key_alias column for matching usage data to our API keys
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS litellm_key_alias VARCHAR(255);
+CREATE INDEX IF NOT EXISTS idx_api_keys_litellm_key_alias ON api_keys(litellm_key_alias);
+
+COMMENT ON COLUMN api_keys.litellm_key_alias IS 'The key_alias from LiteLLM used to match usage analytics data';
 `;
 
 // API Key Models junction table
@@ -244,57 +250,6 @@ CREATE INDEX IF NOT EXISTS idx_api_key_models_api_key ON api_key_models(api_key_
 CREATE INDEX IF NOT EXISTS idx_api_key_models_model ON api_key_models(model_id);
 
 COMMENT ON TABLE api_key_models IS 'Junction table linking API keys to multiple models';
-`;
-
-// Usage logs table
-export const usageLogsTable = `
-CREATE TABLE IF NOT EXISTS usage_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
-    api_key_id UUID REFERENCES api_keys(id) ON DELETE SET NULL,
-    model_id VARCHAR(255) NOT NULL REFERENCES models(id),
-    user_id UUID NOT NULL REFERENCES users(id),
-    request_tokens INTEGER NOT NULL DEFAULT 0,
-    response_tokens INTEGER NOT NULL DEFAULT 0,
-    total_tokens INTEGER NOT NULL DEFAULT 0,
-    cost DECIMAL(10,6) DEFAULT 0,
-    latency_ms INTEGER,
-    status_code INTEGER NOT NULL,
-    error_message TEXT,
-    request_id VARCHAR(255),
-    endpoint VARCHAR(255),
-    metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE INDEX IF NOT EXISTS idx_usage_logs_subscription_id ON usage_logs(subscription_id);
-CREATE INDEX IF NOT EXISTS idx_usage_logs_api_key_id ON usage_logs(api_key_id);
-CREATE INDEX IF NOT EXISTS idx_usage_logs_model_id ON usage_logs(model_id);
-CREATE INDEX IF NOT EXISTS idx_usage_logs_user_id ON usage_logs(user_id);
-CREATE INDEX IF NOT EXISTS idx_usage_logs_created_at ON usage_logs(created_at);
-CREATE INDEX IF NOT EXISTS idx_usage_logs_status_code ON usage_logs(status_code);
-`;
-
-// Usage summaries table for aggregated data
-export const usageSummariesTable = `
-CREATE TABLE IF NOT EXISTS usage_summaries (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
-    model_id VARCHAR(255) NOT NULL REFERENCES models(id),
-    period_type VARCHAR(20) NOT NULL CHECK (period_type IN ('hour', 'day', 'month')),
-    period_start TIMESTAMP WITH TIME ZONE NOT NULL,
-    request_count INTEGER NOT NULL DEFAULT 0,
-    total_tokens INTEGER NOT NULL DEFAULT 0,
-    total_cost DECIMAL(10,6) DEFAULT 0,
-    error_count INTEGER DEFAULT 0,
-    avg_latency_ms INTEGER,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(subscription_id, model_id, period_type, period_start)
-);
-
-CREATE INDEX IF NOT EXISTS idx_usage_summaries_subscription_id ON usage_summaries(subscription_id);
-CREATE INDEX IF NOT EXISTS idx_usage_summaries_model_id ON usage_summaries(model_id);
-CREATE INDEX IF NOT EXISTS idx_usage_summaries_period ON usage_summaries(period_type, period_start);
 `;
 
 // Audit logs table
@@ -534,20 +489,126 @@ CREATE INDEX IF NOT EXISTS idx_team_members_default_team ON team_members(team_id
 // Populate litellm_model_id from metadata migration
 export const litellmModelIdMigration = `
 -- Populate litellm_model_id column from existing metadata for models that don't have it set
-UPDATE models 
+UPDATE models
 SET litellm_model_id = metadata->'litellm_model_info'->>'id'
-WHERE litellm_model_id IS NULL 
-  AND metadata->'litellm_model_info'->>'id' IS NOT NULL 
+WHERE litellm_model_id IS NULL
+  AND metadata->'litellm_model_info'->>'id' IS NOT NULL
   AND metadata->'litellm_model_info'->>'id' != '';
 
 -- Log the migration results
 DO $$
-DECLARE 
+DECLARE
     updated_count INTEGER;
 BEGIN
     GET DIAGNOSTICS updated_count = ROW_COUNT;
     RAISE NOTICE 'Populated litellm_model_id for % models from metadata', updated_count;
 END $$;
+`;
+
+// Fix key_hash to store hash of actual LiteLLM key value
+export const fixKeyHashMigration = `
+-- Enable pgcrypto extension for digest() function
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- Update key_hash to be the SHA256 hash of lite_llm_key_value (the actual LiteLLM key)
+-- This fixes a bug where key_hash was storing the hash of a random local key
+-- that was never used, breaking API key authentication
+UPDATE api_keys
+SET key_hash = encode(digest(lite_llm_key_value::bytea, 'sha256'::text), 'hex')
+WHERE lite_llm_key_value IS NOT NULL
+  AND key_hash != encode(digest(lite_llm_key_value::bytea, 'sha256'::text), 'hex');
+
+-- Log the migration results
+DO $$
+DECLARE
+    updated_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO updated_count
+    FROM api_keys
+    WHERE lite_llm_key_value IS NOT NULL;
+
+    RAISE NOTICE 'Fixed key_hash values for API keys (total active keys with LiteLLM value: %)', updated_count;
+END $$;
+`;
+
+// Function to backfill litellm_key_alias for existing API keys
+// This is called programmatically at startup after the tables are created
+export const backfillLiteLLMKeyAlias = async (dbUtils: DatabaseUtils, liteLLMService: any) => {
+  try {
+    // Find all API keys that don't have litellm_key_alias set
+    const keysToBackfill = await dbUtils.queryMany<{
+      id: string;
+      lite_llm_key_value: string;
+    }>(
+      `SELECT id, lite_llm_key_value
+       FROM api_keys
+       WHERE litellm_key_alias IS NULL
+         AND lite_llm_key_value IS NOT NULL`,
+      [],
+    );
+
+    if (keysToBackfill.length === 0) {
+      console.log('✅ No API keys need litellm_key_alias backfill');
+      return;
+    }
+
+    console.log(`🔄 Backfilling litellm_key_alias for ${keysToBackfill.length} API keys...`);
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const key of keysToBackfill) {
+      try {
+        // Call LiteLLM /key/info to get the key_alias
+        const keyInfo = await liteLLMService.getKeyAlias(key.lite_llm_key_value);
+
+        // Update the database with the key_alias
+        await dbUtils.query(`UPDATE api_keys SET litellm_key_alias = $1 WHERE id = $2`, [
+          keyInfo.key_alias,
+          key.id,
+        ]);
+
+        successCount++;
+      } catch (error) {
+        console.error(
+          `Failed to backfill key_alias for API key ${key.id}:`,
+          error instanceof Error ? error.message : error,
+        );
+        errorCount++;
+      }
+    }
+
+    console.log(`✅ Backfilled litellm_key_alias: ${successCount} succeeded, ${errorCount} failed`);
+  } catch (error) {
+    console.error('❌ Failed to backfill litellm_key_alias:', error);
+    // Don't throw - this is a best-effort migration
+  }
+};
+
+// Daily usage cache table for admin usage analytics
+export const dailyUsageCacheTable = `
+CREATE TABLE IF NOT EXISTS daily_usage_cache (
+    date DATE PRIMARY KEY,
+    raw_data JSONB NOT NULL,              -- Full LiteLLM response for the day
+    aggregated_by_user JSONB,             -- Pre-computed user breakdown
+    aggregated_by_model JSONB,            -- Pre-computed model breakdown
+    aggregated_by_provider JSONB,         -- Pre-computed provider breakdown
+    total_metrics JSONB,                  -- Pre-computed totals (requests, tokens, cost, etc.)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    is_complete BOOLEAN DEFAULT true      -- false if current day (needs periodic refresh)
+);
+
+CREATE INDEX IF NOT EXISTS idx_daily_cache_date ON daily_usage_cache(date DESC);
+CREATE INDEX IF NOT EXISTS idx_daily_cache_complete ON daily_usage_cache(is_complete);
+CREATE INDEX IF NOT EXISTS idx_daily_cache_updated_at ON daily_usage_cache(updated_at) WHERE is_complete = false;
+
+COMMENT ON TABLE daily_usage_cache IS 'Cached daily usage data from LiteLLM for admin analytics with 5-minute TTL for current day';
+COMMENT ON COLUMN daily_usage_cache.date IS 'The date for which usage data is cached';
+COMMENT ON COLUMN daily_usage_cache.raw_data IS 'Full LiteLLM API response for the day';
+COMMENT ON COLUMN daily_usage_cache.is_complete IS 'False for current day (needs refresh), true for historical days (permanent cache)';
+
+-- Add index on api_keys.lite_llm_key_value if it doesn't exist (needed for user mapping from LiteLLM data)
+CREATE INDEX IF NOT EXISTS idx_api_keys_lite_llm_key ON api_keys(lite_llm_key_value);
 `;
 
 // Main migration function
@@ -580,12 +641,6 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
     console.log('🔑 Creating api_key_models table...');
     await dbUtils.query(apiKeyModelsTable);
 
-    console.log('📈 Creating usage_logs table...');
-    await dbUtils.query(usageLogsTable);
-
-    console.log('📊 Creating usage_summaries table...');
-    await dbUtils.query(usageSummariesTable);
-
     console.log('📋 Creating audit_logs table...');
     await dbUtils.query(auditLogsTable);
 
@@ -612,6 +667,12 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
 
     console.log('🔧 Populating litellm_model_id from metadata...');
     await dbUtils.query(litellmModelIdMigration);
+
+    console.log('📊 Creating daily_usage_cache table...');
+    await dbUtils.query(dailyUsageCacheTable);
+
+    console.log('🔐 Fixing key_hash values for API key authentication...');
+    await dbUtils.query(fixKeyHashMigration);
 
     console.log('✅ Database migrations completed successfully!');
   } catch (error) {

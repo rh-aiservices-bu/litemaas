@@ -5,10 +5,12 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts | pino-pretty",
+    "dev:logged": "mkdir -p ../logs && tsx watch src/index.ts | pino-pretty | tee ../logs/backend.log",
+    "dev:oauth": "env-cmd -f .env.oauth.local tsx watch src/index.ts | pino-pretty",
+    "dev:oauth:logged": "mkdir -p ../logs && env-cmd -f .env.oauth.local tsx watch src/index.ts | pino-pretty | tee ../logs/backend.log",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "vitest run",
-    "dev:oauth": "env-cmd -f .env.oauth.local tsx watch src/index.ts | pino-pretty",
     "test:unit": "vitest run tests/unit",
     "test:integration": "vitest run tests/integration",
     "test:security": "vitest run tests/security",
@@ -22,7 +24,10 @@
     "clean": "rimraf dist coverage .tsbuildinfo",
     "db:seed": "tsx src/scripts/seed-data.ts",
     "db:setup": "npm run db:seed",
-    "reset-user-properties": "tsx ../scripts/reset-user-properties.ts"
+    "script:recalculate-cache": "tsx src/scripts/recalculate-usage-cache.ts",
+    "reset-user-properties": "tsx ../scripts/reset-user-properties.ts",
+    "logs": "tail -f ../logs/backend.log",
+    "logs:clear": "rm -f ../logs/backend.log"
   },
   "dependencies": {
     "@fastify/autoload": "^5.8.0",
@@ -39,6 +44,7 @@
     "@fastify/type-provider-typebox": "^4.0.0",
     "@sinclair/typebox": "^0.32.15",
     "axios": "^1.11.0",
+    "date-fns": "^2.30.0",
     "dotenv": "^16.5.0",
     "fastify": "^4.26.1",
     "fastify-plugin": "^4.5.1",
