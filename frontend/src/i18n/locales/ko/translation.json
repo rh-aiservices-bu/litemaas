@@ -103,7 +103,14 @@
       "title": "모델 관리",
       "tpmMustBeAtLeast_1": "TPM은 최소 1이어야 합니다",
       "tpmTokensPerMinute": "TPM (분당 토큰 수)",
-      "updateModelFailed": "모델 업데이트 실패"
+      "updateModelFailed": "모델 업데이트 실패",
+      "testConfiguration": "구성 테스트",
+      "testingConfiguration": "구성 테스트 중...",
+      "connectionSuccessful": "연결 성공! 모델을 생성할 수 있습니다.",
+      "cannotContactEndpoint": "엔드포인트에 연결할 수 없습니다",
+      "authenticationFailed": "인증 실패",
+      "modelNotAvailable": "이 엔드포인트에서 모델을 사용할 수 없습니다",
+      "availableModels": "사용 가능한 모델:"
     },
     "loading": {
       "description": "서버에서 모델 정보를 가져오는 중",

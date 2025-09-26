@@ -103,7 +103,14 @@
       "title": "Model Management",
       "tpmMustBeAtLeast_1": "TPM must be at least 1",
       "tpmTokensPerMinute": "TPM (Tokens per Minute)",
-      "updateModelFailed": "Update Model Failed"
+      "updateModelFailed": "Update Model Failed",
+      "testConfiguration": "Test Configuration",
+      "testingConfiguration": "Testing configuration...",
+      "connectionSuccessful": "Connection successful! You can create the model.",
+      "cannotContactEndpoint": "Cannot contact the endpoint",
+      "authenticationFailed": "Authentication failed",
+      "modelNotAvailable": "Model not available at this endpoint",
+      "availableModels": "Available models:"
     },
     "loading": {
       "description": "Retrieving model information from the server",

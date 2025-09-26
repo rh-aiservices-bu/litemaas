@@ -115,8 +115,6 @@ npm install        # Install dependencies
 npm run dev        # Start both backend and frontend with auto-reload
 ```
 
-> **Note**: In development, both backend and frontend servers run with auto-reload enabled. Any code changes are automatically detected and applied without needing to restart the servers.
-
 **Production (OpenShift):**
 
 ```bash
@@ -140,6 +138,12 @@ _See `docs/development/` for detailed setup and `docs/deployment/configuration.m
 **Workaround**: Use the wrapper script: `./dev-tools/run_with_stderr.sh command args` to capture both stdout and stderr.
 
 See <https://github.com/anthropics/claude-code/issues/4711> for details.
+
+### Changes tests
+
+**IMPORTANT**: In development, both backend and frontend servers run with auto-reload enabled. Any code changes are automatically detected and applied without needing to restart the servers. In most cases YOU DON'T NEED to start or restart the servers. Backend is listening on port 8081, and frontend is listening on port 3000.
+
+USE Playwright to test your modifications live.
 
 ## 🔒 Security & Performance
 

@@ -103,7 +103,14 @@
       "title": "モデル管理",
       "tpmMustBeAtLeast_1": "TPMは1以上である必要があります",
       "tpmTokensPerMinute": "TPM（毎分トークン数）",
-      "updateModelFailed": "モデルの更新に失敗しました"
+      "updateModelFailed": "モデルの更新に失敗しました",
+      "testConfiguration": "設定をテスト",
+      "testingConfiguration": "設定をテストしています...",
+      "connectionSuccessful": "接続成功！モデルを作成できます。",
+      "cannotContactEndpoint": "エンドポイントに接続できません",
+      "authenticationFailed": "認証に失敗しました",
+      "modelNotAvailable": "このエンドポイントでモデルは利用できません",
+      "availableModels": "利用可能なモデル："
     },
     "loading": {
       "description": "サーバーからモデル情報を取得中",

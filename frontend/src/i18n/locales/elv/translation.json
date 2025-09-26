@@ -103,7 +103,14 @@
       "title": "Vegil Vellyn",
       "tpmMustBeAtLeast_1": "TPM prestant min",
       "tpmTokensPerMinute": "TPM (Têw hen Vuin)",
-      "updateModelFailed": "Trenaro Vegil Vuin"
+      "updateModelFailed": "Trenaro Vegil Vuin",
+      "testConfiguration": "Praedo Orthor",
+      "testingConfiguration": "Praedo orthad...",
+      "connectionSuccessful": "Yrch prestinn! Eryd carned i vegil.",
+      "cannotContactEndpoint": "Ú-eston fael i fuin",
+      "authenticationFailed": "Ostoher vuin",
+      "modelNotAvailable": "Vegil ú-fael han i fuin",
+      "availableModels": "Vegil fael:"
     },
     "loading": {
       "description": "Dotha vegil-gwaed o thurin",

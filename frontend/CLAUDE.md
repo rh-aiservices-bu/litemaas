@@ -552,10 +552,10 @@ function Component() {
   };
 
   // Higher-order error handler with retry
-  const handleClick = withErrorHandler(
-    async () => await apiService.performAction(),
-    { enableRetry: true, maxRetries: 3 }
-  );
+  const handleClick = withErrorHandler(async () => await apiService.performAction(), {
+    enableRetry: true,
+    maxRetries: 3,
+  });
 }
 ```
 

@@ -103,7 +103,14 @@
       "title": "Modellverwaltung",
       "tpmMustBeAtLeast_1": "TPM muss mindestens 1 sein",
       "tpmTokensPerMinute": "TPM (Token pro Minute)",
-      "updateModelFailed": "Modell-Aktualisierung fehlgeschlagen"
+      "updateModelFailed": "Modell-Aktualisierung fehlgeschlagen",
+      "testConfiguration": "Konfiguration Testen",
+      "testingConfiguration": "Teste Konfiguration...",
+      "connectionSuccessful": "Verbindung erfolgreich! Sie können das Modell erstellen.",
+      "cannotContactEndpoint": "Endpunkt kann nicht kontaktiert werden",
+      "authenticationFailed": "Authentifizierung fehlgeschlagen",
+      "modelNotAvailable": "Modell nicht verfügbar an diesem Endpunkt",
+      "availableModels": "Verfügbare Modelle:"
     },
     "loading": {
       "description": "Modellinformationen vom Server abrufen",

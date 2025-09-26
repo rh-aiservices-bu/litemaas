@@ -38,7 +38,7 @@ import {
   TrashIcon,
 } from '@patternfly/react-icons';
 import { ActionsColumn, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useAuth } from '../contexts/AuthContext';
@@ -85,6 +85,14 @@ const AdminModelsPage: React.FC = () => {
 
   // Expandable rows state for API Base column
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+
+  // Test configuration state
+  const [isTestingConfig, setIsTestingConfig] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    type: 'success' | 'danger' | 'warning' | null;
+    message: string;
+    availableModels?: string[];
+  }>({ type: null, message: '' });
 
   // Check permissions
   const canModifyModels = currentUser?.roles?.includes('admin') || false;
@@ -209,6 +217,11 @@ const AdminModelsPage: React.FC = () => {
       },
     },
   );
+
+  // Clear test result when critical fields change
+  useEffect(() => {
+    setTestResult({ type: null, message: '' });
+  }, [formData.api_base, formData.api_key, formData.backend_model_name]);
 
   const resetForm = () => {
     setFormData({
@@ -362,6 +375,75 @@ const AdminModelsPage: React.FC = () => {
       newExpanded.add(modelId);
     }
     setExpandedRows(newExpanded);
+  };
+
+  const handleTestConfiguration = async () => {
+    // Validate required fields first
+    if (!formData.api_base || !formData.api_key || !formData.backend_model_name) {
+      setTestResult({
+        type: 'danger',
+        message:
+          t('models.admin.apiBaseUrlIsRequired') +
+          ', ' +
+          t('models.admin.apiKeyIsRequired') +
+          ', ' +
+          t('models.admin.backendModelNameIsRequired'),
+      });
+      return;
+    }
+
+    setIsTestingConfig(true);
+    setTestResult({ type: null, message: '' });
+
+    try {
+      const response = await fetch(`${formData.api_base}/models`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${formData.api_key}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        // Handle auth errors
+        if (response.status === 401 || response.status === 403) {
+          setTestResult({
+            type: 'danger',
+            message: t('models.admin.authenticationFailed'),
+          });
+        } else {
+          setTestResult({
+            type: 'danger',
+            message: t('models.admin.cannotContactEndpoint'),
+          });
+        }
+        return;
+      }
+
+      const data = await response.json();
+      const availableModels = data.data?.map((m: any) => m.id) || [];
+
+      if (availableModels.includes(formData.backend_model_name)) {
+        setTestResult({
+          type: 'success',
+          message: t('models.admin.connectionSuccessful'),
+        });
+      } else {
+        setTestResult({
+          type: 'warning',
+          message: t('models.admin.modelNotAvailable'),
+          availableModels: availableModels.slice(0, 5), // Show first 5
+        });
+      }
+    } catch (error) {
+      console.error('Test configuration error:', error);
+      setTestResult({
+        type: 'danger',
+        message: t('models.admin.cannotContactEndpoint'),
+      });
+    } finally {
+      setIsTestingConfig(false);
+    }
   };
 
   // Permission check
@@ -898,32 +980,61 @@ const AdminModelsPage: React.FC = () => {
             </Form>
           </ModalBody>
           <ModalFooter>
-            <div
-              style={{
-                marginTop: '1.5rem',
-                display: 'flex',
-                gap: '1rem',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <Button
-                variant="primary"
-                onClick={handleSubmit}
-                isLoading={createModelMutation.isLoading || updateModelMutation.isLoading}
-              >
-                {isCreateModalOpen ? t('common.create') : t('common.update')}
-              </Button>
-              <Button
-                variant="link"
-                onClick={() => {
-                  setIsCreateModalOpen(false);
-                  setIsEditModalOpen(false);
-                  resetForm();
-                }}
-              >
-                {t('common.cancel')}
-              </Button>
-            </div>
+            <Flex direction={{ default: 'column' }}>
+              <FlexItem>
+                {/* Test result alert */}
+                {testResult.type && (
+                  <Alert
+                    variant={testResult.type}
+                    title={testResult.message}
+                    isInline
+                    className="pf-v6-u-mb-md"
+                  >
+                    {testResult.availableModels && testResult.availableModels.length > 0 && (
+                      <div>
+                        <p>{t('models.admin.availableModels')}</p>
+                        <ul>
+                          {testResult.availableModels.map((model) => (
+                            <li key={model}>{model}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </Alert>
+                )}
+              </FlexItem>
+              <FlexItem>
+                <Flex columnGap={{ default: 'columnGapSm' }}>
+                  <Button
+                    variant="secondary"
+                    onClick={handleTestConfiguration}
+                    isLoading={isTestingConfig}
+                    isDisabled={
+                      !formData.api_base || !formData.api_key || !formData.backend_model_name
+                    }
+                  >
+                    {t('models.admin.testConfiguration')}
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={handleSubmit}
+                    isLoading={createModelMutation.isLoading || updateModelMutation.isLoading}
+                  >
+                    {isCreateModalOpen ? t('common.create') : t('common.update')}
+                  </Button>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      setIsCreateModalOpen(false);
+                      setIsEditModalOpen(false);
+                      resetForm();
+                    }}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                </Flex>
+              </FlexItem>
+            </Flex>
           </ModalFooter>
         </Modal>
 
