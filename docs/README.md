@@ -8,13 +8,14 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 
 - **[Architecture Overview](architecture/overview.md)** - System design and components
 - **[Development Setup](development/setup.md)** - Local development environment
-- **[API Quick Start](api/)** - API documentation and examples
+- **[API Quick Start](api/README.md)** - API documentation and examples
 
 ### Core Documentation
 
 #### 🏗️ Architecture
 
 - **[System Overview](architecture/overview.md)** - High-level architecture with diagrams
+- **[Project Structure](architecture/project-structure.md)** - Complete directory structure and file organization
 - **[Database Schema](architecture/database-schema.md)** - Complete database design
 - **[Services](architecture/services.md)** - Backend service architecture
 - **[LiteLLM Integration](architecture/litellm-integration.md)** - Model proxy integration
@@ -40,7 +41,7 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 
 - **[Setup Guide](development/setup.md)** - Local development environment
 - **[Backend Guide](development/backend-guide.md)** - Fastify development
-- **[UI Guidelines](development/pf6-guide/README.md)** - PatternFly 6 best practices
+- **[UI Guidelines](development/pf6-guide/README.md)** - PatternFly 6 comprehensive guide with setup, components, and patterns
 - **[Error Handling Guide](development/error-handling.md)** - Comprehensive error handling patterns
 - **[Translation Management](development/translation-management.md)** - i18n and translation tools
 - **[Migration Notes](development/migration-notes.md)** - Database migrations
@@ -59,6 +60,7 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 - **[Authentication Flow](features/authentication-flow.md)** - OAuth integration details
 - **[RBAC](features/user-roles-administration.md)** - Administration roles
 - **[Admin Tools](features/admin-tools.md)** - Administrative tools and model sync
+- **[Model Configuration Testing](features/model-configuration-testing.md)** - Configuration validation feature
 - **[Chatbot Implementation](development/chatbot-implementation.md)** - AI chatbot integration
 - **[Test Chatbot](features/test-chatbot.md)** - Chatbot testing guide
 - **[Chatbot Enhancements](features/chatbot-future-enhancements.md)** - Future chatbot features
@@ -95,7 +97,7 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 
 ### For API Users
 
-1. Start with [API Quick Start](api/)
+1. Start with [API Quick Start](api/README.md)
 2. Review [REST API Reference](api/rest-api.md)
 3. Learn about [Multi-Model Keys](api/api-migration-guide.md)
 4. Check [Usage API](api/usage-api.md)
@@ -153,6 +155,7 @@ See our [Contributing Guide](../CONTRIBUTING.md) for information on:
 
 ### Quick Document Lookup
 
+- **Project Structure**: `docs/architecture/project-structure.md`
 - **Error Handling**: `docs/development/error-handling.md`
 - **Admin Features**: `docs/features/admin-tools.md`
 - **User Roles/RBAC**: `docs/features/user-roles-administration.md`
