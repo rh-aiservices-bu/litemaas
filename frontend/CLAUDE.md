@@ -76,6 +76,136 @@ For details, see [`docs/development/translation-management.md`](../docs/developm
 
 For implementation examples, see [`docs/development/pf6-guide/`](../docs/development/pf6-guide/).
 
+## ⚠️ Component Development Checklist - MUST FOLLOW
+
+### Before Creating ANY Component
+
+1. **Search for similar components first**:
+   ```bash
+   # Find existing components with similar functionality
+   find_symbol "ComponentName"
+   search_for_pattern "similar functionality"
+   ```
+
+2. **Follow PatternFly 6 requirements**:
+   - ✅ ALWAYS use `pf-v6-` prefix for classes
+   - ✅ ALWAYS use semantic design tokens
+   - ✅ ALWAYS import from `@patternfly/react-core` v6
+   - ❌ NEVER hardcode colors or measurements
+
+3. **Use established patterns**:
+
+### Error Handling Pattern
+```typescript
+// ✅ CORRECT - Use useErrorHandler hook
+import { useErrorHandler } from '../hooks/useErrorHandler';
+
+function MyComponent() {
+  const { handleError, withErrorHandler } = useErrorHandler();
+
+  const handleAction = async () => {
+    try {
+      await apiService.performAction();
+    } catch (error) {
+      handleError(error); // Automatic notification
+    }
+  };
+}
+
+// ❌ WRONG - Manual error handling
+function MyComponent() {
+  const handleAction = async () => {
+    try {
+      await apiService.performAction();
+    } catch (error) {
+      console.error(error); // No user notification!
+      alert(error.message); // Poor UX!
+    }
+  };
+}
+```
+
+### Data Fetching Pattern
+```typescript
+// ✅ CORRECT - Use React Query
+import { useQuery } from '@tanstack/react-query';
+
+function MyComponent() {
+  const { data, error, isLoading } = useQuery({
+    queryKey: ['items', id],
+    queryFn: () => itemService.getById(id),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  if (isLoading) return <Spinner />;
+  if (error) return <ErrorAlert error={error} />;
+  return <div>{data}</div>;
+}
+
+// ❌ WRONG - Manual state management
+function MyComponent() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/items/' + id) // No error handling!
+      .then(res => res.json())
+      .then(setData)
+      .finally(() => setLoading(false));
+  }, [id]);
+}
+```
+
+### Form Validation Pattern
+```typescript
+// ✅ CORRECT - Use validation with error display
+import { FieldErrors } from '../components/errors';
+
+function MyForm() {
+  const [errors, setErrors] = useState({});
+  const { handleValidationError } = useErrorHandler();
+
+  const handleSubmit = async (data) => {
+    try {
+      await apiService.submit(data);
+    } catch (error) {
+      handleValidationError(error);
+      setErrors(error.response?.data?.errors || {});
+    }
+  };
+
+  return (
+    <Form>
+      <FieldErrors errors={errors} />
+      {/* form fields */}
+    </Form>
+  );
+}
+```
+
+### Accessibility Requirements
+```typescript
+// ✅ CORRECT - Include ARIA labels and live regions
+<Button
+  aria-label={t('buttons.submit')}
+  onClick={handleSubmit}
+>
+  {t('submit')}
+</Button>
+
+<ScreenReaderAnnouncement message={statusMessage} />
+
+// ❌ WRONG - Missing accessibility
+<button onClick={handleSubmit}>Submit</button>
+```
+
+### Anti-Patterns to Avoid
+1. **Never** handle errors without useErrorHandler hook
+2. **Never** fetch data without React Query
+3. **Never** hardcode text - use i18n `t()` function
+4. **Never** skip PatternFly 6 components for custom UI
+5. **Never** ignore accessibility requirements
+
 ## 🚀 Development Commands
 
 ```bash

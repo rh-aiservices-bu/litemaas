@@ -215,4 +215,4 @@ const LazyChart = lazy(() => import('./HeavyChart'));
 - [PatternFly Charts on PatternFly.org](https://www.patternfly.org/charts/about)
 - [PatternFly React Charts GitHub Repository](https://github.com/patternfly/patternfly-react/tree/main/packages/react-charts)
 
-> For the most up-to-date documentation and code examples, consult both PatternFly.org and the official GitHub repository. When using AI tools, leverage context7 to fetch the latest docs from these sources.
+> For the most up-to-date documentation and code examples, consult both PatternFly.org and the official GitHub repository. When using AI tools for PatternFly 6, use the local documentation and PatternFly.org. Note: Context7 may have outdated PatternFly versions - use it for other libraries but NOT for PatternFly 6.

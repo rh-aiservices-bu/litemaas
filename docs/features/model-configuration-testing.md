@@ -37,10 +37,12 @@ The Model Configuration Testing feature allows administrators to validate model 
 The test results will appear in the modal footer above the action buttons:
 
 #### Success Scenarios
+
 - **✅ Connection Successful**: "Connection successful! You can create the model."
   - Appears when the endpoint is reachable, authentication succeeds, and the model is found
 
 #### Error Scenarios
+
 - **❌ Cannot Contact Endpoint**: Network connectivity issues or invalid URL
 - **❌ Authentication Failed**: Invalid API key or insufficient permissions
 - **⚠️ Model Not Available**: Model name not found in the available models list
@@ -67,12 +69,12 @@ The test results will appear in the modal footer above the action buttons:
       "object": "model",
       "created": 1758888561,
       "owned_by": "provider",
-      "max_model_len": 32768,
+      "max_model_len": 32768
       // ... other model properties
     },
     {
       "id": "model-name-2",
-      "object": "model",
+      "object": "model"
       // ... other properties
     }
   ]
@@ -94,6 +96,7 @@ The feature handles various error conditions:
 ## User Interface Elements
 
 ### Test Configuration Button
+
 - **Location**: Modal footer, left of the Create/Cancel buttons
 - **State Management**:
   - Disabled when required fields are missing
@@ -101,6 +104,7 @@ The feature handles various error conditions:
   - Enabled after test completion
 
 ### Result Alert
+
 - **Location**: Modal footer, above the action buttons
 - **Types**:
   - Success (green): Configuration validated successfully
@@ -140,12 +144,14 @@ The feature supports all 9 LiteMaaS languages with appropriate translations:
 ## Best Practices
 
 ### For Administrators
+
 1. Always test configuration before creating models
 2. Use specific model names exactly as they appear in the API response
 3. Ensure API keys have appropriate permissions for model access
 4. Verify base URLs include the correct protocol (https://)
 
 ### For Developers
+
 1. Handle network timeouts gracefully
 2. Provide clear, actionable error messages
 3. Clear previous test results when form data changes

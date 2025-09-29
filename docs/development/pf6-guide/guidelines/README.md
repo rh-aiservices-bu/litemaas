@@ -60,7 +60,7 @@ import { UserIcon } from '@patternfly/react-icons';
 4. **Reference version-specific docs** - Match your project's PatternFly version
 5. **Provide context to AI** - Share links and code snippets when asking for help
 
-> For the most up-to-date documentation, use both the official docs and the source repositories. When using AI tools, encourage them to leverage context7 to fetch the latest documentation from these sources.
+> For the most up-to-date documentation, use both the official docs and the source repositories. When using AI tools for PatternFly 6, use the local documentation and PatternFly.org. Note: Context7 may have outdated PatternFly versions - use it for other libraries but NOT for PatternFly 6.
 
 ### Accessibility Requirements
 

@@ -50,6 +50,80 @@ For details, see [`docs/features/user-roles-administration.md`](../docs/features
 
 For implementation details, see [`docs/development/backend-guide.md`](../docs/development/backend-guide.md).
 
+## ⚠️ Implementation Patterns - MUST FOLLOW
+
+### Service Implementation Pattern
+```typescript
+// ✅ CORRECT - Extend BaseService
+export class MyService extends BaseService {
+  async createItem(data: CreateRequest) {
+    // Use built-in validation
+    this.validateRequiredFields(data, ['name', 'email']);
+    this.validateEmail(data.email);
+
+    try {
+      return await this.executeQueryOne<Item>('INSERT...', [data]);
+    } catch (error) {
+      // Use ApplicationError factory methods
+      if (error.code === '23505') {
+        throw ApplicationError.alreadyExists('Item', 'name', data.name);
+      }
+      throw this.mapDatabaseError(error, 'item creation');
+    }
+  }
+}
+
+// ❌ WRONG - Don't create services without BaseService
+export class MyService {
+  async createItem(data) {
+    if (!data.name) throw new Error('Name required'); // Wrong!
+    // Direct database access without error mapping
+  }
+}
+```
+
+### Route Pattern with RBAC
+```typescript
+// ✅ CORRECT - Use preHandler for role validation
+app.post('/api/admin/items',
+  {
+    preHandler: [app.authenticate, app.requireRole('admin')],
+    schema: { body: CreateItemSchema }
+  },
+  async (request, reply) => {
+    const result = await itemService.create(request.body);
+    return { data: result };
+  }
+);
+
+// ❌ WRONG - Don't manually check roles in handler
+app.post('/api/admin/items', async (request, reply) => {
+  if (request.user.role !== 'admin') { // Wrong!
+    throw new Error('Unauthorized');
+  }
+  // ...
+});
+```
+
+### Error Handling Pattern
+```typescript
+// ✅ CORRECT - Use ApplicationError factory methods
+throw ApplicationError.validation('Invalid format', 'field', value, 'suggestion');
+throw ApplicationError.notFound('User', userId);
+throw ApplicationError.forbidden('Admin access required', 'admin');
+
+// ❌ WRONG - Don't use generic errors
+throw new Error('Invalid format'); // Wrong!
+throw { statusCode: 404, message: 'Not found' }; // Wrong!
+```
+
+### Anti-Patterns to Avoid
+1. **Never** create services without extending BaseService
+2. **Never** use `new Error()` - use ApplicationError factory methods
+3. **Never** handle authentication/authorization manually - use middleware
+4. **Never** access database directly without error mapping
+5. **Never** skip validation helpers from BaseService
+
 ## 🔄 LiteLLM Integration
 
 **Model Sync**: Auto-sync on startup from `/model/info` endpoint with graceful fallback to mock data.
