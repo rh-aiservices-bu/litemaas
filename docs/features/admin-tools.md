@@ -65,10 +65,12 @@ Model configuration testing allows administrators to:
 ### Test Results and Error Handling
 
 #### Success Scenario
+
 - **✅ Connection Successful**: "Connection successful! You can create the model."
 - Indicates the endpoint is reachable, authentication works, and the model exists
 
 #### Error Scenarios
+
 - **❌ Cannot Contact Endpoint**: Network issues or invalid URL
 - **❌ Authentication Failed**: Invalid API key or insufficient permissions
 - **⚠️ Model Not Available**: Model name not found in endpoint's model list
@@ -77,6 +79,7 @@ Model configuration testing allows administrators to:
 ### Technical Details
 
 The test configuration feature:
+
 - Connects to `{API_BASE_URL}/models` endpoint
 - Uses Bearer token authentication with the provided API key
 - Parses the JSON response to extract available model IDs from the `data` array

@@ -1423,7 +1423,7 @@ Content-Type: application/json
       "id": "model-name-2",
       "object": "model",
       "created": 1758888562,
-      "owned_by": "provider",
+      "owned_by": "provider"
       // ... additional model properties
     }
   ]
@@ -1435,6 +1435,7 @@ Content-Type: application/json
 Configuration testing handles various error scenarios from external APIs:
 
 **Authentication Errors (HTTP 401/403)**:
+
 ```json
 {
   "error": {
@@ -1446,12 +1447,14 @@ Configuration testing handles various error scenarios from external APIs:
 ```
 
 **Network/Connectivity Errors**:
+
 - Connection timeouts
 - DNS resolution failures
 - SSL certificate errors
 - Network unreachable errors
 
 **Server Errors (HTTP 5xx)**:
+
 ```json
 {
   "error": {
@@ -1482,6 +1485,7 @@ Configuration testing handles various error scenarios from external APIs:
 #### Frontend Implementation Notes
 
 The model configuration testing is implemented in `AdminModelsPage.tsx` with:
+
 - State management for testing progress and results
 - Automatic clearing of results when form data changes
 - Proper error categorization and user feedback

@@ -12,6 +12,7 @@
 **LiteMaaS** is a model subscription and management platform that bridges users and AI model services through LiteLLM integration.
 
 **Monorepo** with two packages:
+
 - **Backend** (`@litemaas/backend`): Fastify API server with PostgreSQL, OAuth2/JWT, RBAC
 - **Frontend** (`@litemaas/frontend`): React + PatternFly 6 UI with 9-language i18n support
 
@@ -26,6 +27,7 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 **Role-Based Access Control (RBAC)**: Three-tier hierarchy `admin > adminReadonly > user` with OpenShift integration.
 
 For detailed features, see:
+
 - [`backend/CLAUDE.md`](backend/CLAUDE.md) - API implementation details
 - [`frontend/CLAUDE.md`](frontend/CLAUDE.md) - UI implementation details
 - [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md) - Complete RBAC guide
@@ -80,6 +82,7 @@ For details, see [`docs/deployment/authentication.md`](docs/deployment/authentic
 **Complete guide index**: [`docs/README.md`](docs/README.md)
 
 **Key documentation**:
+
 - **Project Structure**: [`docs/architecture/project-structure.md`](docs/architecture/project-structure.md)
 - **Development Setup**: [`docs/development/setup.md`](docs/development/setup.md)
 - **API Reference**: [`docs/api/rest-api.md`](docs/api/rest-api.md)
@@ -88,6 +91,26 @@ For details, see [`docs/deployment/authentication.md`](docs/deployment/authentic
 
 ## 🎯 For AI Assistants
 
+### ⚠️ BEFORE YOU CODE - Pattern Discovery Checklist
+
+**MANDATORY**: Before implementing ANY new feature, you MUST:
+
+1. **Search for existing implementations**:
+   - Use `find_symbol` to locate similar components/services
+   - Use `search_for_pattern` to find code patterns
+   - Check relevant memory files: `code_style_conventions`, `error_handling_architecture`
+
+2. **Follow established patterns**:
+   - **Backend**: ALWAYS extend `BaseService`, use `ApplicationError` factory methods
+   - **Frontend**: ALWAYS use `useErrorHandler` hook, follow PatternFly 6 prefix (`pf-v6-`)
+   - **Testing**: ALWAYS test error scenarios, use `./dev-tools/run_with_stderr.sh` for stderr
+
+3. **Verify against pattern reference**:
+   - See [`docs/development/pattern-reference.md`](docs/development/pattern-reference.md) for comprehensive patterns
+   - Check existing code in similar features before creating new patterns
+
+### Working on Specific Tasks
+
 When working on:
 
 - **Backend tasks** → Load `backend/CLAUDE.md` for Fastify/service details
@@ -95,6 +118,15 @@ When working on:
 - **Role/Admin tasks** → Load `docs/features/user-roles-administration.md` for RBAC details
 - **Authentication tasks** → Load `docs/deployment/authentication.md` for OAuth/role setup
 - **Full-stack tasks** → Start with this file, then load specific contexts as needed
+
+### Context7 Usage Guidelines
+
+⚠️ **Important for AI tools using Context7**:
+
+- ✅ **Use Context7 for**: Backend libraries (Fastify, PostgreSQL, LiteLLM), non-UI frontend libraries (React Query, Axios, Vite)
+- ❌ **Don't use Context7 for**: PatternFly 6 components (use `docs/development/pf6-guide/` + PatternFly.org instead)
+
+Context7 may contain outdated PatternFly versions. For all PatternFly 6 UI development, refer to the local PF6 guide and official PatternFly.org documentation.
 
 ### Security Note for AI Assistants
 
