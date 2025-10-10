@@ -7,6 +7,7 @@ import {
   CogIcon,
   CommentsIcon,
   UsersIcon,
+  ChartBarIcon,
 } from '@patternfly/react-icons';
 
 import HomePage from '../pages/HomePage';
@@ -17,6 +18,7 @@ import ChatbotPage from '../pages/ChatbotPage';
 import UsagePage from '../pages/UsagePage';
 import ToolsPage from '../pages/ToolsPage';
 import AdminModelsPage from '../pages/AdminModelsPage';
+import AdminUsagePage from '../pages/AdminUsagePage';
 import UsersPage from '../pages/UsersPage';
 
 import { AppConfig } from '../types/navigation';
@@ -83,6 +85,14 @@ export const appConfig: AppConfig = {
           element: AdminModelsPage,
           label: 'nav.admin.models',
           icon: CubesIcon,
+          requiredRoles: ['admin', 'admin-readonly'],
+        },
+        {
+          id: 'admin-usage',
+          path: '/admin/usage',
+          element: AdminUsagePage,
+          label: 'nav.admin.usage',
+          icon: ChartBarIcon,
           requiredRoles: ['admin', 'admin-readonly'],
         },
         {
@@ -153,6 +163,13 @@ export const appConfig: AppConfig = {
       label: 'nav.admin.models',
       path: '/admin/models',
       icon: CubesIcon,
+      requiredRoles: ['admin', 'admin-readonly'],
+    },
+    {
+      id: 'admin-usage',
+      label: 'nav.admin.usage',
+      path: '/admin/usage',
+      icon: ChartBarIcon,
       requiredRoles: ['admin', 'admin-readonly'],
     },
     {

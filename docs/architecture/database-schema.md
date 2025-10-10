@@ -237,70 +237,36 @@ CREATE INDEX idx_api_key_models_key ON api_key_models(api_key_id);
 CREATE INDEX idx_api_key_models_model ON api_key_models(model_id);
 ```
 
-### usage_logs
+### daily_usage_cache
 
-Detailed usage logging for analytics with cost calculation
-
-```sql
-CREATE TABLE usage_logs (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
-    api_key_id UUID REFERENCES api_keys(id) ON DELETE SET NULL,
-    team_id UUID REFERENCES teams(id) ON DELETE SET NULL,
-    model_id VARCHAR(255) NOT NULL,
-    request_tokens INTEGER NOT NULL,
-    response_tokens INTEGER NOT NULL,
-    total_tokens INTEGER GENERATED ALWAYS AS (request_tokens + response_tokens) STORED,
-
-    -- Cost Calculation Fields
-    input_cost DECIMAL(10, 6) DEFAULT 0.000000,
-    output_cost DECIMAL(10, 6) DEFAULT 0.000000,
-    total_cost DECIMAL(10, 6) GENERATED ALWAYS AS (input_cost + output_cost) STORED,
-
-    latency_ms INTEGER,
-    status_code INTEGER,
-    error_message TEXT,
-
-    -- LiteLLM Integration Fields
-    litellm_request_id VARCHAR(255),
-
-    metadata JSONB DEFAULT '{}',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-) PARTITION BY RANGE (created_at);
-
--- Create monthly partitions
-CREATE TABLE usage_logs_2024_01 PARTITION OF usage_logs
-    FOR VALUES FROM ('2024-01-01') TO ('2024-02-01');
-
-CREATE INDEX idx_usage_logs_subscription ON usage_logs(subscription_id);
-CREATE INDEX idx_usage_logs_created ON usage_logs(created_at);
-CREATE INDEX idx_usage_logs_model ON usage_logs(model_id);
-CREATE INDEX idx_usage_logs_team ON usage_logs(team_id);
-CREATE INDEX idx_usage_logs_litellm ON usage_logs(litellm_request_id);
-```
-
-### usage_summaries
-
-Pre-aggregated usage statistics for performance
+Cached daily usage data from LiteLLM for admin analytics with intelligent caching strategy
 
 ```sql
-CREATE TABLE usage_summaries (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
-    model_id VARCHAR(255) NOT NULL,
-    period_type VARCHAR(20) NOT NULL, -- 'hour', 'day', 'month'
-    period_start TIMESTAMP WITH TIME ZONE NOT NULL,
-    request_count INTEGER DEFAULT 0,
-    total_tokens BIGINT DEFAULT 0,
-    error_count INTEGER DEFAULT 0,
-    avg_latency_ms INTEGER,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(subscription_id, model_id, period_type, period_start)
+CREATE TABLE daily_usage_cache (
+    date DATE PRIMARY KEY,
+    raw_data JSONB NOT NULL,              -- Full LiteLLM response for the day
+    aggregated_by_user JSONB,             -- Pre-computed user breakdown
+    aggregated_by_model JSONB,            -- Pre-computed model breakdown
+    aggregated_by_provider JSONB,         -- Pre-computed provider breakdown
+    total_metrics JSONB,                  -- Pre-computed totals (requests, tokens, cost, etc.)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    is_complete BOOLEAN DEFAULT true      -- false if current day (needs periodic refresh)
 );
 
-CREATE INDEX idx_usage_summaries_subscription ON usage_summaries(subscription_id);
-CREATE INDEX idx_usage_summaries_period ON usage_summaries(period_type, period_start);
+CREATE INDEX idx_daily_cache_date ON daily_usage_cache(date DESC);
+CREATE INDEX idx_daily_cache_complete ON daily_usage_cache(is_complete);
+CREATE INDEX idx_daily_cache_updated_at ON daily_usage_cache(updated_at) WHERE is_complete = false;
 ```
+
+**Caching Strategy**:
+
+- **Historical days** (> 1 day old): Cached permanently with `is_complete = true`, never refreshed
+- **Current day**: 5-minute TTL with `is_complete = false`, auto-refreshed when stale
+- **Missing days**: Fetched from LiteLLM `/user/daily/activity` endpoint on demand
+
+**Data Enrichment**: Raw LiteLLM data is enriched with user mappings by joining API key aliases from LiteLLM response with local `api_keys` table to map requests to actual users.
+
+**Note:** Usage data is fetched from LiteLLM's API via the `/user/daily/activity` endpoint and cached in `daily_usage_cache` for performance. Historical data (> 1 day old) is cached permanently, while current day data has a 5-minute TTL.
 
 ### audit_logs
 
@@ -367,57 +333,6 @@ CREATE TRIGGER enforce_subscription_quota BEFORE UPDATE ON subscriptions
     EXECUTE FUNCTION check_subscription_quota();
 ```
 
-### Automatic usage summary update
-
-```sql
-CREATE OR REPLACE FUNCTION update_usage_summary()
-RETURNS TRIGGER AS $$
-BEGIN
-    INSERT INTO usage_summaries (
-        subscription_id,
-        model_id,
-        period_type,
-        period_start,
-        request_count,
-        total_tokens,
-        error_count,
-        avg_latency_ms
-    )
-    VALUES (
-        NEW.subscription_id,
-        NEW.model_id,
-        'hour',
-        date_trunc('hour', NEW.created_at),
-        1,
-        NEW.total_tokens,
-        CASE WHEN NEW.status_code >= 400 THEN 1 ELSE 0 END,
-        NEW.latency_ms
-    )
-    ON CONFLICT (subscription_id, model_id, period_type, period_start)
-    DO UPDATE SET
-        request_count = usage_summaries.request_count + 1,
-        total_tokens = usage_summaries.total_tokens + NEW.total_tokens,
-        error_count = usage_summaries.error_count +
-            CASE WHEN NEW.status_code >= 400 THEN 1 ELSE 0 END,
-        avg_latency_ms = (
-            (usage_summaries.avg_latency_ms * usage_summaries.request_count + NEW.latency_ms) /
-            (usage_summaries.request_count + 1)
-        );
-
-    -- Update subscription usage
-    UPDATE subscriptions
-    SET used_requests = used_requests + 1,
-        used_tokens = used_tokens + NEW.total_tokens
-    WHERE id = NEW.subscription_id;
-
-    RETURN NEW;
-END;
-$$ language 'plpgsql';
-
-CREATE TRIGGER update_usage_on_log AFTER INSERT ON usage_logs
-    FOR EACH ROW EXECUTE FUNCTION update_usage_summary();
-```
-
 ## Views
 
 ### Active subscriptions view
@@ -437,23 +352,6 @@ JOIN users u ON s.user_id = u.id
 JOIN models m ON s.model_id = m.id
 WHERE s.status = 'active'
     AND (s.expires_at IS NULL OR s.expires_at > CURRENT_TIMESTAMP);
-```
-
-### Usage statistics view
-
-```sql
-CREATE VIEW usage_statistics AS
-SELECT
-    s.user_id,
-    s.model_id,
-    date_trunc('day', ul.created_at) as usage_date,
-    COUNT(*) as request_count,
-    SUM(ul.total_tokens) as total_tokens,
-    AVG(ul.latency_ms) as avg_latency_ms,
-    SUM(CASE WHEN ul.status_code >= 400 THEN 1 ELSE 0 END) as error_count
-FROM usage_logs ul
-JOIN subscriptions s ON ul.subscription_id = s.id
-GROUP BY s.user_id, s.model_id, date_trunc('day', ul.created_at);
 ```
 
 ## Multi-Model API Key Migration

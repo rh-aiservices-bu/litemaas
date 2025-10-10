@@ -1589,70 +1589,23 @@ export class SubscriptionService extends BaseService {
         };
       }
 
-      // Real analytics implementation would query usage logs
-      const usageQuery = `
-        SELECT 
-          COUNT(*) as request_count,
-          SUM(token_count) as token_count,
-          SUM(cost) as total_spend,
-          AVG(cost) as average_request_cost,
-          model_id
-        FROM usage_logs 
-        WHERE subscription_id = $1 
-          AND created_at >= $2 
-          AND created_at <= $3
-        GROUP BY model_id
-      `;
-
-      const usageData = await this.fastify.dbUtils.queryMany(usageQuery, [
+      // TODO: Real analytics implementation should fetch from LiteLLM API
+      // For now, returning empty usage data since local logging is not implemented
+      return {
         subscriptionId,
-        period.start,
-        period.end,
-      ]);
-
-      const totalUsage = usageData.reduce(
-        (acc, row) => ({
-          requestCount: (acc.requestCount as number) + parseInt(String(row.request_count)),
-          tokenCount: (acc.tokenCount as number) + parseInt(String(row.token_count || '0')),
-          totalSpend: (acc.totalSpend as number) + parseFloat(String(row.total_spend || '0')),
-          averageRequestCost: acc.averageRequestCost,
-          averageTokenCost: acc.averageTokenCost,
-        }),
-        {
+        period,
+        usage: {
           requestCount: 0,
           tokenCount: 0,
           totalSpend: 0,
           averageRequestCost: 0,
           averageTokenCost: 0,
         },
-      );
-
-      totalUsage.averageRequestCost =
-        (totalUsage.requestCount as number) > 0
-          ? (totalUsage.totalSpend as number) / (totalUsage.requestCount as number)
-          : 0;
-      totalUsage.averageTokenCost =
-        (totalUsage.tokenCount as number) > 0
-          ? (totalUsage.totalSpend as number) / (totalUsage.tokenCount as number)
-          : 0;
-
-      return {
-        subscriptionId,
-        period,
-        usage: totalUsage as {
-          requestCount: number;
-          tokenCount: number;
-          totalSpend: number;
-          averageRequestCost: number;
-          averageTokenCost: number;
+        models: [],
+        rateLimitEvents: {
+          tpmViolations: 0,
+          rpmViolations: 0,
         },
-        models: usageData.map((row) => ({
-          modelId: String(row.model_id),
-          modelName: String(row.model_id), // Would be joined from models table in real implementation
-          requestCount: parseInt(String(row.request_count)),
-          tokenCount: parseInt(String(row.token_count || '0')),
-          spend: parseFloat(String(row.total_spend || '0')),
-        })),
       };
     } catch (error) {
       this.fastify.log.error(error, 'Failed to get subscription usage analytics');

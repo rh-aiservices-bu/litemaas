@@ -49,7 +49,7 @@ import { UserIcon } from '@patternfly/react-icons';
 ### Styling Rules
 
 - ✅ **Use PatternFly utilities** - Before writing custom CSS
-- ✅ **Use semantic design tokens** for custom CSS (e.g., `var(--pf-v6-global--primary-color--light)`), not base tokens with numbers (e.g., `--pf-v6-global--Color--100`) or hardcoded values
+- ✅ **Use semantic design tokens** for custom CSS (e.g., `var(--pf-t--global--color--brand--default)`), not base tokens with numbers (e.g., `--pf-t--global--text--color--regular`) or hardcoded values
 - ❌ **Don't mix PatternFly versions** - Stick to v6 throughout
 
 ### Documentation Requirements

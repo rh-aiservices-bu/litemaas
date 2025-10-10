@@ -1,15 +1,283 @@
 {
+  "admin": {
+    "usage": {
+      "tables": {
+        "models": {
+          "ariaLabel": "Tâur dail echuin-aerlinn",
+          "caption": "Tâur tira dail-aerlinn nan {{count}} echuin",
+          "columns": {
+            "avgLatency": "Lû-Daer Aer",
+            "cost": "Cost",
+            "model": "Echui",
+            "requests": "Pedi",
+            "successRate": "Prestann-Rond",
+            "tokens": "Têw",
+            "users": "Aduiain"
+          },
+          "empty": {
+            "description": "Ú-ennen aerlinn-gwaed nan lû-rond edhellen",
+            "title": "Úin echuin-gwaed úir"
+          },
+          "pagination": {
+            "ariaLabel": "Echuin-dail tâur band-rond"
+          },
+          "successRate": {
+            "high": "Prestann-rond ûr (>95%)",
+            "low": "Prestann-rond naer (<90%)",
+            "medium": "Prestann-rond medan (90-95%)"
+          }
+        },
+        "providers": {
+          "ariaLabel": "Tâur dail aphad-aerlinn",
+          "caption": "Tâur tira dail-aerlinn nan {{count}} aphad-hin",
+          "columns": {
+            "cost": "Cost",
+            "models": "Echuin",
+            "provider": "Aphad",
+            "requests": "Pedi",
+            "successRate": "Prestann-Rond",
+            "tokens": "Têw"
+          },
+          "empty": {
+            "description": "Ú-ennen aerlinn-gwaed nan lû-rond edhellen",
+            "title": "Úin aphad-gwaed úir"
+          },
+          "pagination": {
+            "ariaLabel": "Aphad-dail tâur band-rond"
+          },
+          "successRate": {
+            "high": "Prestann-rond ûr (>95%)",
+            "low": "Prestann-rond naer (<90%)",
+            "medium": "Prestann-rond medan (90-95%)"
+          }
+        },
+        "users": {
+          "ariaLabel": "Tâur dail aduiain-aerlinn",
+          "caption": "Tâur tira dail-aerlinn nan {{count}} aduiain",
+          "columns": {
+            "cost": "Cost",
+            "lastActive": "Methed Fîr",
+            "requests": "Pedi",
+            "tokens": "Têw",
+            "user": "Aduiadan"
+          },
+          "empty": {
+            "description": "Ú-ennen aerlinn-gwaed nan lû-rond edhellen",
+            "title": "Úin aduiain-gwaed úir"
+          },
+          "pagination": {
+            "ariaLabel": "Aduiain-dail tâur band-rond"
+          }
+        }
+      },
+      "timeAgo": {
+        "days": "{{count}} aur gîn",
+        "days_plural": "{{count}} aur gîn",
+        "hours": "{{count}} dú gîn",
+        "hours_plural": "{{count}} dú gîn",
+        "justNow": "Sí hinan",
+        "minutes": "{{count}} vuin gîn",
+        "minutes_plural": "{{count}} vuin gîn"
+      }
+    }
+  },
+  "adminUsage": {
+    "accessDenied": "Minno Gwedh",
+    "activeUsers": "Aduiain Fîr",
+    "apiKeysCleared": "API-anguirel halad ú-orthad - edhello aduiain tolos",
+    "apiKeysFilterAdjusted": "API-anguirel halad edrain orthad - anno doro edhellion",
+    "apiKeysFilterAvailable": "API-anguirel halad sí úir",
+    "charts": {
+      "modelDistributionAriaLabel": "Minithith echuin-aerlinn dail",
+      "modelUsageTrends": "Echuin-Aerlinn Mith",
+      "modelUsageTrendsAriaDesc": "Minithith-rond-thûl tira aerlinn echuin daer hen lû. I govad tira {{metric}}.",
+      "modelUsageTrendsAriaLabel": "Minithith-rond tira echuin-aerlinn mith hen lû dan {{metric}}",
+      "modelUsageTrendsDescription": "Echuin-aerlinn dail hen lû",
+      "noDataAvailable": "Úin gwaed úir nan lû edhellen",
+      "noModelData": "Úin echuin-gwaed úir",
+      "noModelDataExplanation": "Úin echuin-aerlinn-gwaed úir nan lû-rond edhellen.",
+      "topUsers": "Aduiain Aer",
+      "usageTrends": "Aerlinn-Mith",
+      "usageTrendsDescription": "Aerlinn-mith hen lû"
+    },
+    "completionTokens": "Têw Echannen",
+    "datePresets": {
+      "30d": "Methed 30 aur",
+      "7d": "Methed 7 aur",
+      "90d": "Methed 90 aur",
+      "custom": "Rond echann"
+    },
+    "dateRangeChanged": "Îuil-rond edrain na {{preset}}",
+    "dateRangeSelect": "Îuil-rond edhellen",
+    "endDate": "Methed-îuil",
+    "errors": {
+      "export": "Edwen aerlinn-gwaed fael",
+      "exportDescription": "Edwen aduiain-aer-gwaed fael.",
+      "fetchMetrics": "Lain aerlinn-govaded fael",
+      "fetchModels": "Lain echuin-dail fael",
+      "fetchProviders": "Lain aphad-dail fael",
+      "fetchUsers": "Lain aduiain-dail fael",
+      "refresh": "Athra gwaed-aurui fael"
+    },
+    "export": "Edwen",
+    "exportComplete": "Aerlinn-gwaed edwen prestann.",
+    "exportModal": {
+      "csvDescription": "Aer nan tâur-gwaed. Gwedh dan Excel, Google Sheets a aenyn minithith-echad.",
+      "csvFullName": "(Fair-Thelia-Comma)",
+      "dateRange": "Îuil-Rond",
+      "downloaded": "Aerlinn-gwaed dúlin prestann.",
+      "downloadFile": "Duin edwen-teith",
+      "export": "Edwen",
+      "exportButton": "Edwen aerlinn-gwaed",
+      "exporting": "I-nedwen...",
+      "format": "Dandollen",
+      "from": "O",
+      "jsonDescription": "Aer nan banda-hin. Gwaed-dandollen thûl nan orthad-uir a API-gwaith.",
+      "jsonFullName": "(JavaScript Ostol-Tegil)",
+      "success": "Edwen prestann",
+      "title": "Edwen Aerlinn-Gwaed",
+      "to": "Na"
+    },
+    "exportStarting": "Togo edwen...",
+    "exportSuccess": "Edwen prestann",
+    "filters": {
+      "apiKeys": "Halad dan API-anguirel",
+      "apiKeysLoadError": "Lain API-anguirel fael",
+      "apiKeysPlaceholder": "Edhello aduiain tolos ad halad dan API-anguirel",
+      "apiKeysPlaceholderActive": "Îl API-anguirel (dago ad halad)",
+      "clearApiKeysFilter": "Thuia API-anguirel halad",
+      "clearModels": "Thuia echuin edhellen",
+      "clearUsers": "Thuia aduiain edhellen",
+      "models": "Halad dan echuin",
+      "modelsPlaceholder": "Îl echuin (dago ad halad)",
+      "noApiKeysAvailable": "Úin API-anguirel úir nan aduiain edhellen",
+      "noApiKeysFound": "Ú-ennen API-anguirel nan \"{{query}}\"",
+      "noModelsFound": "Ú-ennen echuin nan \"{{query}}\"",
+      "noUsersFound": "Ú-ennen aduiain nan \"{{query}}\"",
+      "searchModels": "Drego echuin...",
+      "searchUsers": "Drego aduiain...",
+      "selectedApiKeys": "API-anguirel edhellen",
+      "selectedModels": "Echuin edhellen",
+      "selectedUsers": "Aduiain edhellen",
+      "users": "Halad dan aduiain",
+      "usersPlaceholder": "Îl aduiain (dago ad halad)"
+    },
+    "heatmap": {
+      "accessibility": {
+        "cellLabel": "{{dayName}}, {{date}}, {{value}}, {{percent}} o veth",
+        "heatmapDescription": "Luin-minithith tira {{metric}} dan aur-veth tar {{weeks}} veth"
+      },
+      "legend": {
+        "colorScale": "Aerlinn-thûl",
+        "noData": "Úin gwaed",
+        "zeroUsage": "Aerlinn nûl"
+      },
+      "table": {
+        "viewAsChart": "Tira sui minithith",
+        "viewAsTable": "Tira sui tâur",
+        "week": "Veth"
+      },
+      "tooltip": {
+        "noDataOutsideRange": "Úin gwaed (palan rond edhellen)",
+        "percentOfWeek": "{{percent}}% o veth îl"
+      }
+    },
+    "loading": "Lain govaded...",
+    "loadingModels": "Lain echuin-gwaed...",
+    "loadingProviders": "Lain aphad-gwaed...",
+    "loadingUsers": "Lain aduiain-gwaed...",
+    "metrics": {
+      "activeUsersAriaLabel": "{{active}} aduiain fîr o {{total}} aduiain îl",
+      "noChange": "Úin edraith",
+      "ofTotalUsers": "o {{total}} îl",
+      "successRateAriaLabel": "Prestann-rond: {{percentage}}%",
+      "totalCostAriaLabel": "Cost îl: ${{amount}}",
+      "totalRequestsAriaLabel": "Pedi îl: {{count}}",
+      "trendLabel": "Mith {{direction}} dan {{change}}%"
+    },
+    "metricSelect": "Govad edhellen",
+    "metricsOverview": "Govaded Tirin",
+    "modelBreakdown": "Echuin-Dail",
+    "modelFilterChanged": "Halad dan {{count}} echui(n)",
+    "noData": "Úin gwaed úir",
+    "noModelData": "Úin echuin-gwaed úir",
+    "noModelsFound": "Ú-ennen echuin nan îuil-rond edhellen.",
+    "noProviderData": "Úin aphad-gwaed úir",
+    "noProvidersFound": "Ú-ennen aphad-hin nan îuil-rond edhellen.",
+    "noUserData": "Úin aduiain-gwaed úir",
+    "noUsersFound": "Ú-ennen aduiain nan îuil-rond edhellen.",
+    "promptTokens": "Têw-Peth",
+    "providerBreakdown": "Aphad-Dail",
+    "refreshing": "Athra gwaed-aurui...",
+    "refreshSuccess": "Athra prestann",
+    "refreshToday": "Athra Aurui",
+    "requiresAdmin": "Úan phenin ad tira aran-aerlinn-minithith.",
+    "selectDateRange": "Anno edhello îuil-rond ad tira govaded.",
+    "selectMetric": "Edhello govad",
+    "startDate": "Togo-îuil",
+    "subtitle": "Tira a minithia aerlinn tar îl aduiain, echuin a aphad-hin",
+    "successRate": "Prestann-Rond",
+    "tabChanged": "Thelia na {{tab}} tab",
+    "tableHeaders": {
+      "completionTokens": "Têw<br />Echannen",
+      "cost": "Cost",
+      "promptTokens": "Têw<br />Peth",
+      "requests": "Pedi",
+      "tokens": "Têw",
+      "user": "Aduiadan"
+    },
+    "tables": {
+      "topUsers": "Aduiain aer dan pedi a cost"
+    },
+    "tabs": {
+      "byModels": "Dan Echuin",
+      "byProviders": "Dan Aphad-hin",
+      "byUsers": "Dan Aduiain",
+      "overview": "Tirin"
+    },
+    "tabsLabel": "Aerlinn-minithith tab-hin",
+    "title": "Aran-Aerlinn Minithith",
+    "todayDataRefreshed": "Gwaed-aerlinn aurui athra.",
+    "topUsers": {
+      "csvHeaders": {
+        "costUsd": "Cost (USD)",
+        "email": "Lam-thúl",
+        "inputTokens": "Têw Minno",
+        "outputTokens": "Têw Toltha",
+        "requests": "Pedi",
+        "tokens": "Têw",
+        "username": "Aduiadan-eneth"
+      },
+      "export": "Edwen",
+      "exportAriaLabel": "Duin aduiain-aer CSV-teith",
+      "exportSuccess": "Edwen prestann",
+      "exportSuccessDescription": "Aduiain-aer-gwaed dúlin prestann."
+    },
+    "totalCost": "Cost Îl",
+    "totalModels": "Echuin Îl",
+    "totalProviders": "Aphad-hin Îl",
+    "totalRequests": "Pedi Îl",
+    "totalUsers": "Aduiain Îl",
+    "unknownUser": "Aduiadan Ú-danna",
+    "unknownUserDescription": "Pedi o anguirel-API neledh pe ú-minnen",
+    "usageHeatmapSubtitle": "Aerlinn-luin hen veth edhellen",
+    "userBreakdown": "Aduiain-Dail",
+    "userFilterChanged": "Halad dan {{count}} aduiadan/aduiain",
+    "weeklyUsagePatterns": "Veth-Aerlinn Echad"
+  },
   "common": {
     "anUnknownErrorOccurred": "Ohtar ú-dhuilin tûl",
     "cancel": "Daeglos",
     "chart": "Minithith",
     "close": "Hortho",
+    "closeFullScreen": "Hortho cen-tur",
     "create": "Garo",
     "dataPoints": "Gwaed-vuin",
     "date": "Îuil",
     "day": "Aur",
     "delete": "Suigo",
     "error": "Ohtar",
+    "expandToFullScreen": "Palan-cen tûr",
     "export": "Edwen",
     "features": "Thyn",
     "label": "Tegil",
@@ -33,8 +301,12 @@
       "apiKeyIsRequired": "API ango prestanneth",
       "apiKeyOptional": "API Ango (Edhellen)",
       "areYouSureYouWantToDeleteTheModel": "Na trî le suigad i vegil",
+      "authenticationFailed": "Ostoher vuin",
+      "availableModels": "Vegil fael:",
       "backendModelName": "Dâd-vegil Estel",
       "backendModelNameIsRequired": "Dâd-vegil estel prestanneth",
+      "cannotContactEndpoint": "Ú-eston fael i fuin",
+      "connectionSuccessful": "Yrch prestinn! Eryd carned i vegil.",
       "createModel": "Caro Vegil",
       "createModelFailed": "Caro Vegil Vuin",
       "createYourFirstModelToGetStarted": "Caro-vuin vegil an togo.",
@@ -65,6 +337,7 @@
       "modelName": "Vegil Eneth",
       "modelNameCannotContainSpaces": "Vegil estel ú-dhel orthad haew",
       "modelNameIsRequired": "Vegil eneth prestanneth",
+      "modelNotAvailable": "Vegil ú-fael han i fuin",
       "modelsTable": "Echuin tâur",
       "modelUpdated": "Vegil Trenarn",
       "modelUpdatedSuccessfully": "Vegil trenarn dan",
@@ -99,18 +372,13 @@
         "tpm": "TPM",
         "visionSupport": "Tirion-Thýl"
       },
+      "testConfiguration": "Praedo Orthor",
+      "testingConfiguration": "Praedo orthad...",
       "thisActionCannotBeUndoneAndWillRemoveTheModelFromLitellm": "I caran sin ú-ern edwen a suigad i vegil o LiteLLM.",
       "title": "Vegil Vellyn",
       "tpmMustBeAtLeast_1": "TPM prestant min",
       "tpmTokensPerMinute": "TPM (Têw hen Vuin)",
-      "updateModelFailed": "Trenaro Vegil Vuin",
-      "testConfiguration": "Praedo Orthor",
-      "testingConfiguration": "Praedo orthad...",
-      "connectionSuccessful": "Yrch prestinn! Eryd carned i vegil.",
-      "cannotContactEndpoint": "Ú-eston fael i fuin",
-      "authenticationFailed": "Ostoher vuin",
-      "modelNotAvailable": "Vegil ú-fael han i fuin",
-      "availableModels": "Vegil fael:"
+      "updateModelFailed": "Trenaro Vegil Vuin"
     },
     "loading": {
       "description": "Dotha vegil-gwaed o thurin",
@@ -125,7 +393,8 @@
     "admin": {
       "models": "Vegil Vellyn",
       "tools": "Echad",
-      "users": "Users"
+      "usage": "Aerlinn-Minithith",
+      "users": "Aduiain"
     },
     "apiKeys": "Anguirel-API",
     "chatbot": "Glingad-Celeb",
@@ -882,6 +1151,7 @@
       "chartLegend": "Minithith-othren dan gwaed-rimm-gwaed",
       "dataExported": "Gwaed edwen na {{filename}}",
       "dataTableAlternative": "Gwaed-tâur dangweth",
+      "dismissAnnouncement": "Thynd thúl-faer",
       "exportChartData": "Edwen minithith-gwaed sui CSV",
       "legendPattern": "Rim {{name}} tira mi {{color}} luin dan {{pattern}} rîn-echad",
       "legendSummary": "Othren sui {{count}} helech: {{items}}",
@@ -899,6 +1169,7 @@
       "skipToNavigation": "Linna na linna-orthad",
       "switchedToChart": "Thelia na minithith-tirin",
       "switchedToTable": "Thelia na tâur-tirin",
+      "systemAnnouncement": "Rond-thúl faer",
       "tableCaption": "Gwaed-tâur nan {{title}}",
       "tableNavigationInstructions": "Aníra pilin-cair ad linna rhain rîn a thûl, pe Tab ad linna na heleth gwanûn min.",
       "viewModeToggle": "Thelia rhain minithith a tâur-tirin"
@@ -916,6 +1187,9 @@
       "save": "Glaw",
       "saving": "I-nglaw...",
       "tryAgain": "Anno prestanno"
+    },
+    "avatar": {
+      "userAvatar": "Aduiadan-Tirion"
     },
     "errors": {
       "details": "En-chinn",
@@ -950,6 +1224,15 @@
         "url": "{{field}} rhain URL dhain"
       }
     },
+    "footer": {
+      "appBy": "Amloth dan",
+      "forks": "Echad-gwaith: ",
+      "githubLogo": "GitHub-Tegil",
+      "noVersion": "úin lain",
+      "sourceOnGitHub": "Teith na GitHub",
+      "stars": "Êl: ",
+      "version": "lain"
+    },
     "language": {
       "chinese": "中文",
       "elvish": "Edhellen",
@@ -962,10 +1245,21 @@
       "selector": "Lam",
       "spanish": "Español"
     },
+    "navigation": {
+      "mainNavigation": "Linna orod",
+      "userMenu": "Aduiadan-list"
+    },
     "notifications": {
       "clear": "Thuia îl",
+      "clearAll": "Thuia îl thúl",
+      "drawerActions": "Thúl-rond caran",
       "empty": "Úin thúl",
+      "markAllRead": "Teitha îl sui cano",
       "markRead": "Teitha sui cano",
+      "noNotificationsDescription": "Úin thúl hinan sí.",
+      "noNotificationsFound": "Ú-ennen thúl",
+      "notificationsLabel": "Thúl",
+      "notificationSrTitle": "Thúl",
       "title": "Thúl"
     },
     "pagination": {
@@ -973,8 +1267,11 @@
     },
     "theme": {
       "dark": "Dúath",
+      "darkThemeToggle": "dúath-sain prestanno",
       "light": "Galad",
-      "toggle": "Thelia sain"
+      "lightThemeToggle": "galad-sain prestanno",
+      "toggle": "Thelia sain",
+      "toggleGroup": "Dúath-sain prestanno-thûr"
     }
   },
   "users": {

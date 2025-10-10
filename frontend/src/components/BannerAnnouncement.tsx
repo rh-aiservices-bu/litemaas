@@ -11,7 +11,7 @@ interface BannerAnnouncementProps {
 }
 
 export const BannerAnnouncement: React.FC<BannerAnnouncementProps> = ({ className }) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { banners, dismissBanner } = useBanners();
   const { isAuthenticated } = useAuth();
 
@@ -68,7 +68,7 @@ export const BannerAnnouncement: React.FC<BannerAnnouncementProps> = ({ classNam
         rel="noopener noreferrer"
         className="pf-v6-u-ml-sm"
       >
-        {linkText || 'Learn more'}
+        {linkText || t('common.learnMore')}
       </Button>
     );
   };
@@ -94,7 +94,7 @@ export const BannerAnnouncement: React.FC<BannerAnnouncementProps> = ({ classNam
     <Banner
       data-testid="banner-announcement"
       className={`pf-v6-u-position-sticky pf-v6-u-top-0 pf-v6-u-z-index-300 ${getBannerVariantClass(activeBanner.variant)} ${className || ''}`}
-      screenReaderText="System announcement"
+      screenReaderText={t('ui.accessibility.systemAnnouncement')}
     >
       <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsNone' }}>
         <FlexItem flex={{ default: 'flex_1' }}>
@@ -111,7 +111,7 @@ export const BannerAnnouncement: React.FC<BannerAnnouncementProps> = ({ classNam
           <FlexItem>
             <Button
               variant="plain"
-              aria-label="Dismiss announcement"
+              aria-label={t('ui.accessibility.dismissAnnouncement')}
               onClick={handleDismiss}
               icon={<TimesIcon />}
             />

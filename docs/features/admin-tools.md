@@ -284,3 +284,109 @@ For more technical details about the sync process, see:
 
 - [Model Sync Development Guide](../development/model-sync.md)
 - [Model Sync API Documentation](../api/model-sync-api.md)
+
+## Usage Analytics
+
+The Admin Usage Analytics feature (`/admin/usage`) provides comprehensive system-wide visibility into AI model usage across all users, models, and providers.
+
+### Access Requirements
+
+- **Admin users**: Full access including data refresh capabilities
+- **Admin-readonly users**: View-only access to all analytics and reports
+- **Regular users**: No access (redirected or receive 403 error)
+
+### Purpose
+
+Usage analytics allows administrators to:
+
+- **Monitor System-Wide Usage**: Track requests, tokens, and costs across all users
+- **Analyze Trends**: View historical trends and comparison metrics
+- **Identify Top Users**: See which users are consuming the most resources
+- **Track Model Performance**: Monitor usage patterns by model and provider
+- **Export Data**: Generate reports in CSV or JSON format for external analysis
+- **Optimize Resources**: Make data-driven decisions about model availability and capacity
+
+### Key Features
+
+#### Comprehensive Metrics Dashboard
+
+The analytics dashboard displays:
+
+- **Period Overview**: Selected date range with total and active user counts
+- **Usage Metrics**: Total requests, tokens (prompt/completion), and costs
+- **Success Rates**: Request success percentage and average latency
+- **Cost Breakdowns**: Costs by provider and by model
+- **Trend Analysis**: Percentage changes compared to previous period
+- **Top Performers**: Highest-usage users and models
+- **Daily Charts**: Visual representation of usage over time
+
+#### Multi-Dimensional Filtering
+
+Filter analytics by:
+
+- **Date Range**: Predefined presets (1d, 7d, 30d, 90d) or custom range
+- **Models**: Select specific models to analyze
+- **Users**: Filter by specific users
+- **API Keys**: Filter by specific API keys (cascading filter with user selection)
+
+#### Intelligent Caching
+
+The system uses sophisticated caching for optimal performance:
+
+- **Historical Data**: Permanent cache for days older than 1 day
+- **Current Day**: 5-minute TTL with automatic stale detection
+- **On-Demand Refresh**: Admins can force refresh current day data
+- **LiteLLM Integration**: Data fetched from `/user/daily/activity` endpoint
+- **User Enrichment**: API keys mapped to users via local database
+
+### Using the Analytics Dashboard
+
+1. **Navigate** to `/admin/usage` in LiteMaaS
+2. **Select Date Range** using the date picker or presets
+3. **Apply Filters** (optional) to focus on specific models, users, or API keys
+4. **Review Metrics** in the overview cards and charts
+5. **Export Data** for external analysis if needed
+6. **Refresh Today** to get latest current-day data (admin only)
+
+### Role-Based Functionality
+
+#### Admin Users (Full Access)
+
+- ✅ View all analytics and metrics
+- ✅ Apply any combination of filters
+- ✅ Export data in CSV or JSON format
+- ✅ Force refresh current day data
+- ✅ Access all breakdown reports (by user, model, provider)
+
+#### Admin-Readonly Users (View Only)
+
+- ✅ View all analytics and metrics
+- ✅ Apply any combination of filters
+- ✅ Export data in CSV or JSON format
+- ❌ Cannot refresh current day data (button disabled with tooltip)
+
+### Data Export
+
+Export functionality provides:
+
+- **CSV Format**: Spreadsheet-compatible for Excel/Google Sheets
+- **JSON Format**: Structured data for programmatic processing
+- **Complete Data**: All metrics for selected date range and filters
+- **Automatic Filename**: `admin-usage-export-{startDate}-to-{endDate}.{format}`
+
+### Performance Considerations
+
+The caching strategy ensures:
+
+- **Fast Response Times**: Historical data served from cache instantly
+- **Fresh Current Data**: Today's data refreshed every 5 minutes
+- **Reduced LiteLLM Load**: Minimizes API calls to LiteLLM service
+- **Scalability**: Supports large date ranges without performance degradation
+
+### Technical Details
+
+For complete technical documentation, see:
+
+- **[Admin Usage Analytics Implementation](admin-usage-analytics-implementation-plan.md)** - Complete feature specification
+- **[Usage API Documentation](../api/usage-api.md#admin-endpoints)** - API endpoints and data formats
+- **[REST API Reference](../api/rest-api.md#admin-usage-analytics-apiv1adminusage)** - Detailed endpoint specifications

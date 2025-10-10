@@ -171,6 +171,13 @@ export class RBACService {
       resource: 'admin',
       action: 'audit',
     },
+    {
+      id: 'admin:usage',
+      name: 'Admin Usage Analytics',
+      description: 'Access admin usage analytics and reporting',
+      resource: 'admin',
+      action: 'usage',
+    },
   ];
 
   // System roles
@@ -183,6 +190,7 @@ export class RBACService {
         'admin:system',
         'admin:users',
         'admin:audit',
+        'admin:usage',
         'admin:banners:read',
         'admin:banners:write',
         'users:read',
@@ -224,6 +232,7 @@ export class RBACService {
       description: 'Read-only access to admin features',
       permissions: [
         'admin:users', // View admin section
+        'admin:usage', // View admin usage analytics
         'admin:banners:read', // View banners in admin
         'users:read', // List and view users
         'models:read',
@@ -252,20 +261,29 @@ export class RBACService {
     permission: string,
     resourceId?: string,
     context?: Record<string, any>,
+    providedRoles?: string[],
   ): Promise<boolean> {
     try {
-      // Get user roles
-      const user = await this.fastify.dbUtils.queryOne<UserWithRoles>(
-        'SELECT roles FROM users WHERE id = $1 AND is_active = true',
-        [userId],
-      );
+      // Get user roles (use provided roles for API keys, otherwise query database)
+      let userRoles: string[];
 
-      if (!user || !user.roles) {
-        return false;
+      if (providedRoles) {
+        userRoles = providedRoles;
+      } else {
+        const user = await this.fastify.dbUtils.queryOne<UserWithRoles>(
+          'SELECT roles FROM users WHERE id = $1 AND is_active = true',
+          [userId],
+        );
+
+        if (!user || !user.roles) {
+          return false;
+        }
+
+        userRoles = user.roles;
       }
 
       // Check if any role has the required permission
-      for (const roleName of user.roles) {
+      for (const roleName of userRoles) {
         const role = this.systemRoles.find((r) => r.id === roleName);
 
         if (!role) {
@@ -428,7 +446,13 @@ export class RBACService {
       }
 
       // Check permission
-      const hasPermission = await this.hasPermission(user.userId, permission, resourceId, context);
+      const hasPermission = await this.hasPermission(
+        user.userId,
+        permission,
+        resourceId,
+        context,
+        user.roles,
+      );
 
       if (!hasPermission) {
         this.fastify.log.warn(

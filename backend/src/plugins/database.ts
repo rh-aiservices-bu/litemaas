@@ -36,6 +36,17 @@ const databasePlugin: FastifyPluginAsync = async (fastify) => {
           // Don't fail the startup, but log the error
         }
 
+        // Backfill litellm_key_alias for existing API keys
+        try {
+          const { backfillLiteLLMKeyAlias } = await import('../lib/database-migrations');
+          const { LiteLLMService } = await import('../services/litellm.service');
+          const liteLLMService = new LiteLLMService(fastify);
+          await backfillLiteLLMKeyAlias(fastify.dbUtils, liteLLMService);
+        } catch (backfillError) {
+          fastify.log.error(backfillError as Error, 'Failed to backfill litellm_key_alias');
+          // Don't fail the startup, but log the error
+        }
+
         // Sync models on startup
         try {
           const { ModelSyncService } = await import('../services/model-sync.service');

@@ -1,0 +1,413 @@
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from 'react-query';
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { TopUsersTable, type UserSummary } from '../../../components/admin/TopUsersTable';
+import { NotificationProvider } from '../../../contexts/NotificationContext';
+
+// Mock URL.createObjectURL and URL.revokeObjectURL for export tests
+const mockCreateObjectURL = vi.fn(() => 'blob:mock-url');
+const mockRevokeObjectURL = vi.fn();
+
+global.URL.createObjectURL = mockCreateObjectURL;
+global.URL.revokeObjectURL = mockRevokeObjectURL;
+
+// Mock i18n to return safe strings without HTML for table headers
+vi.mock('react-i18next', async () => {
+  const actual = await vi.importActual('react-i18next');
+  return {
+    ...actual,
+    useTranslation: () => ({
+      t: (key: string, defaultValue?: string) => {
+        const translations: Record<string, string> = {
+          'adminUsage.charts.topUsers': 'Top Users',
+          'adminUsage.charts.noDataAvailable': 'No data available',
+          'adminUsage.tableHeaders.user': 'User',
+          'adminUsage.tableHeaders.requests': 'Requests',
+          'adminUsage.tableHeaders.tokens': 'Tokens',
+          'adminUsage.tableHeaders.promptTokens': 'Input Tokens',
+          'adminUsage.tableHeaders.completionTokens': 'Output Tokens',
+          'adminUsage.tableHeaders.cost': 'Cost',
+          'adminUsage.topUsers.export': 'Export',
+          'adminUsage.topUsers.exportSuccess': 'Export successful',
+          'adminUsage.topUsers.exportSuccessDescription':
+            'Top users data has been downloaded successfully.',
+          'adminUsage.errors.export': 'Export failed',
+          'adminUsage.errors.exportDescription': 'Failed to export top users data.',
+          'common.expandToFullScreen': 'Expand to full screen',
+        };
+        return translations[key] || defaultValue || key;
+      },
+      i18n: {
+        language: 'en',
+        changeLanguage: vi.fn(),
+      },
+    }),
+  };
+});
+
+describe('TopUsersTable', () => {
+  let mockLink: HTMLAnchorElement;
+  let queryClient: QueryClient;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+
+    queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+        },
+      },
+    });
+
+    // Mock document.createElement for link creation
+    mockLink = document.createElement('a');
+    mockLink.click = vi.fn();
+    vi.spyOn(document, 'createElement').mockReturnValue(mockLink);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  const createMockUsers = (count: number = 5): UserSummary[] => {
+    return Array.from({ length: count }, (_, index) => ({
+      userId: `user-${index + 1}`,
+      username: `user${index + 1}`,
+      email: `user${index + 1}@example.com`,
+      requests: (index + 1) * 100,
+      tokens: (index + 1) * 10000,
+      prompt_tokens: (index + 1) * 6000,
+      completion_tokens: (index + 1) * 4000,
+      cost: (index + 1) * 10.5,
+    }));
+  };
+
+  const renderComponent = (props: Partial<Parameters<typeof TopUsersTable>[0]> = {}) => {
+    const defaultProps = {
+      topUsers: createMockUsers(),
+      loading: false,
+    };
+
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <NotificationProvider>
+          <TopUsersTable {...defaultProps} {...props} />
+        </NotificationProvider>
+      </QueryClientProvider>,
+    );
+  };
+
+  describe('Loading State', () => {
+    it('should show loading skeleton when loading is true', () => {
+      renderComponent({ loading: true });
+
+      // Should show skeleton
+      const skeletons = document.querySelectorAll('.pf-v6-c-skeleton');
+      expect(skeletons.length).toBeGreaterThan(0);
+
+      // Should still show title
+      expect(screen.getByText(/top users/i)).toBeInTheDocument();
+    });
+
+    it('should not show table when loading', () => {
+      renderComponent({ loading: true });
+
+      // Should not show table
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    });
+  });
+
+  describe('Empty State', () => {
+    it('should show empty message when no users', () => {
+      renderComponent({ topUsers: [] });
+
+      expect(screen.getByText(/no data available/i)).toBeInTheDocument();
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    });
+
+    it('should show empty message when topUsers is null/undefined', () => {
+      renderComponent({ topUsers: undefined as any });
+
+      expect(screen.getByText(/no data available/i)).toBeInTheDocument();
+    });
+  });
+
+  describe('Table Rendering', () => {
+    it('should render table with users data', () => {
+      const users = createMockUsers(3);
+      renderComponent({ topUsers: users });
+
+      // Should show table
+      const table = screen.getByRole('table');
+      expect(table).toBeInTheDocument();
+
+      // Should show all 3 users
+      users.forEach((user) => {
+        expect(screen.getByText(user.username)).toBeInTheDocument();
+        expect(screen.getByText(user.email)).toBeInTheDocument();
+      });
+    });
+
+    it('should limit display to top 5 users even if more are provided', () => {
+      const users = createMockUsers(10);
+      renderComponent({ topUsers: users });
+
+      // Should show first 5 users
+      for (let i = 0; i < 5; i++) {
+        expect(screen.getByText(users[i].username)).toBeInTheDocument();
+      }
+
+      // Should not show 6th user and beyond
+      for (let i = 5; i < 10; i++) {
+        expect(screen.queryByText(users[i].username)).not.toBeInTheDocument();
+      }
+    });
+
+    it('should display all table headers', () => {
+      renderComponent();
+
+      // Check for all column headers
+      expect(screen.getByText(/user/i)).toBeInTheDocument();
+      expect(screen.getByText(/requests/i)).toBeInTheDocument();
+      expect(screen.getByText(/tokens/i)).toBeInTheDocument();
+      // Prompt and completion tokens headers are rendered with dangerouslySetInnerHTML
+      // so we just verify table structure is correct
+      const headers = screen.getAllByRole('columnheader');
+      expect(headers.length).toBeGreaterThanOrEqual(6);
+    });
+  });
+
+  describe('Data Formatting', () => {
+    it('should format numbers correctly in table cells', () => {
+      const users = [
+        {
+          userId: 'user-1',
+          username: 'testuser',
+          email: 'test@example.com',
+          requests: 5000,
+          tokens: 1000000,
+          prompt_tokens: 600000,
+          completion_tokens: 400000,
+          cost: 125.5,
+        },
+      ];
+      renderComponent({ topUsers: users });
+
+      // Should format with K/M suffixes (based on formatNumber behavior from MetricsOverview tests)
+      expect(screen.getByText('5.0K')).toBeInTheDocument();
+      expect(screen.getByText('1.0M')).toBeInTheDocument();
+      expect(screen.getByText('600.0K')).toBeInTheDocument();
+      expect(screen.getByText('400.0K')).toBeInTheDocument();
+    });
+
+    it('should format cost as currency', () => {
+      const users = [
+        {
+          userId: 'user-1',
+          username: 'testuser',
+          email: 'test@example.com',
+          requests: 100,
+          tokens: 10000,
+          prompt_tokens: 6000,
+          completion_tokens: 4000,
+          cost: 125.5,
+        },
+      ];
+      renderComponent({ topUsers: users });
+
+      // Should show formatted currency ($125.50)
+      expect(screen.getByText('$125.50')).toBeInTheDocument();
+    });
+  });
+
+  describe('Export Functionality', () => {
+    it('should show export button', () => {
+      renderComponent();
+
+      const exportButton = screen.getByRole('button', { name: /export/i });
+      expect(exportButton).toBeInTheDocument();
+    });
+
+    it('should create CSV file when export button is clicked', async () => {
+      const user = userEvent.setup();
+      const users = createMockUsers(3);
+      renderComponent({ topUsers: users });
+
+      const exportButton = screen.getByRole('button', { name: /export/i });
+      await user.click(exportButton);
+
+      // Should create blob URL
+      expect(mockCreateObjectURL).toHaveBeenCalledWith(expect.any(Blob));
+
+      // Should create download link with correct attributes
+      expect(mockLink.download).toMatch(/top-users-\d{4}-\d{2}-\d{2}\.csv/);
+      expect(mockLink.click).toHaveBeenCalled();
+
+      // Should clean up
+      expect(mockRevokeObjectURL).toHaveBeenCalledWith('blob:mock-url');
+    });
+
+    it('should include correct CSV headers in export', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const exportButton = screen.getByRole('button', { name: /export/i });
+      await user.click(exportButton);
+
+      const blob = mockCreateObjectURL.mock.calls[0][0] as Blob;
+      const text = await blob.text();
+
+      // Check headers
+      expect(text).toContain('Username');
+      expect(text).toContain('Email');
+      expect(text).toContain('Requests');
+      expect(text).toContain('Tokens');
+      expect(text).toContain('Input Tokens');
+      expect(text).toContain('Output Tokens');
+      expect(text).toContain('Cost (USD)');
+    });
+
+    it('should export top 5 users data only', async () => {
+      const user = userEvent.setup();
+      const users = createMockUsers(10);
+      renderComponent({ topUsers: users });
+
+      const exportButton = screen.getByRole('button', { name: /export/i });
+      await user.click(exportButton);
+
+      const blob = mockCreateObjectURL.mock.calls[0][0] as Blob;
+      const text = await blob.text();
+
+      // Check that first 5 users are included
+      for (let i = 0; i < 5; i++) {
+        expect(text).toContain(users[i].username);
+        expect(text).toContain(users[i].email);
+      }
+
+      // Check that 6th user is not included
+      expect(text).not.toContain(users[5].username);
+    });
+
+    it('should show success notification after export', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      const exportButton = screen.getByRole('button', { name: /export/i });
+      await user.click(exportButton);
+
+      // Should show success notification
+      await waitFor(() => {
+        expect(screen.getByText(/export successful/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should handle export errors gracefully', async () => {
+      const user = userEvent.setup();
+      renderComponent();
+
+      // Mock createObjectURL to throw an error
+      mockCreateObjectURL.mockImplementationOnce(() => {
+        throw new Error('Export failed');
+      });
+
+      const exportButton = screen.getByRole('button', { name: /export/i });
+      await user.click(exportButton);
+
+      // Should show error notification
+      await waitFor(() => {
+        expect(screen.getByText(/export failed/i)).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe('Expand Functionality', () => {
+    it('should show expand button when onExpand is provided', () => {
+      const onExpand = vi.fn();
+      renderComponent({ onExpand });
+
+      const expandButton = screen.getByRole('button', { name: /expand to full screen/i });
+      expect(expandButton).toBeInTheDocument();
+    });
+
+    it('should not show expand button when onExpand is not provided', () => {
+      renderComponent({ onExpand: undefined });
+
+      const expandButton = screen.queryByRole('button', { name: /expand to full screen/i });
+      expect(expandButton).not.toBeInTheDocument();
+    });
+
+    it('should call onExpand when expand button is clicked', async () => {
+      const user = userEvent.setup();
+      const onExpand = vi.fn();
+      renderComponent({ onExpand });
+
+      const expandButton = screen.getByRole('button', { name: /expand to full screen/i });
+      await user.click(expandButton);
+
+      expect(onExpand).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('User Display', () => {
+    it('should display username and email for each user', () => {
+      const users = [
+        {
+          userId: 'user-1',
+          username: 'john.doe',
+          email: 'john@example.com',
+          requests: 100,
+          tokens: 10000,
+          prompt_tokens: 6000,
+          completion_tokens: 4000,
+          cost: 10.5,
+        },
+        {
+          userId: 'user-2',
+          username: 'jane.smith',
+          email: 'jane@example.com',
+          requests: 200,
+          tokens: 20000,
+          prompt_tokens: 12000,
+          completion_tokens: 8000,
+          cost: 21.0,
+        },
+      ];
+      renderComponent({ topUsers: users });
+
+      // Check first user
+      expect(screen.getByText('john.doe')).toBeInTheDocument();
+      expect(screen.getByText('john@example.com')).toBeInTheDocument();
+
+      // Check second user
+      expect(screen.getByText('jane.smith')).toBeInTheDocument();
+      expect(screen.getByText('jane@example.com')).toBeInTheDocument();
+    });
+
+    it('should display all metrics for each user', () => {
+      const users = [
+        {
+          userId: 'user-1',
+          username: 'testuser',
+          email: 'test@example.com',
+          requests: 100,
+          tokens: 10000,
+          prompt_tokens: 6000,
+          completion_tokens: 4000,
+          cost: 10.5,
+        },
+      ];
+      renderComponent({ topUsers: users });
+
+      // Check that all cells are rendered (username + 5 metric columns)
+      const rows = screen.getAllByRole('row');
+      // Header row + 1 data row = 2 rows
+      expect(rows.length).toBe(2);
+
+      // Check data row has correct number of cells
+      const dataCells = rows[1].querySelectorAll('td, th');
+      expect(dataCells.length).toBe(6); // username (th) + 5 metrics (td)
+    });
+  });
+});

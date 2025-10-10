@@ -82,11 +82,14 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
 
     try {
       // Log API access
+      // Use NULL for non-UUID user IDs (e.g., admin API keys)
+      const userId = user.userId && user.userId !== 'admin-api-key' ? user.userId : null;
+
       await fastify.dbUtils.query(
         `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, ip_address, user_agent, metadata)
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
-          user.userId,
+          userId,
           `${request.method}_${request.url.split('?')[0]}`,
           'API_ACCESS',
           null,
@@ -97,6 +100,7 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
             responseTime: reply.elapsedTime,
             method: request.method,
             url: request.url,
+            authenticatedAs: user.userId, // Preserve original userId for tracking
           }),
         ],
       );
@@ -218,13 +222,6 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
                  FROM api_keys ak 
                  JOIN subscriptions s ON ak.subscription_id = s.id 
                  WHERE ak.id = $1`;
-          params = [resourceId];
-          break;
-        case 'usage':
-          query = `SELECT s.user_id 
-                 FROM usage_logs ul 
-                 JOIN subscriptions s ON ul.subscription_id = s.id 
-                 WHERE ul.id = $1`;
           params = [resourceId];
           break;
         default:

@@ -48,8 +48,8 @@ describe('Admin Models Routes', () => {
       expect([401, 403]).toContain(response.statusCode);
       const result = JSON.parse(response.body);
       expect(result.error).toBeDefined();
-      // The actual error structure may vary, so just check that it's an object
-      expect(typeof result.error).toBe('object');
+      // The error can be either a string or an object depending on the error handler
+      expect(['string', 'object']).toContain(typeof result.error);
     });
 
     it('should reject requests without admin permissions for PUT', async () => {

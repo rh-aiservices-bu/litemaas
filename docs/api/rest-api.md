@@ -367,8 +367,8 @@ Response:
   "outputCostPerToken": 0.00006,
   "estimatedCost": 9.75,
   "costBreakdown": {
-    "inputTokens": 75000,
-    "outputTokens": 75000,
+    "promptTokens": 75000,
+    "completionTokens": 75000,
     "inputCost": 2.25,
     "outputCost": 4.50,
     "totalCost": 6.75
@@ -1361,6 +1361,328 @@ Response:
     "modelsRemoved": 1,
     "total": 25
   }
+}
+```
+
+### Admin Usage Analytics (/api/v1/admin/usage)
+
+Comprehensive usage analytics with intelligent caching and multi-dimensional filtering.
+
+**Caching Strategy**:
+
+- Historical days (> 1 day old): Permanent cache, never refreshed
+- Current day: 5-minute TTL, auto-refreshed when stale
+- Data fetched from LiteLLM `/user/daily/activity` endpoint on cache miss
+
+#### POST /api/v1/admin/usage/analytics
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Get comprehensive global usage metrics with trend analysis
+
+```json
+Request:
+{
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31",
+  "userIds": ["uuid1", "uuid2"],      // Optional filter
+  "modelIds": ["gpt-4", "gpt-3.5"],  // Optional filter
+  "providerIds": ["openai", "azure"], // Optional filter
+  "apiKeyIds": ["key1", "key2"]       // Optional filter
+}
+
+Response:
+{
+  "period": {
+    "startDate": "2024-01-01",
+    "endDate": "2024-01-31"
+  },
+  "totalUsers": 150,
+  "activeUsers": 95,
+  "totalRequests": 12500,
+  "totalTokens": {
+    "total": 2500000,
+    "prompt": 1800000,
+    "completion": 700000
+  },
+  "totalCost": {
+    "total": 125.50,
+    "byProvider": {
+      "openai": 100.25,
+      "azure": 25.25
+    },
+    "byModel": {
+      "gpt-4": 90.00,
+      "gpt-3.5-turbo": 35.50
+    }
+  },
+  "successRate": 99.2,
+  "averageLatency": 850,
+  "topMetrics": {
+    "topUser": {
+      "userId": "uuid",
+      "username": "john.doe",
+      "requests": 1500,
+      "cost": 45.50
+    },
+    "topModel": {
+      "modelId": "gpt-4",
+      "modelName": "GPT-4",
+      "requests": 8000,
+      "cost": 90.00
+    }
+  },
+  "trends": {
+    "requestsTrend": {
+      "metric": "requests",
+      "current": 12500,
+      "previous": 10000,
+      "percentageChange": 25.0,
+      "direction": "up"
+    },
+    "costTrend": {
+      "metric": "cost",
+      "current": 125.50,
+      "previous": 110.25,
+      "percentageChange": 13.8,
+      "direction": "up"
+    },
+    "usersTrend": {
+      "metric": "activeUsers",
+      "current": 95,
+      "previous": 87,
+      "percentageChange": 9.2,
+      "direction": "up"
+    }
+  },
+  "dailyUsage": [
+    {
+      "date": "2024-01-01",
+      "requests": 450,
+      "tokens": 90000,
+      "prompt_tokens": 65000,
+      "completion_tokens": 25000,
+      "cost": 4.50
+    }
+  ],
+  "topModels": [
+    {
+      "modelId": "gpt-4",
+      "modelName": "GPT-4",
+      "provider": "openai",
+      "requests": 8000,
+      "tokens": 1600000,
+      "cost": 90.00
+    }
+  ],
+  "topUsers": [
+    {
+      "userId": "uuid",
+      "username": "john.doe",
+      "email": "john@example.com",
+      "role": "user",
+      "requests": 1500,
+      "tokens": 300000,
+      "cost": 45.50
+    }
+  ]
+}
+```
+
+#### GET /api/v1/admin/usage/by-user
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Get usage metrics broken down by user
+
+```
+Query Parameters:
+- startDate: YYYY-MM-DD (required)
+- endDate: YYYY-MM-DD (required)
+- modelIds[]: Array of model IDs (optional)
+- providerIds[]: Array of provider IDs (optional)
+
+Response:
+{
+  "users": [
+    {
+      "userId": "uuid",
+      "username": "john.doe",
+      "email": "john@example.com",
+      "role": "user",
+      "metrics": {
+        "requests": 1500,
+        "tokens": {
+          "total": 300000,
+          "input": 220000,
+          "output": 80000
+        },
+        "cost": 45.50,
+        "lastActive": "2024-01-31T15:30:00Z"
+      }
+    }
+  ],
+  "total": 150
+}
+```
+
+#### GET /api/v1/admin/usage/by-model
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Get usage metrics broken down by model
+
+```
+Query Parameters:
+- startDate: YYYY-MM-DD (required)
+- endDate: YYYY-MM-DD (required)
+- userIds[]: Array of user UUIDs (optional)
+- providerIds[]: Array of provider IDs (optional)
+
+Response:
+{
+  "models": [
+    {
+      "modelId": "gpt-4",
+      "modelName": "GPT-4",
+      "provider": "openai",
+      "metrics": {
+        "requests": 8000,
+        "tokens": {
+          "total": 1600000,
+          "input": 1200000,
+          "output": 400000
+        },
+        "cost": 90.00,
+        "users": 50,
+        "successRate": 99.5
+      }
+    }
+  ],
+  "total": 25
+}
+```
+
+#### GET /api/v1/admin/usage/by-provider
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Get usage metrics broken down by provider
+
+```
+Query Parameters:
+- startDate: YYYY-MM-DD (required)
+- endDate: YYYY-MM-DD (required)
+- userIds[]: Array of user UUIDs (optional)
+- modelIds[]: Array of model IDs (optional)
+
+Response:
+{
+  "providers": [
+    {
+      "provider": "openai",
+      "metrics": {
+        "requests": 10000,
+        "tokens": {
+          "total": 2000000,
+          "input": 1500000,
+          "output": 500000
+        },
+        "cost": 100.25,
+        "models": 15,
+        "successRate": 99.3
+      }
+    }
+  ],
+  "total": 3
+}
+```
+
+#### GET /api/v1/admin/usage/export
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Export comprehensive usage data in CSV or JSON format
+
+```
+Query Parameters:
+- startDate: YYYY-MM-DD (required)
+- endDate: YYYY-MM-DD (required)
+- format: "csv" or "json" (optional, defaults to "csv")
+- userIds[]: Array of user UUIDs (optional)
+- modelIds[]: Array of model IDs (optional)
+- providerIds[]: Array of provider IDs (optional)
+
+Response: File download with appropriate Content-Type and Content-Disposition headers
+Filename format: admin-usage-export-{startDate}-to-{endDate}.{format}
+```
+
+#### POST /api/v1/admin/usage/refresh-today
+
+**Authorization**: Requires `admin` role (write operation)
+
+Force refresh of current day's usage data from LiteLLM
+
+```json
+Response:
+{
+  "message": "Current day usage data refreshed successfully",
+  "refreshedAt": "2024-01-31T16:45:30Z",
+  "status": "success"
+}
+```
+
+#### GET /api/v1/admin/usage/filter-options
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Get available filter options based on actual usage data. Returns models and users that have usage data in the specified date range, including retired models and inactive users with historical data.
+
+```
+Query Parameters:
+- startDate: YYYY-MM-DD (required)
+- endDate: YYYY-MM-DD (required)
+
+Response:
+{
+  "models": [
+    {
+      "modelId": "gpt-4",
+      "modelName": "GPT-4",
+      "provider": "openai",
+      "hasUsage": true
+    }
+  ],
+  "users": [
+    {
+      "userId": "uuid",
+      "username": "john.doe",
+      "email": "john@example.com",
+      "hasUsage": true
+    }
+  ]
+}
+```
+
+#### POST /api/v1/admin/usage/rebuild-cache
+
+**Authorization**: Requires `admin` role (write operation)
+
+Rebuild aggregated cache columns from raw_data. Useful for fixing stale aggregated data when raw data is correct.
+
+```json
+Request (optional):
+{
+  "startDate": "2024-01-01",  // Optional: limit rebuild scope
+  "endDate": "2024-01-31"      // Optional: limit rebuild scope
+}
+
+Response:
+{
+  "message": "Successfully rebuilt 31 cache entries from raw_data",
+  "rebuiltCount": 31,
+  "totalEntries": 31,
+  "status": "success"
 }
 ```
 

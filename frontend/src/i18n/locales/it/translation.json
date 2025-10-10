@@ -1,15 +1,283 @@
 {
+  "admin": {
+    "usage": {
+      "tables": {
+        "models": {
+          "ariaLabel": "Tabella di analisi utilizzo modelli",
+          "caption": "Tabella che mostra l'analisi dell'utilizzo per {{count}} modelli",
+          "columns": {
+            "avgLatency": "Latenza Media",
+            "cost": "Costo",
+            "model": "Modello",
+            "requests": "Richieste",
+            "successRate": "Tasso di Successo",
+            "tokens": "Token",
+            "users": "Utenti"
+          },
+          "empty": {
+            "description": "Nessun dato di utilizzo trovato per il periodo di tempo selezionato",
+            "title": "Nessun dato modello disponibile"
+          },
+          "pagination": {
+            "ariaLabel": "Paginazione tabella analisi modelli"
+          },
+          "successRate": {
+            "high": "Tasso di successo alto (>95%)",
+            "low": "Tasso di successo basso (<90%)",
+            "medium": "Tasso di successo medio (90-95%)"
+          }
+        },
+        "providers": {
+          "ariaLabel": "Tabella di analisi utilizzo provider",
+          "caption": "Tabella che mostra l'analisi dell'utilizzo per {{count}} provider",
+          "columns": {
+            "cost": "Costo",
+            "models": "Modelli",
+            "provider": "Provider",
+            "requests": "Richieste",
+            "successRate": "Tasso di Successo",
+            "tokens": "Token"
+          },
+          "empty": {
+            "description": "Nessun dato di utilizzo trovato per il periodo di tempo selezionato",
+            "title": "Nessun dato provider disponibile"
+          },
+          "pagination": {
+            "ariaLabel": "Paginazione tabella analisi provider"
+          },
+          "successRate": {
+            "high": "Tasso di successo alto (>95%)",
+            "low": "Tasso di successo basso (<90%)",
+            "medium": "Tasso di successo medio (90-95%)"
+          }
+        },
+        "users": {
+          "ariaLabel": "Tabella di analisi utilizzo utenti",
+          "caption": "Tabella che mostra l'analisi dell'utilizzo per {{count}} utenti",
+          "columns": {
+            "cost": "Costo",
+            "lastActive": "Ultima Attività",
+            "requests": "Richieste",
+            "tokens": "Token",
+            "user": "Utente"
+          },
+          "empty": {
+            "description": "Nessun dato di utilizzo trovato per il periodo di tempo selezionato",
+            "title": "Nessun dato utente disponibile"
+          },
+          "pagination": {
+            "ariaLabel": "Paginazione tabella analisi utenti"
+          }
+        }
+      },
+      "timeAgo": {
+        "days": "{{count}} giorno fa",
+        "days_plural": "{{count}} giorni fa",
+        "hours": "{{count}} ora fa",
+        "hours_plural": "{{count}} ore fa",
+        "justNow": "Proprio ora",
+        "minutes": "{{count}} minuto fa",
+        "minutes_plural": "{{count}} minuti fa"
+      }
+    }
+  },
+  "adminUsage": {
+    "accessDenied": "Accesso Negato",
+    "activeUsers": "Utenti Attivi",
+    "apiKeysCleared": "Filtro chiavi API disabilitato - seleziona prima gli utenti",
+    "apiKeysFilterAdjusted": "Il filtro chiavi API potrebbe essere cambiato - controlla le selezioni",
+    "apiKeysFilterAvailable": "Il filtro chiavi API è ora disponibile",
+    "charts": {
+      "modelDistributionAriaLabel": "Grafico di distribuzione utilizzo modelli",
+      "modelUsageTrends": "Trend di Utilizzo Modelli",
+      "modelUsageTrendsAriaDesc": "Un grafico a barre impilate che mostra l'utilizzo di diversi modelli nel tempo. La metrica visualizzata è {{metric}}.",
+      "modelUsageTrendsAriaLabel": "Grafico impilato che mostra i trend di utilizzo modelli nel tempo per {{metric}}",
+      "modelUsageTrendsDescription": "Analisi utilizzo modelli nel tempo",
+      "noDataAvailable": "Nessun dato disponibile per il periodo selezionato",
+      "noModelData": "Nessun dato modello disponibile",
+      "noModelDataExplanation": "Nessun dato di utilizzo modelli disponibile per il periodo di tempo selezionato.",
+      "topUsers": "Utenti Principali",
+      "usageTrends": "Trend di Utilizzo",
+      "usageTrendsDescription": "Trend di utilizzo nel tempo"
+    },
+    "completionTokens": "Token di Completamento",
+    "datePresets": {
+      "30d": "Ultimi 30 giorni",
+      "7d": "Ultimi 7 giorni",
+      "90d": "Ultimi 90 giorni",
+      "custom": "Intervallo personalizzato"
+    },
+    "dateRangeChanged": "Intervallo di date cambiato a {{preset}}",
+    "dateRangeSelect": "Selezione intervallo date",
+    "endDate": "Data fine",
+    "errors": {
+      "export": "Impossibile esportare i dati di utilizzo",
+      "exportDescription": "Impossibile esportare i dati degli utenti principali.",
+      "fetchMetrics": "Impossibile caricare le metriche di utilizzo",
+      "fetchModels": "Impossibile caricare l'analisi modelli",
+      "fetchProviders": "Impossibile caricare l'analisi provider",
+      "fetchUsers": "Impossibile caricare l'analisi utenti",
+      "refresh": "Impossibile aggiornare i dati di oggi"
+    },
+    "export": "Esporta",
+    "exportComplete": "I dati di utilizzo sono stati esportati con successo.",
+    "exportModal": {
+      "csvDescription": "Ideale per fogli di calcolo. Compatibile con Excel, Google Sheets e altri strumenti di analisi dati.",
+      "csvFullName": "(Valori Separati da Virgola)",
+      "dateRange": "Intervallo Date",
+      "downloaded": "I dati di utilizzo sono stati scaricati con successo.",
+      "downloadFile": "Scarica file di esportazione",
+      "export": "Esporta",
+      "exportButton": "Esporta dati di utilizzo",
+      "exporting": "Esportazione in corso...",
+      "format": "Formato",
+      "from": "Da",
+      "jsonDescription": "Ideale per sviluppatori. Formato dati strutturato per accesso programmatico e integrazione API.",
+      "jsonFullName": "(Notazione Oggetti JavaScript)",
+      "success": "Esportazione riuscita",
+      "title": "Esporta Dati di Utilizzo",
+      "to": "A"
+    },
+    "exportStarting": "Avvio esportazione...",
+    "exportSuccess": "Esportazione riuscita",
+    "filters": {
+      "apiKeys": "Filtra per chiavi API",
+      "apiKeysLoadError": "Impossibile caricare le chiavi API",
+      "apiKeysPlaceholder": "Seleziona prima gli utenti per filtrare per chiavi API",
+      "apiKeysPlaceholderActive": "Tutte le chiavi API (clicca per filtrare)",
+      "clearApiKeysFilter": "Cancella filtro chiavi API",
+      "clearModels": "Cancella selezione modelli",
+      "clearUsers": "Cancella selezione utenti",
+      "models": "Filtra per modelli",
+      "modelsPlaceholder": "Tutti i modelli (clicca per filtrare)",
+      "noApiKeysAvailable": "Nessuna chiave API disponibile per gli utenti selezionati",
+      "noApiKeysFound": "Nessuna chiave API trovata per \"{{query}}\"",
+      "noModelsFound": "Nessun modello trovato per \"{{query}}\"",
+      "noUsersFound": "Nessun utente trovato per \"{{query}}\"",
+      "searchModels": "Cerca modelli...",
+      "searchUsers": "Cerca utenti...",
+      "selectedApiKeys": "Chiavi API selezionate",
+      "selectedModels": "Modelli selezionati",
+      "selectedUsers": "Utenti selezionati",
+      "users": "Filtra per utenti",
+      "usersPlaceholder": "Tutti gli utenti (clicca per filtrare)"
+    },
+    "heatmap": {
+      "accessibility": {
+        "cellLabel": "{{dayName}}, {{date}}, {{value}}, {{percent}} della settimana",
+        "heatmapDescription": "Mappa termica che mostra {{metric}} per giorno della settimana attraverso {{weeks}} settimane"
+      },
+      "legend": {
+        "colorScale": "Intensità di utilizzo",
+        "noData": "Nessun dato",
+        "zeroUsage": "Utilizzo zero"
+      },
+      "table": {
+        "viewAsChart": "Visualizza come grafico",
+        "viewAsTable": "Visualizza come tabella",
+        "week": "Settimana"
+      },
+      "tooltip": {
+        "noDataOutsideRange": "Nessun dato (fuori dall'intervallo selezionato)",
+        "percentOfWeek": "{{percent}}% del totale settimanale"
+      }
+    },
+    "loading": "Caricamento metriche...",
+    "loadingModels": "Caricamento dati modelli...",
+    "loadingProviders": "Caricamento dati provider...",
+    "loadingUsers": "Caricamento dati utenti...",
+    "metrics": {
+      "activeUsersAriaLabel": "{{active}} utenti attivi su {{total}} utenti totali",
+      "noChange": "Nessuna variazione",
+      "ofTotalUsers": "di {{total}} totali",
+      "successRateAriaLabel": "Tasso di successo: {{percentage}}%",
+      "totalCostAriaLabel": "Costo totale: ${{amount}}",
+      "totalRequestsAriaLabel": "Richieste totali: {{count}}",
+      "trendLabel": "Trend {{direction}} del {{change}}%"
+    },
+    "metricSelect": "Selezione metrica",
+    "metricsOverview": "Panoramica Metriche",
+    "modelBreakdown": "Analisi Modelli",
+    "modelFilterChanged": "Filtro per {{count}} modello/i",
+    "noData": "Nessun dato disponibile",
+    "noModelData": "Nessun dato modello disponibile",
+    "noModelsFound": "Nessun modello trovato per l'intervallo di date selezionato.",
+    "noProviderData": "Nessun dato provider disponibile",
+    "noProvidersFound": "Nessun provider trovato per l'intervallo di date selezionato.",
+    "noUserData": "Nessun dato utente disponibile",
+    "noUsersFound": "Nessun utente trovato per l'intervallo di date selezionato.",
+    "promptTokens": "Token di Prompt",
+    "providerBreakdown": "Analisi Provider",
+    "refreshing": "Aggiornamento dati di oggi in corso...",
+    "refreshSuccess": "Aggiornamento riuscito",
+    "refreshToday": "Aggiorna Oggi",
+    "requiresAdmin": "Non hai il permesso di visualizzare le analitiche di utilizzo amministratore.",
+    "selectDateRange": "Seleziona un intervallo di date per visualizzare le metriche.",
+    "selectMetric": "Seleziona metrica",
+    "startDate": "Data inizio",
+    "subtitle": "Visualizza e analizza l'utilizzo di tutti gli utenti, modelli e provider",
+    "successRate": "Tasso di Successo",
+    "tabChanged": "Passato alla scheda {{tab}}",
+    "tableHeaders": {
+      "completionTokens": "Token di<br />Completamento",
+      "cost": "Costo",
+      "promptTokens": "Token di<br />Prompt",
+      "requests": "Richieste",
+      "tokens": "Token",
+      "user": "Utente"
+    },
+    "tables": {
+      "topUsers": "Utenti principali per richieste e costo"
+    },
+    "tabs": {
+      "byModels": "Per Modelli",
+      "byProviders": "Per Provider",
+      "byUsers": "Per Utenti",
+      "overview": "Panoramica"
+    },
+    "tabsLabel": "Schede analitiche di utilizzo",
+    "title": "Analitiche di Utilizzo Amministratore",
+    "todayDataRefreshed": "I dati di utilizzo di oggi sono stati aggiornati.",
+    "topUsers": {
+      "csvHeaders": {
+        "costUsd": "Costo (USD)",
+        "email": "Email",
+        "inputTokens": "Token di Input",
+        "outputTokens": "Token di Output",
+        "requests": "Richieste",
+        "tokens": "Token",
+        "username": "Nome Utente"
+      },
+      "export": "Esporta",
+      "exportAriaLabel": "Scarica file CSV utenti principali",
+      "exportSuccess": "Esportazione riuscita",
+      "exportSuccessDescription": "I dati degli utenti principali sono stati scaricati con successo."
+    },
+    "totalCost": "Costo Totale",
+    "totalModels": "Modelli Totali",
+    "totalProviders": "Provider Totali",
+    "totalRequests": "Richieste Totali",
+    "totalUsers": "Utenti Totali",
+    "unknownUser": "Utente Sconosciuto",
+    "unknownUserDescription": "Richieste da chiavi API eliminate o non mappate",
+    "usageHeatmapSubtitle": "Mappa termica di utilizzo per le settimane selezionate",
+    "userBreakdown": "Analisi Utenti",
+    "userFilterChanged": "Filtro per {{count}} utente/i",
+    "weeklyUsagePatterns": "Pattern di Utilizzo Settimanali"
+  },
   "common": {
     "anUnknownErrorOccurred": "Si è verificato un errore sconosciuto",
     "cancel": "Annulla",
     "chart": "Grafico",
     "close": "Chiudi",
+    "closeFullScreen": "Chiudi vista a schermo intero",
     "create": "Crea",
     "dataPoints": "punti dati",
     "date": "Data",
     "day": "Giorno",
     "delete": "Elimina",
     "error": "Errore",
+    "expandToFullScreen": "Espandi a schermo intero",
     "export": "Esporta",
     "features": "Caratteristiche",
     "label": "Etichetta",
@@ -33,8 +301,12 @@
       "apiKeyIsRequired": "La chiave API è obbligatoria",
       "apiKeyOptional": "Chiave API (Opzionale)",
       "areYouSureYouWantToDeleteTheModel": "Sei sicuro di voler eliminare il modello",
+      "authenticationFailed": "Autenticazione fallita",
+      "availableModels": "Modelli disponibili:",
       "backendModelName": "Nome Modello Backend",
       "backendModelNameIsRequired": "Il nome del modello backend è obbligatorio",
+      "cannotContactEndpoint": "Impossibile contattare l'endpoint",
+      "connectionSuccessful": "Connessione riuscita! Puoi creare il modello.",
       "createModel": "Crea Modello",
       "createModelFailed": "Creazione Modello Fallita",
       "createYourFirstModelToGetStarted": "Crea il tuo primo modello per iniziare.",
@@ -65,6 +337,7 @@
       "modelName": "Nome Modello",
       "modelNameCannotContainSpaces": "Il nome del modello non può contenere spazi",
       "modelNameIsRequired": "Il nome del modello è obbligatorio",
+      "modelNotAvailable": "Modello non disponibile a questo endpoint",
       "modelsTable": "Tabella dei modelli",
       "modelUpdated": "Modello Aggiornato",
       "modelUpdatedSuccessfully": "Modello aggiornato con successo",
@@ -99,18 +372,13 @@
         "tpm": "TPM",
         "visionSupport": "Supporto Visione"
       },
+      "testConfiguration": "Testa Configurazione",
+      "testingConfiguration": "Testando configurazione...",
       "thisActionCannotBeUndoneAndWillRemoveTheModelFromLitellm": "Questa azione non può essere annullata e rimuoverà il modello da LiteLLM.",
       "title": "Gestione Modelli",
       "tpmMustBeAtLeast_1": "TPM deve essere almeno 1",
       "tpmTokensPerMinute": "TPM (Token per Minuto)",
-      "updateModelFailed": "Aggiornamento Modello Fallito",
-      "testConfiguration": "Testa Configurazione",
-      "testingConfiguration": "Testando configurazione...",
-      "connectionSuccessful": "Connessione riuscita! Puoi creare il modello.",
-      "cannotContactEndpoint": "Impossibile contattare l'endpoint",
-      "authenticationFailed": "Autenticazione fallita",
-      "modelNotAvailable": "Modello non disponibile a questo endpoint",
-      "availableModels": "Modelli disponibili:"
+      "updateModelFailed": "Aggiornamento Modello Fallito"
     },
     "loading": {
       "description": "Recupero informazioni modelli dal server",
@@ -125,6 +393,7 @@
     "admin": {
       "models": "Gestione Modelli",
       "tools": "Strumenti",
+      "usage": "Analitiche di Utilizzo",
       "users": "Utenti"
     },
     "apiKeys": "Chiavi API",
@@ -882,6 +1151,7 @@
       "chartLegend": "Legenda del grafico con informazioni sulle serie di dati",
       "dataExported": "Dati esportati in {{filename}}",
       "dataTableAlternative": "Alternativa tabella dati",
+      "dismissAnnouncement": "Chiudi annuncio",
       "exportChartData": "Esporta dati del grafico come CSV",
       "legendPattern": "Serie {{name}} mostrata in colore {{color}} con pattern linea {{pattern}}",
       "legendSummary": "La legenda contiene {{count}} elementi: {{items}}",
@@ -899,6 +1169,7 @@
       "skipToNavigation": "Vai alla navigazione",
       "switchedToChart": "Passato alla vista grafico",
       "switchedToTable": "Passato alla vista tabella",
+      "systemAnnouncement": "Annuncio di sistema",
       "tableCaption": "Tabella dati per {{title}}",
       "tableNavigationInstructions": "Usa i tasti freccia per navigare tra righe e colonne, o Tab per spostarti al prossimo elemento interattivo.",
       "viewModeToggle": "Alterna tra vista grafico e tabella"
@@ -916,6 +1187,9 @@
       "save": "Salva",
       "saving": "Salvataggio...",
       "tryAgain": "Riprova"
+    },
+    "avatar": {
+      "userAvatar": "Avatar Utente"
     },
     "errors": {
       "details": "Dettagli",
@@ -950,6 +1224,15 @@
         "url": "{{field}} deve essere un URL valido"
       }
     },
+    "footer": {
+      "appBy": "App di",
+      "forks": "Fork: ",
+      "githubLogo": "Logo GitHub",
+      "noVersion": "nessuna versione",
+      "sourceOnGitHub": "Codice su GitHub",
+      "stars": "Stelle: ",
+      "version": "versione"
+    },
     "language": {
       "chinese": "中文",
       "elvish": "Edhellen",
@@ -962,10 +1245,21 @@
       "selector": "Lingua",
       "spanish": "Español"
     },
+    "navigation": {
+      "mainNavigation": "Navigazione principale",
+      "userMenu": "Menu utente"
+    },
     "notifications": {
       "clear": "Cancella tutto",
+      "clearAll": "Cancella tutto",
+      "drawerActions": "Azioni pannello notifiche",
       "empty": "Nessuna notifica",
+      "markAllRead": "Segna tutte come lette",
       "markRead": "Segna come letto",
+      "noNotificationsDescription": "Al momento non ci sono notifiche.",
+      "noNotificationsFound": "Nessuna notifica trovata",
+      "notificationsLabel": "Notifiche",
+      "notificationSrTitle": "Notifica",
       "title": "Notifiche"
     },
     "pagination": {
@@ -973,8 +1267,11 @@
     },
     "theme": {
       "dark": "Scuro",
+      "darkThemeToggle": "interruttore tema scuro",
       "light": "Chiaro",
-      "toggle": "Cambia tema"
+      "lightThemeToggle": "interruttore tema chiaro",
+      "toggle": "Cambia tema",
+      "toggleGroup": "Gruppo interruttore tema scuro"
     }
   },
   "users": {

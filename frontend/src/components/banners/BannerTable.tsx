@@ -142,7 +142,7 @@ const BannerTable: React.FC<BannerTableProps> = ({
                       <FlexItem>
                         <Content
                           component={ContentVariants.small}
-                          style={{ color: 'var(--pf-v6-global--Color--200)' }}
+                          style={{ color: 'var(--pf-t--global--text--color--subtle)' }}
                         >
                           {banner.content.en
                             ? banner.content.en.substring(0, 60) +
@@ -174,7 +174,9 @@ const BannerTable: React.FC<BannerTableProps> = ({
                           {hasPendingChange && (
                             <Content
                               component={ContentVariants.small}
-                              style={{ color: 'var(--pf-v6-global--warning-color--100)' }}
+                              style={{
+                                color: 'var(--pf-t--global--color--status--warning--default)',
+                              }}
                             >
                               {' (' + t('pages.tools.pending') + ')'}
                             </Content>
@@ -250,7 +252,7 @@ const BannerTable: React.FC<BannerTableProps> = ({
             component={ContentVariants.small}
             style={{
               marginTop: '0.5rem',
-              color: 'var(--pf-v6-global--Color--200)',
+              color: 'var(--pf-t--global--text--color--subtle)',
             }}
           >
             {t('pages.tools.deleteWarning')}

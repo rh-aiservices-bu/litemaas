@@ -41,6 +41,7 @@ import { BarsIcon, MoonIcon, SunIcon, GlobeIcon } from '@patternfly/react-icons'
 import {
   AvatarPlaceholder,
   LogoTitle,
+  LogoTitleWhite,
   starLogo,
   githubLogo,
   forkLogo,
@@ -51,6 +52,7 @@ import {
 import { appConfig } from '../config/navigation';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useConfig } from '../contexts/ConfigContext';
 import { BannerProvider } from '../contexts/BannerContext';
 import { NotificationDrawer, NotificationBadgeButton } from './NotificationDrawer';
 import { AlertToastGroup } from './AlertToastGroup';
@@ -69,6 +71,7 @@ const Layout: React.FC = () => {
   };
   const { unreadCount, toastNotifications, removeToastNotification } = useNotifications();
   const { user, logout } = useAuth();
+  const { config } = useConfig();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
@@ -325,16 +328,31 @@ const Layout: React.FC = () => {
       <DropdownItem isDisabled key="user-info" role="presentation">
         <div style={{ padding: '0.5rem 0' }}>
           <div style={{ fontWeight: 'bold' }}>{user?.name || user?.username}</div>
-          <div style={{ fontSize: '0.875rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+          <div
+            style={{
+              fontSize: 'var(--pf-t--global--font--size--sm)',
+              color: 'var(--pf-t--global--text--color--subtle)',
+            }}
+          >
             {user?.email}
           </div>
           {user?.roles?.includes('admin') && (
-            <div style={{ fontSize: '0.75rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+            <div
+              style={{
+                fontSize: 'var(--pf-t--global--font--size--xs)',
+                color: 'var(--pf-t--global--text--color--subtle)',
+              }}
+            >
               {t('role.admin')}
             </div>
           )}
           {user?.roles?.includes('admin-readonly') && !user?.roles?.includes('admin') && (
-            <div style={{ fontSize: '0.75rem', color: 'var(--pf-t--global--text--color--subtle)' }}>
+            <div
+              style={{
+                fontSize: 'var(--pf-t--global--font--size--xs)',
+                color: 'var(--pf-t--global--text--color--subtle)',
+              }}
+            >
               {t('role.adminReadonly')}
             </div>
           )}
@@ -361,15 +379,15 @@ const Layout: React.FC = () => {
         <ToolbarGroup align={{ default: 'alignEnd' }}>
           {/* Theme Toggle */}
           <ToolbarItem style={{ display: 'flex', alignItems: 'center', height: '40px' }}>
-            <ToggleGroup aria-label="Dark theme toggle group">
+            <ToggleGroup aria-label={t('ui.theme.toggleGroup')}>
               <ToggleGroupItem
-                aria-label="light theme toggle"
+                aria-label={t('ui.theme.lightThemeToggle')}
                 icon={<SunIcon />}
                 isSelected={!isDarkTheme}
                 onClick={() => handleThemeToggle(false)}
               />
               <ToggleGroupItem
-                aria-label="dark theme toggle"
+                aria-label={t('ui.theme.darkThemeToggle')}
                 icon={<MoonIcon />}
                 isSelected={isDarkTheme}
                 onClick={() => handleThemeToggle(true)}
@@ -455,7 +473,7 @@ const Layout: React.FC = () => {
                       (userToggleRef as React.MutableRefObject<any>).current = node;
                     }
                   }}
-                  aria-label="User menu"
+                  aria-label={t('ui.navigation.userMenu')}
                   aria-expanded={isUserDropdownOpen}
                   aria-haspopup="menu"
                   variant="plain"
@@ -475,7 +493,7 @@ const Layout: React.FC = () => {
                     padding: '0',
                   }}
                 >
-                  <Avatar src={AvatarPlaceholder} alt="User Avatar" size="sm" />
+                  <Avatar src={AvatarPlaceholder} alt={t('ui.avatar.userAvatar')} size="sm" />
                 </MenuToggle>
               )}
             >
@@ -508,7 +526,7 @@ const Layout: React.FC = () => {
             <BarsIcon />
           </Button>
           <img
-            src={LogoTitle}
+            src={isDarkTheme ? LogoTitleWhite : LogoTitle}
             alt={appConfig.appTitle}
             style={{
               height: '40px',
@@ -528,7 +546,7 @@ const Layout: React.FC = () => {
         isFilled
         style={{ display: 'flex', flexDirection: 'column', height: '100%' }}
       >
-        <nav role="navigation" aria-label="Main navigation">
+        <nav role="navigation" aria-label={t('ui.navigation.mainNavigation')}>
           {PageNav}
         </nav>
         <aside
@@ -536,10 +554,12 @@ const Layout: React.FC = () => {
           style={{ marginTop: 'auto', padding: '1rem', textAlign: 'center' }}
         >
           <Content component={ContentVariants.small}>
-            App by{' '}
+            {t('ui.footer.appBy')}{' '}
             <a href="http://red.ht/cai-team" target="_blank" rel="noreferrer">
-              red.ht/cai-team
+              red.ht/cai team
             </a>
+            <br />
+            {t('ui.footer.version')} {config?.version || t('ui.footer.noVersion')}
             <br />
             <Flex direction={{ default: 'column' }} style={{ width: '100%', alignItems: 'center' }}>
               <FlexItem style={{ marginBottom: '0rem' }}>
@@ -554,15 +574,15 @@ const Layout: React.FC = () => {
                         alignItems: 'center',
                         justifyContent: 'center',
                         marginTop: '0.5rem',
-                        fontSize: '0.75rem',
+                        fontSize: 'var(--pf-t--global--font--size--xs)',
                       }}
                     >
                       <img
                         src={isDarkTheme ? githubLogoWhite : githubLogo}
-                        alt="GitHub Logo"
+                        alt={t('ui.footer.githubLogo')}
                         style={{ height: '20px', marginRight: '0.5rem' }}
                       />
-                      Source on GitHub
+                      {t('ui.footer.sourceOnGitHub')}
                     </Content>
                   </FlexItem>
                 </Flex>
@@ -582,7 +602,7 @@ const Layout: React.FC = () => {
                           }}
                           aria-hidden="true"
                         />
-                        <span className="pf-v6-screen-reader">Stars: </span>
+                        <span className="pf-v6-screen-reader">{t('ui.footer.stars')}</span>
                       </>
                     )}
                     {repoStars !== null ? `${repoStars}` : ''}
@@ -600,7 +620,7 @@ const Layout: React.FC = () => {
                           }}
                           aria-hidden="true"
                         />
-                        <span className="pf-v6-screen-reader">Forks: </span>
+                        <span className="pf-v6-screen-reader">{t('ui.footer.forks')}</span>
                       </>
                     )}
                     {repoForks !== null ? `${repoForks}` : ''}

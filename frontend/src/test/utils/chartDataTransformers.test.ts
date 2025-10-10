@@ -12,15 +12,57 @@ import { UsageMetrics } from '../../services/usage.service';
 
 // Mock data for testing
 const mockDailyUsage: UsageMetrics['dailyUsage'] = [
-  { date: '2024-01-01', requests: 100, tokens: 50000, cost: 5.5 },
-  { date: '2024-01-03', requests: 200, tokens: 100000, cost: 11.0 }, // Intentionally out of order
-  { date: '2024-01-02', requests: 150, tokens: 75000, cost: 8.25 },
+  {
+    date: '2024-01-01',
+    requests: 100,
+    tokens: 50000,
+    prompt_tokens: 30000,
+    completion_tokens: 20000,
+    cost: 5.5,
+  },
+  {
+    date: '2024-01-03',
+    requests: 200,
+    tokens: 100000,
+    prompt_tokens: 60000,
+    completion_tokens: 40000,
+    cost: 11.0,
+  }, // Intentionally out of order
+  {
+    date: '2024-01-02',
+    requests: 150,
+    tokens: 75000,
+    prompt_tokens: 45000,
+    completion_tokens: 30000,
+    cost: 8.25,
+  },
 ];
 
 const mockTopModels: UsageMetrics['topModels'] = [
-  { name: 'GPT-4', requests: 450, tokens: 450000, cost: 22.5 },
-  { name: 'GPT-3.5', requests: 350, tokens: 350000, cost: 7.0 },
-  { name: 'Claude', requests: 200, tokens: 200000, cost: 8.0 },
+  {
+    name: 'GPT-4',
+    requests: 450,
+    tokens: 450000,
+    prompt_tokens: 270000,
+    completion_tokens: 180000,
+    cost: 22.5,
+  },
+  {
+    name: 'GPT-3.5',
+    requests: 350,
+    tokens: 350000,
+    prompt_tokens: 210000,
+    completion_tokens: 140000,
+    cost: 7.0,
+  },
+  {
+    name: 'Claude',
+    requests: 200,
+    tokens: 200000,
+    prompt_tokens: 120000,
+    completion_tokens: 80000,
+    cost: 8.0,
+  },
 ];
 
 const mockHourlyUsage: UsageMetrics['hourlyUsage'] = [
@@ -108,7 +150,14 @@ describe('chartDataTransformers', () => {
 
     it('handles invalid date strings gracefully', () => {
       const invalidDateData: UsageMetrics['dailyUsage'] = [
-        { date: 'invalid-date', requests: 100, tokens: 50000, cost: 5.5 },
+        {
+          date: 'invalid-date',
+          requests: 100,
+          tokens: 50000,
+          prompt_tokens: 30000,
+          completion_tokens: 20000,
+          cost: 5.5,
+        },
       ];
 
       const result = transformDailyUsageToChartData(invalidDateData);
@@ -156,7 +205,14 @@ describe('chartDataTransformers', () => {
     it('rounds percentages to one decimal place', () => {
       const totalRequests = 333;
       const modelsData: UsageMetrics['topModels'] = [
-        { name: 'Model A', requests: 100, tokens: 10000, cost: 5.0 },
+        {
+          name: 'Model A',
+          requests: 100,
+          tokens: 10000,
+          prompt_tokens: 6000,
+          completion_tokens: 4000,
+          cost: 5.0,
+        },
       ];
 
       const result = transformModelBreakdownToChartData(modelsData, totalRequests);
@@ -187,9 +243,11 @@ describe('chartDataTransformers', () => {
 
       const result = transformModelBreakdownToChartData(incompleteModels, 100);
 
+      // The transformer filters out models with 0 or undefined requests (line 122 in chartDataTransformers.ts)
+      // So only the second model (with 100 requests) should be in the result
+      expect(result.modelBreakdown).toHaveLength(1);
       expect(result.modelBreakdown[0].name).toBe('Unknown Model');
-      expect(result.modelBreakdown[0].requests).toBe(0);
-      expect(result.modelBreakdown[1].name).toBe('Unknown Model');
+      expect(result.modelBreakdown[0].requests).toBe(100); // Second model has 100 requests
     });
 
     it('creates proper donut chart data structure', () => {

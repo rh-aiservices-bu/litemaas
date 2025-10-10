@@ -1,29 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
+import { renderWithAuth, mockUser, mockAdminUser, mockAdminReadonlyUser } from '../test-utils';
 import userEvent from '@testing-library/user-event';
 import AdminModelsPage from '../../pages/AdminModelsPage';
-import React from 'react';
 
 // Mock translation
-vi.mock('react-i18next', () => ({
-  useTranslation: () => ({
-    t: (key: string) => key,
-  }),
-}));
-
-// Mock AuthContext
-const mockUseAuth = vi.fn();
-vi.mock('../../contexts/AuthContext', () => ({
-  useAuth: () => mockUseAuth(),
-}));
-
-// Mock NotificationContext
-const mockAddNotification = vi.fn();
-vi.mock('../../contexts/NotificationContext', () => ({
-  useNotifications: () => ({
-    addNotification: mockAddNotification,
-  }),
-}));
+vi.mock('react-i18next', async () => {
+  const actual = await vi.importActual('react-i18next');
+  return {
+    ...actual,
+    useTranslation: () => ({
+      t: (key: string) => key,
+    }),
+  };
+});
 
 // Mock services
 vi.mock('../../services/models.service', () => ({
@@ -46,11 +36,15 @@ const mockUseQuery = vi.fn();
 const mockUseMutation = vi.fn();
 const mockUseQueryClient = vi.fn();
 
-vi.mock('react-query', () => ({
-  useQuery: (...args: any[]) => mockUseQuery(...args),
-  useMutation: (...args: any[]) => mockUseMutation(...args),
-  useQueryClient: () => mockUseQueryClient(),
-}));
+vi.mock('react-query', async () => {
+  const actual = await vi.importActual('react-query');
+  return {
+    ...actual,
+    useQuery: (...args: any[]) => mockUseQuery(...args),
+    useMutation: (...args: any[]) => mockUseMutation(...args),
+    useQueryClient: () => mockUseQueryClient(),
+  };
+});
 
 // Mock utils
 vi.mock('../../utils/flairColors', () => ({
@@ -60,20 +54,9 @@ vi.mock('../../utils/flairColors', () => ({
   ]),
 }));
 
-// Simple test wrapper
-const TestWrapper = ({ children }: { children: React.ReactNode }) => {
-  return <div>{children}</div>;
-};
-
 describe('AdminModelsPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-
-    // Default mocks
-    mockUseAuth.mockReturnValue({
-      user: { id: 'admin-user', roles: ['admin'] },
-      isAuthenticated: true,
-    });
 
     mockUseQuery.mockReturnValue({
       data: {
@@ -112,36 +95,21 @@ describe('AdminModelsPage', () => {
 
   describe('Authorization Tests', () => {
     it('should show access denied for users without admin roles', () => {
-      mockUseAuth.mockReturnValue({
-        user: { id: 'user', roles: ['user'] },
-        isAuthenticated: true,
-      });
-
-      render(<AdminModelsPage />, { wrapper: TestWrapper });
+      renderWithAuth(<AdminModelsPage />, { user: mockUser });
 
       expect(screen.getByText(/models.permissions.accessDenied/)).toBeInTheDocument();
       expect(screen.getByText(/models.permissions.noPermission/)).toBeInTheDocument();
     });
 
     it('should show content for admin users', () => {
-      mockUseAuth.mockReturnValue({
-        user: { id: 'admin', roles: ['admin'] },
-        isAuthenticated: true,
-      });
-
-      render(<AdminModelsPage />, { wrapper: TestWrapper });
+      renderWithAuth(<AdminModelsPage />, { user: mockAdminUser });
 
       expect(screen.queryByText(/models.permissions.accessDenied/)).not.toBeInTheDocument();
       expect(screen.getByText(/models.admin.createModel/)).toBeInTheDocument();
     });
 
     it('should show content but no create button for adminReadonly users', () => {
-      mockUseAuth.mockReturnValue({
-        user: { id: 'admin-readonly', roles: ['adminReadonly'] },
-        isAuthenticated: true,
-      });
-
-      render(<AdminModelsPage />, { wrapper: TestWrapper });
+      renderWithAuth(<AdminModelsPage />, { user: mockAdminReadonlyUser });
 
       expect(screen.queryByText(/models.permissions.accessDenied/)).not.toBeInTheDocument();
       expect(screen.queryByText(/models.admin.createModel/)).not.toBeInTheDocument();
@@ -156,7 +124,7 @@ describe('AdminModelsPage', () => {
         error: null,
       });
 
-      render(<AdminModelsPage />, { wrapper: TestWrapper });
+      renderWithAuth(<AdminModelsPage />, { user: mockAdminUser });
 
       expect(screen.getByText(/models.loading.title/)).toBeInTheDocument();
     });
@@ -169,7 +137,7 @@ describe('AdminModelsPage', () => {
         error,
       });
 
-      render(<AdminModelsPage />, { wrapper: TestWrapper });
+      renderWithAuth(<AdminModelsPage />, { user: mockAdminUser });
 
       expect(screen.getByText(/models.admin.errorLoadingModels/)).toBeInTheDocument();
     });
@@ -177,7 +145,7 @@ describe('AdminModelsPage', () => {
 
   describe('Model Display', () => {
     it('should display models table with data', async () => {
-      render(<AdminModelsPage />, { wrapper: TestWrapper });
+      renderWithAuth(<AdminModelsPage />, { user: mockAdminUser });
 
       await waitFor(() => {
         expect(screen.getByText('GPT-4')).toBeInTheDocument();
@@ -203,7 +171,7 @@ describe('AdminModelsPage', () => {
         error: null,
       });
 
-      render(<AdminModelsPage />, { wrapper: TestWrapper });
+      renderWithAuth(<AdminModelsPage />, { user: mockAdminUser });
 
       expect(screen.getByText(/models.admin.noModelsFound/)).toBeInTheDocument();
     });
@@ -213,7 +181,7 @@ describe('AdminModelsPage', () => {
     it('should open create modal when create button clicked', async () => {
       const user = userEvent.setup();
 
-      render(<AdminModelsPage />, { wrapper: TestWrapper });
+      renderWithAuth(<AdminModelsPage />, { user: mockAdminUser });
 
       await waitFor(() => {
         expect(screen.getByText(/models.admin.createModel/)).toBeInTheDocument();
@@ -230,7 +198,7 @@ describe('AdminModelsPage', () => {
     it('should handle form validation', async () => {
       const user = userEvent.setup();
 
-      render(<AdminModelsPage />, { wrapper: TestWrapper });
+      renderWithAuth(<AdminModelsPage />, { user: mockAdminUser });
 
       const createButton = screen.getByRole('button', { name: /models.admin.createModel/ });
       await user.click(createButton);
@@ -245,7 +213,7 @@ describe('AdminModelsPage', () => {
     it('should handle cost conversion in form', async () => {
       const user = userEvent.setup();
 
-      render(<AdminModelsPage />, { wrapper: TestWrapper });
+      renderWithAuth(<AdminModelsPage />, { user: mockAdminUser });
 
       const createButton = screen.getByRole('button', { name: /models.admin.createModel/ });
       await user.click(createButton);
@@ -281,7 +249,7 @@ describe('AdminModelsPage', () => {
         error: null,
       });
 
-      render(<AdminModelsPage />, { wrapper: TestWrapper });
+      renderWithAuth(<AdminModelsPage />, { user: mockAdminUser });
 
       await waitFor(() => {
         expect(screen.getByText(/models.admin.table.showMore/)).toBeInTheDocument();
@@ -291,7 +259,7 @@ describe('AdminModelsPage', () => {
 
   describe('Feature Display', () => {
     it('should show model features as labels', async () => {
-      render(<AdminModelsPage />, { wrapper: TestWrapper });
+      renderWithAuth(<AdminModelsPage />, { user: mockAdminUser });
 
       await waitFor(() => {
         expect(screen.getByText('GPT-4')).toBeInTheDocument();

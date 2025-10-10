@@ -471,7 +471,7 @@ const SubscriptionsPage: React.FC = () => {
             <>
               <Content
                 component={ContentVariants.h4}
-                style={{ color: 'var(--pf-v6-global--Color--200)', marginBottom: '1rem' }}
+                style={{ color: 'var(--pf-t--global--text--color--subtle)', marginBottom: '1rem' }}
               >
                 {t('pages.subscriptions.detailsTitle')}
               </Content>

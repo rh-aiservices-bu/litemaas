@@ -45,10 +45,11 @@ describe('HomePage', () => {
     it('should render all four navigation cards', () => {
       render(<HomePage />);
 
-      expect(screen.getByRole('heading', { level: 3, name: 'Models' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { level: 3, name: 'Subscriptions' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { level: 3, name: 'API Keys' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { level: 3, name: 'Usage' })).toBeInTheDocument();
+      // Card headings are h2 elements (level 2), not h3
+      expect(screen.getByRole('heading', { level: 2, name: 'Models' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: 'Subscriptions' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: 'API Keys' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: 'Usage' })).toBeInTheDocument();
     });
 
     it('should display card descriptions', () => {
@@ -165,14 +166,13 @@ describe('HomePage', () => {
     it('should have proper heading hierarchy', () => {
       render(<HomePage />);
 
-      // Should have one h1 and four h3 headings
-      // Note: The heading order violation is an implementation issue in the HomePage component
-      // that should be fixed in the actual component, not the test
+      // Should have one h1 and multiple h2 headings for cards
+      // The component uses h2 for card headings, which is proper hierarchy after h1
       const h1 = screen.getByRole('heading', { level: 1 });
-      const h3s = screen.getAllByRole('heading', { level: 3 });
+      const h2s = screen.getAllByRole('heading', { level: 2 });
 
       expect(h1).toBeInTheDocument();
-      expect(h3s).toHaveLength(5);
+      expect(h2s).toHaveLength(5); // 5 cards with h2 headings
     });
 
     it('should have proper landmarks and regions', () => {
@@ -203,11 +203,11 @@ describe('HomePage', () => {
       const links = screen.getAllByRole('link');
       expect(links).toHaveLength(5);
 
-      // Cards should have accessible headings
-      expect(screen.getByRole('heading', { level: 3, name: 'Models' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { level: 3, name: 'Subscriptions' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { level: 3, name: 'API Keys' })).toBeInTheDocument();
-      expect(screen.getByRole('heading', { level: 3, name: 'Usage' })).toBeInTheDocument();
+      // Cards should have accessible headings (h2, not h3)
+      expect(screen.getByRole('heading', { level: 2, name: 'Models' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: 'Subscriptions' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: 'API Keys' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: 'Usage' })).toBeInTheDocument();
     });
 
     it('should provide sufficient color contrast', () => {

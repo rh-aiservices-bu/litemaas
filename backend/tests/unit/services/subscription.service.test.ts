@@ -517,12 +517,48 @@ describe('SubscriptionService', () => {
     });
   });
 
-  // incrementUsage method doesn't exist in the actual service - removing these tests
-  // The actual service doesn't have this method
+  describe('getSubscription', () => {
+    it('should retrieve subscription by ID', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+      mockFastify.dbUtils!.queryOne = vi.fn().mockResolvedValue(mockSubscription);
 
-  // getSubscriptionPricing method doesn't exist in the actual service - removing these tests
-  // The actual service doesn't have this method
+      const result = await service.getSubscription('sub-123', 'user-123');
 
-  // Removing all duplicate test blocks that don't match the actual service implementation
-  // These duplicate tests were causing failures
+      expect(result).toBeDefined();
+      expect(result?.id).toBe('sub-123');
+    });
+
+    it('should return null for non-existent subscription', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+      mockFastify.dbUtils!.queryOne = vi.fn().mockResolvedValue(null);
+
+      const result = await service.getSubscription('non-existent', 'user-123');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('resetQuotas', () => {
+    it('should reset quotas for all subscriptions', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+      mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 5 });
+
+      const result = await service.resetQuotas();
+
+      expect(result).toBe(5);
+      expect(mockFastify.dbUtils!.query).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE subscriptions'),
+        expect.anything(),
+      );
+    });
+
+    it('should reset quotas for specific user', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+      mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 2 });
+
+      const result = await service.resetQuotas('user-123');
+
+      expect(result).toBe(2);
+    });
+  });
 });

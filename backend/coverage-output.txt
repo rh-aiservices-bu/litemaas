@@ -1,0 +1,264 @@
+
+> @litemaas/backend@workspace test:coverage
+> vitest run --coverage
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+
+ RUN  v1.6.1 /home/gmoutier/Dev/repos/rh-aiservices-bu/litemaas/backend
+      Coverage enabled with v8
+
+ ✓ tests/unit/services/admin-usage-stats.service.test.ts  (40 tests) 72ms
+ ✓ tests/unit/services/team.service.test.ts  (54 tests) 1520ms
+ ✓ tests/unit/utils/errors.test.ts  (61 tests) 25ms
+ ✓ tests/unit/services/api-key.service.test.ts  (44 tests) 832ms
+ ✓ tests/unit/middleware/error-handler.test.ts  (23 tests) 24ms
+ ✓ tests/integration/error-flows.test.ts  (26 tests) 697ms
+ ✓ tests/unit/middleware/auth-hooks.test.ts  (23 tests) 21ms
+ ✓ tests/unit/plugins/subscription-hooks.test.ts  (38 tests) 3772ms
+ ✓ tests/unit/services/banner.service.test.ts  (31 tests) 1938ms
+ ✓ tests/integration/routes/banners.test.ts  (39 tests) 1838ms
+ ✓ tests/unit/services/subscription.service.test.ts  (24 tests) 1528ms
+ ✓ tests/unit/services/admin.service.test.ts  (25 tests) 1175ms
+ ✓ tests/security/security.test.ts  (19 tests | 2 skipped) 7085ms
+ ✓ tests/unit/utils/error-helpers.test.ts  (34 tests) 56ms
+ ✓ tests/unit/services/daily-usage-cache-manager.test.ts  (22 tests) 21ms
+ ✓ tests/unit/services/rbac.service.test.ts  (41 tests) 491ms
+ ✓ tests/integration/admin-usage.test.ts  (44 tests | 3 skipped) 4104ms
+ ✓ tests/unit/services/token.service.test.ts  (37 tests) 29ms
+ ✓ tests/integration/routes/subscriptions.test.ts  (23 tests) 1087ms
+ ✓ tests/unit/services/oauth.service.test.ts  (28 tests) 21ms
+stdout | tests/integration/routes/admin-models.test.ts > Admin Models Routes > Authorization > should reject requests without admin permissions for POST
+{
+  raw: {
+    res: Response {
+      _events: [Object: null prototype],
+      _eventsCount: 1,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: true,
+      _last: false,
+      chunkedEncoding: false,
+      shouldKeepAlive: true,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: true,
+      sendDate: true,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      strictContentLength: false,
+      _contentLength: 75,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      _header: 'HTTP/1.1 403 Forbidden\r\n' +
+        "Content-Security-Policy: default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';object-src 'none';script-src-attr 'none';upgrade-insecure-requests\r\n" +
+        'Cross-Origin-Opener-Policy: same-origin\r\n' +
+        'Cross-Origin-Resource-Policy: same-origin\r\n' +
+        'Origin-Agent-Cluster: ?1\r\n' +
+        'Referrer-Policy: no-referrer\r\n' +
+        'Strict-Transport-Security: max-age=15552000; includeSubDomains\r\n' +
+        'X-Content-Type-Options: nosniff\r\n' +
+        'X-DNS-Prefetch-Control: off\r\n' +
+        'X-Download-Options: noopen\r\n' +
+        'X-Frame-Options: SAMEORIGIN\r\n' +
+        'X-Permitted-Cross-Domain-Policies: none\r\n' +
+        'X-XSS-Protection: 0\r\n' +
+        'vary: Origin\r\n' +
+        'access-control-allow-origin: http://localhost:3000,http://localhost:3001\r\n' +
+        'access-control-allow-credentials: true\r\n' +
+        'x-ratelimit-limit: 1000\r\n' +
+        'x-ratelimit-remaining: 999\r\n' +
+        'x-ratelimit-reset: 300\r\n' +
+        'content-type: application/json; charset=utf-8\r\n' +
+        'content-length: 75\r\n' +
+        'Date: Thu, 09 Oct 2025 20:31:52 GMT\r\n' +
+        'Connection: keep-alive\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      req: [Request],
+      _sent100: false,
+      _expect_continue: false,
+      _lightMyRequest: [Object],
+      _promiseCallback: true,
+      statusCode: 403,
+      statusMessage: 'Forbidden',
+      Symbol(shapeMode): false,
+      Symbol(kCapture): false,
+      Symbol(kBytesWritten): 0,
+      Symbol(kNeedDrain): false,
+      Symbol(corked): 0,
+      Symbol(kChunkedBuffer): [],
+      Symbol(kChunkedLength): 0,
+      Symbol(kSocket): [Writable],
+      Symbol(kOutHeaders): [Object: null prototype],
+      Symbol(errored): null,
+      Symbol(kHighWaterMark): 65536,
+      Symbol(kRejectNonStandardBodyWrites): false
+    },
+    req: Request {
+      _events: [Object],
+      _readableState: [ReadableState],
+      _maxListeners: undefined,
+      url: '/api/v1/admin/models',
+      aborted: false,
+      httpVersionMajor: 1,
+      httpVersionMinor: 1,
+      httpVersion: '1.1',
+      method: 'POST',
+      headers: [Object],
+      rawHeaders: [Array],
+      socket: [MockSocket],
+      _lightMyRequest: [Object],
+      _eventsCount: 2,
+      Symbol(shapeMode): true,
+      Symbol(kCapture): false
+    }
+  },
+  headers: {
+    'content-security-policy': "default-src 'self';style-src 'self' 'unsafe-inline';script-src 'self';img-src 'self' data: https:;base-uri 'self';font-src 'self' https: data:;form-action 'self';frame-ancestors 'self';object-src 'none';script-src-attr 'none';upgrade-insecure-requests",
+    'cross-origin-opener-policy': 'same-origin',
+    'cross-origin-resource-policy': 'same-origin',
+    'origin-agent-cluster': '?1',
+    'referrer-policy': 'no-referrer',
+    'strict-transport-security': 'max-age=15552000; includeSubDomains',
+    'x-content-type-options': 'nosniff',
+    'x-dns-prefetch-control': 'off',
+    'x-download-options': 'noopen',
+    'x-frame-options': 'SAMEORIGIN',
+    'x-permitted-cross-domain-policies': 'none',
+    'x-xss-protection': '0',
+    vary: 'Origin',
+    'access-control-allow-origin': 'http://localhost:3000,http://localhost:3001',
+    'access-control-allow-credentials': 'true',
+    'x-ratelimit-limit': '1000',
+    'x-ratelimit-remaining': '999',
+    'x-ratelimit-reset': '300',
+    'content-type': 'application/json; charset=utf-8',
+    'content-length': '75',
+    date: 'Thu, 09 Oct 2025 20:31:52 GMT',
+    connection: 'keep-alive'
+  },
+  statusCode: 403,
+  statusMessage: 'Forbidden',
+  trailers: {},
+  cookies: [Getter],
+  rawPayload: <Buffer 7b 22 65 72 72 6f 72 22 3a 22 46 6f 72 62 69 64 64 65 6e 22 2c 22 6d 65 73 73 61 67 65 22 3a 22 5c 22 6d 65 73 73 61 67 65 5c 22 20 69 73 20 72 65 71 ... 25 more bytes>,
+  payload: '{"error":"Forbidden","message":"\\"message\\" is required!","statusCode":403}',
+  body: '{"error":"Forbidden","message":"\\"message\\" is required!","statusCode":403}',
+  json: [Function: parseJsonPayload],
+  stream: [Function: streamPayload]
+}
+
+ ✓ tests/integration/routes/admin-models.test.ts  (18 tests) 748ms
+stdout | tests/integration/admin-api-keys.test.ts > Admin API Keys Endpoint > Response Structure > should order results by username and then by key name
+API keys retrieved: [
+  { username: 'dev-user', name: 'undefined' },
+  { username: 'admin', name: 'undefined' }
+]
+
+ ✓ tests/integration/admin-api-keys.test.ts  (13 tests) 509ms
+ ✓ tests/unit/services/litellm.service.test.ts  (15 tests) 15026ms
+ ✓ tests/unit/services/model-sync.service.test.ts  (14 tests) 12ms
+ ✓ tests/integration/routes/api-keys.test.ts  (13 tests) 7426ms
+
+ Test Files  25 passed (25)
+      Tests  744 passed | 5 skipped (749)
+   Start at  16:31:15
+   Duration  61.86s (transform 833ms, setup 0ms, collect 6.55s, tests 50.06s, environment 5ms, prepare 1.77s)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   69.44 |    68.11 |   62.83 |   69.44 |                   
+ src               |    64.4 |       40 |   66.66 |    64.4 |                   
+  app.ts           |   85.39 |       50 |     100 |   85.39 | 27-38,43          
+  index.ts         |       0 |        0 |       0 |       0 | 1-29              
+ src/config        |   25.86 |        0 |       0 |   25.86 |                   
+  database.ts      |       0 |        0 |       0 |       0 | 1-25              
+  index.ts         |       0 |        0 |       0 |       0 | 1-3               
+  litellm.ts       |     100 |      100 |     100 |     100 |                   
+  oauth.ts         |       0 |        0 |       0 |       0 | 1-15              
+ src/middleware    |   59.87 |    62.92 |      80 |   59.87 |                   
+  auth-hooks.ts    |   54.97 |    69.04 |     100 |   54.97 | ...29-330,343-382 
+  error-handler.ts |   65.34 |    57.44 |      75 |   65.34 | ...32,334,343-366 
+ src/plugins       |   68.56 |    78.51 |   70.58 |   68.56 |                   
+  auth.ts          |   52.66 |    64.86 |     100 |   52.66 | ...51-360,366-374 
+  database.ts      |   46.24 |    57.89 |      80 |   46.24 | ...87-196,216-223 
+  env.ts           |     100 |      100 |     100 |     100 |                   
+  index.ts         |     100 |      100 |     100 |     100 |                   
+  logging.ts       |    78.7 |       80 |     100 |    78.7 | ...81,85-88,92-95 
+  oauth.ts         |   65.78 |      100 |   16.66 |   65.78 | ...58,61-62,65-73 
+  rate-limit.ts    |      58 |    66.66 |   66.66 |      58 | 25-43,49-61,68-77 
+  rbac.ts          |   66.85 |      100 |     100 |   66.85 | ...38-258,293-314 
+  session.ts       |   69.95 |      100 |   33.33 |   69.95 | ...82-194,201-211 
+  ...tion-hooks.ts |   91.99 |    93.44 |     100 |   91.99 | ...74-480,486-490 
+  swagger.ts       |   58.82 |    33.33 |      20 |   58.82 | ...71-118,131-132 
+ src/routes        |   60.87 |    52.87 |   47.11 |   60.87 |                   
+  admin-models.ts  |   73.96 |    54.83 |     100 |   73.96 | ...20-329,372-406 
+  admin-usage.ts   |   75.63 |    64.86 |      80 |   75.63 | ...27-670,704-743 
+  admin.ts         |   57.39 |    85.71 |      40 |   57.39 | ...80-293,314-341 
+  api-keys.ts      |   66.14 |    47.05 |   41.66 |   66.14 | ...11-637,713-820 
+  auth-user.ts     |   42.05 |      100 |   33.33 |   42.05 | 26-56,73-103      
+  auth.ts          |   50.24 |      100 |    12.5 |   50.24 | ...30-347,388-408 
+  banners.ts       |   57.47 |    52.17 |    90.9 |   57.47 | ...40-565,596-604 
+  config.ts        |   62.26 |    33.33 |      50 |   62.26 | 15-16,32-49       
+  health.ts        |   41.41 |      100 |   11.11 |   41.41 | ...60-312,341-392 
+  index.ts         |    89.7 |      100 |      50 |    89.7 | 58-64             
+  models.ts        |   51.49 |    39.13 |   33.33 |   51.49 | ...24-836,858-901 
+  subscriptions.ts |   86.65 |    30.76 |      80 |   86.65 | ...47-649,676-708 
+  usage.ts         |   53.75 |      100 |      20 |   53.75 | ...04-833,860-887 
+  users.ts         |   44.23 |      100 |   16.66 |   44.23 | ...85-465,492-534 
+ src/schemas       |   86.35 |       50 |   33.33 |   86.35 |                   
+  admin-models.ts  |     100 |      100 |     100 |     100 |                   
+  admin-usage.ts   |     100 |      100 |     100 |     100 |                   
+  admin.ts         |     100 |      100 |     100 |     100 |                   
+  api-keys.ts      |     100 |      100 |     100 |     100 |                   
+  auth.ts          |     100 |      100 |     100 |     100 |                   
+  banners.ts       |     100 |      100 |     100 |     100 |                   
+  common.ts        |   81.35 |      100 |      50 |   81.35 | 49-59             
+  config.ts        |     100 |      100 |     100 |     100 |                   
+  health.ts        |     100 |      100 |     100 |     100 |                   
+  index.ts         |     100 |      100 |     100 |     100 |                   
+  models.ts        |     100 |      100 |     100 |     100 |                   
+  subscriptions.ts |     100 |      100 |     100 |     100 |                   
+  usage.ts         |     100 |      100 |     100 |     100 |                   
+  users.ts         |       0 |        0 |       0 |       0 | 1-293             
+ src/services      |   70.89 |    67.44 |   68.75 |   70.89 |                   
+  ...ts.service.ts |   88.06 |    63.84 |   94.11 |   88.06 | ...2565,2599-2605 
+  admin.service.ts |     100 |    96.42 |     100 |     100 | 198               
+  ...ey.service.ts |   69.47 |    64.39 |    82.6 |   69.47 | ...1842,1905-1913 
+  ...er.service.ts |   80.09 |    81.13 |   92.85 |   80.09 | ...15-320,363-436 
+  base.service.ts  |   66.85 |    58.53 |   40.74 |   66.85 | ...62-669,679-690 
+  ...he-manager.ts |   99.08 |    62.33 |     100 |   99.08 | 169-173           
+  ...am.service.ts |   54.05 |    47.05 |   77.77 |   54.05 | ...95-247,253-295 
+  ...on.service.ts |   29.48 |        0 |       0 |   29.48 | ...32,38-43,49-77 
+  ...lm.service.ts |   43.78 |       72 |   57.14 |   43.78 | ...1351,1354-1358 
+  ...nc.service.ts |   55.29 |    58.06 |      60 |   55.29 | ...18-638,644-670 
+  oauth.service.ts |   49.02 |    57.57 |      40 |   49.02 | ...26-432,544-559 
+  rbac.service.ts  |   80.97 |    88.46 |      60 |   80.97 | ...87-494,534-535 
+  ...on.service.ts |   25.06 |      100 |   16.66 |   25.06 | ...15-336,339-343 
+  ...on.service.ts |   65.32 |    50.71 |   71.42 |   65.32 | ...1873-1877,1882 
+  team.service.ts  |   92.03 |     78.1 |     100 |   92.03 | ...1220,1291-1293 
+  token.service.ts |   97.33 |    91.42 |     100 |   97.33 | 193-198           
+  ...ts.service.ts |   36.53 |      100 |   28.57 |   36.53 | ...51-452,473-489 
+ src/utils         |   82.96 |    84.07 |   72.85 |   82.96 |                   
+  error-helpers.ts |    95.6 |    83.16 |   89.65 |    95.6 | ...60,464-465,614 
+  errors.ts        |     100 |     97.4 |     100 |     100 | 64                
+  ...sync.utils.ts |   51.77 |    43.47 |     100 |   51.77 | ...69-178,219-320 
+  ...tion.utils.ts |   53.39 |      100 |       0 |   53.39 | ...72-180,188-220 
+ src/validators    |   28.83 |      100 |       0 |   28.83 |                   
+  ....validator.ts |   28.83 |      100 |       0 |   28.83 | ...77-320,325-378 
+ tests             |   81.66 |      100 |       0 |   81.66 |                   
+  setup.ts         |   81.66 |      100 |       0 |   81.66 | ...72,76-78,82-84 
+ tests/helpers     |      80 |       25 |      50 |      80 |                   
+  test-app.ts      |      80 |       25 |      50 |      80 | ...31-36,46-47,50 
+ tests/integration |     100 |       50 |     100 |     100 |                   
+  setup.ts         |     100 |       50 |     100 |     100 | 26,49             
+-------------------|---------|----------|---------|---------|-------------------

@@ -99,6 +99,24 @@ export const VictoryTheme = {
   grayscale: { name: 'grayscale' },
 };
 
+// Mock createContainer for interactive tooltips
+export const createContainer = (...types: string[]) => {
+  return ({ children, ...props }: any) =>
+    React.createElement('div', {
+      'data-testid': `victory-container-${types.join('-')}`,
+      'data-container-types': types.join(','),
+      'data-props': JSON.stringify(props),
+      children,
+    });
+};
+
+// Mock getCustomTheme for custom chart themes
+export const getCustomTheme = (colorTheme: any, variantTheme: any) => ({
+  colorTheme,
+  variantTheme,
+  name: 'custom-theme',
+});
+
 // Export default Victory object
 export default {
   VictoryChart,
@@ -113,4 +131,6 @@ export default {
   VictoryScatter,
   VictoryContainer,
   VictoryTheme,
+  createContainer,
+  getCustomTheme,
 };

@@ -263,13 +263,13 @@ LiteMaaS uses PatternFly 6, which provides WCAG-compliant color tokens:
 
 ```css
 /* High contrast text colors */
-.pf-v6-u-color-100  /* Dark text on light backgrounds */
-.pf-v6-u-color-200  /* Medium contrast text */
+.pf-t-u-color-100  /* Dark text on light backgrounds */
+.pf-t-u-color-200  /* Medium contrast text */
 
 /* Status colors with proper contrast */
-.pf-v6-u-success-color-100
-.pf-v6-u-warning-color-100
-.pf-v6-u-danger-color-100
+.pf-t-u-success-color-100
+.pf-t-u-warning-color-100
+.pf-t-u-danger-color-100
 ```
 
 ## Focus Management Testing
@@ -469,7 +469,7 @@ Builds will fail if:
 ```css
 /* Instead of custom colors, use PatternFly tokens */
 .text-primary {
-  color: var(--pf-v6-global--Color--100); /* High contrast text */
+  color: var(--pf-t--global--text--color--regular); /* High contrast text */
 }
 ```
 

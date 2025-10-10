@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig({
+  root: path.resolve(__dirname),
   plugins: [react()],
   // Cache configuration moved to root level
   cacheDir: 'node_modules/.vitest',
@@ -13,6 +14,8 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: ['./src/test/setup.ts'],
+    // Exclude investigation/research test files
+    exclude: ['**/node_modules/**', '**/dist/**', '**/__investigations__/**'],
 
     // Enhanced environment configuration for better async and AbortSignal support
     env: {
@@ -70,7 +73,7 @@ export default defineConfig({
     },
     coverage: {
       provider: 'v8',
-      reporter: ['default'],
+      reporter: ['text', 'html', 'lcov'],
       exclude: [
         'node_modules/',
         'dist/',
@@ -80,6 +83,7 @@ export default defineConfig({
         'src/types/',
         'src/vite-env.d.ts',
         'src/test/',
+        'scripts/',
       ],
       thresholds: {
         global: {

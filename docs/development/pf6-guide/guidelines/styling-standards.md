@@ -66,8 +66,10 @@ Essential CSS and styling rules for PatternFly React applications.
 PatternFly 6 introduces a new semantic design token system. The token structure follows this pattern:
 
 ```
---pf-v6--[scope]--[component]--[property]--[concept]--[variant]--[state]
+--pf-t--[scope]--[component]--[property]--[concept]--[variant]--[state]
 ```
+
+**⚠️ CRITICAL**: PatternFly 6 tokens use `--pf-t--` prefix (with `-t-`), NOT `--pf-v6-`!
 
 - **Scope**: `global` or `chart`
 - **Component**: `background`, `text`, `icon`, `border`, `box-shadow`, `motion`, `spacer`
@@ -78,7 +80,7 @@ PatternFly 6 introduces a new semantic design token system. The token structure 
 
 ### Token Layer Hierarchy
 
-1. **Semantic Tokens** (✅ Use These): `--pf-v6-global--text--color--regular`
+1. **Semantic Tokens** (✅ Use These): `--pf-t--global--text--color--regular`
 2. **Base Tokens** (❌ Avoid): Lower-level tokens ending in numbers
 3. **Palette Tokens** (❌ Avoid): Raw color values
 
@@ -88,21 +90,36 @@ PatternFly 6 introduces a new semantic design token system. The token structure 
 - **Fuzzy Matching**: Use VS Code plugin for token discovery (type `pf6` then relevant keywords)
 - **Example Process**: For disabled state → `pf6` + `back` (background) + `dis` (disabled)
 
+### Critical Token Distinction
+
+```css
+/* ❌ WRONG - Old PF5-style tokens with CamelCase (DO NOT USE) */
+--pf-v6-global--Color--200
+--pf-v6-global--BackgroundColor--100
+--pf-v6-global--FontSize--sm
+
+/* ✅ CORRECT - PF6 tokens with -t- prefix and kebab-case */
+--pf-t--global--text--color--subtle
+--pf-t--global--background--color--100
+--pf-t--global--font--size--sm
+```
+
 ### Migration from Global Variables
 
-- **OLD**: `--pf-v5-global--FontSize--lg`
-- **NEW**: `--pf-v6-global--font--size--lg`
+- **OLD (PF5)**: `--pf-v5-global--FontSize--lg` or `--pf-v6-global--FontSize--lg`
+- **NEW (PF6)**: `--pf-t--global--font--size--lg`
 - **React Tokens**: `global_FontSize_lg` becomes `global_font_size_lg`
 
 ```css
 .custom-component {
-  /* ✅ Correct - Use semantic design tokens */
-  color: var(--pf-v6-global--text--color--regular);
-  background: var(--pf-v6-global--background--color--primary--default);
-  margin: var(--pf-v6-global--spacer--md);
+  /* ✅ Correct - Use semantic design tokens with -t- prefix */
+  color: var(--pf-t--global--text--color--regular);
+  background: var(--pf-t--global--background--color--primary--default);
+  margin: var(--pf-t--global--spacer--md);
 
-  /* ❌ Wrong - Don't use old global variables or base tokens */
+  /* ❌ Wrong - Don't use old global variables or PF5-style tokens */
   /* color: var(--pf-v5-global--Color--100); */
+  /* color: var(--pf-v6-global--Color--200); // OLD STYLE */
   /* color: var(--pf-global--Color--dark-100); */
   /* margin: 16px; */
 }
@@ -112,44 +129,161 @@ PatternFly 6 introduces a new semantic design token system. The token structure 
 
 ```css
 /* Text Colors */
---pf-v6-global--text--color--regular
---pf-v6-global--text--color--subtle
---pf-v6-global--text--color--disabled
---pf-v6-global--text--color--brand
---pf-v6-global--text--color--on-brand
+--pf-t--global--text--color--regular
+--pf-t--global--text--color--subtle
+--pf-t--global--text--color--disabled
+--pf-t--global--text--color--brand
+--pf-t--global--text--color--on-brand
 
 /* Background Colors */
---pf-v6-global--background--color--primary--default
---pf-v6-global--background--color--primary--hover
---pf-v6-global--background--color--secondary--default
---pf-v6-global--background--color--disabled
+--pf-t--global--background--color--primary--default
+--pf-t--global--background--color--primary--hover
+--pf-t--global--background--color--secondary--default
+--pf-t--global--background--color--disabled
+--pf-t--global--background--color--100
+--pf-t--global--background--color--200
 
 /* Status Colors */
---pf-v6-global--color--status--success
---pf-v6-global--color--status--warning
---pf-v6-global--color--status--danger
---pf-v6-global--color--status--info
+--pf-t--global--color--status--success--default
+--pf-t--global--color--status--warning--default
+--pf-t--global--color--status--danger--default
+--pf-t--global--color--status--info--default
+
+/* Brand Colors */
+--pf-t--global--color--brand--default
 
 /* Spacing */
---pf-v6-global--spacer--xs
---pf-v6-global--spacer--sm
---pf-v6-global--spacer--md
---pf-v6-global--spacer--lg
---pf-v6-global--spacer--xl
+--pf-t--global--spacer--xs
+--pf-t--global--spacer--sm
+--pf-t--global--spacer--md
+--pf-t--global--spacer--lg
+--pf-t--global--spacer--xl
 
 /* Typography */
---pf-v6-global--font--family--body
---pf-v6-global--font--family--heading
---pf-v6-global--font--size--body--default
---pf-v6-global--font--size--heading--xl
---pf-v6-global--font--weight--body--default
---pf-v6-global--font--weight--heading--default
+--pf-t--global--font--family--body
+--pf-t--global--font--family--heading
+--pf-t--global--font--size--xs
+--pf-t--global--font--size--sm
+--pf-t--global--font--size--body--default
+--pf-t--global--font--size--heading--xl
+--pf-t--global--font--weight--body--default
+--pf-t--global--font--weight--heading--default
+--pf-t--global--font--weight--bold
 
 /* Borders */
---pf-v6-global--border--color--default
---pf-v6-global--border--width--regular
---pf-v6-global--border--radius--small
+--pf-t--global--border--color--default
+--pf-t--global--border--color--200
+--pf-t--global--border--width--regular
+--pf-t--global--border--radius--sm
+--pf-t--global--border--radius--small
 ```
+
+## PatternFly 6 Token Migration Reference
+
+### Complete Token Mapping Table
+
+Use this table when migrating from legacy PF5-style tokens to correct PF6 tokens:
+
+| Legacy Token (❌ OLD - Don't Use)      | PF6 Token (✅ Correct)                            | Usage                         |
+| -------------------------------------- | ------------------------------------------------- | ----------------------------- |
+| `--pf-v6-global--Color--100`           | `--pf-t--global--text--color--regular`            | Primary text color            |
+| `--pf-v6-global--Color--200`           | `--pf-t--global--text--color--subtle`             | Secondary/subtle text         |
+| `--pf-v6-global--Color--300`           | `--pf-t--global--text--color--subtle`             | Tertiary text                 |
+| `--pf-v6-global--Color--400`           | `--pf-t--global--text--color--subtle`             | Quaternary text               |
+| `--pf-v6-global--BackgroundColor--100` | `--pf-t--global--background--color--100`          | White/primary background      |
+| `--pf-v6-global--BackgroundColor--200` | `--pf-t--global--background--color--200`          | Grey/secondary background     |
+| `--pf-v6-global--BorderColor--100`     | `--pf-t--global--border--color--default`          | Default border color          |
+| `--pf-v6-global--BorderColor--200`     | `--pf-t--global--border--color--200`              | Secondary border color        |
+| `--pf-v6-global--BorderRadius--sm`     | `--pf-t--global--border--radius--sm`              | Small border radius           |
+| `--pf-v6-global--FontSize--xs`         | `--pf-t--global--font--size--xs`                  | Extra small font              |
+| `--pf-v6-global--FontSize--sm`         | `--pf-t--global--font--size--sm`                  | Small font                    |
+| `--pf-v6-global--FontWeight--bold`     | `--pf-t--global--font--weight--bold`              | Bold font weight              |
+| `--pf-v6-global--spacer--xs`           | `--pf-t--global--spacer--xs`                      | Extra small spacing           |
+| `--pf-v6-global--spacer--sm`           | `--pf-t--global--spacer--sm`                      | Small spacing                 |
+| `--pf-v6-global--spacer--md`           | `--pf-t--global--spacer--md`                      | Medium spacing                |
+| `--pf-v6-global--success-color--100`   | `--pf-t--global--color--status--success--default` | Success status color          |
+| `--pf-v6-global--warning-color--100`   | `--pf-t--global--color--status--warning--default` | Warning status color          |
+| `--pf-v6-global--danger-color--100`    | `--pf-t--global--color--status--danger--default`  | Danger status color           |
+| `--pf-v6-global--danger-color--200`    | `--pf-t--global--color--status--danger--default`  | Danger status color (variant) |
+| `--pf-v6-global--primary-color--100`   | `--pf-t--global--color--brand--default`           | Primary brand color           |
+
+### Real-World Migration Examples
+
+Based on actual code migrations in this project:
+
+```typescript
+// ❌ OLD - Legacy PF5-style tokens (DO NOT USE)
+style={{
+  color: 'var(--pf-v6-global--Color--200)',
+  backgroundColor: 'var(--pf-v6-global--BackgroundColor--100)',
+  fontSize: 'var(--pf-v6-global--FontSize--sm)',
+  fontWeight: 'var(--pf-v6-global--FontWeight--bold)',
+}}
+
+// ✅ CORRECT - PF6 tokens with -t- prefix
+style={{
+  color: 'var(--pf-t--global--text--color--subtle)',
+  backgroundColor: 'var(--pf-t--global--background--color--100)',
+  fontSize: 'var(--pf-t--global--font--size--sm)',
+  fontWeight: 'var(--pf-t--global--font--weight--bold)',
+}}
+```
+
+```typescript
+// ❌ OLD - Status color tokens
+style={{ color: 'var(--pf-v6-global--success--color--100)' }}
+style={{ color: 'var(--pf-v6-global--danger--color--100)' }}
+
+// ✅ CORRECT - PF6 status tokens
+style={{ color: 'var(--pf-t--global--color--status--success--default)' }}
+style={{ color: 'var(--pf-t--global--color--status--danger--default)' }}
+```
+
+### Common Migration Patterns
+
+#### Pattern 1: Text Colors
+
+```css
+/* OLD → NEW */
+var(--pf-v6-global--Color--200)  → var(--pf-t--global--text--color--subtle)
+var(--pf-v6-global--Color--100)  → var(--pf-t--global--text--color--regular)
+```
+
+#### Pattern 2: Background Colors
+
+```css
+/* OLD → NEW */
+var(--pf-v6-global--BackgroundColor--100) → var(--pf-t--global--background--color--100)
+var(--pf-v6-global--BackgroundColor--200) → var(--pf-t--global--background--color--200)
+```
+
+#### Pattern 3: Typography
+
+```css
+/* OLD → NEW */
+var(--pf-v6-global--FontSize--{xs|sm|md|lg})    → var(--pf-t--global--font--size--{xs|sm|md|lg})
+var(--pf-v6-global--FontWeight--{bold|normal})  → var(--pf-t--global--font--weight--{bold|normal})
+```
+
+#### Pattern 4: Borders and Spacing
+
+```css
+/* OLD → NEW */
+var(--pf-v6-global--BorderColor--100)    → var(--pf-t--global--border--color--default)
+var(--pf-v6-global--BorderRadius--sm)    → var(--pf-t--global--border--radius--sm)
+var(--pf-v6-global--spacer--{xs|sm|md})  → var(--pf-t--global--spacer--{xs|sm|md})
+```
+
+### Migration Checklist
+
+When writing or updating components:
+
+- [ ] ✅ Use `--pf-t--` prefix (NOT `--pf-v6-`)
+- [ ] ✅ Use kebab-case for all token segments (NOT CamelCase)
+- [ ] ✅ Use semantic token names (`text--color--subtle` NOT `Color--200`)
+- [ ] ✅ Use `--default` suffix for status colors (`--status--success--default`)
+- [ ] ✅ Test in both light and dark themes
+- [ ] ✅ Verify tokens exist in browser DevTools
 
 ### Dark Theme Support
 
@@ -184,10 +318,10 @@ If you encounter `--pf-v6-temp--dev--tbd` tokens (displayed as hot pink), these 
 - **No 1:1 Mapping**: Choose tokens based on semantic meaning, not old variable names
 
 ```css
-/* ✅ If overrides are absolutely necessary, use semantic tokens */
+/* ✅ If overrides are absolutely necessary, use semantic tokens with -t- prefix */
 .custom-override {
-  background: var(--pf-v6-global--background--color--primary--hover);
-  border-color: var(--pf-v6-global--border--color--default);
+  background: var(--pf-t--global--background--color--primary--hover);
+  border-color: var(--pf-t--global--border--color--default);
 }
 
 /* ❌ Never override PatternFly component internals */

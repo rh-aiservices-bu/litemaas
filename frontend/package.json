@@ -5,7 +5,9 @@
   "private": true,
   "scripts": {
     "dev": "vite",
+    "dev:logged": "mkdir -p ../logs && vite | tee ../logs/frontend.log",
     "build": "tsc && vite build",
+    "logs": "tail -f ../logs/frontend.log",
     "preview": "vite preview",
     "test": "vitest run",
     "test:unit": "vitest run src/test/components",

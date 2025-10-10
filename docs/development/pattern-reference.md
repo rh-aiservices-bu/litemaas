@@ -294,6 +294,111 @@ export const UserProfilePage: React.FC = () => {
 };
 ```
 
+### React Context Pattern
+
+**Use Cases**: Global state like authentication, configuration, notifications. Use React Query for server state instead.
+
+```typescript
+// ✅ CORRECT - ConfigContext pattern with proper typing
+// File: contexts/ConfigContext.tsx
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { configService } from '../services/config.service';
+
+interface AppConfig {
+  usageCacheTtlMinutes: number;
+  maxExportRows: number;
+  features: {
+    adminAnalytics: boolean;
+    modelTesting: boolean;
+  };
+}
+
+interface ConfigContextValue {
+  config: AppConfig | null;
+  isLoading: boolean;
+  error: Error | null;
+  refetch: () => Promise<void>;
+}
+
+const ConfigContext = createContext<ConfigContextValue | undefined>(undefined);
+
+export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [config, setConfig] = useState<AppConfig | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  const fetchConfig = async () => {
+    try {
+      setIsLoading(true);
+      const data = await configService.getConfig();
+      setConfig(data);
+      setError(null);
+    } catch (err) {
+      setError(err as Error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchConfig();
+  }, []);
+
+  const value: ConfigContextValue = {
+    config,
+    isLoading,
+    error,
+    refetch: fetchConfig,
+  };
+
+  return <ConfigContext.Provider value={value}>{children}</ConfigContext.Provider>;
+};
+
+// Custom hook with proper error handling
+export const useConfig = (): ConfigContextValue => {
+  const context = useContext(ConfigContext);
+  if (context === undefined) {
+    throw new Error('useConfig must be used within a ConfigProvider');
+  }
+  return context;
+};
+
+// ✅ CORRECT - Usage in components
+const MyComponent: React.FC = () => {
+  const { config, isLoading } = useConfig();
+
+  const staleTime = config?.usageCacheTtlMinutes
+    ? config.usageCacheTtlMinutes * 60 * 1000
+    : 5 * 60 * 1000;
+
+  const { data } = useQuery({
+    queryKey: ['usage'],
+    queryFn: fetchUsage,
+    staleTime, // Use config value
+  });
+
+  return <div>{/* ... */}</div>;
+};
+
+// ❌ WRONG - Storing server data in Context instead of React Query
+const DataContext = createContext<{ users: User[] }>({ users: [] });
+// Use React Query for server state instead!
+
+// ❌ WRONG - Missing error handling in useContext hook
+export const useConfig = () => {
+  return useContext(ConfigContext); // Missing undefined check!
+};
+```
+
+**When to Use**:
+
+- ✅ Authentication state (AuthContext)
+- ✅ Application configuration (ConfigContext)
+- ✅ UI notifications (NotificationContext)
+- ✅ Theme/locale settings
+- ❌ Server data (use React Query)
+- ❌ Form state (use local state)
+
 ### Form Handling Pattern
 
 ```typescript
@@ -468,6 +573,41 @@ export const UsersTable: React.FC = () => {
   );
 };
 ```
+
+### Chart Component Pattern
+
+**Shared Utilities**: Use `chartFormatters.ts`, `chartConstants.ts`, and `chartAccessibility.ts` for all chart components.
+
+```typescript
+// ✅ CORRECT - Using shared utilities
+import {
+  formatYTickByMetric,
+  formatXTickWithSkipping,
+  calculateLeftPaddingByMetric,
+} from '../../utils/chartFormatters';
+import { CHART_PADDING, GRID_STYLES, AXIS_STYLES } from '../../utils/chartConstants';
+import { generateChartAriaDescription } from '../../utils/chartAccessibility';
+
+// Use formatters instead of duplicating logic
+<ChartAxis
+  tickFormat={(value) => formatYTickByMetric(value, metricType)}
+  style={{
+    tickLabels: { fontSize: AXIS_STYLES.tickLabelFontSize },
+    grid: { stroke: GRID_STYLES.stroke, strokeDasharray: GRID_STYLES.strokeDasharray },
+  }}
+/>
+
+// Use unique SVG filter IDs to avoid conflicts
+<filter id="tooltip-shadow-myChart" ... />
+
+// ❌ WRONG - Duplicating formatting logic
+const formatYTick = (value: number) => {
+  if (value >= 1000) return `${(value / 1000).toFixed(0)}K`;
+  return value.toString();
+};
+```
+
+**Full Guide**: See [`chart-components-guide.md`](./chart-components-guide.md)
 
 ## Error Handling Patterns
 
@@ -834,6 +974,247 @@ Before marking any task complete:
 8. ✅ Accessibility attributes included
 9. ✅ Error scenarios tested
 10. ✅ Lint and build pass
+
+## Admin Analytics Patterns
+
+### Day-by-Day Incremental Caching Pattern
+
+**Use Case**: Fetch and cache large datasets efficiently by processing one day at a time.
+
+**Implementation**: `AdminUsageStatsService` + `DailyUsageCacheManager`
+
+```typescript
+// ✅ CORRECT - Day-by-day incremental caching with intelligent TTL
+export class AdminUsageStatsService extends BaseService {
+  async getAnalytics(filters: AdminUsageFilters): Promise<AnalyticsResponse> {
+    const { startDate, endDate } = filters;
+
+    // Process each day in the date range
+    const allDaysData = [];
+    for (let date = startDate; date <= endDate; date = addDays(date, 1)) {
+      // Check if day is cached
+      const cached = await this.cacheManager.getCachedDay(date);
+
+      if (cached && !this.isDayStale(cached, date)) {
+        // Use cached data
+        allDaysData.push(cached);
+      } else {
+        // Fetch from LiteLLM
+        const rawData = await this.liteLLMService.getDailyActivity(date);
+
+        // Enrich with user mappings
+        const enrichedData = await this.enrichWithUserData(rawData);
+
+        // Cache with appropriate TTL
+        const isCurrentDay = isSameDay(date, new Date());
+        await this.cacheManager.cacheDay(date, enrichedData, !isCurrentDay);
+
+        allDaysData.push(enrichedData);
+      }
+    }
+
+    // Aggregate all days
+    return this.aggregateData(allDaysData, filters);
+  }
+
+  private isDayStale(cached: CachedDay, date: Date): boolean {
+    const isCurrentDay = isSameDay(date, new Date());
+    if (!isCurrentDay) return false; // Historical data never stale
+
+    const FIVE_MINUTES = 5 * 60 * 1000;
+    return (Date.now() - cached.updated_at.getTime()) > FIVE_MINUTES;
+  }
+}
+```
+
+**Benefits**:
+- Scales to any date range without memory issues
+- Historical data cached permanently, never refetched
+- Current day has 5-minute TTL for near-real-time data
+- Graceful handling of missing days
+
+**Database Schema**:
+
+```sql
+CREATE TABLE daily_usage_cache (
+    date DATE PRIMARY KEY,
+    raw_data JSONB NOT NULL,
+    enriched_data JSONB,
+    is_complete BOOLEAN DEFAULT true,  -- false for current day
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+---
+
+### Filter Cascade Pattern
+
+**Use Case**: Dependent filters where one filter's options depend on another filter's selection.
+
+**Implementation**: `ApiKeyFilterSelect` depends on `UserFilterSelect`
+
+```typescript
+// ✅ CORRECT - Cascading filter with dynamic options
+export const ApiKeyFilterSelect: React.FC = ({ selectedUserIds, onChange }) => {
+  const { config } = useConfig();
+  const staleTime = config?.usageCacheTtlMinutes ? config.usageCacheTtlMinutes * 60 * 1000 : 5 * 60 * 1000;
+
+  // Fetch API keys, filtered by selected users
+  const { data: apiKeys } = useQuery({
+    queryKey: ['admin', 'apiKeys', selectedUserIds],
+    queryFn: () => adminUsageService.getFilterOptions({ userIds: selectedUserIds }),
+    staleTime,
+    enabled: selectedUserIds.length > 0, // Only fetch if users selected
+  });
+
+  // Clear selection when user filter changes
+  useEffect(() => {
+    onChange([]);  // Reset API key selection
+  }, [selectedUserIds, onChange]);
+
+  return (
+    <Select
+      isDisabled={selectedUserIds.length === 0}
+      placeholderText={selectedUserIds.length === 0
+        ? t('filters.selectUsersFirst')
+        : t('filters.selectApiKeys')}
+      selections={selectedValue}
+      onSelect={handleSelect}
+    >
+      {apiKeys?.map(key => (
+        <SelectOption key={key.id} value={key.id}>
+          {key.name}
+        </SelectOption>
+      ))}
+    </Select>
+  );
+};
+```
+
+**Key Aspects**:
+- `enabled` prevents unnecessary queries
+- Auto-reset dependent filter when parent changes
+- User feedback for filter dependencies
+- Query key includes parent filter for proper caching
+
+---
+
+### ConfigContext + React Query Integration Pattern
+
+**Use Case**: Dynamic cache TTL from backend configuration instead of hardcoded values.
+
+**Implementation**: ConfigContext provides backend config to React Query hooks
+
+```typescript
+// ✅ CORRECT - ConfigContext providing dynamic staleTime
+// 1. Backend exposes configuration
+// backend/src/routes/config.ts
+app.get('/api/v1/config', async (request, reply) => {
+  return {
+    usageCacheTtlMinutes: parseInt(process.env.USAGE_CACHE_TTL_MINUTES || '5'),
+    maxExportRows: parseInt(process.env.MAX_EXPORT_ROWS || '10000'),
+    version: process.env.npm_package_version,
+  };
+});
+
+// 2. Frontend ConfigContext fetches and provides config
+// contexts/ConfigContext.tsx
+export const ConfigProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [config, setConfig] = useState<AppConfig | null>(null);
+
+  useEffect(() => {
+    configService.getConfig().then(setConfig);
+  }, []);
+
+  return <ConfigContext.Provider value={{ config, isLoading: !config }}>
+    {children}
+  </ConfigContext.Provider>;
+};
+
+// 3. Components use config for dynamic staleTime
+// pages/AdminUsagePage.tsx
+const { config } = useConfig();
+const staleTime = config?.usageCacheTtlMinutes
+  ? config.usageCacheTtlMinutes * 60 * 1000
+  : 5 * 60 * 1000; // Fallback
+
+const { data } = useQuery({
+  queryKey: ['admin', 'usage', filters],
+  queryFn: () => adminUsageService.getAnalytics(filters),
+  staleTime, // Dynamic from backend!
+});
+```
+
+**Benefits**:
+- Single source of truth (backend environment variable)
+- No hardcoded cache durations in frontend
+- Easy tuning without redeployment
+- Consistent TTL across all admin usage queries
+
+---
+
+### Admin-Only Route Pattern
+
+**Use Case**: Endpoints accessible only to admin/adminReadonly roles.
+
+```typescript
+// ✅ CORRECT - Admin route with permission check
+fastify.post(
+  '/api/v1/admin/usage/analytics',
+  {
+    schema: {
+      tags: ['Admin Usage Analytics'],
+      security: [{ bearerAuth: [] }],
+      body: AdminUsageFiltersSchema,
+      response: {
+        200: AnalyticsResponseSchema,
+        403: ErrorResponseSchema,
+      },
+    },
+    // Use requirePermission for granular control
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:usage')],
+  },
+  async (request, reply) => {
+    const filters = request.body;
+    const analytics = await adminUsageStatsService.getAnalytics(filters);
+    return { data: analytics };
+  },
+);
+
+// ❌ WRONG - Manual role checking in handler
+fastify.post('/api/v1/admin/usage/analytics', async (request, reply) => {
+  if (!request.user.roles.includes('admin')) {
+    throw ApplicationError.forbidden('Admin access required');
+  }
+  // ... handler logic
+});
+```
+
+**RBAC Middleware**:
+
+```typescript
+// plugins/rbac.ts
+fastify.decorate('requirePermission', (permission: string) => {
+  return async (request: FastifyRequest, reply: FastifyReply) => {
+    const user = request.user;
+
+    // Check permission based on role
+    if (permission === 'admin:usage') {
+      const hasAccess = user.roles.includes('admin') || user.roles.includes('adminReadonly');
+      if (!hasAccess) {
+        throw ApplicationError.forbidden('Admin access required', 'admin');
+      }
+    }
+
+    // Check for write-only operations
+    if (permission === 'admin:write') {
+      if (!user.roles.includes('admin')) {
+        throw ApplicationError.forbidden('Admin write access required', 'admin');
+      }
+    }
+  };
+});
+```
 
 ---
 

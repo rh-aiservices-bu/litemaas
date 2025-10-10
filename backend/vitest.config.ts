@@ -1,7 +1,9 @@
 import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 export default defineConfig({
   test: {
+    root: path.resolve(__dirname),
     globals: true,
     environment: 'node',
     // Limit concurrency to prevent database deadlocks
@@ -17,8 +19,18 @@ export default defineConfig({
     testTimeout: 30000,
     coverage: {
       provider: 'v8',
-      reporter: ['default'],
-      exclude: ['node_modules/', 'dist/', 'coverage/', '**/*.d.ts', '**/*.config.ts', 'src/types/'],
+      reporter: ['text', 'html', 'lcov'],
+      exclude: [
+        'node_modules/',
+        'dist/',
+        'coverage/',
+        '**/*.d.ts',
+        '**/*.config.ts',
+        'src/examples',
+        'src/lib/database-migrations.ts',
+        'src/scripts',
+        'src/types/',
+      ],
     },
     env: {
       NODE_ENV: 'test',

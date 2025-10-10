@@ -66,7 +66,7 @@ export class ErrorBoundary extends Component<Props, State> {
           <EmptyState variant={EmptyStateVariant.full}>
             <ExclamationCircleIcon
               style={{
-                fontSize: '4rem',
+                fontSize: 'var(--pf-t--global--font--size--4xl)',
                 color: 'var(--pf-t--global--color--status--danger--default)',
               }}
             />
@@ -79,7 +79,12 @@ export class ErrorBoundary extends Component<Props, State> {
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details style={{ marginTop: '20px', textAlign: 'left' }}>
                   <summary>Error details</summary>
-                  <pre style={{ fontSize: '12px', overflow: 'auto' }}>
+                  <pre
+                    style={{
+                      fontSize: 'var(--pf-t--global--font--size--xs)',
+                      overflow: 'auto',
+                    }}
+                  >
                     {this.state.error.toString()}
                     {this.state.errorInfo && this.state.errorInfo.componentStack}
                   </pre>

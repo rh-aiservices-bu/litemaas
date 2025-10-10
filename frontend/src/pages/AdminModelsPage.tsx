@@ -97,7 +97,9 @@ const AdminModelsPage: React.FC = () => {
   // Check permissions
   const canModifyModels = currentUser?.roles?.includes('admin') || false;
   const canReadModels =
-    currentUser?.roles?.includes('admin') || currentUser?.roles?.includes('adminReadonly') || false;
+    currentUser?.roles?.includes('admin') ||
+    currentUser?.roles?.includes('admin-readonly') ||
+    false;
 
   // Fetch models data
   const {
@@ -568,7 +570,12 @@ const AdminModelsPage: React.FC = () => {
                   <div>
                     {t('models.admin.table.inputCost')}
                     <br />
-                    <small style={{ fontSize: '0.875rem', fontWeight: 'normal' }}>
+                    <small
+                      style={{
+                        fontSize: 'var(--pf-t--global--font--size--sm)',
+                        fontWeight: 'normal',
+                      }}
+                    >
                       {t('models.admin.table.1mTokens')}
                     </small>
                   </div>
@@ -577,7 +584,12 @@ const AdminModelsPage: React.FC = () => {
                   <div>
                     {t('models.admin.table.outputCost')}
                     <br />
-                    <small style={{ fontSize: '0.875rem', fontWeight: 'normal' }}>
+                    <small
+                      style={{
+                        fontSize: 'var(--pf-t--global--font--size--sm)',
+                        fontWeight: 'normal',
+                      }}
+                    >
                       {t('models.admin.table.1mTokens')}
                     </small>
                   </div>

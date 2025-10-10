@@ -160,21 +160,62 @@ const AccessibleChart: React.FC<AccessibleChartProps> = ({
     return () => document.removeEventListener('keydown', handleKeydown);
   }, [viewMode, allowExport, t]);
 
-  // Export data as CSV
+  /**
+   * Export data as CSV with raw values (not formatted strings)
+   * Looks for raw values in this priority order:
+   * 1. {key}Raw or raw{Key} fields (e.g., valueRaw, rawValue)
+   * 2. Numeric values
+   * 3. String values as fallback
+   */
   const exportData = () => {
     if (!data.length) return;
 
-    const headers = ['Label', 'Value', ...additionalHeaders];
+    const headers = additionalHeaders;
     const csvContent = [
       headers.join(','),
       ...data.map((item) => {
-        const row = [item.label, formatValue(item.value)];
+        const row: string[] = [];
 
         // Add additional info if present
         if (item.additionalInfo && additionalHeaders.length > 0) {
           additionalHeaders.forEach((header) => {
             const key = header.toLowerCase().replace(/\s+/g, '');
-            row.push(item.additionalInfo?.[key]?.toString() || '');
+            const info = item.additionalInfo;
+
+            if (!info) {
+              row.push('');
+              return;
+            }
+
+            // Look for raw value with multiple naming conventions
+            const rawKey1 = `${key}Raw`; // e.g., valueRaw
+            const rawKey2 = `raw${key.charAt(0).toUpperCase()}${key.slice(1)}`; // e.g., rawValue
+
+            let value: string | number | undefined;
+
+            // Priority 1: Look for explicit raw value fields
+            if (rawKey1 in info && typeof info[rawKey1] === 'number') {
+              value = info[rawKey1] as number;
+            } else if (rawKey2 in info && typeof info[rawKey2] === 'number') {
+              value = info[rawKey2] as number;
+            }
+            // Priority 2: Use numeric value directly
+            else if (key in info && typeof info[key] === 'number') {
+              value = info[key] as number;
+            }
+            // Priority 3: Use item.value if it's numeric and matches what we need
+            else if (typeof item.value === 'number' && key === 'value') {
+              value = item.value;
+            }
+            // Fallback: Use string value
+            else if (key in info) {
+              value = info[key];
+            } else {
+              value = '';
+            }
+
+            // Convert to string for CSV
+            row.push(value?.toString() || '');
           });
         }
 
@@ -276,6 +317,7 @@ const AccessibleChart: React.FC<AccessibleChartProps> = ({
 
       {viewMode === 'chart' ? (
         <div
+          key="chart-view"
           role="img"
           aria-labelledby={chartId}
           aria-describedby={`${descriptionId} ${summaryId} ${ariaDescribedBy || ''}`.trim()}
@@ -334,8 +376,6 @@ const AccessibleChart: React.FC<AccessibleChartProps> = ({
             </Caption>
             <Thead>
               <Tr>
-                <Th>{t('common.label')}</Th>
-                <Th>{t('common.value')}</Th>
                 {additionalHeaders.map((header, index) => (
                   <Th key={index}>{header}</Th>
                 ))}
@@ -344,8 +384,6 @@ const AccessibleChart: React.FC<AccessibleChartProps> = ({
             <Tbody>
               {data.map((item, index) => (
                 <Tr key={index}>
-                  <Td>{item.label}</Td>
-                  <Td>{formatValue(item.value)}</Td>
                   {additionalHeaders.map((header, headerIndex) => {
                     const key = header.toLowerCase().replace(/\s+/g, '');
                     const value = item.additionalInfo?.[key];

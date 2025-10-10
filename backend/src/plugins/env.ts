@@ -35,6 +35,9 @@ const envSchema = Type.Object({
   LITELLM_RETRIES: Type.String({ default: '3' }),
   LITELLM_RETRY_DELAY: Type.String({ default: '1000' }),
 
+  // Usage Cache
+  USAGE_CACHE_TTL_MINUTES: Type.String({ default: '5' }),
+
   // Rate Limiting
   RATE_LIMIT_MAX: Type.String({ default: '100' }),
   RATE_LIMIT_TIME_WINDOW: Type.String({ default: '1m' }),
