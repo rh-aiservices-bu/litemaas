@@ -2,6 +2,7 @@ import { FastifyPluginAsync } from 'fastify';
 import { AuthenticatedRequest } from '../types';
 import {
   AdminUsageFiltersSchema,
+  PaginationQuerySchema,
   ExportQuerySchema,
   AnalyticsResponseSchema,
   UserBreakdownResponseSchema,
@@ -16,6 +17,12 @@ import {
   type ExportQuery,
 } from '../schemas/admin-usage';
 import type { AdminUsageFilters } from '../types/admin-usage.types';
+import { getRateLimitConfig } from '../config/rate-limit.config';
+import {
+  validateDateRangeWithWarning,
+  validateDateRangeSize,
+  suggestDateRanges,
+} from '../utils/date-validation';
 
 import { AdminUsageStatsService } from '../services/admin-usage-stats.service';
 import { DailyUsageCacheManager } from '../services/daily-usage-cache-manager';
@@ -25,6 +32,9 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
   const liteLLMService = new LiteLLMService(fastify);
   const cacheManager = new DailyUsageCacheManager(fastify);
   const adminUsageStatsService = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
+
+  // Get admin analytics configuration
+  const config = fastify.getAdminAnalyticsConfig();
 
   /**
    * Helper function to convert Date objects to ISO strings in response
@@ -65,6 +75,9 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{
     Body: AdminUsageFilters;
   }>('/analytics', {
+    config: {
+      rateLimit: getRateLimitConfig('analytics'),
+    },
     schema: {
       tags: ['Admin Usage Analytics'],
       summary: 'Get global usage metrics',
@@ -77,6 +90,7 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
         400: AdminUsageErrorResponseSchema,
         401: AdminUsageErrorResponseSchema,
         403: AdminUsageErrorResponseSchema,
+        429: AdminUsageErrorResponseSchema,
         500: AdminUsageErrorResponseSchema,
       },
     },
@@ -92,12 +106,46 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
         const startDate = queryFilters.startDate;
         const endDate = queryFilters.endDate;
 
-        // Simple string comparison is valid for YYYY-MM-DD format
-        if (startDate > endDate) {
+        // Validate date range size
+        const validation = validateDateRangeWithWarning(
+          startDate,
+          endDate,
+          config.dateRangeLimits.maxAnalyticsDays,
+          config.warnings.largeDateRangeDays,
+        );
+
+        if (!validation.valid) {
+          // Generate suggested ranges
+          const suggestedRanges = suggestDateRanges(
+            startDate,
+            endDate,
+            config.dateRangeLimits.maxAnalyticsDays,
+          );
+
           return reply.code(400).send({
-            error: 'Start date must be before or equal to end date',
-            code: 'INVALID_DATE_RANGE',
+            error: validation.error,
+            code: validation.code,
+            details: {
+              requestedDays: validation.days,
+              maxAllowedDays: config.dateRangeLimits.maxAnalyticsDays,
+              suggestion: `Break your request into ${suggestedRanges.length} smaller date ranges`,
+              suggestedRanges: suggestedRanges.slice(0, 4), // First 4 suggestions only
+            },
           });
+        }
+
+        // Log warning for large ranges
+        if (validation.warning) {
+          fastify.log.warn(
+            {
+              userId: authRequest.user?.userId,
+              startDate,
+              endDate,
+              rangeInDays: validation.days,
+              endpoint: '/analytics',
+            },
+            'Large date range requested for analytics',
+          );
         }
 
         // Create filters object with string dates
@@ -145,8 +193,8 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
-   * GET /api/v1/admin/usage/by-user
-   * Get usage breakdown by user
+   * POST /api/v1/admin/usage/by-user
+   * Get usage breakdown by user with pagination
    *
    * This endpoint provides detailed usage metrics for each user including:
    * - Request counts and token usage
@@ -154,80 +202,126 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
    * - Models used by each user
    * - Last activity timestamp
    *
+   * Supports pagination and sorting via query parameters.
+   * Filter arrays sent in request body to avoid URL length limits.
+   *
    * @requires admin or adminReadonly role
    */
-  fastify.get<{
-    Querystring: AdminUsageFilters;
+  fastify.post<{
+    Body: AdminUsageFilters;
+    Querystring: {
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+    };
   }>('/by-user', {
+    config: {
+      rateLimit: getRateLimitConfig('analytics'),
+    },
     schema: {
       tags: ['Admin Usage Analytics'],
-      summary: 'Get usage breakdown by user',
+      summary: 'Get paginated usage breakdown by user',
       description:
-        'Get detailed usage metrics broken down by user. Requires admin or adminReadonly role.',
+        'Get detailed usage metrics broken down by user with pagination and sorting support. Requires admin or adminReadonly role.',
       security: [{ bearerAuth: [] }],
-      querystring: AdminUsageFiltersSchema,
+      body: AdminUsageFiltersSchema,
+      querystring: PaginationQuerySchema,
       response: {
         200: UserBreakdownResponseSchema,
         400: AdminUsageErrorResponseSchema,
         401: AdminUsageErrorResponseSchema,
         403: AdminUsageErrorResponseSchema,
+        429: AdminUsageErrorResponseSchema,
         500: AdminUsageErrorResponseSchema,
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:usage')],
     handler: async (request, reply) => {
       const authRequest = request as AuthenticatedRequest;
-      const queryFilters = request.query;
+      const bodyFilters = request.body;
+      const paginationQuery = request.query;
       let filters: AdminUsageFilters | undefined;
 
       try {
         // Use date strings directly (no timezone conversion)
         // Dates are in YYYY-MM-DD format and match LiteLLM's local timezone expectations
-        const startDate = queryFilters.startDate;
-        const endDate = queryFilters.endDate;
+        const startDate = bodyFilters.startDate;
+        const endDate = bodyFilters.endDate;
 
-        // Simple string comparison is valid for YYYY-MM-DD format
-        if (startDate > endDate) {
+        // Validate date range size
+        const validation = validateDateRangeWithWarning(
+          startDate,
+          endDate,
+          config.dateRangeLimits.maxAnalyticsDays,
+          config.warnings.largeDateRangeDays,
+        );
+
+        if (!validation.valid) {
+          const suggestedRanges = suggestDateRanges(
+            startDate,
+            endDate,
+            config.dateRangeLimits.maxAnalyticsDays,
+          );
+
           return reply.code(400).send({
-            error: 'Start date must be before or equal to end date',
-            code: 'INVALID_DATE_RANGE',
+            error: validation.error,
+            code: validation.code,
+            details: {
+              requestedDays: validation.days,
+              maxAllowedDays: config.dateRangeLimits.maxAnalyticsDays,
+              suggestion: `Break your request into ${suggestedRanges.length} smaller date ranges`,
+              suggestedRanges: suggestedRanges.slice(0, 4),
+            },
           });
+        }
+
+        // Log warning for large ranges
+        if (validation.warning) {
+          fastify.log.warn(
+            {
+              userId: authRequest.user?.userId,
+              startDate,
+              endDate,
+              rangeInDays: validation.days,
+              endpoint: '/by-user',
+            },
+            'Large date range requested for user breakdown',
+          );
         }
 
         // Create filters object with string dates
         filters = {
           startDate,
           endDate,
-          userIds: queryFilters.userIds,
-          modelIds: queryFilters.modelIds,
-          providerIds: queryFilters.providerIds,
+          userIds: bodyFilters.userIds,
+          modelIds: bodyFilters.modelIds,
+          providerIds: bodyFilters.providerIds,
+          apiKeyIds: bodyFilters.apiKeyIds,
+        };
+
+        // Extract pagination parameters from query
+        const paginationParams = {
+          page: paginationQuery.page,
+          limit: paginationQuery.limit,
+          sortBy: paginationQuery.sortBy,
+          sortOrder: paginationQuery.sortOrder,
         };
 
         fastify.log.info(
           {
             adminUser: authRequest.user?.userId,
-            filters: queryFilters,
+            filters: bodyFilters,
+            pagination: paginationParams,
             action: 'get_user_breakdown',
           },
-          'Admin requested user breakdown',
+          'Admin requested user breakdown with pagination',
         );
 
-        const result = await adminUsageStatsService.getUserBreakdown(filters);
+        const result = await adminUsageStatsService.getUserBreakdown(filters, paginationParams);
         const serializedResult = serializeDates(result);
 
-        // Debug logging
-        fastify.log.info(
-          {
-            resultSample: serializedResult.slice(0, 1),
-            resultCount: serializedResult.length,
-          },
-          'User breakdown result before serialization',
-        );
-
-        return reply.code(200).send({
-          users: serializedResult,
-          total: serializedResult.length,
-        });
+        return reply.code(200).send(serializedResult);
       } catch (error) {
         fastify.log.error(
           {
@@ -235,7 +329,7 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
             errorMessage: error instanceof Error ? error.message : 'Unknown error',
             errorStack: error instanceof Error ? error.stack : undefined,
             adminUser: authRequest.user?.userId,
-            filters: filters || queryFilters,
+            filters: filters || bodyFilters,
           },
           'Failed to get user breakdown',
         );
@@ -249,8 +343,8 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
-   * GET /api/v1/admin/usage/by-model
-   * Get usage breakdown by model
+   * POST /api/v1/admin/usage/by-model
+   * Get usage breakdown by model with pagination
    *
    * This endpoint provides detailed usage metrics for each model including:
    * - Request counts and token usage per model
@@ -258,76 +352,131 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
    * - Number of unique users per model
    * - Success rates and average latency per model
    *
+   * Supports pagination and sorting via query parameters.
+   * Filter arrays sent in request body to avoid URL length limits.
+   *
    * @requires admin or adminReadonly role
    */
-  fastify.get<{
-    Querystring: AdminUsageFilters;
+  fastify.post<{
+    Body: AdminUsageFilters;
+    Querystring: {
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+    };
   }>('/by-model', {
+    config: {
+      rateLimit: getRateLimitConfig('analytics'),
+    },
     schema: {
       tags: ['Admin Usage Analytics'],
-      summary: 'Get usage breakdown by model',
+      summary: 'Get paginated usage breakdown by model',
       description:
-        'Get detailed usage metrics broken down by model. Requires admin or adminReadonly role.',
+        'Get detailed usage metrics broken down by model with pagination and sorting support. Requires admin or adminReadonly role.',
       security: [{ bearerAuth: [] }],
-      querystring: AdminUsageFiltersSchema,
+      body: AdminUsageFiltersSchema,
+      querystring: PaginationQuerySchema,
       response: {
         200: ModelBreakdownResponseSchema,
         400: AdminUsageErrorResponseSchema,
         401: AdminUsageErrorResponseSchema,
         403: AdminUsageErrorResponseSchema,
+        429: AdminUsageErrorResponseSchema,
         500: AdminUsageErrorResponseSchema,
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:usage')],
     handler: async (request, reply) => {
       const authRequest = request as AuthenticatedRequest;
-      const queryFilters = request.query;
+      const bodyFilters = request.body;
+      const paginationQuery = request.query;
       let filters: AdminUsageFilters | undefined;
 
       try {
         // Use date strings directly (no timezone conversion)
         // Dates are in YYYY-MM-DD format and match LiteLLM's local timezone expectations
-        const startDate = queryFilters.startDate;
-        const endDate = queryFilters.endDate;
+        const startDate = bodyFilters.startDate;
+        const endDate = bodyFilters.endDate;
 
-        // Simple string comparison is valid for YYYY-MM-DD format
-        if (startDate > endDate) {
+        // Validate date range size
+        const validation = validateDateRangeWithWarning(
+          startDate,
+          endDate,
+          config.dateRangeLimits.maxAnalyticsDays,
+          config.warnings.largeDateRangeDays,
+        );
+
+        if (!validation.valid) {
+          const suggestedRanges = suggestDateRanges(
+            startDate,
+            endDate,
+            config.dateRangeLimits.maxAnalyticsDays,
+          );
+
           return reply.code(400).send({
-            error: 'Start date must be before or equal to end date',
-            code: 'INVALID_DATE_RANGE',
+            error: validation.error,
+            code: validation.code,
+            details: {
+              requestedDays: validation.days,
+              maxAllowedDays: config.dateRangeLimits.maxAnalyticsDays,
+              suggestion: `Break your request into ${suggestedRanges.length} smaller date ranges`,
+              suggestedRanges: suggestedRanges.slice(0, 4),
+            },
           });
+        }
+
+        // Log warning for large ranges
+        if (validation.warning) {
+          fastify.log.warn(
+            {
+              userId: authRequest.user?.userId,
+              startDate,
+              endDate,
+              rangeInDays: validation.days,
+              endpoint: '/by-model',
+            },
+            'Large date range requested for model breakdown',
+          );
         }
 
         // Create filters object with string dates
         filters = {
           startDate,
           endDate,
-          userIds: queryFilters.userIds,
-          modelIds: queryFilters.modelIds,
-          providerIds: queryFilters.providerIds,
+          userIds: bodyFilters.userIds,
+          modelIds: bodyFilters.modelIds,
+          providerIds: bodyFilters.providerIds,
+          apiKeyIds: bodyFilters.apiKeyIds,
+        };
+
+        // Extract pagination parameters from query
+        const paginationParams = {
+          page: paginationQuery.page,
+          limit: paginationQuery.limit,
+          sortBy: paginationQuery.sortBy,
+          sortOrder: paginationQuery.sortOrder,
         };
 
         fastify.log.info(
           {
             adminUser: authRequest.user?.userId,
-            filters: queryFilters,
+            filters: bodyFilters,
+            pagination: paginationParams,
             action: 'get_model_breakdown',
           },
-          'Admin requested model breakdown',
+          'Admin requested model breakdown with pagination',
         );
 
-        const result = await adminUsageStatsService.getModelBreakdown(filters);
+        const result = await adminUsageStatsService.getModelBreakdown(filters, paginationParams);
         const serializedResult = serializeDates(result);
-        return reply.code(200).send({
-          models: serializedResult,
-          total: serializedResult.length,
-        });
+        return reply.code(200).send(serializedResult);
       } catch (error) {
         fastify.log.error(
           {
             error,
             adminUser: authRequest.user?.userId,
-            filters: filters || queryFilters,
+            filters: filters || bodyFilters,
           },
           'Failed to get model breakdown',
         );
@@ -341,8 +490,8 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
-   * GET /api/v1/admin/usage/by-provider
-   * Get usage breakdown by provider
+   * POST /api/v1/admin/usage/by-provider
+   * Get usage breakdown by provider with pagination
    *
    * This endpoint provides detailed usage metrics for each provider (OpenAI, Azure, etc.) including:
    * - Request counts and token usage per provider
@@ -350,76 +499,131 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
    * - Number of models and users per provider
    * - Success rates and average latency per provider
    *
+   * Supports pagination and sorting via query parameters.
+   * Filter arrays sent in request body to avoid URL length limits.
+   *
    * @requires admin or adminReadonly role
    */
-  fastify.get<{
-    Querystring: AdminUsageFilters;
+  fastify.post<{
+    Body: AdminUsageFilters;
+    Querystring: {
+      page?: number;
+      limit?: number;
+      sortBy?: string;
+      sortOrder?: 'asc' | 'desc';
+    };
   }>('/by-provider', {
+    config: {
+      rateLimit: getRateLimitConfig('analytics'),
+    },
     schema: {
       tags: ['Admin Usage Analytics'],
-      summary: 'Get usage breakdown by provider',
+      summary: 'Get paginated usage breakdown by provider',
       description:
-        'Get detailed usage metrics broken down by provider (OpenAI, Azure, etc.). Requires admin or adminReadonly role.',
+        'Get detailed usage metrics broken down by provider (OpenAI, Azure, etc.) with pagination and sorting support. Requires admin or adminReadonly role.',
       security: [{ bearerAuth: [] }],
-      querystring: AdminUsageFiltersSchema,
+      body: AdminUsageFiltersSchema,
+      querystring: PaginationQuerySchema,
       response: {
         200: ProviderBreakdownResponseSchema,
         400: AdminUsageErrorResponseSchema,
         401: AdminUsageErrorResponseSchema,
         403: AdminUsageErrorResponseSchema,
+        429: AdminUsageErrorResponseSchema,
         500: AdminUsageErrorResponseSchema,
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:usage')],
     handler: async (request, reply) => {
       const authRequest = request as AuthenticatedRequest;
-      const queryFilters = request.query;
+      const bodyFilters = request.body;
+      const paginationQuery = request.query;
       let filters: AdminUsageFilters | undefined;
 
       try {
         // Use date strings directly (no timezone conversion)
         // Dates are in YYYY-MM-DD format and match LiteLLM's local timezone expectations
-        const startDate = queryFilters.startDate;
-        const endDate = queryFilters.endDate;
+        const startDate = bodyFilters.startDate;
+        const endDate = bodyFilters.endDate;
 
-        // Simple string comparison is valid for YYYY-MM-DD format
-        if (startDate > endDate) {
+        // Validate date range size
+        const validation = validateDateRangeWithWarning(
+          startDate,
+          endDate,
+          config.dateRangeLimits.maxAnalyticsDays,
+          config.warnings.largeDateRangeDays,
+        );
+
+        if (!validation.valid) {
+          const suggestedRanges = suggestDateRanges(
+            startDate,
+            endDate,
+            config.dateRangeLimits.maxAnalyticsDays,
+          );
+
           return reply.code(400).send({
-            error: 'Start date must be before or equal to end date',
-            code: 'INVALID_DATE_RANGE',
+            error: validation.error,
+            code: validation.code,
+            details: {
+              requestedDays: validation.days,
+              maxAllowedDays: config.dateRangeLimits.maxAnalyticsDays,
+              suggestion: `Break your request into ${suggestedRanges.length} smaller date ranges`,
+              suggestedRanges: suggestedRanges.slice(0, 4),
+            },
           });
+        }
+
+        // Log warning for large ranges
+        if (validation.warning) {
+          fastify.log.warn(
+            {
+              userId: authRequest.user?.userId,
+              startDate,
+              endDate,
+              rangeInDays: validation.days,
+              endpoint: '/by-provider',
+            },
+            'Large date range requested for provider breakdown',
+          );
         }
 
         // Create filters object with string dates
         filters = {
           startDate,
           endDate,
-          userIds: queryFilters.userIds,
-          modelIds: queryFilters.modelIds,
-          providerIds: queryFilters.providerIds,
+          userIds: bodyFilters.userIds,
+          modelIds: bodyFilters.modelIds,
+          providerIds: bodyFilters.providerIds,
+          apiKeyIds: bodyFilters.apiKeyIds,
+        };
+
+        // Extract pagination parameters from query
+        const paginationParams = {
+          page: paginationQuery.page,
+          limit: paginationQuery.limit,
+          sortBy: paginationQuery.sortBy,
+          sortOrder: paginationQuery.sortOrder,
         };
 
         fastify.log.info(
           {
             adminUser: authRequest.user?.userId,
-            filters: queryFilters,
+            filters: bodyFilters,
+            pagination: paginationParams,
             action: 'get_provider_breakdown',
           },
-          'Admin requested provider breakdown',
+          'Admin requested provider breakdown with pagination',
         );
 
-        const result = await adminUsageStatsService.getProviderBreakdown(filters);
+        const result = await adminUsageStatsService.getProviderBreakdown(filters, paginationParams);
         const serializedResult = serializeDates(result);
-        return reply.code(200).send({
-          providers: serializedResult,
-          total: serializedResult.length,
-        });
+        return reply.code(200).send(serializedResult);
       } catch (error) {
         fastify.log.error(
           {
             error,
             adminUser: authRequest.user?.userId,
-            filters: filters || queryFilters,
+            filters: filters || bodyFilters,
           },
           'Failed to get provider breakdown',
         );
@@ -433,25 +637,29 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   /**
-   * GET /api/v1/admin/usage/export
+   * POST /api/v1/admin/usage/export
    * Export usage data
    *
    * This endpoint exports comprehensive usage data in CSV or JSON format.
    * The export includes all available metrics for the specified date range and filters.
+   * Filter arrays sent in request body to avoid URL length limits.
    *
    * @requires admin or adminReadonly role
    * @param format - Export format (csv or json), defaults to csv
    */
-  fastify.get<{
-    Querystring: ExportQuery;
+  fastify.post<{
+    Body: ExportQuery;
   }>('/export', {
+    config: {
+      rateLimit: getRateLimitConfig('export'),
+    },
     schema: {
       tags: ['Admin Usage Analytics'],
       summary: 'Export usage data',
       description:
         'Export comprehensive usage data in CSV or JSON format. Requires admin or adminReadonly role.',
       security: [{ bearerAuth: [] }],
-      querystring: ExportQuerySchema,
+      body: ExportQuerySchema,
       response: {
         200: {
           type: 'string',
@@ -460,26 +668,45 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
         400: AdminUsageErrorResponseSchema,
         401: AdminUsageErrorResponseSchema,
         403: AdminUsageErrorResponseSchema,
+        429: AdminUsageErrorResponseSchema,
         500: AdminUsageErrorResponseSchema,
       },
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:usage')],
     handler: async (request, reply) => {
       const authRequest = request as AuthenticatedRequest;
-      const query = request.query;
-      const format = query.format || 'csv';
+      const exportRequest = request.body;
+      const format = exportRequest.format || 'csv';
 
       try {
         // Use date strings directly (no timezone conversion)
         // Dates are in YYYY-MM-DD format and match LiteLLM's local timezone expectations
-        const startDate = query.startDate;
-        const endDate = query.endDate;
+        const startDate = exportRequest.startDate;
+        const endDate = exportRequest.endDate;
 
-        // Simple string comparison is valid for YYYY-MM-DD format
-        if (startDate > endDate) {
+        // Use export-specific limit (365 days)
+        const validation = validateDateRangeSize(
+          startDate,
+          endDate,
+          config.dateRangeLimits.maxExportDays,
+        );
+
+        if (!validation.valid) {
+          const suggestedRanges = suggestDateRanges(
+            startDate,
+            endDate,
+            config.dateRangeLimits.maxExportDays,
+          );
+
           return reply.code(400).send({
-            error: 'Start date must be before or equal to end date',
-            code: 'INVALID_DATE_RANGE',
+            error: validation.error,
+            code: validation.code,
+            details: {
+              requestedDays: validation.days,
+              maxAllowedDays: config.dateRangeLimits.maxExportDays,
+              suggestion: `Maximum export range is ${config.dateRangeLimits.maxExportDays} days. Consider breaking into ${suggestedRanges.length} exports.`,
+              suggestedRanges: suggestedRanges.slice(0, 4),
+            },
           });
         }
 
@@ -487,16 +714,18 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
         const filters: AdminUsageFilters = {
           startDate,
           endDate,
-          userIds: query.userIds,
-          modelIds: query.modelIds,
-          providerIds: query.providerIds,
+          userIds: exportRequest.userIds,
+          modelIds: exportRequest.modelIds,
+          providerIds: exportRequest.providerIds,
+          apiKeyIds: exportRequest.apiKeyIds,
         };
 
         fastify.log.info(
           {
             adminUser: authRequest.user?.userId,
             format,
-            dateRange: { start: query.startDate, end: query.endDate },
+            dateRange: { start: exportRequest.startDate, end: exportRequest.endDate },
+            rangeInDays: validation.days,
             action: 'export_usage_data',
           },
           'Admin requested usage data export',
@@ -505,7 +734,7 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
         const exportData = await adminUsageStatsService.exportUsageData(filters, format);
 
         // Set appropriate headers for file download
-        const filename = `admin-usage-export-${query.startDate}-to-${query.endDate}.${format}`;
+        const filename = `admin-usage-export-${exportRequest.startDate}-to-${exportRequest.endDate}.${format}`;
         reply.header('Content-Type', format === 'csv' ? 'text/csv' : 'application/json');
         reply.header('Content-Disposition', `attachment; filename="${filename}"`);
 
@@ -515,7 +744,7 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
           {
             error,
             adminUser: authRequest.user?.userId,
-            query,
+            exportRequest,
           },
           'Failed to export usage data',
         );
@@ -539,6 +768,9 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
    * @requires admin role (not adminReadonly - this is a write operation)
    */
   fastify.post('/refresh-today', {
+    config: {
+      rateLimit: getRateLimitConfig('analytics'),
+    },
     schema: {
       tags: ['Admin Usage Analytics'],
       summary: 'Refresh current day usage data',
@@ -549,6 +781,7 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
         200: RefreshTodayResponseSchema,
         401: AdminUsageErrorResponseSchema,
         403: AdminUsageErrorResponseSchema,
+        429: AdminUsageErrorResponseSchema,
         500: AdminUsageErrorResponseSchema,
       },
     },
@@ -607,6 +840,9 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get<{
     Querystring: { startDate: string; endDate: string };
   }>('/filter-options', {
+    config: {
+      rateLimit: getRateLimitConfig('analytics'),
+    },
     schema: {
       tags: ['Admin Usage Analytics'],
       summary: 'Get filter options from usage data',
@@ -619,6 +855,7 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
         400: AdminUsageErrorResponseSchema,
         401: AdminUsageErrorResponseSchema,
         403: AdminUsageErrorResponseSchema,
+        429: AdminUsageErrorResponseSchema,
         500: AdminUsageErrorResponseSchema,
       },
     },
@@ -685,6 +922,9 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post<{
     Body: { startDate?: string; endDate?: string };
   }>('/rebuild-cache', {
+    config: {
+      rateLimit: getRateLimitConfig('cacheRebuild'),
+    },
     schema: {
       tags: ['Admin Usage Analytics'],
       summary: 'Rebuild cache from raw data',
@@ -696,6 +936,7 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
         200: RebuildCacheResponseSchema,
         401: AdminUsageErrorResponseSchema,
         403: AdminUsageErrorResponseSchema,
+        429: AdminUsageErrorResponseSchema,
         500: AdminUsageErrorResponseSchema,
       },
     },
@@ -738,6 +979,100 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(500).send({
           error: 'Internal server error while rebuilding cache',
           code: 'REBUILD_FAILED',
+        });
+      }
+    },
+  });
+
+  /**
+   * GET /api/v1/admin/usage/cache/metrics
+   * Get cache performance metrics
+   *
+   * This endpoint returns current cache performance metrics including:
+   * - Cache hit/miss counts
+   * - Cache rebuilds
+   * - Lock acquisition success/failure counts
+   * - Grace period applications
+   * - Calculated hit rate and lock contention rate
+   *
+   * Useful for monitoring cache performance and detecting issues.
+   *
+   * @requires admin or adminReadonly role
+   */
+  fastify.get('/cache/metrics', {
+    config: {
+      rateLimit: getRateLimitConfig('analytics'),
+    },
+    schema: {
+      tags: ['Admin Usage Analytics'],
+      summary: 'Get cache performance metrics',
+      description:
+        'Get cache performance metrics including hit rate, lock contention, and rebuild statistics. Requires admin or adminReadonly role.',
+      security: [{ bearerAuth: [] }],
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            cacheHits: { type: 'number', description: 'Number of cache hits' },
+            cacheMisses: { type: 'number', description: 'Number of cache misses' },
+            cacheRebuilds: { type: 'number', description: 'Number of cache rebuilds performed' },
+            lockAcquisitionSuccesses: {
+              type: 'number',
+              description: 'Number of successful lock acquisitions',
+            },
+            lockAcquisitionFailures: {
+              type: 'number',
+              description: 'Number of failed lock acquisitions (lock contention)',
+            },
+            gracePeriodApplications: {
+              type: 'number',
+              description: 'Number of times grace period logic was applied',
+            },
+            cacheHitRate: {
+              type: 'number',
+              description: 'Cache hit rate (hits / total requests)',
+            },
+            lockContentionRate: {
+              type: 'number',
+              description: 'Lock contention rate (failures / total attempts)',
+            },
+          },
+        },
+        401: AdminUsageErrorResponseSchema,
+        403: AdminUsageErrorResponseSchema,
+        429: AdminUsageErrorResponseSchema,
+        500: AdminUsageErrorResponseSchema,
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:usage')],
+    handler: async (request, reply) => {
+      const authRequest = request as AuthenticatedRequest;
+
+      try {
+        fastify.log.info(
+          {
+            adminUser: authRequest.user?.userId,
+            adminUsername: authRequest.user?.username,
+            action: 'get_cache_metrics',
+          },
+          'Admin requested cache performance metrics',
+        );
+
+        const metrics = cacheManager.getMetrics();
+
+        return reply.code(200).send(metrics);
+      } catch (error) {
+        fastify.log.error(
+          {
+            error,
+            adminUser: authRequest.user?.userId,
+          },
+          'Failed to get cache metrics',
+        );
+
+        return reply.code(500).send({
+          error: 'Internal server error while retrieving cache metrics',
+          code: 'CACHE_METRICS_FAILED',
         });
       }
     },

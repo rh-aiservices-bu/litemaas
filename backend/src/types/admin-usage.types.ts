@@ -511,3 +511,125 @@ export interface IDailyUsageCacheManager {
    */
   cleanupOldCache(retentionDays?: number): Promise<number>;
 }
+
+/**
+ * Pagination parameters for list endpoints
+ *
+ * @property page - Page number (1-indexed, default: 1)
+ * @property limit - Items per page (default: 50, max: 200)
+ * @property sortBy - Field to sort by
+ * @property sortOrder - Sort direction
+ */
+export interface PaginationParams {
+  /** Page number (1-indexed) */
+  page: number;
+
+  /** Items per page (max: 200) */
+  limit: number;
+
+  /** Field to sort by (e.g., 'totalTokens', 'totalRequests') */
+  sortBy: string;
+
+  /** Sort direction */
+  sortOrder: 'asc' | 'desc';
+}
+
+/**
+ * Pagination metadata for paginated responses
+ *
+ * Provides information about the current page, total pages,
+ * and navigation capabilities.
+ */
+export interface PaginationMetadata {
+  /** Current page number (1-indexed) */
+  page: number;
+
+  /** Items per page */
+  limit: number;
+
+  /** Total number of items across all pages */
+  total: number;
+
+  /** Total number of pages */
+  totalPages: number;
+
+  /** Whether there is a next page */
+  hasNext: boolean;
+
+  /** Whether there is a previous page */
+  hasPrevious: boolean;
+}
+
+/**
+ * Generic paginated response wrapper
+ *
+ * Wraps any data array with pagination metadata.
+ *
+ * @template T - Type of data items
+ */
+export interface PaginatedResponse<T> {
+  /** Data items for current page */
+  data: T[];
+
+  /** Pagination metadata */
+  pagination: PaginationMetadata;
+}
+
+/**
+ * Pagination defaults and limits
+ */
+export const PAGINATION_DEFAULTS = {
+  /** Default page number */
+  PAGE: 1,
+
+  /** Default items per page */
+  LIMIT: 50,
+
+  /** Maximum items per page (prevent excessive resource usage) */
+  MAX_LIMIT: 200,
+
+  /** Default sort order */
+  SORT_ORDER: 'desc' as const,
+} as const;
+
+/**
+ * Valid sort fields for user breakdown
+ */
+export const USER_BREAKDOWN_SORT_FIELDS = [
+  'username',
+  'totalRequests',
+  'totalTokens',
+  'promptTokens',
+  'completionTokens',
+  'totalCost',
+] as const;
+
+export type UserBreakdownSortField = (typeof USER_BREAKDOWN_SORT_FIELDS)[number];
+
+/**
+ * Valid sort fields for model breakdown
+ */
+export const MODEL_BREAKDOWN_SORT_FIELDS = [
+  'modelName',
+  'totalRequests',
+  'totalTokens',
+  'promptTokens',
+  'completionTokens',
+  'totalCost',
+] as const;
+
+export type ModelBreakdownSortField = (typeof MODEL_BREAKDOWN_SORT_FIELDS)[number];
+
+/**
+ * Valid sort fields for provider breakdown
+ */
+export const PROVIDER_BREAKDOWN_SORT_FIELDS = [
+  'providerName',
+  'totalRequests',
+  'totalTokens',
+  'promptTokens',
+  'completionTokens',
+  'totalCost',
+] as const;
+
+export type ProviderBreakdownSortField = (typeof PROVIDER_BREAKDOWN_SORT_FIELDS)[number];

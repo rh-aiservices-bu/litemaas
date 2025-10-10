@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 import { DailyUsageCacheManager } from '../../../src/services/daily-usage-cache-manager';
+import { initAdminAnalyticsConfig } from '../../../src/config/admin-analytics.config';
 import type { FastifyInstance } from 'fastify';
 import type {
   EnrichedDayData,
@@ -10,6 +11,10 @@ import type {
 } from '../../../src/services/daily-usage-cache-manager';
 
 describe('DailyUsageCacheManager', () => {
+  beforeAll(() => {
+    // Initialize admin analytics configuration
+    initAdminAnalyticsConfig();
+  });
   let service: DailyUsageCacheManager;
   let mockFastify: Partial<FastifyInstance>;
   let mockPgClient: any;
@@ -106,8 +111,8 @@ describe('DailyUsageCacheManager', () => {
 
       expect(result).toBeNull();
       expect(mockFastify.log!.debug).toHaveBeenCalledWith(
-        { date: '2024-01-15' },
-        'No cached data found for date',
+        { dateString: '2024-01-15' },
+        'Cache miss - no rebuild function provided',
       );
     });
 
@@ -132,8 +137,8 @@ describe('DailyUsageCacheManager', () => {
       expect(result!.metrics).toEqual(mockDayMetrics);
       expect(result!.breakdown.users).toEqual(mockUserMetrics);
       expect(mockFastify.log!.debug).toHaveBeenCalledWith(
-        { date: '2024-01-15', isComplete: true },
-        'Returning cached daily data',
+        expect.objectContaining({ dateString: '2024-01-15' }),
+        'Cache hit',
       );
     });
 
@@ -155,9 +160,10 @@ describe('DailyUsageCacheManager', () => {
       const result = await service.getCachedDailyData('2024-01-15');
 
       expect(result).toBeNull();
+      // Check for the stale cache debug message (first call)
       expect(mockFastify.log!.debug).toHaveBeenCalledWith(
         expect.objectContaining({ date: '2024-01-15' }),
-        'Current day cache is stale, needs refresh',
+        'Current day cache is stale',
       );
     });
 
@@ -188,8 +194,8 @@ describe('DailyUsageCacheManager', () => {
 
       await expect(service.getCachedDailyData('2024-01-15')).rejects.toThrow();
       expect(mockFastify.log!.error).toHaveBeenCalledWith(
-        expect.objectContaining({ error: dbError }),
-        'Failed to get cached daily data',
+        expect.objectContaining({ dateString: '2024-01-15' }),
+        'Failed to check cache',
       );
     });
   });

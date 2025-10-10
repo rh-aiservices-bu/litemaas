@@ -65,6 +65,17 @@ const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
       }
     }, []);
 
+    // Cleanup effect: Ensures cleanup on unmount (defense-in-depth)
+    // This handles edge cases like navigation, error boundaries, and conditional rendering
+    React.useEffect(() => {
+      return () => {
+        if (resizeObserverRef.current) {
+          resizeObserverRef.current.disconnect();
+          resizeObserverRef.current = null;
+        }
+      };
+    }, []);
+
     if (loading) {
       return <Skeleton height={`${height}px`} width="100%" />;
     }
@@ -169,6 +180,11 @@ const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
     // Calculate left padding based on metric type for Y-axis labels visibility
     const leftPadding = calculateLeftPaddingByMetric(metricType);
 
+    // Compute the key that AccessibleChart will use to look up values
+    // The header is translated, then lowercased with spaces removed
+    const metricHeader = t(`pages.usage.metrics.${metricType}`);
+    const metricKey = metricHeader.toLowerCase().replace(/\s+/g, '');
+
     // Transform data for accessibility - create data points per date with model breakdown
     // Store raw values for export and formatted values for display
     const accessibleData: AccessibleChartData[] = chartData.map((point) => {
@@ -179,9 +195,8 @@ const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
 
       // Build additionalInfo with both raw and formatted values
       const additionalInfo: { [key: string]: string | number } = {
-        date: point.date,
-        value: formatYTickByMetric(totalValue, metricType), // Formatted for display
-        valueRaw: totalValue, // Raw for export (matches ${key}Raw pattern)
+        [metricKey]: formatYTickByMetric(totalValue, metricType), // Formatted for display
+        [`${metricKey}Raw`]: totalValue, // Raw for export (matches ${key}Raw pattern)
         modelbreakdown: modelBreakdown, // Formatted for display
       };
 
@@ -443,9 +458,9 @@ const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
         chartType="bar"
         formatValue={formatAccessibleValue}
         exportFilename={`model-usage-trends-${metricType}`}
+        labelHeader={t('pages.usage.tableHeaders.date')}
         additionalHeaders={[
-          t('pages.usage.tableHeaders.date'),
-          t('common.value'),
+          t(`pages.usage.metrics.${metricType}`),
           // Include individual model columns for CSV export
           ...modelNames,
         ]}

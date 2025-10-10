@@ -2,6 +2,47 @@ import { Type, Static } from '@sinclair/typebox';
 
 // Query parameter schemas for admin usage endpoints
 
+// Pagination query schema for breakdown endpoints
+export const PaginationQuerySchema = Type.Object({
+  page: Type.Optional(
+    Type.Integer({
+      minimum: 1,
+      default: 1,
+      description: 'Page number (1-indexed)',
+    }),
+  ),
+  limit: Type.Optional(
+    Type.Integer({
+      minimum: 1,
+      maximum: 200,
+      default: 50,
+      description: 'Items per page (max: 200)',
+    }),
+  ),
+  sortBy: Type.Optional(
+    Type.String({
+      default: 'totalTokens',
+      description: 'Field to sort by',
+    }),
+  ),
+  sortOrder: Type.Optional(
+    Type.Union([Type.Literal('asc'), Type.Literal('desc')], {
+      default: 'desc',
+      description: 'Sort direction',
+    }),
+  ),
+});
+
+// Pagination metadata schema for paginated responses
+export const PaginationMetadataSchema = Type.Object({
+  page: Type.Integer({ description: 'Current page number (1-indexed)' }),
+  limit: Type.Integer({ description: 'Items per page' }),
+  total: Type.Integer({ description: 'Total number of items across all pages' }),
+  totalPages: Type.Integer({ description: 'Total number of pages' }),
+  hasNext: Type.Boolean({ description: 'Whether there is a next page' }),
+  hasPrevious: Type.Boolean({ description: 'Whether there is a previous page' }),
+});
+
 export const AdminUsageFiltersSchema = Type.Object({
   startDate: Type.String({
     format: 'date',
@@ -32,6 +73,12 @@ export const AdminUsageFiltersSchema = Type.Object({
     }),
   ),
 });
+
+// Combined schema for breakdown endpoints with pagination
+export const AdminUsageFiltersWithPaginationSchema = Type.Intersect([
+  AdminUsageFiltersSchema,
+  PaginationQuerySchema,
+]);
 
 export const ExportQuerySchema = Type.Object({
   startDate: Type.String({
@@ -237,10 +284,16 @@ export const UserBreakdownItemSchema = Type.Object({
   }),
 });
 
-export const UserBreakdownResponseSchema = Type.Object({
-  users: Type.Array(UserBreakdownItemSchema),
-  total: Type.Integer({ minimum: 0, description: 'Total number of users' }),
+// Paginated response schema for user breakdown
+export const PaginatedUserBreakdownResponseSchema = Type.Object({
+  data: Type.Array(UserBreakdownItemSchema, {
+    description: 'User breakdown data for current page',
+  }),
+  pagination: PaginationMetadataSchema,
 });
+
+// Legacy non-paginated response (deprecated - use paginated version)
+export const UserBreakdownResponseSchema = PaginatedUserBreakdownResponseSchema;
 
 export const ModelBreakdownItemSchema = Type.Object({
   modelId: Type.String(),
@@ -255,10 +308,16 @@ export const ModelBreakdownItemSchema = Type.Object({
   }),
 });
 
-export const ModelBreakdownResponseSchema = Type.Object({
-  models: Type.Array(ModelBreakdownItemSchema),
-  total: Type.Integer({ minimum: 0, description: 'Total number of models' }),
+// Paginated response schema for model breakdown
+export const PaginatedModelBreakdownResponseSchema = Type.Object({
+  data: Type.Array(ModelBreakdownItemSchema, {
+    description: 'Model breakdown data for current page',
+  }),
+  pagination: PaginationMetadataSchema,
 });
+
+// Legacy non-paginated response (deprecated - use paginated version)
+export const ModelBreakdownResponseSchema = PaginatedModelBreakdownResponseSchema;
 
 export const ProviderBreakdownItemSchema = Type.Object({
   provider: Type.String(),
@@ -272,10 +331,16 @@ export const ProviderBreakdownItemSchema = Type.Object({
   }),
 });
 
-export const ProviderBreakdownResponseSchema = Type.Object({
-  providers: Type.Array(ProviderBreakdownItemSchema),
-  total: Type.Integer({ minimum: 0, description: 'Total number of providers' }),
+// Paginated response schema for provider breakdown
+export const PaginatedProviderBreakdownResponseSchema = Type.Object({
+  data: Type.Array(ProviderBreakdownItemSchema, {
+    description: 'Provider breakdown data for current page',
+  }),
+  pagination: PaginationMetadataSchema,
 });
+
+// Legacy non-paginated response (deprecated - use paginated version)
+export const ProviderBreakdownResponseSchema = PaginatedProviderBreakdownResponseSchema;
 
 export const RefreshTodayResponseSchema = Type.Object({
   message: Type.String(),

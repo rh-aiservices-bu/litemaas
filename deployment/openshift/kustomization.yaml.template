@@ -37,9 +37,9 @@ resources:
 
 # Images - can be overridden for different environments
 images:
-  - name: quay.io/rh-aiservice-bu/litemaas-backend
+  - name: quay.io/rh-aiservices-bu/litemaas-backend
     newTag: latest
-  - name: quay.io/rh-aiservice-bu/litemaas-frontend
+  - name: quay.io/rh-aiservices-bu/litemaas-frontend
     newTag: latest
 # Resource patches - can be uncommented and customized as needed
 # patches:

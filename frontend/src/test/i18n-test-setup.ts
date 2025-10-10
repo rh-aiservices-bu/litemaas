@@ -40,6 +40,8 @@ const testTranslations = {
   'common.updatedAt': 'Updated',
   'common.yes': 'Yes',
   'common.no': 'No',
+  'common.refreshPage': 'Refresh Page',
+  'common.tryAgain': 'Try Again',
 
   // Status
   'status.active': 'Active',
@@ -52,6 +54,16 @@ const testTranslations = {
 
   // UI Pagination
   'ui.pagination.showing': 'Showing',
+
+  // UI Errors
+  'ui.errors.somethingWentWrong': 'Something went wrong',
+  'ui.errors.somethingWentWrongDesc':
+    "We're sorry, but something unexpected happened. Please try refreshing the page or contact support if the problem persists.",
+  'ui.errors.bannerDismissFailed': 'Failed to dismiss banner. Please try again.',
+  'ui.errors.bannerUpdateFailed': 'Failed to update banner. Please try again.',
+  'ui.errors.componentLoadingError': 'Component Loading Error',
+  'ui.errors.componentLoadingErrorDesc':
+    'Failed to load this component. Please try refreshing the page.',
 
   // Pages
   'pages.home.title': 'Welcome to LiteMaaS',

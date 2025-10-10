@@ -115,7 +115,7 @@ const HeatmapLegend: React.FC<HeatmapLegendProps> = ({
                   border: '1px solid var(--pf-t--global--border--color--default)',
                   borderRadius: 'var(--pf-t--global--border--radius--sm)',
                 }}
-                aria-label="Zero usage indicator"
+                aria-label={t('adminUsage.heatmap.legend.zeroUsageAriaLabel')}
                 role="img"
               />
               <span
@@ -155,7 +155,7 @@ const HeatmapLegend: React.FC<HeatmapLegendProps> = ({
                   border: '1px solid var(--pf-t--global--border--color--default)',
                   borderRadius: 'var(--pf-t--global--border--radius--sm)',
                 }}
-                aria-label="No data indicator"
+                aria-label={t('adminUsage.heatmap.legend.noDataAriaLabel')}
                 role="img"
               />
               <span

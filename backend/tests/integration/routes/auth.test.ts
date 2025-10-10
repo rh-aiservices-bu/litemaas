@@ -6,7 +6,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { createApp } from '../../../src/app';
-import { generateTestToken, generateExpiredToken } from '../setup';
+import { generateTestToken, generateExpiredToken, createTestUsers, TEST_USER_IDS } from '../setup';
 
 describe('Auth Routes Integration', () => {
   let app: FastifyInstance;
@@ -23,9 +23,12 @@ describe('Auth Routes Integration', () => {
     app = await createApp({ logger: false });
     await app.ready();
 
-    // Generate test tokens
-    validToken = generateTestToken('user-123', ['user']);
-    adminToken = generateTestToken('admin-123', ['admin']);
+    // Create test users in database for integration tests
+    await createTestUsers(app);
+
+    // Generate test tokens using proper UUIDs
+    validToken = generateTestToken(TEST_USER_IDS.USER, ['user']);
+    adminToken = generateTestToken(TEST_USER_IDS.ADMIN, ['admin']);
   });
 
   afterAll(async () => {

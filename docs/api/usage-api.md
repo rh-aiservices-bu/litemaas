@@ -327,6 +327,20 @@ The admin usage analytics system implements a sophisticated caching strategy opt
 5. Calculate trends with comparison periods
 6. Cache enriched data in `daily_usage_cache` table
 
+### Why POST for Analytics Endpoints?
+
+Most analytics endpoints (`/analytics`, `/by-user`, `/by-model`, `/by-provider`, `/export`) use POST instead of GET to support large filter arrays that would exceed URL length limits.
+
+**Key Reasons:**
+
+- **URL Length Limits**: Browsers (2048 chars) and web servers (4096-8192 chars) have strict URL length limits
+- **Large Filter Arrays**: Filtering by 100+ user IDs or API key IDs creates URLs exceeding these limits
+  - Example: 100 UUIDs × 36 chars each = 3,600+ character URLs
+- **HTTP Compliance**: RFC 7231 allows POST for complex queries when GET is impractical
+- **Hybrid Pattern**: Filters in request body (unlimited size), pagination in query string (standard HTTP semantics)
+
+See [REST API Documentation](rest-api.md#admin-usage-analytics-apiv1adminusage) for detailed technical rationale.
+
 ### Admin Analytics Endpoint
 
 **Endpoint:** `POST /api/v1/admin/usage/analytics`
@@ -352,43 +366,49 @@ The admin usage analytics system implements a sophisticated caching strategy opt
 
 ### User Breakdown Endpoint
 
-**Endpoint:** `GET /api/v1/admin/usage/by-user`
+**Endpoint:** `POST /api/v1/admin/usage/by-user`
 
 **Required Permission:** `admin:usage`
 
-**Description**: Detailed usage metrics broken down by user
+**Description**: Detailed usage metrics broken down by user. Uses POST to support large filter arrays.
 
-**Query Parameters**: `startDate`, `endDate`, `modelIds[]`, `providerIds[]`
+**Request Body**: `startDate`, `endDate`, `userIds[]`, `modelIds[]`, `providerIds[]`, `apiKeyIds[]`
+
+**Query Parameters** (Pagination): `page`, `limit`, `sortBy`, `sortOrder`
 
 ### Model Breakdown Endpoint
 
-**Endpoint:** `GET /api/v1/admin/usage/by-model`
+**Endpoint:** `POST /api/v1/admin/usage/by-model`
 
 **Required Permission:** `admin:usage`
 
-**Description**: Detailed usage metrics broken down by model
+**Description**: Detailed usage metrics broken down by model. Uses POST to support large filter arrays.
 
-**Query Parameters**: `startDate`, `endDate`, `userIds[]`, `providerIds[]`
+**Request Body**: `startDate`, `endDate`, `userIds[]`, `modelIds[]`, `providerIds[]`, `apiKeyIds[]`
+
+**Query Parameters** (Pagination): `page`, `limit`, `sortBy`, `sortOrder`
 
 ### Provider Breakdown Endpoint
 
-**Endpoint:** `GET /api/v1/admin/usage/by-provider`
+**Endpoint:** `POST /api/v1/admin/usage/by-provider`
 
 **Required Permission:** `admin:usage`
 
-**Description**: Detailed usage metrics broken down by provider
+**Description**: Detailed usage metrics broken down by provider. Uses POST to support large filter arrays.
 
-**Query Parameters**: `startDate`, `endDate`, `userIds[]`, `modelIds[]`
+**Request Body**: `startDate`, `endDate`, `userIds[]`, `modelIds[]`, `providerIds[]`, `apiKeyIds[]`
+
+**Query Parameters** (Pagination): `page`, `limit`, `sortBy`, `sortOrder`
 
 ### Export Endpoint
 
-**Endpoint:** `GET /api/v1/admin/usage/export`
+**Endpoint:** `POST /api/v1/admin/usage/export`
 
 **Required Permission:** `admin:usage`
 
-**Description**: Export comprehensive usage data in CSV or JSON format
+**Description**: Export comprehensive usage data in CSV or JSON format. Uses POST to support large filter arrays.
 
-**Query Parameters**: `startDate`, `endDate`, `format` (csv/json), `userIds[]`, `modelIds[]`, `providerIds[]`
+**Request Body**: `startDate`, `endDate`, `format` (csv/json), `userIds[]`, `modelIds[]`, `providerIds[]`, `apiKeyIds[]`
 
 ### Refresh Today Endpoint
 

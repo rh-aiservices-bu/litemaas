@@ -1,10 +1,18 @@
-import { FastifyPluginAsync } from 'fastify';
+// backend/src/routes/config.ts
+
+import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { readFileSync } from 'fs';
 import { join } from 'path';
+import { getPublicConfig } from '../config/admin-analytics.config.js';
 import { litellmConfig } from '../config/litellm.js';
 import { ConfigResponseSchema, type ConfigResponse } from '../schemas/config';
 
-export const configRoutes: FastifyPluginAsync = async (fastify) => {
+/**
+ * Configuration Routes
+ *
+ * Exposes safe subset of configuration to frontend
+ */
+export default async function configRoutes(fastify: FastifyInstance) {
   // Read version from root package.json once at startup
   let appVersion = '0.0.0';
   try {
@@ -15,7 +23,12 @@ export const configRoutes: FastifyPluginAsync = async (fastify) => {
     fastify.log.warn(error, 'Failed to read version from package.json, using default');
   }
 
-  // Get public configuration
+  /**
+   * GET /api/v1/config
+   *
+   * Get public configuration
+   * No authentication required - this is public configuration
+   */
   fastify.get<{
     Reply: ConfigResponse;
   }>('/', {
@@ -48,6 +61,74 @@ export const configRoutes: FastifyPluginAsync = async (fastify) => {
       };
     },
   });
-};
 
-export default configRoutes;
+  /**
+   * GET /api/v1/config/admin-analytics
+   *
+   * Get public admin analytics configuration
+   * No authentication required - this is public configuration
+   */
+  fastify.get(
+    '/admin-analytics',
+    {
+      schema: {
+        description: 'Get public admin analytics configuration',
+        tags: ['configuration'],
+        response: {
+          200: {
+            type: 'object',
+            properties: {
+              pagination: {
+                type: 'object',
+                properties: {
+                  defaultPageSize: { type: 'number' },
+                  maxPageSize: { type: 'number' },
+                  minPageSize: { type: 'number' },
+                },
+              },
+              topLimits: {
+                type: 'object',
+                properties: {
+                  users: { type: 'number' },
+                  models: { type: 'number' },
+                  providers: { type: 'number' },
+                },
+              },
+              dateRangeLimits: {
+                type: 'object',
+                properties: {
+                  maxAnalyticsDays: { type: 'number' },
+                  maxExportDays: { type: 'number' },
+                },
+              },
+              warnings: {
+                type: 'object',
+                properties: {
+                  largeDateRangeDays: { type: 'number' },
+                },
+              },
+              trends: {
+                type: 'object',
+                properties: {
+                  calculationPrecision: { type: 'number' },
+                },
+              },
+              export: {
+                type: 'object',
+                properties: {
+                  maxRows: { type: 'number' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    async (_request: FastifyRequest, reply: FastifyReply) => {
+      const config = fastify.getAdminAnalyticsConfig();
+      const publicConfig = getPublicConfig(config);
+
+      return reply.send(publicConfig);
+    },
+  );
+}

@@ -207,48 +207,70 @@ export const TopUsersTable: React.FC<TopUsersTableProps> = ({
         </Flex>
       </CardTitle>
       <CardBody>
-        <Table aria-label={t('adminUsage.tables.topUsers')} variant="compact">
-          <Thead>
-            <Tr>
-              <Th>{t('adminUsage.tableHeaders.user')}</Th>
-              <Th modifier="nowrap">{t('adminUsage.tableHeaders.requests')}</Th>
-              <Th modifier="nowrap">{t('adminUsage.tableHeaders.tokens')}</Th>
-              <Th
-                modifier="nowrap"
-                dangerouslySetInnerHTML={{ __html: t('adminUsage.tableHeaders.promptTokens') }}
-              />
-              <Th
-                modifier="nowrap"
-                dangerouslySetInnerHTML={{ __html: t('adminUsage.tableHeaders.completionTokens') }}
-              />
-              <Th modifier="nowrap">{t('adminUsage.tableHeaders.cost')}</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {topUsers.slice(0, 5).map((user, index) => (
-              <Tr key={user.userId || index}>
-                <Th scope="row">
-                  <div>
-                    <div style={{ fontWeight: 'bold' }}>{user.username}</div>
-                    <div
-                      style={{
-                        fontSize: 'var(--pf-t--global--font--size--sm)',
-                        color: 'var(--pf-t--global--text--color--subtle)',
-                      }}
-                    >
-                      {user.email}
-                    </div>
-                  </div>
+        <div style={{ maxWidth: '100%', overflowX: 'auto' }}>
+          <Table
+            aria-label={t('adminUsage.tables.topUsers')}
+            variant="compact"
+            style={{ minWidth: 'min-content' }}
+          >
+            <Thead>
+              <Tr>
+                <Th style={{ whiteSpace: 'normal', padding: '8px', textAlign: 'left' }}>
+                  {t('adminUsage.tableHeaders.user')}
                 </Th>
-                <Td>{formatNumber(user.requests)}</Td>
-                <Td>{formatNumber(user.tokens)}</Td>
-                <Td>{formatNumber(user.prompt_tokens)}</Td>
-                <Td>{formatNumber(user.completion_tokens)}</Td>
-                <Td>{formatCurrency(user.cost)}</Td>
+                <Th style={{ whiteSpace: 'normal', padding: '8px', textAlign: 'center' }}>
+                  {t('adminUsage.tableHeaders.requests')}
+                </Th>
+                <Th style={{ whiteSpace: 'normal', padding: '8px', textAlign: 'center' }}>
+                  {t('adminUsage.tableHeaders.tokens')}
+                </Th>
+                <Th style={{ whiteSpace: 'normal', padding: '8px', textAlign: 'center' }}>
+                  {t('adminUsage.tableHeaders.promptTokens')}
+                </Th>
+                <Th style={{ whiteSpace: 'normal', padding: '8px', textAlign: 'center' }}>
+                  {t('adminUsage.tableHeaders.completionTokens')}
+                </Th>
+                <Th style={{ whiteSpace: 'normal', padding: '8px', textAlign: 'center' }}>
+                  {t('adminUsage.tableHeaders.cost')}
+                </Th>
               </Tr>
-            ))}
-          </Tbody>
-        </Table>
+            </Thead>
+            <Tbody>
+              {topUsers.slice(0, 5).map((user, index) => (
+                <Tr key={user.userId || index}>
+                  <Th scope="row" style={{ padding: '8px', textAlign: 'left' }}>
+                    <div>
+                      <div style={{ fontWeight: 'bold' }}>{user.username}</div>
+                      <div
+                        style={{
+                          fontSize: 'var(--pf-t--global--font--size--sm)',
+                          color: 'var(--pf-t--global--text--color--subtle)',
+                        }}
+                      >
+                        {user.email}
+                      </div>
+                    </div>
+                  </Th>
+                  <Td style={{ padding: '8px', textAlign: 'center' }}>
+                    {formatNumber(user.requests)}
+                  </Td>
+                  <Td style={{ padding: '8px', textAlign: 'center' }}>
+                    {formatNumber(user.tokens)}
+                  </Td>
+                  <Td style={{ padding: '8px', textAlign: 'center' }}>
+                    {formatNumber(user.prompt_tokens)}
+                  </Td>
+                  <Td style={{ padding: '8px', textAlign: 'center' }}>
+                    {formatNumber(user.completion_tokens)}
+                  </Td>
+                  <Td style={{ padding: '8px', textAlign: 'center' }}>
+                    {formatCurrency(user.cost)}
+                  </Td>
+                </Tr>
+              ))}
+            </Tbody>
+          </Table>
+        </div>
       </CardBody>
     </Card>
   );

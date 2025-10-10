@@ -19,6 +19,7 @@ export interface AccessibleChartData {
   value: number | string;
   additionalInfo?: { [key: string]: string | number };
   color?: string;
+  labelStyle?: React.CSSProperties;
 }
 
 export interface AccessibleChartProps {
@@ -42,6 +43,8 @@ export interface AccessibleChartProps {
   exportFilename?: string;
   /** Additional table headers for complex data */
   additionalHeaders?: string[];
+  /** Header for the label column (first column in table view) */
+  labelHeader?: string;
   /** Custom data formatting function */
   formatValue?: (value: number | string, type?: string) => string;
   /** Loading state */
@@ -63,11 +66,13 @@ const AccessibleChart: React.FC<AccessibleChartProps> = ({
   allowExport = true,
   exportFilename = 'chart-data',
   additionalHeaders = [],
+  labelHeader,
   formatValue = (value) => value.toString(),
   error,
   ariaDescribedBy,
 }) => {
   const { t } = useTranslation();
+  const effectiveLabelHeader = labelHeader || t('common.label');
   const [viewMode, setViewMode] = useState<'chart' | 'table'>('chart');
   const chartId = useId();
   const descriptionId = useId();
@@ -170,11 +175,14 @@ const AccessibleChart: React.FC<AccessibleChartProps> = ({
   const exportData = () => {
     if (!data.length) return;
 
-    const headers = additionalHeaders;
+    const headers = [effectiveLabelHeader, ...additionalHeaders];
     const csvContent = [
       headers.join(','),
       ...data.map((item) => {
         const row: string[] = [];
+
+        // Add label as first column
+        row.push(item.label);
 
         // Add additional info if present
         if (item.additionalInfo && additionalHeaders.length > 0) {
@@ -376,19 +384,30 @@ const AccessibleChart: React.FC<AccessibleChartProps> = ({
             </Caption>
             <Thead>
               <Tr>
+                <Th key="label" style={{ whiteSpace: 'normal', padding: '8px', textAlign: 'left' }}>
+                  {effectiveLabelHeader}
+                </Th>
                 {additionalHeaders.map((header, index) => (
-                  <Th key={index}>{header}</Th>
+                  <Th
+                    key={index}
+                    style={{ whiteSpace: 'normal', padding: '8px', textAlign: 'center' }}
+                  >
+                    {header}
+                  </Th>
                 ))}
               </Tr>
             </Thead>
             <Tbody>
               {data.map((item, index) => (
                 <Tr key={index}>
+                  <Td key="label" style={{ padding: '8px', textAlign: 'left', ...item.labelStyle }}>
+                    {item.label}
+                  </Td>
                   {additionalHeaders.map((header, headerIndex) => {
                     const key = header.toLowerCase().replace(/\s+/g, '');
                     const value = item.additionalInfo?.[key];
                     return (
-                      <Td key={headerIndex}>
+                      <Td key={headerIndex} style={{ padding: '8px', textAlign: 'center' }}>
                         {value ? formatValue(value) : t('common.notAvailable')}
                       </Td>
                     );

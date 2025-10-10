@@ -19,6 +19,11 @@ import errorHandlerPlugin from './middleware/error-handler';
 import authHooksPlugin from './middleware/auth-hooks';
 import routes from './routes';
 import authRoutes from './routes/auth';
+import {
+  initAdminAnalyticsConfig,
+  getAdminAnalyticsConfig,
+  type AdminAnalyticsConfig,
+} from './config/admin-analytics.config.js';
 
 export const createApp = async (opts: { logger?: boolean } = {}): Promise<FastifyInstance> => {
   const fastify = Fastify({
@@ -47,6 +52,19 @@ export const createApp = async (opts: { logger?: boolean } = {}): Promise<Fastif
 
   // Register core plugins
   await fastify.register(envPlugin);
+
+  // Initialize admin analytics configuration early in startup
+  try {
+    const config = initAdminAnalyticsConfig();
+    fastify.log.info({ config }, 'Admin analytics configuration loaded');
+  } catch (error) {
+    fastify.log.fatal({ error }, 'Failed to load admin analytics configuration');
+    throw error;
+  }
+
+  // Decorate fastify instance with config getter
+  fastify.decorate('getAdminAnalyticsConfig', getAdminAnalyticsConfig);
+
   await fastify.register(import('@fastify/sensible'));
   await fastify.register(import('@fastify/helmet'), {
     contentSecurityPolicy: {
@@ -85,5 +103,12 @@ export const createApp = async (opts: { logger?: boolean } = {}): Promise<Fastif
 
   return fastify;
 };
+
+// Type augmentation for FastifyInstance
+declare module 'fastify' {
+  interface FastifyInstance {
+    getAdminAnalyticsConfig: () => AdminAnalyticsConfig;
+  }
+}
 
 export default createApp;

@@ -102,6 +102,7 @@
     },
     "completionTokens": "完成令牌",
     "datePresets": {
+      "1d": "最近 1 天",
       "30d": "最近 30 天",
       "7d": "最近 7 天",
       "90d": "最近 90 天",
@@ -170,7 +171,9 @@
       "legend": {
         "colorScale": "使用强度",
         "noData": "无数据",
-        "zeroUsage": "零使用"
+        "noDataAriaLabel": "无数据指示符",
+        "zeroUsage": "零使用",
+        "zeroUsageAriaLabel": "零使用指示符"
       },
       "table": {
         "viewAsChart": "查看图表",
@@ -197,7 +200,17 @@
     },
     "metricSelect": "指标选择",
     "metricsOverview": "指标概览",
-    "modelBreakdown": "模型明细",
+    "modelBreakdown": {
+      "completionTokens": "完成令牌",
+      "modelName": "模型",
+      "noData": "无可用模型数据",
+      "noDataDescription": "所选日期范围和筛选条件未找到使用数据。",
+      "promptTokens": "提示令牌",
+      "tableLabel": "模型明细表",
+      "totalCost": "总成本",
+      "totalRequests": "请求数",
+      "totalTokens": "总令牌数"
+    },
     "modelFilterChanged": "按 {{count}} 个模型筛选",
     "noData": "无可用数据",
     "noModelData": "无可用模型数据",
@@ -206,8 +219,22 @@
     "noProvidersFound": "所选日期范围未找到提供商。",
     "noUserData": "无可用用户数据",
     "noUsersFound": "所选日期范围未找到用户。",
+    "pagination": {
+      "label": "分页"
+    },
     "promptTokens": "提示令牌",
-    "providerBreakdown": "提供商明细",
+    "providerBreakdown": {
+      "completionTokens": "完成令牌",
+      "noData": "无可用提供商数据",
+      "noDataDescription": "所选日期范围和筛选条件未找到使用数据。",
+      "promptTokens": "提示令牌",
+      "providerName": "提供商",
+      "successRate": "成功率",
+      "tableLabel": "提供商明细表",
+      "totalCost": "总成本",
+      "totalRequests": "请求数",
+      "totalTokens": "总令牌数"
+    },
     "refreshing": "刷新今日数据中...",
     "refreshSuccess": "刷新成功",
     "refreshToday": "刷新今日",
@@ -261,7 +288,18 @@
     "unknownUser": "未知用户",
     "unknownUserDescription": "来自已删除或未映射 API 密钥的请求",
     "usageHeatmapSubtitle": "所选周的使用热力图",
-    "userBreakdown": "用户明细",
+    "userBreakdown": {
+      "completionTokens": "完成令牌",
+      "email": "邮箱",
+      "noData": "无可用用户数据",
+      "noDataDescription": "所选日期范围和筛选条件未找到使用数据。",
+      "promptTokens": "提示令牌",
+      "tableLabel": "用户明细表",
+      "totalCost": "总成本",
+      "totalRequests": "请求数",
+      "totalTokens": "总令牌数",
+      "username": "用户名"
+    },
     "userFilterChanged": "按 {{count}} 个用户筛选",
     "weeklyUsagePatterns": "每周使用模式"
   },
@@ -286,8 +324,10 @@
     "no": "否",
     "none": "没有任何",
     "notAvailable": "N/A",
+    "refreshPage": "刷新页面",
     "retry": "重试",
     "table": "表格",
+    "tryAgain": "重试",
     "update": "更新",
     "value": "值",
     "view": "查看",
@@ -1071,7 +1111,10 @@
       "loadingTitle": "正在加载使用数据...",
       "metrics": {
         "avgResponseTime": "平均响应时间",
+        "completion_tokens": "完成令牌",
+        "cost": "成本",
         "currency": "CNY",
+        "prompt_tokens": "提示令牌",
         "requests": "请求",
         "successfulRequests": "成功的请求",
         "successRate": "成功率",
@@ -1116,12 +1159,14 @@
       "selectApiKeyTitle": "选择API密钥",
       "subtitle": "监控您的API使用情况、成本和性能指标",
       "tableHeaders": {
+        "completionTokens": "完成令牌",
         "cost": "成本",
         "count": "计数",
         "date": "日期",
         "formattedValue": "格式化值",
         "model": "模型",
         "percentage": "百分比",
+        "promptTokens": "提示令牌",
         "requests": "请求",
         "tokens": "令牌",
         "usagePercent": "使用率 %"
@@ -1192,6 +1237,15 @@
       "userAvatar": "用户头像"
     },
     "errors": {
+      "bannerCreateFailed": "创建横幅失败。请重试。",
+      "bannerDeleteFailed": "删除横幅失败。请重试。",
+      "bannerDismissFailed": "关闭横幅失败。请重试。",
+      "bannerUpdateFailed": "更新横幅失败。请重试。",
+      "bannerVisibilityFailed": "应用可见性更改失败。请重试。",
+      "componentError": "组件错误",
+      "componentLoadingError": "组件加载错误",
+      "componentLoadingErrorDesc": "加载此组件失败。请尝试刷新页面。",
+      "configLoadFailed": "加载应用程序配置失败",
       "details": "详情",
       "errorCode": "错误代码",
       "field": "字段",
@@ -1205,7 +1259,8 @@
       "retryAction": "重试失败的操作",
       "retryAfter": "请等待{{seconds}}秒后重试",
       "showDetails": "显示详情",
-      "somethingWrong": "出现问题",
+      "somethingWentWrong": "出现问题",
+      "somethingWentWrongDesc": "抱歉，发生了意外情况。请尝试刷新页面，如果问题仍然存在，请联系支持。",
       "statusCode": "状态代码",
       "title": "错误",
       "tryRefresh": "抱歉，发生了意外情况。请尝试刷新页面，如果问题仍然存在，请联系支持。",
@@ -1222,7 +1277,8 @@
         "positive": "{{field}}必须是正数",
         "required": "{{field}}是必填项",
         "url": "{{field}}必须是有效的URL"
-      }
+      },
+      "somethingWrong": "出现问题"
     },
     "footer": {
       "appBy": "应用由",
@@ -1246,6 +1302,7 @@
       "spanish": "Español"
     },
     "navigation": {
+      "globalNavigation": "全局导航",
       "mainNavigation": "主导航",
       "userMenu": "用户菜单"
     },

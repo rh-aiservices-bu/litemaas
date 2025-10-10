@@ -60,9 +60,23 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
     }
   }, []);
 
+  // Cleanup effect: Ensures cleanup on unmount (defense-in-depth)
+  // This handles edge cases like navigation, error boundaries, and conditional rendering
+  React.useEffect(() => {
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
+    };
+  }, []);
+
   // Calculate column widths based on container
-  const weekColumnWidth = 160; // Fixed for date ranges like "Sep 29-Oct 5"
-  const remainingWidth = containerWidth - weekColumnWidth;
+  const weekColumnWidth = 120; // Fixed width for date ranges like "Sep 29-Oct 5" (increased to prevent truncation)
+  // Account for borders: 8 columns × 2px (left + right borders, but they collapse)
+  // In practice, with border-collapse, we need about 8-10px total for all borders
+  const borderAdjustment = 10;
+  const remainingWidth = Math.max(0, containerWidth - weekColumnWidth - borderAdjustment);
   const dayColumnWidth = remainingWidth > 0 ? Math.floor(remainingWidth / 7) : 80; // Fallback to 80px minimum
 
   // Generate color scale from data
@@ -94,7 +108,8 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
     const baseStyle: React.CSSProperties = {
       backgroundColor: getCellColor(value, isInRange),
       border: '1px solid var(--pf-t--global--border--color--default)',
-      width: `${columnWidth}px`,
+      minWidth: `${columnWidth}px`,
+      maxWidth: `${columnWidth}px`,
       height: '48px',
       textAlign: 'center',
       verticalAlign: 'middle',
@@ -176,21 +191,30 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
     );
   };
 
+  // Compute the key that AccessibleChart will use to look up values
+  // The header is translated, then lowercased with spaces removed
+  const metricHeader = t(`pages.usage.metrics.${metricType}`);
+  const metricKey = metricHeader.toLowerCase().replace(/\s+/g, '');
+
   // Transform data for AccessibleChart
   const accessibleData = useMemo(() => {
     return data.flatMap((week) =>
-      week.days.map((day) => ({
-        label: `${day.dayName}, ${day.date}`,
-        value: day.value || 0,
-        additionalInfo: {
-          date: day.date,
-          value: day.formattedValue,
-          formattedValue: day.formattedValue,
-          rawValue: day.value || 0,
-        },
-      })),
+      week.days.map((day) => {
+        // Check if this is Monday (first day of week) for bold styling
+        const isMonday = day.dayName.startsWith('Mon');
+
+        return {
+          label: `${day.dayName}, ${day.date}`,
+          value: day.value || 0,
+          labelStyle: isMonday ? { fontWeight: 'bold' } : undefined,
+          additionalInfo: {
+            [metricKey]: day.formattedValue,
+            [`${metricKey}Raw`]: day.value || 0,
+          },
+        };
+      }),
     );
-  }, [data]);
+  }, [data, metricKey]);
 
   // Loading state
   if (loading) {
@@ -226,7 +250,8 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
         weeks: data.length,
       })}
       chartType="area"
-      additionalHeaders={['Date', 'Value']}
+      labelHeader={t('pages.usage.tableHeaders.date')}
+      additionalHeaders={[t(`pages.usage.metrics.${metricType}`)]}
     >
       <div ref={containerRef} style={{ width: '100%' }}>
         <Table
@@ -235,7 +260,7 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
             metric: t(`pages.usage.metrics.${metricType}`),
             weeks: data.length,
           })}
-          style={{ width: '100%', tableLayout: 'fixed' }}
+          style={{ width: '100%', tableLayout: 'fixed', minWidth: 'min-content' }}
         >
           <Caption className="pf-v6-screen-reader">
             {t('adminUsage.heatmap.accessibility.heatmapDescription', {
@@ -251,6 +276,7 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
                 style={{
                   width: `${weekColumnWidth}px`,
                   minWidth: `${weekColumnWidth}px`,
+                  maxWidth: `${weekColumnWidth}px`,
                   textAlign: 'left',
                   fontSize: 'var(--pf-t--global--font--size--sm)',
                   fontWeight: 'var(--pf-t--global--font--weight--bold)',
@@ -262,7 +288,8 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
                 <Th
                   key={day}
                   style={{
-                    width: `${dayColumnWidth}px`,
+                    minWidth: `${dayColumnWidth}px`,
+                    maxWidth: `${dayColumnWidth}px`,
                     textAlign: 'center',
                     fontSize: 'var(--pf-t--global--font--size--sm)',
                     fontWeight: 'var(--pf-t--global--font--weight--bold)',
@@ -284,6 +311,7 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
                   style={{
                     width: `${weekColumnWidth}px`,
                     minWidth: `${weekColumnWidth}px`,
+                    maxWidth: `${weekColumnWidth}px`,
                     fontSize: 'var(--pf-t--global--font--size--sm)',
                     color: 'var(--pf-t--global--text--color--subtle)',
                     fontWeight: 'normal',

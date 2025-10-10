@@ -1,61 +1,80 @@
-import React, { useState, useMemo } from 'react';
-import { useTranslation } from 'react-i18next';
+import React from 'react';
 import { Table, Thead, Tbody, Tr, Th, Td, ThProps } from '@patternfly/react-table';
 import {
   Pagination,
-  PaginationVariant,
   EmptyState,
   EmptyStateVariant,
   EmptyStateBody,
   Title,
-  Skeleton,
   Badge,
 } from '@patternfly/react-core';
-import { CloudIcon } from '@patternfly/react-icons';
-import type { ProviderBreakdown } from '../../services/adminUsage.service';
+import { SearchIcon } from '@patternfly/react-icons';
+import { useQuery } from 'react-query';
+import { useTranslation } from 'react-i18next';
+import { adminUsageService } from '../../services/adminUsage.service';
+import { usePagination } from '../../hooks/usePagination';
+import { useErrorHandler } from '../../hooks/useErrorHandler';
+import type { AdminUsageFilters } from '../../services/adminUsage.service';
 import { formatNumber, formatCurrency, formatPercentage } from '../../utils/formatters';
+import { PER_PAGE_OPTIONS } from '../../services/adminUsage.service';
 
-/**
- * Props for ProviderBreakdownTable component
- */
 interface ProviderBreakdownTableProps {
-  /** Provider breakdown data to display */
-  data: ProviderBreakdown[];
-  /** Whether data is currently loading */
-  loading: boolean;
+  filters: AdminUsageFilters;
 }
 
-/**
- * Sortable column identifiers
- */
-type SortableColumn = 'provider' | 'requests' | 'tokens' | 'cost' | 'models' | 'successRate';
-
-/**
- * ProviderBreakdownTable Component
- *
- * Displays a sortable, paginated table of provider usage breakdowns with:
- * - Provider name
- * - Usage metrics (requests, tokens, cost)
- * - Resource counts (models, users)
- * - Performance metrics (success rate)
- * - Client-side sorting and pagination
- * - Number formatting with abbreviations (1K, 1M)
- * - Currency formatting
- * - Percentage formatting
- * - Color-coded success rates (green >95%, yellow 90-95%, red <90%)
- * - Empty state and loading skeleton
- * - WCAG AA accessibility compliance
- */
-const ProviderBreakdownTable: React.FC<ProviderBreakdownTableProps> = ({ data, loading }) => {
+export const ProviderBreakdownTable: React.FC<ProviderBreakdownTableProps> = ({ filters }) => {
   const { t } = useTranslation();
-
-  // Sorting state
-  const [activeSortIndex, setActiveSortIndex] = useState<number>(1); // Default: requests column
-  const [activeSortDirection, setActiveSortDirection] = useState<'asc' | 'desc'>('desc');
+  const { handleError } = useErrorHandler();
 
   // Pagination state
-  const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(25);
+  const pagination = usePagination({
+    initialSortBy: 'metrics.tokens.total',
+    initialSortOrder: 'desc',
+  });
+
+  // Fetch data with pagination
+  const { data: response, isLoading } = useQuery(
+    ['providerBreakdown', filters, pagination.paginationParams],
+    () =>
+      adminUsageService.getProviderBreakdown(filters, {
+        page: pagination.page,
+        limit: pagination.perPage,
+        sortBy: pagination.sortBy,
+        sortOrder: pagination.sortOrder,
+      }),
+    {
+      onError: (err) => handleError(err),
+      keepPreviousData: true,
+      staleTime: 5 * 60 * 1000,
+    },
+  );
+
+  // Reset pagination when filters change
+  React.useEffect(() => {
+    pagination.reset();
+  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sort handler for table headers
+  const handleSort = (columnKey: string) => {
+    const newSortOrder =
+      pagination.sortBy === columnKey && pagination.sortOrder === 'asc' ? 'desc' : 'asc';
+    pagination.setSort(columnKey, newSortOrder);
+  };
+
+  // Get sort direction for column
+  const getSortParams = (columnKey: string): ThProps['sort'] => {
+    return {
+      sortBy:
+        pagination.sortBy === columnKey
+          ? {
+              index: 0,
+              direction: pagination.sortOrder,
+            }
+          : {},
+      onSort: () => handleSort(columnKey),
+      columnIndex: 0,
+    };
+  };
 
   /**
    * Get success rate badge with color coding
@@ -81,205 +100,94 @@ const ProviderBreakdownTable: React.FC<ProviderBreakdownTableProps> = ({ data, l
     );
   };
 
-  /**
-   * Get sort function for a column
-   */
-  const getSortFunction = (_column: SortableColumn) => {
-    return (a: ProviderBreakdown, b: ProviderBreakdown): number => {
-      let aValue: string | number;
-      let bValue: string | number;
-
-      switch (_column) {
-        case 'provider':
-          aValue = a.provider.toLowerCase();
-          bValue = b.provider.toLowerCase();
-          break;
-        case 'requests':
-          aValue = a.metrics.requests;
-          bValue = b.metrics.requests;
-          break;
-        case 'tokens':
-          aValue = a.metrics.tokens.total;
-          bValue = b.metrics.tokens.total;
-          break;
-        case 'cost':
-          aValue = a.metrics.cost;
-          bValue = b.metrics.cost;
-          break;
-        case 'models':
-          aValue = a.metrics.models;
-          bValue = b.metrics.models;
-          break;
-        case 'successRate':
-          aValue = a.metrics.successRate;
-          bValue = b.metrics.successRate;
-          break;
-        default:
-          return 0;
-      }
-
-      if (aValue < bValue) {
-        return activeSortDirection === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return activeSortDirection === 'asc' ? 1 : -1;
-      }
-      return 0;
-    };
-  };
-
-  /**
-   * Handle column header click for sorting
-   */
-  const handleSort = (columnIndex: number, _column: SortableColumn) => {
-    if (activeSortIndex === columnIndex) {
-      // Toggle direction if same column
-      setActiveSortDirection(activeSortDirection === 'asc' ? 'desc' : 'asc');
-    } else {
-      // Set new column with default descending direction
-      setActiveSortIndex(columnIndex);
-      setActiveSortDirection('desc');
-    }
-  };
-
-  /**
-   * Get sort params for table header
-   */
-  const getSortParams = (columnIndex: number, column: SortableColumn): ThProps['sort'] => ({
-    sortBy: {
-      index: activeSortIndex,
-      direction: activeSortDirection,
-    },
-    onSort: () => handleSort(columnIndex, column),
-    columnIndex,
-  });
-
-  // Sort and paginate data
-  const sortedData = useMemo(() => {
-    if (!data || data.length === 0) return [];
-
-    const columnMap: SortableColumn[] = [
-      'provider',
-      'requests',
-      'tokens',
-      'cost',
-      'models',
-      'successRate',
-    ];
-    const sortColumn = columnMap[activeSortIndex] || 'requests';
-
-    return [...data].sort(getSortFunction(sortColumn));
-  }, [data, activeSortIndex, activeSortDirection]);
-
-  const paginatedData = useMemo(() => {
-    const startIndex = (page - 1) * perPage;
-    return sortedData.slice(startIndex, startIndex + perPage);
-  }, [sortedData, page, perPage]);
-
-  // Loading skeleton
-  if (loading) {
-    return (
-      <div>
-        <Table aria-label={t('admin.usage.tables.providers.ariaLabel')} variant="compact">
-          <Thead>
-            <Tr>
-              <Th>{t('admin.usage.tables.providers.columns.provider')}</Th>
-              <Th>{t('admin.usage.tables.providers.columns.requests')}</Th>
-              <Th>{t('admin.usage.tables.providers.columns.tokens')}</Th>
-              <Th>{t('admin.usage.tables.providers.columns.cost')}</Th>
-              <Th>{t('admin.usage.tables.providers.columns.models')}</Th>
-              <Th>{t('admin.usage.tables.providers.columns.successRate')}</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {Array.from({ length: 5 }).map((_, index) => (
-              <Tr key={index}>
-                <Td>
-                  <Skeleton width="60%" />
-                </Td>
-                <Td>
-                  <Skeleton width="40%" />
-                </Td>
-                <Td>
-                  <Skeleton width="50%" />
-                </Td>
-                <Td>
-                  <Skeleton width="45%" />
-                </Td>
-                <Td>
-                  <Skeleton width="35%" />
-                </Td>
-                <Td>
-                  <Skeleton width="40%" />
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      </div>
-    );
+  if (isLoading && !response) {
+    return <div className="pf-v6-u-text-align-center pf-v6-u-p-lg">{t('common.loading')}</div>;
   }
 
-  // Empty state
-  if (!data || data.length === 0) {
+  if (!response || response.data.length === 0) {
     return (
       <EmptyState variant={EmptyStateVariant.sm}>
-        <CloudIcon />
-        <Title headingLevel="h3" size="lg">
-          {t('admin.usage.tables.providers.empty.title')}
+        <SearchIcon />
+        <Title headingLevel="h4" size="lg">
+          {t('adminUsage.providerBreakdown.noData', 'No provider data available')}
         </Title>
-        <EmptyStateBody>{t('admin.usage.tables.providers.empty.description')}</EmptyStateBody>
+        <EmptyStateBody>
+          {t(
+            'adminUsage.providerBreakdown.noDataDescription',
+            'No usage data found for the selected date range and filters.',
+          )}
+        </EmptyStateBody>
       </EmptyState>
     );
   }
 
+  const { data: providers, pagination: paginationMetadata } = response;
+
   return (
-    <div>
-      <Table aria-label={t('admin.usage.tables.providers.ariaLabel')} variant="compact">
-        <caption className="pf-v6-screen-reader">
-          {t('admin.usage.tables.providers.caption', { count: data.length })}
-        </caption>
+    <>
+      <Pagination
+        itemCount={paginationMetadata.total}
+        page={pagination.page}
+        perPage={pagination.perPage}
+        onSetPage={pagination.setPage}
+        onPerPageSelect={pagination.setPerPage}
+        variant="top"
+        perPageOptions={PER_PAGE_OPTIONS.map((opt) => opt)}
+        titles={{
+          paginationAriaLabel: t('adminUsage.pagination.label', 'Provider breakdown pagination'),
+        }}
+      />
+
+      <Table aria-label={t('adminUsage.providerBreakdown.tableLabel', 'Provider breakdown table')}>
         <Thead>
           <Tr>
-            <Th sort={getSortParams(0, 'provider')} width={20}>
-              {t('admin.usage.tables.providers.columns.provider')}
+            <Th sort={getSortParams('provider')}>
+              {t('adminUsage.providerBreakdown.providerName', 'Provider')}
             </Th>
-            <Th sort={getSortParams(1, 'requests')} width={15}>
-              {t('admin.usage.tables.providers.columns.requests')}
+            <Th sort={getSortParams('metrics.requests')}>
+              {t('adminUsage.providerBreakdown.totalRequests', 'Requests')}
             </Th>
-            <Th sort={getSortParams(2, 'tokens')} width={15}>
-              {t('admin.usage.tables.providers.columns.tokens')}
+            <Th sort={getSortParams('metrics.tokens.total')}>
+              {t('adminUsage.providerBreakdown.totalTokens', 'Total Tokens')}
             </Th>
-            <Th sort={getSortParams(3, 'cost')} width={15}>
-              {t('admin.usage.tables.providers.columns.cost')}
+            <Th sort={getSortParams('metrics.tokens.input')}>
+              {t('adminUsage.providerBreakdown.promptTokens', 'Prompt Tokens')}
             </Th>
-            <Th sort={getSortParams(4, 'models')} width={15}>
-              {t('admin.usage.tables.providers.columns.models')}
+            <Th sort={getSortParams('metrics.tokens.output')}>
+              {t('adminUsage.providerBreakdown.completionTokens', 'Completion Tokens')}
             </Th>
-            <Th sort={getSortParams(5, 'successRate')} width={20}>
-              {t('admin.usage.tables.providers.columns.successRate')}
+            <Th sort={getSortParams('metrics.cost')}>
+              {t('adminUsage.providerBreakdown.totalCost', 'Total Cost')}
+            </Th>
+            <Th sort={getSortParams('metrics.successRate')}>
+              {t('adminUsage.providerBreakdown.successRate', 'Success Rate')}
             </Th>
           </Tr>
         </Thead>
         <Tbody>
-          {paginatedData.map((provider) => (
+          {providers.map((provider) => (
             <Tr key={provider.provider}>
-              <Td dataLabel={t('admin.usage.tables.providers.columns.provider')}>
+              <Td dataLabel={t('adminUsage.providerBreakdown.providerName', 'Provider')}>
                 <strong>{provider.provider}</strong>
               </Td>
-              <Td dataLabel={t('admin.usage.tables.providers.columns.requests')}>
+              <Td dataLabel={t('adminUsage.providerBreakdown.totalRequests', 'Requests')}>
                 {formatNumber(provider.metrics.requests)}
               </Td>
-              <Td dataLabel={t('admin.usage.tables.providers.columns.tokens')}>
+              <Td dataLabel={t('adminUsage.providerBreakdown.totalTokens', 'Total Tokens')}>
                 {formatNumber(provider.metrics.tokens.total)}
               </Td>
-              <Td dataLabel={t('admin.usage.tables.providers.columns.cost')}>
+              <Td dataLabel={t('adminUsage.providerBreakdown.promptTokens', 'Prompt Tokens')}>
+                {formatNumber(provider.metrics.tokens.input)}
+              </Td>
+              <Td
+                dataLabel={t('adminUsage.providerBreakdown.completionTokens', 'Completion Tokens')}
+              >
+                {formatNumber(provider.metrics.tokens.output)}
+              </Td>
+              <Td dataLabel={t('adminUsage.providerBreakdown.totalCost', 'Total Cost')}>
                 {formatCurrency(provider.metrics.cost)}
               </Td>
-              <Td dataLabel={t('admin.usage.tables.providers.columns.models')}>
-                {formatNumber(provider.metrics.models)}
-              </Td>
-              <Td dataLabel={t('admin.usage.tables.providers.columns.successRate')}>
+              <Td dataLabel={t('adminUsage.providerBreakdown.successRate', 'Success Rate')}>
                 {getSuccessRateBadge(provider.metrics.successRate)}
               </Td>
             </Tr>
@@ -287,29 +195,19 @@ const ProviderBreakdownTable: React.FC<ProviderBreakdownTableProps> = ({ data, l
         </Tbody>
       </Table>
 
-      {/* Pagination */}
-      {data.length > perPage && (
-        <Pagination
-          itemCount={data.length}
-          perPage={perPage}
-          page={page}
-          onSetPage={(_event, newPage) => setPage(newPage)}
-          onPerPageSelect={(_event, newPerPage) => {
-            setPerPage(newPerPage);
-            setPage(1);
-          }}
-          perPageOptions={[
-            { title: '10', value: 10 },
-            { title: '25', value: 25 },
-            { title: '50', value: 50 },
-            { title: '100', value: 100 },
-          ]}
-          variant={PaginationVariant.bottom}
-          aria-label={t('admin.usage.tables.providers.pagination.ariaLabel')}
-          style={{ marginTop: 'var(--pf-t--global--spacer--md)' }}
-        />
-      )}
-    </div>
+      <Pagination
+        itemCount={paginationMetadata.total}
+        page={pagination.page}
+        perPage={pagination.perPage}
+        onSetPage={pagination.setPage}
+        onPerPageSelect={pagination.setPerPage}
+        variant="bottom"
+        perPageOptions={PER_PAGE_OPTIONS.map((opt) => opt)}
+        titles={{
+          paginationAriaLabel: t('adminUsage.pagination.label', 'Provider breakdown pagination'),
+        }}
+      />
+    </>
   );
 };
 

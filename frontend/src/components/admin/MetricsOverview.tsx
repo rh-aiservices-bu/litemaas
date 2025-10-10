@@ -153,6 +153,24 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
     return 'danger';
   };
 
+  // Helper function to get metric label based on metric type
+  const getMetricLabel = (
+    metric: 'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion_tokens',
+  ): string => {
+    switch (metric) {
+      case 'requests':
+        return t('adminUsage.totalRequests');
+      case 'tokens':
+        return t('pages.usage.metrics.totalTokens');
+      case 'prompt_tokens':
+        return t('adminUsage.promptTokens');
+      case 'completion_tokens':
+        return t('adminUsage.completionTokens');
+      case 'cost':
+        return t('adminUsage.totalCost');
+    }
+  };
+
   // Get top users from data
   const topUsers: UserSummary[] = data?.topUsers || [];
 
@@ -414,7 +432,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
         <FullScreenChartModal
           isOpen={isUsageTrendsExpanded}
           onClose={() => setIsUsageTrendsExpanded(false)}
-          title={t('adminUsage.charts.usageTrends')}
+          title={`${t('adminUsage.charts.usageTrends')} - ${getMetricLabel(selectedMetric)}`}
         >
           <UsageTrends
             data={chartData[selectedMetric]}
@@ -528,7 +546,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
         <FullScreenChartModal
           isOpen={isModelUsageTrendsExpanded}
           onClose={() => setIsModelUsageTrendsExpanded(false)}
-          title={t('adminUsage.charts.modelUsageTrends', 'Model Usage Trends')}
+          title={`${t('adminUsage.charts.modelUsageTrends', 'Model Usage Trends')} - ${getMetricLabel(selectedModelMetric)}`}
         >
           <ModelUsageTrends
             data={dailyModelUsageData}
@@ -632,16 +650,18 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
             </Flex>
           </CardTitle>
           <CardBody>
-            {loading ? (
-              <Skeleton height="350px" />
-            ) : (
-              <UsageHeatmap
-                data={heatmapData}
-                loading={false}
-                height={350}
-                metricType={selectedHeatmapMetric}
-              />
-            )}
+            <div style={{ maxWidth: '100%', overflowX: 'auto' }}>
+              {loading ? (
+                <Skeleton height="350px" />
+              ) : (
+                <UsageHeatmap
+                  data={heatmapData}
+                  loading={false}
+                  height={350}
+                  metricType={selectedHeatmapMetric}
+                />
+              )}
+            </div>
           </CardBody>
         </Card>
 
@@ -649,7 +669,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
         <FullScreenChartModal
           isOpen={isHeatmapExpanded}
           onClose={() => setIsHeatmapExpanded(false)}
-          title={t('adminUsage.weeklyUsagePatterns')}
+          title={`${t('adminUsage.weeklyUsagePatterns')} - ${getMetricLabel(selectedHeatmapMetric)}`}
         >
           <UsageHeatmap
             data={heatmapData}

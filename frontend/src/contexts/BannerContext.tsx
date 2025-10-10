@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, ReactNode } from 'react';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useTranslation } from 'react-i18next';
 import { bannerService } from '../services/banners.service';
 import { useAuth } from './AuthContext';
 import { useNotifications } from './NotificationContext';
@@ -35,6 +36,7 @@ interface BannerProviderProps {
 }
 
 export const BannerProvider: React.FC<BannerProviderProps> = ({ children }) => {
+  const { t } = useTranslation();
   const { user, isAuthenticated } = useAuth();
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
@@ -79,7 +81,7 @@ export const BannerProvider: React.FC<BannerProviderProps> = ({ children }) => {
       addNotification({
         variant: 'danger',
         title: 'Error',
-        description: 'Failed to dismiss banner. Please try again.',
+        description: t('ui.errors.bannerDismissFailed'),
       });
     },
   });
@@ -128,7 +130,7 @@ export const BannerProvider: React.FC<BannerProviderProps> = ({ children }) => {
         addNotification({
           variant: 'danger',
           title: 'Error',
-          description: 'Failed to update banner. Please try again.',
+          description: t('ui.errors.bannerUpdateFailed'),
         });
       },
     },
@@ -175,7 +177,7 @@ export const BannerProvider: React.FC<BannerProviderProps> = ({ children }) => {
       addNotification({
         variant: 'danger',
         title: 'Error',
-        description: 'Failed to delete banner. Please try again.',
+        description: t('ui.errors.bannerDeleteFailed'),
       });
     },
   });
@@ -234,7 +236,7 @@ export const BannerProvider: React.FC<BannerProviderProps> = ({ children }) => {
         addNotification({
           variant: 'danger',
           title: 'Error',
-          description: 'Failed to apply visibility changes. Please try again.',
+          description: t('ui.errors.bannerVisibilityFailed'),
         });
       },
     },
@@ -297,8 +299,7 @@ export const BannerProvider: React.FC<BannerProviderProps> = ({ children }) => {
           addNotification({
             variant: 'danger',
             title: 'Error',
-            description:
-              error instanceof Error ? error.message : 'Failed to create banner. Please try again.',
+            description: error instanceof Error ? error.message : t('ui.errors.bannerCreateFailed'),
           });
           throw error; // Re-throw to maintain the async function behavior
         }

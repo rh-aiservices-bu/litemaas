@@ -20,6 +20,8 @@ vi.mock('react-i18next', () => ({
         'pages.usage.tableHeaders.model': 'Model',
         'pages.usage.tableHeaders.requests': 'Requests',
         'pages.usage.tableHeaders.tokens': 'Tokens',
+        'pages.usage.tableHeaders.promptTokens': 'Prompt Tokens',
+        'pages.usage.tableHeaders.completionTokens': 'Completion Tokens',
         'pages.usage.tableHeaders.cost': 'Cost',
       };
 
@@ -81,9 +83,33 @@ const mockDonutData: DonutChartDataPoint[] = [
 ];
 
 const mockModelBreakdown: ModelBreakdownData[] = [
-  { name: 'GPT-4', requests: 450, tokens: 450000, cost: 22.5, percentage: 45 },
-  { name: 'GPT-3.5', requests: 350, tokens: 350000, cost: 7.0, percentage: 35 },
-  { name: 'Claude', requests: 200, tokens: 200000, cost: 8.0, percentage: 20 },
+  {
+    name: 'GPT-4',
+    requests: 450,
+    tokens: 450000,
+    prompt_tokens: 300000,
+    completion_tokens: 150000,
+    cost: 22.5,
+    percentage: 45,
+  },
+  {
+    name: 'GPT-3.5',
+    requests: 350,
+    tokens: 350000,
+    prompt_tokens: 200000,
+    completion_tokens: 150000,
+    cost: 7.0,
+    percentage: 35,
+  },
+  {
+    name: 'Claude',
+    requests: 200,
+    tokens: 200000,
+    prompt_tokens: 120000,
+    completion_tokens: 80000,
+    cost: 8.0,
+    percentage: 20,
+  },
 ];
 
 describe('ModelDistributionChart', () => {
@@ -292,7 +318,15 @@ describe('ModelDistributionChart', () => {
 
   it('handles missing model breakdown data gracefully', () => {
     const incompleteBreakdown: ModelBreakdownData[] = [
-      { name: 'GPT-4', requests: 450, tokens: 0, cost: 0, percentage: 45 },
+      {
+        name: 'GPT-4',
+        requests: 450,
+        tokens: 0,
+        prompt_tokens: 0,
+        completion_tokens: 0,
+        cost: 0,
+        percentage: 45,
+      },
     ];
 
     render(
@@ -382,5 +416,108 @@ describe('ModelDistributionChart', () => {
     props = JSON.parse(chart.getAttribute('data-props') || '{}');
     // Padding remains the same - legend visibility doesn't affect ChartDonut padding
     expect(props.padding.right).toBe(10);
+  });
+
+  describe('Memory Management - ResizeObserver Cleanup', () => {
+    let disconnectSpy: ReturnType<typeof vi.fn>;
+    let observeSpy: ReturnType<typeof vi.fn>;
+    let unobserveSpy: ReturnType<typeof vi.fn>;
+    let OriginalResizeObserver: typeof ResizeObserver;
+
+    beforeEach(() => {
+      disconnectSpy = vi.fn();
+      observeSpy = vi.fn();
+      unobserveSpy = vi.fn();
+
+      // Save original ResizeObserver
+      OriginalResizeObserver = global.ResizeObserver;
+
+      // Mock ResizeObserver
+      global.ResizeObserver = vi.fn().mockImplementation(() => ({
+        observe: observeSpy,
+        disconnect: disconnectSpy,
+        unobserve: unobserveSpy,
+      })) as any;
+    });
+
+    afterEach(() => {
+      // Restore original ResizeObserver
+      global.ResizeObserver = OriginalResizeObserver;
+      vi.clearAllMocks();
+    });
+
+    it('should create ResizeObserver on mount', () => {
+      render(<ModelDistributionChart data={mockDonutData} modelBreakdown={mockModelBreakdown} />);
+
+      // Verify observer was created and element was observed
+      expect(global.ResizeObserver).toHaveBeenCalledTimes(1);
+      expect(observeSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should clean up ResizeObserver on unmount', () => {
+      const { unmount } = render(
+        <ModelDistributionChart data={mockDonutData} modelBreakdown={mockModelBreakdown} />,
+      );
+
+      // Verify observer was created
+      expect(global.ResizeObserver).toHaveBeenCalled();
+
+      // Clear the spy to ensure disconnect is from unmount
+      disconnectSpy.mockClear();
+
+      // Unmount component
+      unmount();
+
+      // Verify disconnect was called on unmount
+      expect(disconnectSpy).toHaveBeenCalled();
+    });
+
+    it('should handle multiple mount/unmount cycles without leaking', () => {
+      // Track total disconnect calls across all cycles
+      let totalDisconnects = 0;
+      disconnectSpy.mockImplementation(() => {
+        totalDisconnects++;
+      });
+
+      // Mount and unmount 10 times
+      for (let i = 0; i < 10; i++) {
+        const { unmount } = render(
+          <ModelDistributionChart data={mockDonutData} modelBreakdown={mockModelBreakdown} />,
+        );
+        unmount();
+      }
+
+      // Should have created 10 observers
+      expect(global.ResizeObserver).toHaveBeenCalledTimes(10);
+
+      // Should have disconnected at least 10 times (once per unmount)
+      expect(totalDisconnects).toBeGreaterThanOrEqual(10);
+    });
+
+    it('should disconnect old observer when ref changes', () => {
+      const { rerender, unmount } = render(
+        <ModelDistributionChart data={mockDonutData} modelBreakdown={mockModelBreakdown} />,
+      );
+
+      // Initial mount
+      expect(observeSpy).toHaveBeenCalledTimes(1);
+
+      // Force re-render (in real app, this could be prop change)
+      rerender(<ModelDistributionChart data={mockDonutData} modelBreakdown={mockModelBreakdown} />);
+
+      // Unmount
+      unmount();
+
+      // Verify cleanup happened
+      expect(disconnectSpy).toHaveBeenCalled();
+    });
+
+    it('should not throw errors if unmounted before observer created', () => {
+      // This should not throw
+      const { unmount } = render(<ModelDistributionChart data={[]} modelBreakdown={[]} />);
+      unmount();
+
+      // No assertions needed - test passes if no error thrown
+    });
   });
 });

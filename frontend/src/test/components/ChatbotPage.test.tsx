@@ -178,6 +178,31 @@ describe('ChatbotPage', () => {
       litellmApiUrl: 'https://api.litemaas.com',
       usageCacheTtlMinutes: 5,
       environment: 'development',
+      adminAnalytics: {
+        pagination: {
+          defaultPageSize: 50,
+          maxPageSize: 500,
+          minPageSize: 10,
+        },
+        topLimits: {
+          users: 10,
+          models: 10,
+          providers: 5,
+        },
+        dateRangeLimits: {
+          maxAnalyticsDays: 90,
+          maxExportDays: 365,
+        },
+        warnings: {
+          largeDateRangeDays: 30,
+        },
+        trends: {
+          calculationPrecision: 2,
+        },
+        export: {
+          maxRows: 10000,
+        },
+      },
     });
 
     vi.mocked(chatService.sendMessage).mockResolvedValue({

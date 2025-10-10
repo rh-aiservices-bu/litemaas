@@ -1,7 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery } from 'react-query';
-import { format } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import {
   PageSection,
   Title,
@@ -19,7 +19,7 @@ import {
 import { DownloadIcon, SyncAltIcon } from '@patternfly/react-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
-import { useConfig } from '../contexts/ConfigContext';
+import { useConfig, useAdminAnalyticsConfig } from '../contexts/ConfigContext';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import {
   adminUsageService,
@@ -48,7 +48,8 @@ const AdminUsagePage: React.FC = () => {
   const { t } = useTranslation();
   const { user: currentUser } = useAuth();
   const { addNotification } = useNotifications();
-  const { config } = useConfig();
+  const { config: backendConfig } = useConfig();
+  const analyticsConfig = useAdminAnalyticsConfig();
   const { handleError } = useErrorHandler();
   const { announcement, announce } = useScreenReaderAnnouncement();
 
@@ -72,19 +73,19 @@ const AdminUsagePage: React.FC = () => {
     switch (datePreset) {
       case '1d':
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 1);
+        startDate.setDate(now.getDate() - 0); // Today only (1 day inclusive)
         break;
       case '7d':
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 7);
+        startDate.setDate(now.getDate() - 6); // 7 days inclusive
         break;
       case '30d':
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 30);
+        startDate.setDate(now.getDate() - 29); // 30 days inclusive
         break;
       case '90d':
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 90);
+        startDate.setDate(now.getDate() - 89); // 90 days inclusive
         break;
       case 'custom':
         if (customStartDate && customEndDate) {
@@ -95,11 +96,11 @@ const AdminUsagePage: React.FC = () => {
         }
         // Fallback to last 7 days if custom dates not set
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 7);
+        startDate.setDate(now.getDate() - 6); // 7 days inclusive
         break;
       default:
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 7);
+        startDate.setDate(now.getDate() - 6); // 7 days inclusive
     }
 
     return {
@@ -117,8 +118,8 @@ const AdminUsagePage: React.FC = () => {
 
   // Data fetching with React Query
   // Use dynamic staleTime from backend config (defaults to 5 minutes if config not loaded)
-  const staleTimeMs = config?.usageCacheTtlMinutes
-    ? config.usageCacheTtlMinutes * 60 * 1000
+  const staleTimeMs = backendConfig?.usageCacheTtlMinutes
+    ? backendConfig.usageCacheTtlMinutes * 60 * 1000
     : 5 * 60 * 1000;
 
   const {
@@ -241,6 +242,120 @@ const AdminUsagePage: React.FC = () => {
     }
   };
 
+  /**
+   * Validate and set custom date range
+   * Shows warning/error before making API call
+   */
+  const handleCustomStartDateChange = (start: string) => {
+    // If we don't have an end date yet, just set the start date
+    if (!customEndDate) {
+      setCustomStartDate(start);
+      return;
+    }
+
+    const startDate = new Date(start);
+    const endDate = new Date(customEndDate);
+
+    // Check date order
+    if (startDate > endDate) {
+      addNotification({
+        variant: 'danger',
+        title: t('adminUsage.errors.invalidDateOrder.title', 'Invalid Date Range'),
+        description: t(
+          'adminUsage.errors.invalidDateOrder.description',
+          'Start date must be before end date.',
+        ),
+      });
+      return;
+    }
+
+    // Calculate range
+    const days = differenceInDays(endDate, startDate) + 1;
+
+    // Check if exceeds maximum
+    if (days > analyticsConfig.dateRangeLimits.maxAnalyticsDays) {
+      addNotification({
+        variant: 'danger',
+        title: t('adminUsage.errors.dateRangeTooLarge.title', 'Date Range Too Large'),
+        description: t(
+          'adminUsage.errors.dateRangeTooLarge.description',
+          `Maximum date range is ${analyticsConfig.dateRangeLimits.maxAnalyticsDays} days. You selected ${days} days. Please select a smaller range.`,
+        ),
+      });
+      return;
+    }
+
+    // Show warning for large ranges
+    if (days > analyticsConfig.warnings.largeDateRangeDays) {
+      addNotification({
+        variant: 'warning',
+        title: t('adminUsage.warnings.largeRange.title', 'Large Date Range'),
+        description: t(
+          'adminUsage.warnings.largeRange.description',
+          `You've selected ${days} days of data. This may take longer to load.`,
+        ),
+      });
+    }
+
+    // Valid - update state
+    setCustomStartDate(start);
+  };
+
+  const handleCustomEndDateChange = (end: string) => {
+    // If we don't have a start date yet, just set the end date
+    if (!customStartDate) {
+      setCustomEndDate(end);
+      return;
+    }
+
+    const startDate = new Date(customStartDate);
+    const endDate = new Date(end);
+
+    // Check date order
+    if (startDate > endDate) {
+      addNotification({
+        variant: 'danger',
+        title: t('adminUsage.errors.invalidDateOrder.title', 'Invalid Date Range'),
+        description: t(
+          'adminUsage.errors.invalidDateOrder.description',
+          'Start date must be before end date.',
+        ),
+      });
+      return;
+    }
+
+    // Calculate range
+    const days = differenceInDays(endDate, startDate) + 1;
+
+    // Check if exceeds maximum
+    if (days > analyticsConfig.dateRangeLimits.maxAnalyticsDays) {
+      addNotification({
+        variant: 'danger',
+        title: t('adminUsage.errors.dateRangeTooLarge.title', 'Date Range Too Large'),
+        description: t(
+          'adminUsage.errors.dateRangeTooLarge.description',
+          `Maximum date range is ${analyticsConfig.dateRangeLimits.maxAnalyticsDays} days. You selected ${days} days. Please select a smaller range.`,
+        ),
+      });
+      return;
+    }
+
+    // Show warning for large ranges
+    if (days > analyticsConfig.warnings.largeDateRangeDays) {
+      addNotification({
+        variant: 'warning',
+        title: t('adminUsage.warnings.largeRange.title', 'Large Date Range'),
+        description: t(
+          'adminUsage.warnings.largeRange.description',
+          `You've selected ${days} days of data. This may take longer to load.`,
+        ),
+      });
+    }
+
+    // Valid - update state
+    setCustomEndDate(end);
+  };
+
   return (
     <>
       <PageSection variant="secondary">
@@ -301,8 +416,8 @@ const AdminUsagePage: React.FC = () => {
               }}
               customStartDate={customStartDate}
               customEndDate={customEndDate}
-              onStartDateChange={setCustomStartDate}
-              onEndDateChange={setCustomEndDate}
+              onStartDateChange={handleCustomStartDateChange}
+              onEndDateChange={handleCustomEndDateChange}
               isOpen={isDatePresetOpen}
               onOpenChange={setIsDatePresetOpen}
             />

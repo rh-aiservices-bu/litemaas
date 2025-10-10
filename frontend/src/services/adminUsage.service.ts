@@ -193,6 +193,76 @@ export interface AdminUsageFilters {
 }
 
 /**
+ * Pagination parameters for API requests
+ */
+export interface PaginationParams {
+  /** Page number (1-indexed) */
+  page?: number;
+
+  /** Items per page (max: 200) */
+  limit?: number;
+
+  /** Field to sort by */
+  sortBy?: string;
+
+  /** Sort direction */
+  sortOrder?: 'asc' | 'desc';
+}
+
+/**
+ * Pagination metadata from API responses
+ */
+export interface PaginationMetadata {
+  /** Current page number */
+  page: number;
+
+  /** Items per page */
+  limit: number;
+
+  /** Total number of items across all pages */
+  total: number;
+
+  /** Total number of pages */
+  totalPages: number;
+
+  /** Whether there is a next page */
+  hasNext: boolean;
+
+  /** Whether there is a previous page */
+  hasPrevious: boolean;
+}
+
+/**
+ * Generic paginated API response
+ */
+export interface PaginatedResponse<T> {
+  /** Data items for current page */
+  data: T[];
+
+  /** Pagination metadata */
+  pagination: PaginationMetadata;
+}
+
+/**
+ * Pagination defaults (match backend)
+ */
+export const PAGINATION_DEFAULTS = {
+  PAGE: 1,
+  LIMIT: 50,
+  SORT_ORDER: 'desc' as const,
+} as const;
+
+/**
+ * Per-page options for pagination selector
+ */
+export const PER_PAGE_OPTIONS = [
+  { title: '10', value: 10 },
+  { title: '25', value: 25 },
+  { title: '50', value: 50 },
+  { title: '100', value: 100 },
+] as const;
+
+/**
  * Admin usage service for fetching global usage analytics
  */
 class AdminUsageService {
@@ -206,72 +276,94 @@ class AdminUsageService {
   }
 
   /**
-   * Get user breakdown data
+   * Get user breakdown data with pagination
    * @param filters Date range and dimension filters
-   * @returns Array of user breakdown entries
+   * @param pagination Pagination parameters (optional)
+   * @returns Paginated user breakdown data
    */
-  async getUserBreakdown(filters: AdminUsageFilters): Promise<UserBreakdown[]> {
+  async getUserBreakdown(
+    filters: AdminUsageFilters,
+    pagination?: PaginationParams,
+  ): Promise<PaginatedResponse<UserBreakdown>> {
     const params = new URLSearchParams();
-    params.append('startDate', filters.startDate);
-    params.append('endDate', filters.endDate);
 
-    if (filters.modelIds?.length) {
-      filters.modelIds.forEach((id) => params.append('modelIds[]', id));
+    // Add pagination parameters if provided
+    if (pagination?.page !== undefined) {
+      params.append('page', pagination.page.toString());
     }
-    if (filters.providerIds?.length) {
-      filters.providerIds.forEach((id) => params.append('providerIds[]', id));
+    if (pagination?.limit !== undefined) {
+      params.append('limit', pagination.limit.toString());
+    }
+    if (pagination?.sortBy) {
+      params.append('sortBy', pagination.sortBy);
+    }
+    if (pagination?.sortOrder) {
+      params.append('sortOrder', pagination.sortOrder);
     }
 
-    const response = await apiClient.get<{ users: UserBreakdown[]; total: number }>(
-      `/admin/usage/by-user?${params.toString()}`,
-    );
-    return response.users;
+    const url = `/admin/usage/by-user${params.toString() ? `?${params.toString()}` : ''}`;
+
+    return apiClient.post<PaginatedResponse<UserBreakdown>>(url, filters);
   }
 
   /**
-   * Get model breakdown data
+   * Get model breakdown data with pagination
    * @param filters Date range and dimension filters
-   * @returns Array of model breakdown entries
+   * @param pagination Pagination parameters (optional)
+   * @returns Paginated model breakdown data
    */
-  async getModelBreakdown(filters: AdminUsageFilters): Promise<ModelBreakdown[]> {
+  async getModelBreakdown(
+    filters: AdminUsageFilters,
+    pagination?: PaginationParams,
+  ): Promise<PaginatedResponse<ModelBreakdown>> {
     const params = new URLSearchParams();
-    params.append('startDate', filters.startDate);
-    params.append('endDate', filters.endDate);
 
-    if (filters.userIds?.length) {
-      filters.userIds.forEach((id) => params.append('userIds[]', id));
+    if (pagination?.page !== undefined) {
+      params.append('page', pagination.page.toString());
     }
-    if (filters.providerIds?.length) {
-      filters.providerIds.forEach((id) => params.append('providerIds[]', id));
+    if (pagination?.limit !== undefined) {
+      params.append('limit', pagination.limit.toString());
+    }
+    if (pagination?.sortBy) {
+      params.append('sortBy', pagination.sortBy);
+    }
+    if (pagination?.sortOrder) {
+      params.append('sortOrder', pagination.sortOrder);
     }
 
-    const response = await apiClient.get<{ models: ModelBreakdown[]; total: number }>(
-      `/admin/usage/by-model?${params.toString()}`,
-    );
-    return response.models;
+    const url = `/admin/usage/by-model${params.toString() ? `?${params.toString()}` : ''}`;
+
+    return apiClient.post<PaginatedResponse<ModelBreakdown>>(url, filters);
   }
 
   /**
-   * Get provider breakdown data
+   * Get provider breakdown data with pagination
    * @param filters Date range and dimension filters
-   * @returns Array of provider breakdown entries
+   * @param pagination Pagination parameters (optional)
+   * @returns Paginated provider breakdown data
    */
-  async getProviderBreakdown(filters: AdminUsageFilters): Promise<ProviderBreakdown[]> {
+  async getProviderBreakdown(
+    filters: AdminUsageFilters,
+    pagination?: PaginationParams,
+  ): Promise<PaginatedResponse<ProviderBreakdown>> {
     const params = new URLSearchParams();
-    params.append('startDate', filters.startDate);
-    params.append('endDate', filters.endDate);
 
-    if (filters.userIds?.length) {
-      filters.userIds.forEach((id) => params.append('userIds[]', id));
+    if (pagination?.page !== undefined) {
+      params.append('page', pagination.page.toString());
     }
-    if (filters.modelIds?.length) {
-      filters.modelIds.forEach((id) => params.append('modelIds[]', id));
+    if (pagination?.limit !== undefined) {
+      params.append('limit', pagination.limit.toString());
+    }
+    if (pagination?.sortBy) {
+      params.append('sortBy', pagination.sortBy);
+    }
+    if (pagination?.sortOrder) {
+      params.append('sortOrder', pagination.sortOrder);
     }
 
-    const response = await apiClient.get<{ providers: ProviderBreakdown[]; total: number }>(
-      `/admin/usage/by-provider?${params.toString()}`,
-    );
-    return response.providers;
+    const url = `/admin/usage/by-provider${params.toString() ? `?${params.toString()}` : ''}`;
+
+    return apiClient.post<PaginatedResponse<ProviderBreakdown>>(url, filters);
   }
 
   /**
@@ -281,24 +373,16 @@ class AdminUsageService {
    * @returns Blob containing exported data
    */
   async exportUsageData(filters: AdminUsageFilters, format: 'csv' | 'json' = 'csv'): Promise<Blob> {
-    const params = new URLSearchParams({ format });
-    params.append('startDate', filters.startDate);
-    params.append('endDate', filters.endDate);
-
-    if (filters.userIds?.length) {
-      filters.userIds.forEach((id) => params.append('userIds[]', id));
-    }
-    if (filters.modelIds?.length) {
-      filters.modelIds.forEach((id) => params.append('modelIds[]', id));
-    }
-    if (filters.providerIds?.length) {
-      filters.providerIds.forEach((id) => params.append('providerIds[]', id));
-    }
-
-    const response = await fetch(`/api/v1/admin/usage/export?${params.toString()}`, {
+    const response = await fetch('/api/v1/admin/usage/export', {
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem('access_token')}`,
       },
+      body: JSON.stringify({
+        ...filters,
+        format,
+      }),
     });
 
     if (!response.ok) {

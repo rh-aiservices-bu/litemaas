@@ -29,6 +29,9 @@ import type {
   EnrichedDayData,
   AggregatedUsageData as AdminAggregatedUsageData,
 } from '../types/admin-usage.types.js';
+import { withAdvisoryLock, calculateLockId } from '../utils/advisory-lock.utils.js';
+import { getTodayUTC, subDaysUTC } from './admin-usage/admin-usage.utils.js';
+import { getAdminAnalyticsConfig } from '../config/admin-analytics.config.js';
 
 /**
  * NOTE: We import and use EnrichedDayData and AggregatedUsageData from admin-usage.types.ts
@@ -93,6 +96,19 @@ interface ProviderMetrics {
  */
 export class DailyUsageCacheManager extends BaseService {
   private readonly CURRENT_DAY_TTL_MS: number;
+  private readonly config = getAdminAnalyticsConfig();
+
+  /**
+   * Cache performance metrics
+   */
+  private metrics = {
+    cacheHits: 0,
+    cacheMisses: 0,
+    cacheRebuilds: 0,
+    lockAcquisitionSuccesses: 0,
+    lockAcquisitionFailures: 0,
+    gracePeriodApplications: 0,
+  };
 
   constructor(fastify: FastifyInstance) {
     super(fastify);
@@ -106,18 +122,108 @@ export class DailyUsageCacheManager extends BaseService {
   }
 
   /**
-   * Get cached daily data from database
+   * Get cached daily data from database with advisory lock protection
    *
    * For historical days (> 1 day old), returns cached data permanently.
-   * For current day, checks if cache is stale (> 5 minutes old) and returns null if stale.
+   * For current day, checks if cache is stale (> 5 minutes old) and rebuilds with lock protection.
    *
-   * @param date - The date to get cached data for
+   * @param dateString - The date to get cached data for (YYYY-MM-DD)
+   * @param rebuildFn - Optional function to rebuild cache if missing (for integration with AdminUsageStatsService)
    * @returns Cached data or null if not cached or stale
    * @throws ApplicationError if database operation fails
    */
-  async getCachedDailyData(dateString: string): Promise<EnrichedDayData | null> {
-    // dateString is already in YYYY-MM-DD format, no conversion needed
+  async getCachedDailyData(
+    dateString: string,
+    rebuildFn?: (dateString: string) => Promise<EnrichedDayData>,
+  ): Promise<EnrichedDayData | null> {
+    // Check cache first
+    const cached = await this.checkCache(dateString);
+    if (cached) {
+      this.metrics.cacheHits++;
+      this.fastify.log.debug({ dateString, metrics: this.metrics }, 'Cache hit');
+      return cached;
+    }
 
+    this.metrics.cacheMisses++;
+
+    // If no rebuild function provided, just return null
+    if (!rebuildFn) {
+      this.fastify.log.debug({ dateString }, 'Cache miss - no rebuild function provided');
+      return null;
+    }
+
+    // Cache miss - need to rebuild with lock protection
+    this.fastify.log.debug({ dateString }, 'Cache miss - acquiring lock for rebuild');
+
+    const lockId = calculateLockId(dateString);
+
+    // Try to acquire lock and rebuild
+    const result = await withAdvisoryLock(
+      this.fastify.pg.pool,
+      lockId,
+      async () => {
+        this.metrics.lockAcquisitionSuccesses++;
+
+        // Double-check cache (another process may have built it while we waited for lock)
+        const cached = await this.checkCache(dateString);
+        if (cached) {
+          this.fastify.log.debug({ dateString }, 'Cache populated by another process');
+          return cached;
+        }
+
+        // We have the lock and cache is still empty - rebuild
+        this.metrics.cacheRebuilds++;
+        this.fastify.log.info({ dateString }, 'Building cache for date');
+
+        const usageData = await rebuildFn(dateString);
+
+        // Determine if this is current day for TTL purposes (using grace period logic)
+        const isCurrentDay = this.isCurrentDayWithGracePeriod(dateString);
+
+        // Write to cache with appropriate TTL
+        await this.saveToDailyCache(dateString, usageData, isCurrentDay);
+
+        return usageData;
+      },
+      {
+        blocking: false,
+        onLockFailed: () => {
+          this.metrics.lockAcquisitionFailures++;
+          this.fastify.log.debug(
+            { dateString, lockId, metrics: this.metrics },
+            'Lock held by another process - will wait for their result',
+          );
+        },
+      },
+    );
+
+    if (result === null) {
+      // Lock was held by another process
+      // Wait briefly and check cache again (other process should finish soon)
+      await new Promise((resolve) => setTimeout(resolve, 100)); // 100ms
+      const cached = await this.checkCache(dateString);
+
+      if (cached) {
+        return cached;
+      }
+
+      // Still not cached - other process may have failed
+      this.fastify.log.warn({ dateString }, 'Cache still empty after waiting for other process');
+      return null;
+    }
+
+    return result;
+  }
+
+  /**
+   * Check cache for a date
+   *
+   * Internal method used by getCachedDailyData.
+   *
+   * @param dateString - Date in YYYY-MM-DD format
+   * @returns Cached data or null if not found or stale
+   */
+  private async checkCache(dateString: string): Promise<EnrichedDayData | null> {
     try {
       const result = await this.executeQuery<{ rows: any[] }>(
         `SELECT
@@ -132,32 +238,23 @@ export class DailyUsageCacheManager extends BaseService {
         FROM daily_usage_cache
         WHERE date = $1`,
         [dateString],
-        'getting cached daily data',
+        'checking cache',
       );
 
       if (!result.rows || result.rows.length === 0) {
-        this.fastify.log.debug({ date: dateString }, 'No cached data found for date');
         return null;
       }
 
       const row = result.rows[0];
 
-      // Check if current day cache is stale (> 5 minutes old)
+      // Check if current day cache is stale
       if (!row.is_complete) {
         const cacheAge = Date.now() - new Date(row.updated_at).getTime();
         if (cacheAge > this.CURRENT_DAY_TTL_MS) {
-          this.fastify.log.debug(
-            { date: dateString, cacheAge },
-            'Current day cache is stale, needs refresh',
-          );
+          this.fastify.log.debug({ date: dateString, cacheAge }, 'Current day cache is stale');
           return null;
         }
       }
-
-      this.fastify.log.debug(
-        { date: dateString, isComplete: row.is_complete },
-        'Returning cached daily data',
-      );
 
       // Convert date from PostgreSQL Date object to YYYY-MM-DD string
       const formattedDate =
@@ -183,9 +280,60 @@ export class DailyUsageCacheManager extends BaseService {
         rawData,
       };
     } catch (error) {
-      this.fastify.log.error({ error, date: dateString }, 'Failed to get cached daily data');
-      throw this.mapDatabaseError(error, 'getting cached daily data');
+      this.fastify.log.error({ error, dateString }, 'Failed to check cache');
+      throw this.mapDatabaseError(error, 'checking cache');
     }
+  }
+
+  /**
+   * Determine if date should be considered "current day" with grace period
+   *
+   * Grace period handles midnight boundary race conditions:
+   * - If it's 00:03 UTC and we're caching yesterday's data, treat as "current day"
+   * - Prevents historical cache from getting short TTL
+   *
+   * @param dateString - Date in YYYY-MM-DD format
+   * @returns True if should use current day TTL
+   */
+  private isCurrentDayWithGracePeriod(dateString: string): boolean {
+    const today = getTodayUTC();
+
+    // If date is today, it's definitely current day
+    if (dateString === today) {
+      return true;
+    }
+
+    // If date is not yesterday, it's definitely historical
+    const yesterday = subDaysUTC(today, 1);
+    if (dateString !== yesterday) {
+      return false;
+    }
+
+    // Date is yesterday - check if we're within grace period
+    // (handles case where cache build started before midnight, finishes after)
+    const now = new Date();
+    const minutesSinceMidnight = now.getUTCHours() * 60 + now.getUTCMinutes();
+
+    const gracePeriodMinutes = this.config.cache.gracePeriodMinutes;
+
+    if (minutesSinceMidnight <= gracePeriodMinutes) {
+      // We're within grace period after midnight
+      // Cache build likely started before midnight (yesterday was "today")
+      this.metrics.gracePeriodApplications++;
+      this.fastify.log.debug(
+        {
+          dateString,
+          minutesSinceMidnight,
+          gracePeriodMinutes,
+          metrics: this.metrics,
+        },
+        'Applying grace period - treating yesterday as current day',
+      );
+
+      return true;
+    }
+
+    return false;
   }
 
   /**
@@ -545,5 +693,42 @@ export class DailyUsageCacheManager extends BaseService {
       total[provider].completion_tokens += metrics.completion_tokens || 0;
       total[provider].spend += metrics.spend || 0;
     }
+  }
+
+  /**
+   * Get cache performance metrics
+   *
+   * Returns current metrics including hit rate and lock contention rate.
+   * Useful for monitoring and debugging cache performance.
+   *
+   * @returns Cache metrics object
+   */
+  getMetrics() {
+    const totalCacheRequests = this.metrics.cacheHits + this.metrics.cacheMisses;
+    const totalLockAttempts =
+      this.metrics.lockAcquisitionSuccesses + this.metrics.lockAcquisitionFailures;
+
+    return {
+      ...this.metrics,
+      cacheHitRate: totalCacheRequests > 0 ? this.metrics.cacheHits / totalCacheRequests : 0,
+      lockContentionRate:
+        totalLockAttempts > 0 ? this.metrics.lockAcquisitionFailures / totalLockAttempts : 0,
+    };
+  }
+
+  /**
+   * Reset cache metrics
+   *
+   * Useful for testing or resetting metrics after monitoring period.
+   */
+  resetMetrics() {
+    this.metrics = {
+      cacheHits: 0,
+      cacheMisses: 0,
+      cacheRebuilds: 0,
+      lockAcquisitionSuccesses: 0,
+      lockAcquisitionFailures: 0,
+      gracePeriodApplications: 0,
+    };
   }
 }

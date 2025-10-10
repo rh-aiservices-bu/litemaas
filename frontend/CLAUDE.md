@@ -102,11 +102,18 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 - **AuthContext** - Authentication state (user, roles, isAuthenticated)
 - **NotificationContext** - App-wide notification system
 - **ConfigContext** - Application configuration from `/api/v1/config` endpoint
-  - Provides `usageCacheTtlMinutes` from backend config
+  - **Base Config**: `usageCacheTtlMinutes`, `version`, `environment`
+  - **Admin Analytics Config**: All UI-relevant admin analytics settings (pagination, limits, thresholds)
   - Integrates with React Query `staleTime`: `config.usageCacheTtlMinutes * 60 * 1000`
   - Pattern: Dynamic cache TTL eliminates hardcoded values in query hooks
 
 **React Query**: Server state management with dynamic stale time from ConfigContext, 10min cache time, 3 retries
+
+### Admin Analytics Configuration
+
+**Hook**: `useAdminAnalyticsConfig()` provides pagination limits, date range limits, trend thresholds, and export limits from backend.
+
+**Integration**: Dynamic configuration eliminates hardcoded values, integrates with React Query `staleTime` via ConfigContext.
 
 **Admin Component Structure**:
 
@@ -176,23 +183,9 @@ For implementation examples, see [`docs/development/pf6-guide/`](../docs/develop
 
 ## 📊 Chart Component Development
 
-**Shared Utilities**: Chart components use shared formatters, constants, and accessibility helpers to ensure consistency.
+**Shared Utilities**: Use `chartFormatters.ts`, `chartConstants.ts`, and `chartAccessibility.ts` for consistent formatting, styling, and ARIA support across all charts.
 
-**Key Files**:
-
-- `utils/chartFormatters.ts` - Y/X axis formatting, padding calculations
-- `utils/chartConstants.ts` - Styling constants (padding, tooltips, grids, animations)
-- `utils/chartAccessibility.ts` - ARIA descriptions, color schemes
-
-**Quick Guidelines**:
-
-- ✅ Use `formatYTickByMetric()`, `formatXTickWithSkipping()`, `calculateLeftPaddingByMetric()`
-- ✅ Import constants from `chartConstants.ts` (never hardcode values)
-- ✅ Use unique SVG filter IDs (e.g., `tooltip-shadow-myChart`) to avoid conflicts
-- ✅ Include accessibility data transformation with `AccessibleChart` wrapper
-- ✅ Use `generateChartAriaDescription()` for consistent screen reader support
-
-**Full Guide**: See [`docs/development/chart-components-guide.md`](../docs/development/chart-components-guide.md) for complete API reference and examples.
+See [`docs/development/chart-components-guide.md`](../docs/development/chart-components-guide.md) for complete patterns and API reference.
 
 ## ⚠️ Component Development Checklist - MUST FOLLOW
 
@@ -258,296 +251,23 @@ npm run clean          # Remove build artifacts
 npm run check:translations  # Check all locale files for missing keys
 ```
 
-## 🧪 Testing Best Practices and Debugging
-
-### Test Infrastructure
-
-**Test Framework**: Vitest with React Testing Library
-**Test Utilities**: `src/test/test-utils.tsx` - Centralized provider setup
-**Mock Strategy**: vi.mock() at module level with proper hoisting
-
-### Critical Testing Patterns
-
-#### 1. ConfigContext Mocking (CRITICAL)
-
-**Issue**: ConfigProvider uses React Query which starts in loading state, blocking all tests.
-
-**Solution**: Mock ConfigContext in test-utils.tsx to provide config synchronously:
-
-```typescript
-// ✅ CORRECT - Mock the entire module
-vi.mock('../contexts/ConfigContext', () => {
-  const React = require('react');
-  const mockConfig = { version: '1.0.0-test', usageCacheTTL: 300, environment: 'test' };
-  const mockConfigContext = React.createContext({ config: mockConfig, isLoading: false, error: null });
-
-  return {
-    useConfig: () => {
-      const context = React.useContext(mockConfigContext);
-      if (!context) throw new Error('useConfig must be used within a ConfigProvider');
-      return context;
-    },
-    ConfigProvider: ({ children }) =>
-      React.createElement(mockConfigContext.Provider,
-        { value: { config: mockConfig, isLoading: false, error: null } },
-        children
-      ),
-  };
-});
-
-// ❌ WRONG - Don't mock just the service
-vi.mock('../services/config.service', () => ({
-  configService: { getConfig: vi.fn().mockResolvedValue({...}) }
-}));
-```
-
-**Why**: The service mock still leaves React Query in loading state. Must mock the entire context.
-
-#### 2. vi.mock() Hoisting Rules
-
-**Issue**: Vitest hoists vi.mock() calls, preventing access to top-level variables.
-
-```typescript
-// ❌ WRONG - Top-level variable not accessible in mock factory
-const mockConfig = { version: '1.0.0' };
-vi.mock('../context', () => ({
-  useConfig: () => mockConfig, // ReferenceError: Cannot access 'mockConfig' before initialization
-}));
-
-// ✅ CORRECT - Define inside factory or use require()
-vi.mock('../context', () => {
-  const mockConfig = { version: '1.0.0' }; // Defined inside
-  return {
-    useConfig: () => mockConfig,
-  };
-});
-```
-
-#### 3. Mock Conflict Resolution
-
-**Issue**: File-level mocks can conflict with test-utils global mocks.
-
-**Example**: AdminModelsPage.test.tsx mocks useAuth locally, but test-utils also provides AuthProvider.
-
-**Resolution Strategies**:
-
-1. **Prefer global mocks** - Use test-utils for consistent behavior
-2. **Override selectively** - Use vi.mocked() to override specific implementations
-3. **Document conflicts** - Add TODO comments for tests that need refactoring
-
-```typescript
-// ✅ CORRECT - Override global mock for specific test
-import { useAuth } from '../contexts/AuthContext';
-vi.mocked(useAuth).mockReturnValue({ user: { roles: ['admin'] }, isAuthenticated: true });
-
-// ❌ WRONG - Duplicate mock conflicts with test-utils
-vi.mock('../contexts/AuthContext', () => ({
-  useAuth: () => mockUseAuth(), // Conflicts!
-}));
-```
-
-#### 4. Auth Testing Pattern (RECOMMENDED)
-
-**Issue**: Testing components with different user roles requires consistent auth mocking approach.
-
-**Solution**: Use `renderWithAuth()` helper from test-utils instead of mocking useAuth directly.
-
-**Available Mock Users**:
-
-- `mockUser` - Regular user with `['user']` roles
-- `mockAdminUser` - Admin user with `['admin']` roles
-- `mockAdminReadonlyUser` - Read-only admin with `['admin-readonly']` roles
-
-**Usage Examples**:
-
-```typescript
-import { renderWithAuth, mockUser, mockAdminUser, mockAdminReadonlyUser } from '../test-utils';
-
-// ✅ CORRECT - Test with regular user
-it('should deny access for regular users', () => {
-  renderWithAuth(<AdminModelsPage />, { user: mockUser });
-  expect(screen.getByText(/accessDenied/)).toBeInTheDocument();
-});
-
-// ✅ CORRECT - Test with admin user
-it('should show full access for admin', () => {
-  renderWithAuth(<AdminModelsPage />, { user: mockAdminUser });
-  expect(screen.getByText(/createModel/)).toBeInTheDocument();
-});
-
-// ✅ CORRECT - Test with admin readonly user
-it('should hide create button for readonly admin', () => {
-  renderWithAuth(<AdminModelsPage />, { user: mockAdminReadonlyUser });
-  expect(screen.queryByText(/createModel/)).not.toBeInTheDocument();
-});
-
-// ✅ CORRECT - Test with custom user
-it('should work with custom roles', () => {
-  renderWithAuth(<MyComponent />, {
-    user: { id: '123', email: 'test@example.com', roles: ['custom-role'], isAdmin: false }
-  });
-});
-```
-
-**Why This Approach**:
-
-- ✅ No mock conflicts - directly injects auth context value
-- ✅ Explicit and readable - auth state clear in test setup
-- ✅ Type-safe - uses actual AuthContext interface
-- ✅ Consistent - same pattern across all role-based tests
-- ✅ Flexible - supports custom users and route testing
-
-**Migration from Old Pattern**:
-
-```typescript
-// ❌ OLD PATTERN - File-level mock conflicts with test-utils
-vi.mock('../../contexts/AuthContext', () => ({
-  useAuth: () => mockUseAuth()
-}));
-
-it('test', () => {
-  mockUseAuth.mockReturnValue({ user: { roles: ['admin'] } });
-  render(<Component />, { wrapper: TestWrapper });
-});
-
-// ✅ NEW PATTERN - Use renderWithAuth
-import { renderWithAuth, mockAdminUser } from '../test-utils';
-
-it('test', () => {
-  renderWithAuth(<Component />, { user: mockAdminUser });
-});
-```
-
-**Role Names (IMPORTANT)**:
-
-- Use `'admin'` for admin role
-- Use `'admin-readonly'` for read-only admin (hyphenated, not camelCase!)
-- Use `'user'` for regular user role
-- Roles are checked with `user.roles.includes('role-name')`
-
-### PatternFly 6 Component Testing
-
-**Common Issues**:
-
-1. **Heading Levels**: Components may use h2/h3, not h1. Check actual DOM structure.
-2. **ARIA Labels**: PatternFly generates specific labels - use browser output to verify.
-3. **Landmarks**: May not render properly in JSDOM - test with E2E if critical.
-
-```typescript
-// ✅ CORRECT - Verify actual structure first
-const headings = screen.getAllByRole('heading', { level: 2 }); // Not level 3!
-
-// ❌ WRONG - Assuming heading level without checking
-expect(screen.getByRole('heading', { level: 3, name: 'Models' })).toBeInTheDocument();
-```
-
-#### Modal Component Testing
-
-✅ **PatternFly 6 Modals work perfectly in JSDOM** - No special workarounds needed!
-
-**Quick Reference**:
-
-- Use `waitFor()` for all modal operations
-- Query modals with `role="dialog"`
-- Be specific with close button queries (modals have multiple close buttons)
-- Act() warnings are informational only with proper `waitFor()` usage
-
-**Complete Guide**: [`docs/development/pf6-guide/testing-patterns/modals.md`](../docs/development/pf6-guide/testing-patterns/modals.md)
-
-- Step-by-step testing patterns with code examples
-- Opening/closing modals, form submission, backdrop clicks
-- Common issues and solutions (multiple close buttons, form validation)
-- ARIA compliance testing
-
-#### Dropdown & Pagination Component Testing
-
-✅ **PatternFly 6 Dropdowns work perfectly in JSDOM** - Use correct ARIA role!
-
-**Critical Discovery**: PatternFly 6 dropdowns use `role="menuitem"` (NOT `role="option"`).
-
-**Quick Reference**:
-
-- Use `role="menuitem"` to find dropdown options
-- Use `waitFor()` for dropdown menu rendering
-- Find options by text content matching
-- Don't use `role="option"` (that's for native select elements)
-
-**Complete Guide**: [`docs/development/pf6-guide/testing-patterns/dropdowns-pagination.md`](../docs/development/pf6-guide/testing-patterns/dropdowns-pagination.md)
-
-- Comprehensive dropdown and pagination testing patterns with code examples
-- Solutions to common query issues
-- Pagination navigation and items-per-page selection
-- Complete troubleshooting guide
-
-#### Context-Dependent Component Testing
-
-✅ **Context-dependent components require correct parent props** - Common pattern in PatternFly 6!
-
-**Critical Discovery**: Components like `AlertActionCloseButton` require specific parent props to provide context.
-
-**Quick Reference**:
-
-- Use correct parent prop (e.g., `actionClose` for Alert, not `actionLinks`)
-- Always render context-dependent components with parent
-- Check PatternFly docs for correct prop usage
-- Don't render context consumers outside their providers
-
-**Common Context-Dependent Components**:
-
-- `AlertActionCloseButton` → requires `Alert` parent with `actionClose` prop
-- `ModalBoxCloseButton` → requires `Modal` parent (auto-rendered)
-- Custom context consumers → require appropriate `Context.Provider`
-
-**Complete Guide**: [`docs/development/pf6-guide/testing-patterns/context-dependent-components.md`](../docs/development/pf6-guide/testing-patterns/context-dependent-components.md)
-
-- Detailed context requirements with code examples
-- Fix examples for common errors (wrong prop usage)
-- Parent component testing patterns
-- Alternative testing strategies
-
-### Test Debugging Workflow
-
-1. **Run specific test file**:
-
-   ```bash
-   npm test -- ComponentName.test.tsx
-   ```
-
-2. **Check for "Loading configuration..."** - ConfigContext not mocked properly
-
-3. **Check for mock hoisting errors** - Move variables inside factory function
-
-4. **Inspect actual DOM**:
-
-   ```typescript
-   screen.debug(); // Print entire DOM
-   screen.logTestingPlaygroundURL(); // Interactive inspector
-   ```
-
-5. **Skip temporarily with TODO**:
-   ```typescript
-   // TODO: Fix mock conflict - see docs/development/test-improvement-plan.md
-   it.skip('test name', () => {
-     // Test code here
-   });
-   ```
-
-### Test Coverage Goals
-
-- **Unit Tests**: All components, hooks, utilities
-- **Integration Tests**: Page-level rendering and interactions
-- **Accessibility Tests**: WCAG 2.1 AA compliance
-- **E2E Tests**: Critical user flows (login, model subscription)
-
-**Current Status**: 98.5% passing (975/990 tests, 15 skipped)
-
-### Known Test Limitations
-
-1. **AdminModelsPage role-based tests**: Mock conflicts need refactoring
-2. **comprehensive-accessibility heading hierarchy**: JSDOM rendering differences
-3. **comprehensive-accessibility landmarks**: May need E2E verification
-
-See [`docs/development/test-improvement-plan.md`](../../docs/development/test-improvement-plan.md) for roadmap to address these.
+## 🧪 Testing
+
+**Framework**: Vitest with React Testing Library and centralized test utilities in `src/test/test-utils.tsx`.
+
+**Key Patterns**:
+- **Auth Testing**: Use `renderWithAuth()` helper with `mockUser`, `mockAdminUser`, `mockAdminReadonlyUser`
+- **ConfigContext**: Mock entire context (not just service) to avoid loading state
+- **PatternFly 6**: Modals/dropdowns work in JSDOM; modals use `role="dialog"`, dropdowns use `role="menuitem"`
+- **Debugging**: Use `screen.debug()` to inspect DOM, `npm test -- File.test.tsx` for specific files
+
+**Test Guides**:
+- [`docs/development/pf6-guide/testing-patterns/modals.md`](../docs/development/pf6-guide/testing-patterns/modals.md) - Modal testing patterns
+- [`docs/development/pf6-guide/testing-patterns/dropdowns-pagination.md`](../docs/development/pf6-guide/testing-patterns/dropdowns-pagination.md) - Dropdown/pagination patterns
+- [`docs/development/pf6-guide/testing-patterns/context-dependent-components.md`](../docs/development/pf6-guide/testing-patterns/context-dependent-components.md) - Context-dependent components
+- [`docs/development/pf6-guide/testing-patterns/switch-components.md`](../docs/development/pf6-guide/testing-patterns/switch-components.md) - Switch component patterns
+
+**Coverage**: 98.5% passing (975/990 tests, 15 skipped). See [`docs/archive/implementation-plans/test-improvement-plan.md`](../../docs/archive/implementation-plans/test-improvement-plan.md) for known limitations.
 
 ## 🎨 Styling Guidelines
 

@@ -102,6 +102,7 @@
     },
     "completionTokens": "완성 토큰",
     "datePresets": {
+      "1d": "지난 1일",
       "30d": "지난 30일",
       "7d": "지난 7일",
       "90d": "지난 90일",
@@ -170,7 +171,9 @@
       "legend": {
         "colorScale": "사용 강도",
         "noData": "데이터 없음",
-        "zeroUsage": "사용량 없음"
+        "noDataAriaLabel": "데이터 없음 표시",
+        "zeroUsage": "사용량 없음",
+        "zeroUsageAriaLabel": "사용량 없음 표시"
       },
       "table": {
         "viewAsChart": "차트로 보기",
@@ -197,7 +200,17 @@
     },
     "metricSelect": "메트릭 선택",
     "metricsOverview": "메트릭 개요",
-    "modelBreakdown": "모델 분석",
+    "modelBreakdown": {
+      "completionTokens": "완성 토큰",
+      "modelName": "모델",
+      "noData": "사용 가능한 모델 데이터 없음",
+      "noDataDescription": "선택한 날짜 범위와 필터에 대한 사용량 데이터를 찾을 수 없습니다.",
+      "promptTokens": "프롬프트 토큰",
+      "tableLabel": "모델 분석 테이블",
+      "totalCost": "총 비용",
+      "totalRequests": "요청",
+      "totalTokens": "총 토큰 수"
+    },
     "modelFilterChanged": "{{count}}개 모델로 필터링 중",
     "noData": "사용 가능한 데이터 없음",
     "noModelData": "사용 가능한 모델 데이터 없음",
@@ -206,8 +219,22 @@
     "noProvidersFound": "선택한 날짜 범위에 대한 공급자를 찾을 수 없습니다.",
     "noUserData": "사용 가능한 사용자 데이터 없음",
     "noUsersFound": "선택한 날짜 범위에 대한 사용자를 찾을 수 없습니다.",
+    "pagination": {
+      "label": "페이지네이션"
+    },
     "promptTokens": "프롬프트 토큰",
-    "providerBreakdown": "공급자 분석",
+    "providerBreakdown": {
+      "completionTokens": "완성 토큰",
+      "noData": "사용 가능한 공급자 데이터 없음",
+      "noDataDescription": "선택한 날짜 범위와 필터에 대한 사용량 데이터를 찾을 수 없습니다.",
+      "promptTokens": "프롬프트 토큰",
+      "providerName": "공급자",
+      "successRate": "성공률",
+      "tableLabel": "공급자 분석 테이블",
+      "totalCost": "총 비용",
+      "totalRequests": "요청",
+      "totalTokens": "총 토큰 수"
+    },
     "refreshing": "오늘 데이터를 새로고침하는 중...",
     "refreshSuccess": "새로고침 성공",
     "refreshToday": "오늘 새로고침",
@@ -261,7 +288,18 @@
     "unknownUser": "알 수 없는 사용자",
     "unknownUserDescription": "삭제되었거나 매핑되지 않은 API 키의 요청",
     "usageHeatmapSubtitle": "선택한 주에 대한 사용량 히트맵",
-    "userBreakdown": "사용자 분석",
+    "userBreakdown": {
+      "completionTokens": "완성 토큰",
+      "email": "이메일",
+      "noData": "사용 가능한 사용자 데이터 없음",
+      "noDataDescription": "선택한 날짜 범위와 필터에 대한 사용량 데이터를 찾을 수 없습니다.",
+      "promptTokens": "프롬프트 토큰",
+      "tableLabel": "사용자 분석 테이블",
+      "totalCost": "총 비용",
+      "totalRequests": "요청",
+      "totalTokens": "총 토큰 수",
+      "username": "사용자명"
+    },
     "userFilterChanged": "{{count}}명의 사용자로 필터링 중",
     "weeklyUsagePatterns": "주간 사용 패턴"
   },
@@ -286,8 +324,10 @@
     "no": "아니오",
     "none": "없음",
     "notAvailable": "N/A",
+    "refreshPage": "페이지 새로고침",
     "retry": "다시 시도",
     "table": "테이블",
+    "tryAgain": "다시 시도",
     "update": "업데이트",
     "value": "값",
     "view": "보기",
@@ -1071,7 +1111,10 @@
       "loadingTitle": "사용량 데이터 불러오는 중...",
       "metrics": {
         "avgResponseTime": "평균 응답 시간",
+        "completion_tokens": "완성 토큰",
+        "cost": "비용",
         "currency": "KRW",
+        "prompt_tokens": "프롬프트 토큰",
         "requests": "요청",
         "successfulRequests": "성공적인 요청",
         "successRate": "성공률",
@@ -1116,12 +1159,14 @@
       "selectApiKeyTitle": "API 키 선택",
       "subtitle": "API 사용량, 비용 및 성능 메트릭 모니터링",
       "tableHeaders": {
+        "completionTokens": "완성 토큰",
         "cost": "비용",
         "count": "개수",
         "date": "날짜",
         "formattedValue": "형식화된 값",
         "model": "모델",
         "percentage": "백분율",
+        "promptTokens": "프롬프트 토큰",
         "requests": "요청",
         "tokens": "토큰",
         "usagePercent": "사용률 %"
@@ -1192,6 +1237,15 @@
       "userAvatar": "사용자 아바타"
     },
     "errors": {
+      "bannerCreateFailed": "배너 생성에 실패했습니다. 다시 시도해 주세요.",
+      "bannerDeleteFailed": "배너 삭제에 실패했습니다. 다시 시도해 주세요.",
+      "bannerDismissFailed": "배너를 닫는 데 실패했습니다. 다시 시도해 주세요.",
+      "bannerUpdateFailed": "배너 업데이트에 실패했습니다. 다시 시도해 주세요.",
+      "bannerVisibilityFailed": "표시 설정 변경에 실패했습니다. 다시 시도해 주세요.",
+      "componentError": "컴포넌트 오류",
+      "componentLoadingError": "컴포넌트 로딩 오류",
+      "componentLoadingErrorDesc": "컴포넌트를 로드하는 데 실패했습니다. 페이지를 새로고침해 주세요.",
+      "configLoadFailed": "애플리케이션 설정을 로드하는 데 실패했습니다",
       "details": "세부사항",
       "errorCode": "오류 코드",
       "field": "필드",
@@ -1205,7 +1259,8 @@
       "retryAction": "실패한 작업을 다시 시도",
       "retryAfter": "{{seconds}}초 후에 다시 시도해 주세요",
       "showDetails": "세부사항 보기",
-      "somethingWrong": "문제가 발생했습니다",
+      "somethingWentWrong": "문제가 발생했습니다",
+      "somethingWentWrongDesc": "죄송합니다. 예상치 못한 문제가 발생했습니다. 페이지를 새로고침하거나 문제가 지속되면 지원팀에 문의해 주세요.",
       "statusCode": "상태 코드",
       "title": "오류",
       "tryRefresh": "죄송합니다만 예기치 않은 문제가 발생했습니다. 페이지를 새로고침하거나 문제가 지속되면 지원팀에 문의하세요.",
@@ -1222,7 +1277,8 @@
         "positive": "{{field}}은(는) 양수여야 합니다",
         "required": "{{field}}은(는) 필수입니다",
         "url": "{{field}}은(는) 유효한 URL이어야 합니다"
-      }
+      },
+      "somethingWrong": "문제가 발생했습니다"
     },
     "footer": {
       "appBy": "앱 제작자",
@@ -1246,6 +1302,7 @@
       "spanish": "Español"
     },
     "navigation": {
+      "globalNavigation": "전역 네비게이션",
       "mainNavigation": "주 네비게이션",
       "userMenu": "사용자 메뉴"
     },
