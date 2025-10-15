@@ -1,6 +1,11 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useQuery } from 'react-query';
-import { configService, type BackendConfig } from '../services/config.service';
+import { useTranslation } from 'react-i18next';
+import {
+  configService,
+  type BackendConfig,
+  type AdminAnalyticsPublicConfig,
+} from '../services/config.service';
 
 interface ConfigContextType {
   config: BackendConfig | null;
@@ -22,6 +27,43 @@ export const useConfig = () => {
   return context;
 };
 
+/**
+ * Hook for accessing admin analytics configuration with defaults
+ */
+export const useAdminAnalyticsConfig = (): AdminAnalyticsPublicConfig => {
+  const { config } = useConfig();
+
+  // Provide sensible defaults if config not yet loaded
+  // This prevents UI from breaking during initial load
+  return (
+    config?.adminAnalytics ?? {
+      pagination: {
+        defaultPageSize: 50,
+        maxPageSize: 500,
+        minPageSize: 10,
+      },
+      topLimits: {
+        users: 10,
+        models: 10,
+        providers: 5,
+      },
+      dateRangeLimits: {
+        maxAnalyticsDays: 90,
+        maxExportDays: 365,
+      },
+      warnings: {
+        largeDateRangeDays: 30,
+      },
+      trends: {
+        calculationPrecision: 2,
+      },
+      export: {
+        maxRows: 10000,
+      },
+    }
+  );
+};
+
 interface ConfigProviderProps {
   children: ReactNode;
 }
@@ -36,6 +78,7 @@ interface ConfigProviderProps {
  * - Environment (development/production)
  */
 export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
+  const { t } = useTranslation();
   const { data, isLoading, error } = useQuery<BackendConfig, Error>(
     ['backendConfig', 'v2'], // v2: added version field
     () => configService.getConfig(),
@@ -85,9 +128,9 @@ export const ConfigProvider: React.FC<ConfigProviderProps> = ({ children }) => {
           textAlign: 'center',
         }}
       >
-        <h2>Failed to load application configuration</h2>
+        <h2>{t('ui.errors.configLoadFailed')}</h2>
         <p>{error.message}</p>
-        <button onClick={() => window.location.reload()}>Retry</button>
+        <button onClick={() => window.location.reload()}>{t('common.retry')}</button>
       </div>
     );
   }

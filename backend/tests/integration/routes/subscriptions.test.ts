@@ -1,13 +1,13 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { createApp } from '../../../src/app';
-import { generateTestToken, mockUser } from '../setup';
+import { generateTestToken, mockUser, createTestUsers } from '../setup';
 
 describe('Subscriptions Routes', () => {
   let app: FastifyInstance;
 
   const mockSubscription = {
-    id: 'sub-123',
+    id: '00000000-0000-4000-8000-000000000999',
     userId: 'user-123',
     modelId: 'gpt-4',
     status: 'active',
@@ -22,6 +22,7 @@ describe('Subscriptions Routes', () => {
   beforeAll(async () => {
     app = await createApp({ logger: false });
     await app.ready();
+    await createTestUsers(app);
   });
 
   afterAll(async () => {
@@ -258,7 +259,7 @@ describe('Subscriptions Routes', () => {
     it('should return 404 for non-existent subscription', async () => {
       const response = await app.inject({
         method: 'GET',
-        url: '/api/v1/subscriptions/non-existent-id',
+        url: '/api/v1/subscriptions/00000000-0000-4000-8000-999999999999',
         headers: {
           authorization: `Bearer ${generateTestToken(mockUser.id, ['user'])}`,
         },
@@ -268,7 +269,7 @@ describe('Subscriptions Routes', () => {
     });
 
     it('should not allow access to other users subscriptions', async () => {
-      const otherUser = { ...mockUser, id: 'other-user-id' };
+      const otherUser = { ...mockUser, id: '00000000-0000-4000-8000-000000000888' };
       const response = await app.inject({
         method: 'GET',
         url: `/api/v1/subscriptions/${mockSubscription.id}`,
@@ -308,7 +309,7 @@ describe('Subscriptions Routes', () => {
     it('should return 404 for non-existent subscription', async () => {
       const response = await app.inject({
         method: 'GET',
-        url: '/api/v1/subscriptions/non-existent-id/quota',
+        url: '/api/v1/subscriptions/00000000-0000-4000-8000-999999999999/quota',
         headers: {
           authorization: `Bearer ${generateTestToken(mockUser.id, ['user'])}`,
         },
@@ -353,7 +354,7 @@ describe('Subscriptions Routes', () => {
     it('should return 404 for non-existent subscription', async () => {
       const response = await app.inject({
         method: 'PATCH',
-        url: '/api/v1/subscriptions/non-existent-id',
+        url: '/api/v1/subscriptions/00000000-0000-4000-8000-999999999999',
         headers: {
           authorization: `Bearer ${generateTestToken(mockUser.id, ['user'])}`,
         },
@@ -400,7 +401,7 @@ describe('Subscriptions Routes', () => {
     it('should return 404 for non-existent subscription', async () => {
       const response = await app.inject({
         method: 'POST',
-        url: '/api/v1/subscriptions/non-existent-id/cancel',
+        url: '/api/v1/subscriptions/00000000-0000-4000-8000-999999999999/cancel',
         headers: {
           authorization: `Bearer ${generateTestToken(mockUser.id, ['user'])}`,
         },

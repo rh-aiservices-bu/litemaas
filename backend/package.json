@@ -24,6 +24,8 @@
     "clean": "rimraf dist coverage .tsbuildinfo",
     "db:seed": "tsx src/scripts/seed-data.ts",
     "db:setup": "npm run db:seed",
+    "test:db:reset": "tsx tests/helpers/db-reset-script.ts",
+    "test:db:setup": "npm run test:db:reset && echo 'Test database ready'",
     "script:recalculate-cache": "tsx src/scripts/recalculate-usage-cache.ts",
     "reset-user-properties": "tsx ../scripts/reset-user-properties.ts",
     "logs": "tail -f ../logs/backend.log",

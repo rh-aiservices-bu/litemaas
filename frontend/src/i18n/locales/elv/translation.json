@@ -102,6 +102,7 @@
     },
     "completionTokens": "Têw Echannen",
     "datePresets": {
+      "1d": "Aur fîr",
       "30d": "Methed 30 aur",
       "7d": "Methed 7 aur",
       "90d": "Methed 90 aur",
@@ -170,7 +171,9 @@
       "legend": {
         "colorScale": "Aerlinn-thûl",
         "noData": "Úin gwaed",
-        "zeroUsage": "Aerlinn nûl"
+        "noDataAriaLabel": "Orthael úin-gwaed",
+        "zeroUsage": "Aerlinn nûl",
+        "zeroUsageAriaLabel": "Orthael aerlinn-nûl"
       },
       "table": {
         "viewAsChart": "Tira sui minithith",
@@ -197,7 +200,17 @@
     },
     "metricSelect": "Govad edhellen",
     "metricsOverview": "Govaded Tirin",
-    "modelBreakdown": "Echuin-Dail",
+    "modelBreakdown": {
+      "completionTokens": "Têw Echannen",
+      "modelName": "Echui",
+      "noData": "Úin echuin-gwaed úir",
+      "noDataDescription": "Úin aerlinn-gwaed ennen nan îuil-rond a halad edhellen.",
+      "promptTokens": "Têw Peth",
+      "tableLabel": "Tâur echuin-dail",
+      "totalCost": "Cost Îl",
+      "totalRequests": "Pedi",
+      "totalTokens": "Têw Îl"
+    },
     "modelFilterChanged": "Halad dan {{count}} echui(n)",
     "noData": "Úin gwaed úir",
     "noModelData": "Úin echuin-gwaed úir",
@@ -206,8 +219,22 @@
     "noProvidersFound": "Ú-ennen aphad-hin nan îuil-rond edhellen.",
     "noUserData": "Úin aduiain-gwaed úir",
     "noUsersFound": "Ú-ennen aduiain nan îuil-rond edhellen.",
+    "pagination": {
+      "label": "Lethron"
+    },
     "promptTokens": "Têw-Peth",
-    "providerBreakdown": "Aphad-Dail",
+    "providerBreakdown": {
+      "completionTokens": "Têw Echannen",
+      "noData": "Úin aphad-gwaed úir",
+      "noDataDescription": "Úin aerlinn-gwaed ennen nan îuil-rond a halad edhellen.",
+      "promptTokens": "Têw Peth",
+      "providerName": "Aphad",
+      "successRate": "Prestann-Rond",
+      "tableLabel": "Tâur aphad-dail",
+      "totalCost": "Cost Îl",
+      "totalRequests": "Pedi",
+      "totalTokens": "Têw Îl"
+    },
     "refreshing": "Athra gwaed-aurui...",
     "refreshSuccess": "Athra prestann",
     "refreshToday": "Athra Aurui",
@@ -261,7 +288,18 @@
     "unknownUser": "Aduiadan Ú-danna",
     "unknownUserDescription": "Pedi o anguirel-API neledh pe ú-minnen",
     "usageHeatmapSubtitle": "Aerlinn-luin hen veth edhellen",
-    "userBreakdown": "Aduiain-Dail",
+    "userBreakdown": {
+      "completionTokens": "Têw Echannen",
+      "email": "Lam-thúl",
+      "noData": "Úin aduiain-gwaed úir",
+      "noDataDescription": "Úin aerlinn-gwaed ennen nan îuil-rond a halad edhellen.",
+      "promptTokens": "Têw Peth",
+      "tableLabel": "Tâur aduiain-dail",
+      "totalCost": "Cost Îl",
+      "totalRequests": "Pedi",
+      "totalTokens": "Têw Îl",
+      "username": "Aduiadan-eneth"
+    },
     "userFilterChanged": "Halad dan {{count}} aduiadan/aduiain",
     "weeklyUsagePatterns": "Veth-Aerlinn Echad"
   },
@@ -286,8 +324,10 @@
     "no": "Avo",
     "none": "Úin",
     "notAvailable": "Ú-úir",
+    "refreshPage": "Athra Band",
     "retry": "Orthor",
     "table": "Tâur",
+    "tryAgain": "Orthor Erin",
     "update": "Trenaro",
     "value": "Fair",
     "view": "Cen",
@@ -1071,7 +1111,10 @@
       "loadingTitle": "Lain aerlinn-gwaed...",
       "metrics": {
         "avgResponseTime": "Dandollen-lû Aer",
+        "completion_tokens": "Têw Echannen",
+        "cost": "Cost",
         "currency": "EUR",
+        "prompt_tokens": "Têw Peth",
         "requests": "pedi",
         "successfulRequests": "pedi prestann",
         "successRate": "Prestann-rond",
@@ -1116,12 +1159,14 @@
       "selectApiKeyTitle": "Edhello Anguirel-API",
       "subtitle": "Tirno API-aerlinn, cost a prestann-govaded",
       "tableHeaders": {
+        "completionTokens": "Têw Echannen",
         "cost": "Cost",
         "count": "Rond",
         "date": "Îuil",
         "formattedValue": "Fair Orthad",
         "model": "Echui",
         "percentage": "Rond-fair",
+        "promptTokens": "Têw Peth",
         "requests": "Pedi",
         "tokens": "Têw",
         "usagePercent": "Aerlinn %"
@@ -1192,6 +1237,15 @@
       "userAvatar": "Aduiadan-Tirion"
     },
     "errors": {
+      "bannerCreateFailed": "Ortho faer fael. Anno orthor erin.",
+      "bannerDeleteFailed": "Neledh faer fael. Anno orthor erin.",
+      "bannerDismissFailed": "Thynd faer fael. Anno orthor erin.",
+      "bannerUpdateFailed": "Trenaro faer fael. Anno orthor erin.",
+      "bannerVisibilityFailed": "Dadben tiruith-edraith fael. Anno orthor erin.",
+      "componentError": "Component-ohtar",
+      "componentLoadingError": "Component-lain Ohtar",
+      "componentLoadingErrorDesc": "Lain component sin fael. Anno orthor dan athra-band.",
+      "configLoadFailed": "Lain amloth-orthad fael",
       "details": "En-chinn",
       "errorCode": "Ú-acharn côd",
       "field": "Talaf",
@@ -1205,7 +1259,8 @@
       "retryAction": "Anno prestanno i-ngurad ú-acharn",
       "retryAfter": "Dartho {{seconds}} lend a-mrestanto",
       "showDetails": "Tira en-chinn",
-      "somethingWrong": "Rhein ohtar orthant",
+      "somethingWentWrong": "Rhein ohtar orthant",
+      "somethingWentWrongDesc": "Goheno, nan rhein ú-prestann orthant. Anno orthor dan athra-band pe pado na orthad-uin sui ohtar dartha.",
       "statusCode": "Stat côd",
       "title": "Ohtar",
       "tryRefresh": "Goheno, nan rhein ú-prestann orthant. Anno athra-band i band pe pado na orthad-uin sui ohtar dartha.",
@@ -1222,7 +1277,8 @@
         "positive": "{{field}} rhain nôr muin",
         "required": "{{field}} rhain",
         "url": "{{field}} rhain URL dhain"
-      }
+      },
+      "somethingWrong": "Rhein ohtar orthant"
     },
     "footer": {
       "appBy": "Amloth dan",
@@ -1246,6 +1302,7 @@
       "spanish": "Español"
     },
     "navigation": {
+      "globalNavigation": "Linna ambar",
       "mainNavigation": "Linna orod",
       "userMenu": "Aduiadan-list"
     },

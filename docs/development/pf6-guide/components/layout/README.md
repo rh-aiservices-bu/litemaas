@@ -17,8 +17,6 @@ PatternFly layout components provide the foundation for structuring application 
 
 ## Related Files
 
-- [**Page Sections**](./page-sections.md) - PageSection component usage and patterns
-- [**Grid System**](./grid-system.md) - Grid layout and responsive design
 - [**Component Architecture**](../../guidelines/component-architecture.md) - Component structure patterns
 - [**Styling Standards**](../../guidelines/styling-standards.md) - Layout styling guidelines
 

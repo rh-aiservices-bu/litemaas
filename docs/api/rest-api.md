@@ -1374,6 +1374,107 @@ Comprehensive usage analytics with intelligent caching and multi-dimensional fil
 - Current day: 5-minute TTL, auto-refreshed when stale
 - Data fetched from LiteLLM `/user/daily/activity` endpoint on cache miss
 
+**Rate Limiting**:
+
+All admin analytics endpoints are rate-limited to prevent abuse and protect system resources. Rate limits are applied **per-user** (not globally) based on JWT authentication.
+
+**Rate Limit Tiers**:
+
+| Endpoint Type     | Default Limit | Time Window | Environment Variable         |
+| ----------------- | ------------- | ----------- | ---------------------------- |
+| Analytics Queries | 10 requests   | 1 minute    | `ADMIN_ANALYTICS_RATE_LIMIT` |
+| Data Export       | 5 requests    | 1 minute    | `ADMIN_EXPORT_RATE_LIMIT`    |
+| Cache Rebuild     | 1 request     | 5 minutes   | `ADMIN_CACHE_REBUILD_LIMIT`  |
+
+**Analytics Query Endpoints** (10 req/min):
+
+- `POST /analytics`
+- `POST /by-user`
+- `POST /by-model`
+- `POST /by-provider`
+- `POST /refresh-today`
+- `GET /filter-options`
+
+**Export Endpoints** (5 req/min):
+
+- `POST /export`
+
+**Cache Operations** (1 req/5min):
+
+- `POST /rebuild-cache`
+
+**Rate Limit Headers**:
+
+All responses include rate limit information in headers:
+
+```http
+X-RateLimit-Limit: 10
+X-RateLimit-Remaining: 7
+X-RateLimit-Reset: 1705940460
+```
+
+**Rate Limit Exceeded (HTTP 429)**:
+
+When rate limit is exceeded, the API returns:
+
+```json
+{
+  "code": "RATE_LIMITED",
+  "message": "Rate limit exceeded. Please try again later."
+}
+```
+
+Headers include retry information:
+
+```http
+Retry-After: 42
+X-RateLimit-Limit: 10
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1705940460
+```
+
+**Configuration**:
+
+Rate limits can be configured via environment variables for different deployment scenarios:
+
+```bash
+# Analytics query endpoints (default: 10)
+ADMIN_ANALYTICS_RATE_LIMIT=20
+
+# Data export endpoints (default: 5)
+ADMIN_EXPORT_RATE_LIMIT=10
+
+# Cache rebuild operations (default: 1)
+ADMIN_CACHE_REBUILD_LIMIT=1
+```
+
+**Notes**:
+
+- Rate limits are tracked per authenticated user (via JWT `userId`)
+- Unauthenticated requests use IP-based rate limiting
+- Rate limit windows are sliding, not fixed
+- Cache rebuild has the most restrictive limit due to high resource cost
+
+**Why POST for Query Endpoints?**
+
+The analytics query endpoints (`/analytics`, `/by-user`, `/by-model`, `/by-provider`, `/export`) use POST instead of GET to support large filter arrays that would exceed URL length limits.
+
+**Technical Rationale**:
+
+- **URL Length Limits**: Browsers typically limit URLs to 2048 characters, and web servers (Nginx, Apache) enforce limits between 4096-8192 characters
+- **Large Filter Arrays**: Real-world usage scenarios often require filtering by 100+ user IDs or API key IDs, which would create URLs exceeding these limits
+- **Example Calculation**:
+  - 100 UUIDs (36 chars each) = 3,600 characters
+  - Plus base URL, query params, and encoding = easily > 4,000 characters
+- **HTTP Compliance**: RFC 7231 allows POST for complex queries when GET is impractical
+
+**Hybrid Request Pattern**:
+
+- **Filters in Request Body**: Unlimited size, supports complex multi-dimensional filtering (users, models, providers, API keys)
+- **Pagination in Query String**: Remains in URL for cacheability and standard HTTP semantics (`?page=2&limit=50`)
+
+This pattern provides the best of both worlds: unlimited filter complexity via request body while maintaining RESTful pagination semantics.
+
 #### POST /api/v1/admin/usage/analytics
 
 **Authorization**: Requires `admin` or `adminReadonly` role
@@ -1489,22 +1590,41 @@ Response:
 }
 ```
 
-#### GET /api/v1/admin/usage/by-user
+#### POST /api/v1/admin/usage/by-user
 
 **Authorization**: Requires `admin` or `adminReadonly` role
 
-Get usage metrics broken down by user
+Get usage metrics broken down by user with pagination support
+
+**Note**: Uses POST instead of GET to support large filter arrays (100+ user IDs) that would exceed URL length limits (2048-4096 characters). Filters are sent in the request body while pagination parameters remain in the query string for cacheability.
+
+**Request Body:**
+
+```json
+{
+  "startDate": "2024-01-01", // Required: YYYY-MM-DD format
+  "endDate": "2024-01-31", // Required: YYYY-MM-DD format
+  "userIds": ["uuid1", "uuid2"], // Optional: Filter by specific users
+  "modelIds": ["gpt-4", "gpt-3.5"], // Optional: Filter by specific models
+  "providerIds": ["openai", "azure"], // Optional: Filter by specific providers
+  "apiKeyIds": ["key1", "key2"] // Optional: Filter by specific API keys
+}
+```
+
+**Query Parameters** (Pagination):
 
 ```
-Query Parameters:
-- startDate: YYYY-MM-DD (required)
-- endDate: YYYY-MM-DD (required)
-- modelIds[]: Array of model IDs (optional)
-- providerIds[]: Array of provider IDs (optional)
+- page: number (default: 1)
+- limit: number (default: 50, max: 200)
+- sortBy: string (username, totalRequests, totalTokens, promptTokens, completionTokens, totalCost)
+- sortOrder: "asc" | "desc" (default: "desc")
+```
 
-Response:
+**Response:**
+
+```json
 {
-  "users": [
+  "data": [
     {
       "userId": "uuid",
       "username": "john.doe",
@@ -1517,31 +1637,57 @@ Response:
           "input": 220000,
           "output": 80000
         },
-        "cost": 45.50,
+        "cost": 45.5,
         "lastActive": "2024-01-31T15:30:00Z"
       }
     }
   ],
-  "total": 150
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 150,
+    "totalPages": 3,
+    "hasNext": true,
+    "hasPrevious": false
+  }
 }
 ```
 
-#### GET /api/v1/admin/usage/by-model
+#### POST /api/v1/admin/usage/by-model
 
 **Authorization**: Requires `admin` or `adminReadonly` role
 
-Get usage metrics broken down by model
+Get usage metrics broken down by model with pagination support
+
+**Note**: Uses POST instead of GET to support large filter arrays that would exceed URL length limits.
+
+**Request Body:**
+
+```json
+{
+  "startDate": "2024-01-01", // Required: YYYY-MM-DD format
+  "endDate": "2024-01-31", // Required: YYYY-MM-DD format
+  "userIds": ["uuid1", "uuid2"], // Optional: Filter by specific users
+  "modelIds": ["gpt-4", "gpt-3.5"], // Optional: Filter by specific models
+  "providerIds": ["openai", "azure"], // Optional: Filter by specific providers
+  "apiKeyIds": ["key1", "key2"] // Optional: Filter by specific API keys
+}
+```
+
+**Query Parameters** (Pagination):
 
 ```
-Query Parameters:
-- startDate: YYYY-MM-DD (required)
-- endDate: YYYY-MM-DD (required)
-- userIds[]: Array of user UUIDs (optional)
-- providerIds[]: Array of provider IDs (optional)
+- page: number (default: 1)
+- limit: number (default: 50, max: 200)
+- sortBy: string (modelName, totalRequests, totalTokens, promptTokens, completionTokens, totalCost)
+- sortOrder: "asc" | "desc" (default: "desc")
+```
 
-Response:
+**Response:**
+
+```json
 {
-  "models": [
+  "data": [
     {
       "modelId": "gpt-4",
       "modelName": "GPT-4",
@@ -1553,32 +1699,58 @@ Response:
           "input": 1200000,
           "output": 400000
         },
-        "cost": 90.00,
+        "cost": 90.0,
         "users": 50,
         "successRate": 99.5
       }
     }
   ],
-  "total": 25
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 25,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
 }
 ```
 
-#### GET /api/v1/admin/usage/by-provider
+#### POST /api/v1/admin/usage/by-provider
 
 **Authorization**: Requires `admin` or `adminReadonly` role
 
-Get usage metrics broken down by provider
+Get usage metrics broken down by provider with pagination support
+
+**Note**: Uses POST instead of GET to support large filter arrays that would exceed URL length limits.
+
+**Request Body:**
+
+```json
+{
+  "startDate": "2024-01-01", // Required: YYYY-MM-DD format
+  "endDate": "2024-01-31", // Required: YYYY-MM-DD format
+  "userIds": ["uuid1", "uuid2"], // Optional: Filter by specific users
+  "modelIds": ["gpt-4", "gpt-3.5"], // Optional: Filter by specific models
+  "providerIds": ["openai", "azure"], // Optional: Filter by specific providers
+  "apiKeyIds": ["key1", "key2"] // Optional: Filter by specific API keys
+}
+```
+
+**Query Parameters** (Pagination):
 
 ```
-Query Parameters:
-- startDate: YYYY-MM-DD (required)
-- endDate: YYYY-MM-DD (required)
-- userIds[]: Array of user UUIDs (optional)
-- modelIds[]: Array of model IDs (optional)
+- page: number (default: 1)
+- limit: number (default: 50, max: 200)
+- sortBy: string (providerName, totalRequests, totalTokens, promptTokens, completionTokens, totalCost)
+- sortOrder: "asc" | "desc" (default: "desc")
+```
 
-Response:
+**Response:**
+
+```json
 {
-  "providers": [
+  "data": [
     {
       "provider": "openai",
       "metrics": {
@@ -1594,28 +1766,44 @@ Response:
       }
     }
   ],
-  "total": 3
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 3,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
 }
 ```
 
-#### GET /api/v1/admin/usage/export
+#### POST /api/v1/admin/usage/export
 
 **Authorization**: Requires `admin` or `adminReadonly` role
 
+**Note**: Uses POST instead of GET to support large filter arrays that would exceed URL length limits.
+
 Export comprehensive usage data in CSV or JSON format
 
-```
-Query Parameters:
-- startDate: YYYY-MM-DD (required)
-- endDate: YYYY-MM-DD (required)
-- format: "csv" or "json" (optional, defaults to "csv")
-- userIds[]: Array of user UUIDs (optional)
-- modelIds[]: Array of model IDs (optional)
-- providerIds[]: Array of provider IDs (optional)
+**Request Body:**
 
-Response: File download with appropriate Content-Type and Content-Disposition headers
-Filename format: admin-usage-export-{startDate}-to-{endDate}.{format}
+```json
+{
+  "startDate": "2024-01-01", // Required: YYYY-MM-DD format
+  "endDate": "2024-01-31", // Required: YYYY-MM-DD format
+  "format": "csv", // Optional: "csv" or "json", defaults to "csv"
+  "userIds": ["uuid1", "uuid2"], // Optional: Filter by specific users
+  "modelIds": ["gpt-4", "gpt-3.5"], // Optional: Filter by specific models
+  "providerIds": ["openai", "azure"], // Optional: Filter by specific providers
+  "apiKeyIds": ["key1", "key2"] // Optional: Filter by specific API keys
+}
 ```
+
+**Response:**
+
+- File download with appropriate Content-Type and Content-Disposition headers
+- Filename format: `admin-usage-export-{startDate}-to-{endDate}.{format}`
+- Content-Type: `text/csv` for CSV format, `application/json` for JSON format
 
 #### POST /api/v1/admin/usage/refresh-today
 

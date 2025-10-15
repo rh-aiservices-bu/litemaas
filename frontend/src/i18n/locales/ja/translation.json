@@ -102,6 +102,7 @@
     },
     "completionTokens": "補完トークン",
     "datePresets": {
+      "1d": "過去1日間",
       "30d": "過去30日間",
       "7d": "過去7日間",
       "90d": "過去90日間",
@@ -170,7 +171,9 @@
       "legend": {
         "colorScale": "使用強度",
         "noData": "データなし",
-        "zeroUsage": "使用なし"
+        "noDataAriaLabel": "データなし表示",
+        "zeroUsage": "使用なし",
+        "zeroUsageAriaLabel": "使用なし表示"
       },
       "table": {
         "viewAsChart": "グラフ表示",
@@ -197,7 +200,17 @@
     },
     "metricSelect": "メトリクス選択",
     "metricsOverview": "メトリクス概要",
-    "modelBreakdown": "モデル内訳",
+    "modelBreakdown": {
+      "completionTokens": "補完トークン",
+      "modelName": "モデル",
+      "noData": "モデルデータがありません",
+      "noDataDescription": "選択した期間とフィルターの使用データが見つかりません。",
+      "promptTokens": "プロンプトトークン",
+      "tableLabel": "モデル内訳テーブル",
+      "totalCost": "総コスト",
+      "totalRequests": "リクエスト",
+      "totalTokens": "総トークン数"
+    },
     "modelFilterChanged": "{{count}}個のモデルでフィルタリング中",
     "noData": "データがありません",
     "noModelData": "モデルデータがありません",
@@ -206,8 +219,22 @@
     "noProvidersFound": "選択した期間のプロバイダーが見つかりません。",
     "noUserData": "ユーザーデータがありません",
     "noUsersFound": "選択した期間のユーザーが見つかりません。",
+    "pagination": {
+      "label": "ページネーション"
+    },
     "promptTokens": "プロンプトトークン",
-    "providerBreakdown": "プロバイダー内訳",
+    "providerBreakdown": {
+      "completionTokens": "補完トークン",
+      "noData": "プロバイダーデータがありません",
+      "noDataDescription": "選択した期間とフィルターの使用データが見つかりません。",
+      "promptTokens": "プロンプトトークン",
+      "providerName": "プロバイダー",
+      "successRate": "成功率",
+      "tableLabel": "プロバイダー内訳テーブル",
+      "totalCost": "総コスト",
+      "totalRequests": "リクエスト",
+      "totalTokens": "総トークン数"
+    },
     "refreshing": "本日のデータを更新中...",
     "refreshSuccess": "更新成功",
     "refreshToday": "本日を更新",
@@ -261,7 +288,18 @@
     "unknownUser": "不明なユーザー",
     "unknownUserDescription": "削除済みまたはマッピングされていないAPIキーからのリクエスト",
     "usageHeatmapSubtitle": "選択した週の使用ヒートマップ",
-    "userBreakdown": "ユーザー内訳",
+    "userBreakdown": {
+      "completionTokens": "補完トークン",
+      "email": "メール",
+      "noData": "ユーザーデータがありません",
+      "noDataDescription": "選択した期間とフィルターの使用データが見つかりません。",
+      "promptTokens": "プロンプトトークン",
+      "tableLabel": "ユーザー内訳テーブル",
+      "totalCost": "総コスト",
+      "totalRequests": "リクエスト",
+      "totalTokens": "総トークン数",
+      "username": "ユーザー名"
+    },
     "userFilterChanged": "{{count}}人のユーザーでフィルタリング中",
     "weeklyUsagePatterns": "週間使用パターン"
   },
@@ -286,8 +324,10 @@
     "no": "いいえ",
     "none": "なし",
     "notAvailable": "N/A",
+    "refreshPage": "ページを更新",
     "retry": "再試行",
     "table": "テーブル",
+    "tryAgain": "再試行",
     "update": "更新",
     "value": "値",
     "view": "表示",
@@ -1071,7 +1111,10 @@
       "loadingTitle": "使用状況データを読み込み中...",
       "metrics": {
         "avgResponseTime": "平均応答時間",
+        "completion_tokens": "補完トークン",
+        "cost": "コスト",
         "currency": "JPY",
+        "prompt_tokens": "プロンプトトークン",
         "requests": "リクエスト",
         "successfulRequests": "成功したリクエスト",
         "successRate": "成功率",
@@ -1116,12 +1159,14 @@
       "selectApiKeyTitle": "APIキーを選択",
       "subtitle": "API使用状況、コスト、パフォーマンスメトリクスを監視",
       "tableHeaders": {
+        "completionTokens": "補完トークン",
         "cost": "コスト",
         "count": "カウント",
         "date": "日付",
         "formattedValue": "フォーマット済み値",
         "model": "モデル",
         "percentage": "パーセンテージ",
+        "promptTokens": "プロンプトトークン",
         "requests": "リクエスト",
         "tokens": "トークン",
         "usagePercent": "使用率 %"
@@ -1192,6 +1237,15 @@
       "userAvatar": "ユーザーアバター"
     },
     "errors": {
+      "bannerCreateFailed": "バナーの作成に失敗しました。もう一度お試しください。",
+      "bannerDeleteFailed": "バナーの削除に失敗しました。もう一度お試しください。",
+      "bannerDismissFailed": "バナーを閉じることに失敗しました。もう一度お試しください。",
+      "bannerUpdateFailed": "バナーの更新に失敗しました。もう一度お試しください。",
+      "bannerVisibilityFailed": "表示変更の適用に失敗しました。もう一度お試しください。",
+      "componentError": "コンポーネントエラー",
+      "componentLoadingError": "コンポーネント読み込みエラー",
+      "componentLoadingErrorDesc": "このコンポーネントの読み込みに失敗しました。ページを更新してください。",
+      "configLoadFailed": "アプリケーション設定の読み込みに失敗しました",
       "details": "詳細",
       "errorCode": "エラーコード",
       "field": "フィールド",
@@ -1205,7 +1259,8 @@
       "retryAction": "失敗した操作を再試行する",
       "retryAfter": "{{seconds}}秒待ってから再試行してください",
       "showDetails": "詳細を表示",
-      "somethingWrong": "問題が発生しました",
+      "somethingWentWrong": "問題が発生しました",
+      "somethingWentWrongDesc": "申し訳ございませんが、予期しない問題が発生しました。ページを更新するか、問題が続く場合はサポートにお問い合わせください。",
       "statusCode": "ステータスコード",
       "title": "エラー",
       "tryRefresh": "申し訳ございませんが、予期しない問題が発生しました。ページを更新するか、問題が続く場合はサポートにお問い合わせください。",
@@ -1222,7 +1277,8 @@
         "positive": "{{field}}は正の数である必要があります",
         "required": "{{field}}は必須です",
         "url": "{{field}}は有効なURLである必要があります"
-      }
+      },
+      "somethingWrong": "問題が発生しました"
     },
     "footer": {
       "appBy": "アプリ制作：",
@@ -1246,6 +1302,7 @@
       "spanish": "Español"
     },
     "navigation": {
+      "globalNavigation": "グローバルナビゲーション",
       "mainNavigation": "メインナビゲーション",
       "userMenu": "ユーザーメニュー"
     },

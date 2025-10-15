@@ -57,6 +57,17 @@ npm install        # Install dependencies
 npm run dev        # Start both backend and frontend with auto-reload and logging
 ```
 
+**Testing (First Time Setup):**
+
+```bash
+# Create test database (required before running backend tests)
+psql -U pgadmin -h localhost -p 5432 -d postgres -c "CREATE DATABASE litemaas_test;"
+cd backend && npm run test:db:setup
+
+# Run tests
+npm test
+```
+
 **Production (OpenShift):**
 
 ```bash
@@ -75,82 +86,38 @@ _See `docs/development/` for detailed setup and `docs/deployment/configuration.m
 
 ### Development Server and Logging Setup
 
-**⚠️ IMPORTANT FOR CLAUDE CODE AND AI ASSISTANTS**:
-
-The development servers are configured to run with hot-reload and write logs to files for AI assistant visibility.
+**⚠️ IMPORTANT**: Development servers are already running with auto-reload. DO NOT start new processes!
 
 **Current Setup:**
 
-- **Backend**: Running on port 8081 with `tsx watch` and `pino-pretty` logging
-- **Frontend**: Running on port 3000 with Vite dev server
-- **Logs**: Both servers write to `logs/` directory in the monorepo root
+- Backend: Port 8081 (`tsx watch` + `pino-pretty`)
+- Frontend: Port 3000 (Vite HMR)
+- Logs: `logs/backend.log` and `logs/frontend.log`
 
-**For AI Assistants (Claude Code):**
+**Quick Commands:**
 
 ```bash
-# DO NOT start new server processes - they are already running!
-
-# To check backend logs (most recent 100 lines):
+# Check logs
 tail -n 100 logs/backend.log
-
-# To check frontend logs:
 tail -n 100 logs/frontend.log
 
-# To watch logs in real-time:
-tail -f logs/backend.log
-tail -f logs/frontend.log
-
-# To search for errors:
-grep -i error logs/backend.log | tail -n 20
-grep -i error logs/frontend.log | tail -n 20
-
-# To check server status (if needed):
-curl http://localhost:8081/api/v1/health  # Backend health check
-curl http://localhost:3000          # Frontend dev server
+# Search for errors
+grep -i error logs/*.log | tail -n 20
 ```
 
-**Server URLs:**
+**Key URLs:**
 
 - Backend API: `http://localhost:8081`
-- Frontend Dev Server: `http://localhost:3000`
-- API Documentation: `http://localhost:8081/docs`
-
-**Starting/Stopping Servers (for human developers):**
-
-```bash
-# Start with logging (recommended for AI-assisted development):
-npm run dev:logged
-
-# Start without logging (for regular development):
-npm run dev
-
-# Clear log files:
-npm run logs:clear
-```
+- Frontend: `http://localhost:3000`
+- API Docs: `http://localhost:8081/docs`
 
 ### Bash Tool Limitation
 
 **⚠️ CRITICAL**: stderr redirects are broken in the Bash tool - you can't use `2>&1` in bash commands. The Bash tool will mangle the stderr redirect and pass a "2" as an arg, and you won't see stderr.
 
-**Workaround**: Use the wrapper script: `./dev-tools/run_with_stderr.sh command args` to capture both stdout and stderr.
+**Workaround**: Use `./dev-tools/run_with_stderr.sh command args` to capture both stdout and stderr.
 
 See <https://github.com/anthropics/claude-code/issues/4711> for details.
-
-### Changes and Testing
-
-**IMPORTANT**: In development, both backend and frontend servers run with auto-reload enabled. Any code changes are automatically detected and applied without needing to restart the servers.
-
-**YOU DON'T NEED TO**:
-
-- Start new server processes (they're already running)
-- Restart servers after code changes (auto-reload handles this)
-- Run `npm run dev` again (servers are persistent)
-
-**INSTEAD, DO**:
-
-- Read the log files to see server output
-- Use Playwright to test your modifications live
-- Check the logs for compilation errors or runtime issues
 
 ## 🔐 Security & Authentication
 
@@ -172,22 +139,7 @@ For details, see [`docs/deployment/authentication.md`](docs/deployment/authentic
 
 ## 🎯 For AI Assistants
 
-### ⚠️ BEFORE YOU CODE - Server and Log Check
-
-**FIRST STEP**: Always check if servers are running and read recent logs:
-
-```bash
-# Check recent backend activity
-tail -n 50 logs/backend.log
-
-# Check recent frontend activity
-tail -n 50 logs/frontend.log
-
-# Look for any errors
-grep -i error logs/*.log | tail -n 20
-```
-
-### ⚠️ BEFORE YOU CODE - Pattern Discovery Checklist
+### ⚠️ Pattern Discovery Checklist (MANDATORY)
 
 **MANDATORY**: Before implementing ANY new feature, you MUST:
 
@@ -215,25 +167,12 @@ When working on:
 - **Authentication tasks** → Load `docs/deployment/authentication.md` for OAuth/role setup
 - **Full-stack tasks** → Start with this file, then load specific contexts as needed
 
-### Debugging Workflow for AI Assistants
+### Debugging Workflow
 
-1. **Check logs first** - Don't start new processes:
-
-   ```bash
-   tail -n 100 logs/backend.log
-   tail -n 100 logs/frontend.log
-   ```
-
-2. **If you see compilation errors** - Fix the code and check logs again (auto-reload will recompile)
-
-3. **If you see runtime errors** - Read the stack trace from logs and fix
-
-4. **If servers appear down** - Tell the user to restart manually:
-
-   ```bash
-   # User should run this, not the AI:
-   npm run dev:logged
-   ```
+1. **Check logs first**: `tail -n 100 logs/backend.log` or `logs/frontend.log`
+2. **Fix compilation errors**: Save file, auto-reload will recompile
+3. **Runtime errors**: Read stack trace from logs
+4. **Servers down**: Tell user to run `npm run dev:logged`
 
 ### Context7 Usage Guidelines
 

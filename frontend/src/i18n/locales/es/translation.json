@@ -102,6 +102,7 @@
     },
     "completionTokens": "Tokens de completado",
     "datePresets": {
+      "1d": "Último día",
       "30d": "Últimos 30 días",
       "7d": "Últimos 7 días",
       "90d": "Últimos 90 días",
@@ -170,7 +171,9 @@
       "legend": {
         "colorScale": "Intensidad de uso",
         "noData": "Sin datos",
-        "zeroUsage": "Uso cero"
+        "noDataAriaLabel": "Indicador de sin datos",
+        "zeroUsage": "Uso cero",
+        "zeroUsageAriaLabel": "Indicador de uso cero"
       },
       "table": {
         "viewAsChart": "Ver como gráfico",
@@ -197,7 +200,17 @@
     },
     "metricSelect": "Selección de métrica",
     "metricsOverview": "Resumen de métricas",
-    "modelBreakdown": "Desglose de modelos",
+    "modelBreakdown": {
+      "completionTokens": "Tokens de completado",
+      "modelName": "Modelo",
+      "noData": "No hay datos de modelo disponibles",
+      "noDataDescription": "No se encontraron datos de uso para el rango de fechas y filtros seleccionados.",
+      "promptTokens": "Tokens de prompt",
+      "tableLabel": "Tabla de desglose de modelos",
+      "totalCost": "Costo total",
+      "totalRequests": "Solicitudes",
+      "totalTokens": "Tokens totales"
+    },
     "modelFilterChanged": "Filtrando por {{count}} modelo(s)",
     "noData": "No hay datos disponibles",
     "noModelData": "No hay datos de modelo disponibles",
@@ -206,8 +219,22 @@
     "noProvidersFound": "No se encontraron proveedores para el rango de fechas seleccionado.",
     "noUserData": "No hay datos de usuario disponibles",
     "noUsersFound": "No se encontraron usuarios para el rango de fechas seleccionado.",
+    "pagination": {
+      "label": "Paginación"
+    },
     "promptTokens": "Tokens de prompt",
-    "providerBreakdown": "Desglose de proveedores",
+    "providerBreakdown": {
+      "completionTokens": "Tokens de completado",
+      "noData": "No hay datos de proveedor disponibles",
+      "noDataDescription": "No se encontraron datos de uso para el rango de fechas y filtros seleccionados.",
+      "promptTokens": "Tokens de prompt",
+      "providerName": "Proveedor",
+      "successRate": "Tasa de éxito",
+      "tableLabel": "Tabla de desglose de proveedores",
+      "totalCost": "Costo total",
+      "totalRequests": "Solicitudes",
+      "totalTokens": "Tokens totales"
+    },
     "refreshing": "Actualizando datos de hoy...",
     "refreshSuccess": "Actualización exitosa",
     "refreshToday": "Actualizar hoy",
@@ -261,7 +288,18 @@
     "unknownUser": "Usuario desconocido",
     "unknownUserDescription": "Solicitudes de claves API eliminadas o sin asignar",
     "usageHeatmapSubtitle": "Mapa de calor de uso durante las semanas seleccionadas",
-    "userBreakdown": "Desglose de usuarios",
+    "userBreakdown": {
+      "completionTokens": "Tokens de completado",
+      "email": "Correo electrónico",
+      "noData": "No hay datos de usuario disponibles",
+      "noDataDescription": "No se encontraron datos de uso para el rango de fechas y filtros seleccionados.",
+      "promptTokens": "Tokens de prompt",
+      "tableLabel": "Tabla de desglose de usuarios",
+      "totalCost": "Costo total",
+      "totalRequests": "Solicitudes",
+      "totalTokens": "Tokens totales",
+      "username": "Nombre de usuario"
+    },
     "userFilterChanged": "Filtrando por {{count}} usuario(s)",
     "weeklyUsagePatterns": "Patrones de uso semanales"
   },
@@ -286,8 +324,10 @@
     "no": "No",
     "none": "Ninguno",
     "notAvailable": "N/D",
+    "refreshPage": "Actualizar Página",
     "retry": "Reintentar",
     "table": "Tabla",
+    "tryAgain": "Intentar de Nuevo",
     "update": "Actualizar",
     "value": "Valor",
     "view": "Ver",
@@ -1071,7 +1111,10 @@
       "loadingTitle": "Cargando Datos de Uso...",
       "metrics": {
         "avgResponseTime": "Tiempo de Respuesta Promedio",
+        "completion_tokens": "Tokens de Completado",
+        "cost": "Costo",
         "currency": "EUR",
+        "prompt_tokens": "Tokens de Prompt",
         "requests": "solicitudes",
         "successfulRequests": "solicitudes exitosas",
         "successRate": "Tasa de Éxito",
@@ -1116,12 +1159,14 @@
       "selectApiKeyTitle": "Selecciona una Clave API",
       "subtitle": "Monitorea tu uso de API, costos y métricas de rendimiento",
       "tableHeaders": {
+        "completionTokens": "Tokens de Completado",
         "cost": "Costo",
         "count": "Conteo",
         "date": "Fecha",
         "formattedValue": "Valor Formateado",
         "model": "Modelo",
         "percentage": "Porcentaje",
+        "promptTokens": "Tokens de Prompt",
         "requests": "Solicitudes",
         "tokens": "Tokens",
         "usagePercent": "Uso %"
@@ -1192,6 +1237,15 @@
       "userAvatar": "Avatar de usuario"
     },
     "errors": {
+      "bannerCreateFailed": "Error al crear el banner. Por favor, inténtalo de nuevo.",
+      "bannerDeleteFailed": "Error al eliminar el banner. Por favor, inténtalo de nuevo.",
+      "bannerDismissFailed": "Error al cerrar el banner. Por favor, inténtalo de nuevo.",
+      "bannerUpdateFailed": "Error al actualizar el banner. Por favor, inténtalo de nuevo.",
+      "bannerVisibilityFailed": "Error al aplicar los cambios de visibilidad. Por favor, inténtalo de nuevo.",
+      "componentError": "Error de Componente",
+      "componentLoadingError": "Error al Cargar Componente",
+      "componentLoadingErrorDesc": "Error al cargar este componente. Por favor, intenta actualizar la página.",
+      "configLoadFailed": "Error al cargar la configuración de la aplicación",
       "details": "Detalles",
       "errorCode": "Código de error",
       "field": "Campo",
@@ -1205,7 +1259,8 @@
       "retryAction": "Reintentar la operación fallida",
       "retryAfter": "Por favor espere {{seconds}} segundos antes de reintentar",
       "showDetails": "Mostrar detalles",
-      "somethingWrong": "Algo salió mal",
+      "somethingWentWrong": "Algo salió mal",
+      "somethingWentWrongDesc": "Lo sentimos, pero algo inesperado ocurrió. Por favor, intenta actualizar la página o contacta con soporte si el problema persiste.",
       "statusCode": "Código de estado",
       "title": "Error",
       "tryRefresh": "Lo sentimos, pero algo inesperado ocurrió. Por favor, intenta actualizar la página o contacta con soporte si el problema persiste.",
@@ -1222,7 +1277,8 @@
         "positive": "{{field}} debe ser un número positivo",
         "required": "{{field}} es requerido",
         "url": "{{field}} debe ser una URL válida"
-      }
+      },
+      "somethingWrong": "Algo salió mal"
     },
     "footer": {
       "appBy": "Aplicación por",
@@ -1246,6 +1302,7 @@
       "spanish": "Español"
     },
     "navigation": {
+      "globalNavigation": "Navegación global",
       "mainNavigation": "Navegación principal",
       "userMenu": "Menú de usuario"
     },

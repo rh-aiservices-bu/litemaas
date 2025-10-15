@@ -9,8 +9,9 @@ import {
   Title,
 } from '@patternfly/react-core';
 import { ExclamationCircleIcon } from '@patternfly/react-icons';
+import { withTranslation, WithTranslation } from 'react-i18next';
 
-interface Props {
+interface Props extends WithTranslation {
   children: ReactNode;
   fallback?: ReactNode;
 }
@@ -21,7 +22,7 @@ interface State {
   errorInfo: ErrorInfo | null;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundaryComponent extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
     this.state = {
@@ -56,6 +57,8 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   render() {
+    const { t } = this.props;
+
     if (this.state.hasError) {
       if (this.props.fallback) {
         return <>{this.props.fallback}</>;
@@ -71,11 +74,10 @@ export class ErrorBoundary extends Component<Props, State> {
               }}
             />
             <Title headingLevel="h2" size="lg">
-              Something went wrong
+              {t('ui.errors.somethingWentWrong')}
             </Title>
             <EmptyStateBody>
-              We're sorry, but something unexpected happened. Please try refreshing the page or
-              contact support if the problem persists.
+              {t('ui.errors.somethingWentWrongDesc')}
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details style={{ marginTop: '20px', textAlign: 'left' }}>
                   <summary>Error details</summary>
@@ -93,10 +95,10 @@ export class ErrorBoundary extends Component<Props, State> {
             </EmptyStateBody>
             <EmptyStateActions>
               <Button variant="primary" onClick={() => window.location.reload()}>
-                Refresh Page
+                {t('common.refreshPage')}
               </Button>
               <Button variant="link" onClick={this.handleReset}>
-                Try Again
+                {t('common.tryAgain')}
               </Button>
             </EmptyStateActions>
           </EmptyState>
@@ -107,3 +109,6 @@ export class ErrorBoundary extends Component<Props, State> {
     return this.props.children;
   }
 }
+
+export const ErrorBoundary: React.ComponentType<Omit<Props, keyof WithTranslation>> =
+  withTranslation()(ErrorBoundaryComponent);

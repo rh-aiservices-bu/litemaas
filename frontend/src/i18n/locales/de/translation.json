@@ -102,6 +102,7 @@
     },
     "completionTokens": "Vervollständigungs-Token",
     "datePresets": {
+      "1d": "Letzter Tag",
       "30d": "Letzte 30 Tage",
       "7d": "Letzte 7 Tage",
       "90d": "Letzte 90 Tage",
@@ -170,7 +171,9 @@
       "legend": {
         "colorScale": "Nutzungsintensität",
         "noData": "Keine Daten",
-        "zeroUsage": "Keine Nutzung"
+        "noDataAriaLabel": "Keine-Daten-Indikator",
+        "zeroUsage": "Keine Nutzung",
+        "zeroUsageAriaLabel": "Keine-Nutzung-Indikator"
       },
       "table": {
         "viewAsChart": "Als Diagramm anzeigen",
@@ -197,7 +200,17 @@
     },
     "metricSelect": "Metrikauswahl",
     "metricsOverview": "Metriken-Übersicht",
-    "modelBreakdown": "Modellaufschlüsselung",
+    "modelBreakdown": {
+      "completionTokens": "Vervollständigungs-Token",
+      "modelName": "Modell",
+      "noData": "Keine Modelldaten verfügbar",
+      "noDataDescription": "Keine Nutzungsdaten für den ausgewählten Datumsbereich und Filter gefunden.",
+      "promptTokens": "Prompt-Token",
+      "tableLabel": "Modellaufschlüsselungstabelle",
+      "totalCost": "Gesamtkosten",
+      "totalRequests": "Anfragen",
+      "totalTokens": "Token insgesamt"
+    },
     "modelFilterChanged": "Filtern nach {{count}} Modell(en)",
     "noData": "Keine Daten verfügbar",
     "noModelData": "Keine Modelldaten verfügbar",
@@ -206,8 +219,22 @@
     "noProvidersFound": "Keine Anbieter für den ausgewählten Datumsbereich gefunden.",
     "noUserData": "Keine Benutzerdaten verfügbar",
     "noUsersFound": "Keine Benutzer für den ausgewählten Datumsbereich gefunden.",
+    "pagination": {
+      "label": "Paginierung"
+    },
     "promptTokens": "Prompt-Token",
-    "providerBreakdown": "Anbieteraufschlüsselung",
+    "providerBreakdown": {
+      "completionTokens": "Vervollständigungs-Token",
+      "noData": "Keine Anbieterdaten verfügbar",
+      "noDataDescription": "Keine Nutzungsdaten für den ausgewählten Datumsbereich und Filter gefunden.",
+      "promptTokens": "Prompt-Token",
+      "providerName": "Anbieter",
+      "successRate": "Erfolgsrate",
+      "tableLabel": "Anbieteraufschlüsselungstabelle",
+      "totalCost": "Gesamtkosten",
+      "totalRequests": "Anfragen",
+      "totalTokens": "Token insgesamt"
+    },
     "refreshing": "Heutige Daten werden aktualisiert...",
     "refreshSuccess": "Aktualisierung erfolgreich",
     "refreshToday": "Heute aktualisieren",
@@ -261,7 +288,18 @@
     "unknownUser": "Unbekannter Benutzer",
     "unknownUserDescription": "Anfragen von gelöschten oder nicht zugeordneten API-Schlüsseln",
     "usageHeatmapSubtitle": "Nutzungs-Heatmap über ausgewählte Woche(n)",
-    "userBreakdown": "Benutzeraufschlüsselung",
+    "userBreakdown": {
+      "completionTokens": "Vervollständigungs-Token",
+      "email": "E-Mail",
+      "noData": "Keine Benutzerdaten verfügbar",
+      "noDataDescription": "Keine Nutzungsdaten für den ausgewählten Datumsbereich und Filter gefunden.",
+      "promptTokens": "Prompt-Token",
+      "tableLabel": "Benutzeraufschlüsselungstabelle",
+      "totalCost": "Gesamtkosten",
+      "totalRequests": "Anfragen",
+      "totalTokens": "Token insgesamt",
+      "username": "Benutzername"
+    },
     "userFilterChanged": "Filtern nach {{count}} Benutzer(n)",
     "weeklyUsagePatterns": "Wöchentliche Nutzungsmuster"
   },
@@ -286,8 +324,10 @@
     "no": "Nein",
     "none": "Keiner",
     "notAvailable": "N/V",
+    "refreshPage": "Seite aktualisieren",
     "retry": "Wiederholen",
     "table": "Tabelle",
+    "tryAgain": "Erneut versuchen",
     "update": "Aktualisieren",
     "value": "Wert",
     "view": "Ansehen",
@@ -1071,7 +1111,10 @@
       "loadingTitle": "Nutzungsdaten werden geladen...",
       "metrics": {
         "avgResponseTime": "Durchschn. Antwortzeit",
+        "completion_tokens": "Vervollständigungs-Token",
+        "cost": "Kosten",
         "currency": "EUR",
+        "prompt_tokens": "Prompt-Token",
         "requests": "Anfragen",
         "successfulRequests": "erfolgreiche Anfragen",
         "successRate": "Erfolgsrate",
@@ -1116,12 +1159,14 @@
       "selectApiKeyTitle": "API-Schlüssel auswählen",
       "subtitle": "Überwachen Sie Ihre API-Nutzung, Kosten und Leistungsmetriken",
       "tableHeaders": {
+        "completionTokens": "Vervollständigungs-Token",
         "cost": "Kosten",
         "count": "Anzahl",
         "date": "Datum",
         "formattedValue": "Formatierter Wert",
         "model": "Modell",
         "percentage": "Prozentsatz",
+        "promptTokens": "Prompt-Token",
         "requests": "Anfragen",
         "tokens": "Token",
         "usagePercent": "Nutzung %"
@@ -1192,6 +1237,15 @@
       "userAvatar": "Benutzer-Avatar"
     },
     "errors": {
+      "bannerCreateFailed": "Fehler beim Erstellen des Banners. Bitte versuchen Sie es erneut.",
+      "bannerDeleteFailed": "Fehler beim Löschen des Banners. Bitte versuchen Sie es erneut.",
+      "bannerDismissFailed": "Fehler beim Schließen des Banners. Bitte versuchen Sie es erneut.",
+      "bannerUpdateFailed": "Fehler beim Aktualisieren des Banners. Bitte versuchen Sie es erneut.",
+      "bannerVisibilityFailed": "Fehler beim Anwenden der Sichtbarkeitsänderungen. Bitte versuchen Sie es erneut.",
+      "componentError": "Komponentenfehler",
+      "componentLoadingError": "Fehler beim Laden der Komponente",
+      "componentLoadingErrorDesc": "Fehler beim Laden dieser Komponente. Bitte versuchen Sie, die Seite zu aktualisieren.",
+      "configLoadFailed": "Fehler beim Laden der Anwendungskonfiguration",
       "details": "Details",
       "errorCode": "Fehlercode",
       "field": "Feld",
@@ -1205,7 +1259,8 @@
       "retryAction": "Den fehlgeschlagenen Vorgang wiederholen",
       "retryAfter": "Bitte warten Sie {{seconds}} Sekunden, bevor Sie es erneut versuchen",
       "showDetails": "Details anzeigen",
-      "somethingWrong": "Etwas ist schief gelaufen",
+      "somethingWentWrong": "Etwas ist schiefgelaufen",
+      "somethingWentWrongDesc": "Es tut uns leid, aber etwas Unerwartetes ist passiert. Bitte versuchen Sie, die Seite zu aktualisieren oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
       "statusCode": "Statuscode",
       "title": "Fehler",
       "tryRefresh": "Es tut uns leid, aber etwas Unerwartetes ist passiert. Bitte versuchen Sie, die Seite zu aktualisieren oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
@@ -1222,7 +1277,8 @@
         "positive": "{{field}} muss eine positive Zahl sein",
         "required": "{{field}} ist erforderlich",
         "url": "{{field}} muss eine gültige URL sein"
-      }
+      },
+      "somethingWrong": "Etwas ist schief gelaufen"
     },
     "footer": {
       "appBy": "App von",
@@ -1246,6 +1302,7 @@
       "spanish": "Español"
     },
     "navigation": {
+      "globalNavigation": "Globale Navigation",
       "mainNavigation": "Hauptnavigation",
       "userMenu": "Benutzermenü"
     },

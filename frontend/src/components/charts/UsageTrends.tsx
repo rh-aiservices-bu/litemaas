@@ -66,6 +66,17 @@ const UsageTrends: React.FC<UsageTrendsProps> = ({
     }
   }, []);
 
+  // Cleanup effect: Ensures cleanup on unmount (defense-in-depth)
+  // This handles edge cases like navigation, error boundaries, and conditional rendering
+  React.useEffect(() => {
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
+    };
+  }, []);
+
   if (loading) {
     return <Skeleton height={`${height}px`} width="100%" />;
   }
@@ -179,14 +190,19 @@ const UsageTrends: React.FC<UsageTrendsProps> = ({
   const yValues = chartData.map((d) => d.y);
   const maxY = Math.max(...yValues, 1);
 
+  // Compute the key that AccessibleChart will use to look up values
+  // The header is translated, then lowercased with spaces removed
+  const metricHeader = t(`pages.usage.metrics.${metricType}`);
+  const metricKey = metricHeader.toLowerCase().replace(/\s+/g, '');
+
   // Transform data for accessibility
   const accessibleData: AccessibleChartData[] = data.map((point, index) => ({
     label: extractDateFromLabel(point.label) || `${t('common.day')} ${index + 1}`,
     value: point.y || 0,
     additionalInfo: {
       rawValue: point.y || 0,
-      value: formatYTickByMetric(point.y || 0, metricType),
-      date: extractDateFromLabel(point.label) || '',
+      [metricKey]: formatYTickByMetric(point.y || 0, metricType),
+      [`${metricKey}Raw`]: point.y || 0,
     },
   }));
 
@@ -387,7 +403,8 @@ const UsageTrends: React.FC<UsageTrendsProps> = ({
       chartType="line"
       formatValue={formatAccessibleValue}
       exportFilename={`usage-trends-${metricType}`}
-      additionalHeaders={[t('pages.usage.tableHeaders.date'), t('common.value')]}
+      labelHeader={t('pages.usage.tableHeaders.date')}
+      additionalHeaders={[t(`pages.usage.metrics.${metricType}`)]}
     >
       <div
         ref={containerRef}

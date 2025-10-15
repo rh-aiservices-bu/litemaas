@@ -102,6 +102,7 @@
     },
     "completionTokens": "Tokens de complétion",
     "datePresets": {
+      "1d": "Dernier jour",
       "30d": "30 derniers jours",
       "7d": "7 derniers jours",
       "90d": "90 derniers jours",
@@ -170,7 +171,9 @@
       "legend": {
         "colorScale": "Intensité d'utilisation",
         "noData": "Pas de données",
-        "zeroUsage": "Aucune utilisation"
+        "noDataAriaLabel": "Indicateur d'absence de données",
+        "zeroUsage": "Aucune utilisation",
+        "zeroUsageAriaLabel": "Indicateur d'utilisation nulle"
       },
       "table": {
         "viewAsChart": "Afficher comme graphique",
@@ -197,7 +200,17 @@
     },
     "metricSelect": "Sélection de métrique",
     "metricsOverview": "Aperçu des métriques",
-    "modelBreakdown": "Répartition par modèle",
+    "modelBreakdown": {
+      "completionTokens": "Tokens de complétion",
+      "modelName": "Modèle",
+      "noData": "Aucune donnée de modèle disponible",
+      "noDataDescription": "Aucune donnée d'utilisation trouvée pour la plage de dates et les filtres sélectionnés.",
+      "promptTokens": "Tokens de prompt",
+      "tableLabel": "Tableau de répartition par modèle",
+      "totalCost": "Coût total",
+      "totalRequests": "Requêtes",
+      "totalTokens": "Tokens totaux"
+    },
     "modelFilterChanged": "Filtrage par {{count}} modèle(s)",
     "noData": "Aucune donnée disponible",
     "noModelData": "Aucune donnée de modèle disponible",
@@ -206,8 +219,22 @@
     "noProvidersFound": "Aucun fournisseur trouvé pour la plage de dates sélectionnée.",
     "noUserData": "Aucune donnée d'utilisateur disponible",
     "noUsersFound": "Aucun utilisateur trouvé pour la plage de dates sélectionnée.",
+    "pagination": {
+      "label": "Pagination"
+    },
     "promptTokens": "Tokens de prompt",
-    "providerBreakdown": "Répartition par fournisseur",
+    "providerBreakdown": {
+      "completionTokens": "Tokens de complétion",
+      "noData": "Aucune donnée de fournisseur disponible",
+      "noDataDescription": "Aucune donnée d'utilisation trouvée pour la plage de dates et les filtres sélectionnés.",
+      "promptTokens": "Tokens de prompt",
+      "providerName": "Fournisseur",
+      "successRate": "Taux de réussite",
+      "tableLabel": "Tableau de répartition par fournisseur",
+      "totalCost": "Coût total",
+      "totalRequests": "Requêtes",
+      "totalTokens": "Tokens totaux"
+    },
     "refreshing": "Actualisation des données du jour...",
     "refreshSuccess": "Actualisation réussie",
     "refreshToday": "Actualiser aujourd'hui",
@@ -261,7 +288,18 @@
     "unknownUser": "Utilisateur inconnu",
     "unknownUserDescription": "Requêtes provenant de clés API supprimées ou non mappées",
     "usageHeatmapSubtitle": "Carte thermique d'utilisation sur la ou les semaines sélectionnées",
-    "userBreakdown": "Répartition par utilisateur",
+    "userBreakdown": {
+      "completionTokens": "Tokens de complétion",
+      "email": "E-mail",
+      "noData": "Aucune donnée d'utilisateur disponible",
+      "noDataDescription": "Aucune donnée d'utilisation trouvée pour la plage de dates et les filtres sélectionnés.",
+      "promptTokens": "Tokens de prompt",
+      "tableLabel": "Tableau de répartition par utilisateur",
+      "totalCost": "Coût total",
+      "totalRequests": "Requêtes",
+      "totalTokens": "Tokens totaux",
+      "username": "Nom d'utilisateur"
+    },
     "userFilterChanged": "Filtrage par {{count}} utilisateur(s)",
     "weeklyUsagePatterns": "Modèles d'utilisation hebdomadaire"
   },
@@ -286,8 +324,10 @@
     "no": "Non",
     "none": "Aucun",
     "notAvailable": "N/D",
+    "refreshPage": "Actualiser la Page",
     "retry": "Réessayer",
     "table": "Tableau",
+    "tryAgain": "Réessayer",
     "update": "Mettre à jour",
     "value": "Valeur",
     "view": "Voir",
@@ -1071,7 +1111,10 @@
       "loadingTitle": "Chargement des Données d'Utilisation...",
       "metrics": {
         "avgResponseTime": "Temps de Réponse Moyen",
+        "completion_tokens": "Tokens de Complétion",
+        "cost": "Coût",
         "currency": "EUR",
+        "prompt_tokens": "Tokens de Prompt",
         "requests": "requêtes",
         "successfulRequests": "requêtes réussies",
         "successRate": "Taux de Succès",
@@ -1116,12 +1159,14 @@
       "selectApiKeyTitle": "Sélectionner une Clé API",
       "subtitle": "Surveillez votre utilisation d'API, les coûts et les métriques de performance",
       "tableHeaders": {
+        "completionTokens": "Tokens de Complétion",
         "cost": "Coût",
         "count": "Nombre",
         "date": "Date",
         "formattedValue": "Valeur Formatée",
         "model": "Modèle",
         "percentage": "Pourcentage",
+        "promptTokens": "Tokens de Prompt",
         "requests": "Requêtes",
         "tokens": "Tokens",
         "usagePercent": "Utilisation %"
@@ -1192,6 +1237,15 @@
       "userAvatar": "Avatar de l'utilisateur"
     },
     "errors": {
+      "bannerCreateFailed": "Échec de la création de la bannière. Veuillez réessayer.",
+      "bannerDeleteFailed": "Échec de la suppression de la bannière. Veuillez réessayer.",
+      "bannerDismissFailed": "Échec de la fermeture de la bannière. Veuillez réessayer.",
+      "bannerUpdateFailed": "Échec de la mise à jour de la bannière. Veuillez réessayer.",
+      "bannerVisibilityFailed": "Échec de l'application des modifications de visibilité. Veuillez réessayer.",
+      "componentError": "Erreur de Composant",
+      "componentLoadingError": "Erreur de Chargement du Composant",
+      "componentLoadingErrorDesc": "Échec du chargement de ce composant. Veuillez essayer d'actualiser la page.",
+      "configLoadFailed": "Échec du chargement de la configuration de l'application",
       "details": "Détails",
       "errorCode": "Code d'erreur",
       "field": "Champ",
@@ -1205,7 +1259,8 @@
       "retryAction": "Réessayer l'opération échouée",
       "retryAfter": "Veuillez attendre {{seconds}} secondes avant de réessayer",
       "showDetails": "Afficher les détails",
-      "somethingWrong": "Quelque chose s'est mal passé",
+      "somethingWentWrong": "Une erreur s'est produite",
+      "somethingWentWrongDesc": "Nous sommes désolés, mais quelque chose d'inattendu s'est produit. Veuillez essayer d'actualiser la page ou contacter le support si le problème persiste.",
       "statusCode": "Code de statut",
       "title": "Erreur",
       "tryRefresh": "Nous sommes désolés, mais quelque chose d'inattendu s'est produit. Veuillez essayer d'actualiser la page ou contacter le support si le problème persiste.",
@@ -1222,7 +1277,8 @@
         "positive": "{{field}} doit être un nombre positif",
         "required": "{{field}} est requis",
         "url": "{{field}} doit être une URL valide"
-      }
+      },
+      "somethingWrong": "Quelque chose s'est mal passé"
     },
     "footer": {
       "appBy": "Application par",
@@ -1246,6 +1302,7 @@
       "spanish": "Español"
     },
     "navigation": {
+      "globalNavigation": "Navigation globale",
       "mainNavigation": "Navigation principale",
       "userMenu": "Menu utilisateur"
     },

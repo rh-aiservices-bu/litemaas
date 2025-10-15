@@ -47,11 +47,23 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
     }
   }, []);
 
+  // Cleanup effect: Ensures cleanup on unmount (defense-in-depth)
+  // This handles edge cases like navigation, error boundaries, and conditional rendering
+  React.useEffect(() => {
+    return () => {
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
+    };
+  }, []);
+
   // Empty state
   if (!data || data.length === 0) {
     return (
       <AccessibleChart
         data={[]}
+        labelHeader={t('pages.usage.tableHeaders.model')}
         title={ariaLabel || t('pages.usage.charts.modelUsageDistribution')}
         description={t('pages.usage.charts.noDataDescription')}
         chartType="donut"
@@ -118,6 +130,8 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
         requests: item.y,
         percentage: item.percentage,
         tokens: model?.tokens || 0,
+        prompttokens: model?.prompt_tokens || 0,
+        completiontokens: model?.completion_tokens || 0,
         cost: model?.cost || 0,
         // Formatted values for display
         requestsFormatted: item.y.toLocaleString(),
@@ -128,6 +142,20 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
             : model.tokens >= 1000
               ? `${(model.tokens / 1000).toFixed(1)}K`
               : model.tokens.toString()
+          : '0',
+        prompttokensFormatted: model?.prompt_tokens
+          ? model.prompt_tokens >= 1000000
+            ? `${(model.prompt_tokens / 1000000).toFixed(1)}M`
+            : model.prompt_tokens >= 1000
+              ? `${(model.prompt_tokens / 1000).toFixed(1)}K`
+              : model.prompt_tokens.toString()
+          : '0',
+        completiontokensFormatted: model?.completion_tokens
+          ? model.completion_tokens >= 1000000
+            ? `${(model.completion_tokens / 1000000).toFixed(1)}M`
+            : model.completion_tokens >= 1000
+              ? `${(model.completion_tokens / 1000).toFixed(1)}K`
+              : model.completion_tokens.toString()
           : '0',
         costFormatted: model?.cost ? `$${model.cost.toFixed(2)}` : '$0.00',
       },
@@ -158,9 +186,12 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
       summary={chartSummary}
       chartType="donut"
       exportFilename="model-distribution"
+      labelHeader={t('pages.usage.tableHeaders.model')}
       additionalHeaders={[
         t('pages.usage.tableHeaders.requests'),
         t('pages.usage.tableHeaders.tokens'),
+        t('pages.usage.tableHeaders.promptTokens'),
+        t('pages.usage.tableHeaders.completionTokens'),
         t('pages.usage.tableHeaders.cost'),
       ]}
       formatValue={(value) => value.toString()}

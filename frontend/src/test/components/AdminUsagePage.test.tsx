@@ -27,10 +27,44 @@ vi.mock('../../services/adminUsage.service', () => ({
 // Mock ConfigContext
 vi.mock('../../contexts/ConfigContext', () => ({
   useConfig: () => ({
-    cacheTTL: {
-      shortLived: 5 * 60 * 1000, // 5 minutes
-      default: 10 * 60 * 1000, // 10 minutes
-      longLived: 60 * 60 * 1000, // 1 hour
+    config: {
+      cacheTTL: {
+        shortLived: 5 * 60 * 1000, // 5 minutes
+        default: 10 * 60 * 1000, // 10 minutes
+        longLived: 60 * 60 * 1000, // 1 hour
+      },
+    },
+    isLoading: false,
+    error: null,
+  }),
+  useAdminAnalyticsConfig: () => ({
+    pagination: {
+      defaultPageSize: 50,
+      maxPageSize: 500,
+      minPageSize: 10,
+    },
+    topLimits: {
+      users: 10,
+      models: 10,
+      providers: 5,
+    },
+    dateRangeLimits: {
+      maxAnalyticsDays: 90,
+      maxExportDays: 365,
+    },
+    warnings: {
+      largeDateRangeDays: 30,
+    },
+    trends: {
+      calculationPrecision: 2,
+    },
+    export: {
+      maxRows: 10000,
+      formats: ['csv', 'json'],
+    },
+    cache: {
+      historicalDataTTL: 86400000, // 24 hours
+      currentDayTTL: 300000, // 5 minutes
     },
   }),
 }));

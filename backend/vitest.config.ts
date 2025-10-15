@@ -35,10 +35,13 @@ export default defineConfig({
     env: {
       NODE_ENV: 'test',
       JWT_SECRET: 'test-secret-key-for-vitest-testing',
-      DATABASE_URL: 'postgresql://test:test@localhost:5432/litemaas_test',
+      DATABASE_URL: 'postgresql://pgadmin:thisisadmin@localhost:5432/litemaas_test',
       OAUTH_CLIENT_ID: 'test-client-id',
       OAUTH_CLIENT_SECRET: 'test-client-secret',
       OAUTH_ISSUER: 'http://localhost:8081',
+      // Explicitly unset LITELLM URL to ensure mocking is enabled
+      // LiteLLM service enables mocking when !process.env.LITELLM_API_URL
+      LITELLM_API_URL: '',
     },
   },
 });

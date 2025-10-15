@@ -5,7 +5,7 @@ Essential rules for PatternFly Charts implementation using Victory.js and EChart
 ## Related Files
 
 - [**Component Architecture**](../guidelines/component-architecture.md) - Chart component structure rules
-- [**Performance Optimization**](../troubleshooting/performance.md) - Chart performance considerations
+- [**Common Issues**](../troubleshooting/common-issues.md) - Troubleshooting guide including performance
 
 ## Installation Rules
 

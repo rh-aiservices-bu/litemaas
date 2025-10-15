@@ -102,6 +102,7 @@
     },
     "completionTokens": "Token di Completamento",
     "datePresets": {
+      "1d": "Ultimo giorno",
       "30d": "Ultimi 30 giorni",
       "7d": "Ultimi 7 giorni",
       "90d": "Ultimi 90 giorni",
@@ -170,7 +171,9 @@
       "legend": {
         "colorScale": "Intensità di utilizzo",
         "noData": "Nessun dato",
-        "zeroUsage": "Utilizzo zero"
+        "noDataAriaLabel": "Indicatore nessun dato",
+        "zeroUsage": "Utilizzo zero",
+        "zeroUsageAriaLabel": "Indicatore utilizzo zero"
       },
       "table": {
         "viewAsChart": "Visualizza come grafico",
@@ -197,7 +200,17 @@
     },
     "metricSelect": "Selezione metrica",
     "metricsOverview": "Panoramica Metriche",
-    "modelBreakdown": "Analisi Modelli",
+    "modelBreakdown": {
+      "completionTokens": "Token di Completamento",
+      "modelName": "Modello",
+      "noData": "Nessun dato modello disponibile",
+      "noDataDescription": "Nessun dato di utilizzo trovato per l'intervallo di date e i filtri selezionati.",
+      "promptTokens": "Token di Prompt",
+      "tableLabel": "Tabella analisi modelli",
+      "totalCost": "Costo Totale",
+      "totalRequests": "Richieste",
+      "totalTokens": "Token Totali"
+    },
     "modelFilterChanged": "Filtro per {{count}} modello/i",
     "noData": "Nessun dato disponibile",
     "noModelData": "Nessun dato modello disponibile",
@@ -206,8 +219,22 @@
     "noProvidersFound": "Nessun provider trovato per l'intervallo di date selezionato.",
     "noUserData": "Nessun dato utente disponibile",
     "noUsersFound": "Nessun utente trovato per l'intervallo di date selezionato.",
+    "pagination": {
+      "label": "Paginazione"
+    },
     "promptTokens": "Token di Prompt",
-    "providerBreakdown": "Analisi Provider",
+    "providerBreakdown": {
+      "completionTokens": "Token di Completamento",
+      "noData": "Nessun dato provider disponibile",
+      "noDataDescription": "Nessun dato di utilizzo trovato per l'intervallo di date e i filtri selezionati.",
+      "promptTokens": "Token di Prompt",
+      "providerName": "Provider",
+      "successRate": "Tasso di Successo",
+      "tableLabel": "Tabella analisi provider",
+      "totalCost": "Costo Totale",
+      "totalRequests": "Richieste",
+      "totalTokens": "Token Totali"
+    },
     "refreshing": "Aggiornamento dati di oggi in corso...",
     "refreshSuccess": "Aggiornamento riuscito",
     "refreshToday": "Aggiorna Oggi",
@@ -261,7 +288,18 @@
     "unknownUser": "Utente Sconosciuto",
     "unknownUserDescription": "Richieste da chiavi API eliminate o non mappate",
     "usageHeatmapSubtitle": "Mappa termica di utilizzo per le settimane selezionate",
-    "userBreakdown": "Analisi Utenti",
+    "userBreakdown": {
+      "completionTokens": "Token di Completamento",
+      "email": "Email",
+      "noData": "Nessun dato utente disponibile",
+      "noDataDescription": "Nessun dato di utilizzo trovato per l'intervallo di date e i filtri selezionati.",
+      "promptTokens": "Token di Prompt",
+      "tableLabel": "Tabella analisi utenti",
+      "totalCost": "Costo Totale",
+      "totalRequests": "Richieste",
+      "totalTokens": "Token Totali",
+      "username": "Nome Utente"
+    },
     "userFilterChanged": "Filtro per {{count}} utente/i",
     "weeklyUsagePatterns": "Pattern di Utilizzo Settimanali"
   },
@@ -286,8 +324,10 @@
     "no": "No",
     "none": "Nessuno",
     "notAvailable": "N/D",
+    "refreshPage": "Aggiorna Pagina",
     "retry": "Riprova",
     "table": "Tabella",
+    "tryAgain": "Riprova",
     "update": "Aggiorna",
     "value": "Valore",
     "view": "Visualizza",
@@ -1071,7 +1111,10 @@
       "loadingTitle": "Caricamento Dati Utilizzo...",
       "metrics": {
         "avgResponseTime": "Tempo Risposta Medio",
+        "completion_tokens": "Token di Completamento",
+        "cost": "Costo",
         "currency": "EUR",
+        "prompt_tokens": "Token di Prompt",
         "requests": "richieste",
         "successfulRequests": "richieste riuscite",
         "successRate": "Tasso di Successo",
@@ -1116,12 +1159,14 @@
       "selectApiKeyTitle": "Seleziona una Chiave API",
       "subtitle": "Monitora il tuo utilizzo API, costi e metriche di prestazione",
       "tableHeaders": {
+        "completionTokens": "Token di Completamento",
         "cost": "Costo",
         "count": "Conteggio",
         "date": "Data",
         "formattedValue": "Valore Formattato",
         "model": "Modello",
         "percentage": "Percentuale",
+        "promptTokens": "Token di Prompt",
         "requests": "Richieste",
         "tokens": "Token",
         "usagePercent": "Utilizzo %"
@@ -1192,6 +1237,15 @@
       "userAvatar": "Avatar Utente"
     },
     "errors": {
+      "bannerCreateFailed": "Impossibile creare il banner. Riprova.",
+      "bannerDeleteFailed": "Impossibile eliminare il banner. Riprova.",
+      "bannerDismissFailed": "Impossibile chiudere il banner. Riprova.",
+      "bannerUpdateFailed": "Impossibile aggiornare il banner. Riprova.",
+      "bannerVisibilityFailed": "Impossibile applicare le modifiche di visibilità. Riprova.",
+      "componentError": "Errore Componente",
+      "componentLoadingError": "Errore Caricamento Componente",
+      "componentLoadingErrorDesc": "Impossibile caricare questo componente. Prova ad aggiornare la pagina.",
+      "configLoadFailed": "Impossibile caricare la configurazione dell'applicazione",
       "details": "Dettagli",
       "errorCode": "Codice errore",
       "field": "Campo",
@@ -1205,7 +1259,8 @@
       "retryAction": "Riprova l'operazione fallita",
       "retryAfter": "Aspetta {{seconds}} secondi prima di riprovare",
       "showDetails": "Mostra dettagli",
-      "somethingWrong": "Qualcosa è andato storto",
+      "somethingWentWrong": "Qualcosa è andato storto",
+      "somethingWentWrongDesc": "Ci dispiace, ma si è verificato qualcosa di inaspettato. Prova ad aggiornare la pagina o contatta il supporto se il problema persiste.",
       "statusCode": "Codice di stato",
       "title": "Errore",
       "tryRefresh": "Ci dispiace, ma si è verificato qualcosa di inaspettato. Prova ad aggiornare la pagina o contatta il supporto se il problema persiste.",
@@ -1222,7 +1277,8 @@
         "positive": "{{field}} deve essere un numero positivo",
         "required": "{{field}} è richiesto",
         "url": "{{field}} deve essere un URL valido"
-      }
+      },
+      "somethingWrong": "Qualcosa è andato storto"
     },
     "footer": {
       "appBy": "App di",
@@ -1246,6 +1302,7 @@
       "spanish": "Español"
     },
     "navigation": {
+      "globalNavigation": "Navigazione globale",
       "mainNavigation": "Navigazione principale",
       "userMenu": "Menu utente"
     },

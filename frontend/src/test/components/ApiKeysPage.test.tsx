@@ -693,7 +693,7 @@ describe('ApiKeysPage', () => {
       // Reveal key first - click first action button
       const modal = screen.getByRole('dialog');
       const allButtons = screen.getAllByRole('button');
-      let modalButtons = allButtons.filter(
+      const modalButtons = allButtons.filter(
         (btn) => modal.contains(btn) && !btn.getAttribute('aria-label')?.includes('Close'),
       );
       await user.click(modalButtons[0]);

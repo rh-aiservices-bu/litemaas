@@ -94,20 +94,15 @@ export class LiteLLMService extends BaseService {
   constructor(fastify: FastifyInstance, config?: Partial<LiteLLMConfig>) {
     super(fastify);
     this.config = {
-      baseUrl:
-        config?.baseUrl ||
-        process.env.LITELLM_API_URL ||
-        process.env.LITELLM_BASE_URL ||
-        'http://localhost:4000',
+      baseUrl: config?.baseUrl || process.env.LITELLM_API_URL || 'http://localhost:4000',
       apiKey: config?.apiKey || process.env.LITELLM_API_KEY,
       timeout: config?.timeout || 30000,
       retryAttempts: config?.retryAttempts || 3,
       retryDelay: config?.retryDelay || 1000,
       enableMocking:
         config?.enableMocking ??
-        (process.env.NODE_ENV === 'development' &&
-          !process.env.LITELLM_API_URL &&
-          !process.env.LITELLM_BASE_URL),
+        ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') &&
+          !process.env.LITELLM_API_URL),
     };
 
     this.fastify.log.info(
@@ -156,6 +151,17 @@ export class LiteLLMService extends BaseService {
     } else {
       this.cache.clear();
     }
+  }
+
+  /**
+   * Clear activity cache for daily usage data
+   *
+   * This is used by the admin usage refresh functionality to force fresh data fetch from LiteLLM.
+   * Without clearing this cache, getDailyActivity() would return stale data even when the database cache is invalidated.
+   */
+  public clearActivityCache(): void {
+    this.clearCacheInternal('activity:');
+    this.fastify.log.debug('Cleared LiteLLM activity cache');
   }
 
   private isCircuitBreakerTripped(): boolean {
@@ -345,10 +351,16 @@ export class LiteLLMService extends BaseService {
     }
 
     if (this.config.enableMocking) {
-      this.fastify.log.debug('Using mock models');
-      const models = await this.createMockResponse(this.MOCK_MODELS);
-      this.setCache(cacheKey, models);
-      return models;
+      // In test environment, return empty array to prevent test pollution
+      // Tests should explicitly create the models they need, not rely on mock data
+      const models = process.env.NODE_ENV === 'test' ? [] : this.MOCK_MODELS;
+      this.fastify.log.debug(
+        { modelCount: models.length, isTest: process.env.NODE_ENV === 'test' },
+        'Using mock models',
+      );
+      const response = await this.createMockResponse(models);
+      this.setCache(cacheKey, response);
+      return response;
     }
 
     try {
@@ -1293,6 +1305,22 @@ export class LiteLLMService extends BaseService {
   }
 
   async createModel(modelData: any): Promise<any> {
+    if (this.config.enableMocking) {
+      this.fastify.log.warn(
+        { model_name: modelData.model_name },
+        'LiteLLM is in MOCK MODE - model will not be created in real LiteLLM instance',
+      );
+      // Return mock response matching LiteLLM format
+      return this.createMockResponse({
+        model_name: modelData.model_name,
+        model_info: {
+          id: `mock-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+          ...modelData.model_info,
+        },
+        litellm_params: modelData.litellm_params,
+      });
+    }
+
     const url = '/model/new';
 
     try {
@@ -1311,6 +1339,22 @@ export class LiteLLMService extends BaseService {
   }
 
   async updateModel(modelId: string, modelData: any): Promise<any> {
+    if (this.config.enableMocking) {
+      this.fastify.log.warn(
+        { modelId },
+        'LiteLLM is in MOCK MODE - model will not be updated in real LiteLLM instance',
+      );
+      // Return mock response
+      return this.createMockResponse({
+        model_name: modelData.model_name || `model-${modelId}`,
+        model_info: {
+          id: modelId,
+          ...modelData.model_info,
+        },
+        litellm_params: modelData.litellm_params,
+      });
+    }
+
     const url = `/model/${modelId}/update`;
 
     try {
@@ -1329,6 +1373,15 @@ export class LiteLLMService extends BaseService {
   }
 
   async deleteModel(modelId: string): Promise<void> {
+    if (this.config.enableMocking) {
+      this.fastify.log.warn(
+        { modelId },
+        'LiteLLM is in MOCK MODE - model will not be deleted from real LiteLLM instance',
+      );
+      // Return void (no-op in mock mode)
+      return this.createMockResponse(undefined);
+    }
+
     const url = `/model/delete`;
 
     try {

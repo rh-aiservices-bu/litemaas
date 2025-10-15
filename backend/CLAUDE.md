@@ -111,7 +111,14 @@ For details, see [`docs/features/user-roles-administration.md`](../docs/features
 - **Integration**: LiteLLMService, LiteLLMIntegrationService
 - **Admin**: AdminService
 
-For service architecture and data flows, see [`docs/architecture/services.md`](../docs/architecture/services.md).
+**Admin Analytics Architecture**: Uses specialized service architecture with orchestrator pattern:
+- `AdminUsageStatsService` - Main orchestrator
+- `AdminUsageAggregationService` - Multi-dimensional filtering and aggregation
+- `AdminUsageEnrichmentService` - Data enrichment with batch queries
+- `AdminUsageTrendCalculator` - Trend analysis and comparisons
+- `AdminUsageExportService` - CSV/JSON exports
+
+See [`docs/architecture/services.md`](../docs/architecture/services.md) for complete service architecture and data flows.
 
 ## ⚠️ Implementation Patterns - MUST FOLLOW
 
@@ -180,6 +187,41 @@ npm run lint:fix        # Auto-fix issues
 npm run build           # TypeScript compilation
 ```
 
+## 🧪 Testing
+
+**IMPORTANT**: Tests use a separate `litemaas_test` database, NOT the development database.
+
+### Test Database Setup
+
+Before running tests for the first time:
+
+```bash
+# Create test database
+psql -U pgadmin -h localhost -p 5432 -d postgres -c "CREATE DATABASE litemaas_test;"
+
+# Initialize schema
+npm run test:db:setup
+```
+
+### Running Tests
+
+```bash
+npm run test:unit        # Unit tests (mocked, no database)
+npm run test:integration # Integration tests (real database: litemaas_test)
+npm run test:security    # Security tests
+npm run test:coverage    # Coverage report
+npm run test:perf        # K6 performance tests
+```
+
+### Test Database Management
+
+```bash
+npm run test:db:reset    # Reset test database to clean state
+npm run test:db:setup    # Initialize/reset test database schema
+```
+
+**Safety**: Tests include multiple safety checks to prevent running against development/production databases. The test database URL is hardcoded in `vitest.config.ts`, and integration tests will fail immediately if they detect a non-test database.
+
 ## 🔧 Key Implementation Details
 
 ### Default Team Pattern
@@ -200,11 +242,29 @@ Modern approach supports multiple models per key with budget/TPM limits. Legacy 
 
 For implementation examples, see [`docs/development/backend-guide.md`](../docs/development/backend-guide.md).
 
+### Concurrency Handling
+
+**Advisory Locks**: Uses PostgreSQL advisory locks to prevent race conditions during cache rebuilds with non-blocking locks, grace period logic for midnight boundaries, and idempotent UPSERT patterns.
+
+**Cache Metrics**: `GET /api/v1/admin/usage/cache/metrics` tracks hits/misses, rebuilds, lock contention.
+
+See [`docs/development/concurrency-strategy.md`](../docs/development/concurrency-strategy.md) for implementation details and usage examples.
+
+## ⚙️ Admin Analytics Configuration
+
+All admin analytics business logic constants are centralized in `src/config/admin-analytics.config.ts` with Zod validation.
+
+**Key Categories**: Cache settings (TTL, batch sizes), pagination limits, trend thresholds, export limits, date range limits.
+
+**Access**: `getAdminAnalyticsConfig()` in services, `fastify.getAdminAnalyticsConfig()` in routes.
+
+**Public API**: `GET /api/v1/config/admin-analytics` returns safe subset (frontend-safe values only).
+
 ## 🔗 Environment Variables
 
-Key configuration: DATABASE_URL, JWT_SECRET, OAUTH_CLIENT_ID, LITELLM_API_URL, MOCK_AUTH
+Key configuration: DATABASE_URL, JWT_SECRET, OAUTH_CLIENT_ID, LITELLM_API_URL, MOCK_AUTH, plus 15+ admin analytics settings.
 
-See [`docs/deployment/configuration.md`](../docs/deployment/configuration.md) for complete list.
+See [`docs/deployment/configuration.md`](../docs/deployment/configuration.md) and `.env.example` for complete list.
 
 ## 🚨 Error Handling Architecture
 

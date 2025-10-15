@@ -163,6 +163,18 @@ graph TB
 
 ## 🧪 Testing
 
+**First time running backend tests?** You need to set up the test database first:
+
+```bash
+# Create test database
+psql -U pgadmin -h localhost -p 5432 -d postgres -c "CREATE DATABASE litemaas_test;"
+
+# Initialize schema and seed data
+cd backend && npm run test:db:setup
+```
+
+**Run tests:**
+
 ```bash
 # Run all tests
 npm run test
@@ -179,6 +191,8 @@ npm run test:e2e
 # Performance tests
 npm run test:perf
 ```
+
+**Backend integration tests use a separate `litemaas_test` database** to prevent contamination of development data. See [Development Setup Guide](docs/development/setup.md#test-database-setup) for details.
 
 ## 🚀 Deployment
 

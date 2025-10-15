@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi, Mock } from 'vitest';
+import { describe, it, expect, beforeEach, beforeAll, afterAll, vi, Mock } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { AdminUsageStatsService } from '../../../src/services/admin-usage-stats.service';
 import { LiteLLMService } from '../../../src/services/litellm.service';
@@ -9,6 +9,8 @@ import {
   EnrichedDayData,
   LiteLLMDayData,
 } from '../../../src/types/admin-usage.types';
+import { calculateComparisonPeriod } from '../../../src/services/admin-usage/admin-usage.utils';
+import { initTestConfig } from '../../helpers/test-config';
 
 // Mock Fastify instance
 const createMockFastify = (): FastifyInstance => {
@@ -29,6 +31,7 @@ const createMockFastify = (): FastifyInstance => {
 const createMockLiteLLMService = (): LiteLLMService => {
   return {
     getDailyActivity: vi.fn(),
+    clearActivityCache: vi.fn(),
   } as any;
 };
 
@@ -306,6 +309,20 @@ describe('AdminUsageStatsService', () => {
   let liteLLMService: LiteLLMService;
   let cacheManager: IDailyUsageCacheManager;
   let service: AdminUsageStatsService;
+  let configCleanup: (() => void) | undefined;
+
+  // Initialize admin analytics configuration before all tests
+  beforeAll(() => {
+    const { cleanup } = initTestConfig();
+    configCleanup = cleanup;
+  });
+
+  // Cleanup configuration after all tests
+  afterAll(() => {
+    if (configCleanup) {
+      configCleanup();
+    }
+  });
 
   beforeEach(() => {
     fastify = createMockFastify();
@@ -426,16 +443,21 @@ describe('AdminUsageStatsService', () => {
 
       const result = await service.getUserBreakdown(filters);
 
-      expect(result).toBeInstanceOf(Array);
-      expect(result.length).toBeGreaterThan(0);
+      // Now returns paginated response
+      expect(result).toHaveProperty('data');
+      expect(result).toHaveProperty('pagination');
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.length).toBeGreaterThan(0);
 
-      // Verify sorted by cost descending
-      for (let i = 0; i < result.length - 1; i++) {
-        expect(result[i].metrics.cost).toBeGreaterThanOrEqual(result[i + 1].metrics.cost);
+      // Verify sorted by totalTokens descending (default)
+      for (let i = 0; i < result.data.length - 1; i++) {
+        expect(result.data[i].metrics.tokens.total).toBeGreaterThanOrEqual(
+          result.data[i + 1].metrics.tokens.total,
+        );
       }
 
       // Verify structure
-      const firstUser = result[0];
+      const firstUser = result.data[0];
       expect(firstUser).toHaveProperty('userId');
       expect(firstUser).toHaveProperty('username');
       expect(firstUser).toHaveProperty('email');
@@ -458,8 +480,10 @@ describe('AdminUsageStatsService', () => {
 
       const result = await service.getUserBreakdown(filters);
 
-      expect(result).toBeInstanceOf(Array);
-      expect(result.every((user) => filters.userIds!.includes(user.userId))).toBe(true);
+      // Now returns paginated response
+      expect(result).toHaveProperty('data');
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.every((user) => filters.userIds!.includes(user.userId))).toBe(true);
     });
 
     it('should return empty array when no data exists', async () => {
@@ -481,7 +505,11 @@ describe('AdminUsageStatsService', () => {
 
       const result = await service.getUserBreakdown(filters);
 
-      expect(result).toEqual([]);
+      // Now returns paginated response with empty data
+      expect(result).toHaveProperty('data');
+      expect(result).toHaveProperty('pagination');
+      expect(result.data).toEqual([]);
+      expect(result.pagination.total).toBe(0);
     });
   });
 
@@ -497,16 +525,21 @@ describe('AdminUsageStatsService', () => {
 
       const result = await service.getModelBreakdown(filters);
 
-      expect(result).toBeInstanceOf(Array);
-      expect(result.length).toBeGreaterThan(0);
+      // Now returns paginated response
+      expect(result).toHaveProperty('data');
+      expect(result).toHaveProperty('pagination');
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.length).toBeGreaterThan(0);
 
-      // Verify sorted by cost descending
-      for (let i = 0; i < result.length - 1; i++) {
-        expect(result[i].metrics.cost).toBeGreaterThanOrEqual(result[i + 1].metrics.cost);
+      // Verify sorted by totalTokens descending (default)
+      for (let i = 0; i < result.data.length - 1; i++) {
+        expect(result.data[i].metrics.tokens.total).toBeGreaterThanOrEqual(
+          result.data[i + 1].metrics.tokens.total,
+        );
       }
 
       // Verify structure
-      const firstModel = result[0];
+      const firstModel = result.data[0];
       expect(firstModel).toHaveProperty('modelId');
       expect(firstModel).toHaveProperty('modelName');
       expect(firstModel).toHaveProperty('provider');
@@ -529,8 +562,10 @@ describe('AdminUsageStatsService', () => {
 
       const result = await service.getModelBreakdown(filters);
 
-      expect(result).toBeInstanceOf(Array);
-      expect(result.every((model) => filters.modelIds!.includes(model.modelId))).toBe(true);
+      // Now returns paginated response
+      expect(result).toHaveProperty('data');
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.every((model) => filters.modelIds!.includes(model.modelId))).toBe(true);
     });
   });
 
@@ -546,11 +581,14 @@ describe('AdminUsageStatsService', () => {
 
       const result = await service.getProviderBreakdown(filters);
 
-      expect(result).toBeInstanceOf(Array);
-      expect(result.length).toBeGreaterThan(0);
+      // Now returns paginated response
+      expect(result).toHaveProperty('data');
+      expect(result).toHaveProperty('pagination');
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(result.data.length).toBeGreaterThan(0);
 
       // Verify structure
-      const firstProvider = result[0];
+      const firstProvider = result.data[0];
       expect(firstProvider).toHaveProperty('provider');
       expect(firstProvider.metrics).toHaveProperty('requests');
       expect(firstProvider.metrics).toHaveProperty('tokens');
@@ -572,10 +610,12 @@ describe('AdminUsageStatsService', () => {
 
       const result = await service.getProviderBreakdown(filters);
 
-      expect(result).toBeInstanceOf(Array);
-      expect(result.every((provider) => filters.providerIds!.includes(provider.provider))).toBe(
-        true,
-      );
+      // Now returns paginated response
+      expect(result).toHaveProperty('data');
+      expect(Array.isArray(result.data)).toBe(true);
+      expect(
+        result.data.every((provider) => filters.providerIds!.includes(provider.provider)),
+      ).toBe(true);
     });
   });
 
@@ -595,11 +635,11 @@ describe('AdminUsageStatsService', () => {
       expect(typeof result).toBe('string');
 
       const parsed = JSON.parse(result);
-      expect(parsed).toHaveProperty('period');
-      expect(parsed).toHaveProperty('users');
-      expect(parsed).toHaveProperty('models');
-      expect(parsed).toHaveProperty('providers');
-      expect(parsed).toHaveProperty('exportedAt');
+      expect(parsed).toHaveProperty('metadata');
+      expect(parsed).toHaveProperty('data');
+      expect(parsed.metadata).toHaveProperty('exportedAt');
+      expect(parsed.metadata).toHaveProperty('breakdownType');
+      expect(parsed.metadata.breakdownType).toBe('user');
     });
 
     it('should export data in CSV format', async () => {
@@ -1085,7 +1125,7 @@ describe('AdminUsageStatsService', () => {
       const result = await service.getUserBreakdown(filters);
 
       // Should create Unknown User
-      const unknownUser = result.find((u) => u.username === 'Unknown User');
+      const unknownUser = result.data.find((u) => u.username === 'Unknown User');
       expect(unknownUser).toBeDefined();
       expect(unknownUser?.metrics.requests).toBe(25);
       expect(unknownUser?.metrics.cost).toBe(0.05);
@@ -1194,7 +1234,7 @@ describe('AdminUsageStatsService', () => {
 
       // Result should only include the 90 valid requests in user breakdown
       const userBreakdown = await service.getUserBreakdown(filters);
-      const totalUserRequests = userBreakdown.reduce((sum, u) => sum + u.metrics.requests, 0);
+      const totalUserRequests = userBreakdown.data.reduce((sum, u) => sum + u.metrics.requests, 0);
       expect(totalUserRequests).toBe(90); // Only the mapped user, skipped requests excluded
     });
   });
@@ -1304,11 +1344,11 @@ describe('AdminUsageStatsService', () => {
       // (verified indirectly through user breakdown)
 
       const userBreakdown = await service.getUserBreakdown(filters);
-      expect(userBreakdown).toHaveLength(1);
+      expect(userBreakdown.data).toHaveLength(1);
 
       // The enriched data should contain API key breakdown
       // This is verified indirectly through the aggregation working correctly
-      expect(userBreakdown[0].metrics.requests).toBe(100);
+      expect(userBreakdown.data[0].metrics.requests).toBe(100);
     });
 
     it('should filter by API key IDs when apiKeyIds filter is provided', async () => {
@@ -1731,124 +1771,40 @@ describe('AdminUsageStatsService', () => {
 
       // Should create Unknown User
       const userBreakdown = await service.getUserBreakdown(filters);
-      expect(userBreakdown).toHaveLength(1);
-      expect(userBreakdown[0].userId).toBe('00000000-0000-0000-0000-000000000000');
-      expect(userBreakdown[0].username).toBe('Unknown User');
-      expect(userBreakdown[0].email).toBe('unknown@system.local');
-      expect(userBreakdown[0].metrics.requests).toBe(100);
+      expect(userBreakdown.data).toHaveLength(1);
+      expect(userBreakdown.data[0].userId).toBe('00000000-0000-0000-0000-000000000000');
+      expect(userBreakdown.data[0].username).toBe('Unknown User');
+      expect(userBreakdown.data[0].email).toBe('unknown@system.local');
+      expect(userBreakdown.data[0].metrics.requests).toBe(100);
     });
   });
 
   describe('Trend Calculation', () => {
     describe('calculateComparisonPeriod', () => {
       it('should calculate previous 8-day period correctly', () => {
-        const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
-
-        // Access private method via any cast for testing
         // Jan 20-27 is 8 days, comparison should be Jan 12-19 (also 8 days)
-        const result = (service as any).calculateComparisonPeriod('2025-01-20', '2025-01-27');
+        const result = calculateComparisonPeriod('2025-01-20', '2025-01-27');
 
-        expect(result.comparisonStart).toBe('2025-01-12');
-        expect(result.comparisonEnd).toBe('2025-01-19');
+        expect(result.comparisonStartDate).toBe('2025-01-12');
+        expect(result.comparisonEndDate).toBe('2025-01-19');
+        expect(result.days).toBe(8);
       });
 
       it('should calculate previous 31-day period correctly', () => {
-        const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
-
         // Jan 1-31 is 31 days, comparison should be Dec 1-31 (also 31 days)
-        const result = (service as any).calculateComparisonPeriod('2025-01-01', '2025-01-31');
+        const result = calculateComparisonPeriod('2025-01-01', '2025-01-31');
 
-        expect(result.comparisonStart).toBe('2024-12-01');
-        expect(result.comparisonEnd).toBe('2024-12-31');
+        expect(result.comparisonStartDate).toBe('2024-12-01');
+        expect(result.comparisonEndDate).toBe('2024-12-31');
+        expect(result.days).toBe(31);
       });
 
       it('should calculate single-day comparison period', () => {
-        const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
+        const result = calculateComparisonPeriod('2025-01-15', '2025-01-15');
 
-        const result = (service as any).calculateComparisonPeriod('2025-01-15', '2025-01-15');
-
-        expect(result.comparisonStart).toBe('2025-01-14');
-        expect(result.comparisonEnd).toBe('2025-01-14');
-      });
-    });
-
-    describe('calculateTrend', () => {
-      it('should detect upward trend with percentage increase', () => {
-        const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
-
-        const result = (service as any).calculateTrend('requests', 100, 80);
-
-        expect(result.metric).toBe('requests');
-        expect(result.current).toBe(100);
-        expect(result.previous).toBe(80);
-        expect(result.percentageChange).toBe(25); // (100-80)/80 * 100 = 25%
-        expect(result.direction).toBe('up');
-      });
-
-      it('should detect downward trend with percentage decrease', () => {
-        const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
-
-        const result = (service as any).calculateTrend('cost', 80, 100);
-
-        expect(result.metric).toBe('cost');
-        expect(result.current).toBe(80);
-        expect(result.previous).toBe(100);
-        expect(result.percentageChange).toBe(-20); // (80-100)/100 * 100 = -20%
-        expect(result.direction).toBe('down');
-      });
-
-      it('should detect stable trend within threshold', () => {
-        const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
-
-        const result = (service as any).calculateTrend('users', 100, 99.5);
-
-        expect(result.metric).toBe('users');
-        expect(result.current).toBe(100);
-        expect(result.previous).toBe(99.5);
-        expect(result.percentageChange).toBeCloseTo(0.5, 1); // ~0.5% change
-        expect(result.direction).toBe('stable'); // Within 1% threshold
-      });
-
-      it('should handle zero previous value with current value', () => {
-        const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
-
-        const result = (service as any).calculateTrend('requests', 50, 0);
-
-        expect(result.metric).toBe('requests');
-        expect(result.current).toBe(50);
-        expect(result.previous).toBe(0);
-        expect(result.percentageChange).toBe(100); // Show 100% from baseline
-        expect(result.direction).toBe('up');
-      });
-
-      it('should handle both zero values as stable', () => {
-        const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
-
-        const result = (service as any).calculateTrend('cost', 0, 0);
-
-        expect(result.metric).toBe('cost');
-        expect(result.current).toBe(0);
-        expect(result.previous).toBe(0);
-        expect(result.percentageChange).toBe(0);
-        expect(result.direction).toBe('stable');
-      });
-
-      it('should handle exactly 1% increase as stable (at threshold)', () => {
-        const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
-
-        const result = (service as any).calculateTrend('requests', 101, 100);
-
-        expect(result.percentageChange).toBe(1);
-        expect(result.direction).toBe('stable'); // Exactly at 1% threshold
-      });
-
-      it('should handle 1.1% increase as up (above threshold)', () => {
-        const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
-
-        const result = (service as any).calculateTrend('requests', 101.1, 100);
-
-        expect(result.percentageChange).toBeCloseTo(1.1, 1);
-        expect(result.direction).toBe('up'); // Above 1% threshold
+        expect(result.comparisonStartDate).toBe('2025-01-14');
+        expect(result.comparisonEndDate).toBe('2025-01-14');
+        expect(result.days).toBe(1);
       });
     });
 

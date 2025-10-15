@@ -336,6 +336,80 @@ To test with a real OpenShift cluster including role-based access:
 
 ## Common Development Tasks
 
+### Test Database Setup
+
+**IMPORTANT**: Backend integration tests use a separate `litemaas_test` database to prevent contamination of development data.
+
+#### Why a Separate Test Database?
+
+Integration tests perform real database operations:
+
+- Create, update, and delete test users
+- Mark subscriptions as inactive
+- Invalidate API keys
+- Test data cleanup scenarios
+
+Without isolation, these operations would corrupt your development database.
+
+#### Initial Test Database Setup
+
+**1. Create the test database:**
+
+```bash
+# Using Docker (if PostgreSQL is in Docker)
+docker compose -f dev-tools/compose.yaml exec postgres psql -U pgadmin -c "CREATE DATABASE litemaas_test;"
+
+# Or using local PostgreSQL
+PGPASSWORD=thisisadmin psql -U pgadmin -h localhost -p 5432 -d postgres -c "CREATE DATABASE litemaas_test;"
+```
+
+**2. Initialize the schema:**
+
+```bash
+cd backend
+npm run test:db:setup
+```
+
+This will:
+
+- Copy the schema from your development database to `litemaas_test`
+- Seed minimal required data (default team)
+- Verify the setup was successful
+
+#### Test Database Management
+
+```bash
+cd backend
+
+# Reset test database (truncate all tables, reseed minimal data)
+npm run test:db:reset
+
+# Re-initialize test database schema (useful after schema changes)
+npm run test:db:setup
+```
+
+#### Safety Features
+
+The test infrastructure includes multiple safety checks:
+
+1. **Hardcoded test database URL** in `vitest.config.ts`
+2. **Automatic verification** on test startup - tests fail immediately if wrong database
+3. **Database name checks** - prevents running against `litemaas`, `litemaas_prod`, etc.
+4. **Truncate safety** - reset scripts only work on `litemaas_test`
+
+**You cannot accidentally run tests against your development database.**
+
+#### Keeping Test Schema in Sync
+
+After making schema changes to your development database:
+
+```bash
+cd backend
+
+# Re-initialize test database with latest schema
+npm run test:db:setup
+```
+
 ### Running Tests
 
 ```bash
@@ -348,10 +422,18 @@ npm run test:backend
 # Frontend tests only
 npm run test:frontend
 
+# Backend unit tests (no database)
+cd backend && npm run test:unit
+
+# Backend integration tests (uses litemaas_test database)
+cd backend && npm run test:integration
+
 # Watch mode for development
 cd backend && npm run test:watch
 cd frontend && npm run test:watch
 ```
+
+**First time running backend tests?** Make sure you've completed the test database setup above.
 
 ### Code Quality
 

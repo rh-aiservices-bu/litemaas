@@ -98,6 +98,180 @@ export class UserService {
 }
 ```
 
+### Service Decomposition Pattern
+
+**When to Use**: When a service exceeds 500 lines or has multiple responsibilities.
+
+**Pattern**: Decompose into specialized services with a main orchestrator service.
+
+```typescript
+// ❌ ANTI-PATTERN: Monolithic service
+export class AdminUsageStatsService extends BaseService {
+  // 2,833 lines of mixed concerns
+  async getAnalytics() {
+    // Fetching data from LiteLLM
+    const data = await this.liteLLMService.getData();
+
+    // Enriching with user mappings (500 lines of logic)
+    const enriched = this.enrichWithUserMapping(data);
+
+    // Aggregating (300 lines of logic)
+    const aggregated = this.aggregateData(enriched);
+
+    // Calculating trends (200 lines of logic)
+    const trends = this.calculateTrends(aggregated);
+
+    // Generating charts (200 lines of logic)
+    const charts = this.generateCharts(aggregated);
+
+    // Exporting data (150 lines of logic)
+    // ... 200 more lines ...
+  }
+
+  // ... 200 more methods with mixed responsibilities
+}
+
+// ✅ CORRECT PATTERN: Specialized services with orchestrator
+// Main orchestrator (~500 lines)
+export class AdminUsageStatsService extends BaseService {
+  private aggregationService: AdminUsageAggregationService;
+  private enrichmentService: AdminUsageEnrichmentService;
+  private trendCalculator: AdminUsageTrendCalculator;
+  private exportService: AdminUsageExportService;
+
+  constructor(
+    fastify: FastifyInstance,
+    liteLLMService: LiteLLMService,
+    cacheManager?: IDailyUsageCacheManager,
+  ) {
+    super(fastify);
+
+    // Initialize specialized services
+    this.aggregationService = new AdminUsageAggregationService(fastify);
+    this.enrichmentService = new AdminUsageEnrichmentService(fastify);
+    this.trendCalculator = new AdminUsageTrendCalculator(fastify);
+    this.exportService = new AdminUsageExportService(fastify);
+  }
+
+  async getAnalytics(filters: AdminUsageFilters): Promise<Analytics> {
+    try {
+      // 1. Aggregate current period data (delegates to aggregation service)
+      const currentData = await this.aggregationService.aggregateUsageData(filters, 'total');
+
+      // 2. Calculate comparison period
+      const { comparisonStartDate, comparisonEndDate } = calculateComparisonPeriod(
+        filters.startDate,
+        filters.endDate,
+      );
+
+      // 3. Aggregate comparison period data
+      const comparisonData = await this.aggregationService.aggregateUsageData(
+        { ...filters, startDate: comparisonStartDate, endDate: comparisonEndDate },
+        'total',
+      );
+
+      // 4. Calculate totals
+      const currentTotals = this.aggregationService.calculateTotals(currentData.data);
+      const comparisonTotals = this.aggregationService.calculateTotals(comparisonData.data);
+
+      // 5. Calculate trends (delegates to trend calculator)
+      const trends = this.trendCalculator.calculateAllTrends(currentTotals, comparisonTotals);
+
+      // 6. Get top users and models (delegates to aggregation service)
+      const topUsers = await this.getTopUsers(filters, 10);
+      const topModels = await this.getTopModels(filters, 10);
+
+      // 7. Format and return
+      return {
+        period: { startDate: filters.startDate, endDate: filters.endDate },
+        metrics: currentTotals,
+        trends,
+        topUsers,
+        topModels,
+        dataSource: currentData.dataSource,
+      };
+    } catch (error) {
+      throw ApplicationError.fromUnknown(error, 'getting analytics data');
+    }
+  }
+
+  // Thin wrapper methods that delegate to specialized services
+  async getUserBreakdown(filters: AdminUsageFilters): Promise<UserBreakdown[]> {
+    const data = await this.aggregationService.aggregateUsageData(filters, 'user');
+    return this.enrichmentService.enrichWithUserData(data);
+  }
+
+  async exportToCSV(data: any[], filters: AdminUsageFilters): Promise<string> {
+    return this.exportService.exportUserBreakdownToCSV(data, filters);
+  }
+}
+
+// Specialized service example (~400 lines)
+export class AdminUsageTrendCalculator extends BaseService {
+  /**
+   * Calculate all trends between current and comparison period
+   */
+  calculateAllTrends(current: Metrics, comparison: Metrics): TrendData {
+    return {
+      requestsTrend: this.calculateTrend('requests', current.requests, comparison.requests),
+      costTrend: this.calculateTrend('cost', current.cost, comparison.cost),
+      usersTrend: this.calculateTrend('users', current.users, comparison.users),
+      // ... other trends
+    };
+  }
+
+  /**
+   * Calculate individual trend with direction and percentage
+   */
+  private calculateTrend(metric: string, current: number, previous: number): TrendData {
+    const percentageChange = previous > 0 ? ((current - previous) / previous) * 100 : 0;
+
+    return {
+      metric,
+      current,
+      previous,
+      percentageChange,
+      direction: this.determineTrendDirection(percentageChange),
+    };
+  }
+
+  private determineTrendDirection(change: number): 'up' | 'down' | 'stable' {
+    if (Math.abs(change) < 1.0) return 'stable';
+    return change > 0 ? 'up' : 'down';
+  }
+}
+```
+
+**Guidelines**:
+
+1. **Main Service as Orchestrator**: Keep main service < 500 lines, focused on workflow coordination
+2. **Single Responsibility**: Each specialized service handles one concern (aggregation, enrichment, trends, exports, etc.)
+3. **Pure Utilities**: Extract pure functions (no dependencies) to utility modules
+4. **Dependency Injection**: Pass dependencies through constructor, not as method parameters
+5. **Test Independently**: Each service should be testable in isolation
+6. **Clear Naming**: Service names should clearly indicate their responsibility
+
+**Benefits**:
+
+- **Maintainability**: Smaller, focused services are easier to understand and modify
+- **Testability**: Each service can be tested independently with clear mocks
+- **Reusability**: Specialized services can be reused in different contexts
+- **Extensibility**: Easy to add new services without touching existing code
+- **Code Quality**: Enforces single responsibility principle, reduces duplication
+
+**File Organization**:
+
+```
+backend/src/services/
+├── admin-usage-stats.service.ts          (~500 lines) - Main orchestrator
+└── admin-usage/
+    ├── admin-usage-aggregation.service.ts (~700 lines) - Aggregation logic
+    ├── admin-usage-enrichment.service.ts  (~350 lines) - Data enrichment
+    ├── admin-usage-trend-calculator.ts    (~400 lines) - Trend calculations
+    ├── admin-usage-export.service.ts      (~250 lines) - Export generation
+    └── admin-usage.utils.ts               (~400 lines) - Pure utility functions
+```
+
 ### Route Pattern with RBAC
 
 ```typescript
@@ -1022,12 +1196,13 @@ export class AdminUsageStatsService extends BaseService {
     if (!isCurrentDay) return false; // Historical data never stale
 
     const FIVE_MINUTES = 5 * 60 * 1000;
-    return (Date.now() - cached.updated_at.getTime()) > FIVE_MINUTES;
+    return Date.now() - cached.updated_at.getTime() > FIVE_MINUTES;
   }
 }
 ```
 
 **Benefits**:
+
 - Scales to any date range without memory issues
 - Historical data cached permanently, never refetched
 - Current day has 5-minute TTL for near-real-time data
@@ -1092,6 +1267,7 @@ export const ApiKeyFilterSelect: React.FC = ({ selectedUserIds, onChange }) => {
 ```
 
 **Key Aspects**:
+
 - `enabled` prevents unnecessary queries
 - Auto-reset dependent filter when parent changes
 - User feedback for filter dependencies
@@ -1146,6 +1322,7 @@ const { data } = useQuery({
 ```
 
 **Benefits**:
+
 - Single source of truth (backend environment variable)
 - No hardcoded cache durations in frontend
 - Easy tuning without redeployment

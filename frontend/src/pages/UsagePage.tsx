@@ -62,19 +62,19 @@ const UsagePage: React.FC = () => {
     switch (datePreset) {
       case '1d':
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 1);
+        startDate.setDate(now.getDate() - 0); // Today only (1 day inclusive)
         break;
       case '7d':
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 7);
+        startDate.setDate(now.getDate() - 6); // 7 days inclusive
         break;
       case '30d':
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 30);
+        startDate.setDate(now.getDate() - 29); // 30 days inclusive
         break;
       case '90d':
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 90);
+        startDate.setDate(now.getDate() - 89); // 90 days inclusive
         break;
       case 'custom':
         if (customStartDate && customEndDate) {
@@ -85,11 +85,11 @@ const UsagePage: React.FC = () => {
         }
         // Fallback to last 7 days if custom dates not set
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 7);
+        startDate.setDate(now.getDate() - 6); // 7 days inclusive
         break;
       default:
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 7);
+        startDate.setDate(now.getDate() - 6); // 7 days inclusive
     }
 
     return {

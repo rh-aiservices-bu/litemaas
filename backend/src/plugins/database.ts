@@ -47,22 +47,26 @@ const databasePlugin: FastifyPluginAsync = async (fastify) => {
           // Don't fail the startup, but log the error
         }
 
-        // Sync models on startup
-        try {
-          const { ModelSyncService } = await import('../services/model-sync.service');
-          const modelSyncService = new ModelSyncService(fastify);
-          const syncResult = await modelSyncService.syncModels({
-            forceUpdate: false,
-            markUnavailable: true,
-          });
+        // Skip initial model sync in test environment
+        // Tests can explicitly sync models if needed for their scenarios
+        if (process.env.NODE_ENV !== 'test') {
+          // Sync models on startup
+          try {
+            const { ModelSyncService } = await import('../services/model-sync.service');
+            const modelSyncService = new ModelSyncService(fastify);
+            const syncResult = await modelSyncService.syncModels({
+              forceUpdate: false,
+              markUnavailable: true,
+            });
 
-          fastify.log.info({
-            msg: 'Initial model sync completed',
-            ...syncResult,
-          });
-        } catch (syncError) {
-          fastify.log.error({ error: syncError }, 'Failed to sync models on startup');
-          // Don't fail startup - continue with cached models
+            fastify.log.info({
+              msg: 'Initial model sync completed',
+              ...syncResult,
+            });
+          } catch (syncError) {
+            fastify.log.error({ error: syncError }, 'Failed to sync models on startup');
+            // Don't fail startup - continue with cached models
+          }
         }
 
         // Initialize LiteLLM integration service for auto-sync

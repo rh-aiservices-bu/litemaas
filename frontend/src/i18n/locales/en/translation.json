@@ -102,6 +102,7 @@
     },
     "completionTokens": "Completion Tokens",
     "datePresets": {
+      "1d": "Last day",
       "30d": "Last 30 days",
       "7d": "Last 7 days",
       "90d": "Last 90 days",
@@ -170,7 +171,9 @@
       "legend": {
         "colorScale": "Usage intensity",
         "noData": "No data",
-        "zeroUsage": "Zero usage"
+        "noDataAriaLabel": "No data indicator",
+        "zeroUsage": "Zero usage",
+        "zeroUsageAriaLabel": "Zero usage indicator"
       },
       "table": {
         "viewAsChart": "View as chart",
@@ -197,7 +200,17 @@
     },
     "metricSelect": "Metric selection",
     "metricsOverview": "Metrics Overview",
-    "modelBreakdown": "Model Breakdown",
+    "modelBreakdown": {
+      "completionTokens": "Completion Tokens",
+      "modelName": "Model",
+      "noData": "No model data available",
+      "noDataDescription": "No usage data found for the selected date range and filters.",
+      "promptTokens": "Prompt Tokens",
+      "tableLabel": "Model breakdown table",
+      "totalCost": "Total Cost",
+      "totalRequests": "Requests",
+      "totalTokens": "Total Tokens"
+    },
     "modelFilterChanged": "Filtering by {{count}} model(s)",
     "noData": "No data available",
     "noModelData": "No model data available",
@@ -206,8 +219,22 @@
     "noProvidersFound": "No providers found for the selected date range.",
     "noUserData": "No user data available",
     "noUsersFound": "No users found for the selected date range.",
+    "pagination": {
+      "label": "Pagination"
+    },
     "promptTokens": "Prompt Tokens",
-    "providerBreakdown": "Provider Breakdown",
+    "providerBreakdown": {
+      "completionTokens": "Completion Tokens",
+      "noData": "No provider data available",
+      "noDataDescription": "No usage data found for the selected date range and filters.",
+      "promptTokens": "Prompt Tokens",
+      "providerName": "Provider",
+      "successRate": "Success Rate",
+      "tableLabel": "Provider breakdown table",
+      "totalCost": "Total Cost",
+      "totalRequests": "Requests",
+      "totalTokens": "Total Tokens"
+    },
     "refreshing": "Refreshing today's data...",
     "refreshSuccess": "Refresh successful",
     "refreshToday": "Refresh Today",
@@ -219,9 +246,9 @@
     "successRate": "Success Rate",
     "tabChanged": "Switched to {{tab}} tab",
     "tableHeaders": {
-      "completionTokens": "Completion<br />Tokens",
+      "completionTokens": "Completion Tokens",
       "cost": "Cost",
-      "promptTokens": "Prompt<br />Tokens",
+      "promptTokens": "Prompt Tokens",
       "requests": "Requests",
       "tokens": "Tokens",
       "user": "User"
@@ -261,7 +288,18 @@
     "unknownUser": "Unknown User",
     "unknownUserDescription": "Requests from deleted or unmapped API keys",
     "usageHeatmapSubtitle": "Usage heatmap over selected week(s)",
-    "userBreakdown": "User Breakdown",
+    "userBreakdown": {
+      "completionTokens": "Completion Tokens",
+      "email": "Email",
+      "noData": "No user data available",
+      "noDataDescription": "No usage data found for the selected date range and filters.",
+      "promptTokens": "Prompt Tokens",
+      "tableLabel": "User breakdown table",
+      "totalCost": "Total Cost",
+      "totalRequests": "Requests",
+      "totalTokens": "Total Tokens",
+      "username": "Username"
+    },
     "userFilterChanged": "Filtering by {{count}} user(s)",
     "weeklyUsagePatterns": "Weekly Usage Patterns"
   },
@@ -286,8 +324,10 @@
     "no": "No",
     "none": "None",
     "notAvailable": "N/A",
+    "refreshPage": "Refresh Page",
     "retry": "Retry",
     "table": "Table",
+    "tryAgain": "Try Again",
     "update": "Update",
     "value": "Value",
     "view": "View",
@@ -1071,11 +1111,14 @@
       "loadingTitle": "Loading Usage Data...",
       "metrics": {
         "avgResponseTime": "Avg Response Time",
+        "completion_tokens": "Completion Tokens",
+        "cost": "Cost",
         "currency": "USD",
-        "requests": "requests",
+        "prompt_tokens": "Prompt Tokens",
+        "requests": "Requests",
         "successfulRequests": "successful requests",
         "successRate": "Success Rate",
-        "tokens": "tokens",
+        "tokens": "Tokens",
         "totalCost": "Total Cost",
         "totalRequests": "Total Requests",
         "totalTokens": "Total Tokens"
@@ -1116,12 +1159,14 @@
       "selectApiKeyTitle": "Select an API Key",
       "subtitle": "Monitor your API usage, costs, and performance metrics",
       "tableHeaders": {
+        "completionTokens": "Completion Tokens",
         "cost": "Cost",
         "count": "Count",
         "date": "Date",
         "formattedValue": "Formatted Value",
         "model": "Model",
         "percentage": "Percentage",
+        "promptTokens": "Prompt Tokens",
         "requests": "Requests",
         "tokens": "Tokens",
         "usagePercent": "Usage %"
@@ -1192,6 +1237,15 @@
       "userAvatar": "User Avatar"
     },
     "errors": {
+      "bannerCreateFailed": "Failed to create banner. Please try again.",
+      "bannerDeleteFailed": "Failed to delete banner. Please try again.",
+      "bannerDismissFailed": "Failed to dismiss banner. Please try again.",
+      "bannerUpdateFailed": "Failed to update banner. Please try again.",
+      "bannerVisibilityFailed": "Failed to apply visibility changes. Please try again.",
+      "componentError": "Component Error",
+      "componentLoadingError": "Component Loading Error",
+      "componentLoadingErrorDesc": "Failed to load this component. Please try refreshing the page.",
+      "configLoadFailed": "Failed to load application configuration",
       "details": "Details",
       "errorCode": "Error Code",
       "field": "Field",
@@ -1205,7 +1259,8 @@
       "retryAction": "Retry the failed operation",
       "retryAfter": "Please wait {{seconds}} seconds before retrying",
       "showDetails": "Show Details",
-      "somethingWrong": "Something went wrong",
+      "somethingWentWrong": "Something went wrong",
+      "somethingWentWrongDesc": "We're sorry, but something unexpected happened. Please try refreshing the page or contact support if the problem persists.",
       "statusCode": "Status Code",
       "title": "Error",
       "tryRefresh": "We're sorry, but something unexpected happened. Please try refreshing the page or contact support if the problem persists.",
@@ -1246,6 +1301,7 @@
       "spanish": "Español"
     },
     "navigation": {
+      "globalNavigation": "Global navigation",
       "mainNavigation": "Main navigation",
       "userMenu": "User menu"
     },

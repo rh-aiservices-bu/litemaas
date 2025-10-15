@@ -22,6 +22,8 @@ export interface ModelBreakdownData {
   name: string;
   requests: number;
   tokens: number;
+  prompt_tokens: number;
+  completion_tokens: number;
   cost: number;
   percentage: number;
 }
@@ -126,6 +128,8 @@ export const transformModelBreakdownToChartData = (
         name: model.name || 'Unknown Model',
         requests: model.requests || 0,
         tokens: model.tokens || 0,
+        prompt_tokens: model.prompt_tokens || 0,
+        completion_tokens: model.completion_tokens || 0,
         cost: model.cost || 0,
         percentage: Math.round(percentage * 10) / 10, // Round to 1 decimal place
       };
@@ -494,10 +498,12 @@ export const transformDailyUsageToHeatmapData = (
   const rangeEnd = new Date(endYear, endMonth - 1, endDay);
 
   // Create a map of date -> value for quick lookup
+  // If there are duplicate dates, sum them instead of overwriting
   const dataMap = new Map<string, number>();
   dailyUsage.forEach((item) => {
     const value = item[metricType] || 0;
-    dataMap.set(item.date, value);
+    const existing = dataMap.get(item.date) || 0;
+    dataMap.set(item.date, existing + value);
   });
 
   // Find all weeks that span the date range

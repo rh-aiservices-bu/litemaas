@@ -1,5 +1,6 @@
 import React from 'react';
 import { Alert, AlertActionCloseButton } from '@patternfly/react-core';
+import { useTranslation } from 'react-i18next';
 import { ErrorBoundary } from './ErrorBoundary';
 
 interface ComponentErrorBoundaryProps {
@@ -8,6 +9,7 @@ interface ComponentErrorBoundaryProps {
 }
 
 export const ComponentErrorBoundary: React.FC<ComponentErrorBoundaryProps> = ({ children }) => {
+  const { t } = useTranslation();
   const [error, setError] = React.useState<Error | null>(null);
 
   const resetError = () => setError(null);
@@ -16,7 +18,7 @@ export const ComponentErrorBoundary: React.FC<ComponentErrorBoundaryProps> = ({ 
     return (
       <Alert
         variant="danger"
-        title="Component Error"
+        title={t('ui.errors.componentError')}
         actionClose={<AlertActionCloseButton onClose={resetError} />}
       >
         {error.message}
@@ -27,8 +29,8 @@ export const ComponentErrorBoundary: React.FC<ComponentErrorBoundaryProps> = ({ 
   return (
     <ErrorBoundary
       fallback={
-        <Alert variant="warning" title="Component Loading Error">
-          Failed to load this component. Please try refreshing the page.
+        <Alert variant="warning" title={t('ui.errors.componentLoadingError')}>
+          {t('ui.errors.componentLoadingErrorDesc')}
         </Alert>
       }
     >

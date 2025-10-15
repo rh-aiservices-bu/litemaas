@@ -270,7 +270,7 @@ const Layout: React.FC = () => {
   }, [isUserDropdownOpen]);
 
   const PageNav = (
-    <Nav aria-label="Global navigation" id="main-navigation">
+    <Nav aria-label={t('ui.navigation.globalNavigation')} id="main-navigation">
       <NavList>
         {appConfig.navigation
           .filter((navItem) => {
@@ -279,15 +279,21 @@ const Layout: React.FC = () => {
             return navItem.requiredRoles.some((role) => user?.roles?.includes(role));
           })
           .map((navItem) => {
-            // Handle separator items (render as Divider)
+            // Handle separator items (render role heading with divider styling)
             if (navItem.isGroup) {
               return (
-                <div key={navItem.id}>
-                  <Divider component="li" />
-                  <Content key="role-display" component={ContentVariants.h4}>
+                <li
+                  key={navItem.id}
+                  style={{
+                    borderTop: '1px solid var(--pf-t--global--border--color--default)',
+                    paddingTop: 'var(--pf-t--global--spacer--md)',
+                    marginTop: 'var(--pf-t--global--spacer--md)',
+                  }}
+                >
+                  <Content component={ContentVariants.h4}>
                     {user?.roles ? t('role.' + getMostPowerfulRole(user.roles)) : ''}
                   </Content>
-                </div>
+                </li>
               );
             }
 
@@ -635,10 +641,12 @@ const Layout: React.FC = () => {
   );
 
   const mainContent = (
-    <Page masthead={Header} sidebar={isSidebarOpen ? Sidebar : undefined}>
-      <main id="main-content" role="main">
-        <Outlet />
-      </main>
+    <Page
+      masthead={Header}
+      sidebar={isSidebarOpen ? Sidebar : undefined}
+      mainContainerId="main-content"
+    >
+      <Outlet />
     </Page>
   );
 

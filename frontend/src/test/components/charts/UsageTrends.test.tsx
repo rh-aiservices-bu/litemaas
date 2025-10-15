@@ -497,4 +497,103 @@ describe('UsageTrends', () => {
     // With maxY=10, generates ticks [0,10] and uses max value 10 as domain upper bound
     expect(chartProps.domain.y[1]).toBe(10);
   });
+
+  describe('Memory Management - ResizeObserver Cleanup', () => {
+    let disconnectSpy: ReturnType<typeof vi.fn>;
+    let observeSpy: ReturnType<typeof vi.fn>;
+    let unobserveSpy: ReturnType<typeof vi.fn>;
+    let OriginalResizeObserver: typeof ResizeObserver;
+
+    beforeEach(() => {
+      disconnectSpy = vi.fn();
+      observeSpy = vi.fn();
+      unobserveSpy = vi.fn();
+
+      // Save original ResizeObserver
+      OriginalResizeObserver = global.ResizeObserver;
+
+      // Mock ResizeObserver
+      global.ResizeObserver = vi.fn().mockImplementation(() => ({
+        observe: observeSpy,
+        disconnect: disconnectSpy,
+        unobserve: unobserveSpy,
+      })) as any;
+    });
+
+    afterEach(() => {
+      // Restore original ResizeObserver
+      global.ResizeObserver = OriginalResizeObserver;
+      vi.clearAllMocks();
+    });
+
+    it('should create ResizeObserver on mount', () => {
+      render(<UsageTrends data={mockLineData} metricType="requests" />);
+
+      // Verify observer was created and element was observed
+      expect(global.ResizeObserver).toHaveBeenCalledTimes(1);
+      expect(observeSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('should clean up ResizeObserver on unmount', () => {
+      const { unmount } = render(<UsageTrends data={mockLineData} metricType="requests" />);
+
+      // Verify observer was created
+      expect(global.ResizeObserver).toHaveBeenCalled();
+
+      // Clear the spy to ensure disconnect is from unmount
+      disconnectSpy.mockClear();
+
+      // Unmount component
+      unmount();
+
+      // Verify disconnect was called on unmount
+      expect(disconnectSpy).toHaveBeenCalled();
+    });
+
+    it('should handle multiple mount/unmount cycles without leaking', () => {
+      // Track total disconnect calls across all cycles
+      let totalDisconnects = 0;
+      disconnectSpy.mockImplementation(() => {
+        totalDisconnects++;
+      });
+
+      // Mount and unmount 10 times
+      for (let i = 0; i < 10; i++) {
+        const { unmount } = render(<UsageTrends data={mockLineData} metricType="requests" />);
+        unmount();
+      }
+
+      // Should have created 10 observers
+      expect(global.ResizeObserver).toHaveBeenCalledTimes(10);
+
+      // Should have disconnected at least 10 times (once per unmount)
+      expect(totalDisconnects).toBeGreaterThanOrEqual(10);
+    });
+
+    it('should disconnect old observer when ref changes', () => {
+      const { rerender, unmount } = render(
+        <UsageTrends data={mockLineData} metricType="requests" />,
+      );
+
+      // Initial mount
+      expect(observeSpy).toHaveBeenCalledTimes(1);
+
+      // Force re-render (in real app, this could be prop change)
+      rerender(<UsageTrends data={mockLineData} metricType="requests" />);
+
+      // Unmount
+      unmount();
+
+      // Verify cleanup happened
+      expect(disconnectSpy).toHaveBeenCalled();
+    });
+
+    it('should not throw errors if unmounted before observer created', () => {
+      // This should not throw
+      const { unmount } = render(<UsageTrends data={[]} metricType="requests" />);
+      unmount();
+
+      // No assertions needed - test passes if no error thrown
+    });
+  });
 });

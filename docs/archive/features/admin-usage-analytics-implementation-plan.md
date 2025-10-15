@@ -202,12 +202,12 @@ interface AdminUsageRoutes {
   // Core endpoints (Phase 1 - MVP)
   // Note: All routes are under /api/v1/admin/usage/*
   'POST /api/v1/admin/usage/analytics': AnalyticsResponse; // Main analytics endpoint with filters
-  'GET /api/v1/admin/usage/by-user': UserBreakdownResponse;
-  'GET /api/v1/admin/usage/by-model': ModelBreakdownResponse;
-  'GET /api/v1/admin/usage/by-provider': ProviderBreakdownResponse;
+  'POST /api/v1/admin/usage/by-user': UserBreakdownResponse; // POST to support large filter arrays
+  'POST /api/v1/admin/usage/by-model': ModelBreakdownResponse; // POST to support large filter arrays
+  'POST /api/v1/admin/usage/by-provider': ProviderBreakdownResponse; // POST to support large filter arrays
 
   // Export endpoints (Phase 1 - MVP)
-  'GET /api/v1/admin/usage/export': ExportDataResponse;
+  'POST /api/v1/admin/usage/export': ExportDataResponse; // POST to support large filter arrays
 
   // Refresh and filter endpoints (Phase 1 - MVP)
   'POST /api/v1/admin/usage/refresh-today': RefreshTodayResponse;
@@ -1576,10 +1576,11 @@ This section provides a roadmap for completing the originally planned tabbed int
 #### Backend Infrastructure (100% Complete)
 
 1. ✅ **API Endpoints**
-   - `GET /api/v1/admin/usage/by-user` - Returns detailed user breakdown
-   - `GET /api/v1/admin/usage/by-model` - Returns detailed model breakdown
-   - `GET /api/v1/admin/usage/by-provider` - Returns detailed provider breakdown
-   - All endpoints support filtering by date range, models, users, providers
+   - `POST /api/v1/admin/usage/by-user` - Returns detailed user breakdown (POST to support large filter arrays)
+   - `POST /api/v1/admin/usage/by-model` - Returns detailed model breakdown (POST to support large filter arrays)
+   - `POST /api/v1/admin/usage/by-provider` - Returns detailed provider breakdown (POST to support large filter arrays)
+   - All endpoints support filtering by date range, models, users, providers, API keys
+   - Pagination via query parameters (page, limit, sortBy, sortOrder)
    - Comprehensive error handling and RBAC enforcement
 
 2. ✅ **Database & Caching**
