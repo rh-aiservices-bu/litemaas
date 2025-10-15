@@ -86,7 +86,15 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
   }, [data, metricType]);
 
   // Day abbreviations (i18n)
-  const dayAbbreviations = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  const dayAbbreviations = [
+    t('common.days.mon'),
+    t('common.days.tue'),
+    t('common.days.wed'),
+    t('common.days.thu'),
+    t('common.days.fri'),
+    t('common.days.sat'),
+    t('common.days.sun'),
+  ];
 
   // Get cell color based on value and state
   const getCellColor = (value: number | null, isInRange: boolean): string => {
@@ -244,7 +252,7 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
   return (
     <AccessibleChart
       data={accessibleData}
-      title={t('pages.usage.weeklyUsagePatterns')}
+      title={t('adminUsage.weeklyUsagePatterns')}
       description={t('adminUsage.heatmap.accessibility.heatmapDescription', {
         metric: t(`pages.usage.metrics.${metricType}`),
         weeks: data.length,
@@ -282,7 +290,7 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
                   fontWeight: 'var(--pf-t--global--font--weight--bold)',
                 }}
               >
-                {t('adminUsage.heatmap.weekLabel', 'Week')}
+                {t('adminUsage.heatmap.table.week', 'Week')}
               </Th>
               {dayAbbreviations.map((day) => (
                 <Th

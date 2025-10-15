@@ -89,6 +89,8 @@
     "apiKeysFilterAvailable": "APIキーフィルターが利用可能になりました",
     "charts": {
       "modelDistributionAriaLabel": "モデル使用分布グラフ",
+      "modelLegendDescription": "積み上げグラフに表示されているモデル{{modelName}}",
+      "modelUsageSummary": "{{dataPoints}}個のデータポイントを持つ積み上げグラフで、{{modelCount}}個のモデルを表示しています。合計値は{{minValue}}から{{maxValue}}の範囲で、平均は{{avgValue}}です。",
       "modelUsageTrends": "モデル使用トレンド",
       "modelUsageTrendsAriaDesc": "時間経過に伴う異なるモデルの使用状況を示す積み上げ棒グラフ。表示されているメトリクスは{{metric}}です。",
       "modelUsageTrendsAriaLabel": "{{metric}}による時間経過に伴うモデル使用トレンドを示す積み上げグラフ",
@@ -106,6 +108,7 @@
       "30d": "過去30日間",
       "7d": "過去7日間",
       "90d": "過去90日間",
+      "any": "すべての日付",
       "custom": "カスタム範囲"
     },
     "dateRangeChanged": "期間が{{preset}}に変更されました",
@@ -182,7 +185,8 @@
       },
       "tooltip": {
         "noDataOutsideRange": "データなし（選択範囲外）",
-        "percentOfWeek": "週合計の{{percent}}%"
+        "percentOfWeek": "週合計の{{percent}}%",
+        "zeroUsage": "使用量なし"
       }
     },
     "loading": "メトリクスを読み込み中...",
@@ -191,11 +195,14 @@
     "loadingUsers": "ユーザーデータを読み込み中...",
     "metrics": {
       "activeUsersAriaLabel": "{{total}}人の総ユーザー中{{active}}人がアクティブ",
+      "completionTokensAriaLabel": "補完トークン: {{count}}",
       "noChange": "変化なし",
       "ofTotalUsers": "総{{total}}人中",
+      "promptTokensAriaLabel": "プロンプトトークン: {{count}}",
       "successRateAriaLabel": "成功率: {{percentage}}%",
       "totalCostAriaLabel": "総コスト: ${{amount}}",
       "totalRequestsAriaLabel": "総リクエスト数: {{count}}",
+      "totalTokensAriaLabel": "総トークン数: {{count}}",
       "trendLabel": "トレンド{{direction}}（{{change}}%）"
     },
     "metricSelect": "メトリクス選択",
@@ -313,6 +320,15 @@
     "dataPoints": "データポイント",
     "date": "日付",
     "day": "日",
+    "days": {
+      "fri": "金",
+      "mon": "月",
+      "sat": "土",
+      "sun": "日",
+      "thu": "木",
+      "tue": "火",
+      "wed": "水"
+    },
     "delete": "削除",
     "error": "エラー",
     "expandToFullScreen": "全画面表示に拡大",
@@ -387,6 +403,12 @@
       "outputCostCannotBeNegative": "出力コストは負の値にできません",
       "outputCostPerMillionTokens": "100万トークンあたりの出力コスト",
       "pleaseEnterAValidUrl": "有効なURLを入力してください",
+      "restrictedAccessHelp": "Users must request access and receive admin approval",
+      "restrictedAccessLabel": "Require Admin Approval",
+      "restrictedAccessWarning": {
+        "message": "This will move all active subscriptions for this model to pending status and remove the model from existing API keys. Users will need to be re-approved.",
+        "title": "Enable Restricted Access?"
+      },
       "rpmMustBeAtLeast_1": "RPMは1以上である必要があります",
       "rpmRequestsPerMinute": "RPM（毎分リクエスト数）",
       "supportsFunctionCalling": "関数呼び出しをサポート",
@@ -432,6 +454,7 @@
   "nav": {
     "admin": {
       "models": "モデル管理",
+      "subscriptions": "サブスクリプション管理",
       "tools": "ツール",
       "usage": "使用分析",
       "users": "ユーザー"
@@ -444,6 +467,73 @@
     "usage": "使用状況"
   },
   "pages": {
+    "adminSubscriptions": {
+      "actions": {
+        "approve": "承認",
+        "delete": "削除",
+        "deny": "拒否",
+        "revert": "ステータスを変更"
+      },
+      "approvalModalTitle": "サブスクリプションの承認",
+      "approveSuccess": "{{count}}件のサブスクリプションを承認しました",
+      "bulkApprove": "選択項目を承認",
+      "bulkDeny": "選択項目を拒否",
+      "confirmApproval": "承認の確認",
+      "confirmApprovalSingle": "{{user}}の{{model}}へのアクセスのサブスクリプションリクエストを承認してもよろしいですか？",
+      "confirmDelete": "完全に削除",
+      "confirmDeleteSingle": "{{user}}の{{model}}へのアクセスのサブスクリプションを完全に削除してもよろしいですか？これにより、関連するすべてのデータが削除されます。",
+      "confirmDenial": "拒否の確認",
+      "confirmDenialBulk": "{{count}}件のサブスクリプションリクエストを拒否してもよろしいですか？",
+      "confirmDenialSingle": "{{user}}の{{model}}へのアクセスのサブスクリプションリクエストを拒否してもよろしいですか？",
+      "confirmRevert": "元に戻すことを確認",
+      "deleteModalTitle": "サブスクリプションを削除",
+      "deleteReasonPlaceholder": "オプション：削除の理由を入力してください（監査ログに保存されます）...",
+      "deleteSuccess": "サブスクリプションを正常に削除しました",
+      "deleteWarning": "この操作は元に戻せません",
+      "denialModalTitle": "サブスクリプションの拒否",
+      "denySuccess": "{{count}}件のサブスクリプションを拒否しました",
+      "filters": {
+        "clearStatuses": "ステータス選択をクリア",
+        "dateRange": "期間",
+        "from": "開始日",
+        "model": "モデル",
+        "noStatusesFound": "「{{query}}」に一致するステータスが見つかりません",
+        "selectAll": "すべて選択",
+        "selectedStatuses": "選択されたステータス",
+        "status": "ステータス",
+        "statusPlaceholder": "すべてのステータス（クリックしてフィルター）",
+        "to": "終了日",
+        "user": "ユーザー"
+      },
+      "newStatus": "新しいステータス",
+      "noSelections": "サブスクリプションが選択されていません",
+      "reasonLabel": "コメント",
+      "reasonPlaceholder": "この決定の理由を入力してください...",
+      "reasonRequired": "拒否には理由が必要です",
+      "refresh": "更新",
+      "resultModalTitle": "一括操作の結果",
+      "resultsTable": {
+        "error": "エラー",
+        "failed": "失敗",
+        "result": "結果",
+        "subscription": "サブスクリプション",
+        "success": "成功"
+      },
+      "revertDescription": "{{user}}の{{model}}へのサブスクリプションのステータスを変更します。現在のステータス：{{currentStatus}}",
+      "revertModalTitle": "サブスクリプションステータスを元に戻す",
+      "revertSuccess": "サブスクリプションのステータスを更新しました",
+      "table": {
+        "actions": "操作",
+        "model": "モデル",
+        "reason": "理由",
+        "requestedDate": "リクエスト日",
+        "selectColumn": "サブスクリプションを選択",
+        "status": "ステータス",
+        "statusChangedDate": "最終更新日",
+        "user": "ユーザー"
+      },
+      "title": "サブスクリプション管理"
+    },
     "apiKeys": {
       "clipboard": {
         "copied": "コピー済み",
@@ -482,6 +572,7 @@
       "labels": {
         "actions": "アクション",
         "apiKeyLabel": "APIキー",
+        "apiUrl": "API URL",
         "cancel": "キャンセル",
         "close": "閉じる",
         "created": "作成日",
@@ -799,6 +890,7 @@
       "title": "LiteMaaSにログイン"
     },
     "models": {
+      "alreadySubscribed": "Already Subscribed",
       "ariaLabels": {
         "modelAvailability": "モデルの利用可能性",
         "subscriptionStatus": "購読ステータス"
@@ -833,6 +925,11 @@
         "pricingInput": "入力",
         "pricingOutput": "出力",
         "pricingUnavailable": "料金情報は利用できません",
+        "restrictedAccessInfo": {
+          "buttonText": "アクセスをリクエスト",
+          "message": "このモデルは管理者の承認が必要です。サブスクライブすると、管理者がレビューして承認するまでリクエストは保留状態になります。アクセスが許可されると通知されます。",
+          "title": "管理者承認が必要"
+        },
         "subscribeInfo": "購読することで、このモデルにアクセスでき、使用するためのAPIキーを生成できるようになります。",
         "tokens": "トークン"
       },
@@ -840,6 +937,8 @@
       "moreFeatures": "+{{count}}個の機能",
       "noModels": "まだ利用可能なモデルはありません",
       "notifications": {
+        "accessRequestPending": "{{modelName}}へのサブスクリプションリクエストは管理者の承認待ちです。承認されると通知されます。",
+        "accessRequestSubmitted": "アクセスリクエストが送信されました",
         "alreadySubscribed": "すでにこのモデルをサブスクライブしています",
         "failedToSubscribe": "モデルのサブスクライブに失敗しました",
         "loadError": "エラー",
@@ -855,6 +954,7 @@
         "separator": "•"
       },
       "pricingLabel": "価格：N/A",
+      "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "モデルを検索...",
       "searchResults": "条件に一致する{{count}}個のモデルが見つかりました",
       "subscribe": "サブスクライブ",
@@ -913,15 +1013,20 @@
       "provider": "プロバイダー",
       "quotaFormat": "クォータ：{{requests}}リクエスト、{{tokens}}トークン",
       "requestQuota": "リクエストクォータ",
+      "requestReview": "Request Review",
+      "requestReviewSuccess": "Review requested successfully",
       "requests": "リクエスト",
       "requestsUsed": "使用済みリクエスト",
       "status": {
         "active": "アクティブ",
+        "denied": "Access Denied",
         "expired": "期限切れ",
-        "pending": "保留中",
+        "inactive": "非アクティブ",
+        "pending": "Pending Approval",
         "suspended": "一時停止"
       },
       "statusLabel": "ステータス",
+      "statusReason": "Admin Comment",
       "suspendedMessage": "サブスクリプションが一時停止されました。サポートに連絡するか、アカウントステータスを確認してください。",
       "title": "モデルサブスクリプション",
       "tokenQuota": "トークンクォータ",
@@ -1094,6 +1199,7 @@
         "last7Days": "過去7日間",
         "last90Days": "過去90日間"
       },
+      "export": "エクスポート",
       "exportData": "データをエクスポート",
       "exportUsageData": "選択した期間の使用状況データをエクスポート",
       "filters": {
@@ -1416,6 +1522,7 @@
       "oauthManaged": "ステータスはOAuthプロバイダによって管理されています。"
     },
     "table": {
+      "actions": "操作",
       "ariaLabel": "ユーザーテーブル",
       "caption": "ユーザー名、メール、フルネーム、役割、ステータスを含む{{count}}ユーザーのテーブル。",
       "email": "メール",

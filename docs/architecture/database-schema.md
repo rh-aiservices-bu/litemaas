@@ -40,6 +40,8 @@ CREATE INDEX idx_users_username ON users(username);
 CREATE INDEX idx_users_oauth ON users(oauth_provider, oauth_id);
 ```
 
+**System User**: A special user with fixed UUID `00000000-0000-0000-0000-000000000001` is used for automated system actions in the subscription approval workflow. This user has `is_active = false` (cannot log in) and no roles. It's used to maintain referential integrity when recording system-initiated status changes (e.g., when models are marked as restricted).
+
 ### models
 
 Cached model information from LiteLLM with enhanced metadata
@@ -61,6 +63,9 @@ CREATE TABLE models (
     supports_vision BOOLEAN DEFAULT false,
     litellm_provider VARCHAR(100),
 
+    -- Subscription Approval Workflow
+    restricted_access BOOLEAN DEFAULT false,
+
     metadata JSONB DEFAULT '{}',
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -71,6 +76,9 @@ CREATE INDEX idx_models_provider ON models(provider);
 CREATE INDEX idx_models_active ON models(is_active);
 CREATE INDEX idx_models_capabilities ON models USING GIN(capabilities);
 CREATE INDEX idx_models_litellm_provider ON models(litellm_provider);
+CREATE INDEX idx_models_restricted_access ON models(restricted_access);
+
+COMMENT ON COLUMN models.restricted_access IS 'When true, subscriptions require admin approval';
 ```
 
 ### teams
@@ -134,9 +142,11 @@ CREATE INDEX idx_team_members_user ON team_members(user_id);
 User subscriptions to models with enhanced budget tracking
 
 ```sql
-CREATE TYPE subscription_status AS ENUM ('pending', 'active', 'suspended', 'cancelled', 'expired');
+CREATE TYPE subscription_status AS ENUM ('pending', 'active', 'denied', 'suspended', 'cancelled', 'expired', 'inactive');
 -- Note: 'cancelled' status is maintained for schema compatibility, but cancellation
 -- now permanently deletes subscription records from the database
+-- 'pending' and 'denied' statuses added for restricted model approval workflow
+-- 'inactive' reserved for future use
 
 CREATE TABLE subscriptions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -162,11 +172,17 @@ CREATE TABLE subscriptions (
     last_sync_at TIMESTAMP WITH TIME ZONE,
     sync_status VARCHAR(20) DEFAULT 'pending',
 
+    -- Subscription Approval Workflow
+    status_reason TEXT,
+    status_changed_at TIMESTAMP WITH TIME ZONE,
+    status_changed_by UUID REFERENCES users(id),
+
     reset_at TIMESTAMP WITH TIME ZONE,
     expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT unique_active_subscription UNIQUE (user_id, model_id, status) WHERE status = 'active'
+    CONSTRAINT unique_active_subscription UNIQUE (user_id, model_id, status) WHERE status = 'active',
+    CONSTRAINT subscriptions_user_model_unique UNIQUE (user_id, model_id)
 );
 
 CREATE INDEX idx_subscriptions_user ON subscriptions(user_id);
@@ -175,6 +191,13 @@ CREATE INDEX idx_subscriptions_team ON subscriptions(team_id);
 CREATE INDEX idx_subscriptions_status ON subscriptions(status);
 CREATE INDEX idx_subscriptions_expires ON subscriptions(expires_at);
 CREATE INDEX idx_subscriptions_litellm ON subscriptions(litellm_key_id);
+CREATE INDEX idx_subscriptions_status_updated ON subscriptions(status, status_changed_at DESC);
+
+COMMENT ON COLUMN subscriptions.status_reason IS 'Admin comment when approving/denying subscription';
+COMMENT ON COLUMN subscriptions.status_changed_at IS 'Timestamp of last status change';
+COMMENT ON COLUMN subscriptions.status_changed_by IS 'User ID of admin who changed status (or system user UUID for automated changes)';
+COMMENT ON CONSTRAINT subscriptions_user_model_unique ON subscriptions IS
+  'Ensures one subscription per user per model. Users with denied subscriptions must use Request Review, not create new subscription.';
 ```
 
 ### api_keys
@@ -236,6 +259,34 @@ CREATE TABLE api_key_models (
 CREATE INDEX idx_api_key_models_key ON api_key_models(api_key_id);
 CREATE INDEX idx_api_key_models_model ON api_key_models(model_id);
 ```
+
+### subscription_status_history
+
+Audit trail for all subscription status changes in the approval workflow
+
+```sql
+CREATE TABLE subscription_status_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+    old_status VARCHAR(20),
+    new_status VARCHAR(20) NOT NULL,
+    reason TEXT,
+    changed_by UUID REFERENCES users(id),
+    changed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_subscription_history_subscription_id ON subscription_status_history(subscription_id, changed_at DESC);
+CREATE INDEX idx_subscription_history_changed_by ON subscription_status_history(changed_by);
+CREATE INDEX idx_subscription_history_changed_at ON subscription_status_history(changed_at DESC);
+
+COMMENT ON TABLE subscription_status_history IS 'Audit trail for all subscription status changes in the approval workflow';
+COMMENT ON COLUMN subscription_status_history.old_status IS 'Previous subscription status (NULL for initial creation)';
+COMMENT ON COLUMN subscription_status_history.new_status IS 'New subscription status after change';
+COMMENT ON COLUMN subscription_status_history.reason IS 'Admin comment or system reason for the status change';
+COMMENT ON COLUMN subscription_status_history.changed_by IS 'User ID of admin who changed status, or system user (00000000-0000-0000-0000-000000000001) for automated changes';
+```
+
+**Usage**: This table maintains a complete audit trail of all subscription status transitions. Each entry records who made the change (admin or system), when it occurred, what the transition was, and why. The `changed_by` field references either an actual admin user or the special system user UUID for automated transitions (e.g., when models are marked as restricted).
 
 ### daily_usage_cache
 

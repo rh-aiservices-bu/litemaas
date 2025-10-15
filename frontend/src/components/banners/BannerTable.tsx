@@ -4,7 +4,7 @@ import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import {
   Button,
   Switch,
-  Badge,
+  Label,
   Flex,
   FlexItem,
   Content,
@@ -188,11 +188,11 @@ const BannerTable: React.FC<BannerTableProps> = ({
 
                   {/* Variant Column */}
                   <Td dataLabel={t('pages.tools.variant')}>
-                    <Badge color={getVariantBadgeColor(banner.variant)}>
+                    <Label color={getVariantBadgeColor(banner.variant)}>
                       {t(
                         `pages.tools.variant${banner.variant.charAt(0).toUpperCase() + banner.variant.slice(1)}`,
                       )}
-                    </Badge>
+                    </Label>
                   </Td>
 
                   {/* Last Updated Column */}

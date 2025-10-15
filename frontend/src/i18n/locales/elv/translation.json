@@ -89,6 +89,8 @@
     "apiKeysFilterAvailable": "API-anguirel halad sí úir",
     "charts": {
       "modelDistributionAriaLabel": "Minithith echuin-aerlinn dail",
+      "modelLegendDescription": "Echui {{modelName}} tirin nan minithith-thangad",
+      "modelUsageSummary": "Minithith-thangad sui {{dataPoints}} gwaed-vuin tira {{modelCount}} echuin. Fair îl o {{minValue}} na {{maxValue}}, dan aer {{avgValue}}.",
       "modelUsageTrends": "Echuin-Aerlinn Mith",
       "modelUsageTrendsAriaDesc": "Minithith-rond-thûl tira aerlinn echuin daer hen lû. I govad tira {{metric}}.",
       "modelUsageTrendsAriaLabel": "Minithith-rond tira echuin-aerlinn mith hen lû dan {{metric}}",
@@ -106,6 +108,7 @@
       "30d": "Methed 30 aur",
       "7d": "Methed 7 aur",
       "90d": "Methed 90 aur",
+      "any": "Îuil Îl",
       "custom": "Rond echann"
     },
     "dateRangeChanged": "Îuil-rond edrain na {{preset}}",
@@ -182,7 +185,8 @@
       },
       "tooltip": {
         "noDataOutsideRange": "Úin gwaed (palan rond edhellen)",
-        "percentOfWeek": "{{percent}}% o veth îl"
+        "percentOfWeek": "{{percent}}% o veth îl",
+        "zeroUsage": "Aerlinn nûl"
       }
     },
     "loading": "Lain govaded...",
@@ -191,11 +195,14 @@
     "loadingUsers": "Lain aduiain-gwaed...",
     "metrics": {
       "activeUsersAriaLabel": "{{active}} aduiain fîr o {{total}} aduiain îl",
+      "completionTokensAriaLabel": "Têw echannen: {{count}}",
       "noChange": "Úin edraith",
       "ofTotalUsers": "o {{total}} îl",
+      "promptTokensAriaLabel": "Têw peth: {{count}}",
       "successRateAriaLabel": "Prestann-rond: {{percentage}}%",
       "totalCostAriaLabel": "Cost îl: ${{amount}}",
       "totalRequestsAriaLabel": "Pedi îl: {{count}}",
+      "totalTokensAriaLabel": "Têw îl: {{count}}",
       "trendLabel": "Mith {{direction}} dan {{change}}%"
     },
     "metricSelect": "Govad edhellen",
@@ -313,6 +320,15 @@
     "dataPoints": "Gwaed-vuin",
     "date": "Îuil",
     "day": "Aur",
+    "days": {
+      "fri": "Mer",
+      "mon": "Oreth",
+      "sat": "Elen",
+      "sun": "Anor",
+      "thu": "Rod",
+      "tue": "Nan",
+      "wed": "Gwedh"
+    },
     "delete": "Suigo",
     "error": "Ohtar",
     "expandToFullScreen": "Palan-cen tûr",
@@ -387,6 +403,12 @@
       "outputCostCannotBeNegative": "Toltha-cost ú-faer",
       "outputCostPerMillionTokens": "Toltha-cost an tûluviel têw",
       "pleaseEnterAValidUrl": "Anno minno annon úir",
+      "restrictedAccessHelp": "Users must request access and receive admin approval",
+      "restrictedAccessLabel": "Require Admin Approval",
+      "restrictedAccessWarning": {
+        "message": "This will move all active subscriptions for this model to pending status and remove the model from existing API keys. Users will need to be re-approved.",
+        "title": "Enable Restricted Access?"
+      },
       "rpmMustBeAtLeast_1": "RPM prestant min",
       "rpmRequestsPerMinute": "RPM (Pedi hen Vuin)",
       "supportsFunctionCalling": "Puia Echad-Galad",
@@ -432,6 +454,7 @@
   "nav": {
     "admin": {
       "models": "Vegil Vellyn",
+      "subscriptions": "Glaemscath Govannen",
       "tools": "Echad",
       "usage": "Aerlinn-Minithith",
       "users": "Aduiain"
@@ -444,6 +467,73 @@
     "usage": "Aerlinn"
   },
   "pages": {
+    "adminSubscriptions": {
+      "actions": {
+        "approve": "Orthad",
+        "delete": "Toltho",
+        "deny": "Avon",
+        "revert": "Covatha Estei"
+      },
+      "approvalModalTitle": "Orthad Glaemscaule",
+      "approveSuccess": "{{count}} glaemscaul(e) orthant",
+      "bulkApprove": "Orthad Edregolyn",
+      "bulkDeny": "Avon Edregolyn",
+      "confirmApproval": "Aranuir Orthad",
+      "confirmApprovalSingle": "Le míriel orthad i pedo glaemscaul na {{user}} na tirad {{model}}?",
+      "confirmDelete": "Toltho Enedh",
+      "confirmDeleteSingle": "Le míriel toltho i glaemscaul {{user}} na tirad {{model}} enedh? Henno tolthas pân harthad anglonnon.",
+      "confirmDenial": "Aranuir Avon",
+      "confirmDenialBulk": "Le míriel avon {{count}} pedi glaemscaul?",
+      "confirmDenialSingle": "Le míriel avon i pedo glaemscaul na {{user}} na tirad {{model}}?",
+      "confirmRevert": "Aranuir Perheli",
+      "deleteModalTitle": "Toltho Glaemscaul",
+      "deleteReasonPlaceholder": "Edhel: Teithado i hador tolthon (edregarthas and gorthad anglenneth)...",
+      "deleteSuccess": "Glaemscaul tolthant aníra",
+      "deleteWarning": "Û uir perheli hen",
+      "denialModalTitle": "Avon Glaemscaule",
+      "denySuccess": "{{count}} glaemscaul(e) avonnen",
+      "filters": {
+        "clearStatuses": "Thuia estei edhellen",
+        "dateRange": "Rond Dhû",
+        "from": "Na",
+        "model": "Echad",
+        "noStatusesFound": "Ú-ennen estei nan \"{{query}}\"",
+        "selectAll": "Edregol Îl",
+        "selectedStatuses": "Estei edhellen",
+        "status": "Estei",
+        "statusPlaceholder": "Îl estei (dago ad halad)",
+        "to": "Nan",
+        "user": "Aduian"
+      },
+      "newStatus": "Estei Beleg",
+      "noSelections": "Umin glaemscaul edregol",
+      "reasonLabel": "Paeth",
+      "reasonPlaceholder": "Teithado i hador han cenedh...",
+      "reasonRequired": "Rochon hador na avonin",
+      "refresh": "Nuitha",
+      "resultModalTitle": "Arvedin Gyrth Megil",
+      "resultsTable": {
+        "error": "Gweith",
+        "failed": "Fael",
+        "result": "Arwedh",
+        "subscription": "Glaemscaul",
+        "success": "Orthad"
+      },
+      "revertDescription": "Edreitho i estei glaemscaul {{user}} na {{model}}. Estei sí: {{currentStatus}}",
+      "revertModalTitle": "Perheli Estei Glaemscaul",
+      "revertSuccess": "Estei glaemscaul edreithannen",
+      "table": {
+        "actions": "Gyrth",
+        "model": "Echad",
+        "reason": "Hador",
+        "requestedDate": "Pedennen",
+        "selectColumn": "Edhello glaemscaul",
+        "status": "Estei",
+        "statusChangedDate": "Edraith Niben",
+        "user": "Aduian"
+      },
+      "title": "Glaemscath Govannen"
+    },
     "apiKeys": {
       "clipboard": {
         "copied": "Beria",
@@ -482,6 +572,7 @@
       "labels": {
         "actions": "Caran",
         "apiKeyLabel": "Anguirel-API",
+        "apiUrl": "API Annon",
         "cancel": "Maetho",
         "close": "Thelia",
         "created": "Banda",
@@ -799,6 +890,7 @@
       "title": "Minno na LiteMaaS"
     },
     "models": {
+      "alreadySubscribed": "Already Subscribed",
       "ariaLabels": {
         "modelAvailability": "Sador-aear",
         "subscriptionStatus": "Orthad-thaid"
@@ -833,6 +925,11 @@
         "pricingInput": "Minno",
         "pricingOutput": "Toltha",
         "pricingUnavailable": "Luin-uin ú-chaed",
+        "restrictedAccessInfo": {
+          "buttonText": "Pedo Minno",
+          "message": "I echui sin aníra aran-orthad. Pen glaemscatha, i pedo sui dair estei thartha mi aran tira a orthad hen. Thúlo sui minno gwedh.",
+          "title": "Aran-Orthad Aníra"
+        },
         "subscribeInfo": "Sui velui, na-chaed le cael i fuin a na-chaed le gwaetha fuin-glass en-adar.",
         "tokens": "fuin"
       },
@@ -840,6 +937,8 @@
       "moreFeatures": "+{{count}} uin",
       "noModels": "Úin echuin úir",
       "notifications": {
+        "accessRequestPending": "I glaemscaul-pedo na {{modelName}} dair aran-orthad sui. Thúlo pen orthant.",
+        "accessRequestSubmitted": "Minno-Pedo Annant",
         "alreadySubscribed": "Sí glaemscaul echui sin",
         "failedToSubscribe": "Ú-ern glaemscatha echui",
         "loadError": "Ohtar",
@@ -855,6 +954,7 @@
         "separator": "•"
       },
       "pricingLabel": "Vuin: Ú-úir",
+      "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "Drego echuin...",
       "searchResults": "{{count}} echuin ennen sui uin orthad",
       "subscribe": "Glaemscatha",
@@ -913,15 +1013,20 @@
       "provider": "Aphad",
       "quotaFormat": "Rond: {{requests}} pedi, {{tokens}} têw",
       "requestQuota": "Pedo-rond",
+      "requestReview": "Request Review",
+      "requestReviewSuccess": "Review requested successfully",
       "requests": "pedi",
       "requestsUsed": "Pedi aerlinn",
       "status": {
         "active": "Fîr",
+        "denied": "Access Denied",
         "expired": "Firn",
-        "pending": "Dar",
+        "inactive": "Ú-fîr",
+        "pending": "Pending Approval",
         "suspended": "Daer"
       },
       "statusLabel": "Estei",
+      "statusReason": "Admin Comment",
       "suspendedMessage": "Glaemscaul-uin daer. Pado na orthad-uin pe doro estei-gannen.",
       "title": "Echuin-Glaemscaul",
       "tokenQuota": "Têw-rond",
@@ -1094,6 +1199,7 @@
         "last7Days": "Methed 7 aur",
         "last90Days": "Methed 90 aur"
       },
+      "export": "Edwen",
       "exportData": "Edwen Gwaed",
       "exportUsageData": "Edwen aerlinn-gwaed nan lû edhellen",
       "filters": {
@@ -1416,6 +1522,7 @@
       "oauthManaged": "Thad orthad dan OAuth-telir."
     },
     "table": {
+      "actions": "Caran",
       "ariaLabel": "Tâur-adan",
       "caption": "Tâur dan {{count}} adan dan hannas, postrod, eru-ennas, barad a thad.",
       "email": "Lam-thûl",

@@ -44,6 +44,7 @@ export const AdminCreateModelSchema = Type.Object({
   supports_function_calling: Type.Boolean(),
   supports_parallel_function_calling: Type.Boolean(),
   supports_tool_choice: Type.Boolean(),
+  restrictedAccess: Type.Optional(Type.Boolean()),
 });
 
 export const AdminUpdateModelSchema = Type.Partial(AdminCreateModelSchema);

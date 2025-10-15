@@ -8,6 +8,7 @@ import {
   Switch,
   Button,
   Badge,
+  Label,
   Alert,
   Spinner,
   Flex,
@@ -291,7 +292,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
           </Content>
 
           <div style={{ marginBottom: '1rem' }}>
-            <Badge color={user.isActive ? 'green' : 'red'} style={{ marginBottom: '0.5rem' }}>
+            <Label color={user.isActive ? 'green' : 'red'} style={{ marginBottom: '0.5rem' }}>
               {user.isActive ? (
                 <>
                   <CheckCircleIcon /> {t('status.active', 'Active')}
@@ -301,7 +302,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
                   <ExclamationTriangleIcon /> {t('status.inactive', 'Inactive')}
                 </>
               )}
-            </Badge>
+            </Label>
             <div>
               <Content
                 component={ContentVariants.small}

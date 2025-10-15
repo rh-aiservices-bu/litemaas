@@ -52,6 +52,30 @@ DO $$ BEGIN
 END $$;
 `;
 
+// System user for automated status changes
+export const systemUserSetup = `
+-- Create system user with fixed UUID for audit trail
+INSERT INTO users (
+  id,
+  username,
+  email,
+  oauth_provider,
+  oauth_id,
+  is_active,
+  roles
+) VALUES (
+  '00000000-0000-0000-0000-000000000001',
+  'system',
+  'system@litemaas.internal',
+  'system',
+  'system',
+  false,  -- System user cannot log in
+  '{}'    -- No roles needed
+) ON CONFLICT (id) DO NOTHING;
+
+COMMENT ON COLUMN users.id IS 'System user (00000000-0000-0000-0000-000000000001) used for automated status changes in subscription approval workflow';
+`;
+
 // Teams table
 export const teamsTable = `
 CREATE TABLE IF NOT EXISTS teams (
@@ -133,10 +157,16 @@ ALTER TABLE models ADD COLUMN IF NOT EXISTS max_tokens INTEGER;
 ALTER TABLE models ADD COLUMN IF NOT EXISTS litellm_model_id VARCHAR(255);
 ALTER TABLE models ADD COLUMN IF NOT EXISTS backend_model_name VARCHAR(255);
 
+-- Add restricted_access column for subscription approval workflow
+ALTER TABLE models ADD COLUMN IF NOT EXISTS restricted_access BOOLEAN DEFAULT false;
+
 CREATE INDEX IF NOT EXISTS idx_models_provider ON models(provider);
 CREATE INDEX IF NOT EXISTS idx_models_category ON models(category);
 CREATE INDEX IF NOT EXISTS idx_models_availability ON models(availability);
 CREATE INDEX IF NOT EXISTS idx_models_litellm_model_id ON models(litellm_model_id);
+CREATE INDEX IF NOT EXISTS idx_models_restricted_access ON models(restricted_access);
+
+COMMENT ON COLUMN models.restricted_access IS 'When true, subscriptions require admin approval';
 `;
 
 // Subscriptions table
@@ -179,14 +209,27 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_lite_llm_key_value ON subscriptions
 COMMENT ON COLUMN subscriptions.lite_llm_key_value IS 'The actual LiteLLM key value for this subscription';
 `;
 
-// Migration to update subscriptions status constraint to include 'inactive'
+// Migration to update subscriptions status constraint to include 'inactive', 'pending', and 'denied'
 export const updateSubscriptionsStatusConstraint = `
 -- Drop existing constraint if it exists
 ALTER TABLE subscriptions DROP CONSTRAINT IF EXISTS subscriptions_status_check;
 
--- Add updated constraint with 'inactive' status
-ALTER TABLE subscriptions ADD CONSTRAINT subscriptions_status_check 
-CHECK (status IN ('active', 'suspended', 'cancelled', 'expired', 'inactive'));
+-- Add updated constraint with 'inactive', 'pending', and 'denied' statuses
+ALTER TABLE subscriptions ADD CONSTRAINT subscriptions_status_check
+CHECK (status IN ('active', 'suspended', 'cancelled', 'expired', 'inactive', 'pending', 'denied'));
+
+-- Add new columns for subscription approval workflow
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS status_reason TEXT;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS status_changed_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS status_changed_by UUID REFERENCES users(id);
+
+-- Add composite index for admin panel queries (status + timestamp for sorting)
+CREATE INDEX IF NOT EXISTS idx_subscriptions_status_updated
+  ON subscriptions(status, status_changed_at DESC);
+
+COMMENT ON COLUMN subscriptions.status_reason IS 'Admin comment when approving/denying subscription';
+COMMENT ON COLUMN subscriptions.status_changed_at IS 'Timestamp of last status change';
+COMMENT ON COLUMN subscriptions.status_changed_by IS 'User ID of admin who changed status (or system user UUID for automated changes)';
 `;
 
 // API Keys table
@@ -393,6 +436,28 @@ CREATE INDEX IF NOT EXISTS idx_banner_audit_log_changed_by ON banner_audit_log(c
 CREATE INDEX IF NOT EXISTS idx_banner_audit_log_changed_at ON banner_audit_log(changed_at);
 `;
 
+// Subscription status history table for approval workflow audit trail
+export const subscriptionStatusHistoryTable = `
+CREATE TABLE IF NOT EXISTS subscription_status_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    subscription_id UUID NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
+    old_status VARCHAR(20),
+    new_status VARCHAR(20) NOT NULL,
+    reason TEXT,
+    changed_by UUID REFERENCES users(id),
+    changed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_subscription_history_subscription_id
+  ON subscription_status_history(subscription_id, changed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_subscription_history_changed_by
+  ON subscription_status_history(changed_by);
+CREATE INDEX IF NOT EXISTS idx_subscription_history_changed_at
+  ON subscription_status_history(changed_at DESC);
+
+COMMENT ON TABLE subscription_status_history IS 'Audit trail for all subscription status changes';
+`;
+
 // Updated triggers for updated_at columns
 export const updatedAtTriggers = `
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -531,6 +596,42 @@ BEGIN
 END $$;
 `;
 
+// Migrate existing subscriptions to new approval workflow schema
+export const migrateExistingSubscriptions = `
+-- Set default values for existing subscriptions
+UPDATE subscriptions
+SET
+  status_reason = NULL,
+  status_changed_at = COALESCE(updated_at, created_at),  -- Use existing updated_at or created_at timestamp
+  status_changed_by = '00000000-0000-0000-0000-000000000001'  -- System user
+WHERE status_changed_at IS NULL;
+
+-- Set all existing models to non-restricted (default behavior)
+UPDATE models
+SET restricted_access = false
+WHERE restricted_access IS NULL;
+
+-- Log the migration results
+DO $$
+DECLARE
+    subscription_count INTEGER;
+    model_count INTEGER;
+BEGIN
+    SELECT COUNT(*) INTO subscription_count
+    FROM subscriptions
+    WHERE status_changed_by = '00000000-0000-0000-0000-000000000001';
+
+    SELECT COUNT(*) INTO model_count
+    FROM models
+    WHERE restricted_access = false;
+
+    RAISE NOTICE 'Migrated % existing subscriptions with system user attribution', subscription_count;
+    RAISE NOTICE 'Set % models to non-restricted access (default)', model_count;
+END $$;
+
+COMMENT ON COLUMN subscriptions.status_changed_by IS 'Existing subscriptions migrated with system user ID (00000000-0000-0000-0000-000000000001)';
+`;
+
 // Function to backfill litellm_key_alias for existing API keys
 // This is called programmatically at startup after the tables are created
 export const backfillLiteLLMKeyAlias = async (dbUtils: DatabaseUtils, liteLLMService: any) => {
@@ -620,6 +721,9 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
     console.log('📊 Creating users table...');
     await dbUtils.query(usersTable);
 
+    console.log('🤖 Creating system user for audit trail...');
+    await dbUtils.query(systemUserSetup);
+
     console.log('👥 Creating teams table...');
     await dbUtils.query(teamsTable);
 
@@ -659,6 +763,9 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
     console.log('📝 Creating banner_audit_log table...');
     await dbUtils.query(bannerAuditLogTable);
 
+    console.log('📋 Creating subscription_status_history table...');
+    await dbUtils.query(subscriptionStatusHistoryTable);
+
     console.log('⚡ Creating triggers...');
     await dbUtils.query(updatedAtTriggers);
 
@@ -673,6 +780,9 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
 
     console.log('🔐 Fixing key_hash values for API key authentication...');
     await dbUtils.query(fixKeyHashMigration);
+
+    console.log('🔄 Migrating existing subscriptions for approval workflow...');
+    await dbUtils.query(migrateExistingSubscriptions);
 
     console.log('✅ Database migrations completed successfully!');
   } catch (error) {

@@ -492,6 +492,36 @@ const testTranslations = {
   'forms.save': 'Save',
   'forms.cancel': 'Cancel',
   'forms.reset': 'Reset',
+
+  // Admin Subscriptions Page
+  'pages.adminSubscriptions.title': 'Subscription Requests',
+  'pages.adminSubscriptions.subtitle': 'Manage user subscription requests',
+  'pages.adminSubscriptions.pageDescription': 'Manage user subscription requests',
+  'pages.adminSubscriptions.noSubscriptionRequestsFound':
+    'No subscription requests found. Adjust your filters to see more results.',
+  'pages.adminSubscriptions.filters.status': 'Filter by status',
+  'pages.adminSubscriptions.filters.model': 'Model',
+  'pages.adminSubscriptions.filters.user': 'User',
+  'pages.adminSubscriptions.filters.dateRange': 'Date Range',
+  'pages.adminSubscriptions.filters.anyTime': 'Any Time',
+  'pages.adminSubscriptions.actions.approve': 'Approve',
+  'pages.adminSubscriptions.actions.deny': 'Deny',
+  'pages.adminSubscriptions.actions.delete': 'Delete',
+  'pages.adminSubscriptions.actions.revert': 'Revert',
+  'pages.adminSubscriptions.loading.title': 'Loading Subscription Requests...',
+  'pages.adminSubscriptions.loading.description': 'Retrieving subscription requests',
+
+  // Admin Usage Analytics (used by filters in AdminSubscriptionsPage)
+  'adminUsage.filters.models': 'Filter by models',
+  'adminUsage.filters.users': 'Filter by users',
+  'adminUsage.selectDateRange': 'Select date range',
+
+  // Admin Subscriptions Page - Additional fields
+  'pages.adminSubscriptions.filters.selectAll': 'Select all',
+  'pages.adminSubscriptions.confirmApproval': 'Confirm Approval',
+  'pages.adminSubscriptions.confirmDenial': 'Confirm Denial',
+  'pages.adminSubscriptions.confirmDelete': 'Delete Permanently',
+  'pages.adminSubscriptions.confirmRevert': 'Confirm Revert',
 };
 
 // Create a test-specific i18n instance

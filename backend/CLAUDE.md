@@ -72,7 +72,11 @@ Fastify plugins are registered in specific order:
 
 ## 🗄️ Database Schema
 
-**Core Tables**: users, teams, models, subscriptions, api_keys, audit_logs, daily_usage_cache
+**Core Tables**: users, teams, models, subscriptions, api_keys, audit_logs, daily_usage_cache, subscription_status_history
+
+**Subscription Approval Workflow**: `subscription_status_history` table tracks all status changes with full audit trail. Models table includes `restricted_access` boolean. Subscriptions enhanced with `status_reason`, `status_changed_at`, `status_changed_by` fields and unique constraint `(user_id, model_id)`.
+
+**System User**: Fixed UUID `00000000-0000-0000-0000-000000000001` for audit trail of automated actions (e.g., model restriction cascades).
 
 **Admin Usage Analytics Caching**: `daily_usage_cache` table implements intelligent day-by-day incremental caching:
 
@@ -90,6 +94,8 @@ For complete schema and caching details, see [`docs/architecture/database-schema
 
 **RBAC**: Three-tier hierarchy `admin > adminReadonly > user` with OpenShift group mapping.
 
+**Subscription Approval Permissions**: `admin:subscriptions:read` (admin, adminReadonly), `admin:subscriptions:write` (admin only), `admin:subscriptions:delete` (admin only)
+
 **API Keys**: `Authorization: Bearer sk-litellm-{key}`
 
 **Development**: `MOCK_AUTH=true` for auto-login.
@@ -103,7 +109,7 @@ For details, see [`docs/features/user-roles-administration.md`](../docs/features
 **Core Services**:
 
 - **User/Auth**: RBACService, OAuthService, TokenService
-- **Resources**: ApiKeyService, SubscriptionService, ModelSyncService, TeamService
+- **Resources**: ApiKeyService, SubscriptionService (enhanced with approval workflow), ModelSyncService, TeamService
 - **Analytics** (Major Feature):
   - `UsageStatsService` - User-level usage analytics
   - `AdminUsageStatsService` - **System-wide analytics** with trend analysis and multi-dimensional filtering

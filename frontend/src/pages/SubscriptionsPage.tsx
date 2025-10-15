@@ -11,7 +11,6 @@ import {
   Grid,
   GridItem,
   Button,
-  Badge,
   Content,
   ContentVariants,
   Flex,
@@ -40,6 +39,7 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   TimesCircleIcon,
+  ClockIcon,
 } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useErrorHandler } from '../hooks/useErrorHandler';
@@ -57,6 +57,7 @@ const SubscriptionsPage: React.FC = () => {
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription | null>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isRequestingReview, setIsRequestingReview] = useState(false);
   const modalTriggerRef = useRef<HTMLElement | null>(null);
   const modalPrimaryButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -120,17 +121,19 @@ const SubscriptionsPage: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      active: 'success',
-      suspended: 'warning',
-      expired: 'danger',
-      pending: 'info',
+      active: 'green',
+      suspended: 'orange',
+      expired: 'red',
+      pending: 'blue',
+      denied: 'red',
     } as const;
 
     const icons = {
       active: <CheckCircleIcon />,
       suspended: <ExclamationTriangleIcon />,
       expired: <TimesCircleIcon />,
-      pending: <Spinner size="sm" />,
+      pending: <ClockIcon />,
+      denied: <TimesCircleIcon />,
     };
 
     const statusLabels = {
@@ -138,10 +141,11 @@ const SubscriptionsPage: React.FC = () => {
       suspended: t('pages.subscriptions.status.suspended'),
       expired: t('pages.subscriptions.status.expired'),
       pending: t('pages.subscriptions.status.pending'),
+      denied: t('pages.subscriptions.status.denied'),
     };
 
     return (
-      <Badge
+      <Label
         color={variants[status as keyof typeof variants]}
         aria-label={`${t('pages.subscriptions.ariaLabels.status')}: ${statusLabels[status as keyof typeof statusLabels] || status}`}
       >
@@ -152,7 +156,7 @@ const SubscriptionsPage: React.FC = () => {
               status.charAt(0).toUpperCase() + status.slice(1)}
           </FlexItem>
         </Flex>
-      </Badge>
+      </Label>
     );
   };
 
@@ -238,6 +242,30 @@ const SubscriptionsPage: React.FC = () => {
       }
     } finally {
       setIsCancelling(false);
+    }
+  };
+
+  const handleRequestReview = async (subscription: Subscription) => {
+    try {
+      setIsRequestingReview(true);
+
+      // Call the backend API to request review
+      await subscriptionsService.requestReview(subscription.id);
+
+      // If successful, show success notification and reload subscriptions
+      addNotification({
+        title: t('pages.subscriptions.requestReview'),
+        description: t('pages.subscriptions.requestReviewSuccess'),
+        variant: 'success',
+      });
+
+      // Reload subscriptions to reflect status change from denied to pending
+      await loadSubscriptions();
+    } catch (error: any) {
+      console.error('Failed to request review:', error);
+      handleError(error);
+    } finally {
+      setIsRequestingReview(false);
     }
   };
 
@@ -412,6 +440,19 @@ const SubscriptionsPage: React.FC = () => {
                               {t('pages.subscriptions.viewDetails')}
                             </Button>
                           </FlexItem>
+                          {subscription.status === 'denied' && (
+                            <FlexItem>
+                              <Button
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => handleRequestReview(subscription)}
+                                isDisabled={isRequestingReview}
+                                isLoading={isRequestingReview}
+                              >
+                                {t('pages.subscriptions.requestReview')}
+                              </Button>
+                            </FlexItem>
+                          )}
                         </Flex>
                       </CardFooter>
                     </Card>
@@ -520,6 +561,17 @@ const SubscriptionsPage: React.FC = () => {
                     </Flex>
                   </DescriptionListDescription>
                 </DescriptionListGroup>
+
+                {selectedSubscription.statusReason && (
+                  <DescriptionListGroup>
+                    <DescriptionListTerm>
+                      {t('pages.subscriptions.statusReason')}
+                    </DescriptionListTerm>
+                    <DescriptionListDescription>
+                      {selectedSubscription.statusReason}
+                    </DescriptionListDescription>
+                  </DescriptionListGroup>
+                )}
                 {/* TODO Implement quotas and token counts
                 <DescriptionListGroup>
                   <DescriptionListTerm>{t('pages.subscriptions.requestQuota')}</DescriptionListTerm>

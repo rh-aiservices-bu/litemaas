@@ -201,6 +201,7 @@ Response:
     "output": 0.06,
     "unit": "per_1k_tokens"
   },
+  "restrictedAccess": false,
   "metadata": {
     "version": "0613",
     "releaseDate": "2023-06-13",
@@ -223,7 +224,7 @@ List user subscriptions
 
 ```json
 Query Parameters:
-- status: string (optional) - Filter by status (active, cancelled, suspended, expired)
+- status: string (optional) - Filter by status (active, pending, denied, cancelled, suspended, expired)
 - modelId: string (optional) - Filter by model ID
 - page: number (default: 1)
 - limit: number (default: 20)
@@ -453,6 +454,64 @@ Response (Error - Active API Keys):
 - Subscriptions already `cancelled` or `expired` cannot be cancelled again
 - The cancellation permanently deletes the subscription from the database and cannot be undone
 - The subscription will no longer appear in subscription lists after cancellation
+
+#### POST /api/v1/subscriptions/:id/request-review
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only request review for their own subscriptions
+
+Request review for a denied subscription
+
+**Use Case**: When a subscription has been denied by an admin, users can request a re-review of their request. This moves the subscription from "denied" back to "pending" status for admin reconsideration.
+
+**Idempotent Behavior**:
+
+- `denied` → `pending` (main use case)
+- `pending` → no-op, returns success (already pending)
+- `active` → error (active subscriptions cannot request review)
+- Non-existent subscription → error
+
+```json
+Request:
+POST /api/v1/subscriptions/sub_123/request-review
+
+Response (Success - Denied to Pending):
+{
+  "id": "sub_123",
+  "userId": "user_123",
+  "modelId": "gpt-4",
+  "modelName": "GPT-4",
+  "provider": "OpenAI",
+  "status": "pending",  // Changed from "denied"
+  "statusReason": null,  // Previous denial reason cleared
+  "statusChangedAt": "2024-01-20T10:00:00Z",
+  "createdAt": "2024-01-01T00:00:00Z",
+  "updatedAt": "2024-01-20T10:00:00Z"
+}
+
+Response (No-Op - Already Pending):
+{
+  "id": "sub_123",
+  "userId": "user_123",
+  "modelId": "gpt-4",
+  "status": "pending",  // Already pending, no change
+  "message": "Subscription is already pending review"
+}
+
+Response (Error - Active Subscription):
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Cannot request review for active subscription"
+}
+```
+
+**Notes**:
+
+- Clears the previous `statusReason` (denial reason) when moving to pending
+- Creates audit trail entry for the status change
+- Triggers notification hook for admins (implementation pending)
+- Only the subscription owner can request review (admins use revert endpoint)
 
 ### API Keys
 
@@ -1873,6 +1932,278 @@ Response:
   "status": "success"
 }
 ```
+
+### Admin Subscription Approval (/api/v1/admin/subscriptions)
+
+Comprehensive subscription approval management for restricted models with granular RBAC permissions.
+
+**Permission Levels**:
+
+| Permission                   | Role                 | Capabilities                                |
+| ---------------------------- | -------------------- | ------------------------------------------- |
+| `admin:subscriptions:read`   | admin, adminReadonly | View all subscription requests and history  |
+| `admin:subscriptions:write`  | admin                | Approve, deny, revert subscription requests |
+| `admin:subscriptions:delete` | admin                | Permanently delete subscriptions            |
+
+**Key Features**:
+
+- Filter subscription requests by status, model, user, and date range
+- Bulk approve/deny operations with detailed result tracking
+- Full audit trail with status history
+- Role-based access control (adminReadonly can view but not modify)
+
+#### GET /api/v1/admin/subscriptions
+
+**Authorization**: Requires `admin:subscriptions:read` permission (admin or adminReadonly role)
+
+List and filter subscription approval requests
+
+```json
+Query Parameters:
+- statuses: string[] (optional) - Filter by status (pending, active, denied)
+- modelIds: string[] (optional) - Filter by specific models
+- userIds: string[] (optional) - Filter by specific users (UUID format)
+- dateFrom: string (optional) - Filter by status change date (ISO 8601)
+- dateTo: string (optional) - Filter by status change date (ISO 8601)
+- page: number (default: 1)
+- limit: number (default: 20)
+
+Response:
+{
+  "data": [
+    {
+      "id": "sub_123",
+      "userId": "user_uuid",
+      "modelId": "gpt-4",
+      "status": "pending",
+      "statusReason": null,
+      "statusChangedAt": "2024-01-20T10:00:00Z",
+      "statusChangedBy": null,
+      "user": {
+        "id": "user_uuid",
+        "username": "john.doe",
+        "email": "john@example.com"
+      },
+      "model": {
+        "id": "gpt-4",
+        "name": "GPT-4",
+        "provider": "openai",
+        "restrictedAccess": true
+      },
+      "createdAt": "2024-01-15T10:00:00Z",
+      "updatedAt": "2024-01-20T10:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 15,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
+
+#### GET /api/v1/admin/subscriptions/stats
+
+**Authorization**: Requires `admin:subscriptions:read` permission (admin or adminReadonly role)
+
+Get subscription approval statistics
+
+```json
+Response:
+{
+  "pendingCount": 5,
+  "approvedToday": 10,
+  "deniedToday": 2,
+  "totalRequests": 150
+}
+```
+
+#### POST /api/v1/admin/subscriptions/approve
+
+**Authorization**: Requires `admin:subscriptions:write` permission (admin role only)
+
+Approve subscriptions in bulk
+
+```json
+Request:
+{
+  "subscriptionIds": [
+    "sub_123",
+    "sub_456",
+    "sub_789"
+  ],
+  "reason": "Approved for Q1 research project"  // Optional comment
+}
+
+Response:
+{
+  "successful": 2,
+  "failed": 1,
+  "errors": [
+    {
+      "subscription": "sub_789",
+      "error": "Subscription not found or already approved"
+    }
+  ]
+}
+```
+
+**Notes**:
+
+- Sets subscription status to "active"
+- Records admin user ID and reason in audit trail
+- Triggers notification hook for users (implementation pending)
+- Returns detailed success/failure breakdown
+
+#### POST /api/v1/admin/subscriptions/deny
+
+**Authorization**: Requires `admin:subscriptions:write` permission (admin role only)
+
+Deny subscriptions in bulk
+
+```json
+Request:
+{
+  "subscriptionIds": [
+    "sub_123",
+    "sub_456"
+  ],
+  "reason": "Model requires data science certification"  // Required for denials
+}
+
+Response:
+{
+  "successful": 2,
+  "failed": 0,
+  "errors": []
+}
+```
+
+**Notes**:
+
+- Reason is **required** for all denials (visible to users)
+- Automatically removes model from all user's API keys
+- Updates LiteLLM keys **before** database (security priority)
+- Creates audit trail entry with denial reason
+- Triggers notification hook for users (implementation pending)
+
+#### POST /api/v1/admin/subscriptions/:id/revert
+
+**Authorization**: Requires `admin:subscriptions:write` permission (admin role only)
+
+Revert a subscription status decision
+
+**Use Case**: Correct approval mistakes, change policies, or manually adjust subscription states.
+
+**Allowed Transitions**:
+
+- `active` → `denied` (revoke approval)
+- `denied` → `active` (override denial)
+- `denied` → `pending` (back to review queue)
+- `active` → `pending` (re-review required)
+
+**Blocked Transitions**:
+
+- Same-state transitions (e.g., `active` → `active`)
+- Invalid state combinations
+
+```json
+Request:
+{
+  "newStatus": "denied",  // One of: active, denied, pending
+  "reason": "Policy change - model now requires additional approval"  // Optional
+}
+
+Response:
+{
+  "id": "sub_123",
+  "userId": "user_uuid",
+  "modelId": "gpt-4",
+  "status": "denied",  // Updated status
+  "statusReason": "Policy change - model now requires additional approval",
+  "statusChangedAt": "2024-01-20T15:30:00Z",
+  "statusChangedBy": "admin_uuid",
+  "user": {
+    "id": "user_uuid",
+    "username": "john.doe",
+    "email": "john@example.com"
+  },
+  "model": {
+    "id": "gpt-4",
+    "name": "GPT-4",
+    "provider": "openai",
+    "restrictedAccess": true
+  },
+  "updatedAt": "2024-01-20T15:30:00Z"
+}
+
+Response (Error - Invalid Transition):
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Cannot transition from active to active - same state"
+}
+```
+
+**Notes**:
+
+- Validates state transitions - only allows meaningful changes
+- All changes recorded in audit trail
+- When transitioning to "denied", automatically removes model from API keys
+
+#### DELETE /api/v1/admin/subscriptions/:id
+
+**Authorization**: Requires `admin:subscriptions:delete` permission (admin role only)
+
+⚠️ **Admin-Only Operation** - Not available to adminReadonly users
+
+Permanently delete a subscription from the database
+
+**Use Cases**:
+
+- Removing test/duplicate subscriptions
+- Cleaning up obsolete subscription requests
+- Administrative data management
+
+```json
+Request (optional body):
+{
+  "reason": "Duplicate subscription request"  // Optional, saved in audit log
+}
+
+Response:
+{
+  "success": true
+}
+
+Response (Error - Insufficient Permission):
+{
+  "statusCode": 403,
+  "error": "Forbidden",
+  "message": "admin:subscriptions:delete permission required",
+  "details": {
+    "requiredPermission": "admin:subscriptions:delete",
+    "userRoles": ["adminReadonly", "user"]
+  }
+}
+```
+
+**Important**:
+
+- This action **permanently** deletes the subscription from the database
+- Cannot be undone
+- Creates audit log entry with admin user ID and optional reason
+- Users will need to create a new subscription if they want access later
+- Only users with full `admin` role can perform this operation
+
+**AdminReadonly Restriction**:
+
+- AdminReadonly users do **not** see this action in the UI
+- API requests from adminReadonly users return 403 Forbidden
+- Follows the pattern of other destructive admin operations
 
 ## External API Integration Patterns
 

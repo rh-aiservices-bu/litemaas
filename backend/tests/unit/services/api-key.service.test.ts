@@ -899,4 +899,258 @@ describe('ApiKeyService', () => {
       expect(duration).toMatch(/^\d+d$/); // Should be in days format
     });
   });
+
+  describe('Subscription Status Validation', () => {
+    const activeSubscription = { model_id: 'gpt-4o', status: 'active' };
+    const pendingSubscription = { model_id: 'claude-3-5-sonnet', status: 'pending' };
+    const deniedSubscription = { model_id: 'llama-3', status: 'denied' };
+
+    describe('createApiKey with subscription validation', () => {
+      it('should allow creating key with active subscription models', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        mockDbUtils.queryMany.mockResolvedValueOnce([
+          { model_id: 'gpt-4o', model_name: 'GPT-4o', provider: 'openai', status: 'active' },
+        ]);
+        mockDbUtils.queryOne.mockResolvedValue({ count: 0 });
+
+        vi.mocked(mockLiteLLMService.generateApiKey!).mockResolvedValue(mockLiteLLMKeyResponse);
+
+        mockPgClient.query.mockResolvedValue(undefined);
+        mockPgClient.query.mockResolvedValueOnce(undefined); // BEGIN
+        mockPgClient.query.mockResolvedValueOnce({ rows: [mockApiKeyDbRow] }); // INSERT
+
+        const result = await service.createApiKey('user-123', {
+          modelIds: ['gpt-4o'],
+          name: 'Test Key',
+        });
+
+        expect(result).toBeDefined();
+        expect(result.models).toContain('gpt-4o');
+      });
+
+      it('should reject creating key with pending subscription models', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        // Mock subscription check returns pending subscription
+        mockDbUtils.queryMany.mockResolvedValue([]);
+
+        await expect(
+          service.createApiKey('user-123', {
+            modelIds: ['claude-3-5-sonnet'],
+            name: 'Test Key',
+          }),
+        ).rejects.toThrow(/do not have active subscriptions/i);
+      });
+
+      it('should reject creating key with denied subscription models', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        mockDbUtils.queryMany.mockResolvedValue([]);
+
+        await expect(
+          service.createApiKey('user-123', {
+            modelIds: ['llama-3'],
+            name: 'Test Key',
+          }),
+        ).rejects.toThrow(/do not have active subscriptions/i);
+      });
+
+      it('should reject creating key with mix of active and non-active subscriptions', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        // Only one model has active subscription
+        mockDbUtils.queryMany.mockResolvedValue([
+          { model_id: 'gpt-4o', model_name: 'GPT-4o', provider: 'openai', status: 'active' },
+        ]);
+
+        await expect(
+          service.createApiKey('user-123', {
+            modelIds: ['gpt-4o', 'pending-model'],
+            name: 'Test Key',
+          }),
+        ).rejects.toThrow(/do not have active subscriptions/i);
+      });
+    });
+
+    describe('updateApiKey with subscription validation', () => {
+      it('should allow updating with active subscription models', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        // Call sequence:
+        // 1. getApiKey (initial) -> queryOne for API key, queryMany for models
+        // 2. validateModelsHaveActiveSubscriptions -> queryMany for subscriptions
+        // 3. update -> queryOne to update
+        // 4. getApiKey (final) -> queryOne for API key, queryMany for models
+        mockDbUtils.queryOne
+          .mockResolvedValueOnce(mockApiKeyDbRow) // getApiKey (initial)
+          .mockResolvedValueOnce({ ...mockApiKeyDbRow, name: 'Updated' }) // update
+          .mockResolvedValueOnce({ ...mockApiKeyDbRow, name: 'Updated' }); // getApiKey (final)
+
+        mockDbUtils.queryMany
+          .mockResolvedValueOnce([{ model_id: 'gpt-4o', model_name: 'GPT-4o', provider: 'openai' }]) // getApiKey (initial) - get associated models
+          .mockResolvedValueOnce([{ model_id: 'gpt-4o', status: 'active' }]) // validateModelsHaveActiveSubscriptions
+          .mockResolvedValueOnce([
+            { model_id: 'gpt-4o', model_name: 'GPT-4o', provider: 'openai' },
+          ]); // getApiKey (final) - get associated models
+
+        mockDbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 }); // audit log
+
+        vi.mocked(mockLiteLLMService.updateKey!).mockResolvedValue(undefined);
+
+        const result = await service.updateApiKey('key-123', 'user-123', {
+          modelIds: ['gpt-4o'],
+        });
+
+        expect(result).toBeDefined();
+      });
+
+      it('should reject updating with pending subscription models', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        mockDbUtils.queryOne.mockResolvedValue(mockApiKeyDbRow);
+        mockDbUtils.queryMany.mockResolvedValue([]); // No active subscriptions
+
+        await expect(
+          service.updateApiKey('key-123', 'user-123', {
+            modelIds: ['pending-model'],
+          }),
+        ).rejects.toThrow(/cannot add models without active subscriptions/i);
+      });
+
+      it('should reject updating with denied subscription models', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        mockDbUtils.queryOne.mockResolvedValue(mockApiKeyDbRow);
+        mockDbUtils.queryMany.mockResolvedValue([]);
+
+        await expect(
+          service.updateApiKey('key-123', 'user-123', {
+            modelIds: ['denied-model'],
+          }),
+        ).rejects.toThrow(/cannot add models without active subscriptions/i);
+      });
+    });
+
+    describe('removeModelFromUserApiKeys', () => {
+      it('should remove model from all user API keys', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        const apiKeys = [
+          {
+            id: 'key-1',
+            lite_llm_key_value: 'sk-litellm-1',
+          },
+          {
+            id: 'key-2',
+            lite_llm_key_value: 'sk-litellm-2',
+          },
+        ];
+
+        mockDbUtils.queryMany
+          .mockResolvedValueOnce(apiKeys) // Get API keys with this model
+          .mockResolvedValue([{ model_id: 'other-model' }]); // Remaining models
+
+        mockDbUtils.query.mockResolvedValue({ rowCount: 1 });
+        vi.mocked(mockLiteLLMService.updateKey!).mockResolvedValue(undefined);
+
+        await service.removeModelFromUserApiKeys('user-123', 'gpt-4o');
+
+        // Verify LiteLLM was updated for both keys
+        expect(mockLiteLLMService.updateKey).toHaveBeenCalledTimes(2);
+
+        // Verify database was updated
+        expect(mockDbUtils.query).toHaveBeenCalledWith(
+          expect.stringContaining('DELETE FROM api_key_models'),
+          expect.anything(),
+        );
+      });
+
+      it('should update LiteLLM first, then database (security priority)', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        const apiKeys = [
+          {
+            id: 'key-1',
+            lite_llm_key_value: 'sk-litellm-1',
+          },
+        ];
+
+        const callOrder: string[] = [];
+
+        mockDbUtils.queryMany
+          .mockResolvedValueOnce(apiKeys)
+          .mockResolvedValue([{ model_id: 'other-model' }]);
+
+        mockDbUtils.query.mockImplementation(async () => {
+          callOrder.push('database');
+          return { rowCount: 1 };
+        });
+
+        vi.mocked(mockLiteLLMService.updateKey!).mockImplementation(async () => {
+          callOrder.push('litellm');
+        });
+
+        await service.removeModelFromUserApiKeys('user-123', 'gpt-4o');
+
+        // Verify LiteLLM was called before database
+        expect(callOrder[0]).toBe('litellm');
+        expect(callOrder[1]).toBe('database');
+      });
+
+      it('should not update database if LiteLLM update fails', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        const apiKeys = [
+          {
+            id: 'key-1',
+            lite_llm_key_value: 'sk-litellm-1',
+          },
+        ];
+
+        mockDbUtils.queryMany
+          .mockResolvedValueOnce(apiKeys)
+          .mockResolvedValue([{ model_id: 'other-model' }]);
+
+        mockDbUtils.query.mockResolvedValue({ rowCount: 1 });
+        vi.mocked(mockLiteLLMService.updateKey!).mockRejectedValue(new Error('LiteLLM error'));
+
+        await service.removeModelFromUserApiKeys('user-123', 'gpt-4o');
+
+        // Database update should not have been called
+        expect(mockDbUtils.query).not.toHaveBeenCalledWith(
+          expect.stringContaining('DELETE FROM api_key_models'),
+          expect.anything(),
+        );
+      });
+
+      it('should handle multiple API keys with partial LiteLLM failures', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        const apiKeys = [
+          { id: 'key-1', lite_llm_key_value: 'sk-litellm-1' },
+          { id: 'key-2', lite_llm_key_value: 'sk-litellm-2' },
+        ];
+
+        mockDbUtils.queryMany
+          .mockResolvedValueOnce(apiKeys)
+          .mockResolvedValue([{ model_id: 'other-model' }]);
+
+        mockDbUtils.query.mockResolvedValue({ rowCount: 1 });
+
+        // First key succeeds, second fails
+        vi.mocked(mockLiteLLMService.updateKey!)
+          .mockResolvedValueOnce(undefined)
+          .mockRejectedValueOnce(new Error('LiteLLM error'));
+
+        await service.removeModelFromUserApiKeys('user-123', 'gpt-4o');
+
+        // Only first key should be updated in database
+        expect(mockDbUtils.query).toHaveBeenCalledWith(
+          expect.stringContaining('DELETE FROM api_key_models'),
+          expect.arrayContaining([['key-1'], 'gpt-4o']),
+        );
+      });
+    });
+  });
 });

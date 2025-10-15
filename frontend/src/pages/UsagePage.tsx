@@ -167,7 +167,7 @@ const UsagePage: React.FC = () => {
               variant="primary"
               icon={<DownloadIcon />}
               onClick={handleExport}
-              aria-label={t('pages.usage.export', 'Export usage data')}
+              aria-label={t('pages.usage.exportUsageData', 'Export usage data')}
             >
               {t('pages.usage.export', 'Export')}
             </Button>

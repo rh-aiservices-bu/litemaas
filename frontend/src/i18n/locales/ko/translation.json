@@ -89,6 +89,8 @@
     "apiKeysFilterAvailable": "이제 API 키 필터를 사용할 수 있습니다",
     "charts": {
       "modelDistributionAriaLabel": "모델 사용량 분포 차트",
+      "modelLegendDescription": "누적 차트에 표시된 모델 {{modelName}}",
+      "modelUsageSummary": "{{dataPoints}}개 데이터 포인트를 가진 누적 차트로 {{modelCount}}개 모델을 표시합니다. 총 값은 {{minValue}}에서 {{maxValue}}까지이며, 평균은 {{avgValue}}입니다.",
       "modelUsageTrends": "모델 사용량 추세",
       "modelUsageTrendsAriaDesc": "시간 경과에 따른 여러 모델의 사용량을 보여주는 누적 막대 차트입니다. 표시된 메트릭은 {{metric}}입니다.",
       "modelUsageTrendsAriaLabel": "{{metric}}별 시간 경과에 따른 모델 사용량 추세를 보여주는 누적 차트",
@@ -106,6 +108,7 @@
       "30d": "지난 30일",
       "7d": "지난 7일",
       "90d": "지난 90일",
+      "any": "모든 날짜",
       "custom": "사용자 정의 범위"
     },
     "dateRangeChanged": "날짜 범위가 {{preset}}(으)로 변경되었습니다",
@@ -182,7 +185,8 @@
       },
       "tooltip": {
         "noDataOutsideRange": "데이터 없음 (선택한 범위 외)",
-        "percentOfWeek": "주간 합계의 {{percent}}%"
+        "percentOfWeek": "주간 합계의 {{percent}}%",
+        "zeroUsage": "사용량 없음"
       }
     },
     "loading": "메트릭 로딩 중...",
@@ -191,11 +195,14 @@
     "loadingUsers": "사용자 데이터 로딩 중...",
     "metrics": {
       "activeUsersAriaLabel": "전체 {{total}}명의 사용자 중 {{active}}명의 활성 사용자",
+      "completionTokensAriaLabel": "완성 토큰: {{count}}개",
       "noChange": "변화 없음",
       "ofTotalUsers": "전체 {{total}}명 중",
+      "promptTokensAriaLabel": "프롬프트 토큰: {{count}}개",
       "successRateAriaLabel": "성공률: {{percentage}}%",
       "totalCostAriaLabel": "총 비용: ${{amount}}",
       "totalRequestsAriaLabel": "총 요청: {{count}}회",
+      "totalTokensAriaLabel": "총 토큰: {{count}}개",
       "trendLabel": "추세 {{direction}} {{change}}%"
     },
     "metricSelect": "메트릭 선택",
@@ -313,6 +320,15 @@
     "dataPoints": "데이터 포인트",
     "date": "날짜",
     "day": "일",
+    "days": {
+      "fri": "금",
+      "mon": "월",
+      "sat": "토",
+      "sun": "일",
+      "thu": "목",
+      "tue": "화",
+      "wed": "수"
+    },
     "delete": "삭제",
     "error": "오류",
     "expandToFullScreen": "전체 화면으로 확대",
@@ -387,6 +403,12 @@
       "outputCostCannotBeNegative": "출력 비용은 음수가 될 수 없습니다",
       "outputCostPerMillionTokens": "100만 토큰당 출력 비용",
       "pleaseEnterAValidUrl": "유효한 URL을 입력해 주세요",
+      "restrictedAccessHelp": "Users must request access and receive admin approval",
+      "restrictedAccessLabel": "Require Admin Approval",
+      "restrictedAccessWarning": {
+        "message": "This will move all active subscriptions for this model to pending status and remove the model from existing API keys. Users will need to be re-approved.",
+        "title": "Enable Restricted Access?"
+      },
       "rpmMustBeAtLeast_1": "RPM은 최소 1이어야 합니다",
       "rpmRequestsPerMinute": "RPM (분당 요청 수)",
       "supportsFunctionCalling": "함수 호출 지원",
@@ -432,6 +454,7 @@
   "nav": {
     "admin": {
       "models": "모델 관리",
+      "subscriptions": "구독 관리",
       "tools": "도구",
       "usage": "사용량 분석",
       "users": "사용자"
@@ -444,6 +467,73 @@
     "usage": "사용량"
   },
   "pages": {
+    "adminSubscriptions": {
+      "actions": {
+        "approve": "승인",
+        "delete": "삭제",
+        "deny": "거부",
+        "revert": "상태 변경"
+      },
+      "approvalModalTitle": "구독 승인",
+      "approveSuccess": "{{count}}개의 구독이 승인되었습니다",
+      "bulkApprove": "선택 항목 승인",
+      "bulkDeny": "선택 항목 거부",
+      "confirmApproval": "승인 확인",
+      "confirmApprovalSingle": "{{user}}의 {{model}} 액세스 구독 요청을 승인하시겠습니까?",
+      "confirmDelete": "영구 삭제",
+      "confirmDeleteSingle": "{{user}}의 {{model}} 액세스 구독을 영구적으로 삭제하시겠습니까? 관련된 모든 데이터가 제거됩니다.",
+      "confirmDenial": "거부 확인",
+      "confirmDenialBulk": "{{count}}개의 구독 요청을 거부하시겠습니까?",
+      "confirmDenialSingle": "{{user}}의 {{model}} 액세스 구독 요청을 거부하시겠습니까?",
+      "confirmRevert": "되돌리기 확인",
+      "deleteModalTitle": "구독 삭제",
+      "deleteReasonPlaceholder": "선택사항: 삭제 사유를 입력하세요 (감사 로그에 저장됩니다)...",
+      "deleteSuccess": "구독이 성공적으로 삭제되었습니다",
+      "deleteWarning": "이 작업은 취소할 수 없습니다",
+      "denialModalTitle": "구독 거부",
+      "denySuccess": "{{count}}개의 구독이 거부되었습니다",
+      "filters": {
+        "clearStatuses": "상태 선택 지우기",
+        "dateRange": "날짜 범위",
+        "from": "시작일",
+        "model": "모델",
+        "noStatusesFound": "\"{{query}}\"에 대한 상태를 찾을 수 없습니다",
+        "selectAll": "모두 선택",
+        "selectedStatuses": "선택된 상태",
+        "status": "상태",
+        "statusPlaceholder": "모든 상태 (필터링하려면 클릭)",
+        "to": "종료일",
+        "user": "사용자"
+      },
+      "newStatus": "새 상태",
+      "noSelections": "선택된 구독이 없습니다",
+      "reasonLabel": "코멘트",
+      "reasonPlaceholder": "이 결정의 사유를 입력하세요...",
+      "reasonRequired": "거부 시 사유가 필요합니다",
+      "refresh": "새로고침",
+      "resultModalTitle": "일괄 작업 결과",
+      "resultsTable": {
+        "error": "오류",
+        "failed": "실패",
+        "result": "결과",
+        "subscription": "구독",
+        "success": "성공"
+      },
+      "revertDescription": "{{user}}의 {{model}} 구독 상태를 변경합니다. 현재 상태: {{currentStatus}}",
+      "revertModalTitle": "구독 상태 되돌리기",
+      "revertSuccess": "구독 상태가 업데이트되었습니다",
+      "table": {
+        "actions": "작업",
+        "model": "모델",
+        "reason": "사유",
+        "requestedDate": "요청일",
+        "selectColumn": "구독 선택",
+        "status": "상태",
+        "statusChangedDate": "마지막 업데이트",
+        "user": "사용자"
+      },
+      "title": "구독 관리"
+    },
     "apiKeys": {
       "clipboard": {
         "copied": "복사됨",
@@ -482,6 +572,7 @@
       "labels": {
         "actions": "작업",
         "apiKeyLabel": "API 키",
+        "apiUrl": "API URL",
         "cancel": "취소",
         "close": "닫기",
         "created": "생성됨",
@@ -799,6 +890,7 @@
       "title": "LiteMaaS 로그인"
     },
     "models": {
+      "alreadySubscribed": "이미 구독함",
       "ariaLabels": {
         "modelAvailability": "모델 가용성",
         "subscriptionStatus": "구독 상태"
@@ -833,6 +925,11 @@
         "pricingInput": "입력",
         "pricingOutput": "출력",
         "pricingUnavailable": "가격 정보를 사용할 수 없음",
+        "restrictedAccessInfo": {
+          "buttonText": "액세스 요청",
+          "message": "이 모델은 관리자 승인이 필요합니다. 구독하면 관리자가 검토하고 승인할 때까지 요청이 대기 상태로 유지됩니다. 액세스가 승인되면 알림을 받게 됩니다.",
+          "title": "관리자 승인 필요"
+        },
         "subscribeInfo": "구독하면 이 모델에 액세스할 수 있으며 사용을 위한 API 키를 생성할 수 있습니다.",
         "tokens": "토큰"
       },
@@ -840,6 +937,8 @@
       "moreFeatures": "+{{count}}개 더",
       "noModels": "아직 사용 가능한 모델이 없습니다",
       "notifications": {
+        "accessRequestPending": "{{modelName}}에 대한 구독 요청이 관리자 승인 대기 중입니다. 승인되면 알림을 받게 됩니다.",
+        "accessRequestSubmitted": "액세스 요청 제출됨",
         "alreadySubscribed": "이미 이 모델을 구독하고 있습니다",
         "failedToSubscribe": "모델 구독 실패",
         "loadError": "오류",
@@ -855,6 +954,7 @@
         "separator": "•"
       },
       "pricingLabel": "가격: N/A",
+      "restrictedAccess": "제한된 액세스",
       "searchPlaceholder": "모델 검색...",
       "searchResults": "조건에 일치하는 {{count}}개 모델을 찾았습니다",
       "subscribe": "구독",
@@ -913,15 +1013,20 @@
       "provider": "공급자",
       "quotaFormat": "할당량: {{requests}} 요청, {{tokens}} 토큰",
       "requestQuota": "요청 할당량",
+      "requestReview": "검토 요청",
+      "requestReviewSuccess": "검토가 성공적으로 요청되었습니다",
       "requests": "요청",
       "requestsUsed": "사용된 요청",
       "status": {
         "active": "활성",
+        "denied": "액세스 거부됨",
         "expired": "만료",
-        "pending": "보류 중",
+        "inactive": "비활성",
+        "pending": "승인 대기 중",
         "suspended": "일시 중지"
       },
       "statusLabel": "상태",
+      "statusReason": "관리자 코멘트",
       "suspendedMessage": "구독이 일시 중지되었습니다. 지원팀에 문의하거나 계정 상태를 확인하세요.",
       "title": "모델 구독",
       "tokenQuota": "토큰 할당량",
@@ -1094,6 +1199,7 @@
         "last7Days": "지난 7일",
         "last90Days": "지난 90일"
       },
+      "export": "내보내기",
       "exportData": "데이터 내보내기",
       "exportUsageData": "선택한 기간의 사용량 데이터 내보내기",
       "filters": {
@@ -1278,7 +1384,13 @@
         "required": "{{field}}은(는) 필수입니다",
         "url": "{{field}}은(는) 유효한 URL이어야 합니다"
       },
-      "somethingWrong": "문제가 발생했습니다"
+      "somethingWrong": "문제가 발생했습니다",
+      "restrictedAccessHelp": "사용자는 액세스를 요청해야 하며 관리자의 승인을 받아야 합니다",
+      "restrictedAccessLabel": "관리자 승인 필요",
+      "restrictedAccessWarning": {
+        "message": "이 설정은 이 모델의 모든 활성 구독을 대기 상태로 변경하고 기존 API 키에서 모델을 제거합니다. 사용자는 다시 승인을 받아야 합니다.",
+        "title": "제한된 액세스를 활성화하시겠습니까?"
+      }
     },
     "footer": {
       "appBy": "앱 제작자",
@@ -1416,6 +1528,7 @@
       "oauthManaged": "상태는 OAuth 제공자가 관리합니다."
     },
     "table": {
+      "actions": "작업",
       "ariaLabel": "사용자 테이블",
       "caption": "사용자명, 이메일, 전체 이름, 역할 및 상태가 포함된 {{count}}명의 사용자 테이블.",
       "email": "이메일",

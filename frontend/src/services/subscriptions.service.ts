@@ -5,7 +5,7 @@ export interface Subscription {
   modelId: string;
   modelName: string;
   provider: string;
-  status: 'active' | 'suspended' | 'expired'; // Remove 'pending'
+  status: 'active' | 'suspended' | 'cancelled' | 'expired' | 'inactive' | 'pending' | 'denied';
 
   // Real usage and pricing from LiteLLM
   quotaRequests: number;
@@ -27,6 +27,11 @@ export interface Subscription {
   createdAt: string;
   expiresAt?: string;
 
+  // Approval workflow fields
+  statusReason?: string;
+  statusChangedAt?: string;
+  statusChangedBy?: string;
+
   // Model details for UI display
   modelDescription?: string;
   modelContextLength?: number;
@@ -43,7 +48,7 @@ interface BackendSubscriptionDetails {
   modelId: string;
   modelName?: string;
   provider?: string;
-  status: 'active' | 'suspended' | 'cancelled' | 'expired'; // Remove 'pending'
+  status: 'active' | 'suspended' | 'cancelled' | 'expired' | 'inactive' | 'pending' | 'denied';
   quotaRequests: number;
   quotaTokens: number;
   usedRequests: number;
@@ -58,6 +63,11 @@ interface BackendSubscriptionDetails {
   expiresAt?: string;
   createdAt: string;
   updatedAt: string;
+
+  // Approval workflow fields
+  statusReason?: string;
+  statusChangedAt?: string;
+  statusChangedBy?: string;
 
   // LiteLLM pricing info
   pricing?: {
@@ -141,6 +151,11 @@ class SubscriptionsService {
       createdAt: backend.createdAt,
       expiresAt: backend.expiresAt,
 
+      // Approval workflow fields
+      statusReason: backend.statusReason,
+      statusChangedAt: backend.statusChangedAt,
+      statusChangedBy: backend.statusChangedBy,
+
       // Model details for UI display
       modelDescription: backend.modelDescription,
       modelContextLength: backend.modelContextLength,
@@ -178,9 +193,11 @@ class SubscriptionsService {
   async createSubscription(request: CreateSubscriptionRequest): Promise<Subscription> {
     const response = await apiClient.post<BackendSubscriptionDetails>('/subscriptions', request);
 
-    // Expect active status immediately
-    if (response.status !== 'active') {
-      throw new Error('Subscription creation failed - expected active status');
+    // For restricted models, status will be 'pending', otherwise 'active'
+    if (response.status !== 'active' && response.status !== 'pending') {
+      throw new Error(
+        `Subscription creation failed - unexpected status: ${response.status}. Expected 'active' or 'pending'.`,
+      );
     }
 
     return this.mapBackendToFrontend(response);
@@ -214,6 +231,13 @@ class SubscriptionsService {
   async resumeSubscription(subscriptionId: string): Promise<Subscription> {
     const response = await apiClient.post<BackendSubscriptionDetails>(
       `/subscriptions/${subscriptionId}/resume`,
+    );
+    return this.mapBackendToFrontend(response);
+  }
+
+  async requestReview(subscriptionId: string): Promise<Subscription> {
+    const response = await apiClient.post<BackendSubscriptionDetails>(
+      `/subscriptions/${subscriptionId}/request-review`,
     );
     return this.mapBackendToFrontend(response);
   }

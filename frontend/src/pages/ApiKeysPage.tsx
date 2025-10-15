@@ -83,6 +83,7 @@ const ApiKeysPage: React.FC = () => {
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
   const [keyToDelete, setKeyToDelete] = useState<ApiKey | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedModelForExample, setSelectedModelForExample] = useState<string>('');
 
   // Edit modal state
   const [isEditMode, setIsEditMode] = useState(false);
@@ -196,6 +197,16 @@ const ApiKeysPage: React.FC = () => {
       }
     }
   }, [apiKeys, selectedApiKey]);
+
+  // Initialize selected model for code example when View Key modal opens
+  useEffect(() => {
+    if (isViewModalOpen && selectedApiKey?.models && selectedApiKey.models.length > 0) {
+      setSelectedModelForExample(selectedApiKey.models[0]);
+    } else if (!isViewModalOpen) {
+      // Reset when modal closes
+      setSelectedModelForExample('');
+    }
+  }, [isViewModalOpen, selectedApiKey]);
 
   // Focus management for create modal
   useEffect(() => {
@@ -361,9 +372,9 @@ const ApiKeysPage: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const variants = {
-      active: 'success',
-      revoked: 'warning',
-      expired: 'danger',
+      active: 'green',
+      revoked: 'orange',
+      expired: 'red',
     } as const;
 
     const icons = {
@@ -373,12 +384,12 @@ const ApiKeysPage: React.FC = () => {
     };
 
     return (
-      <Badge color={variants[status as keyof typeof variants]}>
+      <Label color={variants[status as keyof typeof variants]}>
         <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
           <FlexItem>{icons[status as keyof typeof icons]}</FlexItem>
           <FlexItem>{status.charAt(0).toUpperCase() + status.slice(1)}</FlexItem>
         </Flex>
-      </Badge>
+      </Label>
     );
   };
 
@@ -1351,8 +1362,25 @@ const ApiKeysPage: React.FC = () => {
                               const modelDetail = selectedApiKey.modelDetails?.find(
                                 (m) => m.id === modelId,
                               );
+                              const isSelected = modelId === selectedModelForExample;
                               return (
-                                <Label key={modelId} isCompact>
+                                <Label
+                                  key={modelId}
+                                  isCompact
+                                  color={isSelected ? 'blue' : undefined}
+                                  onClick={() => setSelectedModelForExample(modelId)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter' || e.key === ' ') {
+                                      e.preventDefault();
+                                      setSelectedModelForExample(modelId);
+                                    }
+                                  }}
+                                  style={{ cursor: 'pointer' }}
+                                  role="button"
+                                  tabIndex={0}
+                                  aria-pressed={isSelected}
+                                  aria-label={`${modelDetail ? modelDetail.name : modelId}${isSelected ? ' (selected for code example)' : ' (click to use in code example)'}`}
+                                >
                                   {modelDetail ? `${modelDetail.name}` : modelId}
                                 </Label>
                               );
@@ -1365,7 +1393,7 @@ const ApiKeysPage: React.FC = () => {
                     </Tr>
                     <Tr>
                       <Th scope="row">
-                        <strong>API URL</strong>
+                        <strong>{t('pages.apiKeys.labels.apiUrl')}</strong>
                       </Th>
                       <Td>{litellmApiUrl}/v1</Td>
                     </Tr>
@@ -1413,7 +1441,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
   -H "Authorization: Bearer ${visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey ? selectedApiKey.fullKey : '<click-show-key-to-reveal>'}" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "${selectedApiKey.models && selectedApiKey.models.length > 0 ? selectedApiKey.models[0] : 'gpt-4'}",
+    "model": "${selectedModelForExample || 'gpt-4'}",
     "messages": [
       {"role": "${t('pages.apiKeys.codeExample.role')}", "content": "${t('pages.apiKeys.codeExample.content')}"}
     ]

@@ -55,6 +55,7 @@ describe('RBACService', () => {
         'admin:users',
         'admin:usage',
         'admin:banners:read',
+        'admin:subscriptions:read', // Added for Restricted Model Subscription Approval feature
         'users:read',
         'models:read',
         'subscriptions:read',

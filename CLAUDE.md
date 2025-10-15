@@ -26,6 +26,16 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 
 **Role-Based Access Control (RBAC)**: Three-tier hierarchy `admin > adminReadonly > user` with OpenShift integration.
 
+**Restricted Model Subscription Approval** (Major feature - 2025 Q4): Admin-controlled access to sensitive/costly models with comprehensive approval workflow:
+
+- **Restricted Model Flagging**: Administrators mark models requiring approval
+- **Three-state workflow**: Pending → Active/Denied with request review capability
+- **Bulk Operations**: Approve/deny multiple requests with detailed result tracking
+- **Full Audit Trail**: Complete history in `subscription_status_history` table
+- **Granular RBAC**: Read/write/delete permissions (admin vs adminReadonly)
+- **Automatic Cascade**: Access revocation when models become restricted
+- **LiteLLM-first security**: API key updates prioritize access revocation
+
 **Admin Usage Analytics** (Major feature - 2025 Q3): Enterprise-grade analytics with comprehensive system-wide visibility:
 
 - **Day-by-day incremental caching** with intelligent TTL (permanent historical, 5-min current day)
@@ -44,6 +54,7 @@ For detailed features, see:
 - [`backend/CLAUDE.md`](backend/CLAUDE.md) - API implementation, service layer, caching patterns
 - [`frontend/CLAUDE.md`](frontend/CLAUDE.md) - UI components, state management, PatternFly 6
 - [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md) - Complete RBAC guide
+- [`docs/features/subscription-approval-workflow.md`](docs/features/subscription-approval-workflow.md) - Complete approval workflow guide
 - [`docs/features/admin-usage-analytics-implementation-plan.md`](docs/features/admin-usage-analytics-implementation-plan.md) - Comprehensive admin analytics implementation (2000 lines)
 - [`docs/development/chart-components-guide.md`](docs/development/chart-components-guide.md) - Chart component patterns and utilities
 - [`docs/development/pattern-reference.md`](docs/development/pattern-reference.md) - Authoritative code patterns and anti-patterns
