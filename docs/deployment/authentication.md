@@ -690,6 +690,52 @@ ADMIN_API_KEYS=<strong-production-keys>
 - **Multiple admin actions** from same user in short timeframe
 - **Role changes** in OpenShift groups affecting LiteMaaS users
 
+## Troubleshooting
+
+### SSL Certificate Errors During Login
+
+**Problem**: SSL certificate verification errors when fetching user information from Kubernetes API during OAuth authentication.
+
+**Symptoms**:
+
+- Login fails with SSL/TLS certificate errors
+- Backend logs show errors like "unable to verify the first certificate" or "self-signed certificate"
+- Error occurs after OAuth provider redirects back to the application
+- Ingress/Routes work fine with valid certificates, but K8s API endpoint doesn't
+
+**Root Cause**: In many OpenShift/Kubernetes environments, the API server endpoint (`https://api.<cluster>:6443`) may not have proper SSL certificates configured, even though Ingress routes and load balancers do have valid certificates.
+
+**Solution**: Use the `K8S_API_SKIP_TLS_VERIFY` environment variable to disable SSL verification for Kubernetes API calls.
+
+⚠️ **Important Security Considerations**:
+
+- Only use this workaround in **development/testing** environments or **trusted internal networks**
+- This setting only affects the Kubernetes API user info endpoint, not OAuth token exchange
+- The backend will log a warning message when this setting is enabled
+- In production, properly configure SSL certificates for the Kubernetes API server instead
+
+**Configuration**:
+
+```bash
+# Add to backend .env file
+K8S_API_SKIP_TLS_VERIFY=true
+```
+
+**Verification**:
+
+1. Check backend logs for the warning message confirming TLS verification is skipped
+2. Attempt login through OAuth flow
+3. Verify successful authentication and user creation
+
+**Alternative Solutions** (Recommended for Production):
+
+1. Configure proper SSL certificates for the Kubernetes API server
+2. Add the cluster's CA certificate to the trusted certificate store
+3. Use a corporate certificate authority for all cluster endpoints
+4. Implement certificate management tools like cert-manager
+
+For more details, see [Configuration Guide - Kubernetes API TLS Verification](configuration.md#kubernetes-api-tls-verification).
+
 ## Additional Resources
 
 - [OAuth 2.0 Security Best Practices](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics)

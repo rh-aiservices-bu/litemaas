@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import * as https from 'https';
 import { OAuthUserInfo, OAuthTokenResponse } from '../types';
 import { LiteLLMService } from './litellm.service';
 import { DefaultTeamService } from './default-team.service';
@@ -207,21 +208,37 @@ export class OAuthService extends BaseService {
 
     const userInfoUrl = `${apiServerUrl}/apis/user.openshift.io/v1/users/~`;
 
+    // Check if TLS verification should be skipped for K8s API
+    const skipTlsVerify = this.fastify.config.K8S_API_SKIP_TLS_VERIFY === 'true';
+
+    if (skipTlsVerify) {
+      this.fastify.log.warn(
+        { apiServerUrl },
+        'K8S_API_SKIP_TLS_VERIFY is enabled - skipping TLS verification for Kubernetes API calls. This should only be used in development or with trusted clusters.',
+      );
+    }
+
     this.fastify.log.debug(
       {
         oauthIssuer,
         apiServerUrl,
         userInfoUrl,
         accessTokenPreview: accessToken.substring(0, 20) + '...',
+        skipTlsVerify,
       },
       'Fetching user info from OpenShift API server',
     );
+
+    // Create HTTPS agent if TLS verification should be skipped
+    const httpsAgent = skipTlsVerify ? new https.Agent({ rejectUnauthorized: false }) : undefined;
 
     const response = await fetch(userInfoUrl, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         Accept: 'application/json',
       },
+      // @ts-expect-error - Node.js fetch supports agent option
+      agent: httpsAgent,
     });
 
     if (!response.ok) {

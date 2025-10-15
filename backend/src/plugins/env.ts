@@ -27,6 +27,7 @@ const envSchema = Type.Object({
   OAUTH_CLIENT_SECRET: Type.String(),
   OAUTH_ISSUER: Type.String(),
   OAUTH_CALLBACK_URL: Type.String({ default: 'http://localhost:8081/api/auth/callback' }),
+  K8S_API_SKIP_TLS_VERIFY: Type.Optional(Type.String()),
 
   // LiteLLM
   LITELLM_API_URL: Type.String({ default: 'http://localhost:4000' }),

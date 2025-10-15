@@ -36,12 +36,13 @@ DB_CONNECTION_TIMEOUT=10000
 
 ## OAuth Configuration
 
-| Variable              | Description                   | Default                                   | Required |
-| --------------------- | ----------------------------- | ----------------------------------------- | -------- |
-| `OAUTH_CLIENT_ID`     | OpenShift OAuth client ID     | -                                         | Yes      |
-| `OAUTH_CLIENT_SECRET` | OpenShift OAuth client secret | -                                         | Yes      |
-| `OAUTH_ISSUER`        | OAuth provider URL            | -                                         | Yes      |
-| `OAUTH_CALLBACK_URL`  | OAuth callback URL            | `http://localhost:8081/api/auth/callback` | No       |
+| Variable                  | Description                                                          | Default                                   | Required |
+| ------------------------- | -------------------------------------------------------------------- | ----------------------------------------- | -------- |
+| `OAUTH_CLIENT_ID`         | OpenShift OAuth client ID                                            | -                                         | Yes      |
+| `OAUTH_CLIENT_SECRET`     | OpenShift OAuth client secret                                        | -                                         | Yes      |
+| `OAUTH_ISSUER`            | OAuth provider URL                                                   | -                                         | Yes      |
+| `OAUTH_CALLBACK_URL`      | OAuth callback URL                                                   | `http://localhost:8081/api/auth/callback` | No       |
+| `K8S_API_SKIP_TLS_VERIFY` | Skip TLS verification for Kubernetes API calls (⚠️ Use with caution) | -                                         | No       |
 
 ### OAuth Flow Architecture
 
@@ -130,6 +131,37 @@ grantMethod: prompt
 ```
 
 **Note**: The application automatically selects the correct callback URL based on request origin. This allows the same deployment to work across different environments without configuration changes.
+
+### Kubernetes API TLS Verification
+
+In some OpenShift/Kubernetes environments, the API server endpoint (`https://api.<cluster>:6443`) may not have proper SSL certificates configured, even though Ingress routes and load balancers do. This can cause SSL verification errors when the backend fetches user information from the Kubernetes API during OAuth authentication.
+
+**Environment Variable**: `K8S_API_SKIP_TLS_VERIFY`
+
+**Default**: SSL verification is **ENABLED** (secure, recommended for production)
+
+**When to use**: Set to `true` only when:
+
+- You're in a development/testing environment
+- The Kubernetes API endpoint lacks proper SSL certificates
+- You're experiencing SSL certificate verification errors during login
+- You trust the network and cluster (e.g., internal corporate network)
+
+⚠️ **Security Warning**:
+
+- Only use this in **trusted environments**
+- This affects **only** the Kubernetes API user info endpoint
+- OAuth token exchange and other endpoints are not affected
+- Never use in production unless absolutely necessary and the risk is understood
+
+**Example**:
+
+```bash
+# Only enable if experiencing SSL errors with K8s API
+K8S_API_SKIP_TLS_VERIFY=true
+```
+
+**Logging**: When enabled, the backend will log a warning message indicating that TLS verification is being skipped for visibility and security audit purposes.
 
 ## JWT Configuration
 

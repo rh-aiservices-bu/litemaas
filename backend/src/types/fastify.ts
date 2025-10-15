@@ -26,6 +26,7 @@ declare module 'fastify' {
       OAUTH_CLIENT_SECRET: string;
       OAUTH_ISSUER: string;
       OAUTH_CALLBACK_URL: string;
+      K8S_API_SKIP_TLS_VERIFY?: string;
 
       // LiteLLM
       LITELLM_API_URL: string;
