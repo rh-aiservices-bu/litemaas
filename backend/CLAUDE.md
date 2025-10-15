@@ -112,6 +112,7 @@ For details, see [`docs/features/user-roles-administration.md`](../docs/features
 - **Admin**: AdminService
 
 **Admin Analytics Architecture**: Uses specialized service architecture with orchestrator pattern:
+
 - `AdminUsageStatsService` - Main orchestrator
 - `AdminUsageAggregationService` - Multi-dimensional filtering and aggregation
 - `AdminUsageEnrichmentService` - Data enrichment with batch queries

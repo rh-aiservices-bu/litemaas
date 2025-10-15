@@ -256,12 +256,14 @@ npm run check:translations  # Check all locale files for missing keys
 **Framework**: Vitest with React Testing Library and centralized test utilities in `src/test/test-utils.tsx`.
 
 **Key Patterns**:
+
 - **Auth Testing**: Use `renderWithAuth()` helper with `mockUser`, `mockAdminUser`, `mockAdminReadonlyUser`
 - **ConfigContext**: Mock entire context (not just service) to avoid loading state
 - **PatternFly 6**: Modals/dropdowns work in JSDOM; modals use `role="dialog"`, dropdowns use `role="menuitem"`
 - **Debugging**: Use `screen.debug()` to inspect DOM, `npm test -- File.test.tsx` for specific files
 
 **Test Guides**:
+
 - [`docs/development/pf6-guide/testing-patterns/modals.md`](../docs/development/pf6-guide/testing-patterns/modals.md) - Modal testing patterns
 - [`docs/development/pf6-guide/testing-patterns/dropdowns-pagination.md`](../docs/development/pf6-guide/testing-patterns/dropdowns-pagination.md) - Dropdown/pagination patterns
 - [`docs/development/pf6-guide/testing-patterns/context-dependent-components.md`](../docs/development/pf6-guide/testing-patterns/context-dependent-components.md) - Context-dependent components
