@@ -5,6 +5,46 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2025-10-17
+
+This patch release improves test reliability, server startup performance, and handles edge cases in database migrations.
+
+### Fixed
+
+- **Orphaned API Key Handling**: Backend now gracefully handles API keys that exist in the database but were deleted in LiteLLM
+  - Database migration marks orphaned keys with `orphaned_` prefix instead of failing
+  - Eliminates verbose error logging during backfill operations
+  - Prevents migration failures due to missing keys in LiteLLM
+  - Improved error handling for 404 responses during key synchronization
+
+- **Server Startup Performance**: Backend initialization is now faster and more resilient
+  - Moved LiteLLM-dependent operations to background tasks using `setImmediate`
+  - Server starts immediately without waiting for external service operations
+  - Non-blocking initialization prevents startup delays
+  - Better handling of external service availability during boot
+
+- **Frontend Test Reliability**: Fixed missing mock endpoint causing test failures
+  - Added `/api/v1/banners` mock endpoint to test handlers
+  - BannerProvider now works correctly in Layout component tests
+  - Eliminated test failures related to banner initialization
+
+- **Configuration**: Minor backend configuration adjustments
+  - Updated admin analytics configuration handling
+  - Package dependency updates
+
+### Documentation
+
+- Updated deployment version examples in OpenShift configuration
+  - `deployment/openshift/README.md` updated with v0.1.0 reference
+  - `deployment/openshift/user-values.env.example` synchronized
+
+### Contributors
+
+- Guillaume Moutier
+- Co-authored-by: Claude (AI pair programming assistant)
+
+---
+
 ## [0.1.0] - 2025-10-17
 
 This is a significant milestone release introducing three major enterprise-grade features that fundamentally expand the platform's capabilities for model governance, system observability, and operational efficiency.
