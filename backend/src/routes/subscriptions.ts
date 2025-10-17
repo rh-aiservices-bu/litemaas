@@ -30,7 +30,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
           limit: { type: 'number', minimum: 1, maximum: 100, default: 20 },
           status: {
             type: 'string',
-            enum: ['active', 'suspended', 'cancelled', 'expired', 'inactive'],
+            enum: ['active', 'suspended', 'cancelled', 'expired', 'inactive', 'pending', 'denied'],
           },
           modelId: { type: 'string' },
         },
@@ -341,7 +341,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         properties: {
           status: {
             type: 'string',
-            enum: ['active', 'suspended', 'cancelled', 'expired', 'inactive'],
+            enum: ['active', 'suspended', 'cancelled', 'expired', 'inactive', 'pending', 'denied'],
           },
           quotaRequests: { type: 'number', minimum: 1 },
           quotaTokens: { type: 'number', minimum: 1 },
@@ -610,6 +610,71 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         // For other errors, include original message
         const errorMessage = error instanceof Error ? error.message : String(error);
         throw fastify.createError(500, `Failed to get subscription statistics: ${errorMessage}`);
+      }
+    },
+  });
+
+  // Request review for denied subscription
+  fastify.post<{
+    Params: { id: string };
+  }>('/:id/request-review', {
+    schema: {
+      tags: ['Subscriptions'],
+      summary: 'Request review for denied subscription',
+      description: 'User can request re-review of a denied subscription',
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        required: ['id'],
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+        },
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            status: { type: 'string' },
+            statusReason: { type: 'string' },
+            updatedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+        400: {
+          type: 'object',
+          properties: {
+            statusCode: { type: 'number' },
+            error: { type: 'string' },
+            message: { type: 'string' },
+          },
+        },
+        404: {
+          type: 'object',
+          properties: {
+            statusCode: { type: 'number' },
+            error: { type: 'string' },
+            message: { type: 'string' },
+          },
+        },
+      },
+    },
+    preHandler: fastify.authenticateWithDevBypass,
+    handler: async (request, _reply) => {
+      try {
+        const user = (request as AuthenticatedRequest).user;
+        const { id } = request.params;
+
+        const result = await subscriptionService.requestReview(id, user.userId);
+        return result;
+      } catch (error) {
+        fastify.log.error(error, 'Failed to request review');
+
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to request review: ${errorMessage}`);
       }
     },
   });

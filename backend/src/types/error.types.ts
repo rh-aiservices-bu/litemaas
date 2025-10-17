@@ -17,7 +17,7 @@ export interface ErrorResponse {
     details?: ErrorDetails;
 
     // Tracing fields
-    requestId: string; // Unique request identifier
+    requestId?: string; // Unique request identifier (set by error handler middleware)
     correlationId?: string; // For distributed tracing
     timestamp: string; // ISO 8601 timestamp
 

@@ -6,6 +6,8 @@ export enum SubscriptionStatus {
   CANCELLED = 'cancelled',
   EXPIRED = 'expired',
   INACTIVE = 'inactive',
+  PENDING = 'pending',
+  DENIED = 'denied',
 }
 
 export interface Subscription {
@@ -30,6 +32,9 @@ export interface Subscription {
   createdAt: Date;
   updatedAt: Date;
   metadata?: Record<string, any>;
+  statusReason?: string;
+  statusChangedAt?: Date;
+  statusChangedBy?: string;
 }
 
 export interface SubscriptionQuota {
@@ -298,4 +303,62 @@ export interface SubscriptionListParams {
   limit?: number;
   status?: SubscriptionStatus;
   modelId?: string;
+}
+
+// Request types for approval workflow
+export interface ApproveSubscriptionsRequest {
+  subscriptionIds: string[];
+  reason?: string;
+}
+
+export interface DenySubscriptionsRequest {
+  subscriptionIds: string[];
+  reason: string; // Required for denials
+}
+
+export interface RevertSubscriptionRequest {
+  newStatus: 'active' | 'denied' | 'pending';
+  reason?: string;
+}
+
+export interface SubscriptionApprovalFilters {
+  statuses?: SubscriptionStatus[];
+  modelIds?: string[];
+  userIds?: string[];
+  dateFrom?: Date;
+  dateTo?: Date;
+}
+
+export interface SubscriptionApprovalStats {
+  pendingCount: number;
+  approvedToday: number;
+  deniedToday: number;
+  totalRequests: number;
+}
+
+export interface SubscriptionWithDetails extends Subscription {
+  user: {
+    id: string;
+    username: string;
+    email: string;
+  };
+  model: {
+    id: string;
+    name: string;
+    provider: string;
+    restrictedAccess: boolean;
+  };
+  history?: SubscriptionStatusHistoryEntry[];
+}
+
+export interface SubscriptionStatusHistoryEntry {
+  id: string;
+  oldStatus?: string;
+  newStatus: string;
+  reason?: string;
+  changedBy?: {
+    id: string;
+    username: string;
+  };
+  changedAt: Date;
 }

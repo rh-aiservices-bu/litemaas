@@ -17,7 +17,7 @@
     "check-backend": "node scripts/check-backend.js",
     "build": "npm run build --workspaces",
     "build:containers": "./scripts/build-containers.sh",
-    "build:containers:push": "./scripts/build-containers.sh --build-and-push",
+    "build:containers:push": "./scripts/build-containers.sh --build-and-push --no-cache",
     "push:containers": "./scripts/build-containers.sh --push",
     "test": "npm run test --workspaces",
     "lint": "npm run lint --workspaces",

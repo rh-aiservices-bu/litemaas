@@ -136,7 +136,8 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 
 - `auth.service.ts` - Authentication (OAuth, profile)
 - `models.service.ts` - Model catalog
-- `subscriptions.service.ts` - User subscriptions
+- `subscriptions.service.ts` - User subscriptions (includes request-review endpoint)
+- `adminSubscriptions.service.ts` - **Admin subscription approval** (approval requests, bulk operations, stats)
 - `apiKeys.service.ts` - API key management
 - `usage.service.ts` - **User usage analytics** (individual user data)
 - `adminUsage.service.ts` - **Admin usage analytics** (system-wide data, all endpoints)
@@ -152,6 +153,12 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 - `/admin/users` - User management (UsersPage.tsx)
 - `/admin/models` - Model configuration testing (AdminModelsPage.tsx)
 - `/admin/tools` - Administrative tools (ToolsPage.tsx)
+- `/admin/subscriptions` - **Subscription approval management (AdminSubscriptionsPage.tsx)** - Approve/deny restricted model access:
+  - Multi-dimensional filtering (status, model, user, date range)
+  - Bulk approve/deny operations with result modals
+  - Granular RBAC (admin vs adminReadonly)
+  - Manual refresh only (no polling)
+  - Full audit trail display
 - `/admin/usage` - **Admin usage analytics (AdminUsagePage.tsx)** - Major feature with comprehensive system-wide analytics:
   - Global metrics with trend analysis
   - Multi-dimensional filtering (users, models, providers, API keys)

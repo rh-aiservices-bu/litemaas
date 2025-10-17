@@ -76,8 +76,10 @@ const AdminModelsPage: React.FC = () => {
     supports_function_calling: false,
     supports_parallel_function_calling: false,
     supports_tool_choice: false,
+    restrictedAccess: false,
   });
   const [formErrors, setFormErrors] = useState<AdminModelFormErrors>({});
+  const [isRestrictedAccessWarningOpen, setIsRestrictedAccessWarningOpen] = useState(false);
 
   // Display state for cost inputs (per million tokens for better UX)
   const [displayInputCost, setDisplayInputCost] = useState<number>(0);
@@ -241,6 +243,7 @@ const AdminModelsPage: React.FC = () => {
       supports_function_calling: false,
       supports_parallel_function_calling: false,
       supports_tool_choice: false,
+      restrictedAccess: false,
     });
     setDisplayInputCost(0);
     setDisplayOutputCost(0);
@@ -331,6 +334,7 @@ const AdminModelsPage: React.FC = () => {
       supports_function_calling: model.supportsFunctionCalling || false,
       supports_parallel_function_calling: model.supportsParallelFunctionCalling || false,
       supports_tool_choice: model.supportsToolChoice || false,
+      restrictedAccess: model.restrictedAccess || false,
     });
 
     // Set display values for cost inputs
@@ -985,6 +989,20 @@ const AdminModelsPage: React.FC = () => {
                           setFormData({ ...formData, supports_tool_choice: checked })
                         }
                       />
+                      <Checkbox
+                        id="restricted-access"
+                        label={t('models.admin.restrictedAccessLabel')}
+                        description={t('models.admin.restrictedAccessHelp')}
+                        isChecked={formData.restrictedAccess}
+                        onChange={(_event, checked) => {
+                          // If enabling restricted access for existing model, show warning
+                          if (checked && !formData.restrictedAccess && selectedModel) {
+                            setIsRestrictedAccessWarningOpen(true);
+                          } else {
+                            setFormData({ ...formData, restrictedAccess: checked });
+                          }
+                        }}
+                      />
                     </Stack>
                   </FormGroup>
                 </GridItem>
@@ -1100,6 +1118,44 @@ const AdminModelsPage: React.FC = () => {
                 {t('common.cancel')}
               </Button>
             </div>
+          </ModalFooter>
+        </Modal>
+
+        {/* Restricted Access Warning Modal */}
+        <Modal
+          variant={ModalVariant.small}
+          title={t('models.admin.restrictedAccessWarning.title')}
+          isOpen={isRestrictedAccessWarningOpen}
+          onClose={() => setIsRestrictedAccessWarningOpen(false)}
+        >
+          <ModalHeader />
+          <ModalBody>
+            <Alert
+              variant="warning"
+              title={t('models.admin.restrictedAccessWarning.title')}
+              isInline
+            >
+              <p>{t('models.admin.restrictedAccessWarning.message')}</p>
+            </Alert>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setFormData({ ...formData, restrictedAccess: true });
+                setIsRestrictedAccessWarningOpen(false);
+              }}
+            >
+              {t('common.yes')}
+            </Button>
+            <Button
+              variant="link"
+              onClick={() => {
+                setIsRestrictedAccessWarningOpen(false);
+              }}
+            >
+              {t('common.no')}
+            </Button>
           </ModalFooter>
         </Modal>
       </PageSection>

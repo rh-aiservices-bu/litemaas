@@ -431,7 +431,7 @@ export class ApplicationError extends Error {
       message: this.message,
       statusCode: this.statusCode,
       details: this.details,
-      requestId: '', // Will be filled by error handler middleware
+      // requestId will be added by error handler middleware
       correlationId: this.correlationId,
       timestamp: new Date().toISOString(),
       retry,

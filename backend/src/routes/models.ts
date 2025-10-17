@@ -142,6 +142,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
                   supportsFunctionCalling: { type: 'boolean' },
                   supportsParallelFunctionCalling: { type: 'boolean' },
                   supportsToolChoice: { type: 'boolean' },
+                  restrictedAccess: { type: 'boolean' },
                 },
               },
             },
@@ -210,6 +211,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
               supportsFunctionCalling: Boolean(model.supports_function_calling),
               supportsParallelFunctionCalling: Boolean(model.supports_parallel_function_calling),
               supportsToolChoice: Boolean(model.supports_tool_choice),
+              restrictedAccess: Boolean(model.restricted_access),
             }));
 
             fastify.log.debug({ count: models.length }, 'Using synchronized models from database');

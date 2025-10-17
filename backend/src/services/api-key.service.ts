@@ -1176,6 +1176,11 @@ export class ApiKeyService extends BaseService {
         );
       }
 
+      // Validate models have active subscriptions if modelIds are being updated
+      if (updates.modelIds) {
+        await this.validateModelsHaveActiveSubscriptions(userId, updates.modelIds);
+      }
+
       // Get the full LiteLLM key for the update call
       let fullKey: string | undefined;
       if (apiKey.liteLLMKeyId && !this.shouldUseMockData()) {
@@ -1917,4 +1922,138 @@ export class ApiKeyService extends BaseService {
 
   // Removed duplicate validateApiKey and hashApiKey methods
   // Main validateApiKey method has been updated above to handle multi-model support
+
+  /**
+   * Shared validation helper for subscription status
+   * Private helper method for approval workflow
+   */
+  private async validateModelsHaveActiveSubscriptions(
+    userId: string,
+    modelIds: string[],
+  ): Promise<void> {
+    if (!modelIds || modelIds.length === 0) {
+      return;
+    }
+
+    const subscriptions = await this.fastify.dbUtils.queryMany<{
+      model_id: string;
+      status: string;
+    }>(
+      `SELECT model_id, status FROM subscriptions
+       WHERE user_id = $1 AND model_id = ANY($2)`,
+      [userId, modelIds],
+    );
+
+    const invalidModels = modelIds.filter((modelId) => {
+      const sub = subscriptions.find((s) => s.model_id === modelId);
+      return !sub || sub.status !== 'active';
+    });
+
+    if (invalidModels.length > 0) {
+      throw this.createValidationError(
+        `Cannot add models without active subscriptions: ${invalidModels.join(', ')}`,
+        'modelIds',
+        invalidModels,
+        'Ensure all models have active subscriptions before adding them to an API key',
+      );
+    }
+  }
+
+  /**
+   * Remove a specific model from all API keys belonging to a user
+   * Used when subscription is denied or model becomes restricted
+   *
+   * CRITICAL: Updates LiteLLM FIRST, then database (security priority)
+   * - If LiteLLM update fails → rollback/abort (don't modify database)
+   * - If LiteLLM succeeds but database update fails → acceptable (access revoked)
+   */
+  async removeModelFromUserApiKeys(userId: string, modelId: string): Promise<void> {
+    // Get all active API keys for user that contain this model
+    const apiKeys = await this.fastify.dbUtils.queryMany<{
+      id: string;
+      lite_llm_key_value: string;
+    }>(
+      `SELECT DISTINCT ak.id, ak.lite_llm_key_value
+       FROM api_keys ak
+       JOIN api_key_models akm ON ak.id = akm.api_key_id
+       WHERE ak.user_id = $1
+         AND akm.model_id = $2
+         AND ak.is_active = true`,
+      [userId, modelId],
+    );
+
+    if (apiKeys.length === 0) {
+      return;
+    }
+
+    // STEP 1: Update LiteLLM FIRST (security priority)
+    const liteLLMUpdates: { keyId: string; success: boolean; error?: Error }[] = [];
+
+    for (const apiKey of apiKeys) {
+      if (apiKey.lite_llm_key_value && !this.shouldUseMockData()) {
+        try {
+          // Get remaining models for this key (excluding the one being removed)
+          const remainingModels = await this.fastify.dbUtils.queryMany<{ model_id: string }>(
+            `SELECT model_id FROM api_key_models
+             WHERE api_key_id = $1 AND model_id != $2`,
+            [apiKey.id, modelId],
+          );
+
+          await this.liteLLMService.updateKey(apiKey.lite_llm_key_value, {
+            models: remainingModels.map((m) => m.model_id),
+          });
+
+          liteLLMUpdates.push({ keyId: apiKey.id, success: true });
+        } catch (error) {
+          this.fastify.log.error(
+            { error, keyId: apiKey.id, modelId },
+            'Failed to update LiteLLM key - aborting database update for this key',
+          );
+          liteLLMUpdates.push({
+            keyId: apiKey.id,
+            success: false,
+            error: error as Error,
+          });
+        }
+      } else {
+        // Mock mode or no LiteLLM key - treat as success
+        liteLLMUpdates.push({ keyId: apiKey.id, success: true });
+      }
+    }
+
+    // STEP 2: Only update database for keys where LiteLLM succeeded
+    const successfulKeyIds = liteLLMUpdates.filter((u) => u.success).map((u) => u.keyId);
+
+    if (successfulKeyIds.length > 0) {
+      await this.fastify.dbUtils.query(
+        `DELETE FROM api_key_models
+         WHERE api_key_id = ANY($1) AND model_id = $2`,
+        [successfulKeyIds, modelId],
+      );
+
+      this.fastify.log.info(
+        {
+          userId,
+          modelId,
+          keysAffected: successfulKeyIds.length,
+          totalKeys: apiKeys.length,
+        },
+        'Removed model from user API keys',
+      );
+    }
+
+    // Report failures
+    const failures = liteLLMUpdates.filter((u) => !u.success);
+    if (failures.length > 0) {
+      this.fastify.log.warn(
+        {
+          userId,
+          modelId,
+          failedKeys: failures.length,
+          totalKeys: apiKeys.length,
+        },
+        'Some API keys could not be updated in LiteLLM - database unchanged for those keys',
+      );
+    }
+  }
 }

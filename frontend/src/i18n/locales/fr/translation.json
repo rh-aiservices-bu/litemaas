@@ -89,6 +89,8 @@
     "apiKeysFilterAvailable": "Le filtre de clés API est maintenant disponible",
     "charts": {
       "modelDistributionAriaLabel": "Graphique de distribution d'utilisation des modèles",
+      "modelLegendDescription": "Modèle {{modelName}} affiché dans le graphique empilé",
+      "modelUsageSummary": "Graphique empilé avec {{dataPoints}} points de données montrant {{modelCount}} modèles. Les valeurs totales vont de {{minValue}} à {{maxValue}}, avec une moyenne de {{avgValue}}.",
       "modelUsageTrends": "Tendances d'utilisation des modèles",
       "modelUsageTrendsAriaDesc": "Un graphique à barres empilées montrant l'utilisation de différents modèles au fil du temps. La métrique affichée est {{metric}}.",
       "modelUsageTrendsAriaLabel": "Graphique empilé montrant les tendances d'utilisation des modèles au fil du temps par {{metric}}",
@@ -106,6 +108,7 @@
       "30d": "30 derniers jours",
       "7d": "7 derniers jours",
       "90d": "90 derniers jours",
+      "any": "Toutes les dates",
       "custom": "Plage personnalisée"
     },
     "dateRangeChanged": "Plage de dates modifiée en {{preset}}",
@@ -182,7 +185,8 @@
       },
       "tooltip": {
         "noDataOutsideRange": "Pas de données (hors de la plage sélectionnée)",
-        "percentOfWeek": "{{percent}}% du total de la semaine"
+        "percentOfWeek": "{{percent}}% du total de la semaine",
+        "zeroUsage": "Aucune utilisation"
       }
     },
     "loading": "Chargement des métriques...",
@@ -191,11 +195,14 @@
     "loadingUsers": "Chargement des données d'utilisateurs...",
     "metrics": {
       "activeUsersAriaLabel": "{{active}} utilisateurs actifs sur {{total}} utilisateurs au total",
+      "completionTokensAriaLabel": "Tokens de complétion : {{count}}",
       "noChange": "Aucun changement",
       "ofTotalUsers": "sur {{total}} au total",
+      "promptTokensAriaLabel": "Tokens de prompt : {{count}}",
       "successRateAriaLabel": "Taux de réussite : {{percentage}}%",
       "totalCostAriaLabel": "Coût total : ${{amount}}",
       "totalRequestsAriaLabel": "Requêtes totales : {{count}}",
+      "totalTokensAriaLabel": "Tokens totaux : {{count}}",
       "trendLabel": "Tendance {{direction}} de {{change}}%"
     },
     "metricSelect": "Sélection de métrique",
@@ -313,6 +320,15 @@
     "dataPoints": "points de données",
     "date": "Date",
     "day": "Jour",
+    "days": {
+      "fri": "Ven",
+      "mon": "Lun",
+      "sat": "Sam",
+      "sun": "Dim",
+      "thu": "Jeu",
+      "tue": "Mar",
+      "wed": "Mer"
+    },
     "delete": "Supprimer",
     "error": "Erreur",
     "expandToFullScreen": "Agrandir en plein écran",
@@ -387,6 +403,12 @@
       "outputCostCannotBeNegative": "Le coût de sortie ne peut pas être négatif",
       "outputCostPerMillionTokens": "Coût de Sortie par Million de Tokens",
       "pleaseEnterAValidUrl": "Veuillez entrer une URL valide",
+      "restrictedAccessHelp": "Users must request access and receive admin approval",
+      "restrictedAccessLabel": "Require Admin Approval",
+      "restrictedAccessWarning": {
+        "message": "This will move all active subscriptions for this model to pending status and remove the model from existing API keys. Users will need to be re-approved.",
+        "title": "Enable Restricted Access?"
+      },
       "rpmMustBeAtLeast_1": "Le RPM doit être au moins 1",
       "rpmRequestsPerMinute": "RPM (Requêtes par Minute)",
       "supportsFunctionCalling": "Prend en charge l'Appel de Fonctions",
@@ -432,6 +454,7 @@
   "nav": {
     "admin": {
       "models": "Gestion des Modèles",
+      "subscriptions": "Gestion des Abonnements",
       "tools": "Outils",
       "usage": "Analyses d'utilisation",
       "users": "Utilisateurs"
@@ -444,6 +467,73 @@
     "usage": "Utilisation"
   },
   "pages": {
+    "adminSubscriptions": {
+      "actions": {
+        "approve": "Approuver",
+        "delete": "Supprimer",
+        "deny": "Refuser",
+        "revert": "Changer le Statut"
+      },
+      "approvalModalTitle": "Approuver les Abonnements",
+      "approveSuccess": "{{count}} abonnement(s) approuvé(s)",
+      "bulkApprove": "Approuver la Sélection",
+      "bulkDeny": "Refuser la Sélection",
+      "confirmApproval": "Confirmer l'Approbation",
+      "confirmApprovalSingle": "Êtes-vous sûr de vouloir approuver la demande d'abonnement de {{user}} pour accéder à {{model}} ?",
+      "confirmDelete": "Supprimer Définitivement",
+      "confirmDeleteSingle": "Êtes-vous sûr de vouloir supprimer définitivement l'abonnement de {{user}} pour accéder à {{model}} ? Cela supprimera toutes les données associées.",
+      "confirmDenial": "Confirmer le Refus",
+      "confirmDenialBulk": "Êtes-vous sûr de vouloir refuser {{count}} demande(s) d'abonnement ?",
+      "confirmDenialSingle": "Êtes-vous sûr de vouloir refuser la demande d'abonnement de {{user}} pour accéder à {{model}} ?",
+      "confirmRevert": "Confirmer le Rétablissement",
+      "deleteModalTitle": "Supprimer l'Abonnement",
+      "deleteReasonPlaceholder": "Optionnel : Entrez la raison de la suppression (sera enregistrée dans le journal d'audit)...",
+      "deleteSuccess": "Abonnement supprimé avec succès",
+      "deleteWarning": "Cette action ne peut pas être annulée",
+      "denialModalTitle": "Refuser les Abonnements",
+      "denySuccess": "{{count}} abonnement(s) refusé(s)",
+      "filters": {
+        "clearStatuses": "Effacer la sélection de statuts",
+        "dateRange": "Plage de Dates",
+        "from": "De",
+        "model": "Modèle",
+        "noStatusesFound": "Aucun statut trouvé pour \"{{query}}\"",
+        "selectAll": "Sélectionner Tout",
+        "selectedStatuses": "Statuts sélectionnés",
+        "status": "Statut",
+        "statusPlaceholder": "Tous les statuts (cliquer pour filtrer)",
+        "to": "À",
+        "user": "Utilisateur"
+      },
+      "newStatus": "Nouveau Statut",
+      "noSelections": "Aucun abonnement sélectionné",
+      "reasonLabel": "Commentaire",
+      "reasonPlaceholder": "Entrez la raison de cette décision...",
+      "reasonRequired": "Une raison est requise pour les refus",
+      "refresh": "Actualiser",
+      "resultModalTitle": "Résultats de l'Opération en Masse",
+      "resultsTable": {
+        "error": "Error",
+        "failed": "Failed",
+        "result": "Result",
+        "subscription": "Subscription",
+        "success": "Success"
+      },
+      "revertDescription": "Changer le statut de l'abonnement de {{user}} à {{model}}. Statut actuel : {{currentStatus}}",
+      "revertModalTitle": "Rétablir le Statut d'Abonnement",
+      "revertSuccess": "Statut de l'abonnement mis à jour",
+      "table": {
+        "actions": "Actions",
+        "model": "Modèle",
+        "reason": "Raison",
+        "requestedDate": "Demandé",
+        "selectColumn": "Sélectionner des abonnements",
+        "status": "Statut",
+        "statusChangedDate": "Dernière Mise à Jour",
+        "user": "Utilisateur"
+      },
+      "title": "Gestion des Abonnements"
+    },
     "apiKeys": {
       "clipboard": {
         "copied": "Copié",
@@ -482,6 +572,7 @@
       "labels": {
         "actions": "Actions",
         "apiKeyLabel": "Clé API",
+        "apiUrl": "URL de l'API",
         "cancel": "Annuler",
         "close": "Fermer",
         "created": "Créé",
@@ -799,6 +890,7 @@
       "title": "Se connecter à LiteMaaS"
     },
     "models": {
+      "alreadySubscribed": "Already Subscribed",
       "ariaLabels": {
         "modelAvailability": "Disponibilité du modèle",
         "subscriptionStatus": "Statut d'abonnement"
@@ -833,6 +925,11 @@
         "pricingInput": "Entrée",
         "pricingOutput": "Sortie",
         "pricingUnavailable": "Informations de tarification indisponibles",
+        "restrictedAccessInfo": {
+          "buttonText": "Demander l'accès",
+          "message": "Ce modèle nécessite l'approbation d'un administrateur. Lorsque vous vous abonnez, votre demande restera en attente jusqu'à ce qu'un administrateur l'examine et l'approuve. Vous serez notifié une fois votre accès accordé.",
+          "title": "Approbation administrateur requise"
+        },
         "subscribeInfo": "En vous abonnant, vous aurez accès à ce modèle et pourrez générer des clés API pour l'utiliser.",
         "tokens": "tokens"
       },
@@ -840,6 +937,8 @@
       "moreFeatures": "+{{count}} de plus",
       "noModels": "Aucun modèle disponible pour le moment",
       "notifications": {
+        "accessRequestPending": "Votre demande d'abonnement pour {{modelName}} est en attente d'approbation par un administrateur. Vous serez notifié lorsqu'elle sera approuvée.",
+        "accessRequestSubmitted": "Demande d'accès soumise",
         "alreadySubscribed": "Vous êtes déjà abonné à ce modèle",
         "failedToSubscribe": "Échec de l'abonnement au modèle",
         "loadError": "Erreur",
@@ -855,6 +954,7 @@
         "separator": "•"
       },
       "pricingLabel": "Tarification : N/A",
+      "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "Rechercher des modèles...",
       "searchResults": "{{count}} modèles trouvés correspondant à vos critères",
       "subscribe": "S'abonner",
@@ -913,15 +1013,20 @@
       "provider": "Fournisseur",
       "quotaFormat": "Quota : {{requests}} requêtes, {{tokens}} tokens",
       "requestQuota": "Quota de Requêtes",
+      "requestReview": "Request Review",
+      "requestReviewSuccess": "Review requested successfully",
       "requests": "requêtes",
       "requestsUsed": "Requêtes Utilisées",
       "status": {
         "active": "Actif",
+        "denied": "Accès Refusé",
         "expired": "Expiré",
-        "pending": "En attente",
+        "inactive": "Inactif",
+        "pending": "Approbation en Attente",
         "suspended": "Suspendu"
       },
       "statusLabel": "Statut",
+      "statusReason": "Admin Comment",
       "suspendedMessage": "Votre abonnement a été suspendu. Contactez le support ou vérifiez le statut de votre compte.",
       "title": "Abonnements aux Modèles",
       "tokenQuota": "Quota de Tokens",
@@ -1094,6 +1199,7 @@
         "last7Days": "7 derniers jours",
         "last90Days": "90 derniers jours"
       },
+      "export": "Exporter",
       "exportData": "Exporter les Données",
       "exportUsageData": "Exporter les données d'utilisation pour la période sélectionnée",
       "filters": {
@@ -1416,6 +1522,7 @@
       "oauthManaged": "Statut géré par le fournisseur OAuth."
     },
     "table": {
+      "actions": "Actions",
       "ariaLabel": "Tableau des utilisateurs",
       "caption": "Tableau de {{count}} utilisateurs avec nom d'utilisateur, e-mail, nom complet, rôles et statut.",
       "email": "E-mail",

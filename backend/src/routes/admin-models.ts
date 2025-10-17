@@ -3,6 +3,7 @@ import { Static } from '@sinclair/typebox';
 import { AuthenticatedRequest } from '../types';
 import { LiteLLMService } from '../services/litellm.service';
 import { ModelSyncService } from '../services/model-sync.service';
+import { SubscriptionService } from '../services/subscription.service';
 import {
   AdminCreateModelSchema,
   AdminUpdateModelSchema,
@@ -21,6 +22,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
   // Initialize services
   const liteLLMService = new LiteLLMService(fastify);
   const modelSyncService = new ModelSyncService(fastify);
+  const subscriptionService = new SubscriptionService(fastify);
 
   // Create a new model
   fastify.post<{
@@ -300,6 +302,48 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
               updateData.backend_model_name,
               modelId,
             ]);
+          }
+
+          // Handle restrictedAccess changes - triggers cascade logic
+          if (updateData.restrictedAccess !== undefined) {
+            // Get current restriction status
+            const currentModel = await fastify.dbUtils.queryOne<{ restricted_access: boolean }>(
+              'SELECT restricted_access FROM models WHERE id = $1',
+              [modelId],
+            );
+
+            // Only trigger cascade if the value is actually changing
+            if (currentModel && currentModel.restricted_access !== updateData.restrictedAccess) {
+              // Update the database first
+              await fastify.dbUtils.query(
+                'UPDATE models SET restricted_access = $1 WHERE id = $2',
+                [updateData.restrictedAccess, modelId],
+              );
+
+              // Then handle cascade logic (Phase 3 service method)
+              // This will transition active subscriptions to pending and remove from API keys
+              await subscriptionService.handleModelRestrictionChange(
+                modelId,
+                updateData.restrictedAccess,
+              );
+
+              fastify.log.info(
+                { modelId, restrictedAccess: updateData.restrictedAccess },
+                'Model restriction status updated with cascade',
+              );
+            } else if (
+              currentModel &&
+              currentModel.restricted_access === updateData.restrictedAccess
+            ) {
+              // No change, just log
+              fastify.log.debug({ modelId }, 'Model restriction status unchanged');
+            } else {
+              // First-time setting (no current value)
+              await fastify.dbUtils.query(
+                'UPDATE models SET restricted_access = $1 WHERE id = $2',
+                [updateData.restrictedAccess, modelId],
+              );
+            }
           }
 
           fastify.log.info('Model synchronization completed after model update');

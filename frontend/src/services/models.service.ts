@@ -14,6 +14,7 @@ export interface BackendModel {
     unit: string;
   };
   isActive: boolean;
+  restrictedAccess?: boolean;
   createdAt: string;
   updatedAt: string;
   // Admin-specific fields
@@ -46,6 +47,7 @@ export interface Model {
   features: string[];
   availability: 'available' | 'limited' | 'unavailable';
   version: string;
+  restrictedAccess?: boolean;
   // Admin-specific fields
   apiBase?: string;
   backendModelName?: string;
@@ -141,6 +143,7 @@ class ModelsService {
       features,
       availability,
       version,
+      restrictedAccess: backendModel.restrictedAccess,
       // Preserve admin-specific fields
       apiBase: backendModel.apiBase,
       backendModelName: backendModel.backendModelName,
@@ -182,7 +185,6 @@ class ModelsService {
     }
 
     const response = await apiClient.get<ModelsResponse>(`/models?${params}`);
-    console.log(response);
 
     return {
       models: response.data.map(this.convertBackendModel),

@@ -14,7 +14,7 @@ import { CalendarAltIcon } from '@patternfly/react-icons';
 /**
  * Date preset options
  */
-export type DatePreset = '1d' | '7d' | '30d' | '90d' | 'custom';
+export type DatePreset = 'any' | '1d' | '7d' | '30d' | '90d' | 'custom';
 
 /**
  * Props for the DateRangeFilter component
@@ -36,6 +36,8 @@ export interface DateRangeFilterProps {
   isOpen?: boolean;
   /** Callback when preset select open state changes */
   onOpenChange?: (isOpen: boolean) => void;
+  /** Whether to include "Any Date" option (defaults to false) */
+  includeAnyDateOption?: boolean;
 }
 
 /**
@@ -68,6 +70,7 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
   onEndDateChange,
   isOpen: controlledIsOpen,
   onOpenChange: controlledOnOpenChange,
+  includeAnyDateOption = false,
 }) => {
   const { t } = useTranslation();
   const [internalIsOpen, setInternalIsOpen] = React.useState(false);
@@ -111,6 +114,9 @@ export const DateRangeFilter: React.FC<DateRangeFilterProps> = ({
           aria-label={t('adminUsage.dateRangeSelect', 'Date range selection')}
         >
           <SelectList>
+            {includeAnyDateOption && (
+              <SelectOption value="any">{t('adminUsage.datePresets.any', 'Any Date')}</SelectOption>
+            )}
             <SelectOption value="1d">{t('adminUsage.datePresets.1d', 'Last Day')}</SelectOption>
             <SelectOption value="7d">{t('adminUsage.datePresets.7d', 'Last 7 days')}</SelectOption>
             <SelectOption value="30d">

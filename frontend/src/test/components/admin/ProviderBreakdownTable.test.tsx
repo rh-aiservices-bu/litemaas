@@ -238,19 +238,15 @@ describe('ProviderBreakdownTable', () => {
       );
 
       await waitFor(() => {
-        const badge98 = screen.getByText('98.2%');
-        expect(badge98).toBeInTheDocument();
-        expect(badge98).toHaveAttribute(
-          'aria-label',
+        // FIXED: Query by aria-label instead of text content
+        const highRateBadges = screen.getAllByLabelText(
           'admin.usage.tables.providers.successRate.high',
         );
+        expect(highRateBadges.length).toBe(2); // 98.2% and 96.5%
 
-        const badge96 = screen.getByText('96.5%');
-        expect(badge96).toBeInTheDocument();
-        expect(badge96).toHaveAttribute(
-          'aria-label',
-          'admin.usage.tables.providers.successRate.high',
-        );
+        // Verify the actual percentage values are displayed
+        expect(screen.getByText('98.2%')).toBeInTheDocument();
+        expect(screen.getByText('96.5%')).toBeInTheDocument();
       });
     });
 
@@ -282,12 +278,14 @@ describe('ProviderBreakdownTable', () => {
       );
 
       await waitFor(() => {
-        const badge = screen.getByText('93.5%');
-        expect(badge).toBeInTheDocument();
-        expect(badge).toHaveAttribute(
-          'aria-label',
+        // FIXED: Query by aria-label instead of text content
+        const mediumRateBadge = screen.getByLabelText(
           'admin.usage.tables.providers.successRate.medium',
         );
+        expect(mediumRateBadge).toBeInTheDocument();
+
+        // Verify the actual percentage value is displayed
+        expect(screen.getByText('93.5%')).toBeInTheDocument();
       });
     });
 
@@ -309,9 +307,12 @@ describe('ProviderBreakdownTable', () => {
       );
 
       await waitFor(() => {
-        const badge = screen.getByText('88.5%');
-        expect(badge).toBeInTheDocument();
-        expect(badge).toHaveAttribute('aria-label', 'admin.usage.tables.providers.successRate.low');
+        // FIXED: Query by aria-label instead of text content
+        const lowRateBadge = screen.getByLabelText('admin.usage.tables.providers.successRate.low');
+        expect(lowRateBadge).toBeInTheDocument();
+
+        // Verify the actual percentage value is displayed
+        expect(screen.getByText('88.5%')).toBeInTheDocument();
       });
     });
   });
@@ -451,12 +452,20 @@ describe('ProviderBreakdownTable', () => {
       );
 
       await waitFor(() => {
-        const badges = screen.getAllByText(/\d+\.\d+%/);
-        expect(badges.length).toBeGreaterThan(0);
+        // FIXED: Verify that success rate badges have aria-labels by checking for all three types
+        const allLabels = [
+          ...screen.queryAllByLabelText(/admin\.usage\.tables\.providers\.successRate\.high/),
+          ...screen.queryAllByLabelText(/admin\.usage\.tables\.providers\.successRate\.medium/),
+          ...screen.queryAllByLabelText(/admin\.usage\.tables\.providers\.successRate\.low/),
+        ];
 
-        badges.forEach((badge) => {
-          expect(badge).toHaveAttribute('aria-label');
-        });
+        // We should have 3 badges total (98.2%, 96.5%, 88.5%)
+        expect(allLabels.length).toBe(3);
+
+        // Verify all percentage values are displayed
+        expect(screen.getByText('98.2%')).toBeInTheDocument();
+        expect(screen.getByText('96.5%')).toBeInTheDocument();
+        expect(screen.getByText('88.5%')).toBeInTheDocument();
       });
     });
 

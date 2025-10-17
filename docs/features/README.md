@@ -7,6 +7,7 @@ This directory contains documentation for key features and functionality in Lite
 - **[User Roles & Administration](user-roles-administration.md)** - RBAC system with three-tier role hierarchy (admin > adminReadonly > user)
 - **[Admin Tools](admin-tools.md)** - Administrative tools and model synchronization
 - **[Authentication Flow](authentication-flow.md)** - OAuth2 integration and authentication details
+- **[Restricted Model Subscription Approval](subscription-approval-workflow.md)** - Admin approval workflow for restricted model access with audit trail
 - **[Admin Usage API Key Filter](admin-usage-api-key-filter.md)** - Filtering usage data by API keys
 - **[Model Configuration Testing](model-configuration-testing.md)** - Configuration validation and testing features
 - **[Test Chatbot](test-chatbot.md)** - Chatbot testing guide and features

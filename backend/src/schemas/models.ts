@@ -20,6 +20,7 @@ export const ModelSchema = Type.Object({
   contextLength: Type.Optional(Type.Integer({ minimum: 1 })),
   pricing: Type.Optional(ModelPricingSchema),
   isActive: Type.Boolean(),
+  restrictedAccess: Type.Optional(Type.Boolean()),
   createdAt: TimestampSchema,
   updatedAt: TimestampSchema,
 });
@@ -51,6 +52,7 @@ export const CreateModelSchema = Type.Object({
   capabilities: Type.Optional(Type.Array(Type.String())),
   contextLength: Type.Optional(Type.Integer({ minimum: 1 })),
   pricing: Type.Optional(ModelPricingSchema),
+  restrictedAccess: Type.Optional(Type.Boolean()),
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
 });
 
@@ -60,6 +62,7 @@ export const UpdateModelSchema = Type.Object({
   capabilities: Type.Optional(Type.Array(Type.String())),
   contextLength: Type.Optional(Type.Integer({ minimum: 1 })),
   pricing: Type.Optional(ModelPricingSchema),
+  restrictedAccess: Type.Optional(Type.Boolean()),
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
   isActive: Type.Optional(Type.Boolean()),
 });

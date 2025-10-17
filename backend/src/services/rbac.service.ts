@@ -149,6 +149,22 @@ export class RBACService {
       action: 'write',
     },
 
+    // Subscription approval permissions
+    {
+      id: 'admin:subscriptions:read',
+      name: 'View Subscription Requests',
+      description: 'View subscription approval requests and history',
+      resource: 'subscriptions',
+      action: 'read',
+    },
+    {
+      id: 'admin:subscriptions:write',
+      name: 'Manage Subscription Requests',
+      description: 'Approve, deny, and revert subscription requests',
+      resource: 'subscriptions',
+      action: 'write',
+    },
+
     // Admin permissions
     {
       id: 'admin:system',
@@ -193,6 +209,8 @@ export class RBACService {
         'admin:usage',
         'admin:banners:read',
         'admin:banners:write',
+        'admin:subscriptions:read',
+        'admin:subscriptions:write',
         'users:read',
         'users:write',
         'users:delete',
@@ -234,6 +252,7 @@ export class RBACService {
         'admin:users', // View admin section
         'admin:usage', // View admin usage analytics
         'admin:banners:read', // View banners in admin
+        'admin:subscriptions:read', // View subscription requests (no write permission)
         'users:read', // List and view users
         'models:read',
         'subscriptions:read',

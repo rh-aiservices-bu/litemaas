@@ -17,6 +17,8 @@ export const SubscriptionStatusEnum = Type.Union([
   Type.Literal('cancelled'),
   Type.Literal('expired'),
   Type.Literal('inactive'),
+  Type.Literal('pending'),
+  Type.Literal('denied'),
 ]);
 
 export const SubscriptionSchema = Type.Object({
@@ -30,6 +32,9 @@ export const SubscriptionSchema = Type.Object({
   usedTokens: Type.Integer(),
   resetAt: Type.Optional(TimestampSchema),
   expiresAt: Type.Optional(TimestampSchema),
+  statusReason: Type.Optional(Type.String()),
+  statusChangedAt: Type.Optional(TimestampSchema),
+  statusChangedBy: Type.Optional(Type.String()),
   createdAt: TimestampSchema,
   updatedAt: TimestampSchema,
 });

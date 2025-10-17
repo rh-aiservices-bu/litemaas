@@ -89,6 +89,8 @@
     "apiKeysFilterAvailable": "API key filter is now available",
     "charts": {
       "modelDistributionAriaLabel": "Model usage distribution chart",
+      "modelLegendDescription": "Model {{modelName}} shown in the stacked chart",
+      "modelUsageSummary": "Stacked chart with {{dataPoints}} data points showing {{modelCount}} models. Total values range from {{minValue}} to {{maxValue}}, with an average of {{avgValue}}.",
       "modelUsageTrends": "Model Usage Trends",
       "modelUsageTrendsAriaDesc": "A stacked bar chart showing usage of different models over time. The metric displayed is {{metric}}.",
       "modelUsageTrendsAriaLabel": "Stacked chart showing model usage trends over time by {{metric}}",
@@ -106,6 +108,7 @@
       "30d": "Last 30 days",
       "7d": "Last 7 days",
       "90d": "Last 90 days",
+      "any": "Any Date",
       "custom": "Custom range"
     },
     "dateRangeChanged": "Date range changed to {{preset}}",
@@ -182,7 +185,8 @@
       },
       "tooltip": {
         "noDataOutsideRange": "No data (outside selected range)",
-        "percentOfWeek": "{{percent}}% of week total"
+        "percentOfWeek": "{{percent}}% of week total",
+        "zeroUsage": "Zero usage"
       }
     },
     "loading": "Loading metrics...",
@@ -191,11 +195,14 @@
     "loadingUsers": "Loading user data...",
     "metrics": {
       "activeUsersAriaLabel": "{{active}} active users out of {{total}} total users",
+      "completionTokensAriaLabel": "Completion tokens: {{count}}",
       "noChange": "No change",
       "ofTotalUsers": "of {{total}} total",
+      "promptTokensAriaLabel": "Prompt tokens: {{count}}",
       "successRateAriaLabel": "Success rate: {{percentage}}%",
       "totalCostAriaLabel": "Total cost: ${{amount}}",
       "totalRequestsAriaLabel": "Total requests: {{count}}",
+      "totalTokensAriaLabel": "Total tokens: {{count}}",
       "trendLabel": "Trend {{direction}} by {{change}}%"
     },
     "metricSelect": "Metric selection",
@@ -313,6 +320,15 @@
     "dataPoints": "data points",
     "date": "Date",
     "day": "Day",
+    "days": {
+      "fri": "Fri",
+      "mon": "Mon",
+      "sat": "Sat",
+      "sun": "Sun",
+      "thu": "Thu",
+      "tue": "Tue",
+      "wed": "Wed"
+    },
     "delete": "Delete",
     "error": "Error",
     "expandToFullScreen": "Expand to full screen",
@@ -387,6 +403,12 @@
       "outputCostCannotBeNegative": "Output cost cannot be negative",
       "outputCostPerMillionTokens": "Output Cost per Million Tokens",
       "pleaseEnterAValidUrl": "Please enter a valid URL",
+      "restrictedAccessHelp": "Users must request access and receive admin approval",
+      "restrictedAccessLabel": "Require Admin Approval",
+      "restrictedAccessWarning": {
+        "message": "This will move all active subscriptions for this model to pending status and remove the model from existing API keys. Users will need to be re-approved.",
+        "title": "Enable Restricted Access?"
+      },
       "rpmMustBeAtLeast_1": "RPM must be at least 1",
       "rpmRequestsPerMinute": "RPM (Requests per Minute)",
       "supportsFunctionCalling": "Supports Function Calling",
@@ -432,6 +454,7 @@
   "nav": {
     "admin": {
       "models": "Model Management",
+      "subscriptions": "Subscription Management",
       "tools": "Tools",
       "usage": "Usage Analytics",
       "users": "Users"
@@ -444,6 +467,73 @@
     "usage": "Usage"
   },
   "pages": {
+    "adminSubscriptions": {
+      "actions": {
+        "approve": "Approve",
+        "delete": "Delete",
+        "deny": "Deny",
+        "revert": "Change Status"
+      },
+      "approvalModalTitle": "Approve Subscriptions",
+      "approveSuccess": "{{count}} subscription(s) approved",
+      "bulkApprove": "Approve Selected",
+      "bulkDeny": "Deny Selected",
+      "confirmApproval": "Confirm Approval",
+      "confirmApprovalSingle": "Are you sure you want to approve the subscription request for {{user}} to access {{model}}?",
+      "confirmDelete": "Delete Permanently",
+      "confirmDeleteSingle": "Are you sure you want to permanently delete the subscription for {{user}} to access {{model}}? This will remove all associated data.",
+      "confirmDenial": "Confirm Denial",
+      "confirmDenialBulk": "Are you sure you want to deny {{count}} subscription request(s)?",
+      "confirmDenialSingle": "Are you sure you want to deny the subscription request for {{user}} to access {{model}}?",
+      "confirmRevert": "Confirm Revert",
+      "deleteModalTitle": "Delete Subscription",
+      "deleteReasonPlaceholder": "Optional: Enter reason for deletion (will be saved in audit log)...",
+      "deleteSuccess": "Subscription deleted successfully",
+      "deleteWarning": "This action cannot be undone",
+      "denialModalTitle": "Deny Subscriptions",
+      "denySuccess": "{{count}} subscription(s) denied",
+      "filters": {
+        "clearStatuses": "Clear status selection",
+        "dateRange": "Date Range",
+        "from": "From",
+        "model": "Model",
+        "noStatusesFound": "No statuses found for \"{{query}}\"",
+        "selectAll": "Select All",
+        "selectedStatuses": "Selected statuses",
+        "status": "Filter by status",
+        "statusPlaceholder": "All statuses (click to filter)",
+        "to": "To",
+        "user": "User"
+      },
+      "newStatus": "New Status",
+      "noSelections": "No subscriptions selected",
+      "reasonLabel": "Comment",
+      "reasonPlaceholder": "Enter reason for this decision...",
+      "reasonRequired": "Reason is required for denials",
+      "refresh": "Refresh",
+      "resultModalTitle": "Bulk Operation Results",
+      "resultsTable": {
+        "error": "Error",
+        "failed": "Failed",
+        "result": "Result",
+        "subscription": "Subscription",
+        "success": "Success"
+      },
+      "revertDescription": "Change the status of {{user}}'s subscription to {{model}}. Current status: {{currentStatus}}",
+      "revertModalTitle": "Revert Subscription Status",
+      "revertSuccess": "Subscription status updated",
+      "table": {
+        "actions": "Actions",
+        "model": "Model",
+        "reason": "Reason",
+        "requestedDate": "Requested",
+        "selectColumn": "Select subscriptions",
+        "status": "Status",
+        "statusChangedDate": "Last Updated",
+        "user": "User"
+      },
+      "title": "Subscription Management"
+    },
     "apiKeys": {
       "clipboard": {
         "copied": "Copied",
@@ -482,6 +572,7 @@
       "labels": {
         "actions": "Actions",
         "apiKeyLabel": "API key",
+        "apiUrl": "API URL",
         "cancel": "Cancel",
         "close": "Close",
         "created": "Created",
@@ -799,6 +890,7 @@
       "title": "Log in to LiteMaaS"
     },
     "models": {
+      "alreadySubscribed": "Already Subscribed",
       "ariaLabels": {
         "modelAvailability": "Model availability",
         "subscriptionStatus": "Subscription status"
@@ -833,6 +925,11 @@
         "pricingInput": "Input",
         "pricingOutput": "Output",
         "pricingUnavailable": "Pricing information unavailable",
+        "restrictedAccessInfo": {
+          "buttonText": "Request Access",
+          "message": "This model requires administrator approval. When you subscribe, your request will be in pending status until an admin reviews and approves it. You'll be notified once your access is granted.",
+          "title": "Admin Approval Required"
+        },
         "subscribeInfo": "By subscribing, you'll get access to this model and can generate API keys to use it.",
         "tokens": "tokens"
       },
@@ -840,6 +937,8 @@
       "moreFeatures": "+{{count}} more",
       "noModels": "No models available yet",
       "notifications": {
+        "accessRequestPending": "Your subscription request for {{modelName}} is pending admin approval. You'll be notified when it's approved.",
+        "accessRequestSubmitted": "Access Request Submitted",
         "alreadySubscribed": "You are already subscribed to this model",
         "failedToSubscribe": "Failed to subscribe to model",
         "loadError": "Error",
@@ -855,6 +954,7 @@
         "separator": "•"
       },
       "pricingLabel": "Pricing: N/A",
+      "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "Search models...",
       "searchResults": "Found {{count}} models matching your criteria",
       "subscribe": "Subscribe",
@@ -913,15 +1013,20 @@
       "provider": "Provider",
       "quotaFormat": "Quota: {{requests}} requests, {{tokens}} tokens",
       "requestQuota": "Request Quota",
+      "requestReview": "Request Review",
+      "requestReviewSuccess": "Review requested successfully",
       "requests": "requests",
       "requestsUsed": "Requests Used",
       "status": {
         "active": "Active",
+        "denied": "Access Denied",
         "expired": "Expired",
-        "pending": "Pending",
+        "inactive": "Inactive",
+        "pending": "Pending Approval",
         "suspended": "Suspended"
       },
       "statusLabel": "Status",
+      "statusReason": "Admin Comment",
       "suspendedMessage": "Your subscription has been suspended. Contact support or check your account status.",
       "title": "Model Subscriptions",
       "tokenQuota": "Token Quota",
@@ -1094,6 +1199,7 @@
         "last7Days": "Last 7 days",
         "last90Days": "Last 90 days"
       },
+      "export": "Export",
       "exportData": "Export Data",
       "exportUsageData": "Export usage data for the selected time period",
       "filters": {
@@ -1415,6 +1521,7 @@
       "oauthManaged": "Status managed by OAuth provider."
     },
     "table": {
+      "actions": "Actions",
       "ariaLabel": "Users table",
       "caption": "Table of {{count}} users with username, email, full name, roles, and status.",
       "email": "Email",

@@ -89,6 +89,8 @@
     "apiKeysFilterAvailable": "API 密钥筛选现已可用",
     "charts": {
       "modelDistributionAriaLabel": "模型使用分布图表",
+      "modelLegendDescription": "堆叠图表中显示的模型 {{modelName}}",
+      "modelUsageSummary": "堆叠图表包含 {{dataPoints}} 个数据点，显示 {{modelCount}} 个模型。总值范围从 {{minValue}} 到 {{maxValue}}，平均值为 {{avgValue}}。",
       "modelUsageTrends": "模型使用趋势",
       "modelUsageTrendsAriaDesc": "堆叠柱状图显示不同模型随时间的使用情况。显示的指标为 {{metric}}。",
       "modelUsageTrendsAriaLabel": "按 {{metric}} 显示模型使用趋势随时间变化的堆叠图表",
@@ -106,6 +108,7 @@
       "30d": "最近 30 天",
       "7d": "最近 7 天",
       "90d": "最近 90 天",
+      "any": "任意日期",
       "custom": "自定义范围"
     },
     "dateRangeChanged": "日期范围已更改为 {{preset}}",
@@ -182,7 +185,8 @@
       },
       "tooltip": {
         "noDataOutsideRange": "无数据（超出所选范围）",
-        "percentOfWeek": "占周总量的 {{percent}}%"
+        "percentOfWeek": "占周总量的 {{percent}}%",
+        "zeroUsage": "零使用"
       }
     },
     "loading": "加载指标中...",
@@ -191,11 +195,14 @@
     "loadingUsers": "加载用户数据中...",
     "metrics": {
       "activeUsersAriaLabel": "{{total}} 个总用户中有 {{active}} 个活跃用户",
+      "completionTokensAriaLabel": "完成令牌数：{{count}}",
       "noChange": "无变化",
       "ofTotalUsers": "共 {{total}} 个",
+      "promptTokensAriaLabel": "提示令牌数：{{count}}",
       "successRateAriaLabel": "成功率：{{percentage}}%",
       "totalCostAriaLabel": "总成本：${{amount}}",
       "totalRequestsAriaLabel": "总请求数：{{count}}",
+      "totalTokensAriaLabel": "总令牌数：{{count}}",
       "trendLabel": "趋势 {{direction}} {{change}}%"
     },
     "metricSelect": "指标选择",
@@ -313,6 +320,15 @@
     "dataPoints": "数据点",
     "date": "日期",
     "day": "天",
+    "days": {
+      "fri": "周五",
+      "mon": "周一",
+      "sat": "周六",
+      "sun": "周日",
+      "thu": "周四",
+      "tue": "周二",
+      "wed": "周三"
+    },
     "delete": "删除",
     "error": "错误",
     "expandToFullScreen": "展开至全屏",
@@ -387,6 +403,12 @@
       "outputCostCannotBeNegative": "输出成本不能为负数",
       "outputCostPerMillionTokens": "每百万令牌输出成本",
       "pleaseEnterAValidUrl": "请输入有效的URL",
+      "restrictedAccessHelp": "Users must request access and receive admin approval",
+      "restrictedAccessLabel": "Require Admin Approval",
+      "restrictedAccessWarning": {
+        "message": "This will move all active subscriptions for this model to pending status and remove the model from existing API keys. Users will need to be re-approved.",
+        "title": "Enable Restricted Access?"
+      },
       "rpmMustBeAtLeast_1": "RPM必须至少1",
       "rpmRequestsPerMinute": "RPM（每分钟请求数）",
       "supportsFunctionCalling": "支持函数调用",
@@ -432,6 +454,7 @@
   "nav": {
     "admin": {
       "models": "模型管理",
+      "subscriptions": "订阅管理",
       "tools": "工具",
       "usage": "使用分析",
       "users": "用户"
@@ -444,6 +467,73 @@
     "usage": "使用情况"
   },
   "pages": {
+    "adminSubscriptions": {
+      "actions": {
+        "approve": "批准",
+        "delete": "删除",
+        "deny": "拒绝",
+        "revert": "更改状态"
+      },
+      "approvalModalTitle": "批准订阅",
+      "approveSuccess": "已批准{{count}}个订阅",
+      "bulkApprove": "批准选中项",
+      "bulkDeny": "拒绝选中项",
+      "confirmApproval": "确认批准",
+      "confirmApprovalSingle": "您确定要批准{{user}}访问{{model}}的订阅请求吗？",
+      "confirmDelete": "永久删除",
+      "confirmDeleteSingle": "您确定要永久删除{{user}}访问{{model}}的订阅吗？这将删除所有相关数据。",
+      "confirmDenial": "确认拒绝",
+      "confirmDenialBulk": "您确定要拒绝{{count}}个订阅请求吗？",
+      "confirmDenialSingle": "您确定要拒绝{{user}}访问{{model}}的订阅请求吗？",
+      "confirmRevert": "确认恢复",
+      "deleteModalTitle": "删除订阅",
+      "deleteReasonPlaceholder": "可选：输入删除原因（将保存在审计日志中）...",
+      "deleteSuccess": "订阅已成功删除",
+      "deleteWarning": "此操作无法撤销",
+      "denialModalTitle": "拒绝订阅",
+      "denySuccess": "已拒绝{{count}}个订阅",
+      "filters": {
+        "clearStatuses": "清除状态选择",
+        "dateRange": "日期范围",
+        "from": "开始日期",
+        "model": "模型",
+        "noStatusesFound": "未找到 \"{{query}}\" 的状态",
+        "selectAll": "全选",
+        "selectedStatuses": "已选状态",
+        "status": "状态",
+        "statusPlaceholder": "所有状态（点击筛选）",
+        "to": "结束日期",
+        "user": "用户"
+      },
+      "newStatus": "新状态",
+      "noSelections": "未选择订阅",
+      "reasonLabel": "评论",
+      "reasonPlaceholder": "请输入此决定的原因...",
+      "reasonRequired": "拒绝时需要提供原因",
+      "refresh": "刷新",
+      "resultModalTitle": "批量操作结果",
+      "resultsTable": {
+        "error": "错误",
+        "failed": "失败",
+        "result": "结果",
+        "subscription": "订阅",
+        "success": "成功"
+      },
+      "revertDescription": "更改{{user}}对{{model}}的订阅状态。当前状态：{{currentStatus}}",
+      "revertModalTitle": "恢复订阅状态",
+      "revertSuccess": "订阅状态已更新",
+      "table": {
+        "actions": "操作",
+        "model": "模型",
+        "reason": "原因",
+        "requestedDate": "请求日期",
+        "selectColumn": "选择订阅",
+        "status": "状态",
+        "statusChangedDate": "最后更新",
+        "user": "用户"
+      },
+      "title": "订阅管理"
+    },
     "apiKeys": {
       "clipboard": {
         "copied": "已复制",
@@ -482,6 +572,7 @@
       "labels": {
         "actions": "操作",
         "apiKeyLabel": "API密钥",
+        "apiUrl": "API地址",
         "cancel": "取消",
         "close": "关闭",
         "created": "创建时间",
@@ -799,6 +890,7 @@
       "title": "登录LiteMaaS"
     },
     "models": {
+      "alreadySubscribed": "Already Subscribed",
       "ariaLabels": {
         "modelAvailability": "模型可用性",
         "subscriptionStatus": "订阅状态"
@@ -833,6 +925,11 @@
         "pricingInput": "输入",
         "pricingOutput": "输出",
         "pricingUnavailable": "定价信息不可用",
+        "restrictedAccessInfo": {
+          "buttonText": "请求访问",
+          "message": "此模型需要管理员批准。当您订阅时，您的请求将处于待审核状态，直到管理员审核并批准。访问权限批准后您将收到通知。",
+          "title": "需要管理员批准"
+        },
         "subscribeInfo": "通过订阅，您将获得访问此模型的权限，并可以生成用于使用它的API密钥。",
         "tokens": "令牌"
       },
@@ -840,6 +937,8 @@
       "moreFeatures": "+{{count}}个更多",
       "noModels": "暂无可用模型",
       "notifications": {
+        "accessRequestPending": "您对 {{modelName}} 的订阅请求正在等待管理员批准。批准后您将收到通知。",
+        "accessRequestSubmitted": "访问请求已提交",
         "alreadySubscribed": "您已经订阅了此模型",
         "failedToSubscribe": "订阅模型失败",
         "loadError": "错误",
@@ -855,6 +954,7 @@
         "separator": "•"
       },
       "pricingLabel": "价格：不适用",
+      "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "搜索模型...",
       "searchResults": "找到{{count}}个符合您条件的模型",
       "subscribe": "订阅",
@@ -913,15 +1013,20 @@
       "provider": "提供商",
       "quotaFormat": "配额：{{requests}}个请求，{{tokens}}个令牌",
       "requestQuota": "请求配额",
+      "requestReview": "Request Review",
+      "requestReviewSuccess": "Review requested successfully",
       "requests": "请求",
       "requestsUsed": "已使用请求",
       "status": {
         "active": "活跃",
+        "denied": "Access Denied",
         "expired": "已过期",
-        "pending": "待处理",
+        "inactive": "未激活",
+        "pending": "Pending Approval",
         "suspended": "已暂停"
       },
       "statusLabel": "状态",
+      "statusReason": "Admin Comment",
       "suspendedMessage": "您的订阅已被暂停。请联系支持或检查您的账户状态。",
       "title": "模型订阅",
       "tokenQuota": "令牌配额",
@@ -1094,6 +1199,7 @@
         "last7Days": "过去7天",
         "last90Days": "过去90天"
       },
+      "export": "导出",
       "exportData": "导出数据",
       "exportUsageData": "导出选定时间段的使用数据",
       "filters": {
@@ -1416,6 +1522,7 @@
       "oauthManaged": "状态由OAuth提供商管理。"
     },
     "table": {
+      "actions": "操作",
       "ariaLabel": "用户表格",
       "caption": "包含用户名、邮箱、全名、角色和状态的{{count}}个用户表格。",
       "email": "邮箱",

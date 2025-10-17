@@ -20,7 +20,6 @@ import {
   MenuToggle,
   MenuToggleElement,
   Button,
-  Badge,
   Content,
   ContentVariants,
   Flex,
@@ -41,12 +40,19 @@ import {
   EmptyStateActions,
   Label,
   Stack,
+  Alert,
 } from '@patternfly/react-core';
-import { CatalogIcon, FilterIcon, InfoCircleIcon, CheckCircleIcon } from '@patternfly/react-icons';
+import {
+  CatalogIcon,
+  FilterIcon,
+  InfoCircleIcon,
+  CheckCircleIcon,
+  LockIcon,
+} from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { modelsService, Model } from '../services/models.service';
-import { subscriptionsService } from '../services/subscriptions.service';
+import { subscriptionsService, Subscription } from '../services/subscriptions.service';
 import {
   ScreenReaderAnnouncement,
   useScreenReaderAnnouncement,
@@ -69,7 +75,7 @@ const ModelsPage: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubscribing, setIsSubscribing] = useState(false);
-  const [subscriptions, setSubscriptions] = useState<Set<string>>(new Set());
+  const [subscriptions, setSubscriptions] = useState<Map<string, Subscription>>(new Map());
   const modalTriggerRef = useRef<HTMLElement | null>(null);
   const modalPrimaryButtonRef = useRef<HTMLButtonElement>(null);
   const isInitialMountRef = useRef(true);
@@ -120,13 +126,11 @@ const ModelsPage: React.FC = () => {
   const loadSubscriptions = async (): Promise<void> => {
     try {
       const response = await subscriptionsService.getSubscriptions();
-      // Create a Set of subscribed model IDs for efficient lookup
-      const subscribedModelIds = new Set(
-        response.data
-          .filter((sub) => sub.status === 'active') // Only include active subscriptions
-          .map((sub) => sub.modelId),
-      );
-      setSubscriptions(subscribedModelIds);
+      // Create a Map of subscriptions keyed by model ID for efficient lookup
+      // Include ALL subscription statuses to prevent duplicate subscriptions (per unique constraint)
+      // Map preserves full subscription data including status for badge display
+      const subscriptionsMap = new Map(response.data.map((sub) => [sub.modelId, sub]));
+      setSubscriptions(subscriptionsMap);
     } catch (err) {
       console.error('Failed to load subscriptions:', err);
       // Don't show error notification as this is not critical for model browsing
@@ -272,13 +276,24 @@ const ModelsPage: React.FC = () => {
         quotaTokens: 1000000,
       });
 
-      addNotification({
-        variant: 'success',
-        title: t('pages.models.notifications.subscribeSuccess'),
-        description: t('pages.models.notifications.subscribeSuccessDesc', {
-          modelName: selectedModel!.name,
-        }),
-      });
+      // Show different notification based on whether model requires approval
+      if (selectedModel!.restrictedAccess) {
+        addNotification({
+          variant: 'info',
+          title: t('pages.models.notifications.accessRequestSubmitted'),
+          description: t('pages.models.notifications.accessRequestPending', {
+            modelName: selectedModel!.name,
+          }),
+        });
+      } else {
+        addNotification({
+          variant: 'success',
+          title: t('pages.models.notifications.subscribeSuccess'),
+          description: t('pages.models.notifications.subscribeSuccessDesc', {
+            modelName: selectedModel!.name,
+          }),
+        });
+      }
 
       setIsModalOpen(false);
 
@@ -302,23 +317,50 @@ const ModelsPage: React.FC = () => {
   };
 
   const getSubscriptionBadge = (modelId: string) => {
-    // Only show badge if user is subscribed to this model
-    if (!subscriptions.has(modelId)) {
+    // Get subscription for this model (if it exists)
+    const subscription = subscriptions.get(modelId);
+
+    // Only show badge if there's an active or pending subscription
+    if (!subscription) {
       return null;
     }
 
+    // Show green "Subscribed" badge for active subscriptions
+    if (subscription.status === 'active') {
+      return (
+        <Label
+          color="green"
+          aria-label={`${t('pages.models.ariaLabels.subscriptionStatus')}: ${t('pages.models.subscribed')}`}
+        >
+          <CheckCircleIcon /> {t('pages.models.subscribed')}
+        </Label>
+      );
+    }
+
+    // Show blue "Pending" badge for pending subscriptions
+    if (subscription.status === 'pending') {
+      return (
+        <Label
+          color="blue"
+          aria-label={`${t('pages.models.ariaLabels.subscriptionStatus')}: ${t('pages.subscriptions.status.pending')}`}
+        >
+          <LockIcon /> {t('pages.subscriptions.status.pending')}
+        </Label>
+      );
+    }
+
+    // Don't show badge for other statuses (inactive, denied, suspended, etc.)
+    return null;
+  };
+
+  const getRestrictedAccessBadge = () => {
     return (
-      <Badge
-        color="success"
-        aria-label={`${t('pages.models.ariaLabels.subscriptionStatus')}: ${t('pages.models.subscribed')}`}
+      <Label
+        color="orange"
+        aria-label={`${t('pages.models.ariaLabels.modelAvailability')}: ${t('pages.models.restrictedAccess')}`}
       >
-        <Flex alignItems={{ default: 'alignItemsCenter' }} spaceItems={{ default: 'spaceItemsXs' }}>
-          <FlexItem>
-            <CheckCircleIcon />
-          </FlexItem>
-          <FlexItem>{t('pages.models.subscribed')}</FlexItem>
-        </Flex>
-      </Badge>
+        <LockIcon /> {t('pages.models.restrictedAccess')}
+      </Label>
     );
   };
 
@@ -511,7 +553,16 @@ const ModelsPage: React.FC = () => {
                               {model.name}
                             </Title>
                           </FlexItem>
-                          <FlexItem>{getSubscriptionBadge(model.id)}</FlexItem>
+                          <FlexItem>
+                            <Flex spaceItems={{ default: 'spaceItemsSm' }}>
+                              {model.restrictedAccess && (
+                                <FlexItem>{getRestrictedAccessBadge()}</FlexItem>
+                              )}
+                              {getSubscriptionBadge(model.id) && (
+                                <FlexItem>{getSubscriptionBadge(model.id)}</FlexItem>
+                              )}
+                            </Flex>
+                          </FlexItem>
                         </Flex>
                       </CardTitle>
                     </CardHeader>
@@ -597,7 +648,16 @@ const ModelsPage: React.FC = () => {
                 {selectedModel?.name}
               </Title>
             </FlexItem>
-            <FlexItem>{selectedModel && getSubscriptionBadge(selectedModel.id)}</FlexItem>
+            <FlexItem>
+              <Flex spaceItems={{ default: 'spaceItemsSm' }}>
+                {selectedModel?.restrictedAccess && (
+                  <FlexItem>{getRestrictedAccessBadge()}</FlexItem>
+                )}
+                {selectedModel && getSubscriptionBadge(selectedModel.id) && (
+                  <FlexItem>{getSubscriptionBadge(selectedModel.id)}</FlexItem>
+                )}
+              </Flex>
+            </FlexItem>
           </Flex>
         </ModalHeader>
         <ModalBody>
@@ -657,6 +717,17 @@ const ModelsPage: React.FC = () => {
                 {t('pages.models.modal.subscribeInfo')}
               </Content>
 
+              {selectedModel.restrictedAccess && (
+                <Alert
+                  variant="info"
+                  title={t('pages.models.modal.restrictedAccessInfo.title')}
+                  style={{ marginTop: '1rem' }}
+                  isInline
+                >
+                  {t('pages.models.modal.restrictedAccessInfo.message')}
+                </Alert>
+              )}
+
               {selectedModel.availability === 'unavailable' && (
                 <div
                   style={{
@@ -695,14 +766,24 @@ const ModelsPage: React.FC = () => {
               variant="primary"
               onClick={handleSubscribe}
               isLoading={isSubscribing}
-              isDisabled={isSubscribing || selectedModel?.availability === 'unavailable'}
+              isDisabled={
+                isSubscribing ||
+                selectedModel?.availability === 'unavailable' ||
+                (selectedModel ? subscriptions.has(selectedModel.id) : false)
+              }
               aria-label={
                 selectedModel?.name
                   ? t('pages.models.subscribeToModel', { modelName: selectedModel.name })
                   : undefined
               }
             >
-              {isSubscribing ? t('pages.models.subscribing') : t('pages.models.subscribe')}
+              {isSubscribing
+                ? t('pages.models.subscribing')
+                : selectedModel && subscriptions.has(selectedModel.id)
+                  ? t('pages.models.alreadySubscribed')
+                  : selectedModel?.restrictedAccess
+                    ? t('pages.models.modal.restrictedAccessInfo.buttonText')
+                    : t('pages.models.subscribe')}
             </Button>
             <Button
               variant="link"

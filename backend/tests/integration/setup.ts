@@ -185,7 +185,7 @@ export async function createTestUsers(app: FastifyInstance): Promise<void> {
       username: 'testadminreadonly',
       email: 'adminreadonly@example.com',
       full_name: 'Test Admin Readonly',
-      roles: ['adminReadonly'],
+      roles: ['admin-readonly'],
     },
     // Legacy test users for backward compatibility with existing tests
     // Using valid UUIDs instead of string IDs

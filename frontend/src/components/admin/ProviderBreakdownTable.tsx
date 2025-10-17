@@ -6,7 +6,7 @@ import {
   EmptyStateVariant,
   EmptyStateBody,
   Title,
-  Badge,
+  Label,
 } from '@patternfly/react-core';
 import { SearchIcon } from '@patternfly/react-icons';
 import { useQuery } from 'react-query';
@@ -79,24 +79,24 @@ export const ProviderBreakdownTable: React.FC<ProviderBreakdownTableProps> = ({ 
   /**
    * Get success rate badge with color coding
    * @param successRate - Success rate percentage (0-100)
-   * @returns Badge element with appropriate color
+   * @returns Label element with appropriate color
    */
   const getSuccessRateBadge = (successRate: number) => {
-    let color: 'green' | 'gold' | 'red' = 'green';
+    let color: 'green' | 'orange' | 'red' = 'green';
     let ariaLabel = t('admin.usage.tables.providers.successRate.high');
 
     if (successRate < 90) {
       color = 'red';
       ariaLabel = t('admin.usage.tables.providers.successRate.low');
     } else if (successRate < 95) {
-      color = 'gold';
+      color = 'orange';
       ariaLabel = t('admin.usage.tables.providers.successRate.medium');
     }
 
     return (
-      <Badge color={color} aria-label={ariaLabel}>
+      <Label color={color} aria-label={ariaLabel}>
         {formatPercentage(successRate)}
-      </Badge>
+      </Label>
     );
   };
 

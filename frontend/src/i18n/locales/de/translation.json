@@ -89,6 +89,8 @@
     "apiKeysFilterAvailable": "API-Schlüssel-Filter ist jetzt verfügbar",
     "charts": {
       "modelDistributionAriaLabel": "Modellnutzungsverteilungs-Diagramm",
+      "modelLegendDescription": "Modell {{modelName}} im gestapelten Diagramm angezeigt",
+      "modelUsageSummary": "Gestapeltes Diagramm mit {{dataPoints}} Datenpunkten zeigt {{modelCount}} Modelle. Gesamtwerte reichen von {{minValue}} bis {{maxValue}}, mit einem Durchschnitt von {{avgValue}}.",
       "modelUsageTrends": "Modellnutzungs-Trends",
       "modelUsageTrendsAriaDesc": "Ein gestapeltes Balkendiagramm, das die Nutzung verschiedener Modelle über die Zeit zeigt. Die angezeigte Metrik ist {{metric}}.",
       "modelUsageTrendsAriaLabel": "Gestapeltes Diagramm zeigt Modellnutzungs-Trends über die Zeit nach {{metric}}",
@@ -106,6 +108,7 @@
       "30d": "Letzte 30 Tage",
       "7d": "Letzte 7 Tage",
       "90d": "Letzte 90 Tage",
+      "any": "Beliebiges Datum",
       "custom": "Benutzerdefinierter Bereich"
     },
     "dateRangeChanged": "Datumsbereich geändert zu {{preset}}",
@@ -182,7 +185,8 @@
       },
       "tooltip": {
         "noDataOutsideRange": "Keine Daten (außerhalb des ausgewählten Bereichs)",
-        "percentOfWeek": "{{percent}}% des Wochengesamts"
+        "percentOfWeek": "{{percent}}% des Wochengesamts",
+        "zeroUsage": "Keine Nutzung"
       }
     },
     "loading": "Metriken werden geladen...",
@@ -191,11 +195,14 @@
     "loadingUsers": "Benutzerdaten werden geladen...",
     "metrics": {
       "activeUsersAriaLabel": "{{active}} aktive Benutzer von {{total}} Gesamtbenutzern",
+      "completionTokensAriaLabel": "Vervollständigungs-Token: {{count}}",
       "noChange": "Keine Änderung",
       "ofTotalUsers": "von {{total}} insgesamt",
+      "promptTokensAriaLabel": "Prompt-Token: {{count}}",
       "successRateAriaLabel": "Erfolgsrate: {{percentage}}%",
       "totalCostAriaLabel": "Gesamtkosten: ${{amount}}",
       "totalRequestsAriaLabel": "Gesamtanfragen: {{count}}",
+      "totalTokensAriaLabel": "Token insgesamt: {{count}}",
       "trendLabel": "Trend {{direction}} um {{change}}%"
     },
     "metricSelect": "Metrikauswahl",
@@ -313,6 +320,15 @@
     "dataPoints": "Datenpunkte",
     "date": "Datum",
     "day": "Tag",
+    "days": {
+      "fri": "Fr",
+      "mon": "Mo",
+      "sat": "Sa",
+      "sun": "So",
+      "thu": "Do",
+      "tue": "Di",
+      "wed": "Mi"
+    },
     "delete": "Löschen",
     "error": "Fehler",
     "expandToFullScreen": "Auf Vollbild erweitern",
@@ -387,6 +403,12 @@
       "outputCostCannotBeNegative": "Ausgabekosten können nicht negativ sein",
       "outputCostPerMillionTokens": "Ausgabekosten pro Million Token",
       "pleaseEnterAValidUrl": "Bitte geben Sie eine gültige URL ein",
+      "restrictedAccessHelp": "Users must request access and receive admin approval",
+      "restrictedAccessLabel": "Require Admin Approval",
+      "restrictedAccessWarning": {
+        "message": "This will move all active subscriptions for this model to pending status and remove the model from existing API keys. Users will need to be re-approved.",
+        "title": "Enable Restricted Access?"
+      },
       "rpmMustBeAtLeast_1": "RPM muss mindestens 1 sein",
       "rpmRequestsPerMinute": "RPM (Anfragen pro Minute)",
       "supportsFunctionCalling": "Unterstützt Funktionsaufrufe",
@@ -432,6 +454,7 @@
   "nav": {
     "admin": {
       "models": "Modellverwaltung",
+      "subscriptions": "Abonnementverwaltung",
       "tools": "Werkzeuge",
       "usage": "Nutzungsanalyse",
       "users": "Benutzer"
@@ -444,6 +467,73 @@
     "usage": "Nutzung"
   },
   "pages": {
+    "adminSubscriptions": {
+      "actions": {
+        "approve": "Genehmigen",
+        "delete": "Löschen",
+        "deny": "Ablehnen",
+        "revert": "Status Ändern"
+      },
+      "approvalModalTitle": "Abonnements Genehmigen",
+      "approveSuccess": "{{count}} Abonnement(s) genehmigt",
+      "bulkApprove": "Ausgewählte Genehmigen",
+      "bulkDeny": "Ausgewählte Ablehnen",
+      "confirmApproval": "Genehmigung Bestätigen",
+      "confirmApprovalSingle": "Sind Sie sicher, dass Sie die Abonnement-Anfrage von {{user}} für den Zugriff auf {{model}} genehmigen möchten?",
+      "confirmDelete": "Dauerhaft Löschen",
+      "confirmDeleteSingle": "Sind Sie sicher, dass Sie das Abonnement von {{user}} für den Zugriff auf {{model}} dauerhaft löschen möchten? Dadurch werden alle zugehörigen Daten entfernt.",
+      "confirmDenial": "Ablehnung Bestätigen",
+      "confirmDenialBulk": "Sind Sie sicher, dass Sie {{count}} Abonnement-Anfrage(n) ablehnen möchten?",
+      "confirmDenialSingle": "Sind Sie sicher, dass Sie die Abonnement-Anfrage von {{user}} für den Zugriff auf {{model}} ablehnen möchten?",
+      "confirmRevert": "Zurücksetzen Bestätigen",
+      "deleteModalTitle": "Abonnement Löschen",
+      "deleteReasonPlaceholder": "Optional: Geben Sie den Grund für die Löschung ein (wird im Prüfprotokoll gespeichert)...",
+      "deleteSuccess": "Abonnement erfolgreich gelöscht",
+      "deleteWarning": "Diese Aktion kann nicht rückgängig gemacht werden",
+      "denialModalTitle": "Abonnements Ablehnen",
+      "denySuccess": "{{count}} Abonnement(s) abgelehnt",
+      "filters": {
+        "clearStatuses": "Statusauswahl löschen",
+        "dateRange": "Datumsbereich",
+        "from": "Von",
+        "model": "Modell",
+        "noStatusesFound": "Keine Status für \"{{query}}\" gefunden",
+        "selectAll": "Alle Auswählen",
+        "selectedStatuses": "Ausgewählte Status",
+        "status": "Status",
+        "statusPlaceholder": "Alle Status (klicken zum Filtern)",
+        "to": "Bis",
+        "user": "Benutzer"
+      },
+      "newStatus": "Neuer Status",
+      "noSelections": "Keine Abonnements ausgewählt",
+      "reasonLabel": "Kommentar",
+      "reasonPlaceholder": "Geben Sie den Grund für diese Entscheidung ein...",
+      "reasonRequired": "Grund ist für Ablehnungen erforderlich",
+      "refresh": "Aktualisieren",
+      "resultModalTitle": "Ergebnisse der Massenoperation",
+      "resultsTable": {
+        "error": "Fehler",
+        "failed": "Fehlgeschlagen",
+        "result": "Ergebnis",
+        "subscription": "Abonnement",
+        "success": "Erfolg"
+      },
+      "revertDescription": "Ändern Sie den Status des Abonnements von {{user}} für {{model}}. Aktueller Status: {{currentStatus}}",
+      "revertModalTitle": "Abonnement-Status Zurücksetzen",
+      "revertSuccess": "Abonnement-Status aktualisiert",
+      "table": {
+        "actions": "Aktionen",
+        "model": "Modell",
+        "reason": "Grund",
+        "requestedDate": "Angefordert",
+        "selectColumn": "Abonnements auswählen",
+        "status": "Status",
+        "statusChangedDate": "Zuletzt Aktualisiert",
+        "user": "Benutzer"
+      },
+      "title": "Abonnementverwaltung"
+    },
     "apiKeys": {
       "clipboard": {
         "copied": "Kopiert",
@@ -482,6 +572,7 @@
       "labels": {
         "actions": "Aktionen",
         "apiKeyLabel": "API-Schlüssel",
+        "apiUrl": "API-URL",
         "cancel": "Abbrechen",
         "close": "Schließen",
         "created": "Erstellt",
@@ -799,6 +890,7 @@
       "title": "Bei LiteMaaS anmelden"
     },
     "models": {
+      "alreadySubscribed": "Already Subscribed",
       "ariaLabels": {
         "modelAvailability": "Modellverfügbarkeit",
         "subscriptionStatus": "Abonnement-Status"
@@ -833,6 +925,11 @@
         "pricingInput": "Eingabe",
         "pricingOutput": "Ausgabe",
         "pricingUnavailable": "Preisinformationen nicht verfügbar",
+        "restrictedAccessInfo": {
+          "buttonText": "Zugriff anfordern",
+          "message": "Dieses Modell erfordert eine Administrator-Genehmigung. Wenn Sie abonnieren, wird Ihre Anfrage den Status \"Ausstehend\" haben, bis ein Administrator sie überprüft und genehmigt. Sie werden benachrichtigt, sobald Ihr Zugriff gewährt wurde.",
+          "title": "Administrator-Genehmigung erforderlich"
+        },
         "subscribeInfo": "Mit einem Abonnement erhalten Sie Zugang zu diesem Modell und können API-Schlüssel für dessen Nutzung generieren.",
         "tokens": "Token"
       },
@@ -840,6 +937,8 @@
       "moreFeatures": "+{{count}} weitere",
       "noModels": "Noch keine Modelle verfügbar",
       "notifications": {
+        "accessRequestPending": "Ihre Abonnement-Anfrage für {{modelName}} wartet auf Administrator-Genehmigung. Sie werden benachrichtigt, sobald sie genehmigt wurde.",
+        "accessRequestSubmitted": "Zugriffsanfrage eingereicht",
         "alreadySubscribed": "Sie haben dieses Modell bereits abonniert",
         "failedToSubscribe": "Fehler beim Abonnieren des Modells",
         "loadError": "Fehler",
@@ -855,6 +954,7 @@
         "separator": "•"
       },
       "pricingLabel": "Preisgestaltung: N/A",
+      "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "Modelle suchen...",
       "searchResults": "{{count}} Modelle gefunden, die Ihren Kriterien entsprechen",
       "subscribe": "Abonnieren",
@@ -913,15 +1013,20 @@
       "provider": "Anbieter",
       "quotaFormat": "Kontingent: {{requests}} Anfragen, {{tokens}} Token",
       "requestQuota": "Anfrage-Kontingent",
+      "requestReview": "Request Review",
+      "requestReviewSuccess": "Review requested successfully",
       "requests": "Anfragen",
       "requestsUsed": "Verwendete Anfragen",
       "status": {
         "active": "Aktiv",
+        "denied": "Access Denied",
         "expired": "Abgelaufen",
-        "pending": "Ausstehend",
+        "inactive": "Inaktiv",
+        "pending": "Pending Approval",
         "suspended": "Ausgesetzt"
       },
       "statusLabel": "Status",
+      "statusReason": "Admin Comment",
       "suspendedMessage": "Ihr Abonnement wurde ausgesetzt. Kontaktieren Sie den Support oder überprüfen Sie Ihren Kontostatus.",
       "title": "Modell-Abonnements",
       "tokenQuota": "Token-Kontingent",
@@ -1094,6 +1199,7 @@
         "last7Days": "Letzte 7 Tage",
         "last90Days": "Letzte 90 Tage"
       },
+      "export": "Exportieren",
       "exportData": "Daten exportieren",
       "exportUsageData": "Nutzungsdaten für den ausgewählten Zeitraum exportieren",
       "filters": {
@@ -1416,6 +1522,7 @@
       "oauthManaged": "Status wird vom OAuth-Anbieter verwaltet."
     },
     "table": {
+      "actions": "Aktionen",
       "ariaLabel": "Benutzertabelle",
       "caption": "Tabelle mit {{count}} Benutzern mit Benutzername, E-Mail, vollständigem Namen, Rollen und Status.",
       "email": "E-Mail",
