@@ -112,9 +112,11 @@ export function loadAdminAnalyticsConfig(): AdminAnalyticsConfig {
   // Validate configuration
   try {
     return AdminAnalyticsConfigSchema.parse(config);
-  } catch (error) {
+  } catch (error: unknown) {
     if (error instanceof z.ZodError) {
-      const issues = error.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('\n');
+      const issues = error.issues
+        .map((i: z.ZodIssue) => `${i.path.join('.')}: ${i.message}`)
+        .join('\n');
       throw new Error(`Invalid admin analytics configuration:\n${issues}`);
     }
     throw error;
