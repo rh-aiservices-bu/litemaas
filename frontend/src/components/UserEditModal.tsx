@@ -8,6 +8,7 @@ import {
   Switch,
   Button,
   Badge,
+  Label,
   Alert,
   Spinner,
   Flex,
@@ -175,40 +176,51 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
 
           <Grid hasGutter md={6} lg={4} style={{ marginBottom: '1rem' }}>
             <GridItem>
-              <strong style={{ fontSize: '0.875rem' }}>
+              <strong style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
                 {t('users.form.username', 'Username')}:
               </strong>
               <div style={{ marginTop: '0.25rem' }}>{user.username}</div>
             </GridItem>
             <GridItem>
-              <strong style={{ fontSize: '0.875rem' }}>{t('users.form.email', 'Email')}:</strong>
+              <strong style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
+                {t('users.form.email', 'Email')}:
+              </strong>
               <div style={{ marginTop: '0.25rem' }}>{user.email}</div>
             </GridItem>
             <GridItem>
-              <strong style={{ fontSize: '0.875rem' }}>
+              <strong style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
                 {t('users.form.fullName', 'Full Name')}:
               </strong>
               <div style={{ marginTop: '0.25rem' }}>
                 {user.fullName || (
-                  <span style={{ fontStyle: 'italic', color: 'var(--pf-v6-global--Color--200)' }}>
+                  <span
+                    style={{
+                      fontStyle: 'italic',
+                      color: 'var(--pf-t--global--text--color--subtle)',
+                    }}
+                  >
                     {t('common.notAvailable', 'N/A')}
                   </span>
                 )}
               </div>
             </GridItem>
             <GridItem>
-              <strong style={{ fontSize: '0.875rem' }}>
+              <strong style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
                 {t('users.form.createdAt', 'Created At')}:
               </strong>
-              <div style={{ marginTop: '0.25rem', fontSize: '0.875rem' }}>
+              <div
+                style={{ marginTop: '0.25rem', fontSize: 'var(--pf-t--global--font--size--sm)' }}
+              >
                 {formatDateTime(user.createdAt)}
               </div>
             </GridItem>
             <GridItem>
-              <strong style={{ fontSize: '0.875rem' }}>
+              <strong style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
                 {t('users.form.lastLogin', 'Last Login')}:
               </strong>
-              <div style={{ marginTop: '0.25rem', fontSize: '0.875rem' }}>
+              <div
+                style={{ marginTop: '0.25rem', fontSize: 'var(--pf-t--global--font--size--sm)' }}
+              >
                 {formatDate(user.lastLoginAt)}
               </div>
             </GridItem>
@@ -280,7 +292,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
           </Content>
 
           <div style={{ marginBottom: '1rem' }}>
-            <Badge color={user.isActive ? 'green' : 'red'} style={{ marginBottom: '0.5rem' }}>
+            <Label color={user.isActive ? 'green' : 'red'} style={{ marginBottom: '0.5rem' }}>
               {user.isActive ? (
                 <>
                   <CheckCircleIcon /> {t('status.active', 'Active')}
@@ -290,11 +302,11 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
                   <ExclamationTriangleIcon /> {t('status.inactive', 'Inactive')}
                 </>
               )}
-            </Badge>
+            </Label>
             <div>
               <Content
                 component={ContentVariants.small}
-                style={{ fontStyle: 'italic', color: 'var(--pf-v6-global--Color--200)' }}
+                style={{ fontStyle: 'italic', color: 'var(--pf-t--global--text--color--subtle)' }}
               >
                 {t('users.status.oauthManaged')}
               </Content>

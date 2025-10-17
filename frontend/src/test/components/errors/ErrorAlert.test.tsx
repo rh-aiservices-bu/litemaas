@@ -255,9 +255,7 @@ describe('ErrorAlert', () => {
   });
 
   describe('close functionality', () => {
-    // Note: These tests are temporarily skipped due to PatternFly 6 AlertActionCloseButton context issues
-    // The component renders correctly in actual usage but has test environment issues
-    it.skip('should show close button when closable is true', () => {
+    it('should show close button when closable is true', () => {
       const error: ExtractedError = {
         message: 'Something went wrong',
         code: 'TEST_ERROR',
@@ -265,11 +263,9 @@ describe('ErrorAlert', () => {
 
       render(<ErrorAlert error={error} closable={true} onClose={mockOnClose} />);
 
-      // Look for close button by its common text/aria-label patterns
-      const closeButton =
-        screen.queryByRole('button', { name: /close/i }) ||
-        screen.queryByLabelText(/close/i) ||
-        screen.queryByTitle(/close/i);
+      // ✅ FIXED: ErrorAlert now uses actionClose prop for AlertActionCloseButton
+      // Close button renders correctly with proper ARIA attributes
+      const closeButton = screen.getByRole('button', { name: /close/i });
       expect(closeButton).toBeInTheDocument();
     });
 
@@ -279,17 +275,13 @@ describe('ErrorAlert', () => {
         code: 'TEST_ERROR',
       };
 
-      // This test should pass as it doesn't render the problematic close button
       render(<ErrorAlert error={error} closable={false} />);
 
-      const closeButton =
-        screen.queryByRole('button', { name: /close/i }) ||
-        screen.queryByLabelText(/close/i) ||
-        screen.queryByTitle(/close/i);
+      const closeButton = screen.queryByRole('button', { name: /close/i });
       expect(closeButton).not.toBeInTheDocument();
     });
 
-    it.skip('should call onClose when close button is clicked', async () => {
+    it('should call onClose when close button is clicked', async () => {
       const user = userEvent.setup();
       const error: ExtractedError = {
         message: 'Something went wrong',
@@ -298,10 +290,7 @@ describe('ErrorAlert', () => {
 
       render(<ErrorAlert error={error} closable={true} onClose={mockOnClose} />);
 
-      const closeButton =
-        screen.getByRole('button', { name: /close/i }) ||
-        screen.getByLabelText(/close/i) ||
-        screen.getByTitle(/close/i);
+      const closeButton = screen.getByRole('button', { name: /close/i });
       await act(async () => {
         await user.click(closeButton);
       });
@@ -473,8 +462,7 @@ describe('ErrorAlert', () => {
       expect(retryButton).toHaveAttribute('aria-label', 'Retry this operation');
     });
 
-    // Skip keyboard navigation test that includes close button due to PatternFly 6 context issues
-    it.skip('should handle keyboard navigation', async () => {
+    it('should handle keyboard navigation with close button', async () => {
       const user = userEvent.setup();
       const error: ExtractedError = {
         message: 'Something went wrong',
@@ -494,30 +482,33 @@ describe('ErrorAlert', () => {
         />,
       );
 
-      // Tab through interactive elements
+      // ✅ FIXED: Tab order changed - actionClose renders before alert content
+      // Tab order: Close button (actionClose) → Help link → Show details → Retry button (actionLinks)
+
+      // First tab: Close button (rendered by actionClose prop)
+      await act(async () => {
+        await user.tab();
+      });
+      const closeButton = screen.getByRole('button', { name: /close/i });
+      expect(closeButton).toHaveFocus();
+
+      // Second tab: Help link (in alert content)
       await act(async () => {
         await user.tab();
       });
       expect(screen.getByRole('link', { name: /more information/i })).toHaveFocus();
 
+      // Third tab: Show details button (in alert content)
       await act(async () => {
         await user.tab();
       });
       expect(screen.getByRole('button', { name: /show details/i })).toHaveFocus();
 
+      // Fourth tab: Retry button (in actionLinks)
       await act(async () => {
         await user.tab();
       });
       expect(screen.getByRole('button', { name: /retry/i })).toHaveFocus();
-
-      await act(async () => {
-        await user.tab();
-      });
-      const closeButton =
-        screen.getByRole('button', { name: /close/i }) ||
-        screen.getByLabelText(/close/i) ||
-        screen.getByTitle(/close/i);
-      expect(closeButton).toHaveFocus();
     });
 
     it('should handle keyboard navigation without close button', async () => {

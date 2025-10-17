@@ -1,5 +1,6 @@
 // Images
 export { default as LogoTitle } from './images/logo-title.svg';
+export { default as LogoTitleWhite } from './images/logo-title-white.svg';
 export { default as AvatarPlaceholder } from './images/avatar-placeholder.svg';
 export { default as Favicon } from './images/litemaas_favicon.svg';
 export { default as starLogo } from './images/star.svg';

@@ -1,5 +1,6 @@
 import React from 'react';
-import { renderHook, act, render, screen } from '../test-utils';
+import { renderHook, act, screen } from '../test-utils';
+import { render as rtlRender } from '@testing-library/react';
 import { NotificationProvider, useNotifications } from '../../contexts/NotificationContext';
 import { vi } from 'vitest';
 
@@ -92,12 +93,15 @@ describe('NotificationContext', () => {
     });
 
     it('renders children correctly', () => {
-      render(
+      // Test renders children correctly without ConfigProvider wrapper
+      // Using rtlRender (raw React Testing Library) to avoid ConfigProvider loading state
+      rtlRender(
         <NotificationProvider>
           <div>Test Child</div>
         </NotificationProvider>,
       );
 
+      // Content should render immediately without ConfigProvider wrapper
       expect(screen.getByText('Test Child')).toBeInTheDocument();
     });
   });
@@ -636,17 +640,20 @@ describe('NotificationContext', () => {
 
   describe('Context value memoization', () => {
     it('provides stable context value reference', () => {
+      // Test that context value reference remains stable across rerenders
+      // Using rtlRender (raw React Testing Library) to avoid ConfigProvider loading state
       const TestComponent = () => {
         const context = useNotifications();
         return <div>{context.notifications.length}</div>;
       };
 
-      const { rerender } = render(
+      const { rerender } = rtlRender(
         <NotificationProvider>
           <TestComponent />
         </NotificationProvider>,
       );
 
+      // Content should render immediately without ConfigProvider wrapper
       expect(screen.getByText('0')).toBeInTheDocument();
 
       // Rerender should not cause unnecessary re-renders
@@ -656,6 +663,7 @@ describe('NotificationContext', () => {
         </NotificationProvider>,
       );
 
+      // Content should still be there after rerender
       expect(screen.getByText('0')).toBeInTheDocument();
     });
   });

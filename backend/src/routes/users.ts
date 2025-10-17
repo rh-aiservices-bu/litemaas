@@ -277,17 +277,14 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
         );
 
         // Get usage stats
-        const usageStats = await fastify.dbUtils.queryOne(
-          `SELECT 
-             COUNT(*) as total_requests,
-             COALESCE(SUM(total_tokens), 0) as total_tokens,
-             COUNT(*) FILTER (WHERE created_at >= date_trunc('month', NOW())) as current_month_requests,
-             COALESCE(SUM(total_tokens) FILTER (WHERE created_at >= date_trunc('month', NOW())), 0) as current_month_tokens
-           FROM usage_logs ul
-           JOIN subscriptions s ON ul.subscription_id = s.id
-           WHERE s.user_id = $1`,
-          [user.userId],
-        );
+        // TODO: Usage stats should be fetched from LiteLLM API
+        // For now, returning zero values since local logging is not implemented
+        const usageStats = {
+          total_requests: 0,
+          total_tokens: 0,
+          current_month_requests: 0,
+          current_month_tokens: 0,
+        };
 
         // Get user info
         const userInfo = await fastify.dbUtils.queryOne(

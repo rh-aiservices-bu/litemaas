@@ -12,12 +12,17 @@
 - **Self-Service**: Users can independently manage subscriptions and API keys
 - **Multi-Model Access**: One API key can access multiple models
 - **Budget Control**: Set spending limits at user, team, and API key levels
-- **Usage Analytics**: Real-time tracking of token usage and costs
+- **Usage Analytics**: Comprehensive tracking with dual views:
+  - **User View**: Personal usage, token consumption, and costs
+  - **Admin View**: System-wide analytics with trends, multi-dimensional filtering (users/models/providers/API keys), and data export
+- **Role-Based Access Control**: Three-tier hierarchy (admin/adminReadonly/user) with OpenShift group integration
 - **Team Collaboration**: Share budgets and manage access across teams (upcoming feature)
-- **Enterprise Security**: OAuth2 authentication with OpenShift support
-- **Easy Deployment and Usage**: Automated deployment on OpenShift, Patternfly 6 UI
+- **Enterprise Security**: OAuth2 authentication with JWT tokens and audit logging
+- **Easy Deployment and Usage**: Automated deployment on OpenShift with PatternFly 6 UI
 
 ## 📸 Screenshots
+
+> **Note**: Screenshots below show core functionality. Admin-specific features (system-wide usage analytics, user management, role administration) are available but not yet captured in screenshots.
 
 ### Model Discovery
 
@@ -35,7 +40,7 @@
 
 ![api-key-details.png](img/api-key-details.png)
 
-### Usage Statistics
+### Usage Statistics (User View)
 
 ![usage-statistics.png](img/usage-statistics.png)
 
@@ -134,20 +139,41 @@ graph TB
 
 ## 📚 Documentation
 
-- [Architecture Overview](docs/architecture/overview.md)
-- [API Reference](docs/api/README.md)
-- [Configuration Guide](docs/deployment/configuration.md)
-- [Development Guide](docs/development/setup.md)
-- [Production Deployment](docs/deployment/production-guide.md)
-- [UI Guidelines (PatternFly 6)](docs/development/pf6-guide/README.md)
+### Core Documentation
+
+- 🏗️ [Architecture Overview](docs/architecture/overview.md) - System design and data flows
+- 📖 [API Reference](docs/api/README.md) - Complete REST API documentation
+- 🗂️ [Project Structure](docs/architecture/project-structure.md) - Complete file organization map
+- 🔧 [Configuration Guide](docs/deployment/configuration.md) - Environment variables and setup
+- 🛠️ [Development Guide](docs/development/setup.md) - Local development setup
+- 🚀 [Production Deployment](docs/deployment/production-guide.md) - Production deployment options
+- 🎨 [UI Guidelines (PatternFly 6)](docs/development/pf6-guide/README.md) - Frontend development standards
+
+### Feature Documentation
+
+- 📊 [Admin Usage Analytics](docs/features/admin-usage-analytics-implementation-plan.md) - Comprehensive system-wide analytics with caching
+- 🔐 [RBAC & User Roles](docs/features/user-roles-administration.md) - Three-tier role hierarchy and permissions
+- 🔑 [Multi-Model API Keys](docs/features/multi-model-api-keys-implementation.md) - API key architecture
 
 ### Quick Links
 
 - 📝 [Project Roadmap](PROJECT_PLAN.md) - Development phases and milestones
 - 🔧 [Contributing Guide](CONTRIBUTING.md) - How to contribute
-- 🔐 [Security Policy](docs/deployment/authentication.md) - Authentication and security
+- 🔒 [Authentication & Security](docs/deployment/authentication.md) - OAuth2/JWT implementation
 
 ## 🧪 Testing
+
+**First time running backend tests?** You need to set up the test database first:
+
+```bash
+# Create test database
+psql -U pgadmin -h localhost -p 5432 -d postgres -c "CREATE DATABASE litemaas_test;"
+
+# Initialize schema and seed data
+cd backend && npm run test:db:setup
+```
+
+**Run tests:**
 
 ```bash
 # Run all tests
@@ -165,6 +191,8 @@ npm run test:e2e
 # Performance tests
 npm run test:perf
 ```
+
+**Backend integration tests use a separate `litemaas_test` database** to prevent contamination of development data. See [Development Setup Guide](docs/development/setup.md#test-database-setup) for details.
 
 ## 🚀 Deployment
 

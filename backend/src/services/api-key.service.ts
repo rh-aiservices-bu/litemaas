@@ -316,9 +316,6 @@ export class ApiKeyService extends BaseService {
         );
       }
 
-      // Generate secure API key for local hashing (but we'll return the LiteLLM key)
-      const { keyHash } = this.generateApiKey();
-
       // Create API key in LiteLLM with multiple models
       const liteLLMRequest: LiteLLMKeyGenerationRequest = {
         key_alias: this.generateUniqueKeyAlias(request.name || 'api-key'),
@@ -359,8 +356,9 @@ export class ApiKeyService extends BaseService {
         );
       }
 
-      // FIXED: Extract prefix from the actual LiteLLM key instead of local key
+      // FIXED: Extract prefix and hash from the actual LiteLLM key
       const keyPrefix = this.extractKeyPrefix(liteLLMResponse.key);
+      const keyHash = this.hashApiKey(liteLLMResponse.key);
 
       // Begin transaction for atomicity
       const client = await this.fastify.pg.connect();
@@ -368,16 +366,15 @@ export class ApiKeyService extends BaseService {
       try {
         await client.query('BEGIN');
 
-        // Store the API key (without subscription_id for new keys)
-        // Note: We still store the local keyHash for internal validation, but return the LiteLLM key
+        // Store the API key with hash of the actual LiteLLM key for authentication
         const apiKey = await client.query(
           `INSERT INTO api_keys (
-            user_id, name, key_hash, key_prefix, 
-            expires_at, is_active, lite_llm_key_value,
+            user_id, name, key_hash, key_prefix,
+            expires_at, is_active, lite_llm_key_value, litellm_key_alias,
             max_budget, current_spend, tpm_limit, rpm_limit,
             last_sync_at, sync_status, metadata
             ${isLegacyRequest ? ', subscription_id' : ''}
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14${isLegacyRequest ? ', $15' : ''})
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15${isLegacyRequest ? ', $16' : ''})
           RETURNING *`,
           [
             userId,
@@ -387,6 +384,7 @@ export class ApiKeyService extends BaseService {
             request.expiresAt,
             true,
             liteLLMResponse.key,
+            liteLLMRequest.key_alias, // Save the key_alias for usage matching
             request.maxBudget,
             0,
             request.tpmLimit,
@@ -1178,6 +1176,11 @@ export class ApiKeyService extends BaseService {
         );
       }
 
+      // Validate models have active subscriptions if modelIds are being updated
+      if (updates.modelIds) {
+        await this.validateModelsHaveActiveSubscriptions(userId, updates.modelIds);
+      }
+
       // Get the full LiteLLM key for the update call
       let fullKey: string | undefined;
       if (apiKey.liteLLMKeyId && !this.shouldUseMockData()) {
@@ -1503,13 +1506,13 @@ export class ApiKeyService extends BaseService {
         throw this.fastify.createNotFoundError('API key');
       }
 
-      // Generate new key for local hashing
-      const newKey = this.generateApiKey();
-      const hashedKey = this.hashApiKey(newKey.key);
-      let keyPrefix = newKey.keyPrefix; // Default to local prefix, will be updated with LiteLLM key
-
       // Use transaction wrapper
       return await this.fastify.dbUtils.withTransaction(async (client) => {
+        // Variables for new key
+        let keyPrefix: string;
+        let hashedKey: string;
+        let newKeyValue: string;
+
         // If LiteLLM integration is enabled, rotate key there first
         let liteLLMResponse: { key: string } | undefined;
         if (existingKey.liteLLMKeyId && !this.shouldUseMockData()) {
@@ -1534,17 +1537,21 @@ export class ApiKeyService extends BaseService {
               },
             });
 
-            // FIXED: Extract prefix from the actual LiteLLM key
+            // FIXED: Extract prefix and hash from the actual LiteLLM key
             if (liteLLMResponse?.key) {
               keyPrefix = this.extractKeyPrefix(liteLLMResponse.key);
+              hashedKey = this.hashApiKey(liteLLMResponse.key);
+              newKeyValue = liteLLMResponse.key;
+            } else {
+              throw new Error('LiteLLM did not return a key');
             }
 
             // Update database with LiteLLM key and correct prefix
             await client.query(
-              `UPDATE api_keys 
+              `UPDATE api_keys
                SET key_hash = $1, key_prefix = $2, lite_llm_key_value = $3, updated_at = CURRENT_TIMESTAMP
                WHERE id = $4`,
-              [hashedKey, keyPrefix, liteLLMResponse.key, keyId],
+              [hashedKey, keyPrefix, newKeyValue, keyId],
             );
           } catch (error) {
             this.fastify.log.warn(
@@ -1552,18 +1559,29 @@ export class ApiKeyService extends BaseService {
               'Failed to rotate key in LiteLLM, proceeding with local rotation only',
             );
 
-            // Fallback: Update database with local key only
+            // Fallback: Generate local key
+            const localKey = this.generateApiKey();
+            keyPrefix = localKey.keyPrefix;
+            hashedKey = this.hashApiKey(localKey.key);
+            newKeyValue = localKey.key;
+
+            // Update database with local key only
             await client.query(
-              `UPDATE api_keys 
+              `UPDATE api_keys
                SET key_hash = $1, key_prefix = $2, updated_at = CURRENT_TIMESTAMP
                WHERE id = $3`,
               [hashedKey, keyPrefix, keyId],
             );
           }
         } else {
-          // No LiteLLM integration - update with local key only
+          // No LiteLLM integration - generate local key
+          const localKey = this.generateApiKey();
+          keyPrefix = localKey.keyPrefix;
+          hashedKey = this.hashApiKey(localKey.key);
+          newKeyValue = localKey.key;
+
           await client.query(
-            `UPDATE api_keys 
+            `UPDATE api_keys
              SET key_hash = $1, key_prefix = $2, updated_at = CURRENT_TIMESTAMP
              WHERE id = $3`,
             [hashedKey, keyPrefix, keyId],
@@ -1601,80 +1619,12 @@ export class ApiKeyService extends BaseService {
 
         return {
           id: keyId,
-          key: liteLLMResponse?.key || newKey.key, // Return LiteLLM key if available, otherwise local key
+          key: newKeyValue, // Return the new key (LiteLLM or local)
           keyPrefix,
         };
       });
     } catch (error) {
       this.fastify.log.error(error, 'Failed to rotate API key');
-      throw error;
-    }
-  }
-
-  async getApiKeyUsage(
-    keyId: string,
-    userId: string,
-  ): Promise<{
-    totalRequests: number;
-    requestsThisMonth: number;
-    lastUsedAt?: Date;
-    createdAt: Date;
-  }> {
-    try {
-      // First verify the API key belongs to the user
-      const apiKey = await this.getApiKey(keyId, userId);
-      if (!apiKey) {
-        throw this.createNotFoundError(
-          'API key',
-          keyId,
-          'API key not found or you do not have permission to access it',
-        );
-      }
-
-      // Get total requests
-      const totalResult = await this.fastify.dbUtils.query(
-        `SELECT COUNT(*) as total 
-         FROM usage_logs 
-         WHERE api_key_id = $1`,
-        [keyId],
-      );
-
-      // Get requests this month
-      const monthResult = await this.fastify.dbUtils.query(
-        `SELECT COUNT(*) as total 
-         FROM usage_logs 
-         WHERE api_key_id = $1 
-         AND created_at >= DATE_TRUNC('month', CURRENT_DATE)`,
-        [keyId],
-      );
-
-      // Get last used timestamp
-      const lastUsedResult = await this.fastify.dbUtils.query(
-        `SELECT MAX(created_at) as last_used 
-         FROM usage_logs 
-         WHERE api_key_id = $1`,
-        [keyId],
-      );
-
-      return {
-        totalRequests: Number(totalResult.rows[0]?.total || 0),
-        requestsThisMonth: Number(monthResult.rows[0]?.total || 0),
-        lastUsedAt: (() => {
-          const lastUsed = lastUsedResult.rows[0]?.last_used;
-          if (
-            lastUsed &&
-            (typeof lastUsed === 'string' ||
-              typeof lastUsed === 'number' ||
-              lastUsed instanceof Date)
-          ) {
-            return new Date(lastUsed);
-          }
-          return undefined;
-        })(),
-        createdAt: apiKey.createdAt,
-      };
-    } catch (error) {
-      this.fastify.log.error(error, 'Failed to get API key usage');
       throw error;
     }
   }
@@ -1972,4 +1922,138 @@ export class ApiKeyService extends BaseService {
 
   // Removed duplicate validateApiKey and hashApiKey methods
   // Main validateApiKey method has been updated above to handle multi-model support
+
+  /**
+   * Shared validation helper for subscription status
+   * Private helper method for approval workflow
+   */
+  private async validateModelsHaveActiveSubscriptions(
+    userId: string,
+    modelIds: string[],
+  ): Promise<void> {
+    if (!modelIds || modelIds.length === 0) {
+      return;
+    }
+
+    const subscriptions = await this.fastify.dbUtils.queryMany<{
+      model_id: string;
+      status: string;
+    }>(
+      `SELECT model_id, status FROM subscriptions
+       WHERE user_id = $1 AND model_id = ANY($2)`,
+      [userId, modelIds],
+    );
+
+    const invalidModels = modelIds.filter((modelId) => {
+      const sub = subscriptions.find((s) => s.model_id === modelId);
+      return !sub || sub.status !== 'active';
+    });
+
+    if (invalidModels.length > 0) {
+      throw this.createValidationError(
+        `Cannot add models without active subscriptions: ${invalidModels.join(', ')}`,
+        'modelIds',
+        invalidModels,
+        'Ensure all models have active subscriptions before adding them to an API key',
+      );
+    }
+  }
+
+  /**
+   * Remove a specific model from all API keys belonging to a user
+   * Used when subscription is denied or model becomes restricted
+   *
+   * CRITICAL: Updates LiteLLM FIRST, then database (security priority)
+   * - If LiteLLM update fails → rollback/abort (don't modify database)
+   * - If LiteLLM succeeds but database update fails → acceptable (access revoked)
+   */
+  async removeModelFromUserApiKeys(userId: string, modelId: string): Promise<void> {
+    // Get all active API keys for user that contain this model
+    const apiKeys = await this.fastify.dbUtils.queryMany<{
+      id: string;
+      lite_llm_key_value: string;
+    }>(
+      `SELECT DISTINCT ak.id, ak.lite_llm_key_value
+       FROM api_keys ak
+       JOIN api_key_models akm ON ak.id = akm.api_key_id
+       WHERE ak.user_id = $1
+         AND akm.model_id = $2
+         AND ak.is_active = true`,
+      [userId, modelId],
+    );
+
+    if (apiKeys.length === 0) {
+      return;
+    }
+
+    // STEP 1: Update LiteLLM FIRST (security priority)
+    const liteLLMUpdates: { keyId: string; success: boolean; error?: Error }[] = [];
+
+    for (const apiKey of apiKeys) {
+      if (apiKey.lite_llm_key_value && !this.shouldUseMockData()) {
+        try {
+          // Get remaining models for this key (excluding the one being removed)
+          const remainingModels = await this.fastify.dbUtils.queryMany<{ model_id: string }>(
+            `SELECT model_id FROM api_key_models
+             WHERE api_key_id = $1 AND model_id != $2`,
+            [apiKey.id, modelId],
+          );
+
+          await this.liteLLMService.updateKey(apiKey.lite_llm_key_value, {
+            models: remainingModels.map((m) => m.model_id),
+          });
+
+          liteLLMUpdates.push({ keyId: apiKey.id, success: true });
+        } catch (error) {
+          this.fastify.log.error(
+            { error, keyId: apiKey.id, modelId },
+            'Failed to update LiteLLM key - aborting database update for this key',
+          );
+          liteLLMUpdates.push({
+            keyId: apiKey.id,
+            success: false,
+            error: error as Error,
+          });
+        }
+      } else {
+        // Mock mode or no LiteLLM key - treat as success
+        liteLLMUpdates.push({ keyId: apiKey.id, success: true });
+      }
+    }
+
+    // STEP 2: Only update database for keys where LiteLLM succeeded
+    const successfulKeyIds = liteLLMUpdates.filter((u) => u.success).map((u) => u.keyId);
+
+    if (successfulKeyIds.length > 0) {
+      await this.fastify.dbUtils.query(
+        `DELETE FROM api_key_models
+         WHERE api_key_id = ANY($1) AND model_id = $2`,
+        [successfulKeyIds, modelId],
+      );
+
+      this.fastify.log.info(
+        {
+          userId,
+          modelId,
+          keysAffected: successfulKeyIds.length,
+          totalKeys: apiKeys.length,
+        },
+        'Removed model from user API keys',
+      );
+    }
+
+    // Report failures
+    const failures = liteLLMUpdates.filter((u) => !u.success);
+    if (failures.length > 0) {
+      this.fastify.log.warn(
+        {
+          userId,
+          modelId,
+          failedKeys: failures.length,
+          totalKeys: apiKeys.length,
+        },
+        'Some API keys could not be updated in LiteLLM - database unchanged for those keys',
+      );
+    }
+  }
 }

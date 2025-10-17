@@ -36,23 +36,42 @@ const databasePlugin: FastifyPluginAsync = async (fastify) => {
           // Don't fail the startup, but log the error
         }
 
-        // Sync models on startup
-        try {
-          const { ModelSyncService } = await import('../services/model-sync.service');
-          const modelSyncService = new ModelSyncService(fastify);
-          const syncResult = await modelSyncService.syncModels({
-            forceUpdate: false,
-            markUnavailable: true,
-          });
+        // Start LiteLLM-dependent operations in background - don't block server startup
+        setImmediate(async () => {
+          // Background task 1: Backfill litellm_key_alias for existing API keys
+          try {
+            fastify.log.info('Starting background backfill of litellm_key_alias');
+            const { backfillLiteLLMKeyAlias } = await import('../lib/database-migrations');
+            const { LiteLLMService } = await import('../services/litellm.service');
+            const liteLLMService = new LiteLLMService(fastify);
+            await backfillLiteLLMKeyAlias(fastify.dbUtils, liteLLMService);
+            fastify.log.info('Background backfill completed successfully');
+          } catch (backfillError) {
+            fastify.log.error(backfillError as Error, 'Background backfill failed');
+          }
 
-          fastify.log.info({
-            msg: 'Initial model sync completed',
-            ...syncResult,
-          });
-        } catch (syncError) {
-          fastify.log.error({ error: syncError }, 'Failed to sync models on startup');
-          // Don't fail startup - continue with cached models
-        }
+          // Background task 2: Sync models from LiteLLM
+          // Skip in test environment
+          if (process.env.NODE_ENV !== 'test') {
+            try {
+              fastify.log.info('Starting background model sync from LiteLLM');
+              const { ModelSyncService } = await import('../services/model-sync.service');
+              const modelSyncService = new ModelSyncService(fastify);
+              const syncResult = await modelSyncService.syncModels({
+                forceUpdate: false,
+                markUnavailable: true,
+              });
+
+              fastify.log.info({
+                msg: 'Background model sync completed',
+                ...syncResult,
+              });
+            } catch (syncError) {
+              fastify.log.error({ error: syncError }, 'Background model sync failed');
+              // Continue - services will use cached models if available
+            }
+          }
+        });
 
         // Initialize LiteLLM integration service for auto-sync
         const litellmIntegrationService = new LiteLLMIntegrationService(fastify);

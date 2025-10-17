@@ -43,12 +43,18 @@ export const getChartPattern = (index: number, type: 'stroke' | 'color') => {
 };
 
 // Get accessible color for metric type
-export const getMetricColor = (metricType: 'requests' | 'tokens' | 'cost') => {
+export const getMetricColor = (
+  metricType: 'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion_tokens',
+) => {
   switch (metricType) {
     case 'requests':
       return ACCESSIBLE_COLORS.primary.blue;
     case 'tokens':
       return ACCESSIBLE_COLORS.primary.green;
+    case 'prompt_tokens':
+      return ACCESSIBLE_COLORS.primary.darkBlue;
+    case 'completion_tokens':
+      return ACCESSIBLE_COLORS.primary.purple;
     case 'cost':
       return ACCESSIBLE_COLORS.primary.orange;
     default:
@@ -57,12 +63,18 @@ export const getMetricColor = (metricType: 'requests' | 'tokens' | 'cost') => {
 };
 
 // Get stroke pattern for metric type
-export const getMetricStrokePattern = (metricType: 'requests' | 'tokens' | 'cost') => {
+export const getMetricStrokePattern = (
+  metricType: 'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion_tokens',
+) => {
   switch (metricType) {
     case 'requests':
       return STROKE_PATTERNS.solid;
     case 'tokens':
       return STROKE_PATTERNS.dashed;
+    case 'prompt_tokens':
+      return STROKE_PATTERNS.shortdash;
+    case 'completion_tokens':
+      return STROKE_PATTERNS.dashdot;
     case 'cost':
       return STROKE_PATTERNS.dotted;
     default:

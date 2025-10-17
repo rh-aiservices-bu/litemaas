@@ -22,6 +22,7 @@ export interface Model {
   supportsFunctionCalling?: boolean;
   supportsParallelFunctionCalling?: boolean;
   supportsToolChoice?: boolean;
+  restrictedAccess?: boolean; // When true, subscriptions require admin approval
 }
 
 export interface ModelPricing {
@@ -60,6 +61,7 @@ export interface CreateModelDto {
   supportsFunctionCalling?: boolean;
   supportsParallelFunctionCalling?: boolean;
   supportsToolChoice?: boolean;
+  restrictedAccess?: boolean;
 }
 
 export interface UpdateModelDto {
@@ -82,6 +84,7 @@ export interface UpdateModelDto {
   supportsFunctionCalling?: boolean;
   supportsParallelFunctionCalling?: boolean;
   supportsToolChoice?: boolean;
+  restrictedAccess?: boolean;
 }
 
 export interface ModelListParams {

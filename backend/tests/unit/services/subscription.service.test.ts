@@ -99,7 +99,11 @@ describe('SubscriptionService', () => {
       // Mock the service to NOT use mock data so it goes through database logic
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
 
-      const mockQueryOne = vi.fn().mockResolvedValueOnce(mockSubscription); // Existing subscription found
+      // Mock model restriction check (returns false) then existing subscription check
+      const mockQueryOne = vi
+        .fn()
+        .mockResolvedValueOnce({ restricted_access: false })
+        .mockResolvedValueOnce(mockSubscription); // Existing subscription found
       mockFastify.dbUtils!.queryOne = mockQueryOne;
 
       const subscriptionData = {
@@ -161,11 +165,13 @@ describe('SubscriptionService', () => {
       };
 
       // Mock database calls - need to handle the multiple calls from createEnhancedSubscription
+      // Mock: (1) model restriction check, (2) existing subscription, (3) after reactivation, (4) final result
       const mockQueryOne = vi
         .fn()
-        .mockResolvedValueOnce(inactiveSubscription) // First call: check existing subscription in createSubscription
+        .mockResolvedValueOnce({ restricted_access: false }) // First call: model restriction check
+        .mockResolvedValueOnce(inactiveSubscription) // Second call: check existing subscription in createSubscription
         .mockResolvedValueOnce({
-          // Second call: updated subscription from createSubscription
+          // Third call: updated subscription from createSubscription
           ...inactiveSubscription,
           status: 'active',
           quota_requests: 15000, // New quota values
@@ -173,7 +179,7 @@ describe('SubscriptionService', () => {
           updated_at: new Date(),
         })
         .mockResolvedValueOnce({
-          // Third call: final subscription update in createEnhancedSubscription
+          // Fourth call: final subscription update in createEnhancedSubscription
           ...inactiveSubscription,
           status: 'active',
           quota_requests: 15000,
@@ -214,13 +220,86 @@ describe('SubscriptionService', () => {
       expect(result.quotaTokens).toBe(1500000);
     });
 
+    it('should reactivate inactive subscription with pending status for restricted models', async () => {
+      // Mock the service to NOT use mock data so it goes through database logic
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+      // Create a mock inactive subscription for a restricted model
+      const inactiveSubscription = {
+        ...mockSubscription,
+        model_id: 'restricted-gpt-4',
+        status: 'inactive',
+        id: 'sub-inactive-restricted-123',
+        quota_requests: 5000,
+        quota_tokens: 500000,
+        used_requests: 0,
+        used_tokens: 0,
+      };
+
+      // Mock database calls for createSubscription flow
+      const mockQueryOne = vi
+        .fn()
+        .mockResolvedValueOnce({ restricted_access: true }) // Model is restricted
+        .mockResolvedValueOnce(inactiveSubscription) // Existing inactive subscription
+        .mockResolvedValueOnce({
+          // Updated subscription with pending status
+          ...inactiveSubscription,
+          status: 'pending', // Should be pending, not active
+          quota_requests: 15000,
+          quota_tokens: 1500000,
+          updated_at: new Date(),
+        });
+
+      const mockQuery = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+      mockFastify.dbUtils!.queryOne = mockQueryOne;
+      mockFastify.dbUtils!.query = mockQuery;
+
+      // Mock calculateNextResetDate method
+      vi.spyOn(service, 'calculateNextResetDate' as any).mockReturnValue(new Date());
+
+      // Mock LiteLLM sync utilities
+      const mockEnsureUserExists = vi.fn().mockResolvedValue(undefined);
+      vi.doMock('../../../src/utils/litellm-sync.utils', () => ({
+        LiteLLMSyncUtils: {
+          ensureUserExistsInLiteLLM: mockEnsureUserExists,
+        },
+      }));
+
+      const subscriptionData = {
+        modelId: 'restricted-gpt-4',
+        quotaRequests: 15000,
+        quotaTokens: 1500000,
+      };
+
+      const result = await service.createSubscription(mockUser.id, subscriptionData);
+
+      // Verify the subscription was reactivated with pending status
+      expect(result).toBeDefined();
+      expect(result.status).toBe('pending'); // Should be pending for restricted model
+      expect(result.quotaRequests).toBe(15000);
+      expect(result.quotaTokens).toBe(1500000);
+
+      // Verify audit log was created with correct action
+      const auditCalls = mockQuery.mock.calls.filter((call) =>
+        call[0].includes('INSERT INTO audit_logs'),
+      );
+      expect(auditCalls.length).toBeGreaterThan(0);
+      const auditCall = auditCalls[0];
+      const auditParams = auditCall[1];
+      expect(auditParams[1]).toBe('SUBSCRIPTION_REAPPLIED'); // Should use REAPPLIED action
+    });
+
     it('should prevent creating new subscription when active one exists', async () => {
       // Mock the service to NOT use mock data so it goes through database logic
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
 
-      // Mock an active subscription exists
+      // Mock model restriction check then existing active subscription
       const activeSubscription = { ...mockSubscription, status: 'active' };
-      const mockQueryOne = vi.fn().mockResolvedValueOnce(activeSubscription);
+      const mockQueryOne = vi
+        .fn()
+        .mockResolvedValueOnce({ restricted_access: false })
+        .mockResolvedValueOnce(activeSubscription);
       mockFastify.dbUtils!.queryOne = mockQueryOne;
 
       const subscriptionData = {
@@ -237,9 +316,12 @@ describe('SubscriptionService', () => {
       // Mock the service to NOT use mock data so it goes through database logic
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
 
-      // Mock a suspended subscription exists
+      // Mock model restriction check then existing suspended subscription
       const suspendedSubscription = { ...mockSubscription, status: 'suspended' };
-      const mockQueryOne = vi.fn().mockResolvedValueOnce(suspendedSubscription);
+      const mockQueryOne = vi
+        .fn()
+        .mockResolvedValueOnce({ restricted_access: false })
+        .mockResolvedValueOnce(suspendedSubscription);
       mockFastify.dbUtils!.queryOne = mockQueryOne;
 
       const subscriptionData = {
@@ -517,12 +599,360 @@ describe('SubscriptionService', () => {
     });
   });
 
-  // incrementUsage method doesn't exist in the actual service - removing these tests
-  // The actual service doesn't have this method
+  describe('getSubscription', () => {
+    it('should retrieve subscription by ID', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+      mockFastify.dbUtils!.queryOne = vi.fn().mockResolvedValue(mockSubscription);
 
-  // getSubscriptionPricing method doesn't exist in the actual service - removing these tests
-  // The actual service doesn't have this method
+      const result = await service.getSubscription('sub-123', 'user-123');
 
-  // Removing all duplicate test blocks that don't match the actual service implementation
-  // These duplicate tests were causing failures
+      expect(result).toBeDefined();
+      expect(result?.id).toBe('sub-123');
+    });
+
+    it('should return null for non-existent subscription', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+      mockFastify.dbUtils!.queryOne = vi.fn().mockResolvedValue(null);
+
+      const result = await service.getSubscription('non-existent', 'user-123');
+
+      expect(result).toBeNull();
+    });
+  });
+
+  describe('resetQuotas', () => {
+    it('should reset quotas for all subscriptions', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+      mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 5 });
+
+      const result = await service.resetQuotas();
+
+      expect(result).toBe(5);
+      expect(mockFastify.dbUtils!.query).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE subscriptions'),
+        expect.anything(),
+      );
+    });
+
+    it('should reset quotas for specific user', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+      mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 2 });
+
+      const result = await service.resetQuotas('user-123');
+
+      expect(result).toBe(2);
+    });
+  });
+
+  describe('Subscription Approval Workflow', () => {
+    const adminUserId = 'admin-123';
+    const pendingSubscription = {
+      ...mockSubscription,
+      status: 'pending',
+      id: 'sub-pending-123',
+    };
+    const deniedSubscription = {
+      ...mockSubscription,
+      status: 'denied',
+      id: 'sub-denied-123',
+      status_reason: 'Insufficient permissions',
+    };
+
+    describe('createSubscription with restricted model', () => {
+      it('should create subscription with pending status for restricted model', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        // Mock model restriction check
+        const mockQueryOne = vi
+          .fn()
+          .mockResolvedValueOnce({ restricted_access: true }) // Model is restricted
+          .mockResolvedValueOnce(null) // No existing subscription
+          .mockResolvedValueOnce({
+            // New subscription created with pending status
+            ...mockSubscription,
+            status: 'pending',
+            id: 'sub-new-pending',
+          });
+
+        mockFastify.dbUtils!.queryOne = mockQueryOne;
+        mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+        const result = await service.createSubscription(mockUser.id, { modelId: 'gpt-4' });
+
+        expect(result).toBeDefined();
+        expect(result.status).toBe('pending');
+      });
+
+      it('should create subscription with active status for non-restricted model', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        const mockQueryOne = vi
+          .fn()
+          .mockResolvedValueOnce({ restricted_access: false }) // Model is NOT restricted
+          .mockResolvedValueOnce(null) // No existing subscription
+          .mockResolvedValueOnce({
+            // New subscription created with active status
+            ...mockSubscription,
+            status: 'active',
+            id: 'sub-new-active',
+          });
+
+        mockFastify.dbUtils!.queryOne = mockQueryOne;
+        mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+        const result = await service.createSubscription(mockUser.id, { modelId: 'gpt-4' });
+
+        expect(result).toBeDefined();
+        expect(result.status).toBe('active');
+      });
+    });
+
+    describe('approveSubscriptions', () => {
+      it('should approve single subscription and record audit trail', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        // Mock get subscription
+        mockFastify.dbUtils!.queryOne = vi
+          .fn()
+          .mockResolvedValueOnce(pendingSubscription) // Get subscription
+          .mockResolvedValueOnce({ ...pendingSubscription, status: 'active' }); // Update result
+
+        mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+        const result = await service.approveSubscriptions([pendingSubscription.id], adminUserId);
+
+        expect(result.successful).toBe(1);
+        expect(result.failed).toBe(0);
+        expect(result.errors).toHaveLength(0);
+
+        // Verify audit log creation
+        expect(mockFastify.dbUtils!.query).toHaveBeenCalledWith(
+          expect.stringContaining('INSERT INTO subscription_status_history'),
+          expect.anything(),
+        );
+      });
+
+      it('should approve multiple subscriptions in bulk', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        const subscriptionIds = ['sub-1', 'sub-2', 'sub-3'];
+
+        mockFastify.dbUtils!.queryOne = vi
+          .fn()
+          .mockResolvedValueOnce({ ...pendingSubscription, id: 'sub-1' })
+          .mockResolvedValueOnce({ ...pendingSubscription, id: 'sub-1', status: 'active' })
+          .mockResolvedValueOnce({ ...pendingSubscription, id: 'sub-2' })
+          .mockResolvedValueOnce({ ...pendingSubscription, id: 'sub-2', status: 'active' })
+          .mockResolvedValueOnce({ ...pendingSubscription, id: 'sub-3' })
+          .mockResolvedValueOnce({ ...pendingSubscription, id: 'sub-3', status: 'active' });
+
+        mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+        const result = await service.approveSubscriptions(subscriptionIds, adminUserId);
+
+        expect(result.successful).toBe(3);
+        expect(result.failed).toBe(0);
+      });
+
+      it('should handle partial failures in bulk approval', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        mockFastify.dbUtils!.queryOne = vi
+          .fn()
+          .mockResolvedValueOnce(pendingSubscription)
+          .mockResolvedValueOnce({ ...pendingSubscription, status: 'active' })
+          .mockResolvedValueOnce(null); // Second subscription not found
+
+        mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+        const result = await service.approveSubscriptions(['sub-1', 'sub-2'], adminUserId);
+
+        expect(result.successful).toBe(1);
+        expect(result.failed).toBe(1);
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0].subscription).toBe('sub-2');
+        expect(result.errors[0].error).toContain('not found');
+      });
+    });
+
+    describe('denySubscriptions', () => {
+      it('should deny subscription with required reason', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        mockFastify.dbUtils!.queryOne = vi
+          .fn()
+          .mockResolvedValueOnce(pendingSubscription)
+          .mockResolvedValueOnce({ ...pendingSubscription, status: 'denied' });
+
+        mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 1 });
+        mockFastify.dbUtils!.queryMany = vi.fn().mockResolvedValue([]);
+
+        const result = await service.denySubscriptions(
+          [pendingSubscription.id],
+          adminUserId,
+          'Insufficient permissions',
+        );
+
+        expect(result.successful).toBe(1);
+        expect(result.failed).toBe(0);
+
+        // Verify reason was passed
+        expect(mockFastify.dbUtils!.queryOne).toHaveBeenCalledWith(
+          expect.stringContaining('status_reason'),
+          expect.arrayContaining(['Insufficient permissions']),
+        );
+      });
+
+      it('should remove model from user API keys on denial', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        mockFastify.dbUtils!.queryOne = vi
+          .fn()
+          .mockResolvedValueOnce(pendingSubscription)
+          .mockResolvedValueOnce({ ...pendingSubscription, status: 'denied' });
+
+        // Mock API keys containing this model
+        mockFastify.dbUtils!.queryMany = vi.fn().mockResolvedValue([
+          {
+            id: 'key-1',
+            lite_llm_key_value: 'sk-litellm-123',
+          },
+        ]);
+
+        mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+        // Mock LiteLLM service
+        mockLiteLLMService.updateKey = vi.fn().mockResolvedValue(undefined);
+
+        const result = await service.denySubscriptions(
+          [pendingSubscription.id],
+          adminUserId,
+          'Denied',
+        );
+
+        expect(result.successful).toBe(1);
+
+        // Verify API key models were queried
+        expect(mockFastify.dbUtils!.queryMany).toHaveBeenCalled();
+      });
+    });
+
+    describe('requestReview', () => {
+      it('should change denied subscription to pending', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        mockFastify.dbUtils!.queryOne = vi
+          .fn()
+          .mockResolvedValueOnce(deniedSubscription)
+          .mockResolvedValueOnce({ ...deniedSubscription, status: 'pending', status_reason: null });
+
+        mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+        const result = await service.requestReview(deniedSubscription.id, mockUser.id);
+
+        expect(result.status).toBe('pending');
+        expect(result.statusReason).toBeUndefined();
+
+        // Verify audit trail
+        expect(mockFastify.dbUtils!.query).toHaveBeenCalledWith(
+          expect.stringContaining('INSERT INTO subscription_status_history'),
+          expect.anything(),
+        );
+      });
+
+      it('should be idempotent for pending subscriptions', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        mockFastify.dbUtils!.queryOne = vi.fn().mockResolvedValue(pendingSubscription);
+
+        const result = await service.requestReview(pendingSubscription.id, mockUser.id);
+
+        expect(result.status).toBe('pending');
+
+        // Should not update or create audit trail for already pending
+        expect(mockFastify.dbUtils!.queryOne).toHaveBeenCalledTimes(1);
+      });
+
+      it('should throw error for active subscription', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        const activeSubscription = { ...mockSubscription, status: 'active' };
+        mockFastify.dbUtils!.queryOne = vi.fn().mockResolvedValue(activeSubscription);
+
+        await expect(service.requestReview(activeSubscription.id, mockUser.id)).rejects.toThrow(
+          /Cannot request review/i,
+        );
+      });
+    });
+
+    describe('handleModelRestrictionChange', () => {
+      it('should transition active subscriptions to pending when model becomes restricted', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        const activeSubscriptions = [
+          { id: 'sub-1', user_id: 'user-1' },
+          { id: 'sub-2', user_id: 'user-2' },
+        ];
+
+        mockFastify.dbUtils!.queryMany = vi
+          .fn()
+          .mockResolvedValueOnce(activeSubscriptions) // Get active subscriptions
+          .mockResolvedValue([]); // Empty results for API key queries
+
+        mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+        await service.handleModelRestrictionChange('gpt-4', true);
+
+        // Verify subscriptions were updated to pending
+        expect(mockFastify.dbUtils!.query).toHaveBeenCalledWith(
+          expect.stringContaining("status = 'pending'"),
+          expect.anything(),
+        );
+
+        // Verify audit trail created for each subscription
+        const auditCalls = mockFastify.dbUtils!.query.mock.calls.filter((call) =>
+          call[0].includes('INSERT INTO subscription_status_history'),
+        );
+        expect(auditCalls.length).toBe(2);
+      });
+
+      it('should remove model from all affected API keys', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        const activeSubscriptions = [{ id: 'sub-1', user_id: 'user-1' }];
+
+        mockFastify.dbUtils!.queryMany = vi.fn().mockResolvedValue(activeSubscriptions);
+        mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+        await service.handleModelRestrictionChange('gpt-4', true);
+
+        // Verify the flow is triggered
+        // Note: The actual implementation delegates to ApiKeyService for model removal
+        expect(mockFastify.log!.info).toHaveBeenCalled();
+      });
+
+      it('should auto-approve pending subscriptions when model becomes unrestricted', async () => {
+        vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+        const pendingSubscriptions = [{ id: 'sub-1' }, { id: 'sub-2' }];
+
+        mockFastify.dbUtils!.queryMany = vi.fn().mockResolvedValue(pendingSubscriptions);
+        mockFastify.dbUtils!.query = vi.fn().mockResolvedValue({ rowCount: 1 });
+
+        await service.handleModelRestrictionChange('gpt-4', false);
+
+        // Verify subscriptions were updated to active
+        expect(mockFastify.dbUtils!.query).toHaveBeenCalledWith(
+          expect.stringContaining("status = 'active'"),
+          expect.anything(),
+        );
+
+        // Verify audit trail created
+        const auditCalls = mockFastify.dbUtils!.query.mock.calls.filter((call) =>
+          call[0].includes('INSERT INTO subscription_status_history'),
+        );
+        expect(auditCalls.length).toBe(2);
+      });
+    });
+  });
 });

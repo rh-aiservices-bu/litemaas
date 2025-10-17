@@ -6,7 +6,7 @@ import {
   PageSection,
   Title,
   Button,
-  Badge,
+  Label,
   Content,
   ContentVariants,
   Flex,
@@ -169,30 +169,30 @@ const UsersPage: React.FC = () => {
   // Helper functions
   const getStatusBadge = (isActive: boolean) => {
     return (
-      <Badge color={isActive ? 'green' : 'grey'}>
+      <Label color={isActive ? 'green' : 'grey'}>
         {isActive ? <CheckCircleIcon /> : <TimesCircleIcon />}{' '}
         {isActive ? t('status.active') : t('status.inactive')}
-      </Badge>
+      </Label>
     );
   };
 
   const formatRoles = (roles: string[]) => {
     if (!roles || roles.length === 0) {
-      return <Badge color="grey">{t('role.user')}</Badge>;
+      return <Label color="grey">{t('role.user')}</Label>;
     }
 
     return (
       <Flex spaceItems={{ default: 'spaceItemsXs' }} flexWrap={{ default: 'wrap' }}>
         {roles.slice(0, 3).map((role) => (
           <FlexItem key={role}>
-            <Badge color={role === 'admin' ? 'red' : 'blue'}>
+            <Label color={role === 'admin' ? 'red' : 'blue'}>
               {usersService.formatRoleDisplayName(role)}
-            </Badge>
+            </Label>
           </FlexItem>
         ))}
         {roles.length > 3 && (
           <FlexItem>
-            <Badge color="cyan">{t('users.table.moreRoles', { count: roles.length - 3 })}</Badge>
+            <Label color="teal">{t('users.table.moreRoles', { count: roles.length - 3 })}</Label>
           </FlexItem>
         )}
       </Flex>
@@ -454,7 +454,7 @@ const UsersPage: React.FC = () => {
                       <Th width={20}>{t('users.table.fullName')}</Th>
                       <Th width={25}>{t('users.table.roles')}</Th>
                       <Th width={10}>{t('users.table.status')}</Th>
-                      <Th></Th>
+                      <Th screenReaderText={t('users.table.actions')}></Th>
                     </Tr>
                   </Thead>
                   <Tbody>
@@ -499,7 +499,7 @@ const UsersPage: React.FC = () => {
                                 component={ContentVariants.small}
                                 style={{
                                   fontStyle: 'italic',
-                                  color: 'var(--pf-v6-global--Color--200)',
+                                  color: 'var(--pf-t--global--text--color--subtle)',
                                 }}
                               >
                                 {t('users.table.notProvided')}

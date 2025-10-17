@@ -17,9 +17,13 @@ export const ErrorResponseSchema = Type.Object({
   error: Type.Object({
     code: Type.String(),
     message: Type.String(),
+    statusCode: Type.Integer(),
     details: Type.Optional(Type.Record(Type.String(), Type.Any())),
+    requestId: Type.Optional(Type.String()),
+    correlationId: Type.Optional(Type.String()),
+    timestamp: Type.String(),
+    retry: Type.Optional(Type.Any()),
   }),
-  requestId: Type.String(),
 });
 
 export const SuccessMessageSchema = Type.Object({

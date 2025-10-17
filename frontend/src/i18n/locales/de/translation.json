@@ -1,15 +1,337 @@
 {
+  "admin": {
+    "usage": {
+      "tables": {
+        "models": {
+          "ariaLabel": "Modellnutzungs-Aufschlüsselungstabelle",
+          "caption": "Tabelle mit Nutzungsaufschlüsselung für {{count}} Modelle",
+          "columns": {
+            "avgLatency": "Durchschn. Latenz",
+            "cost": "Kosten",
+            "model": "Modell",
+            "requests": "Anfragen",
+            "successRate": "Erfolgsrate",
+            "tokens": "Token",
+            "users": "Benutzer"
+          },
+          "empty": {
+            "description": "Keine Nutzungsdaten für den ausgewählten Zeitraum gefunden",
+            "title": "Keine Modelldaten verfügbar"
+          },
+          "pagination": {
+            "ariaLabel": "Modellaufschlüsselung Tabellenpaginierung"
+          },
+          "successRate": {
+            "high": "Hohe Erfolgsrate (>95%)",
+            "low": "Niedrige Erfolgsrate (<90%)",
+            "medium": "Mittlere Erfolgsrate (90-95%)"
+          }
+        },
+        "providers": {
+          "ariaLabel": "Anbieter-Nutzungsaufschlüsselungstabelle",
+          "caption": "Tabelle mit Nutzungsaufschlüsselung für {{count}} Anbieter",
+          "columns": {
+            "cost": "Kosten",
+            "models": "Modelle",
+            "provider": "Anbieter",
+            "requests": "Anfragen",
+            "successRate": "Erfolgsrate",
+            "tokens": "Token"
+          },
+          "empty": {
+            "description": "Keine Nutzungsdaten für den ausgewählten Zeitraum gefunden",
+            "title": "Keine Anbieterdaten verfügbar"
+          },
+          "pagination": {
+            "ariaLabel": "Anbieteraufschlüsselung Tabellenpaginierung"
+          },
+          "successRate": {
+            "high": "Hohe Erfolgsrate (>95%)",
+            "low": "Niedrige Erfolgsrate (<90%)",
+            "medium": "Mittlere Erfolgsrate (90-95%)"
+          }
+        },
+        "users": {
+          "ariaLabel": "Benutzernutzungs-Aufschlüsselungstabelle",
+          "caption": "Tabelle mit Nutzungsaufschlüsselung für {{count}} Benutzer",
+          "columns": {
+            "cost": "Kosten",
+            "lastActive": "Zuletzt aktiv",
+            "requests": "Anfragen",
+            "tokens": "Token",
+            "user": "Benutzer"
+          },
+          "empty": {
+            "description": "Keine Nutzungsdaten für den ausgewählten Zeitraum gefunden",
+            "title": "Keine Benutzerdaten verfügbar"
+          },
+          "pagination": {
+            "ariaLabel": "Benutzeraufschlüsselung Tabellenpaginierung"
+          }
+        }
+      },
+      "timeAgo": {
+        "days": "vor {{count}} Tag",
+        "days_plural": "vor {{count}} Tagen",
+        "hours": "vor {{count}} Stunde",
+        "hours_plural": "vor {{count}} Stunden",
+        "justNow": "Gerade eben",
+        "minutes": "vor {{count}} Minute",
+        "minutes_plural": "vor {{count}} Minuten"
+      }
+    }
+  },
+  "adminUsage": {
+    "accessDenied": "Zugriff verweigert",
+    "activeUsers": "Aktive Benutzer",
+    "apiKeysCleared": "API-Schlüssel-Filter deaktiviert - wählen Sie zuerst Benutzer aus",
+    "apiKeysFilterAdjusted": "API-Schlüssel-Filter wurde möglicherweise geändert - bitte überprüfen Sie Ihre Auswahl",
+    "apiKeysFilterAvailable": "API-Schlüssel-Filter ist jetzt verfügbar",
+    "charts": {
+      "modelDistributionAriaLabel": "Modellnutzungsverteilungs-Diagramm",
+      "modelLegendDescription": "Modell {{modelName}} im gestapelten Diagramm angezeigt",
+      "modelUsageSummary": "Gestapeltes Diagramm mit {{dataPoints}} Datenpunkten zeigt {{modelCount}} Modelle. Gesamtwerte reichen von {{minValue}} bis {{maxValue}}, mit einem Durchschnitt von {{avgValue}}.",
+      "modelUsageTrends": "Modellnutzungs-Trends",
+      "modelUsageTrendsAriaDesc": "Ein gestapeltes Balkendiagramm, das die Nutzung verschiedener Modelle über die Zeit zeigt. Die angezeigte Metrik ist {{metric}}.",
+      "modelUsageTrendsAriaLabel": "Gestapeltes Diagramm zeigt Modellnutzungs-Trends über die Zeit nach {{metric}}",
+      "modelUsageTrendsDescription": "Modellnutzungsaufschlüsselung über die Zeit",
+      "noDataAvailable": "Keine Daten für den ausgewählten Zeitraum verfügbar",
+      "noModelData": "Keine Modelldaten verfügbar",
+      "noModelDataExplanation": "Keine Modellnutzungsdaten für den ausgewählten Zeitraum verfügbar.",
+      "topUsers": "Top-Benutzer",
+      "usageTrends": "Nutzungstrends",
+      "usageTrendsDescription": "Nutzungstrends über die Zeit"
+    },
+    "completionTokens": "Vervollständigungs-Token",
+    "datePresets": {
+      "1d": "Letzter Tag",
+      "30d": "Letzte 30 Tage",
+      "7d": "Letzte 7 Tage",
+      "90d": "Letzte 90 Tage",
+      "any": "Beliebiges Datum",
+      "custom": "Benutzerdefinierter Bereich"
+    },
+    "dateRangeChanged": "Datumsbereich geändert zu {{preset}}",
+    "dateRangeSelect": "Datumsbereichsauswahl",
+    "endDate": "Enddatum",
+    "errors": {
+      "export": "Fehler beim Exportieren der Nutzungsdaten",
+      "exportDescription": "Fehler beim Exportieren der Top-Benutzerdaten.",
+      "fetchMetrics": "Fehler beim Laden der Nutzungsmetriken",
+      "fetchModels": "Fehler beim Laden der Modellaufschlüsselung",
+      "fetchProviders": "Fehler beim Laden der Anbieteraufschlüsselung",
+      "fetchUsers": "Fehler beim Laden der Benutzeraufschlüsselung",
+      "refresh": "Fehler beim Aktualisieren der heutigen Daten"
+    },
+    "export": "Exportieren",
+    "exportComplete": "Nutzungsdaten wurden erfolgreich exportiert.",
+    "exportModal": {
+      "csvDescription": "Am besten für Tabellenkalkulationen. Kompatibel mit Excel, Google Sheets und anderen Datenanalyse-Tools.",
+      "csvFullName": "(Comma-Separated Values)",
+      "dateRange": "Datumsbereich",
+      "downloaded": "Nutzungsdaten wurden erfolgreich heruntergeladen.",
+      "downloadFile": "Export-Datei herunterladen",
+      "export": "Exportieren",
+      "exportButton": "Nutzungsdaten exportieren",
+      "exporting": "Exportiert...",
+      "format": "Format",
+      "from": "Von",
+      "jsonDescription": "Am besten für Entwickler. Strukturiertes Datenformat für programmatischen Zugriff und API-Integration.",
+      "jsonFullName": "(JavaScript Object Notation)",
+      "success": "Export erfolgreich",
+      "title": "Nutzungsdaten exportieren",
+      "to": "Bis"
+    },
+    "exportStarting": "Export wird gestartet...",
+    "exportSuccess": "Export erfolgreich",
+    "filters": {
+      "apiKeys": "Nach API-Schlüsseln filtern",
+      "apiKeysLoadError": "Fehler beim Laden der API-Schlüssel",
+      "apiKeysPlaceholder": "Wählen Sie zuerst Benutzer aus, um nach API-Schlüsseln zu filtern",
+      "apiKeysPlaceholderActive": "Alle API-Schlüssel (klicken zum Filtern)",
+      "clearApiKeysFilter": "API-Schlüssel-Filter löschen",
+      "clearModels": "Modellauswahl löschen",
+      "clearUsers": "Benutzerauswahl löschen",
+      "models": "Nach Modellen filtern",
+      "modelsPlaceholder": "Alle Modelle (klicken zum Filtern)",
+      "noApiKeysAvailable": "Keine API-Schlüssel für ausgewählte Benutzer verfügbar",
+      "noApiKeysFound": "Keine API-Schlüssel für \"{{query}}\" gefunden",
+      "noModelsFound": "Keine Modelle für \"{{query}}\" gefunden",
+      "noUsersFound": "Keine Benutzer für \"{{query}}\" gefunden",
+      "searchModels": "Modelle suchen...",
+      "searchUsers": "Benutzer suchen...",
+      "selectedApiKeys": "Ausgewählte API-Schlüssel",
+      "selectedModels": "Ausgewählte Modelle",
+      "selectedUsers": "Ausgewählte Benutzer",
+      "users": "Nach Benutzern filtern",
+      "usersPlaceholder": "Alle Benutzer (klicken zum Filtern)"
+    },
+    "heatmap": {
+      "accessibility": {
+        "cellLabel": "{{dayName}}, {{date}}, {{value}}, {{percent}} der Woche",
+        "heatmapDescription": "Heatmap zeigt {{metric}} nach Wochentag über {{weeks}} Wochen"
+      },
+      "legend": {
+        "colorScale": "Nutzungsintensität",
+        "noData": "Keine Daten",
+        "noDataAriaLabel": "Keine-Daten-Indikator",
+        "zeroUsage": "Keine Nutzung",
+        "zeroUsageAriaLabel": "Keine-Nutzung-Indikator"
+      },
+      "table": {
+        "viewAsChart": "Als Diagramm anzeigen",
+        "viewAsTable": "Als Tabelle anzeigen",
+        "week": "Woche"
+      },
+      "tooltip": {
+        "noDataOutsideRange": "Keine Daten (außerhalb des ausgewählten Bereichs)",
+        "percentOfWeek": "{{percent}}% des Wochengesamts",
+        "zeroUsage": "Keine Nutzung"
+      }
+    },
+    "loading": "Metriken werden geladen...",
+    "loadingModels": "Modelldaten werden geladen...",
+    "loadingProviders": "Anbieterdaten werden geladen...",
+    "loadingUsers": "Benutzerdaten werden geladen...",
+    "metrics": {
+      "activeUsersAriaLabel": "{{active}} aktive Benutzer von {{total}} Gesamtbenutzern",
+      "completionTokensAriaLabel": "Vervollständigungs-Token: {{count}}",
+      "noChange": "Keine Änderung",
+      "ofTotalUsers": "von {{total}} insgesamt",
+      "promptTokensAriaLabel": "Prompt-Token: {{count}}",
+      "successRateAriaLabel": "Erfolgsrate: {{percentage}}%",
+      "totalCostAriaLabel": "Gesamtkosten: ${{amount}}",
+      "totalRequestsAriaLabel": "Gesamtanfragen: {{count}}",
+      "totalTokensAriaLabel": "Token insgesamt: {{count}}",
+      "trendLabel": "Trend {{direction}} um {{change}}%"
+    },
+    "metricSelect": "Metrikauswahl",
+    "metricsOverview": "Metriken-Übersicht",
+    "modelBreakdown": {
+      "completionTokens": "Vervollständigungs-Token",
+      "modelName": "Modell",
+      "noData": "Keine Modelldaten verfügbar",
+      "noDataDescription": "Keine Nutzungsdaten für den ausgewählten Datumsbereich und Filter gefunden.",
+      "promptTokens": "Prompt-Token",
+      "tableLabel": "Modellaufschlüsselungstabelle",
+      "totalCost": "Gesamtkosten",
+      "totalRequests": "Anfragen",
+      "totalTokens": "Token insgesamt"
+    },
+    "modelFilterChanged": "Filtern nach {{count}} Modell(en)",
+    "noData": "Keine Daten verfügbar",
+    "noModelData": "Keine Modelldaten verfügbar",
+    "noModelsFound": "Keine Modelle für den ausgewählten Datumsbereich gefunden.",
+    "noProviderData": "Keine Anbieterdaten verfügbar",
+    "noProvidersFound": "Keine Anbieter für den ausgewählten Datumsbereich gefunden.",
+    "noUserData": "Keine Benutzerdaten verfügbar",
+    "noUsersFound": "Keine Benutzer für den ausgewählten Datumsbereich gefunden.",
+    "pagination": {
+      "label": "Paginierung"
+    },
+    "promptTokens": "Prompt-Token",
+    "providerBreakdown": {
+      "completionTokens": "Vervollständigungs-Token",
+      "noData": "Keine Anbieterdaten verfügbar",
+      "noDataDescription": "Keine Nutzungsdaten für den ausgewählten Datumsbereich und Filter gefunden.",
+      "promptTokens": "Prompt-Token",
+      "providerName": "Anbieter",
+      "successRate": "Erfolgsrate",
+      "tableLabel": "Anbieteraufschlüsselungstabelle",
+      "totalCost": "Gesamtkosten",
+      "totalRequests": "Anfragen",
+      "totalTokens": "Token insgesamt"
+    },
+    "refreshing": "Heutige Daten werden aktualisiert...",
+    "refreshSuccess": "Aktualisierung erfolgreich",
+    "refreshToday": "Heute aktualisieren",
+    "requiresAdmin": "Sie haben keine Berechtigung, die Admin-Nutzungsanalyse anzuzeigen.",
+    "selectDateRange": "Bitte wählen Sie einen Datumsbereich aus, um Metriken anzuzeigen.",
+    "selectMetric": "Metrik auswählen",
+    "startDate": "Startdatum",
+    "subtitle": "Nutzung über alle Benutzer, Modelle und Anbieter anzeigen und analysieren",
+    "successRate": "Erfolgsrate",
+    "tabChanged": "Gewechselt zu {{tab}} Tab",
+    "tableHeaders": {
+      "completionTokens": "Vervollständigungs-<br />Token",
+      "cost": "Kosten",
+      "promptTokens": "Prompt-<br />Token",
+      "requests": "Anfragen",
+      "tokens": "Token",
+      "user": "Benutzer"
+    },
+    "tables": {
+      "topUsers": "Top-Benutzer nach Anfragen und Kosten"
+    },
+    "tabs": {
+      "byModels": "Nach Modellen",
+      "byProviders": "Nach Anbietern",
+      "byUsers": "Nach Benutzern",
+      "overview": "Übersicht"
+    },
+    "tabsLabel": "Nutzungsanalyse-Tabs",
+    "title": "Admin-Nutzungsanalyse",
+    "todayDataRefreshed": "Die heutigen Nutzungsdaten wurden aktualisiert.",
+    "topUsers": {
+      "csvHeaders": {
+        "costUsd": "Kosten (USD)",
+        "email": "E-Mail",
+        "inputTokens": "Eingabe-Token",
+        "outputTokens": "Ausgabe-Token",
+        "requests": "Anfragen",
+        "tokens": "Token",
+        "username": "Benutzername"
+      },
+      "export": "Exportieren",
+      "exportAriaLabel": "Top-Benutzer CSV-Datei herunterladen",
+      "exportSuccess": "Export erfolgreich",
+      "exportSuccessDescription": "Top-Benutzerdaten wurden erfolgreich heruntergeladen."
+    },
+    "totalCost": "Gesamtkosten",
+    "totalModels": "Modelle insgesamt",
+    "totalProviders": "Anbieter insgesamt",
+    "totalRequests": "Anfragen insgesamt",
+    "totalUsers": "Benutzer insgesamt",
+    "unknownUser": "Unbekannter Benutzer",
+    "unknownUserDescription": "Anfragen von gelöschten oder nicht zugeordneten API-Schlüsseln",
+    "usageHeatmapSubtitle": "Nutzungs-Heatmap über ausgewählte Woche(n)",
+    "userBreakdown": {
+      "completionTokens": "Vervollständigungs-Token",
+      "email": "E-Mail",
+      "noData": "Keine Benutzerdaten verfügbar",
+      "noDataDescription": "Keine Nutzungsdaten für den ausgewählten Datumsbereich und Filter gefunden.",
+      "promptTokens": "Prompt-Token",
+      "tableLabel": "Benutzeraufschlüsselungstabelle",
+      "totalCost": "Gesamtkosten",
+      "totalRequests": "Anfragen",
+      "totalTokens": "Token insgesamt",
+      "username": "Benutzername"
+    },
+    "userFilterChanged": "Filtern nach {{count}} Benutzer(n)",
+    "weeklyUsagePatterns": "Wöchentliche Nutzungsmuster"
+  },
   "common": {
     "anUnknownErrorOccurred": "Ein unbekannter Fehler ist aufgetreten",
     "cancel": "Abbrechen",
     "chart": "Diagramm",
     "close": "Schließen",
+    "closeFullScreen": "Vollbildansicht schließen",
     "create": "Erstellen",
     "dataPoints": "Datenpunkte",
     "date": "Datum",
     "day": "Tag",
+    "days": {
+      "fri": "Fr",
+      "mon": "Mo",
+      "sat": "Sa",
+      "sun": "So",
+      "thu": "Do",
+      "tue": "Di",
+      "wed": "Mi"
+    },
     "delete": "Löschen",
     "error": "Fehler",
+    "expandToFullScreen": "Auf Vollbild erweitern",
     "export": "Exportieren",
     "features": "Merkmale",
     "label": "Label",
@@ -18,8 +340,10 @@
     "no": "Nein",
     "none": "Keiner",
     "notAvailable": "N/V",
+    "refreshPage": "Seite aktualisieren",
     "retry": "Wiederholen",
     "table": "Tabelle",
+    "tryAgain": "Erneut versuchen",
     "update": "Aktualisieren",
     "value": "Wert",
     "view": "Ansehen",
@@ -33,8 +357,12 @@
       "apiKeyIsRequired": "API-Schlüssel ist erforderlich",
       "apiKeyOptional": "API-Schlüssel (Optional)",
       "areYouSureYouWantToDeleteTheModel": "Sind Sie sicher, dass Sie das Modell löschen möchten",
+      "authenticationFailed": "Authentifizierung fehlgeschlagen",
+      "availableModels": "Verfügbare Modelle:",
       "backendModelName": "Backend-Modellname",
       "backendModelNameIsRequired": "Backend-Modellname ist erforderlich",
+      "cannotContactEndpoint": "Endpunkt kann nicht kontaktiert werden",
+      "connectionSuccessful": "Verbindung erfolgreich! Sie können das Modell erstellen.",
       "createModel": "Modell Erstellen",
       "createModelFailed": "Modell-Erstellung fehlgeschlagen",
       "createYourFirstModelToGetStarted": "Erstellen Sie Ihr erstes Modell, um zu beginnen.",
@@ -65,6 +393,7 @@
       "modelName": "Modellname",
       "modelNameCannotContainSpaces": "Modellname darf keine Leerzeichen enthalten",
       "modelNameIsRequired": "Modellname ist erforderlich",
+      "modelNotAvailable": "Modell nicht verfügbar an diesem Endpunkt",
       "modelsTable": "Models Tabelle",
       "modelUpdated": "Modell Aktualisiert",
       "modelUpdatedSuccessfully": "Modell erfolgreich aktualisiert",
@@ -74,6 +403,12 @@
       "outputCostCannotBeNegative": "Ausgabekosten können nicht negativ sein",
       "outputCostPerMillionTokens": "Ausgabekosten pro Million Token",
       "pleaseEnterAValidUrl": "Bitte geben Sie eine gültige URL ein",
+      "restrictedAccessHelp": "Users must request access and receive admin approval",
+      "restrictedAccessLabel": "Require Admin Approval",
+      "restrictedAccessWarning": {
+        "message": "This will move all active subscriptions for this model to pending status and remove the model from existing API keys. Users will need to be re-approved.",
+        "title": "Enable Restricted Access?"
+      },
       "rpmMustBeAtLeast_1": "RPM muss mindestens 1 sein",
       "rpmRequestsPerMinute": "RPM (Anfragen pro Minute)",
       "supportsFunctionCalling": "Unterstützt Funktionsaufrufe",
@@ -99,6 +434,8 @@
         "tpm": "TPM",
         "visionSupport": "Vision-Unterstützung"
       },
+      "testConfiguration": "Konfiguration Testen",
+      "testingConfiguration": "Teste Konfiguration...",
       "thisActionCannotBeUndoneAndWillRemoveTheModelFromLitellm": "Diese Aktion kann nicht rückgängig gemacht werden und entfernt das Modell aus LiteLLM.",
       "title": "Modellverwaltung",
       "tpmMustBeAtLeast_1": "TPM muss mindestens 1 sein",
@@ -117,7 +454,9 @@
   "nav": {
     "admin": {
       "models": "Modellverwaltung",
+      "subscriptions": "Abonnementverwaltung",
       "tools": "Werkzeuge",
+      "usage": "Nutzungsanalyse",
       "users": "Benutzer"
     },
     "apiKeys": "API-Schlüssel",
@@ -128,6 +467,73 @@
     "usage": "Nutzung"
   },
   "pages": {
+    "adminSubscriptions": {
+      "actions": {
+        "approve": "Genehmigen",
+        "delete": "Löschen",
+        "deny": "Ablehnen",
+        "revert": "Status Ändern"
+      },
+      "approvalModalTitle": "Abonnements Genehmigen",
+      "approveSuccess": "{{count}} Abonnement(s) genehmigt",
+      "bulkApprove": "Ausgewählte Genehmigen",
+      "bulkDeny": "Ausgewählte Ablehnen",
+      "confirmApproval": "Genehmigung Bestätigen",
+      "confirmApprovalSingle": "Sind Sie sicher, dass Sie die Abonnement-Anfrage von {{user}} für den Zugriff auf {{model}} genehmigen möchten?",
+      "confirmDelete": "Dauerhaft Löschen",
+      "confirmDeleteSingle": "Sind Sie sicher, dass Sie das Abonnement von {{user}} für den Zugriff auf {{model}} dauerhaft löschen möchten? Dadurch werden alle zugehörigen Daten entfernt.",
+      "confirmDenial": "Ablehnung Bestätigen",
+      "confirmDenialBulk": "Sind Sie sicher, dass Sie {{count}} Abonnement-Anfrage(n) ablehnen möchten?",
+      "confirmDenialSingle": "Sind Sie sicher, dass Sie die Abonnement-Anfrage von {{user}} für den Zugriff auf {{model}} ablehnen möchten?",
+      "confirmRevert": "Zurücksetzen Bestätigen",
+      "deleteModalTitle": "Abonnement Löschen",
+      "deleteReasonPlaceholder": "Optional: Geben Sie den Grund für die Löschung ein (wird im Prüfprotokoll gespeichert)...",
+      "deleteSuccess": "Abonnement erfolgreich gelöscht",
+      "deleteWarning": "Diese Aktion kann nicht rückgängig gemacht werden",
+      "denialModalTitle": "Abonnements Ablehnen",
+      "denySuccess": "{{count}} Abonnement(s) abgelehnt",
+      "filters": {
+        "clearStatuses": "Statusauswahl löschen",
+        "dateRange": "Datumsbereich",
+        "from": "Von",
+        "model": "Modell",
+        "noStatusesFound": "Keine Status für \"{{query}}\" gefunden",
+        "selectAll": "Alle Auswählen",
+        "selectedStatuses": "Ausgewählte Status",
+        "status": "Status",
+        "statusPlaceholder": "Alle Status (klicken zum Filtern)",
+        "to": "Bis",
+        "user": "Benutzer"
+      },
+      "newStatus": "Neuer Status",
+      "noSelections": "Keine Abonnements ausgewählt",
+      "reasonLabel": "Kommentar",
+      "reasonPlaceholder": "Geben Sie den Grund für diese Entscheidung ein...",
+      "reasonRequired": "Grund ist für Ablehnungen erforderlich",
+      "refresh": "Aktualisieren",
+      "resultModalTitle": "Ergebnisse der Massenoperation",
+      "resultsTable": {
+        "error": "Fehler",
+        "failed": "Fehlgeschlagen",
+        "result": "Ergebnis",
+        "subscription": "Abonnement",
+        "success": "Erfolg"
+      },
+      "revertDescription": "Ändern Sie den Status des Abonnements von {{user}} für {{model}}. Aktueller Status: {{currentStatus}}",
+      "revertModalTitle": "Abonnement-Status Zurücksetzen",
+      "revertSuccess": "Abonnement-Status aktualisiert",
+      "table": {
+        "actions": "Aktionen",
+        "model": "Modell",
+        "reason": "Grund",
+        "requestedDate": "Angefordert",
+        "selectColumn": "Abonnements auswählen",
+        "status": "Status",
+        "statusChangedDate": "Zuletzt Aktualisiert",
+        "user": "Benutzer"
+      },
+      "title": "Abonnementverwaltung"
+    },
     "apiKeys": {
       "clipboard": {
         "copied": "Kopiert",
@@ -166,6 +572,7 @@
       "labels": {
         "actions": "Aktionen",
         "apiKeyLabel": "API-Schlüssel",
+        "apiUrl": "API-URL",
         "cancel": "Abbrechen",
         "close": "Schließen",
         "created": "Erstellt",
@@ -483,6 +890,7 @@
       "title": "Bei LiteMaaS anmelden"
     },
     "models": {
+      "alreadySubscribed": "Already Subscribed",
       "ariaLabels": {
         "modelAvailability": "Modellverfügbarkeit",
         "subscriptionStatus": "Abonnement-Status"
@@ -517,6 +925,11 @@
         "pricingInput": "Eingabe",
         "pricingOutput": "Ausgabe",
         "pricingUnavailable": "Preisinformationen nicht verfügbar",
+        "restrictedAccessInfo": {
+          "buttonText": "Zugriff anfordern",
+          "message": "Dieses Modell erfordert eine Administrator-Genehmigung. Wenn Sie abonnieren, wird Ihre Anfrage den Status \"Ausstehend\" haben, bis ein Administrator sie überprüft und genehmigt. Sie werden benachrichtigt, sobald Ihr Zugriff gewährt wurde.",
+          "title": "Administrator-Genehmigung erforderlich"
+        },
         "subscribeInfo": "Mit einem Abonnement erhalten Sie Zugang zu diesem Modell und können API-Schlüssel für dessen Nutzung generieren.",
         "tokens": "Token"
       },
@@ -524,6 +937,8 @@
       "moreFeatures": "+{{count}} weitere",
       "noModels": "Noch keine Modelle verfügbar",
       "notifications": {
+        "accessRequestPending": "Ihre Abonnement-Anfrage für {{modelName}} wartet auf Administrator-Genehmigung. Sie werden benachrichtigt, sobald sie genehmigt wurde.",
+        "accessRequestSubmitted": "Zugriffsanfrage eingereicht",
         "alreadySubscribed": "Sie haben dieses Modell bereits abonniert",
         "failedToSubscribe": "Fehler beim Abonnieren des Modells",
         "loadError": "Fehler",
@@ -539,6 +954,7 @@
         "separator": "•"
       },
       "pricingLabel": "Preisgestaltung: N/A",
+      "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "Modelle suchen...",
       "searchResults": "{{count}} Modelle gefunden, die Ihren Kriterien entsprechen",
       "subscribe": "Abonnieren",
@@ -597,15 +1013,20 @@
       "provider": "Anbieter",
       "quotaFormat": "Kontingent: {{requests}} Anfragen, {{tokens}} Token",
       "requestQuota": "Anfrage-Kontingent",
+      "requestReview": "Request Review",
+      "requestReviewSuccess": "Review requested successfully",
       "requests": "Anfragen",
       "requestsUsed": "Verwendete Anfragen",
       "status": {
         "active": "Aktiv",
+        "denied": "Access Denied",
         "expired": "Abgelaufen",
-        "pending": "Ausstehend",
+        "inactive": "Inaktiv",
+        "pending": "Pending Approval",
         "suspended": "Ausgesetzt"
       },
       "statusLabel": "Status",
+      "statusReason": "Admin Comment",
       "suspendedMessage": "Ihr Abonnement wurde ausgesetzt. Kontaktieren Sie den Support oder überprüfen Sie Ihren Kontostatus.",
       "title": "Modell-Abonnements",
       "tokenQuota": "Token-Kontingent",
@@ -778,6 +1199,7 @@
         "last7Days": "Letzte 7 Tage",
         "last90Days": "Letzte 90 Tage"
       },
+      "export": "Exportieren",
       "exportData": "Daten exportieren",
       "exportUsageData": "Nutzungsdaten für den ausgewählten Zeitraum exportieren",
       "filters": {
@@ -795,7 +1217,10 @@
       "loadingTitle": "Nutzungsdaten werden geladen...",
       "metrics": {
         "avgResponseTime": "Durchschn. Antwortzeit",
+        "completion_tokens": "Vervollständigungs-Token",
+        "cost": "Kosten",
         "currency": "EUR",
+        "prompt_tokens": "Prompt-Token",
         "requests": "Anfragen",
         "successfulRequests": "erfolgreiche Anfragen",
         "successRate": "Erfolgsrate",
@@ -840,12 +1265,14 @@
       "selectApiKeyTitle": "API-Schlüssel auswählen",
       "subtitle": "Überwachen Sie Ihre API-Nutzung, Kosten und Leistungsmetriken",
       "tableHeaders": {
+        "completionTokens": "Vervollständigungs-Token",
         "cost": "Kosten",
         "count": "Anzahl",
         "date": "Datum",
         "formattedValue": "Formatierter Wert",
         "model": "Modell",
         "percentage": "Prozentsatz",
+        "promptTokens": "Prompt-Token",
         "requests": "Anfragen",
         "tokens": "Token",
         "usagePercent": "Nutzung %"
@@ -875,6 +1302,7 @@
       "chartLegend": "Diagramm-Legende mit Informationen zu Datenreihen",
       "dataExported": "Daten exportiert nach {{filename}}",
       "dataTableAlternative": "Datentabellen-Alternative",
+      "dismissAnnouncement": "Ankündigung schließen",
       "exportChartData": "Diagrammdaten als CSV exportieren",
       "legendPattern": "Serie {{name}} in {{color}} Farbe mit {{pattern}} Linienmuster angezeigt",
       "legendSummary": "Legende enthält {{count}} Elemente: {{items}}",
@@ -892,6 +1320,7 @@
       "skipToNavigation": "Zur Navigation springen",
       "switchedToChart": "Zur Diagrammansicht gewechselt",
       "switchedToTable": "Zur Tabellenansicht gewechselt",
+      "systemAnnouncement": "Systemankündigung",
       "tableCaption": "Datentabelle für {{title}}",
       "tableNavigationInstructions": "Verwenden Sie die Pfeiltasten, um zwischen Zeilen und Spalten zu navigieren, oder Tab, um zum nächsten interaktiven Element zu wechseln.",
       "viewModeToggle": "Zwischen Diagramm- und Tabellenansicht wechseln"
@@ -910,7 +1339,19 @@
       "saving": "Speichern...",
       "tryAgain": "Erneut versuchen"
     },
+    "avatar": {
+      "userAvatar": "Benutzer-Avatar"
+    },
     "errors": {
+      "bannerCreateFailed": "Fehler beim Erstellen des Banners. Bitte versuchen Sie es erneut.",
+      "bannerDeleteFailed": "Fehler beim Löschen des Banners. Bitte versuchen Sie es erneut.",
+      "bannerDismissFailed": "Fehler beim Schließen des Banners. Bitte versuchen Sie es erneut.",
+      "bannerUpdateFailed": "Fehler beim Aktualisieren des Banners. Bitte versuchen Sie es erneut.",
+      "bannerVisibilityFailed": "Fehler beim Anwenden der Sichtbarkeitsänderungen. Bitte versuchen Sie es erneut.",
+      "componentError": "Komponentenfehler",
+      "componentLoadingError": "Fehler beim Laden der Komponente",
+      "componentLoadingErrorDesc": "Fehler beim Laden dieser Komponente. Bitte versuchen Sie, die Seite zu aktualisieren.",
+      "configLoadFailed": "Fehler beim Laden der Anwendungskonfiguration",
       "details": "Details",
       "errorCode": "Fehlercode",
       "field": "Feld",
@@ -924,7 +1365,8 @@
       "retryAction": "Den fehlgeschlagenen Vorgang wiederholen",
       "retryAfter": "Bitte warten Sie {{seconds}} Sekunden, bevor Sie es erneut versuchen",
       "showDetails": "Details anzeigen",
-      "somethingWrong": "Etwas ist schief gelaufen",
+      "somethingWentWrong": "Etwas ist schiefgelaufen",
+      "somethingWentWrongDesc": "Es tut uns leid, aber etwas Unerwartetes ist passiert. Bitte versuchen Sie, die Seite zu aktualisieren oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
       "statusCode": "Statuscode",
       "title": "Fehler",
       "tryRefresh": "Es tut uns leid, aber etwas Unerwartetes ist passiert. Bitte versuchen Sie, die Seite zu aktualisieren oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
@@ -941,7 +1383,17 @@
         "positive": "{{field}} muss eine positive Zahl sein",
         "required": "{{field}} ist erforderlich",
         "url": "{{field}} muss eine gültige URL sein"
-      }
+      },
+      "somethingWrong": "Etwas ist schief gelaufen"
+    },
+    "footer": {
+      "appBy": "App von",
+      "forks": "Forks: ",
+      "githubLogo": "GitHub-Logo",
+      "noVersion": "keine Version",
+      "sourceOnGitHub": "Quellcode auf GitHub",
+      "stars": "Stars: ",
+      "version": "Version"
     },
     "language": {
       "chinese": "中文",
@@ -955,10 +1407,22 @@
       "selector": "Sprache",
       "spanish": "Español"
     },
+    "navigation": {
+      "globalNavigation": "Globale Navigation",
+      "mainNavigation": "Hauptnavigation",
+      "userMenu": "Benutzermenü"
+    },
     "notifications": {
       "clear": "Alle löschen",
+      "clearAll": "Alle löschen",
+      "drawerActions": "Benachrichtigungs-Drawer Aktionen",
       "empty": "Keine Benachrichtigungen",
+      "markAllRead": "Alle als gelesen markieren",
       "markRead": "Als gelesen markieren",
+      "noNotificationsDescription": "Es gibt derzeit keine Benachrichtigungen.",
+      "noNotificationsFound": "Keine Benachrichtigungen gefunden",
+      "notificationsLabel": "Benachrichtigungen",
+      "notificationSrTitle": "Benachrichtigung",
       "title": "Benachrichtigungen"
     },
     "pagination": {
@@ -966,8 +1430,11 @@
     },
     "theme": {
       "dark": "Dunkel",
+      "darkThemeToggle": "Dunkles-Theme-Umschalter",
       "light": "Hell",
-      "toggle": "Thema umschalten"
+      "lightThemeToggle": "Helles-Theme-Umschalter",
+      "toggle": "Thema umschalten",
+      "toggleGroup": "Dunkles-Theme-Umschaltgruppe"
     }
   },
   "users": {
@@ -1055,6 +1522,7 @@
       "oauthManaged": "Status wird vom OAuth-Anbieter verwaltet."
     },
     "table": {
+      "actions": "Aktionen",
       "ariaLabel": "Benutzertabelle",
       "caption": "Tabelle mit {{count}} Benutzern mit Benutzername, E-Mail, vollständigem Namen, Rollen und Status.",
       "email": "E-Mail",

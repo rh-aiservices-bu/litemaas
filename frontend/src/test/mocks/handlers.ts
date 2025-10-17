@@ -358,6 +358,11 @@ export const handlers = [
     });
   }),
 
+  // Banner endpoint (used by BannerProvider in Layout)
+  http.get('/api/v1/banners', () => {
+    return HttpResponse.json([]);
+  }),
+
   // Error simulation endpoints
   http.get('/api/v1/test-error', () => {
     return HttpResponse.json(

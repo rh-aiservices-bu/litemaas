@@ -69,7 +69,7 @@ const LoginPage: React.FC = () => {
     const loadConfig = async () => {
       try {
         const config = await configService.getConfig();
-        setAuthMode(config.authMode);
+        setAuthMode(config.authMode ?? 'oauth');
       } catch (err) {
         console.error('Failed to load configuration:', err);
         // Default to oauth mode on error

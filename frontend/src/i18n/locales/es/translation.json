@@ -1,15 +1,337 @@
 {
+  "admin": {
+    "usage": {
+      "tables": {
+        "models": {
+          "ariaLabel": "Tabla de desglose de uso de modelos",
+          "caption": "Tabla mostrando desglose de uso para {{count}} modelos",
+          "columns": {
+            "avgLatency": "Latencia promedio",
+            "cost": "Costo",
+            "model": "Modelo",
+            "requests": "Solicitudes",
+            "successRate": "Tasa de éxito",
+            "tokens": "Tokens",
+            "users": "Usuarios"
+          },
+          "empty": {
+            "description": "No se encontraron datos de uso para el período de tiempo seleccionado",
+            "title": "No hay datos de modelo disponibles"
+          },
+          "pagination": {
+            "ariaLabel": "Paginación de tabla de desglose de modelo"
+          },
+          "successRate": {
+            "high": "Alta tasa de éxito (>95%)",
+            "low": "Baja tasa de éxito (<90%)",
+            "medium": "Tasa de éxito media (90-95%)"
+          }
+        },
+        "providers": {
+          "ariaLabel": "Tabla de desglose de uso de proveedores",
+          "caption": "Tabla mostrando desglose de uso para {{count}} proveedores",
+          "columns": {
+            "cost": "Costo",
+            "models": "Modelos",
+            "provider": "Proveedor",
+            "requests": "Solicitudes",
+            "successRate": "Tasa de éxito",
+            "tokens": "Tokens"
+          },
+          "empty": {
+            "description": "No se encontraron datos de uso para el período de tiempo seleccionado",
+            "title": "No hay datos de proveedor disponibles"
+          },
+          "pagination": {
+            "ariaLabel": "Paginación de tabla de desglose de proveedor"
+          },
+          "successRate": {
+            "high": "Alta tasa de éxito (>95%)",
+            "low": "Baja tasa de éxito (<90%)",
+            "medium": "Tasa de éxito media (90-95%)"
+          }
+        },
+        "users": {
+          "ariaLabel": "Tabla de desglose de uso de usuarios",
+          "caption": "Tabla mostrando desglose de uso para {{count}} usuarios",
+          "columns": {
+            "cost": "Costo",
+            "lastActive": "Última actividad",
+            "requests": "Solicitudes",
+            "tokens": "Tokens",
+            "user": "Usuario"
+          },
+          "empty": {
+            "description": "No se encontraron datos de uso para el período de tiempo seleccionado",
+            "title": "No hay datos de usuario disponibles"
+          },
+          "pagination": {
+            "ariaLabel": "Paginación de tabla de desglose de usuario"
+          }
+        }
+      },
+      "timeAgo": {
+        "days": "hace {{count}} día",
+        "days_plural": "hace {{count}} días",
+        "hours": "hace {{count}} hora",
+        "hours_plural": "hace {{count}} horas",
+        "justNow": "Justo ahora",
+        "minutes": "hace {{count}} minuto",
+        "minutes_plural": "hace {{count}} minutos"
+      }
+    }
+  },
+  "adminUsage": {
+    "accessDenied": "Acceso denegado",
+    "activeUsers": "Usuarios activos",
+    "apiKeysCleared": "Filtro de claves API deshabilitado - seleccione usuarios primero",
+    "apiKeysFilterAdjusted": "El filtro de claves API puede haber cambiado - por favor revise las selecciones",
+    "apiKeysFilterAvailable": "El filtro de claves API ahora está disponible",
+    "charts": {
+      "modelDistributionAriaLabel": "Gráfico de distribución de uso de modelos",
+      "modelLegendDescription": "Modelo {{modelName}} mostrado en el gráfico apilado",
+      "modelUsageSummary": "Gráfico apilado con {{dataPoints}} puntos de datos mostrando {{modelCount}} modelos. Los valores totales van desde {{minValue}} hasta {{maxValue}}, con un promedio de {{avgValue}}.",
+      "modelUsageTrends": "Tendencias de uso de modelos",
+      "modelUsageTrendsAriaDesc": "Un gráfico de barras apiladas que muestra el uso de diferentes modelos a lo largo del tiempo. La métrica mostrada es {{metric}}.",
+      "modelUsageTrendsAriaLabel": "Gráfico apilado mostrando tendencias de uso de modelos a lo largo del tiempo por {{metric}}",
+      "modelUsageTrendsDescription": "Desglose de uso de modelos a lo largo del tiempo",
+      "noDataAvailable": "No hay datos disponibles para el período seleccionado",
+      "noModelData": "No hay datos de modelo disponibles",
+      "noModelDataExplanation": "No hay datos de uso de modelo disponibles para el período de tiempo seleccionado.",
+      "topUsers": "Usuarios principales",
+      "usageTrends": "Tendencias de uso",
+      "usageTrendsDescription": "Tendencias de uso a lo largo del tiempo"
+    },
+    "completionTokens": "Tokens de completado",
+    "datePresets": {
+      "1d": "Último día",
+      "30d": "Últimos 30 días",
+      "7d": "Últimos 7 días",
+      "90d": "Últimos 90 días",
+      "any": "Cualquier fecha",
+      "custom": "Rango personalizado"
+    },
+    "dateRangeChanged": "Rango de fechas cambiado a {{preset}}",
+    "dateRangeSelect": "Selección de rango de fechas",
+    "endDate": "Fecha de fin",
+    "errors": {
+      "export": "Error al exportar datos de uso",
+      "exportDescription": "Error al exportar datos de usuarios principales.",
+      "fetchMetrics": "Error al cargar métricas de uso",
+      "fetchModels": "Error al cargar desglose de modelos",
+      "fetchProviders": "Error al cargar desglose de proveedores",
+      "fetchUsers": "Error al cargar desglose de usuarios",
+      "refresh": "Error al actualizar los datos de hoy"
+    },
+    "export": "Exportar",
+    "exportComplete": "Los datos de uso se han exportado exitosamente.",
+    "exportModal": {
+      "csvDescription": "Mejor para hojas de cálculo. Compatible con Excel, Google Sheets y otras herramientas de análisis de datos.",
+      "csvFullName": "(Valores separados por comas)",
+      "dateRange": "Rango de fechas",
+      "downloaded": "Los datos de uso se han descargado exitosamente.",
+      "downloadFile": "Descargar archivo de exportación",
+      "export": "Exportar",
+      "exportButton": "Exportar datos de uso",
+      "exporting": "Exportando...",
+      "format": "Formato",
+      "from": "Desde",
+      "jsonDescription": "Mejor para desarrolladores. Formato de datos estructurado para acceso programático e integración de API.",
+      "jsonFullName": "(Notación de objetos JavaScript)",
+      "success": "Exportación exitosa",
+      "title": "Exportar datos de uso",
+      "to": "Hasta"
+    },
+    "exportStarting": "Iniciando exportación...",
+    "exportSuccess": "Exportación exitosa",
+    "filters": {
+      "apiKeys": "Filtrar por claves API",
+      "apiKeysLoadError": "Error al cargar claves API",
+      "apiKeysPlaceholder": "Seleccione usuarios primero para filtrar por claves API",
+      "apiKeysPlaceholderActive": "Todas las claves API (clic para filtrar)",
+      "clearApiKeysFilter": "Limpiar filtro de claves API",
+      "clearModels": "Limpiar selección de modelos",
+      "clearUsers": "Limpiar selección de usuarios",
+      "models": "Filtrar por modelos",
+      "modelsPlaceholder": "Todos los modelos (clic para filtrar)",
+      "noApiKeysAvailable": "No hay claves API disponibles para los usuarios seleccionados",
+      "noApiKeysFound": "No se encontraron claves API para \"{{query}}\"",
+      "noModelsFound": "No se encontraron modelos para \"{{query}}\"",
+      "noUsersFound": "No se encontraron usuarios para \"{{query}}\"",
+      "searchModels": "Buscar modelos...",
+      "searchUsers": "Buscar usuarios...",
+      "selectedApiKeys": "Claves API seleccionadas",
+      "selectedModels": "Modelos seleccionados",
+      "selectedUsers": "Usuarios seleccionados",
+      "users": "Filtrar por usuarios",
+      "usersPlaceholder": "Todos los usuarios (clic para filtrar)"
+    },
+    "heatmap": {
+      "accessibility": {
+        "cellLabel": "{{dayName}}, {{date}}, {{value}}, {{percent}} de la semana",
+        "heatmapDescription": "Mapa de calor mostrando {{metric}} por día de la semana a través de {{weeks}} semanas"
+      },
+      "legend": {
+        "colorScale": "Intensidad de uso",
+        "noData": "Sin datos",
+        "noDataAriaLabel": "Indicador de sin datos",
+        "zeroUsage": "Uso cero",
+        "zeroUsageAriaLabel": "Indicador de uso cero"
+      },
+      "table": {
+        "viewAsChart": "Ver como gráfico",
+        "viewAsTable": "Ver como tabla",
+        "week": "Semana"
+      },
+      "tooltip": {
+        "noDataOutsideRange": "Sin datos (fuera del rango seleccionado)",
+        "percentOfWeek": "{{percent}}% del total de la semana",
+        "zeroUsage": "Uso cero"
+      }
+    },
+    "loading": "Cargando métricas...",
+    "loadingModels": "Cargando datos de modelos...",
+    "loadingProviders": "Cargando datos de proveedores...",
+    "loadingUsers": "Cargando datos de usuarios...",
+    "metrics": {
+      "activeUsersAriaLabel": "{{active}} usuarios activos de {{total}} usuarios totales",
+      "completionTokensAriaLabel": "Tokens de completado: {{count}}",
+      "noChange": "Sin cambios",
+      "ofTotalUsers": "de {{total}} total",
+      "promptTokensAriaLabel": "Tokens de prompt: {{count}}",
+      "successRateAriaLabel": "Tasa de éxito: {{percentage}}%",
+      "totalCostAriaLabel": "Costo total: ${{amount}}",
+      "totalRequestsAriaLabel": "Solicitudes totales: {{count}}",
+      "totalTokensAriaLabel": "Tokens totales: {{count}}",
+      "trendLabel": "Tendencia {{direction}} en {{change}}%"
+    },
+    "metricSelect": "Selección de métrica",
+    "metricsOverview": "Resumen de métricas",
+    "modelBreakdown": {
+      "completionTokens": "Tokens de completado",
+      "modelName": "Modelo",
+      "noData": "No hay datos de modelo disponibles",
+      "noDataDescription": "No se encontraron datos de uso para el rango de fechas y filtros seleccionados.",
+      "promptTokens": "Tokens de prompt",
+      "tableLabel": "Tabla de desglose de modelos",
+      "totalCost": "Costo total",
+      "totalRequests": "Solicitudes",
+      "totalTokens": "Tokens totales"
+    },
+    "modelFilterChanged": "Filtrando por {{count}} modelo(s)",
+    "noData": "No hay datos disponibles",
+    "noModelData": "No hay datos de modelo disponibles",
+    "noModelsFound": "No se encontraron modelos para el rango de fechas seleccionado.",
+    "noProviderData": "No hay datos de proveedor disponibles",
+    "noProvidersFound": "No se encontraron proveedores para el rango de fechas seleccionado.",
+    "noUserData": "No hay datos de usuario disponibles",
+    "noUsersFound": "No se encontraron usuarios para el rango de fechas seleccionado.",
+    "pagination": {
+      "label": "Paginación"
+    },
+    "promptTokens": "Tokens de prompt",
+    "providerBreakdown": {
+      "completionTokens": "Tokens de completado",
+      "noData": "No hay datos de proveedor disponibles",
+      "noDataDescription": "No se encontraron datos de uso para el rango de fechas y filtros seleccionados.",
+      "promptTokens": "Tokens de prompt",
+      "providerName": "Proveedor",
+      "successRate": "Tasa de éxito",
+      "tableLabel": "Tabla de desglose de proveedores",
+      "totalCost": "Costo total",
+      "totalRequests": "Solicitudes",
+      "totalTokens": "Tokens totales"
+    },
+    "refreshing": "Actualizando datos de hoy...",
+    "refreshSuccess": "Actualización exitosa",
+    "refreshToday": "Actualizar hoy",
+    "requiresAdmin": "No tiene permiso para ver las analíticas de uso de administrador.",
+    "selectDateRange": "Por favor seleccione un rango de fechas para ver métricas.",
+    "selectMetric": "Seleccionar métrica",
+    "startDate": "Fecha de inicio",
+    "subtitle": "Ver y analizar el uso en todos los usuarios, modelos y proveedores",
+    "successRate": "Tasa de éxito",
+    "tabChanged": "Cambiado a pestaña {{tab}}",
+    "tableHeaders": {
+      "completionTokens": "Tokens de<br />completado",
+      "cost": "Costo",
+      "promptTokens": "Tokens de<br />prompt",
+      "requests": "Solicitudes",
+      "tokens": "Tokens",
+      "user": "Usuario"
+    },
+    "tables": {
+      "topUsers": "Usuarios principales por solicitudes y costo"
+    },
+    "tabs": {
+      "byModels": "Por modelos",
+      "byProviders": "Por proveedores",
+      "byUsers": "Por usuarios",
+      "overview": "Resumen"
+    },
+    "tabsLabel": "Pestañas de analíticas de uso",
+    "title": "Analíticas de uso de administrador",
+    "todayDataRefreshed": "Los datos de uso de hoy se han actualizado.",
+    "topUsers": {
+      "csvHeaders": {
+        "costUsd": "Costo (USD)",
+        "email": "Correo electrónico",
+        "inputTokens": "Tokens de entrada",
+        "outputTokens": "Tokens de salida",
+        "requests": "Solicitudes",
+        "tokens": "Tokens",
+        "username": "Nombre de usuario"
+      },
+      "export": "Exportar",
+      "exportAriaLabel": "Descargar archivo CSV de usuarios principales",
+      "exportSuccess": "Exportación exitosa",
+      "exportSuccessDescription": "Los datos de usuarios principales se han descargado exitosamente."
+    },
+    "totalCost": "Costo total",
+    "totalModels": "Modelos totales",
+    "totalProviders": "Proveedores totales",
+    "totalRequests": "Solicitudes totales",
+    "totalUsers": "Usuarios totales",
+    "unknownUser": "Usuario desconocido",
+    "unknownUserDescription": "Solicitudes de claves API eliminadas o sin asignar",
+    "usageHeatmapSubtitle": "Mapa de calor de uso durante las semanas seleccionadas",
+    "userBreakdown": {
+      "completionTokens": "Tokens de completado",
+      "email": "Correo electrónico",
+      "noData": "No hay datos de usuario disponibles",
+      "noDataDescription": "No se encontraron datos de uso para el rango de fechas y filtros seleccionados.",
+      "promptTokens": "Tokens de prompt",
+      "tableLabel": "Tabla de desglose de usuarios",
+      "totalCost": "Costo total",
+      "totalRequests": "Solicitudes",
+      "totalTokens": "Tokens totales",
+      "username": "Nombre de usuario"
+    },
+    "userFilterChanged": "Filtrando por {{count}} usuario(s)",
+    "weeklyUsagePatterns": "Patrones de uso semanales"
+  },
   "common": {
     "anUnknownErrorOccurred": "Se produjo un error desconocido",
     "cancel": "Cancelar",
     "chart": "Gráfico",
     "close": "Cerrar",
+    "closeFullScreen": "Cerrar vista de pantalla completa",
     "create": "Crear",
     "dataPoints": "puntos de datos",
     "date": "Fecha",
     "day": "Día",
+    "days": {
+      "fri": "Vie",
+      "mon": "Lun",
+      "sat": "Sáb",
+      "sun": "Dom",
+      "thu": "Jue",
+      "tue": "Mar",
+      "wed": "Mié"
+    },
     "delete": "Eliminar",
     "error": "Error",
+    "expandToFullScreen": "Expandir a pantalla completa",
     "export": "Exportar",
     "features": "Características",
     "label": "Etiqueta",
@@ -18,8 +340,10 @@
     "no": "No",
     "none": "Ninguno",
     "notAvailable": "N/D",
+    "refreshPage": "Actualizar Página",
     "retry": "Reintentar",
     "table": "Tabla",
+    "tryAgain": "Intentar de Nuevo",
     "update": "Actualizar",
     "value": "Valor",
     "view": "Ver",
@@ -33,8 +357,12 @@
       "apiKeyIsRequired": "La clave API es requerida",
       "apiKeyOptional": "Clave API (Opcional)",
       "areYouSureYouWantToDeleteTheModel": "¿Estás seguro de que quieres eliminar el modelo",
+      "authenticationFailed": "Falló la autenticación",
+      "availableModels": "Modelos disponibles:",
       "backendModelName": "Nombre del Modelo Backend",
       "backendModelNameIsRequired": "El nombre del modelo backend es requerido",
+      "cannotContactEndpoint": "No se puede contactar el endpoint",
+      "connectionSuccessful": "¡Conexión exitosa! Puedes crear el modelo.",
       "createModel": "Crear Modelo",
       "createModelFailed": "Error al Crear Modelo",
       "createYourFirstModelToGetStarted": "Crea tu primer modelo para comenzar.",
@@ -65,6 +393,7 @@
       "modelName": "Nombre del Modelo",
       "modelNameCannotContainSpaces": "El nombre del modelo no puede contener espacios",
       "modelNameIsRequired": "El nombre del modelo es requerido",
+      "modelNotAvailable": "Modelo no disponible en este endpoint",
       "modelsTable": "Mesa de modelos",
       "modelUpdated": "Modelo Actualizado",
       "modelUpdatedSuccessfully": "Modelo actualizado exitosamente",
@@ -74,6 +403,12 @@
       "outputCostCannotBeNegative": "El costo de salida no puede ser negativo",
       "outputCostPerMillionTokens": "Costo de Salida por Millón de Tokens",
       "pleaseEnterAValidUrl": "Por favor introduce una URL válida",
+      "restrictedAccessHelp": "Los usuarios deben solicitar acceso y recibir aprobación del administrador",
+      "restrictedAccessLabel": "Requiere Aprobación del Administrador",
+      "restrictedAccessWarning": {
+        "message": "Esto moverá todas las suscripciones activas de este modelo a estado pendiente y eliminará el modelo de las claves API existentes. Los usuarios necesitarán ser re-aprobados.",
+        "title": "¿Habilitar Acceso Restringido?"
+      },
       "rpmMustBeAtLeast_1": "El RPM debe ser al menos 1",
       "rpmRequestsPerMinute": "RPM (Solicitudes por Minuto)",
       "supportsFunctionCalling": "Admite Llamadas de Función",
@@ -99,6 +434,8 @@
         "tpm": "TPM",
         "visionSupport": "Soporte de Visión"
       },
+      "testConfiguration": "Probar Configuración",
+      "testingConfiguration": "Probando configuración...",
       "thisActionCannotBeUndoneAndWillRemoveTheModelFromLitellm": "Esta acción no se puede deshacer y eliminará el modelo de LiteLLM.",
       "title": "Gestión de Modelos",
       "tpmMustBeAtLeast_1": "El TPM debe ser al menos 1",
@@ -117,7 +454,9 @@
   "nav": {
     "admin": {
       "models": "Gestión de Modelos",
+      "subscriptions": "Gestión de Suscripciones",
       "tools": "Herramientas",
+      "usage": "Analíticas de uso",
       "users": "Usuarios"
     },
     "apiKeys": "Claves API",
@@ -128,6 +467,73 @@
     "usage": "Uso"
   },
   "pages": {
+    "adminSubscriptions": {
+      "actions": {
+        "approve": "Aprobar",
+        "delete": "Eliminar",
+        "deny": "Denegar",
+        "revert": "Cambiar Estado"
+      },
+      "approvalModalTitle": "Aprobar Suscripciones",
+      "approveSuccess": "{{count}} suscripción(es) aprobada(s)",
+      "bulkApprove": "Aprobar Seleccionados",
+      "bulkDeny": "Denegar Seleccionados",
+      "confirmApproval": "Confirmar Aprobación",
+      "confirmApprovalSingle": "¿Está seguro de que desea aprobar la solicitud de suscripción de {{user}} para acceder a {{model}}?",
+      "confirmDelete": "Eliminar Permanentemente",
+      "confirmDeleteSingle": "¿Está seguro de que desea eliminar permanentemente la suscripción de {{user}} para acceder a {{model}}? Esto eliminará todos los datos asociados.",
+      "confirmDenial": "Confirmar Denegación",
+      "confirmDenialBulk": "¿Está seguro de que desea denegar {{count}} solicitud(es) de suscripción?",
+      "confirmDenialSingle": "¿Está seguro de que desea denegar la solicitud de suscripción de {{user}} para acceder a {{model}}?",
+      "confirmRevert": "Confirmar Reversión",
+      "deleteModalTitle": "Eliminar Suscripción",
+      "deleteReasonPlaceholder": "Opcional: Ingrese el motivo de la eliminación (se guardará en el registro de auditoría)...",
+      "deleteSuccess": "Suscripción eliminada exitosamente",
+      "deleteWarning": "Esta acción no se puede deshacer",
+      "denialModalTitle": "Denegar Suscripciones",
+      "denySuccess": "{{count}} suscripción(es) denegada(s)",
+      "filters": {
+        "clearStatuses": "Limpiar selección de estado",
+        "dateRange": "Rango de Fechas",
+        "from": "Desde",
+        "model": "Modelo",
+        "noStatusesFound": "No se encontraron estados para \"{{query}}\"",
+        "selectAll": "Seleccionar Todo",
+        "selectedStatuses": "Estados seleccionados",
+        "status": "Estado",
+        "statusPlaceholder": "Todos los estados (clic para filtrar)",
+        "to": "Hasta",
+        "user": "Usuario"
+      },
+      "newStatus": "Nuevo Estado",
+      "noSelections": "No se seleccionaron suscripciones",
+      "reasonLabel": "Comentario",
+      "reasonPlaceholder": "Ingrese el motivo de esta decisión...",
+      "reasonRequired": "Se requiere un motivo para denegar",
+      "refresh": "Actualizar",
+      "resultModalTitle": "Resultados de Operación Masiva",
+      "resultsTable": {
+        "error": "Error",
+        "failed": "Fallido",
+        "result": "Resultado",
+        "subscription": "Suscripción",
+        "success": "Éxito"
+      },
+      "revertDescription": "Cambiar el estado de la suscripción de {{user}} a {{model}}. Estado actual: {{currentStatus}}",
+      "revertModalTitle": "Revertir Estado de Suscripción",
+      "revertSuccess": "Estado de suscripción actualizado",
+      "table": {
+        "actions": "Acciones",
+        "model": "Modelo",
+        "reason": "Razón",
+        "requestedDate": "Solicitado",
+        "selectColumn": "Seleccionar suscripciones",
+        "status": "Estado",
+        "statusChangedDate": "Última Actualización",
+        "user": "Usuario"
+      },
+      "title": "Gestión de Suscripciones"
+    },
     "apiKeys": {
       "clipboard": {
         "copied": "Copiado",
@@ -166,6 +572,7 @@
       "labels": {
         "actions": "Acciones",
         "apiKeyLabel": "Clave API",
+        "apiUrl": "URL de API",
         "cancel": "Cancelar",
         "close": "Cerrar",
         "created": "Creado",
@@ -483,6 +890,7 @@
       "title": "Iniciar sesión en LiteMaaS"
     },
     "models": {
+      "alreadySubscribed": "Ya Suscrito",
       "ariaLabels": {
         "modelAvailability": "Disponibilidad del modelo",
         "subscriptionStatus": "Estado de suscripción"
@@ -517,6 +925,11 @@
         "pricingInput": "Entrada",
         "pricingOutput": "Salida",
         "pricingUnavailable": "Información de precios no disponible",
+        "restrictedAccessInfo": {
+          "buttonText": "Solicitar acceso",
+          "message": "Este modelo requiere aprobación del administrador. Cuando te suscribas, tu solicitud estará en estado pendiente hasta que un administrador la revise y apruebe. Se te notificará una vez que se otorgue el acceso.",
+          "title": "Se requiere aprobación del administrador"
+        },
         "subscribeInfo": "Al suscribirte, obtendrás acceso a este modelo y podrás generar claves API para usarlo.",
         "tokens": "tokens"
       },
@@ -524,6 +937,8 @@
       "moreFeatures": "+{{count}} más",
       "noModels": "Aún no hay modelos disponibles",
       "notifications": {
+        "accessRequestPending": "Tu solicitud de suscripción para {{modelName}} está pendiente de aprobación del administrador. Se te notificará cuando sea aprobada.",
+        "accessRequestSubmitted": "Solicitud de acceso enviada",
         "alreadySubscribed": "Ya estás suscrito a este modelo",
         "failedToSubscribe": "No se pudo suscribir al modelo",
         "loadError": "Error",
@@ -539,6 +954,7 @@
         "separator": "•"
       },
       "pricingLabel": "Precios: N/D",
+      "restrictedAccess": "Acceso Restringido",
       "searchPlaceholder": "Buscar modelos...",
       "searchResults": "Encontrados {{count}} modelos que coinciden con tus criterios",
       "subscribe": "Suscribirse",
@@ -597,15 +1013,20 @@
       "provider": "Proveedor",
       "quotaFormat": "Cuota: {{requests}} solicitudes, {{tokens}} tokens",
       "requestQuota": "Cuota de Solicitudes",
+      "requestReview": "Solicitar Revisión",
+      "requestReviewSuccess": "Revisión solicitada exitosamente",
       "requests": "solicitudes",
       "requestsUsed": "Solicitudes Utilizadas",
       "status": {
         "active": "Activo",
+        "denied": "Acceso Denegado",
         "expired": "Expirado",
-        "pending": "Pendiente",
+        "inactive": "Inactivo",
+        "pending": "Aprobación Pendiente",
         "suspended": "Suspendido"
       },
       "statusLabel": "Estado",
+      "statusReason": "Comentario del Administrador",
       "suspendedMessage": "Tu suscripción ha sido suspendida. Contacta con soporte o verifica el estado de tu cuenta.",
       "title": "Suscripciones de Modelos",
       "tokenQuota": "Cuota de Tokens",
@@ -778,6 +1199,7 @@
         "last7Days": "Últimos 7 días",
         "last90Days": "Últimos 90 días"
       },
+      "export": "Exportar",
       "exportData": "Exportar Datos",
       "exportUsageData": "Exportar datos de uso para el período de tiempo seleccionado",
       "filters": {
@@ -795,7 +1217,10 @@
       "loadingTitle": "Cargando Datos de Uso...",
       "metrics": {
         "avgResponseTime": "Tiempo de Respuesta Promedio",
+        "completion_tokens": "Tokens de Completado",
+        "cost": "Costo",
         "currency": "EUR",
+        "prompt_tokens": "Tokens de Prompt",
         "requests": "solicitudes",
         "successfulRequests": "solicitudes exitosas",
         "successRate": "Tasa de Éxito",
@@ -840,12 +1265,14 @@
       "selectApiKeyTitle": "Selecciona una Clave API",
       "subtitle": "Monitorea tu uso de API, costos y métricas de rendimiento",
       "tableHeaders": {
+        "completionTokens": "Tokens de Completado",
         "cost": "Costo",
         "count": "Conteo",
         "date": "Fecha",
         "formattedValue": "Valor Formateado",
         "model": "Modelo",
         "percentage": "Porcentaje",
+        "promptTokens": "Tokens de Prompt",
         "requests": "Solicitudes",
         "tokens": "Tokens",
         "usagePercent": "Uso %"
@@ -875,6 +1302,7 @@
       "chartLegend": "Leyenda del gráfico con información de series de datos",
       "dataExported": "Datos exportados a {{filename}}",
       "dataTableAlternative": "Alternativa de tabla de datos",
+      "dismissAnnouncement": "Descartar anuncio",
       "exportChartData": "Exportar datos del gráfico como CSV",
       "legendPattern": "Serie {{name}} mostrada en color {{color}} con patrón de línea {{pattern}}",
       "legendSummary": "La leyenda contiene {{count}} elementos: {{items}}",
@@ -892,6 +1320,7 @@
       "skipToNavigation": "Saltar a la navegación",
       "switchedToChart": "Cambiado a vista de gráfico",
       "switchedToTable": "Cambiado a vista de tabla",
+      "systemAnnouncement": "Anuncio del sistema",
       "tableCaption": "Tabla de datos para {{title}}",
       "tableNavigationInstructions": "Usa las teclas de flecha para navegar entre filas y columnas, o Tab para moverte al siguiente elemento interactivo.",
       "viewModeToggle": "Alternar entre vista de gráfico y tabla"
@@ -910,7 +1339,19 @@
       "saving": "Guardando...",
       "tryAgain": "Intentar de nuevo"
     },
+    "avatar": {
+      "userAvatar": "Avatar de usuario"
+    },
     "errors": {
+      "bannerCreateFailed": "Error al crear el banner. Por favor, inténtalo de nuevo.",
+      "bannerDeleteFailed": "Error al eliminar el banner. Por favor, inténtalo de nuevo.",
+      "bannerDismissFailed": "Error al cerrar el banner. Por favor, inténtalo de nuevo.",
+      "bannerUpdateFailed": "Error al actualizar el banner. Por favor, inténtalo de nuevo.",
+      "bannerVisibilityFailed": "Error al aplicar los cambios de visibilidad. Por favor, inténtalo de nuevo.",
+      "componentError": "Error de Componente",
+      "componentLoadingError": "Error al Cargar Componente",
+      "componentLoadingErrorDesc": "Error al cargar este componente. Por favor, intenta actualizar la página.",
+      "configLoadFailed": "Error al cargar la configuración de la aplicación",
       "details": "Detalles",
       "errorCode": "Código de error",
       "field": "Campo",
@@ -924,7 +1365,8 @@
       "retryAction": "Reintentar la operación fallida",
       "retryAfter": "Por favor espere {{seconds}} segundos antes de reintentar",
       "showDetails": "Mostrar detalles",
-      "somethingWrong": "Algo salió mal",
+      "somethingWentWrong": "Algo salió mal",
+      "somethingWentWrongDesc": "Lo sentimos, pero algo inesperado ocurrió. Por favor, intenta actualizar la página o contacta con soporte si el problema persiste.",
       "statusCode": "Código de estado",
       "title": "Error",
       "tryRefresh": "Lo sentimos, pero algo inesperado ocurrió. Por favor, intenta actualizar la página o contacta con soporte si el problema persiste.",
@@ -941,7 +1383,17 @@
         "positive": "{{field}} debe ser un número positivo",
         "required": "{{field}} es requerido",
         "url": "{{field}} debe ser una URL válida"
-      }
+      },
+      "somethingWrong": "Algo salió mal"
+    },
+    "footer": {
+      "appBy": "Aplicación por",
+      "forks": "Bifurcaciones: ",
+      "githubLogo": "Logo de GitHub",
+      "noVersion": "sin versión",
+      "sourceOnGitHub": "Código en GitHub",
+      "stars": "Estrellas: ",
+      "version": "versión"
     },
     "language": {
       "chinese": "中文",
@@ -955,10 +1407,22 @@
       "selector": "Idioma",
       "spanish": "Español"
     },
+    "navigation": {
+      "globalNavigation": "Navegación global",
+      "mainNavigation": "Navegación principal",
+      "userMenu": "Menú de usuario"
+    },
     "notifications": {
       "clear": "Limpiar todo",
+      "clearAll": "Limpiar todo",
+      "drawerActions": "Acciones del panel de notificaciones",
       "empty": "Sin notificaciones",
+      "markAllRead": "Marcar todo como leído",
       "markRead": "Marcar como leído",
+      "noNotificationsDescription": "Actualmente no hay notificaciones.",
+      "noNotificationsFound": "No se encontraron notificaciones",
+      "notificationsLabel": "Notificaciones",
+      "notificationSrTitle": "Notificación",
       "title": "Notificaciones"
     },
     "pagination": {
@@ -966,8 +1430,11 @@
     },
     "theme": {
       "dark": "Oscuro",
+      "darkThemeToggle": "alternar tema oscuro",
       "light": "Claro",
-      "toggle": "Alternar tema"
+      "lightThemeToggle": "alternar tema claro",
+      "toggle": "Alternar tema",
+      "toggleGroup": "Grupo de alternancia de tema oscuro"
     }
   },
   "users": {
@@ -1055,6 +1522,7 @@
       "oauthManaged": "Estado gestionado por el proveedor OAuth."
     },
     "table": {
+      "actions": "Acciones",
       "ariaLabel": "Tabla de usuarios",
       "caption": "Tabla de {{count}} usuarios con nombre de usuario, correo electrónico, nombre completo, roles y estado.",
       "email": "Correo electrónico",

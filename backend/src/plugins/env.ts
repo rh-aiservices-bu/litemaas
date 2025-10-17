@@ -27,6 +27,7 @@ const envSchema = Type.Object({
   OAUTH_CLIENT_SECRET: Type.String(),
   OAUTH_ISSUER: Type.String(),
   OAUTH_CALLBACK_URL: Type.String({ default: 'http://localhost:8081/api/auth/callback' }),
+  K8S_API_SKIP_TLS_VERIFY: Type.Optional(Type.String()),
 
   // LiteLLM
   LITELLM_API_URL: Type.String({ default: 'http://localhost:4000' }),
@@ -34,6 +35,9 @@ const envSchema = Type.Object({
   LITELLM_TIMEOUT: Type.String({ default: '30000' }),
   LITELLM_RETRIES: Type.String({ default: '3' }),
   LITELLM_RETRY_DELAY: Type.String({ default: '1000' }),
+
+  // Usage Cache
+  USAGE_CACHE_TTL_MINUTES: Type.String({ default: '5' }),
 
   // Rate Limiting
   RATE_LIMIT_MAX: Type.String({ default: '100' }),

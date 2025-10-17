@@ -4,107 +4,60 @@
 >
 > - **Backend Context**: [`backend/CLAUDE.md`](backend/CLAUDE.md) - Fastify API implementation details
 > - **Frontend Context**: [`frontend/CLAUDE.md`](frontend/CLAUDE.md) - React/PatternFly 6 implementation details
+> - **Project Structure**: [`docs/architecture/project-structure.md`](docs/architecture/project-structure.md) - Complete directory structure
 > - **Documentation**: See `docs/` for comprehensive guides
 
 ## 🚀 Project Overview
 
 **LiteMaaS** is a model subscription and management platform that bridges users and AI model services through LiteLLM integration.
 
-## 🏗️ Architecture Overview
-
 **Monorepo** with two packages:
 
-- **Backend** (`@litemaas/backend`): Fastify API server
-- **Frontend** (`@litemaas/frontend`): React + PatternFly 6 UI
+- **Backend** (`@litemaas/backend`): Fastify API server with PostgreSQL, OAuth2/JWT, RBAC
+- **Frontend** (`@litemaas/frontend`): React + PatternFly 6 UI with 9-language i18n support
 
-### Tech Stack Summary
-
-- **Backend**: Fastify, TypeScript, PostgreSQL, OAuth2/JWT, RBAC, LiteLLM integration
-- **Frontend**: React, TypeScript, Vite, PatternFly 6, React Router, React Query
-- **Security**: Role-based access control with three-tier hierarchy (admin > adminReadonly > user)
-- **Testing**: Vitest, Playwright, K6
-- **i18n**: EN, ES, FR, DE, IT, JA, KO, ZH, ELV (9 languages)
+**Tech Stack**: Fastify, React, TypeScript, PostgreSQL, PatternFly 6, LiteLLM integration
 
 ## 📁 Project Structure
 
-```
-litemaas/
-├── backend/                    # Fastify API Server
-│   ├── src/
-│   │   ├── config/            # Configuration modules
-│   │   ├── middleware/        # Auth, error handling, CORS
-│   │   ├── models/            # Database models (TypeScript interfaces)
-│   │   ├── plugins/           # Fastify plugins (auth, db, swagger, etc.)
-│   │   ├── routes/            # API endpoints (/auth, /users, /models, etc.)
-│   │   ├── schemas/           # TypeBox validation schemas
-│   │   ├── services/          # Business logic layer (with BaseService)
-│   │   ├── types/             # TypeScript type definitions
-│   │   ├── utils/             # Utility functions (validation, sync)
-│   │   ├── app.ts            # Main Fastify application setup
-│   │   └── index.ts          # Application entry point
-│   ├── tests/
-│   │   ├── fixtures/         # Test data and mocks
-│   │   ├── integration/      # API integration tests
-│   │   ├── performance/      # K6 load testing scripts
-│   │   ├── security/         # Security and auth tests
-│   │   └── unit/            # Unit tests for services
-│   └── dist/                # Compiled JavaScript output
-├── frontend/                  # React Application
-│   ├── src/
-│   │   ├── assets/           # Static assets (images, icons)
-│   │   ├── components/       # Reusable React components
-│   │   ├── config/           # App configuration (navigation)
-│   │   ├── contexts/         # React Context providers
-│   │   ├── hooks/            # Custom React hooks
-│   │   ├── i18n/             # Internationalization setup
-│   │   ├── pages/            # Page-level components (including ChatbotPage)
-│   │   ├── routes/           # Routing configuration
-│   │   ├── services/         # API service layer (Axios-based, chat, prompts)
-│   │   ├── types/            # TypeScript interfaces
-│   │   └── utils/            # Utility functions
-│   ├── public/              # Static public assets
-│   └── dist/                # Vite build output
-├── docs/                    # Project documentation
-└── package.json            # Workspace configuration
-```
+See [`docs/architecture/project-structure.md`](docs/architecture/project-structure.md) for complete directory structure and file organization.
 
 ## 🔧 Key Features
 
-### Role-Based Access Control (RBAC)
+**Role-Based Access Control (RBAC)**: Three-tier hierarchy `admin > adminReadonly > user` with OpenShift integration.
 
-**Three-Tier Hierarchy**: `admin > adminReadonly > user`
+**Restricted Model Subscription Approval** (Major feature - 2025 Q4): Admin-controlled access to sensitive/costly models with comprehensive approval workflow:
 
-- **OpenShift Integration**: Automatic role assignment from OpenShift groups
-- **Multi-Role Support**: Users can have multiple roles; most powerful determines access
-- **Frontend Role Display**: User's most powerful role shown in navigation with translations
-- **Admin Features**: Dedicated admin pages for user management and system operations
-- **Audit Trail**: All admin actions logged for compliance and security
+- **Restricted Model Flagging**: Administrators mark models requiring approval
+- **Three-state workflow**: Pending → Active/Denied with request review capability
+- **Bulk Operations**: Approve/deny multiple requests with detailed result tracking
+- **Full Audit Trail**: Complete history in `subscription_status_history` table
+- **Granular RBAC**: Read/write/delete permissions (admin vs adminReadonly)
+- **Automatic Cascade**: Access revocation when models become restricted
+- **LiteLLM-first security**: API key updates prioritize access revocation
 
-### Backend (`@litemaas/backend`)
+**Admin Usage Analytics** (Major feature - 2025 Q3): Enterprise-grade analytics with comprehensive system-wide visibility:
 
-- Fastify plugin architecture with PostgreSQL
-- OAuth2 + JWT authentication with API key support
-- **Role-based access control (RBAC)** with OpenShift group mapping
-- **Administrative endpoints** for user and system management
-- LiteLLM integration for model synchronization
-- Multi-model API key support with budget management
-- Team collaboration with Default Team pattern
+- **Day-by-day incremental caching** with intelligent TTL (permanent historical, 5-min current day)
+- **Multi-dimensional filtering**: users, models, providers, API keys with cascading filter dependencies
+- **Trend analysis** with automatic comparison period calculations
+- **Rich visualizations**: usage trends, model distribution, weekly heatmap (component ready, integration pending)
+- **Data export**: CSV/JSON with filter preservation
+- **Configurable cache TTL** via ConfigContext integration with React Query
 
-_See [`backend/CLAUDE.md`](backend/CLAUDE.md) for implementation details_
+**State Management**: React Context for auth/notifications/config, React Query for server state with dynamic cache TTL from backend configuration.
 
-### Frontend (`@litemaas/frontend`)
+**Shared Chart Utilities**: Consistent formatting, accessibility, and styling across all chart components via shared utility modules.
 
-- React 18 with TypeScript and Vite
-- PatternFly 6 component library (`pf-v6-` prefix required)
-- **Role-based UI rendering** with conditional admin features
-- **User role display** in navigation sidebar with translation support
-- React Query for server state management
-- AI Chatbot integration with conversation management
-- Internationalization (9 languages supported)
-- Responsive design with dark theme support
-- WCAG 2.1 AA accessibility compliance
+For detailed features, see:
 
-_See [`frontend/CLAUDE.md`](frontend/CLAUDE.md) for implementation details_
+- [`backend/CLAUDE.md`](backend/CLAUDE.md) - API implementation, service layer, caching patterns
+- [`frontend/CLAUDE.md`](frontend/CLAUDE.md) - UI components, state management, PatternFly 6
+- [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md) - Complete RBAC guide
+- [`docs/features/subscription-approval-workflow.md`](docs/features/subscription-approval-workflow.md) - Complete approval workflow guide
+- [`docs/features/admin-usage-analytics-implementation-plan.md`](docs/features/admin-usage-analytics-implementation-plan.md) - Comprehensive admin analytics implementation (2000 lines)
+- [`docs/development/chart-components-guide.md`](docs/development/chart-components-guide.md) - Chart component patterns and utilities
+- [`docs/development/pattern-reference.md`](docs/development/pattern-reference.md) - Authoritative code patterns and anti-patterns
 
 ## 🚀 Quick Start
 
@@ -112,10 +65,19 @@ _See [`frontend/CLAUDE.md`](frontend/CLAUDE.md) for implementation details_
 
 ```bash
 npm install        # Install dependencies
-npm run dev        # Start both backend and frontend with auto-reload
+npm run dev        # Start both backend and frontend with auto-reload and logging
 ```
 
-> **Note**: In development, both backend and frontend servers run with auto-reload enabled. Any code changes are automatically detected and applied without needing to restart the servers.
+**Testing (First Time Setup):**
+
+```bash
+# Create test database (required before running backend tests)
+psql -U pgadmin -h localhost -p 5432 -d postgres -c "CREATE DATABASE litemaas_test;"
+cd backend && npm run test:db:setup
+
+# Run tests
+npm test
+```
 
 **Production (OpenShift):**
 
@@ -133,135 +95,80 @@ _See `docs/development/` for detailed setup and `docs/deployment/configuration.m
 
 ## 🚨 CRITICAL DEVELOPMENT NOTES
 
+### Development Server and Logging Setup
+
+**⚠️ IMPORTANT**: Development servers are already running with auto-reload. DO NOT start new processes!
+
+**Current Setup:**
+
+- Backend: Port 8081 (`tsx watch` + `pino-pretty`)
+- Frontend: Port 3000 (Vite HMR)
+- Logs: `logs/backend.log` and `logs/frontend.log`
+
+**Quick Commands:**
+
+```bash
+# Check logs
+tail -n 100 logs/backend.log
+tail -n 100 logs/frontend.log
+
+# Search for errors
+grep -i error logs/*.log | tail -n 20
+```
+
+**Key URLs:**
+
+- Backend API: `http://localhost:8081`
+- Frontend: `http://localhost:3000`
+- API Docs: `http://localhost:8081/docs`
+
 ### Bash Tool Limitation
 
 **⚠️ CRITICAL**: stderr redirects are broken in the Bash tool - you can't use `2>&1` in bash commands. The Bash tool will mangle the stderr redirect and pass a "2" as an arg, and you won't see stderr.
 
-**Workaround**: Use the wrapper script: `./dev-tools/run_with_stderr.sh command args` to capture both stdout and stderr.
+**Workaround**: Use `./dev-tools/run_with_stderr.sh command args` to capture both stdout and stderr.
 
 See <https://github.com/anthropics/claude-code/issues/4711> for details.
 
-## 🔒 Security & Performance
+## 🔐 Security & Authentication
 
-### Authentication & Authorization
+**OAuth2 + JWT** with role-based access control. Three-tier hierarchy: `admin > adminReadonly > user`.
 
-- **Auth**: OAuth2 (OpenShift) + JWT + API keys + Development mock mode
-- **RBAC**: Three-tier role hierarchy with OpenShift group mapping:
-  ```
-  admin > adminReadonly > user
-  ```
-- **Role Assignment**: Automatic from OpenShift groups (`litemaas-admins`, `litemaas-readonly`, `litemaas-users`)
-- **Multi-Role Support**: Users can have multiple roles; most powerful determines permissions
-- **Resource Protection**: Role-based data access with admin oversight capabilities
+For details, see [`docs/deployment/authentication.md`](docs/deployment/authentication.md) and [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md).
 
-### Security Features
+## 📚 Documentation
 
-- **API Endpoint Protection**: Role-based access control on all admin endpoints
-- **Data Isolation**: Users can only access own resources; admins can access all
-- **Audit Logging**: All admin actions and role changes logged
-- **Rate Limiting**: Role-specific rate limits (higher for admins)
-- **Security Headers**: CORS, CSP, encrypted storage
+**Complete guide index**: [`docs/README.md`](docs/README.md)
 
-### Performance Targets
+**Key documentation**:
 
-- **API Response**: <200ms (standard), <300ms (admin endpoints)
-- **Frontend Load**: <3s initial, <1s role-based navigation updates
-- **Testing**: Vitest, Playwright, K6 with 80%+ coverage requirement
-- **CI/CD**: GitHub Actions for automated testing and deployment
-
-## 🔗 Core Integration Points
-
-### LiteLLM Integration
-
-- Auto-sync models from LiteLLM `/model/info` endpoint
-- Multi-model API key support with budget management
-- Circuit breaker pattern for resilient communication
-- Graceful fallback to mock data in development
-
-### Authentication Flows
-
-- **Production**: OAuth2 with OpenShift provider + role assignment from groups
-- **Development**: Mock auth mode with configurable test user roles
-- **API Keys**: LiteLLM-compatible key generation with user role inheritance
-
-### Role-Based Features
-
-#### Admin Capabilities (`admin` role)
-
-- **User Management**: Create, update, deactivate users and assign roles
-- **System Operations**: Model synchronization, global sync operations
-- **Data Access**: View and modify all user resources
-- **System Monitoring**: Access to system status, metrics, and health checks
-
-#### Read-Only Admin (`adminReadonly` role)
-
-- **System Visibility**: View all users, data, and system information
-- **Monitoring Access**: System status, metrics, audit logs
-- **No Modifications**: Cannot create, update, or delete resources
-- **Reporting**: Access to usage analytics and system reports
-
-#### Standard User (`user` role)
-
-- **Personal Resources**: Manage own subscriptions, API keys, usage data
-- **Self-Service**: Update profile, preferences, and settings
-- **Model Access**: Subscribe to and use available AI models
-- **Limited Scope**: Cannot view other users or system information
-
-_For detailed implementation, see workspace-specific CLAUDE.md files_
-
-## 🚨 Error Handling Architecture
-
-LiteMaaS implements a comprehensive error handling system that provides consistent error processing, user-friendly messages, and resilient operation across both backend and frontend.
-
-### Key Features
-
-- **Structured Backend Errors**: `ApplicationError` class with standardized codes and user-friendly messages
-- **React Error Handling**: `useErrorHandler` hook with automatic notifications and retry logic
-- **Internationalization**: Error messages support all 9 languages (EN, ES, FR, DE, IT, JA, KO, ZH, ELV)
-- **Development Support**: Enhanced error logging and debugging in development mode
-- **Production Resilience**: Graceful fallbacks and circuit breaker patterns for external services
-- **Accessibility**: Screen reader announcements and WCAG-compliant error messaging
-
-### Implementation Details
-
-- **Backend**: See [`backend/CLAUDE.md`](backend/CLAUDE.md) for ApplicationError class, BaseService patterns, and database error mapping
-- **Frontend**: See [`frontend/CLAUDE.md`](frontend/CLAUDE.md) for useErrorHandler hook, error boundaries, and notification integration
-- **Best Practices**: See [`docs/development/error-handling.md`](docs/development/error-handling.md) for comprehensive developer guide
-
-## 📚 Documentation Structure
-
-### AI Context Files (Start Here)
-
-- **[`./CLAUDE.md`](CLAUDE.md)** - This file, project overview
-- **[`backend/CLAUDE.md`](backend/CLAUDE.md)** - Backend implementation context
-- **[`frontend/CLAUDE.md`](frontend/CLAUDE.md)** - Frontend implementation context
-
-### Comprehensive Documentation
-
-```
-docs/
-├── api/                    # API endpoints, schemas, examples
-├── architecture/           # System design, services, integration
-├── deployment/            # Configuration, environment, containers
-├── development/           # Setup guide, testing, conventions
-│   ├── accessibility/     # WCAG 2.1 AA compliance and testing
-│   └── pf6-guide/        # PatternFly 6 authoritative guide
-└── features/              # Feature-specific documentation
-```
-
-### Quick References
-
-- **User Roles Guide**: `docs/features/user-roles-administration.md` - **RBAC system authority**
-- **Authentication Setup**: `docs/deployment/authentication.md` - **OAuth & role configuration**
-- **PatternFly 6**: `docs/development/pf6-guide/` - UI development authority
-- **Accessibility Guide**: `docs/development/accessibility/` - WCAG 2.1 AA compliance
-- **API Reference**: `docs/api/rest-api.md` - Complete endpoint documentation with role requirements
-- **Database Schema**: `docs/architecture/database-schema.md` - Table structures
-- **Environment Config**: `docs/deployment/configuration.md` - All env variables
-- **Development Setup**: `docs/development/setup.md` - Getting started with admin user setup
-- **Chatbot Implementation**: `docs/development/chatbot-implementation.md` - AI chat features
+- **Project Structure**: [`docs/architecture/project-structure.md`](docs/architecture/project-structure.md)
+- **Development Setup**: [`docs/development/setup.md`](docs/development/setup.md)
+- **API Reference**: [`docs/api/rest-api.md`](docs/api/rest-api.md)
+- **Authentication**: [`docs/deployment/authentication.md`](docs/deployment/authentication.md)
+- **RBAC Guide**: [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md)
 
 ## 🎯 For AI Assistants
+
+### ⚠️ Pattern Discovery Checklist (MANDATORY)
+
+**MANDATORY**: Before implementing ANY new feature, you MUST:
+
+1. **Search for existing implementations**:
+   - Use `find_symbol` to locate similar components/services
+   - Use `search_for_pattern` to find code patterns
+   - Check relevant memory files: `code_style_conventions`, `error_handling_architecture`
+
+2. **Follow established patterns**:
+   - **Backend**: ALWAYS extend `BaseService`, use `ApplicationError` factory methods
+   - **Frontend**: ALWAYS use `useErrorHandler` hook, follow PatternFly 6 prefix (`pf-v6-`)
+   - **Testing**: ALWAYS test error scenarios, use `./dev-tools/run_with_stderr.sh` for stderr
+
+3. **Verify against pattern reference**:
+   - See [`docs/development/pattern-reference.md`](docs/development/pattern-reference.md) for comprehensive patterns
+   - Check existing code in similar features before creating new patterns
+
+### Working on Specific Tasks
 
 When working on:
 
@@ -270,6 +177,22 @@ When working on:
 - **Role/Admin tasks** → Load `docs/features/user-roles-administration.md` for RBAC details
 - **Authentication tasks** → Load `docs/deployment/authentication.md` for OAuth/role setup
 - **Full-stack tasks** → Start with this file, then load specific contexts as needed
+
+### Debugging Workflow
+
+1. **Check logs first**: `tail -n 100 logs/backend.log` or `logs/frontend.log`
+2. **Fix compilation errors**: Save file, auto-reload will recompile
+3. **Runtime errors**: Read stack trace from logs
+4. **Servers down**: Tell user to run `npm run dev:logged`
+
+### Context7 Usage Guidelines
+
+⚠️ **Important for AI tools using Context7**:
+
+- ✅ **Use Context7 for**: Backend libraries (Fastify, PostgreSQL, LiteLLM), non-UI frontend libraries (React Query, Axios, Vite)
+- ❌ **Don't use Context7 for**: PatternFly 6 components (use `docs/development/pf6-guide/` + PatternFly.org instead)
+
+Context7 may contain outdated PatternFly versions. For all PatternFly 6 UI development, refer to the local PF6 guide and official PatternFly.org documentation.
 
 ### Security Note for AI Assistants
 

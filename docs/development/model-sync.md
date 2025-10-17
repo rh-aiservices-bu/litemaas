@@ -31,8 +31,7 @@ The Model Synchronization system maintains consistency between LiteLLM backend m
 
 ```bash
 # LiteLLM Backend Configuration
-LITELLM_API_URL=http://localhost:4000    # Primary LiteLLM API URL
-LITELLM_BASE_URL=http://localhost:4000   # Alternative/fallback URL
+LITELLM_API_URL=http://localhost:4000    # LiteLLM API URL
 LITELLM_API_KEY=your-litellm-api-key     # Optional: LiteLLM API key
 
 # Database Configuration
@@ -296,9 +295,7 @@ VALUES ($1, 'MODELS_SYNC', 'MODEL', $2, $3);
 
 ```typescript
 // Automatic mock mode triggers
-enableMocking: process.env.NODE_ENV === 'development' &&
-  !process.env.LITELLM_API_URL &&
-  !process.env.LITELLM_BASE_URL;
+enableMocking: process.env.NODE_ENV === 'development' && !process.env.LITELLM_API_URL;
 ```
 
 ### Mock Data

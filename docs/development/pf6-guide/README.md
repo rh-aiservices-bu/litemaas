@@ -30,6 +30,12 @@ Essential rules and guidelines for developing React applications with PatternFly
 - [**Charts Rules**](./charts/README.md) - PatternFly Charts requirements
 - [**Chatbot Rules**](./chatbot/README.md) - PatternFly Chatbot requirements
 
+### 🧪 Testing Patterns
+
+- [**Modal Testing**](./testing-patterns/modals.md) - Complete guide for testing PatternFly 6 Modal components in JSDOM
+- [**Dropdown & Pagination Testing**](./testing-patterns/dropdowns-pagination.md) - Comprehensive guide for testing PatternFly 6 dropdowns and pagination in JSDOM
+- [**Context-Dependent Components**](./testing-patterns/context-dependent-components.md) - Testing components that require parent context (Alert, Modal, etc.)
+
 ### 🔧 Troubleshooting
 
 - [**Common Issues**](./troubleshooting/common-issues.md) - Frontend, PatternFly 6, and Vite issues

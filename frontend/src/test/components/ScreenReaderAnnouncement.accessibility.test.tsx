@@ -25,9 +25,12 @@ describe('ScreenReaderAnnouncement Accessibility Tests', () => {
       <ScreenReaderAnnouncement message="Polite announcement" priority="polite" />,
     );
 
-    const liveRegion = container.querySelector('[aria-live="polite"]');
-    expect(liveRegion).toBeInTheDocument();
-    expect(liveRegion).toHaveTextContent('Polite announcement');
+    // Wait for the live region to be populated (useEffect needs to run)
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live="polite"]');
+      expect(liveRegion).toBeInTheDocument();
+      expect(liveRegion).toHaveTextContent('Polite announcement');
+    });
 
     // Test live region structure
     ariaTestUtils.testLiveRegion(container);
@@ -38,10 +41,14 @@ describe('ScreenReaderAnnouncement Accessibility Tests', () => {
       <ScreenReaderAnnouncement message="Urgent announcement" priority="assertive" />,
     );
 
-    const liveRegion = container.querySelector('[aria-live="assertive"]');
-    expect(liveRegion).toBeInTheDocument();
-    expect(liveRegion).toHaveTextContent('Urgent announcement');
+    // Wait for the live region to be populated (useEffect needs to run)
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live="assertive"]');
+      expect(liveRegion).toBeInTheDocument();
+      expect(liveRegion).toHaveTextContent('Urgent announcement');
+    });
 
+    const liveRegion = container.querySelector('[aria-live="assertive"]');
     // Note: The component doesn't explicitly set role="alert" - the aria-live="assertive" is sufficient
     expect(liveRegion).toHaveAttribute('aria-live', 'assertive');
   });
@@ -51,8 +58,15 @@ describe('ScreenReaderAnnouncement Accessibility Tests', () => {
       <ScreenReaderAnnouncement message="" priority="polite" />,
     );
 
+    // The component always renders the live region div, even with empty message
+    // However, empty messages don't trigger the useEffect, so we need to wait for render
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live]');
+      expect(liveRegion).toBeInTheDocument();
+    });
+
     const liveRegion = container.querySelector('[aria-live]');
-    expect(liveRegion).toBeInTheDocument();
+    // With an empty message, currentMessage starts as '' and stays as '' (useEffect skips empty messages)
     expect(liveRegion).toHaveTextContent('');
 
     await testAccessibility();
@@ -63,14 +77,20 @@ describe('ScreenReaderAnnouncement Accessibility Tests', () => {
       <ScreenReaderAnnouncement message="First message" priority="polite" />,
     );
 
-    let liveRegion = container.querySelector('[aria-live="polite"]');
-    expect(liveRegion).toHaveTextContent('First message');
+    // Wait for the first message to appear
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live="polite"]');
+      expect(liveRegion).toHaveTextContent('First message');
+    });
 
     // Update message
     rerender(<ScreenReaderAnnouncement message="Second message" priority="polite" />);
 
-    liveRegion = container.querySelector('[aria-live="polite"]');
-    expect(liveRegion).toHaveTextContent('Second message');
+    // Wait for the second message to appear
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live="polite"]');
+      expect(liveRegion).toHaveTextContent('Second message');
+    });
   });
 
   it('should handle priority changes correctly', async () => {
@@ -78,15 +98,21 @@ describe('ScreenReaderAnnouncement Accessibility Tests', () => {
       <ScreenReaderAnnouncement message="Test message" priority="polite" />,
     );
 
-    let liveRegion = container.querySelector('[aria-live="polite"]');
-    expect(liveRegion).toBeInTheDocument();
+    // Wait for the initial polite message to appear
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live="polite"]');
+      expect(liveRegion).toBeInTheDocument();
+    });
 
     // Change to assertive
     rerender(<ScreenReaderAnnouncement message="Test message" priority="assertive" />);
 
-    liveRegion = container.querySelector('[aria-live="assertive"]');
-    expect(liveRegion).toBeInTheDocument();
-    expect(liveRegion).toHaveAttribute('aria-live', 'assertive');
+    // Wait for the assertive message to appear
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live="assertive"]');
+      expect(liveRegion).toBeInTheDocument();
+      expect(liveRegion).toHaveAttribute('aria-live', 'assertive');
+    });
   });
 
   it('should have proper accessibility attributes for status messages', async () => {
@@ -94,9 +120,13 @@ describe('ScreenReaderAnnouncement Accessibility Tests', () => {
       <ScreenReaderAnnouncement message="Status update" priority="polite" />,
     );
 
-    const liveRegion = container.querySelector('[aria-live="polite"]');
-    expect(liveRegion).toBeInTheDocument();
+    // Wait for the live region to be populated
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live="polite"]');
+      expect(liveRegion).toBeInTheDocument();
+    });
 
+    const liveRegion = container.querySelector('[aria-live="polite"]');
     // The component uses aria-live="polite" which is sufficient for status announcements
     expect(liveRegion).toHaveAttribute('aria-live', 'polite');
 
@@ -104,13 +134,16 @@ describe('ScreenReaderAnnouncement Accessibility Tests', () => {
     expect(liveRegion).toHaveClass('pf-v6-screen-reader');
   });
 
-  it('should collect announcements for screen reader testing', () => {
+  it('should collect announcements for screen reader testing', async () => {
     const { container } = renderWithAccessibility(
       <ScreenReaderAnnouncement message="Test announcement for collection" priority="polite" />,
     );
 
-    const announcements = screenReaderTestUtils.testAnnouncements(container);
-    expect(announcements).toContain('Test announcement for collection');
+    // Wait for the announcement to be populated
+    await waitFor(() => {
+      const announcements = screenReaderTestUtils.testAnnouncements(container);
+      expect(announcements).toContain('Test announcement for collection');
+    });
   });
 
   it('should handle long messages without truncation', async () => {
@@ -121,8 +154,11 @@ describe('ScreenReaderAnnouncement Accessibility Tests', () => {
       <ScreenReaderAnnouncement message={longMessage} priority="polite" />,
     );
 
-    const liveRegion = container.querySelector('[aria-live="polite"]');
-    expect(liveRegion).toHaveTextContent(longMessage);
+    // Wait for the long message to be populated
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live="polite"]');
+      expect(liveRegion).toHaveTextContent(longMessage);
+    });
 
     await testAccessibility();
   });
@@ -134,20 +170,27 @@ describe('ScreenReaderAnnouncement Accessibility Tests', () => {
       <ScreenReaderAnnouncement message={messageWithSpecialChars} priority="assertive" />,
     );
 
-    const liveRegion = container.querySelector('[aria-live="assertive"]');
-    expect(liveRegion).toHaveTextContent(messageWithSpecialChars);
+    // Wait for the message with special characters to be populated
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live="assertive"]');
+      expect(liveRegion).toHaveTextContent(messageWithSpecialChars);
+    });
 
     await testAccessibility();
   });
 
-  it('should be invisible but accessible', () => {
+  it('should be invisible but accessible', async () => {
     const { container } = renderWithAccessibility(
       <ScreenReaderAnnouncement message="Hidden but accessible" priority="polite" />,
     );
 
-    const liveRegion = container.querySelector('[aria-live]');
-    expect(liveRegion).toBeInTheDocument();
+    // Wait for the live region to be available (it's always rendered, but wait for consistency)
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live]');
+      expect(liveRegion).toBeInTheDocument();
+    });
 
+    const liveRegion = container.querySelector('[aria-live]');
     // Should have screen reader only styles
     expect(liveRegion).toHaveClass('pf-v6-screen-reader');
 
@@ -185,24 +228,30 @@ describe('ScreenReaderAnnouncement Accessibility Tests', () => {
         <ScreenReaderAnnouncement message={testCase.message} priority={testCase.priority} />,
       );
 
-      const liveRegion = container.querySelector(`[aria-live="${testCase.priority}"]`);
-      expect(liveRegion).toBeInTheDocument();
-      expect(liveRegion).toHaveAttribute('aria-live', testCase.priority);
-      expect(liveRegion).toHaveTextContent(testCase.message);
+      // Wait for the message to be populated in the live region
+      await waitFor(() => {
+        const liveRegion = container.querySelector(`[aria-live="${testCase.priority}"]`);
+        expect(liveRegion).toBeInTheDocument();
+        expect(liveRegion).toHaveAttribute('aria-live', testCase.priority);
+        expect(liveRegion).toHaveTextContent(testCase.message);
+      });
 
       await testAccessibility();
     }
   });
 
-  it('should maintain proper document structure', () => {
+  it('should maintain proper document structure', async () => {
     const { container } = renderWithAccessibility(
       <ScreenReaderAnnouncement message="Structure test" priority="polite" />,
     );
 
-    // Component should not interfere with document structure
-    const liveRegion = container.querySelector('[aria-live]');
-    expect(liveRegion).toBeInTheDocument();
+    // Wait for the live region to be available
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live]');
+      expect(liveRegion).toBeInTheDocument();
+    });
 
+    const liveRegion = container.querySelector('[aria-live]');
     // Should be at the end of the component tree
     expect(liveRegion).toBe(container.lastElementChild);
 
@@ -215,16 +264,22 @@ describe('ScreenReaderAnnouncement Accessibility Tests', () => {
       <ScreenReaderAnnouncement message="Visible message" priority="polite" />,
     );
 
-    expect(container.querySelector('[aria-live]')).toBeInTheDocument();
+    // Wait for the initial message to appear
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live]');
+      expect(liveRegion).toBeInTheDocument();
+    });
 
     // Render with empty message (should still maintain live region)
     rerender(<ScreenReaderAnnouncement message="" priority="polite" />);
 
-    const liveRegion = container.querySelector('[aria-live]');
-    expect(liveRegion).toBeInTheDocument();
-
-    // The component may still show the previous message until the timeout clears it
-    // But the live region should exist regardless
-    expect(liveRegion?.tagName.toLowerCase()).toBe('div');
+    // Live region should still exist even with empty message
+    await waitFor(() => {
+      const liveRegion = container.querySelector('[aria-live]');
+      expect(liveRegion).toBeInTheDocument();
+      // The component may still show the previous message until the timeout clears it
+      // But the live region should exist regardless
+      expect(liveRegion?.tagName.toLowerCase()).toBe('div');
+    });
   });
 });

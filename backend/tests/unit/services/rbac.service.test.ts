@@ -53,7 +53,9 @@ describe('RBACService', () => {
       expect(adminReadonlyRole!.isSystem).toBe(true);
       expect(adminReadonlyRole!.permissions).toEqual([
         'admin:users',
+        'admin:usage',
         'admin:banners:read',
+        'admin:subscriptions:read', // Added for Restricted Model Subscription Approval feature
         'users:read',
         'models:read',
         'subscriptions:read',

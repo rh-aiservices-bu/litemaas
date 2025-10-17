@@ -173,9 +173,8 @@ describe('AccessibleChart', () => {
     const table = screen.getByRole('table');
     expect(table).toBeInTheDocument();
 
-    // Check table headers
-    expect(screen.getByText('Label')).toBeInTheDocument();
-    expect(screen.getByText('Value')).toBeInTheDocument();
+    // Check table headers - AccessibleChart only renders additionalHeaders, not Label/Value columns
+    // The component uses only the provided additionalHeaders array for table columns
     expect(screen.getByText('Date')).toBeInTheDocument();
     expect(screen.getByText('Requests')).toBeInTheDocument();
 

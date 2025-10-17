@@ -1,15 +1,337 @@
 {
+  "admin": {
+    "usage": {
+      "tables": {
+        "models": {
+          "ariaLabel": "モデル使用量内訳テーブル",
+          "caption": "{{count}}個のモデルの使用量内訳を表示するテーブル",
+          "columns": {
+            "avgLatency": "平均レイテンシ",
+            "cost": "コスト",
+            "model": "モデル",
+            "requests": "リクエスト",
+            "successRate": "成功率",
+            "tokens": "トークン",
+            "users": "ユーザー"
+          },
+          "empty": {
+            "description": "選択した期間の使用データが見つかりません",
+            "title": "モデルデータがありません"
+          },
+          "pagination": {
+            "ariaLabel": "モデル内訳テーブルのページネーション"
+          },
+          "successRate": {
+            "high": "高い成功率（>95%）",
+            "low": "低い成功率（<90%）",
+            "medium": "中程度の成功率（90-95%）"
+          }
+        },
+        "providers": {
+          "ariaLabel": "プロバイダー使用量内訳テーブル",
+          "caption": "{{count}}個のプロバイダーの使用量内訳を表示するテーブル",
+          "columns": {
+            "cost": "コスト",
+            "models": "モデル",
+            "provider": "プロバイダー",
+            "requests": "リクエスト",
+            "successRate": "成功率",
+            "tokens": "トークン"
+          },
+          "empty": {
+            "description": "選択した期間の使用データが見つかりません",
+            "title": "プロバイダーデータがありません"
+          },
+          "pagination": {
+            "ariaLabel": "プロバイダー内訳テーブルのページネーション"
+          },
+          "successRate": {
+            "high": "高い成功率（>95%）",
+            "low": "低い成功率（<90%）",
+            "medium": "中程度の成功率（90-95%）"
+          }
+        },
+        "users": {
+          "ariaLabel": "ユーザー使用量内訳テーブル",
+          "caption": "{{count}}人のユーザーの使用量内訳を表示するテーブル",
+          "columns": {
+            "cost": "コスト",
+            "lastActive": "最終アクティブ",
+            "requests": "リクエスト",
+            "tokens": "トークン",
+            "user": "ユーザー"
+          },
+          "empty": {
+            "description": "選択した期間の使用データが見つかりません",
+            "title": "ユーザーデータがありません"
+          },
+          "pagination": {
+            "ariaLabel": "ユーザー内訳テーブルのページネーション"
+          }
+        }
+      },
+      "timeAgo": {
+        "days": "{{count}}日前",
+        "days_plural": "{{count}}日前",
+        "hours": "{{count}}時間前",
+        "hours_plural": "{{count}}時間前",
+        "justNow": "たった今",
+        "minutes": "{{count}}分前",
+        "minutes_plural": "{{count}}分前"
+      }
+    }
+  },
+  "adminUsage": {
+    "accessDenied": "アクセス拒否",
+    "activeUsers": "アクティブユーザー",
+    "apiKeysCleared": "APIキーフィルターが無効化されました - 最初にユーザーを選択してください",
+    "apiKeysFilterAdjusted": "APIキーフィルターが変更された可能性があります - 選択内容を確認してください",
+    "apiKeysFilterAvailable": "APIキーフィルターが利用可能になりました",
+    "charts": {
+      "modelDistributionAriaLabel": "モデル使用分布グラフ",
+      "modelLegendDescription": "積み上げグラフに表示されているモデル{{modelName}}",
+      "modelUsageSummary": "{{dataPoints}}個のデータポイントを持つ積み上げグラフで、{{modelCount}}個のモデルを表示しています。合計値は{{minValue}}から{{maxValue}}の範囲で、平均は{{avgValue}}です。",
+      "modelUsageTrends": "モデル使用トレンド",
+      "modelUsageTrendsAriaDesc": "時間経過に伴う異なるモデルの使用状況を示す積み上げ棒グラフ。表示されているメトリクスは{{metric}}です。",
+      "modelUsageTrendsAriaLabel": "{{metric}}による時間経過に伴うモデル使用トレンドを示す積み上げグラフ",
+      "modelUsageTrendsDescription": "時間経過に伴うモデル使用の内訳",
+      "noDataAvailable": "選択した期間のデータがありません",
+      "noModelData": "モデルデータがありません",
+      "noModelDataExplanation": "選択した期間のモデル使用データがありません。",
+      "topUsers": "上位ユーザー",
+      "usageTrends": "使用トレンド",
+      "usageTrendsDescription": "時間経過に伴う使用トレンド"
+    },
+    "completionTokens": "補完トークン",
+    "datePresets": {
+      "1d": "過去1日間",
+      "30d": "過去30日間",
+      "7d": "過去7日間",
+      "90d": "過去90日間",
+      "any": "すべての日付",
+      "custom": "カスタム範囲"
+    },
+    "dateRangeChanged": "期間が{{preset}}に変更されました",
+    "dateRangeSelect": "期間選択",
+    "endDate": "終了日",
+    "errors": {
+      "export": "使用データのエクスポートに失敗しました",
+      "exportDescription": "上位ユーザーデータのエクスポートに失敗しました。",
+      "fetchMetrics": "使用メトリクスの読み込みに失敗しました",
+      "fetchModels": "モデル内訳の読み込みに失敗しました",
+      "fetchProviders": "プロバイダー内訳の読み込みに失敗しました",
+      "fetchUsers": "ユーザー内訳の読み込みに失敗しました",
+      "refresh": "本日のデータの更新に失敗しました"
+    },
+    "export": "エクスポート",
+    "exportComplete": "使用データが正常にエクスポートされました。",
+    "exportModal": {
+      "csvDescription": "スプレッドシートに最適。Excel、Google Sheets、その他のデータ分析ツールと互換性があります。",
+      "csvFullName": "（カンマ区切り値）",
+      "dateRange": "期間",
+      "downloaded": "使用データが正常にダウンロードされました。",
+      "downloadFile": "エクスポートファイルをダウンロード",
+      "export": "エクスポート",
+      "exportButton": "使用データをエクスポート",
+      "exporting": "エクスポート中...",
+      "format": "フォーマット",
+      "from": "開始",
+      "jsonDescription": "開発者に最適。プログラムによるアクセスとAPI統合のための構造化データフォーマット。",
+      "jsonFullName": "（JavaScript Object Notation）",
+      "success": "エクスポート成功",
+      "title": "使用データのエクスポート",
+      "to": "終了"
+    },
+    "exportStarting": "エクスポートを開始中...",
+    "exportSuccess": "エクスポート成功",
+    "filters": {
+      "apiKeys": "APIキーでフィルター",
+      "apiKeysLoadError": "APIキーの読み込みに失敗しました",
+      "apiKeysPlaceholder": "APIキーでフィルターするには最初にユーザーを選択してください",
+      "apiKeysPlaceholderActive": "すべてのAPIキー（クリックしてフィルター）",
+      "clearApiKeysFilter": "APIキーフィルターをクリア",
+      "clearModels": "モデル選択をクリア",
+      "clearUsers": "ユーザー選択をクリア",
+      "models": "モデルでフィルター",
+      "modelsPlaceholder": "すべてのモデル（クリックしてフィルター）",
+      "noApiKeysAvailable": "選択したユーザーに利用可能なAPIキーがありません",
+      "noApiKeysFound": "「{{query}}」に一致するAPIキーが見つかりません",
+      "noModelsFound": "「{{query}}」に一致するモデルが見つかりません",
+      "noUsersFound": "「{{query}}」に一致するユーザーが見つかりません",
+      "searchModels": "モデルを検索...",
+      "searchUsers": "ユーザーを検索...",
+      "selectedApiKeys": "選択されたAPIキー",
+      "selectedModels": "選択されたモデル",
+      "selectedUsers": "選択されたユーザー",
+      "users": "ユーザーでフィルター",
+      "usersPlaceholder": "すべてのユーザー（クリックしてフィルター）"
+    },
+    "heatmap": {
+      "accessibility": {
+        "cellLabel": "{{dayName}}、{{date}}、{{value}}、週の{{percent}}%",
+        "heatmapDescription": "{{weeks}}週間にわたる曜日別の{{metric}}を示すヒートマップ"
+      },
+      "legend": {
+        "colorScale": "使用強度",
+        "noData": "データなし",
+        "noDataAriaLabel": "データなし表示",
+        "zeroUsage": "使用なし",
+        "zeroUsageAriaLabel": "使用なし表示"
+      },
+      "table": {
+        "viewAsChart": "グラフ表示",
+        "viewAsTable": "テーブル表示",
+        "week": "週"
+      },
+      "tooltip": {
+        "noDataOutsideRange": "データなし（選択範囲外）",
+        "percentOfWeek": "週合計の{{percent}}%",
+        "zeroUsage": "使用量なし"
+      }
+    },
+    "loading": "メトリクスを読み込み中...",
+    "loadingModels": "モデルデータを読み込み中...",
+    "loadingProviders": "プロバイダーデータを読み込み中...",
+    "loadingUsers": "ユーザーデータを読み込み中...",
+    "metrics": {
+      "activeUsersAriaLabel": "{{total}}人の総ユーザー中{{active}}人がアクティブ",
+      "completionTokensAriaLabel": "補完トークン: {{count}}",
+      "noChange": "変化なし",
+      "ofTotalUsers": "総{{total}}人中",
+      "promptTokensAriaLabel": "プロンプトトークン: {{count}}",
+      "successRateAriaLabel": "成功率: {{percentage}}%",
+      "totalCostAriaLabel": "総コスト: ${{amount}}",
+      "totalRequestsAriaLabel": "総リクエスト数: {{count}}",
+      "totalTokensAriaLabel": "総トークン数: {{count}}",
+      "trendLabel": "トレンド{{direction}}（{{change}}%）"
+    },
+    "metricSelect": "メトリクス選択",
+    "metricsOverview": "メトリクス概要",
+    "modelBreakdown": {
+      "completionTokens": "補完トークン",
+      "modelName": "モデル",
+      "noData": "モデルデータがありません",
+      "noDataDescription": "選択した期間とフィルターの使用データが見つかりません。",
+      "promptTokens": "プロンプトトークン",
+      "tableLabel": "モデル内訳テーブル",
+      "totalCost": "総コスト",
+      "totalRequests": "リクエスト",
+      "totalTokens": "総トークン数"
+    },
+    "modelFilterChanged": "{{count}}個のモデルでフィルタリング中",
+    "noData": "データがありません",
+    "noModelData": "モデルデータがありません",
+    "noModelsFound": "選択した期間のモデルが見つかりません。",
+    "noProviderData": "プロバイダーデータがありません",
+    "noProvidersFound": "選択した期間のプロバイダーが見つかりません。",
+    "noUserData": "ユーザーデータがありません",
+    "noUsersFound": "選択した期間のユーザーが見つかりません。",
+    "pagination": {
+      "label": "ページネーション"
+    },
+    "promptTokens": "プロンプトトークン",
+    "providerBreakdown": {
+      "completionTokens": "補完トークン",
+      "noData": "プロバイダーデータがありません",
+      "noDataDescription": "選択した期間とフィルターの使用データが見つかりません。",
+      "promptTokens": "プロンプトトークン",
+      "providerName": "プロバイダー",
+      "successRate": "成功率",
+      "tableLabel": "プロバイダー内訳テーブル",
+      "totalCost": "総コスト",
+      "totalRequests": "リクエスト",
+      "totalTokens": "総トークン数"
+    },
+    "refreshing": "本日のデータを更新中...",
+    "refreshSuccess": "更新成功",
+    "refreshToday": "本日を更新",
+    "requiresAdmin": "管理者使用分析を表示する権限がありません。",
+    "selectDateRange": "メトリクスを表示するには期間を選択してください。",
+    "selectMetric": "メトリクスを選択",
+    "startDate": "開始日",
+    "subtitle": "すべてのユーザー、モデル、プロバイダーにわたる使用状況を表示・分析",
+    "successRate": "成功率",
+    "tabChanged": "{{tab}}タブに切り替えました",
+    "tableHeaders": {
+      "completionTokens": "補完<br />トークン",
+      "cost": "コスト",
+      "promptTokens": "プロンプト<br />トークン",
+      "requests": "リクエスト",
+      "tokens": "トークン",
+      "user": "ユーザー"
+    },
+    "tables": {
+      "topUsers": "リクエストとコスト別上位ユーザー"
+    },
+    "tabs": {
+      "byModels": "モデル別",
+      "byProviders": "プロバイダー別",
+      "byUsers": "ユーザー別",
+      "overview": "概要"
+    },
+    "tabsLabel": "使用分析タブ",
+    "title": "管理者使用分析",
+    "todayDataRefreshed": "本日の使用データが更新されました。",
+    "topUsers": {
+      "csvHeaders": {
+        "costUsd": "コスト（USD）",
+        "email": "メール",
+        "inputTokens": "入力トークン",
+        "outputTokens": "出力トークン",
+        "requests": "リクエスト",
+        "tokens": "トークン",
+        "username": "ユーザー名"
+      },
+      "export": "エクスポート",
+      "exportAriaLabel": "上位ユーザーCSVファイルをダウンロード",
+      "exportSuccess": "エクスポート成功",
+      "exportSuccessDescription": "上位ユーザーデータが正常にダウンロードされました。"
+    },
+    "totalCost": "総コスト",
+    "totalModels": "総モデル数",
+    "totalProviders": "総プロバイダー数",
+    "totalRequests": "総リクエスト数",
+    "totalUsers": "総ユーザー数",
+    "unknownUser": "不明なユーザー",
+    "unknownUserDescription": "削除済みまたはマッピングされていないAPIキーからのリクエスト",
+    "usageHeatmapSubtitle": "選択した週の使用ヒートマップ",
+    "userBreakdown": {
+      "completionTokens": "補完トークン",
+      "email": "メール",
+      "noData": "ユーザーデータがありません",
+      "noDataDescription": "選択した期間とフィルターの使用データが見つかりません。",
+      "promptTokens": "プロンプトトークン",
+      "tableLabel": "ユーザー内訳テーブル",
+      "totalCost": "総コスト",
+      "totalRequests": "リクエスト",
+      "totalTokens": "総トークン数",
+      "username": "ユーザー名"
+    },
+    "userFilterChanged": "{{count}}人のユーザーでフィルタリング中",
+    "weeklyUsagePatterns": "週間使用パターン"
+  },
   "common": {
     "anUnknownErrorOccurred": "不明なエラーが発生しました",
     "cancel": "キャンセル",
     "chart": "グラフ",
     "close": "閉じる",
+    "closeFullScreen": "全画面表示を閉じる",
     "create": "作成",
     "dataPoints": "データポイント",
     "date": "日付",
     "day": "日",
+    "days": {
+      "fri": "金",
+      "mon": "月",
+      "sat": "土",
+      "sun": "日",
+      "thu": "木",
+      "tue": "火",
+      "wed": "水"
+    },
     "delete": "削除",
     "error": "エラー",
+    "expandToFullScreen": "全画面表示に拡大",
     "export": "エクスポート",
     "features": "特徴",
     "label": "ラベル",
@@ -18,8 +340,10 @@
     "no": "いいえ",
     "none": "なし",
     "notAvailable": "N/A",
+    "refreshPage": "ページを更新",
     "retry": "再試行",
     "table": "テーブル",
+    "tryAgain": "再試行",
     "update": "更新",
     "value": "値",
     "view": "表示",
@@ -33,8 +357,12 @@
       "apiKeyIsRequired": "APIキーは必須です",
       "apiKeyOptional": "APIキー（オプション）",
       "areYouSureYouWantToDeleteTheModel": "モデルを削除してもよろしいですか",
+      "authenticationFailed": "認証に失敗しました",
+      "availableModels": "利用可能なモデル：",
       "backendModelName": "バックエンドモデル名",
       "backendModelNameIsRequired": "バックエンドモデル名は必須です",
+      "cannotContactEndpoint": "エンドポイントに接続できません",
+      "connectionSuccessful": "接続成功！モデルを作成できます。",
       "createModel": "モデル作成",
       "createModelFailed": "モデル作成に失敗しました",
       "createYourFirstModelToGetStarted": "最初のモデルを作成して始めましょう。",
@@ -65,6 +393,7 @@
       "modelName": "モデル名",
       "modelNameCannotContainSpaces": "モデル名にはスペースを含めることができません",
       "modelNameIsRequired": "モデル名は必須です",
+      "modelNotAvailable": "このエンドポイントでモデルは利用できません",
       "modelsTable": "モデルテーブル",
       "modelUpdated": "モデルが更新されました",
       "modelUpdatedSuccessfully": "モデルが正常に更新されました",
@@ -74,6 +403,12 @@
       "outputCostCannotBeNegative": "出力コストは負の値にできません",
       "outputCostPerMillionTokens": "100万トークンあたりの出力コスト",
       "pleaseEnterAValidUrl": "有効なURLを入力してください",
+      "restrictedAccessHelp": "Users must request access and receive admin approval",
+      "restrictedAccessLabel": "Require Admin Approval",
+      "restrictedAccessWarning": {
+        "message": "This will move all active subscriptions for this model to pending status and remove the model from existing API keys. Users will need to be re-approved.",
+        "title": "Enable Restricted Access?"
+      },
       "rpmMustBeAtLeast_1": "RPMは1以上である必要があります",
       "rpmRequestsPerMinute": "RPM（毎分リクエスト数）",
       "supportsFunctionCalling": "関数呼び出しをサポート",
@@ -99,6 +434,8 @@
         "tpm": "TPM",
         "visionSupport": "ビジョンサポート"
       },
+      "testConfiguration": "設定をテスト",
+      "testingConfiguration": "設定をテストしています...",
       "thisActionCannotBeUndoneAndWillRemoveTheModelFromLitellm": "このアクションは元に戻すことができず、LiteLLMからモデルを削除します。",
       "title": "モデル管理",
       "tpmMustBeAtLeast_1": "TPMは1以上である必要があります",
@@ -117,7 +454,9 @@
   "nav": {
     "admin": {
       "models": "モデル管理",
+      "subscriptions": "サブスクリプション管理",
       "tools": "ツール",
+      "usage": "使用分析",
       "users": "ユーザー"
     },
     "apiKeys": "APIキー",
@@ -128,6 +467,73 @@
     "usage": "使用状況"
   },
   "pages": {
+    "adminSubscriptions": {
+      "actions": {
+        "approve": "承認",
+        "delete": "削除",
+        "deny": "拒否",
+        "revert": "ステータスを変更"
+      },
+      "approvalModalTitle": "サブスクリプションの承認",
+      "approveSuccess": "{{count}}件のサブスクリプションを承認しました",
+      "bulkApprove": "選択項目を承認",
+      "bulkDeny": "選択項目を拒否",
+      "confirmApproval": "承認の確認",
+      "confirmApprovalSingle": "{{user}}の{{model}}へのアクセスのサブスクリプションリクエストを承認してもよろしいですか？",
+      "confirmDelete": "完全に削除",
+      "confirmDeleteSingle": "{{user}}の{{model}}へのアクセスのサブスクリプションを完全に削除してもよろしいですか？これにより、関連するすべてのデータが削除されます。",
+      "confirmDenial": "拒否の確認",
+      "confirmDenialBulk": "{{count}}件のサブスクリプションリクエストを拒否してもよろしいですか？",
+      "confirmDenialSingle": "{{user}}の{{model}}へのアクセスのサブスクリプションリクエストを拒否してもよろしいですか？",
+      "confirmRevert": "元に戻すことを確認",
+      "deleteModalTitle": "サブスクリプションを削除",
+      "deleteReasonPlaceholder": "オプション：削除の理由を入力してください（監査ログに保存されます）...",
+      "deleteSuccess": "サブスクリプションを正常に削除しました",
+      "deleteWarning": "この操作は元に戻せません",
+      "denialModalTitle": "サブスクリプションの拒否",
+      "denySuccess": "{{count}}件のサブスクリプションを拒否しました",
+      "filters": {
+        "clearStatuses": "ステータス選択をクリア",
+        "dateRange": "期間",
+        "from": "開始日",
+        "model": "モデル",
+        "noStatusesFound": "「{{query}}」に一致するステータスが見つかりません",
+        "selectAll": "すべて選択",
+        "selectedStatuses": "選択されたステータス",
+        "status": "ステータス",
+        "statusPlaceholder": "すべてのステータス（クリックしてフィルター）",
+        "to": "終了日",
+        "user": "ユーザー"
+      },
+      "newStatus": "新しいステータス",
+      "noSelections": "サブスクリプションが選択されていません",
+      "reasonLabel": "コメント",
+      "reasonPlaceholder": "この決定の理由を入力してください...",
+      "reasonRequired": "拒否には理由が必要です",
+      "refresh": "更新",
+      "resultModalTitle": "一括操作の結果",
+      "resultsTable": {
+        "error": "エラー",
+        "failed": "失敗",
+        "result": "結果",
+        "subscription": "サブスクリプション",
+        "success": "成功"
+      },
+      "revertDescription": "{{user}}の{{model}}へのサブスクリプションのステータスを変更します。現在のステータス：{{currentStatus}}",
+      "revertModalTitle": "サブスクリプションステータスを元に戻す",
+      "revertSuccess": "サブスクリプションのステータスを更新しました",
+      "table": {
+        "actions": "操作",
+        "model": "モデル",
+        "reason": "理由",
+        "requestedDate": "リクエスト日",
+        "selectColumn": "サブスクリプションを選択",
+        "status": "ステータス",
+        "statusChangedDate": "最終更新日",
+        "user": "ユーザー"
+      },
+      "title": "サブスクリプション管理"
+    },
     "apiKeys": {
       "clipboard": {
         "copied": "コピー済み",
@@ -166,6 +572,7 @@
       "labels": {
         "actions": "アクション",
         "apiKeyLabel": "APIキー",
+        "apiUrl": "API URL",
         "cancel": "キャンセル",
         "close": "閉じる",
         "created": "作成日",
@@ -483,6 +890,7 @@
       "title": "LiteMaaSにログイン"
     },
     "models": {
+      "alreadySubscribed": "Already Subscribed",
       "ariaLabels": {
         "modelAvailability": "モデルの利用可能性",
         "subscriptionStatus": "購読ステータス"
@@ -517,6 +925,11 @@
         "pricingInput": "入力",
         "pricingOutput": "出力",
         "pricingUnavailable": "料金情報は利用できません",
+        "restrictedAccessInfo": {
+          "buttonText": "アクセスをリクエスト",
+          "message": "このモデルは管理者の承認が必要です。サブスクライブすると、管理者がレビューして承認するまでリクエストは保留状態になります。アクセスが許可されると通知されます。",
+          "title": "管理者承認が必要"
+        },
         "subscribeInfo": "購読することで、このモデルにアクセスでき、使用するためのAPIキーを生成できるようになります。",
         "tokens": "トークン"
       },
@@ -524,6 +937,8 @@
       "moreFeatures": "+{{count}}個の機能",
       "noModels": "まだ利用可能なモデルはありません",
       "notifications": {
+        "accessRequestPending": "{{modelName}}へのサブスクリプションリクエストは管理者の承認待ちです。承認されると通知されます。",
+        "accessRequestSubmitted": "アクセスリクエストが送信されました",
         "alreadySubscribed": "すでにこのモデルをサブスクライブしています",
         "failedToSubscribe": "モデルのサブスクライブに失敗しました",
         "loadError": "エラー",
@@ -539,6 +954,7 @@
         "separator": "•"
       },
       "pricingLabel": "価格：N/A",
+      "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "モデルを検索...",
       "searchResults": "条件に一致する{{count}}個のモデルが見つかりました",
       "subscribe": "サブスクライブ",
@@ -597,15 +1013,20 @@
       "provider": "プロバイダー",
       "quotaFormat": "クォータ：{{requests}}リクエスト、{{tokens}}トークン",
       "requestQuota": "リクエストクォータ",
+      "requestReview": "Request Review",
+      "requestReviewSuccess": "Review requested successfully",
       "requests": "リクエスト",
       "requestsUsed": "使用済みリクエスト",
       "status": {
         "active": "アクティブ",
+        "denied": "Access Denied",
         "expired": "期限切れ",
-        "pending": "保留中",
+        "inactive": "非アクティブ",
+        "pending": "Pending Approval",
         "suspended": "一時停止"
       },
       "statusLabel": "ステータス",
+      "statusReason": "Admin Comment",
       "suspendedMessage": "サブスクリプションが一時停止されました。サポートに連絡するか、アカウントステータスを確認してください。",
       "title": "モデルサブスクリプション",
       "tokenQuota": "トークンクォータ",
@@ -778,6 +1199,7 @@
         "last7Days": "過去7日間",
         "last90Days": "過去90日間"
       },
+      "export": "エクスポート",
       "exportData": "データをエクスポート",
       "exportUsageData": "選択した期間の使用状況データをエクスポート",
       "filters": {
@@ -795,7 +1217,10 @@
       "loadingTitle": "使用状況データを読み込み中...",
       "metrics": {
         "avgResponseTime": "平均応答時間",
+        "completion_tokens": "補完トークン",
+        "cost": "コスト",
         "currency": "JPY",
+        "prompt_tokens": "プロンプトトークン",
         "requests": "リクエスト",
         "successfulRequests": "成功したリクエスト",
         "successRate": "成功率",
@@ -840,12 +1265,14 @@
       "selectApiKeyTitle": "APIキーを選択",
       "subtitle": "API使用状況、コスト、パフォーマンスメトリクスを監視",
       "tableHeaders": {
+        "completionTokens": "補完トークン",
         "cost": "コスト",
         "count": "カウント",
         "date": "日付",
         "formattedValue": "フォーマット済み値",
         "model": "モデル",
         "percentage": "パーセンテージ",
+        "promptTokens": "プロンプトトークン",
         "requests": "リクエスト",
         "tokens": "トークン",
         "usagePercent": "使用率 %"
@@ -875,6 +1302,7 @@
       "chartLegend": "データ系列情報を含むグラフの凡例",
       "dataExported": "データを{{filename}}にエクスポートしました",
       "dataTableAlternative": "データテーブルの代替",
+      "dismissAnnouncement": "お知らせを閉じる",
       "exportChartData": "グラフデータをCSVとしてエクスポート",
       "legendPattern": "{{name}}系列は{{color}}色で{{pattern}}線パターンで表示されています",
       "legendSummary": "凡例には{{count}}個のアイテムが含まれています：{{items}}",
@@ -892,6 +1320,7 @@
       "skipToNavigation": "ナビゲーションにスキップ",
       "switchedToChart": "グラフ表示に切り替えました",
       "switchedToTable": "テーブル表示に切り替えました",
+      "systemAnnouncement": "システムからのお知らせ",
       "tableCaption": "{{title}}のデータテーブル",
       "tableNavigationInstructions": "矢印キーで行と列間を移動、またはTabキーで次のインタラクティブ要素に移動してください。",
       "viewModeToggle": "グラフとテーブル表示を切り替え"
@@ -910,7 +1339,19 @@
       "saving": "保存中...",
       "tryAgain": "再試行"
     },
+    "avatar": {
+      "userAvatar": "ユーザーアバター"
+    },
     "errors": {
+      "bannerCreateFailed": "バナーの作成に失敗しました。もう一度お試しください。",
+      "bannerDeleteFailed": "バナーの削除に失敗しました。もう一度お試しください。",
+      "bannerDismissFailed": "バナーを閉じることに失敗しました。もう一度お試しください。",
+      "bannerUpdateFailed": "バナーの更新に失敗しました。もう一度お試しください。",
+      "bannerVisibilityFailed": "表示変更の適用に失敗しました。もう一度お試しください。",
+      "componentError": "コンポーネントエラー",
+      "componentLoadingError": "コンポーネント読み込みエラー",
+      "componentLoadingErrorDesc": "このコンポーネントの読み込みに失敗しました。ページを更新してください。",
+      "configLoadFailed": "アプリケーション設定の読み込みに失敗しました",
       "details": "詳細",
       "errorCode": "エラーコード",
       "field": "フィールド",
@@ -924,7 +1365,8 @@
       "retryAction": "失敗した操作を再試行する",
       "retryAfter": "{{seconds}}秒待ってから再試行してください",
       "showDetails": "詳細を表示",
-      "somethingWrong": "問題が発生しました",
+      "somethingWentWrong": "問題が発生しました",
+      "somethingWentWrongDesc": "申し訳ございませんが、予期しない問題が発生しました。ページを更新するか、問題が続く場合はサポートにお問い合わせください。",
       "statusCode": "ステータスコード",
       "title": "エラー",
       "tryRefresh": "申し訳ございませんが、予期しない問題が発生しました。ページを更新するか、問題が続く場合はサポートにお問い合わせください。",
@@ -941,7 +1383,17 @@
         "positive": "{{field}}は正の数である必要があります",
         "required": "{{field}}は必須です",
         "url": "{{field}}は有効なURLである必要があります"
-      }
+      },
+      "somethingWrong": "問題が発生しました"
+    },
+    "footer": {
+      "appBy": "アプリ制作：",
+      "forks": "フォーク数：",
+      "githubLogo": "GitHubロゴ",
+      "noVersion": "バージョンなし",
+      "sourceOnGitHub": "GitHubのソース",
+      "stars": "スター数：",
+      "version": "バージョン"
     },
     "language": {
       "chinese": "中文",
@@ -955,10 +1407,22 @@
       "selector": "言語",
       "spanish": "Español"
     },
+    "navigation": {
+      "globalNavigation": "グローバルナビゲーション",
+      "mainNavigation": "メインナビゲーション",
+      "userMenu": "ユーザーメニュー"
+    },
     "notifications": {
       "clear": "すべてクリア",
+      "clearAll": "すべてクリア",
+      "drawerActions": "通知ドロワーのアクション",
       "empty": "通知なし",
+      "markAllRead": "すべて既読にする",
       "markRead": "既読にする",
+      "noNotificationsDescription": "現在通知はありません。",
+      "noNotificationsFound": "通知が見つかりません",
+      "notificationsLabel": "通知",
+      "notificationSrTitle": "通知",
       "title": "通知"
     },
     "pagination": {
@@ -966,8 +1430,11 @@
     },
     "theme": {
       "dark": "ダーク",
+      "darkThemeToggle": "ダークテーマ切り替え",
       "light": "ライト",
-      "toggle": "テーマを切り替え"
+      "lightThemeToggle": "ライトテーマ切り替え",
+      "toggle": "テーマを切り替え",
+      "toggleGroup": "ダークテーマ切り替えグループ"
     }
   },
   "users": {
@@ -1055,6 +1522,7 @@
       "oauthManaged": "ステータスはOAuthプロバイダによって管理されています。"
     },
     "table": {
+      "actions": "操作",
       "ariaLabel": "ユーザーテーブル",
       "caption": "ユーザー名、メール、フルネーム、役割、ステータスを含む{{count}}ユーザーのテーブル。",
       "email": "メール",

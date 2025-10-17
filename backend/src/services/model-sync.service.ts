@@ -668,4 +668,59 @@ export class ModelSyncService {
       orphanedSubscriptions: parseInt(String(orphanedSubscriptions?.count || '0')),
     };
   }
+
+  /**
+   * Update model restriction status
+   * Triggers cascade logic via SubscriptionService when status changes
+   * Admin-only operation for controlling model access
+   */
+  async updateModelRestriction(
+    modelId: string,
+    restrictedAccess: boolean,
+    adminUserId: string,
+  ): Promise<void> {
+    // Get current restriction status
+    const currentModel = await this.fastify.dbUtils.queryOne<{ restricted_access: boolean }>(
+      'SELECT restricted_access FROM models WHERE id = $1',
+      [modelId],
+    );
+
+    if (!currentModel) {
+      throw new Error(`Model ${modelId} not found`);
+    }
+
+    // Update the model
+    await this.fastify.dbUtils.query(
+      'UPDATE models SET restricted_access = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2',
+      [restrictedAccess, modelId],
+    );
+
+    // If restriction status changed, handle cascade
+    if (restrictedAccess !== currentModel.restricted_access) {
+      const { SubscriptionService } = await import('./subscription.service.js');
+      const subscriptionService = new SubscriptionService(this.fastify);
+      await subscriptionService.handleModelRestrictionChange(modelId, restrictedAccess);
+    }
+
+    // Audit log
+    await this.fastify.dbUtils.query(
+      `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        adminUserId,
+        'MODEL_RESTRICTION_CHANGE',
+        'MODEL',
+        modelId,
+        JSON.stringify({
+          restrictedAccess,
+          previousValue: currentModel.restricted_access,
+        }),
+      ],
+    );
+
+    this.fastify.log.info(
+      { modelId, restrictedAccess, adminUserId },
+      'Model restriction status updated',
+    );
+  }
 }

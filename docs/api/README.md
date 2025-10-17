@@ -30,6 +30,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
 
 ### Specialized APIs
 
+- **[LiteLLM API](litellm-api.md)** - LiteLLM integration endpoints
 - **[Model Sync API](model-sync-api.md)** - Model synchronization with LiteLLM
 - **[Usage API](usage-api.md)** - Detailed usage tracking and analytics
 - **[Migration Guide](api-migration-guide.md)** - Upgrading to multi-model API keys

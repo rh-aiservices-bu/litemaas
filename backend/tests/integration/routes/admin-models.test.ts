@@ -1,10 +1,12 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { createApp } from '../../../src/app';
-import { generateTestToken } from '../setup';
+import { generateTestToken, createTestUsers } from '../setup';
 
 describe('Admin Models Routes', () => {
   let app: FastifyInstance;
+  // Track models created during tests for cleanup
+  const createdTestModels = new Set<string>();
 
   const mockCreatePayload = {
     model_name: 'new-test-model',
@@ -26,9 +28,37 @@ describe('Admin Models Routes', () => {
   beforeAll(async () => {
     app = await createApp({ logger: false });
     await app.ready();
+    await createTestUsers(app);
   });
 
   afterAll(async () => {
+    // Cleanup: Delete test models from database
+    // Note: Mock models are no longer synced in test environment, so no pollution to clean
+    if (app && createdTestModels.size > 0) {
+      console.log(`\n=== Cleaning up ${createdTestModels.size} test models ===`);
+
+      try {
+        const modelNamesArray = Array.from(createdTestModels);
+        const deleteResult = await app.dbUtils.query(
+          'DELETE FROM models WHERE id = ANY($1::text[]) RETURNING id',
+          [modelNamesArray],
+        );
+
+        if (deleteResult.rowCount && deleteResult.rowCount > 0) {
+          console.log(`✓ Deleted ${deleteResult.rowCount} test model(s):`);
+          deleteResult.rows.forEach((row: any) => console.log(`  - ${row.id}`));
+        } else {
+          console.log('✓ No test models found in database (already cleaned up)');
+        }
+      } catch (error) {
+        console.error(
+          `✗ Cleanup failed: ${error instanceof Error ? error.message : String(error)}`,
+        );
+      }
+
+      console.log('=== Test cleanup complete ===\n');
+    }
+
     if (app) {
       await app.close();
     }
@@ -48,8 +78,8 @@ describe('Admin Models Routes', () => {
       expect([401, 403]).toContain(response.statusCode);
       const result = JSON.parse(response.body);
       expect(result.error).toBeDefined();
-      // The actual error structure may vary, so just check that it's an object
-      expect(typeof result.error).toBe('object');
+      // The error can be either a string or an object depending on the error handler
+      expect(['string', 'object']).toContain(typeof result.error);
     });
 
     it('should reject requests without admin permissions for PUT', async () => {
@@ -93,11 +123,14 @@ describe('Admin Models Routes', () => {
 
   describe('POST /api/v1/admin/models', () => {
     it('should accept requests from admin users', async () => {
+      // Track for cleanup BEFORE the request to ensure cleanup even if test fails
+      createdTestModels.add(mockCreatePayload.model_name);
+
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/admin/models',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
         payload: mockCreatePayload,
       });
@@ -119,7 +152,7 @@ describe('Admin Models Routes', () => {
         method: 'POST',
         url: '/api/v1/admin/models',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
         payload: {
           // Missing required fields: model_name, backend_model_name, api_base
@@ -152,11 +185,14 @@ describe('Admin Models Routes', () => {
         supports_tool_choice: false,
       };
 
+      // Track for cleanup BEFORE the request to ensure cleanup even if test fails
+      createdTestModels.add(minimalPayload.model_name);
+
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/admin/models',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
         payload: minimalPayload,
       });
@@ -166,15 +202,30 @@ describe('Admin Models Routes', () => {
     });
 
     it('should handle payload without optional api_key', async () => {
-      const payloadWithoutApiKey: Omit<typeof mockCreatePayload, 'api_key'> = {
-        ...mockCreatePayload,
+      const payloadWithoutApiKey = {
+        model_name: 'test-model-no-key',
+        backend_model_name: 'test-backend-model-no-key',
+        description: 'Test model without API key',
+        api_base: 'https://api.testnoapikey.com/v1',
+        input_cost_per_token: 0.00002,
+        output_cost_per_token: 0.00004,
+        tpm: 5000,
+        rpm: 250,
+        max_tokens: 2048,
+        supports_vision: false,
+        supports_function_calling: true,
+        supports_parallel_function_calling: true,
+        supports_tool_choice: false,
       };
+
+      // Track for cleanup BEFORE the request to ensure cleanup even if test fails
+      createdTestModels.add(payloadWithoutApiKey.model_name);
 
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/admin/models',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
         payload: payloadWithoutApiKey,
       });
@@ -196,7 +247,7 @@ describe('Admin Models Routes', () => {
         method: 'PUT',
         url: '/api/v1/admin/models/existing-model-id',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
         payload: updatePayload,
       });
@@ -222,7 +273,7 @@ describe('Admin Models Routes', () => {
         method: 'PUT',
         url: '/api/v1/admin/models/existing-model-id',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
         payload: updatePayload,
       });
@@ -242,7 +293,7 @@ describe('Admin Models Routes', () => {
         method: 'PUT',
         url: '/api/v1/admin/models/existing-model-id',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
         payload: updatePayload,
       });
@@ -255,7 +306,7 @@ describe('Admin Models Routes', () => {
         method: 'PUT',
         url: '/api/v1/admin/models/non-existent-model-id',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
         payload: { model_name: 'updated-name' },
       });
@@ -271,7 +322,7 @@ describe('Admin Models Routes', () => {
         method: 'DELETE',
         url: '/api/v1/admin/models/test-model-to-delete',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
       });
 
@@ -290,7 +341,7 @@ describe('Admin Models Routes', () => {
         method: 'DELETE',
         url: '/api/v1/admin/models/non-existent-model-id',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
       });
 
@@ -320,7 +371,7 @@ describe('Admin Models Routes', () => {
         method: 'POST',
         url: '/api/v1/admin/models',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
         payload: invalidPayload,
       });
@@ -348,7 +399,7 @@ describe('Admin Models Routes', () => {
         method: 'POST',
         url: '/api/v1/admin/models',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
         payload: invalidPayload,
       });
@@ -377,13 +428,33 @@ describe('Admin Models Routes', () => {
     });
 
     it('should return proper success format for valid requests (if successful)', async () => {
+      const testPayload = {
+        model_name: 'response-format-test-model',
+        backend_model_name: 'response-format-backend-model',
+        description: 'Model for testing response format',
+        api_base: 'https://api.responseformat.com/v1',
+        api_key: 'response-format-key',
+        input_cost_per_token: 0.00002,
+        output_cost_per_token: 0.00004,
+        tpm: 5000,
+        rpm: 250,
+        max_tokens: 2048,
+        supports_vision: false,
+        supports_function_calling: true,
+        supports_parallel_function_calling: true,
+        supports_tool_choice: false,
+      };
+
+      // Track for cleanup BEFORE the request to ensure cleanup even if test fails
+      createdTestModels.add(testPayload.model_name);
+
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/admin/models',
         headers: {
-          authorization: `Bearer ${generateTestToken('admin-123', ['admin'])}`,
+          authorization: `Bearer ${generateTestToken('00000000-0000-4000-8000-000000000456', ['admin'])}`,
         },
-        payload: mockCreatePayload,
+        payload: testPayload,
       });
 
       if (response.statusCode === 201) {

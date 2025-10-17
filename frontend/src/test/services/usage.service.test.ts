@@ -1,7 +1,11 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { server } from '../mocks/server';
 import { http, HttpResponse } from 'msw';
-import { usageService, type UsageFilters } from '../../services/usage.service';
+import {
+  usageService,
+  type UsageFilters,
+  type UserUsageFilters,
+} from '../../services/usage.service';
 
 // Mock fetch for export functionality since it's not using apiClient
 const mockFetch = vi.fn();
@@ -223,11 +227,17 @@ describe('UsageService', () => {
       const result = await usageService.exportUsageData();
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
-      expect(mockFetch).toHaveBeenCalledWith('/api/v1/usage/export?format=csv', {
-        headers: {
-          Authorization: 'Bearer mock-token',
+      // Service adds default 30-day date range when no filters provided
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /\/api\/v1\/usage\/export\?format=csv&startDate=\d{4}-\d{2}-\d{2}&endDate=\d{4}-\d{2}-\d{2}/,
+        ),
+        {
+          headers: {
+            Authorization: 'Bearer mock-token',
+          },
         },
-      });
+      );
       expect(result).toBeInstanceOf(Blob);
     });
 
@@ -243,7 +253,9 @@ describe('UsageService', () => {
       const result = await usageService.exportUsageData(undefined, 'json');
 
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/v1/usage/export?format=json',
+        expect.stringMatching(
+          /\/api\/v1\/usage\/export\?format=json&startDate=\d{4}-\d{2}-\d{2}&endDate=\d{4}-\d{2}-\d{2}/,
+        ),
         expect.any(Object),
       );
       expect(result).toBeInstanceOf(Blob);
@@ -256,17 +268,18 @@ describe('UsageService', () => {
         blob: () => Promise.resolve(csvBlob),
       });
 
-      const filters: UsageFilters = {
+      const filters: UserUsageFilters = {
         startDate: '2024-06-01',
         endDate: '2024-06-30',
-        modelId: 'gpt-4',
-        apiKeyId: 'key-1',
+        modelIds: ['gpt-4'],
+        apiKeyIds: ['key-1'],
       };
 
       const result = await usageService.exportUsageData(filters, 'csv');
 
+      // URLSearchParams encodes brackets as %5B%5D
       const expectedUrl =
-        '/api/v1/usage/export?format=csv&startDate=2024-06-01&endDate=2024-06-30&modelId=gpt-4&apiKeyId=key-1';
+        '/api/v1/usage/export?format=csv&startDate=2024-06-01&endDate=2024-06-30&modelIds%5B%5D=gpt-4&apiKeyIds%5B%5D=key-1';
       expect(mockFetch).toHaveBeenCalledWith(expectedUrl, {
         headers: {
           Authorization: 'Bearer mock-token',
@@ -282,14 +295,17 @@ describe('UsageService', () => {
         blob: () => Promise.resolve(csvBlob),
       });
 
-      const filters: UsageFilters = {
+      const filters: UserUsageFilters = {
         startDate: '2024-06-01',
-        modelId: 'gpt-4',
+        endDate: '2024-06-30',
+        modelIds: ['gpt-4'],
       };
 
       await usageService.exportUsageData(filters);
 
-      const expectedUrl = '/api/v1/usage/export?format=csv&startDate=2024-06-01&modelId=gpt-4';
+      // URLSearchParams encodes brackets as %5B%5D
+      const expectedUrl =
+        '/api/v1/usage/export?format=csv&startDate=2024-06-01&endDate=2024-06-30&modelIds%5B%5D=gpt-4';
       expect(mockFetch).toHaveBeenCalledWith(expectedUrl, expect.any(Object));
     });
 
@@ -300,11 +316,15 @@ describe('UsageService', () => {
         blob: () => Promise.resolve(csvBlob),
       });
 
-      const filters: UsageFilters = {};
+      await usageService.exportUsageData();
 
-      await usageService.exportUsageData(filters);
-
-      expect(mockFetch).toHaveBeenCalledWith('/api/v1/usage/export?format=csv', expect.any(Object));
+      // Should use default date range (last 30 days)
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /\/api\/v1\/usage\/export\?format=csv&startDate=\d{4}-\d{2}-\d{2}&endDate=\d{4}-\d{2}-\d{2}/,
+        ),
+        expect.any(Object),
+      );
     });
 
     it('should handle authentication from localStorage', async () => {
@@ -402,7 +422,12 @@ describe('UsageService', () => {
       });
 
       await usageService.exportUsageData(undefined, 'csv');
-      expect(mockFetch).toHaveBeenCalledWith('/api/v1/usage/export?format=csv', expect.any(Object));
+      expect(mockFetch).toHaveBeenCalledWith(
+        expect.stringMatching(
+          /\/api\/v1\/usage\/export\?format=csv&startDate=\d{4}-\d{2}-\d{2}&endDate=\d{4}-\d{2}-\d{2}/,
+        ),
+        expect.any(Object),
+      );
 
       mockFetch.mockClear();
       const jsonBlob = new Blob(['json data'], { type: 'application/json' });
@@ -413,7 +438,9 @@ describe('UsageService', () => {
 
       await usageService.exportUsageData(undefined, 'json');
       expect(mockFetch).toHaveBeenCalledWith(
-        '/api/v1/usage/export?format=json',
+        expect.stringMatching(
+          /\/api\/v1\/usage\/export\?format=json&startDate=\d{4}-\d{2}-\d{2}&endDate=\d{4}-\d{2}-\d{2}/,
+        ),
         expect.any(Object),
       );
     });

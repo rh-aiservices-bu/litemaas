@@ -94,20 +94,15 @@ export class LiteLLMService extends BaseService {
   constructor(fastify: FastifyInstance, config?: Partial<LiteLLMConfig>) {
     super(fastify);
     this.config = {
-      baseUrl:
-        config?.baseUrl ||
-        process.env.LITELLM_API_URL ||
-        process.env.LITELLM_BASE_URL ||
-        'http://localhost:4000',
+      baseUrl: config?.baseUrl || process.env.LITELLM_API_URL || 'http://localhost:4000',
       apiKey: config?.apiKey || process.env.LITELLM_API_KEY,
       timeout: config?.timeout || 30000,
       retryAttempts: config?.retryAttempts || 3,
       retryDelay: config?.retryDelay || 1000,
       enableMocking:
         config?.enableMocking ??
-        (process.env.NODE_ENV === 'development' &&
-          !process.env.LITELLM_API_URL &&
-          !process.env.LITELLM_BASE_URL),
+        ((process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') &&
+          !process.env.LITELLM_API_URL),
     };
 
     this.fastify.log.info(
@@ -156,6 +151,17 @@ export class LiteLLMService extends BaseService {
     } else {
       this.cache.clear();
     }
+  }
+
+  /**
+   * Clear activity cache for daily usage data
+   *
+   * This is used by the admin usage refresh functionality to force fresh data fetch from LiteLLM.
+   * Without clearing this cache, getDailyActivity() would return stale data even when the database cache is invalidated.
+   */
+  public clearActivityCache(): void {
+    this.clearCacheInternal('activity:');
+    this.fastify.log.debug('Cleared LiteLLM activity cache');
   }
 
   private isCircuitBreakerTripped(): boolean {
@@ -345,10 +351,16 @@ export class LiteLLMService extends BaseService {
     }
 
     if (this.config.enableMocking) {
-      this.fastify.log.debug('Using mock models');
-      const models = await this.createMockResponse(this.MOCK_MODELS);
-      this.setCache(cacheKey, models);
-      return models;
+      // In test environment, return empty array to prevent test pollution
+      // Tests should explicitly create the models they need, not rely on mock data
+      const models = process.env.NODE_ENV === 'test' ? [] : this.MOCK_MODELS;
+      this.fastify.log.debug(
+        { modelCount: models.length, isTest: process.env.NODE_ENV === 'test' },
+        'Using mock models',
+      );
+      const response = await this.createMockResponse(models);
+      this.setCache(cacheKey, response);
+      return response;
     }
 
     try {
@@ -555,6 +567,43 @@ export class LiteLLMService extends BaseService {
       });
     } catch (error) {
       this.fastify.log.error(error, 'Failed to delete key');
+      throw error;
+    }
+  }
+
+  /**
+   * Get key alias information from LiteLLM API
+   * Used for backfilling litellm_key_alias for existing keys
+   */
+  async getKeyAlias(apiKey: string): Promise<{ key_alias: string; key: string }> {
+    if (this.config.enableMocking) {
+      return this.createMockResponse({
+        key: apiKey,
+        key_alias: `mock_alias_${apiKey.slice(-8)}`,
+      });
+    }
+
+    try {
+      const response = await this.makeRequest<{
+        key: string;
+        info: {
+          key_name: string;
+          key_alias: string;
+          soft_budget_cooldown: boolean;
+          spend: number;
+          expires: string | null;
+          models: string[];
+        };
+      }>(`/key/info?key=${encodeURIComponent(apiKey)}`, {
+        method: 'GET',
+      });
+
+      return {
+        key: response.key,
+        key_alias: response.info.key_alias,
+      };
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to get key alias info');
       throw error;
     }
   }
@@ -1044,6 +1093,7 @@ export class LiteLLMService extends BaseService {
       spend: number;
       tokens: number;
       requests: number;
+      breakdown?: any; // Full breakdown from LiteLLM including models, api_keys, providers
     }>;
   }> {
     const cacheKey = this.getCacheKey(`activity:${apiKeyHash}:${startDate}:${endDate}`);
@@ -1092,40 +1142,99 @@ export class LiteLLMService extends BaseService {
     }
 
     try {
-      const queryParams = new URLSearchParams();
-      if (startDate) queryParams.append('start_date', startDate);
-      if (endDate) queryParams.append('end_date', endDate);
-      if (apiKeyHash) queryParams.append('api_key', apiKeyHash);
+      // Pagination loop to fetch all pages of results
+      const allResults: any[] = [];
+      let currentPage = 1;
+      let hasMore = true;
+      let metadata: any = null;
 
-      const response = await this.makeRequest<any>(
-        `/user/daily/activity?${queryParams.toString()}`,
+      this.fastify.log.debug(
+        { startDate, endDate, apiKeyHash: apiKeyHash ? 'provided' : 'none' },
+        'LiteLLM: Starting paginated fetch for daily activity',
+      );
+
+      // Fetch all pages until no more data
+      while (hasMore) {
+        const queryParams = new URLSearchParams();
+        if (startDate) queryParams.append('start_date', startDate);
+        if (endDate) queryParams.append('end_date', endDate);
+        if (apiKeyHash) queryParams.append('api_key', apiKeyHash);
+        queryParams.append('page', currentPage.toString());
+        queryParams.append('page_size', '1000'); // Maximum allowed per LiteLLM API
+
+        const response = await this.makeRequest<any>(
+          `/user/daily/activity?${queryParams.toString()}`,
+          {
+            method: 'GET',
+          },
+        );
+
+        // Accumulate results from this page
+        const pageResults = response.results || [];
+        allResults.push(...pageResults);
+
+        // Store metadata (contains aggregated totals across all pages)
+        if (!metadata) {
+          metadata = response.metadata || {};
+        }
+
+        // Check if more pages exist
+        hasMore = response.metadata?.has_more === true;
+
+        // Log pagination progress
+        this.fastify.log.debug(
+          {
+            page: response.metadata?.page || currentPage,
+            totalPages: response.metadata?.total_pages,
+            resultsThisPage: pageResults.length,
+            totalResultsSoFar: allResults.length,
+            hasMore,
+          },
+          'LiteLLM: Fetched page of daily activity data',
+        );
+
+        currentPage++;
+
+        // Safety check: prevent infinite loops (shouldn't happen with has_more logic)
+        if (currentPage > 10000) {
+          this.fastify.log.error(
+            { currentPage, totalResults: allResults.length },
+            'LiteLLM: Pagination safety limit reached, stopping fetch',
+          );
+          break;
+        }
+      }
+
+      // Log final pagination summary
+      this.fastify.log.info(
         {
-          method: 'GET',
+          totalPages: currentPage - 1,
+          totalResults: allResults.length,
+          dateRange: { startDate, endDate },
         },
+        'LiteLLM: Completed paginated fetch for daily activity',
       );
 
       // Parse the response according to the actual LiteLLM format
-      const metadata = response.metadata || {};
-      const results = response.results || [];
-
-      // Aggregate metrics from all dates
+      // Metadata contains aggregated totals across ALL pages
       const totalSpend = metadata.total_spend || 0;
       const totalTokens = metadata.total_tokens || 0;
       const promptTokens = metadata.total_prompt_tokens || 0;
       const completionTokens = metadata.total_completion_tokens || 0;
       const apiRequests = metadata.total_api_requests || 0;
 
-      // Aggregate model breakdown
+      // Aggregate model breakdown from ALL results
       const modelBreakdown: { [key: string]: any } = {};
       const dailyMetrics: any[] = [];
 
-      results.forEach((dayResult: any) => {
-        // Add to daily metrics
+      allResults.forEach((dayResult: any) => {
+        // Add to daily metrics with full breakdown preserved
         dailyMetrics.push({
           date: dayResult.date,
           spend: dayResult.metrics?.spend || 0,
           tokens: dayResult.metrics?.total_tokens || 0,
           requests: dayResult.metrics?.api_requests || 0,
+          breakdown: dayResult.breakdown, // Preserve full breakdown including api_key_breakdown
         });
 
         // Aggregate model breakdown
@@ -1155,7 +1264,7 @@ export class LiteLLMService extends BaseService {
         completion_tokens: completionTokens,
         api_requests: apiRequests,
         by_model: Object.values(modelBreakdown),
-        daily_metrics: dailyMetrics,
+        daily_metrics: dailyMetrics, // Now includes full breakdown data
       };
 
       this.setCache(cacheKey, result);
@@ -1196,6 +1305,22 @@ export class LiteLLMService extends BaseService {
   }
 
   async createModel(modelData: any): Promise<any> {
+    if (this.config.enableMocking) {
+      this.fastify.log.warn(
+        { model_name: modelData.model_name },
+        'LiteLLM is in MOCK MODE - model will not be created in real LiteLLM instance',
+      );
+      // Return mock response matching LiteLLM format
+      return this.createMockResponse({
+        model_name: modelData.model_name,
+        model_info: {
+          id: `mock-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+          ...modelData.model_info,
+        },
+        litellm_params: modelData.litellm_params,
+      });
+    }
+
     const url = '/model/new';
 
     try {
@@ -1214,6 +1339,22 @@ export class LiteLLMService extends BaseService {
   }
 
   async updateModel(modelId: string, modelData: any): Promise<any> {
+    if (this.config.enableMocking) {
+      this.fastify.log.warn(
+        { modelId },
+        'LiteLLM is in MOCK MODE - model will not be updated in real LiteLLM instance',
+      );
+      // Return mock response
+      return this.createMockResponse({
+        model_name: modelData.model_name || `model-${modelId}`,
+        model_info: {
+          id: modelId,
+          ...modelData.model_info,
+        },
+        litellm_params: modelData.litellm_params,
+      });
+    }
+
     const url = `/model/${modelId}/update`;
 
     try {
@@ -1232,6 +1373,15 @@ export class LiteLLMService extends BaseService {
   }
 
   async deleteModel(modelId: string): Promise<void> {
+    if (this.config.enableMocking) {
+      this.fastify.log.warn(
+        { modelId },
+        'LiteLLM is in MOCK MODE - model will not be deleted from real LiteLLM instance',
+      );
+      // Return void (no-op in mock mode)
+      return this.createMockResponse(undefined);
+    }
+
     const url = `/model/delete`;
 
     try {

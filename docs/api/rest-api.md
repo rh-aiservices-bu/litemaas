@@ -201,6 +201,7 @@ Response:
     "output": 0.06,
     "unit": "per_1k_tokens"
   },
+  "restrictedAccess": false,
   "metadata": {
     "version": "0613",
     "releaseDate": "2023-06-13",
@@ -223,7 +224,7 @@ List user subscriptions
 
 ```json
 Query Parameters:
-- status: string (optional) - Filter by status (active, cancelled, suspended, expired)
+- status: string (optional) - Filter by status (active, pending, denied, cancelled, suspended, expired)
 - modelId: string (optional) - Filter by model ID
 - page: number (default: 1)
 - limit: number (default: 20)
@@ -367,8 +368,8 @@ Response:
   "outputCostPerToken": 0.00006,
   "estimatedCost": 9.75,
   "costBreakdown": {
-    "inputTokens": 75000,
-    "outputTokens": 75000,
+    "promptTokens": 75000,
+    "completionTokens": 75000,
     "inputCost": 2.25,
     "outputCost": 4.50,
     "totalCost": 6.75
@@ -453,6 +454,64 @@ Response (Error - Active API Keys):
 - Subscriptions already `cancelled` or `expired` cannot be cancelled again
 - The cancellation permanently deletes the subscription from the database and cannot be undone
 - The subscription will no longer appear in subscription lists after cancellation
+
+#### POST /api/v1/subscriptions/:id/request-review
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only request review for their own subscriptions
+
+Request review for a denied subscription
+
+**Use Case**: When a subscription has been denied by an admin, users can request a re-review of their request. This moves the subscription from "denied" back to "pending" status for admin reconsideration.
+
+**Idempotent Behavior**:
+
+- `denied` → `pending` (main use case)
+- `pending` → no-op, returns success (already pending)
+- `active` → error (active subscriptions cannot request review)
+- Non-existent subscription → error
+
+```json
+Request:
+POST /api/v1/subscriptions/sub_123/request-review
+
+Response (Success - Denied to Pending):
+{
+  "id": "sub_123",
+  "userId": "user_123",
+  "modelId": "gpt-4",
+  "modelName": "GPT-4",
+  "provider": "OpenAI",
+  "status": "pending",  // Changed from "denied"
+  "statusReason": null,  // Previous denial reason cleared
+  "statusChangedAt": "2024-01-20T10:00:00Z",
+  "createdAt": "2024-01-01T00:00:00Z",
+  "updatedAt": "2024-01-20T10:00:00Z"
+}
+
+Response (No-Op - Already Pending):
+{
+  "id": "sub_123",
+  "userId": "user_123",
+  "modelId": "gpt-4",
+  "status": "pending",  // Already pending, no change
+  "message": "Subscription is already pending review"
+}
+
+Response (Error - Active Subscription):
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Cannot request review for active subscription"
+}
+```
+
+**Notes**:
+
+- Clears the previous `statusReason` (denial reason) when moving to pending
+- Creates audit trail entry for the status change
+- Triggers notification hook for admins (implementation pending)
+- Only the subscription owner can request review (admins use revert endpoint)
 
 ### API Keys
 
@@ -1363,6 +1422,918 @@ Response:
   }
 }
 ```
+
+### Admin Usage Analytics (/api/v1/admin/usage)
+
+Comprehensive usage analytics with intelligent caching and multi-dimensional filtering.
+
+**Caching Strategy**:
+
+- Historical days (> 1 day old): Permanent cache, never refreshed
+- Current day: 5-minute TTL, auto-refreshed when stale
+- Data fetched from LiteLLM `/user/daily/activity` endpoint on cache miss
+
+**Rate Limiting**:
+
+All admin analytics endpoints are rate-limited to prevent abuse and protect system resources. Rate limits are applied **per-user** (not globally) based on JWT authentication.
+
+**Rate Limit Tiers**:
+
+| Endpoint Type     | Default Limit | Time Window | Environment Variable         |
+| ----------------- | ------------- | ----------- | ---------------------------- |
+| Analytics Queries | 10 requests   | 1 minute    | `ADMIN_ANALYTICS_RATE_LIMIT` |
+| Data Export       | 5 requests    | 1 minute    | `ADMIN_EXPORT_RATE_LIMIT`    |
+| Cache Rebuild     | 1 request     | 5 minutes   | `ADMIN_CACHE_REBUILD_LIMIT`  |
+
+**Analytics Query Endpoints** (10 req/min):
+
+- `POST /analytics`
+- `POST /by-user`
+- `POST /by-model`
+- `POST /by-provider`
+- `POST /refresh-today`
+- `GET /filter-options`
+
+**Export Endpoints** (5 req/min):
+
+- `POST /export`
+
+**Cache Operations** (1 req/5min):
+
+- `POST /rebuild-cache`
+
+**Rate Limit Headers**:
+
+All responses include rate limit information in headers:
+
+```http
+X-RateLimit-Limit: 10
+X-RateLimit-Remaining: 7
+X-RateLimit-Reset: 1705940460
+```
+
+**Rate Limit Exceeded (HTTP 429)**:
+
+When rate limit is exceeded, the API returns:
+
+```json
+{
+  "code": "RATE_LIMITED",
+  "message": "Rate limit exceeded. Please try again later."
+}
+```
+
+Headers include retry information:
+
+```http
+Retry-After: 42
+X-RateLimit-Limit: 10
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1705940460
+```
+
+**Configuration**:
+
+Rate limits can be configured via environment variables for different deployment scenarios:
+
+```bash
+# Analytics query endpoints (default: 10)
+ADMIN_ANALYTICS_RATE_LIMIT=20
+
+# Data export endpoints (default: 5)
+ADMIN_EXPORT_RATE_LIMIT=10
+
+# Cache rebuild operations (default: 1)
+ADMIN_CACHE_REBUILD_LIMIT=1
+```
+
+**Notes**:
+
+- Rate limits are tracked per authenticated user (via JWT `userId`)
+- Unauthenticated requests use IP-based rate limiting
+- Rate limit windows are sliding, not fixed
+- Cache rebuild has the most restrictive limit due to high resource cost
+
+**Why POST for Query Endpoints?**
+
+The analytics query endpoints (`/analytics`, `/by-user`, `/by-model`, `/by-provider`, `/export`) use POST instead of GET to support large filter arrays that would exceed URL length limits.
+
+**Technical Rationale**:
+
+- **URL Length Limits**: Browsers typically limit URLs to 2048 characters, and web servers (Nginx, Apache) enforce limits between 4096-8192 characters
+- **Large Filter Arrays**: Real-world usage scenarios often require filtering by 100+ user IDs or API key IDs, which would create URLs exceeding these limits
+- **Example Calculation**:
+  - 100 UUIDs (36 chars each) = 3,600 characters
+  - Plus base URL, query params, and encoding = easily > 4,000 characters
+- **HTTP Compliance**: RFC 7231 allows POST for complex queries when GET is impractical
+
+**Hybrid Request Pattern**:
+
+- **Filters in Request Body**: Unlimited size, supports complex multi-dimensional filtering (users, models, providers, API keys)
+- **Pagination in Query String**: Remains in URL for cacheability and standard HTTP semantics (`?page=2&limit=50`)
+
+This pattern provides the best of both worlds: unlimited filter complexity via request body while maintaining RESTful pagination semantics.
+
+#### POST /api/v1/admin/usage/analytics
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Get comprehensive global usage metrics with trend analysis
+
+```json
+Request:
+{
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31",
+  "userIds": ["uuid1", "uuid2"],      // Optional filter
+  "modelIds": ["gpt-4", "gpt-3.5"],  // Optional filter
+  "providerIds": ["openai", "azure"], // Optional filter
+  "apiKeyIds": ["key1", "key2"]       // Optional filter
+}
+
+Response:
+{
+  "period": {
+    "startDate": "2024-01-01",
+    "endDate": "2024-01-31"
+  },
+  "totalUsers": 150,
+  "activeUsers": 95,
+  "totalRequests": 12500,
+  "totalTokens": {
+    "total": 2500000,
+    "prompt": 1800000,
+    "completion": 700000
+  },
+  "totalCost": {
+    "total": 125.50,
+    "byProvider": {
+      "openai": 100.25,
+      "azure": 25.25
+    },
+    "byModel": {
+      "gpt-4": 90.00,
+      "gpt-3.5-turbo": 35.50
+    }
+  },
+  "successRate": 99.2,
+  "averageLatency": 850,
+  "topMetrics": {
+    "topUser": {
+      "userId": "uuid",
+      "username": "john.doe",
+      "requests": 1500,
+      "cost": 45.50
+    },
+    "topModel": {
+      "modelId": "gpt-4",
+      "modelName": "GPT-4",
+      "requests": 8000,
+      "cost": 90.00
+    }
+  },
+  "trends": {
+    "requestsTrend": {
+      "metric": "requests",
+      "current": 12500,
+      "previous": 10000,
+      "percentageChange": 25.0,
+      "direction": "up"
+    },
+    "costTrend": {
+      "metric": "cost",
+      "current": 125.50,
+      "previous": 110.25,
+      "percentageChange": 13.8,
+      "direction": "up"
+    },
+    "usersTrend": {
+      "metric": "activeUsers",
+      "current": 95,
+      "previous": 87,
+      "percentageChange": 9.2,
+      "direction": "up"
+    }
+  },
+  "dailyUsage": [
+    {
+      "date": "2024-01-01",
+      "requests": 450,
+      "tokens": 90000,
+      "prompt_tokens": 65000,
+      "completion_tokens": 25000,
+      "cost": 4.50
+    }
+  ],
+  "topModels": [
+    {
+      "modelId": "gpt-4",
+      "modelName": "GPT-4",
+      "provider": "openai",
+      "requests": 8000,
+      "tokens": 1600000,
+      "cost": 90.00
+    }
+  ],
+  "topUsers": [
+    {
+      "userId": "uuid",
+      "username": "john.doe",
+      "email": "john@example.com",
+      "role": "user",
+      "requests": 1500,
+      "tokens": 300000,
+      "cost": 45.50
+    }
+  ]
+}
+```
+
+#### POST /api/v1/admin/usage/by-user
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Get usage metrics broken down by user with pagination support
+
+**Note**: Uses POST instead of GET to support large filter arrays (100+ user IDs) that would exceed URL length limits (2048-4096 characters). Filters are sent in the request body while pagination parameters remain in the query string for cacheability.
+
+**Request Body:**
+
+```json
+{
+  "startDate": "2024-01-01", // Required: YYYY-MM-DD format
+  "endDate": "2024-01-31", // Required: YYYY-MM-DD format
+  "userIds": ["uuid1", "uuid2"], // Optional: Filter by specific users
+  "modelIds": ["gpt-4", "gpt-3.5"], // Optional: Filter by specific models
+  "providerIds": ["openai", "azure"], // Optional: Filter by specific providers
+  "apiKeyIds": ["key1", "key2"] // Optional: Filter by specific API keys
+}
+```
+
+**Query Parameters** (Pagination):
+
+```
+- page: number (default: 1)
+- limit: number (default: 50, max: 200)
+- sortBy: string (username, totalRequests, totalTokens, promptTokens, completionTokens, totalCost)
+- sortOrder: "asc" | "desc" (default: "desc")
+```
+
+**Response:**
+
+```json
+{
+  "data": [
+    {
+      "userId": "uuid",
+      "username": "john.doe",
+      "email": "john@example.com",
+      "role": "user",
+      "metrics": {
+        "requests": 1500,
+        "tokens": {
+          "total": 300000,
+          "input": 220000,
+          "output": 80000
+        },
+        "cost": 45.5,
+        "lastActive": "2024-01-31T15:30:00Z"
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 150,
+    "totalPages": 3,
+    "hasNext": true,
+    "hasPrevious": false
+  }
+}
+```
+
+#### POST /api/v1/admin/usage/by-model
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Get usage metrics broken down by model with pagination support
+
+**Note**: Uses POST instead of GET to support large filter arrays that would exceed URL length limits.
+
+**Request Body:**
+
+```json
+{
+  "startDate": "2024-01-01", // Required: YYYY-MM-DD format
+  "endDate": "2024-01-31", // Required: YYYY-MM-DD format
+  "userIds": ["uuid1", "uuid2"], // Optional: Filter by specific users
+  "modelIds": ["gpt-4", "gpt-3.5"], // Optional: Filter by specific models
+  "providerIds": ["openai", "azure"], // Optional: Filter by specific providers
+  "apiKeyIds": ["key1", "key2"] // Optional: Filter by specific API keys
+}
+```
+
+**Query Parameters** (Pagination):
+
+```
+- page: number (default: 1)
+- limit: number (default: 50, max: 200)
+- sortBy: string (modelName, totalRequests, totalTokens, promptTokens, completionTokens, totalCost)
+- sortOrder: "asc" | "desc" (default: "desc")
+```
+
+**Response:**
+
+```json
+{
+  "data": [
+    {
+      "modelId": "gpt-4",
+      "modelName": "GPT-4",
+      "provider": "openai",
+      "metrics": {
+        "requests": 8000,
+        "tokens": {
+          "total": 1600000,
+          "input": 1200000,
+          "output": 400000
+        },
+        "cost": 90.0,
+        "users": 50,
+        "successRate": 99.5
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 25,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
+
+#### POST /api/v1/admin/usage/by-provider
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Get usage metrics broken down by provider with pagination support
+
+**Note**: Uses POST instead of GET to support large filter arrays that would exceed URL length limits.
+
+**Request Body:**
+
+```json
+{
+  "startDate": "2024-01-01", // Required: YYYY-MM-DD format
+  "endDate": "2024-01-31", // Required: YYYY-MM-DD format
+  "userIds": ["uuid1", "uuid2"], // Optional: Filter by specific users
+  "modelIds": ["gpt-4", "gpt-3.5"], // Optional: Filter by specific models
+  "providerIds": ["openai", "azure"], // Optional: Filter by specific providers
+  "apiKeyIds": ["key1", "key2"] // Optional: Filter by specific API keys
+}
+```
+
+**Query Parameters** (Pagination):
+
+```
+- page: number (default: 1)
+- limit: number (default: 50, max: 200)
+- sortBy: string (providerName, totalRequests, totalTokens, promptTokens, completionTokens, totalCost)
+- sortOrder: "asc" | "desc" (default: "desc")
+```
+
+**Response:**
+
+```json
+{
+  "data": [
+    {
+      "provider": "openai",
+      "metrics": {
+        "requests": 10000,
+        "tokens": {
+          "total": 2000000,
+          "input": 1500000,
+          "output": 500000
+        },
+        "cost": 100.25,
+        "models": 15,
+        "successRate": 99.3
+      }
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "total": 3,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
+
+#### POST /api/v1/admin/usage/export
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+**Note**: Uses POST instead of GET to support large filter arrays that would exceed URL length limits.
+
+Export comprehensive usage data in CSV or JSON format
+
+**Request Body:**
+
+```json
+{
+  "startDate": "2024-01-01", // Required: YYYY-MM-DD format
+  "endDate": "2024-01-31", // Required: YYYY-MM-DD format
+  "format": "csv", // Optional: "csv" or "json", defaults to "csv"
+  "userIds": ["uuid1", "uuid2"], // Optional: Filter by specific users
+  "modelIds": ["gpt-4", "gpt-3.5"], // Optional: Filter by specific models
+  "providerIds": ["openai", "azure"], // Optional: Filter by specific providers
+  "apiKeyIds": ["key1", "key2"] // Optional: Filter by specific API keys
+}
+```
+
+**Response:**
+
+- File download with appropriate Content-Type and Content-Disposition headers
+- Filename format: `admin-usage-export-{startDate}-to-{endDate}.{format}`
+- Content-Type: `text/csv` for CSV format, `application/json` for JSON format
+
+#### POST /api/v1/admin/usage/refresh-today
+
+**Authorization**: Requires `admin` role (write operation)
+
+Force refresh of current day's usage data from LiteLLM
+
+```json
+Response:
+{
+  "message": "Current day usage data refreshed successfully",
+  "refreshedAt": "2024-01-31T16:45:30Z",
+  "status": "success"
+}
+```
+
+#### GET /api/v1/admin/usage/filter-options
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Get available filter options based on actual usage data. Returns models and users that have usage data in the specified date range, including retired models and inactive users with historical data.
+
+```
+Query Parameters:
+- startDate: YYYY-MM-DD (required)
+- endDate: YYYY-MM-DD (required)
+
+Response:
+{
+  "models": [
+    {
+      "modelId": "gpt-4",
+      "modelName": "GPT-4",
+      "provider": "openai",
+      "hasUsage": true
+    }
+  ],
+  "users": [
+    {
+      "userId": "uuid",
+      "username": "john.doe",
+      "email": "john@example.com",
+      "hasUsage": true
+    }
+  ]
+}
+```
+
+#### POST /api/v1/admin/usage/rebuild-cache
+
+**Authorization**: Requires `admin` role (write operation)
+
+Rebuild aggregated cache columns from raw_data. Useful for fixing stale aggregated data when raw data is correct.
+
+```json
+Request (optional):
+{
+  "startDate": "2024-01-01",  // Optional: limit rebuild scope
+  "endDate": "2024-01-31"      // Optional: limit rebuild scope
+}
+
+Response:
+{
+  "message": "Successfully rebuilt 31 cache entries from raw_data",
+  "rebuiltCount": 31,
+  "totalEntries": 31,
+  "status": "success"
+}
+```
+
+### Admin Subscription Approval (/api/v1/admin/subscriptions)
+
+Comprehensive subscription approval management for restricted models with granular RBAC permissions.
+
+**Permission Levels**:
+
+| Permission                   | Role                 | Capabilities                                |
+| ---------------------------- | -------------------- | ------------------------------------------- |
+| `admin:subscriptions:read`   | admin, adminReadonly | View all subscription requests and history  |
+| `admin:subscriptions:write`  | admin                | Approve, deny, revert subscription requests |
+| `admin:subscriptions:delete` | admin                | Permanently delete subscriptions            |
+
+**Key Features**:
+
+- Filter subscription requests by status, model, user, and date range
+- Bulk approve/deny operations with detailed result tracking
+- Full audit trail with status history
+- Role-based access control (adminReadonly can view but not modify)
+
+#### GET /api/v1/admin/subscriptions
+
+**Authorization**: Requires `admin:subscriptions:read` permission (admin or adminReadonly role)
+
+List and filter subscription approval requests
+
+```json
+Query Parameters:
+- statuses: string[] (optional) - Filter by status (pending, active, denied)
+- modelIds: string[] (optional) - Filter by specific models
+- userIds: string[] (optional) - Filter by specific users (UUID format)
+- dateFrom: string (optional) - Filter by status change date (ISO 8601)
+- dateTo: string (optional) - Filter by status change date (ISO 8601)
+- page: number (default: 1)
+- limit: number (default: 20)
+
+Response:
+{
+  "data": [
+    {
+      "id": "sub_123",
+      "userId": "user_uuid",
+      "modelId": "gpt-4",
+      "status": "pending",
+      "statusReason": null,
+      "statusChangedAt": "2024-01-20T10:00:00Z",
+      "statusChangedBy": null,
+      "user": {
+        "id": "user_uuid",
+        "username": "john.doe",
+        "email": "john@example.com"
+      },
+      "model": {
+        "id": "gpt-4",
+        "name": "GPT-4",
+        "provider": "openai",
+        "restrictedAccess": true
+      },
+      "createdAt": "2024-01-15T10:00:00Z",
+      "updatedAt": "2024-01-20T10:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 15,
+    "totalPages": 1,
+    "hasNext": false,
+    "hasPrevious": false
+  }
+}
+```
+
+#### GET /api/v1/admin/subscriptions/stats
+
+**Authorization**: Requires `admin:subscriptions:read` permission (admin or adminReadonly role)
+
+Get subscription approval statistics
+
+```json
+Response:
+{
+  "pendingCount": 5,
+  "approvedToday": 10,
+  "deniedToday": 2,
+  "totalRequests": 150
+}
+```
+
+#### POST /api/v1/admin/subscriptions/approve
+
+**Authorization**: Requires `admin:subscriptions:write` permission (admin role only)
+
+Approve subscriptions in bulk
+
+```json
+Request:
+{
+  "subscriptionIds": [
+    "sub_123",
+    "sub_456",
+    "sub_789"
+  ],
+  "reason": "Approved for Q1 research project"  // Optional comment
+}
+
+Response:
+{
+  "successful": 2,
+  "failed": 1,
+  "errors": [
+    {
+      "subscription": "sub_789",
+      "error": "Subscription not found or already approved"
+    }
+  ]
+}
+```
+
+**Notes**:
+
+- Sets subscription status to "active"
+- Records admin user ID and reason in audit trail
+- Triggers notification hook for users (implementation pending)
+- Returns detailed success/failure breakdown
+
+#### POST /api/v1/admin/subscriptions/deny
+
+**Authorization**: Requires `admin:subscriptions:write` permission (admin role only)
+
+Deny subscriptions in bulk
+
+```json
+Request:
+{
+  "subscriptionIds": [
+    "sub_123",
+    "sub_456"
+  ],
+  "reason": "Model requires data science certification"  // Required for denials
+}
+
+Response:
+{
+  "successful": 2,
+  "failed": 0,
+  "errors": []
+}
+```
+
+**Notes**:
+
+- Reason is **required** for all denials (visible to users)
+- Automatically removes model from all user's API keys
+- Updates LiteLLM keys **before** database (security priority)
+- Creates audit trail entry with denial reason
+- Triggers notification hook for users (implementation pending)
+
+#### POST /api/v1/admin/subscriptions/:id/revert
+
+**Authorization**: Requires `admin:subscriptions:write` permission (admin role only)
+
+Revert a subscription status decision
+
+**Use Case**: Correct approval mistakes, change policies, or manually adjust subscription states.
+
+**Allowed Transitions**:
+
+- `active` → `denied` (revoke approval)
+- `denied` → `active` (override denial)
+- `denied` → `pending` (back to review queue)
+- `active` → `pending` (re-review required)
+
+**Blocked Transitions**:
+
+- Same-state transitions (e.g., `active` → `active`)
+- Invalid state combinations
+
+```json
+Request:
+{
+  "newStatus": "denied",  // One of: active, denied, pending
+  "reason": "Policy change - model now requires additional approval"  // Optional
+}
+
+Response:
+{
+  "id": "sub_123",
+  "userId": "user_uuid",
+  "modelId": "gpt-4",
+  "status": "denied",  // Updated status
+  "statusReason": "Policy change - model now requires additional approval",
+  "statusChangedAt": "2024-01-20T15:30:00Z",
+  "statusChangedBy": "admin_uuid",
+  "user": {
+    "id": "user_uuid",
+    "username": "john.doe",
+    "email": "john@example.com"
+  },
+  "model": {
+    "id": "gpt-4",
+    "name": "GPT-4",
+    "provider": "openai",
+    "restrictedAccess": true
+  },
+  "updatedAt": "2024-01-20T15:30:00Z"
+}
+
+Response (Error - Invalid Transition):
+{
+  "statusCode": 400,
+  "error": "Bad Request",
+  "message": "Cannot transition from active to active - same state"
+}
+```
+
+**Notes**:
+
+- Validates state transitions - only allows meaningful changes
+- All changes recorded in audit trail
+- When transitioning to "denied", automatically removes model from API keys
+
+#### DELETE /api/v1/admin/subscriptions/:id
+
+**Authorization**: Requires `admin:subscriptions:delete` permission (admin role only)
+
+⚠️ **Admin-Only Operation** - Not available to adminReadonly users
+
+Permanently delete a subscription from the database
+
+**Use Cases**:
+
+- Removing test/duplicate subscriptions
+- Cleaning up obsolete subscription requests
+- Administrative data management
+
+```json
+Request (optional body):
+{
+  "reason": "Duplicate subscription request"  // Optional, saved in audit log
+}
+
+Response:
+{
+  "success": true
+}
+
+Response (Error - Insufficient Permission):
+{
+  "statusCode": 403,
+  "error": "Forbidden",
+  "message": "admin:subscriptions:delete permission required",
+  "details": {
+    "requiredPermission": "admin:subscriptions:delete",
+    "userRoles": ["adminReadonly", "user"]
+  }
+}
+```
+
+**Important**:
+
+- This action **permanently** deletes the subscription from the database
+- Cannot be undone
+- Creates audit log entry with admin user ID and optional reason
+- Users will need to create a new subscription if they want access later
+- Only users with full `admin` role can perform this operation
+
+**AdminReadonly Restriction**:
+
+- AdminReadonly users do **not** see this action in the UI
+- API requests from adminReadonly users return 403 Forbidden
+- Follows the pattern of other destructive admin operations
+
+## External API Integration Patterns
+
+The LiteMaaS system integrates with external AI model APIs for configuration validation and model discovery. This section documents the expected integration patterns and API structures.
+
+### Model Configuration Testing
+
+The frontend Model Configuration Testing feature validates external AI model endpoints by making direct API calls. This testing capability enables administrators to verify model configurations before creating or updating models in LiteMaaS.
+
+#### External API Endpoint Structure
+
+Model configuration testing expects external AI APIs to follow the standard OpenAI-compatible format:
+
+**Endpoint**: `GET {API_BASE_URL}/models`
+**Authentication**: Bearer token authorization
+
+#### Expected Request Format
+
+```http
+GET /models HTTP/1.1
+Host: external-api-provider.com
+Authorization: Bearer {API_KEY}
+Content-Type: application/json
+```
+
+#### Expected Response Format
+
+```json
+{
+  "object": "list",
+  "data": [
+    {
+      "id": "model-name-1",
+      "object": "model",
+      "created": 1758888561,
+      "owned_by": "provider",
+      "root": "/mnt/models",
+      "parent": null,
+      "max_model_len": 32768,
+      "permission": [
+        {
+          "id": "modelperm-5d4ee142ac7449a38f452494577c7e2a",
+          "object": "model_permission",
+          "created": 1758888561,
+          "allow_create_engine": false,
+          "allow_sampling": true,
+          "allow_logprobs": true,
+          "allow_search_indices": false,
+          "allow_view": true,
+          "allow_fine_tuning": false,
+          "organization": "*",
+          "group": null,
+          "is_blocking": false
+        }
+      ]
+    },
+    {
+      "id": "model-name-2",
+      "object": "model",
+      "created": 1758888562,
+      "owned_by": "provider"
+      // ... additional model properties
+    }
+  ]
+}
+```
+
+#### Error Response Handling
+
+Configuration testing handles various error scenarios from external APIs:
+
+**Authentication Errors (HTTP 401/403)**:
+
+```json
+{
+  "error": {
+    "message": "Invalid authentication credentials",
+    "type": "authentication_error",
+    "code": "invalid_api_key"
+  }
+}
+```
+
+**Network/Connectivity Errors**:
+
+- Connection timeouts
+- DNS resolution failures
+- SSL certificate errors
+- Network unreachable errors
+
+**Server Errors (HTTP 5xx)**:
+
+```json
+{
+  "error": {
+    "message": "Internal server error",
+    "type": "server_error",
+    "code": "internal_error"
+  }
+}
+```
+
+#### Model Validation Process
+
+1. **Field Validation**: Ensure required fields are present (API Base URL, API Key, Backend Model Name)
+2. **HTTP Request**: Make GET request to `{API_BASE_URL}/models`
+3. **Authentication**: Use Bearer token authentication with provided API key
+4. **Response Parsing**: Extract model list from `data` array
+5. **Model Verification**: Check if specified model name exists in returned model IDs
+6. **Result Reporting**: Display success or specific error messages
+
+#### Integration Security Considerations
+
+- **HTTPS Enforcement**: All external API calls should use HTTPS
+- **API Key Protection**: Keys are used for validation only, not stored permanently
+- **Error Sanitization**: Error messages don't expose sensitive configuration details
+- **Request Timeout**: Implement reasonable timeout limits for external API calls
+- **Rate Limiting**: Consider implementing rate limiting for test requests
+
+#### Frontend Implementation Notes
+
+The model configuration testing is implemented in `AdminModelsPage.tsx` with:
+
+- State management for testing progress and results
+- Automatic clearing of results when form data changes
+- Proper error categorization and user feedback
+- Loading states and button disable logic
+- Internationalized error messages
+
+For detailed implementation, see [Model Configuration Testing Documentation](../features/model-configuration-testing.md).
 
 ## Error Responses
 

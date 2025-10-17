@@ -6,80 +6,72 @@
 
 **@litemaas/frontend** - React 18 application with TypeScript, Vite, and PatternFly 6 component library.
 
+**Development Server**: Running on port 3000 with Vite HMR (Hot Module Replacement) and auto-refresh
+
+## 🚨 CRITICAL FOR AI ASSISTANTS - Server and Logging
+
+**⚠️ The frontend dev server is already running!** Do not start new processes.
+
+### Checking Frontend Status and Logs
+
+```bash
+# DO NOT run npm run dev - server is already running!
+
+# Check recent frontend logs (last 100 lines):
+tail -n 100 ../logs/frontend.log
+
+# Watch frontend logs in real-time:
+tail -f ../logs/frontend.log
+
+# Check for compilation errors:
+grep -i "error\|failed" ../logs/frontend.log | tail -n 20
+
+# Check for warnings (React, deprecations):
+grep -i "warning" ../logs/frontend.log | tail -n 20
+
+# Check Vite HMR updates:
+grep "hmr" ../logs/frontend.log | tail -n 20
+
+# Verify server is responding:
+curl http://localhost:3000
+```
+
+### Server Information
+
+- **Dev Server URL**: `http://localhost:3000`
+- **HMR**: Enabled - changes to components instantly reflect in browser
+- **Auto-refresh**: Browser automatically updates on file save
+- **Log Location**: `../logs/frontend.log` (relative to frontend directory)
+- **Build Output**: Check logs for TypeScript/ESLint errors
+
+### Debugging Workflow
+
+1. **Make component changes** - Save the file
+2. **Check logs for compilation** - `tail -n 50 ../logs/frontend.log`
+3. **If TypeScript errors** - Fix types and save, Vite will recompile
+4. **If ESLint warnings** - Fix or add disable comment if intentional
+5. **Check browser** - HMR should auto-update, check browser console for runtime errors
+6. **If HMR fails** - Browser will show error overlay with details
+
+### Common Frontend Log Patterns
+
+```bash
+# Check for failed API calls:
+grep -i "axios\|fetch\|401\|403\|404\|500" ../logs/frontend.log | tail -n 20
+
+# Check for React errors:
+grep -i "react\|hook\|render\|component" ../logs/frontend.log | tail -n 20
+
+# Check for PatternFly issues:
+grep -i "patternfly\|pf-v6" ../logs/frontend.log | tail -n 20
+
+# Check for build/bundle issues:
+grep -i "vite\|rollup\|bundle\|chunk" ../logs/frontend.log | tail -n 20
+```
+
 ## 📁 Frontend Structure
 
-```
-frontend/
-├── src/
-│   ├── assets/            # Static assets
-│   │   ├── images/       # Images and logos
-│   │   └── icons/        # Custom icons
-│   ├── components/        # Reusable components
-│   │   ├── charts/       # Chart components (AccessibleChart, etc.)
-│   │   ├── AlertToastGroup.tsx # Toast notifications
-│   │   ├── ComponentErrorBoundary.tsx # Component-level error handling
-│   │   ├── ErrorBoundary.tsx # Global error handling
-│   │   ├── Layout.tsx    # Main app layout
-│   │   ├── NotificationDrawer.tsx # Notification UI
-│   │   ├── ProtectedRoute.tsx # Auth route guard
-│   │   ├── ScreenReaderAnnouncement.tsx # ARIA live regions
-│   │   └── index.ts      # Component exports
-│   ├── config/            # App configuration
-│   │   └── navigation.ts # Navigation structure
-│   ├── contexts/          # React Context providers
-│   │   ├── AuthContext.tsx # Authentication state
-│   │   └── NotificationContext.tsx # Notifications
-│   ├── hooks/             # Custom React hooks
-│   │   └── useAsyncError.ts # Async error handling hook
-│   ├── i18n/              # Internationalization
-│   │   ├── index.ts      # i18n configuration
-│   │   └── locales/      # Translation files (9 languages)
-│   │       ├── en/       # English
-│   │       ├── es/       # Spanish
-│   │       ├── fr/       # French
-│   │       ├── de/       # German
-│   │       ├── it/       # Italian
-│   │       ├── ja/       # Japanese
-│   │       ├── ko/       # Korean
-│   │       ├── zh/       # Chinese
-│   │       └── elv/      # Elvish
-│   ├── pages/             # Page components (flat structure)
-│   │   ├── HomePage.tsx  # Dashboard
-│   │   ├── ModelsPage.tsx # Model catalog
-│   │   ├── SubscriptionsPage.tsx # Subscription management
-│   │   ├── ApiKeysPage.tsx # API key management
-│   │   ├── UsagePage.tsx # Usage analytics
-│   │   ├── ToolsPage.tsx    # Admin tools
-│   │   ├── ChatbotPage.tsx # AI chatbot interface
-│   │   ├── LoginPage.tsx # Authentication
-│   │   └── AuthCallbackPage.tsx # OAuth callback
-│   ├── routes/            # Routing configuration
-│   │   └── index.tsx     # Route definitions
-│   ├── services/          # API service layer
-│   │   ├── api.ts        # Axios instance & interceptors
-│   │   ├── auth.service.ts # Authentication API
-│   │   ├── models.service.ts # Models API
-│   │   ├── subscriptions.service.ts # Subscriptions API
-│   │   ├── apiKeys.service.ts # API keys API
-│   │   ├── usage.service.ts # Usage analytics API
-│   │   ├── chat.service.ts # Chatbot API
-│   │   ├── prompts.service.ts # Prompt management API
-│   │   └── config.service.ts # Configuration API
-│   ├── types/             # TypeScript interfaces
-│   │   ├── auth.ts       # Auth types
-│   │   ├── models.ts     # Model types
-│   │   └── api.ts        # API response types
-│   ├── utils/             # Utility functions
-│   │   ├── formatters.ts # Data formatting
-│   │   ├── validators.ts # Form validation
-│   │   └── constants.ts  # App constants
-│   ├── App.tsx           # Root component
-│   ├── main.tsx          # Entry point
-│   └── index.css         # Global styles
-├── public/               # Static public assets
-├── tests/               # Test files
-└── dist/                # Build output
-```
+See [`docs/architecture/project-structure.md`](../docs/architecture/project-structure.md) for complete frontend directory structure.
 
 ## 🎨 PatternFly 6 Critical Requirements
 
@@ -93,302 +85,156 @@ frontend/
 4. **Theme Testing**: Test in both light and dark themes
 5. **Table Patterns**: Follow guide's table implementation (current code may be outdated)
 
-### Common Mistakes to Avoid
+### Common Mistakes and Token Usage
 
-```typescript
-// ❌ WRONG - Missing pf-v6- prefix
-<div className="c-card">
+**Critical rules** - See [`docs/development/pf6-guide/guidelines/styling-standards.md`](../docs/development/pf6-guide/guidelines/styling-standards.md) for complete guide:
 
-// ✅ CORRECT
-<div className="pf-v6-c-card">
+- ✅ ALWAYS use `pf-v6-` prefix for component classes
+- ✅ ALWAYS use `--pf-t--` prefix for design tokens (semantic tokens with `-t-`)
+- ✅ Choose tokens by meaning (e.g., `--pf-t--global--color--brand--default`), not appearance
+- ❌ NEVER hardcode colors or measurements
+- ❌ NEVER use legacy `--pf-v6-global--` tokens or numbered base tokens
 
-// ❌ WRONG - Hardcoded color
-style={{ color: '#0066CC' }}
+## 🗃️ State Management
 
-// ✅ CORRECT - Use design token
-style={{ color: 'var(--pf-v6-global--primary-color--100)' }}
-```
+**React Context**:
 
-## 🏗️ State Management
+- **AuthContext** - Authentication state (user, roles, isAuthenticated)
+- **NotificationContext** - App-wide notification system
+- **ConfigContext** - Application configuration from `/api/v1/config` endpoint
+  - **Base Config**: `usageCacheTtlMinutes`, `version`, `environment`
+  - **Admin Analytics Config**: All UI-relevant admin analytics settings (pagination, limits, thresholds)
+  - Integrates with React Query `staleTime`: `config.usageCacheTtlMinutes * 60 * 1000`
+  - Pattern: Dynamic cache TTL eliminates hardcoded values in query hooks
 
-### React Context (Global State)
+**React Query**: Server state management with dynamic stale time from ConfigContext, 10min cache time, 3 retries
 
-```typescript
-// AuthContext - User authentication state
-{
-  user: User | null,
-  isAuthenticated: boolean,
-  login: (credentials) => Promise<void>,
-  logout: () => void,
-  checkAuth: () => Promise<void>
-}
+### Admin Analytics Configuration
 
-// NotificationContext - App notifications
-{
-  notifications: Notification[],
-  addNotification: (notification) => void,
-  removeNotification: (id) => void,
-  clearAll: () => void
-}
-```
+**Hook**: `useAdminAnalyticsConfig()` provides pagination limits, date range limits, trend thresholds, and export limits from backend.
 
-### React Query (Server State)
+**Integration**: Dynamic configuration eliminates hardcoded values, integrates with React Query `staleTime` via ConfigContext.
 
-```typescript
-// Caching strategy
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      cacheTime: 10 * 60 * 1000, // 10 minutes
-      retry: 3,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
+**Admin Component Structure**:
 
-// Usage pattern
-const { data, isLoading, error } = useQuery(['models'], () => modelsService.getAll(), {
-  enabled: isAuthenticated,
-});
-```
+- `components/admin/` - Admin-specific UI components
+  - `MetricsOverview.tsx` - Main analytics dashboard with trend indicators
+  - `TopUsersTable.tsx` - User usage breakdown table
+  - `UserFilterSelect.tsx` - Multi-select user filter with search
+  - `ApiKeyFilterSelect.tsx` - Cascading API key filter (depends on selected users)
+  - `ProviderBreakdownTable.tsx` - Provider metrics (component ready, integration pending)
+- `components/charts/` - Shared chart components
+  - `UsageTrends.tsx`, `ModelDistributionChart.tsx`, `ModelUsageTrends.tsx`
+  - `UsageHeatmap.tsx` - Weekly heatmap (component ready, integration pending)
+  - `AccessibleChart.tsx` - Accessibility wrapper for Victory charts
 
 ## 🔌 API Service Layer
 
-### Axios Configuration
+**Axios Configuration**: Base client with JWT token interceptors and 401 error handling.
 
-```typescript
-// Base setup with interceptors
-const apiClient = axios.create({
-  baseURL: '/api/v1',
-  timeout: 30000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+**Service Pattern**: Consistent service structure for all API endpoints:
 
-// JWT token interceptor
-apiClient.interceptors.request.use((config) => {
-  const token = localStorage.getItem('jwt_token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
+- `auth.service.ts` - Authentication (OAuth, profile)
+- `models.service.ts` - Model catalog
+- `subscriptions.service.ts` - User subscriptions (includes request-review endpoint)
+- `adminSubscriptions.service.ts` - **Admin subscription approval** (approval requests, bulk operations, stats)
+- `apiKeys.service.ts` - API key management
+- `usage.service.ts` - **User usage analytics** (individual user data)
+- `adminUsage.service.ts` - **Admin usage analytics** (system-wide data, all endpoints)
+- `chat.service.ts` - Chatbot integration
+- `config.service.ts` - Application configuration
 
-// Error handling interceptor
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Redirect to login
-      window.location.href = '/auth/login';
-    }
-    return Promise.reject(error);
-  },
-);
-```
+## 🌍 Routing Structure
 
-### Service Pattern
+**Main Routes**: `/home`, `/models`, `/subscriptions`, `/api-keys`, `/usage`, `/admin/*`
 
-```typescript
-// Consistent service structure
-export const modelService = {
-  getAll: () => apiClient.get<Model[]>('/models'),
-  getById: (id: string) => apiClient.get<Model>(`/models/${id}`),
-  subscribe: (modelId: string, data: SubscriptionRequest) =>
-    apiClient.post<Subscription>(`/models/${modelId}/subscribe`, data),
-  unsubscribe: (modelId: string) => apiClient.delete(`/models/${modelId}/unsubscribe`),
-};
-```
+**Admin Routes** (admin/adminReadonly roles required):
 
-## 🌐 Routing Structure
+- `/admin/users` - User management (UsersPage.tsx)
+- `/admin/models` - Model configuration testing (AdminModelsPage.tsx)
+- `/admin/tools` - Administrative tools (ToolsPage.tsx)
+- `/admin/subscriptions` - **Subscription approval management (AdminSubscriptionsPage.tsx)** - Approve/deny restricted model access:
+  - Multi-dimensional filtering (status, model, user, date range)
+  - Bulk approve/deny operations with result modals
+  - Granular RBAC (admin vs adminReadonly)
+  - Manual refresh only (no polling)
+  - Full audit trail display
+- `/admin/usage` - **Admin usage analytics (AdminUsagePage.tsx)** - Major feature with comprehensive system-wide analytics:
+  - Global metrics with trend analysis
+  - Multi-dimensional filtering (users, models, providers, API keys)
+  - Day-by-day incremental caching (5-min TTL for current day)
+  - Data export (CSV/JSON)
+  - ConfigContext integration for dynamic cache TTL
 
-```typescript
-// Main routes configuration
-const routes = [
-  { path: '/', element: <Navigate to="/home" /> },
-  { path: '/home', element: <HomePage /> },
-  { path: '/models', element: <ModelsPage /> },
-  { path: '/models/:id', element: <ModelDetailPage /> },
-  { path: '/subscriptions', element: <SubscriptionsPage /> },
-  { path: '/api-keys', element: <ApiKeysPage /> },
-  { path: '/usage', element: <UsagePage /> },
-  { path: '/admin/tools', element: <ToolsPage /> },
-  // Admin routes (role-protected)
-  { path: '/admin', element: <AdminPage />, requiredRoles: ['admin', 'adminReadonly'] },
-  { path: '/admin/users', element: <UserManagementPage />, requiredRoles: ['admin', 'adminReadonly'] },
-  { path: '/admin/system', element: <SystemStatusPage />, requiredRoles: ['admin', 'adminReadonly'] },
-  // Auth routes
-  { path: '/auth/login', element: <LoginPage /> },
-  { path: '/auth/callback', element: <AuthCallback /> }
-];
+**Protection**: `ProtectedRoute` for auth, `RoleProtectedRoute` for admin routes with required roles
 
-// Role-based protected route wrapper
-<RoleProtectedRoute requiredRoles={['admin', 'adminReadonly']}>
-  <Route element={<AdminComponent />} />
-</RoleProtectedRoute>
+## 🌐 Internationalization (i18n)
 
-// Standard protected route wrapper
-<ProtectedRoute>
-  <Route element={<Component />} />
-</ProtectedRoute>
-```
+**Languages**: EN, ES, FR, DE, IT, JA, KO, ZH, ELV (9 languages)
 
-## 🌍 Internationalization (i18n)
+**Usage**: `useTranslation()` hook with `t('key')` function
 
-### Configuration
+**Translation Check**: `npm run check:translations` - check for missing keys and duplicates
 
-```typescript
-i18n.use(initReactI18next).init({
-  resources: { en, es, fr, de, it, ja, ko, zh, elv },
-  lng: 'en',
-  fallbackLng: 'en',
-  interpolation: { escapeValue: false },
-  detection: {
-    order: ['localStorage', 'navigator'],
-    caches: ['localStorage'],
-  },
-});
-```
-
-### Usage Pattern
-
-```typescript
-import { useTranslation } from 'react-i18next';
-
-function Component() {
-  const { t } = useTranslation();
-
-  return (
-    <div>
-      <h1>{t('models.title')}</h1>
-      <p>{t('models.description', { count: modelCount })}</p>
-    </div>
-  );
-}
-```
-
-### Translation Management Tools
-
-The project includes an enhanced translation checker script for managing translations across all 9 supported languages. See [Translation Management Guide](../docs/development/translation-management.md) for comprehensive documentation.
-
-#### Common Translation Commands
-
-```bash
-# Check for missing keys (basic check)
-npm run check:translations
-
-# Check for duplicate keys in source language
-npm run check:translations -- --check-duplicates
-
-# Fix duplicates and reorder keys with missing translation markers (no backup)
-npm run check:translations -- --fix-duplicates --reorder --missing-strategy=mark --no-backup
-
-# Target specific language
-npm run check:translations -- --language=fr --reorder --no-backup
-
-# Show all available options
-npm run check:translations -- --help
-```
-
-#### Important Notes for AI Assistants
-
-⚠️ **Always check for duplicate keys before making translation changes**:
-
-- Use `npm run check:translations -- --check-duplicates` to detect issues
-- Fix with `npm run check:translations -- --fix-duplicates` if found
-- Use `--no-backup` to skip backups (recommended when using git versioning)
-
-✅ **Duplicate Handling (Working Correctly)**:
-
-- **Object duplicates**: Properties are merged correctly from all occurrences
-- **Leaf duplicates**: Resolved based on strategy (first/last)
-- Both types are handled automatically by the script
-
-**Translation file locations**: `src/i18n/locales/{language}/translation.json`
-**Missing translation marker**: `🔴 MISSING TRANSLATION - PLEASE TRANSLATE: [English text]`
-**Strategy options**: `--strategy=first|last` - affects leaf key resolution
-**Backup options**: `--no-backup` - skip backup creation (use git versioning)
+For details, see [`docs/development/translation-management.md`](../docs/development/translation-management.md).
 
 ## 🎯 Component Patterns
 
-### Page Component Structure
+**Page Structure**: Standard hooks pattern with React Query, local state, and handlers
 
-```typescript
-export const ModelPage: React.FC = () => {
-  // Hooks
-  const { t } = useTranslation();
-  const { user } = useAuth();
-  const navigate = useNavigate();
+**Form Handling**: Validation, error state, submit handling
 
-  // React Query
-  const { data: models, isLoading, error } = useQuery(
-    ['models'],
-    modelService.getAll
-  );
+**Modal Patterns**: Used in AdminModelsPage for model configuration testing with async validation
 
-  // Local state
-  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+For implementation examples, see [`docs/development/pf6-guide/`](../docs/development/pf6-guide/).
 
-  // Handlers
-  const handleSubscribe = async (model: Model) => {
-    // Implementation
-  };
+## 📊 Chart Component Development
 
-  // Loading state
-  if (isLoading) return <Spinner />;
+**Shared Utilities**: Use `chartFormatters.ts`, `chartConstants.ts`, and `chartAccessibility.ts` for consistent formatting, styling, and ARIA support across all charts.
 
-  // Error state
-  if (error) return <ErrorAlert error={error} />;
+See [`docs/development/chart-components-guide.md`](../docs/development/chart-components-guide.md) for complete patterns and API reference.
 
-  // Main render
-  return (
-    <PageSection variant="light">
-      {/* Component content */}
-    </PageSection>
-  );
-};
-```
+## ⚠️ Component Development Checklist - MUST FOLLOW
 
-### Form Handling Pattern
+**All patterns and code examples**: See [`docs/development/pattern-reference.md`](../docs/development/pattern-reference.md) for authoritative implementation patterns.
 
-```typescript
-const FormComponent: React.FC = () => {
-  const [formData, setFormData] = useState(initialState);
-  const [errors, setErrors] = useState<ValidationErrors>({});
+### Before Creating ANY Component
 
-  const validate = (): boolean => {
-    const newErrors = validateForm(formData);
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+1. **Search for similar components first** - Use `find_symbol` and `search_for_pattern`
+2. **Follow PatternFly 6 requirements** - ALWAYS use `pf-v6-` prefix, semantic tokens, v6 imports
+3. **Use established patterns** - Check pattern-reference.md first
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!validate()) return;
+**Critical Rules**:
 
-    try {
-      await apiService.submit(formData);
-      showSuccessToast('Success!');
-    } catch (error) {
-      showErrorToast('Failed to submit');
-    }
-  };
+1. **Error Handling**: MUST use `useErrorHandler` hook - never console.error or alert()
+2. **Data Fetching**: MUST use React Query - never manual fetch/useState
+3. **Internationalization**: MUST use `t()` function - never hardcode text
+4. **Accessibility**: MUST include ARIA labels and live regions
+5. **Forms**: MUST validate with `FieldErrors` component and handleValidationError
+6. **Cascading Filters**: Follow ApiKeyFilterSelect pattern (filter options based on other selections)
 
-  return (
-    <Form onSubmit={handleSubmit}>
-      {/* Form fields */}
-    </Form>
-  );
-};
-```
+**Pattern Examples Available**:
+
+- Component structure with React Query and error handling
+- Form validation with server-side error display
+- Cascading filter pattern (dependent filters)
+- ConfigContext integration with React Query staleTime
+- Admin-only components with role checks
+- Accessibility patterns with ARIA and screen reader announcements
 
 ## 🚀 Development Commands
 
 ```bash
-# Development server with HMR
-npm run dev             # Starts on http://localhost:5173
+# ⚠️ FOR AI ASSISTANTS: These commands are for human developers
+# The dev server is already running - just read the logs!
+
+# Development server with HMR (ALREADY RUNNING)
+npm run dev:logged      # With logging to ../logs/frontend.log
+npm run dev             # Without logging
+
+# Check logs (USE THESE INSTEAD OF STARTING SERVERS)
+npm run logs            # View frontend logs
+npm run logs:clear      # Clear log file
 
 # Building
 npm run build          # Production build
@@ -412,178 +258,119 @@ npm run clean          # Remove build artifacts
 npm run check:translations  # Check all locale files for missing keys
 ```
 
+## 🧪 Testing
+
+**Framework**: Vitest with React Testing Library and centralized test utilities in `src/test/test-utils.tsx`.
+
+**Key Patterns**:
+
+- **Auth Testing**: Use `renderWithAuth()` helper with `mockUser`, `mockAdminUser`, `mockAdminReadonlyUser`
+- **ConfigContext**: Mock entire context (not just service) to avoid loading state
+- **PatternFly 6**: Modals/dropdowns work in JSDOM; modals use `role="dialog"`, dropdowns use `role="menuitem"`
+- **Debugging**: Use `screen.debug()` to inspect DOM, `npm test -- File.test.tsx` for specific files
+
+**Test Guides**:
+
+- [`docs/development/pf6-guide/testing-patterns/modals.md`](../docs/development/pf6-guide/testing-patterns/modals.md) - Modal testing patterns
+- [`docs/development/pf6-guide/testing-patterns/dropdowns-pagination.md`](../docs/development/pf6-guide/testing-patterns/dropdowns-pagination.md) - Dropdown/pagination patterns
+- [`docs/development/pf6-guide/testing-patterns/context-dependent-components.md`](../docs/development/pf6-guide/testing-patterns/context-dependent-components.md) - Context-dependent components
+- [`docs/development/pf6-guide/testing-patterns/switch-components.md`](../docs/development/pf6-guide/testing-patterns/switch-components.md) - Switch component patterns
+
+**Coverage**: 98.5% passing (975/990 tests, 15 skipped). See [`docs/archive/implementation-plans/test-improvement-plan.md`](../../docs/archive/implementation-plans/test-improvement-plan.md) for known limitations.
+
 ## 🎨 Styling Guidelines
 
-### CSS Organization
-
-```css
-/* Component-specific styles */
-.app-custom-component {
-  /* Use PatternFly design tokens */
-  padding: var(--pf-v6-global--spacer--md);
-  color: var(--pf-v6-global--Color--100);
-
-  /* Responsive utilities */
-  @media (min-width: 768px) {
-    padding: var(--pf-v6-global--spacer--lg);
-  }
-}
-
-/* Dark theme overrides */
-[data-theme='dark'] .app-custom-component {
-  background: var(--pf-v6-global--BackgroundColor--dark-200);
-}
-```
-
-## 📊 Performance Targets
-
-- Initial load: <3s
-- Time to interactive: <5s
-- Lighthouse score: >90
-- Bundle size: <500KB gzipped
-- React renders: Optimized with memo/useMemo/useCallback
+Use PatternFly 6 design tokens, avoid hardcoded values. Support dark theme with `[data-theme='dark']` overrides.
 
 ## 🔧 Key Implementation Notes
 
-### Authentication Flow
+**Authentication Flow**: OAuth provider → JWT token → localStorage → Auth context
 
-1. User clicks "Login" → Redirect to OAuth provider
-2. OAuth callback → Receive auth code
-3. Exchange code for JWT token
-4. Store token in localStorage
-5. Set auth context → App ready
+**Error Boundaries**: Global `<ErrorBoundary>` and component-level `<ComponentErrorBoundary>`
 
-### Error Boundary Strategy
+**Data Fetching**: React Query with pagination, prefetching, and optimistic updates
 
-```typescript
-// Global error boundary
-<ErrorBoundary fallback={<ErrorPage />}>
-  <App />
-</ErrorBoundary>
+**Accessibility**: ARIA live regions with `ScreenReaderAnnouncement` component
 
-// Component-level boundary
-<ComponentErrorBoundary>
-  <RiskyComponent />
-</ComponentErrorBoundary>
-```
-
-### Data Fetching Patterns
-
-- **List views**: Use React Query with pagination
-- **Detail views**: Prefetch on hover, cache for navigation
-- **Forms**: Optimistic updates with rollback on error
-- **Real-time**: Consider WebSocket for live updates
-
-### Accessibility Patterns
-
-```typescript
-// ARIA live region announcements
-import { ScreenReaderAnnouncement } from './components';
-
-const Component = () => {
-  const { announcement, announce } = useScreenReaderAnnouncement();
-
-  const handleAction = () => {
-    // Announce status changes
-    announce('Action completed successfully', 'polite');
-    // Use 'assertive' for errors or critical updates
-    announce('Error occurred', 'assertive');
-  };
-
-  return (
-    <>
-      <button onClick={handleAction}>Perform Action</button>
-      <ScreenReaderAnnouncement
-        message={announcement.message}
-        priority={announcement.priority}
-        announcementKey={announcement.key}
-      />
-    </>
-  );
-};
-```
+For detailed patterns, see [`docs/development/accessibility/`](../docs/development/accessibility/).
 
 ## 🔗 Environment Variables
 
-Key frontend configuration:
+Key configuration: `VITE_API_BASE_URL`, `VITE_AUTH_URL`, `VITE_ENABLE_MOCK_AUTH`, `VITE_DEFAULT_LOCALE`
 
-```bash
-# API Configuration
-VITE_API_BASE_URL=http://localhost:3000/api/v1
-VITE_AUTH_URL=http://localhost:3000/api/auth
-
-# Feature Flags
-VITE_ENABLE_MOCK_AUTH=false
-VITE_ENABLE_ANALYTICS=true
-
-# i18n
-VITE_DEFAULT_LOCALE=en
-VITE_SUPPORTED_LOCALES=en,es,fr,de,it,ja,ko,zh,elv
-```
+See [`docs/deployment/configuration.md`](../docs/deployment/configuration.md) for complete list.
 
 ## 🚨 Error Handling Architecture
 
-The frontend implements comprehensive error handling using the `useErrorHandler` hook with automatic notifications, retry logic, and error boundaries.
+**useErrorHandler Hook**: Specialized handlers (`handleError`, `handleValidationError`, `withErrorHandler`) with automatic notifications and retry logic.
 
-### useErrorHandler Hook
+**Key Features**: PatternFly 6 integration, error boundaries, React Query integration, i18n support.
 
-```typescript
-import { useErrorHandler } from '../hooks/useErrorHandler';
+For details, see [`docs/development/error-handling.md`](../docs/development/error-handling.md).
 
-function Component() {
-  const { handleError, handleValidationError, withErrorHandler } = useErrorHandler();
+## 🛠️ Troubleshooting for AI Assistants
 
-  // Basic error handling with notifications
-  const handleAction = async () => {
-    try {
-      await apiService.performAction();
-    } catch (error) {
-      handleError(error);
-    }
-  };
+### Common Frontend Issues and How to Check
 
-  // Specialized validation error handling
-  const handleFormSubmit = async (data: FormData) => {
-    try {
-      await apiService.submitForm(data);
-    } catch (error) {
-      handleValidationError(error);
-    }
-  };
+1. **"Page not loading/blank screen"**
 
-  // Higher-order error handler with retry
-  const handleClick = withErrorHandler(
-    async () => await apiService.performAction(),
-    { enableRetry: true, maxRetries: 3 }
-  );
-}
-```
+   ```bash
+   # Check for React errors
+   grep -i "error\|uncaught\|exception" ../logs/frontend.log | tail -n 20
+   # Also check browser console for client-side errors
+   ```
 
-### Key Features
+2. **"Component not updating"**
 
-- **Specialized handlers**: `handleValidationError`, `handleNetworkError`, `handleAuthError`
-- **Higher-order wrapper**: `withErrorHandler` for automatic error handling
-- **PatternFly 6 integration**: Consistent notifications with proper ARIA support
-- **Retry mechanisms**: Automatic retry for transient errors
-- **Error boundaries**: Global and component-level error isolation
-- **React Query integration**: Automatic error handling for data fetching
-- **Internationalization**: Error messages support all 9 languages
+   ```bash
+   # Check HMR status
+   grep -i "hmr\|update\|reload" ../logs/frontend.log | tail -n 20
+   ```
 
-### Error Boundaries
+3. **"API calls failing"**
 
-```typescript
-// Global error boundary
-<ErrorBoundary fallback={<ErrorPage />}>
-  <App />
-</ErrorBoundary>
+   ```bash
+   # Check for network errors
+   grep -i "401\|403\|404\|500\|axios\|network" ../logs/frontend.log | tail -n 20
+   ```
 
-// Component-level error boundary
-<ComponentErrorBoundary componentName="UserProfile">
-  <UserProfileComponent />
-</ComponentErrorBoundary>
-```
+4. **"TypeScript errors"**
 
-For comprehensive examples, patterns, and best practices, see [`docs/development/error-handling.md`](../docs/development/error-handling.md).
+   ```bash
+   # Check compilation errors
+   grep -i "typescript\|ts\|type error" ../logs/frontend.log | tail -n 30
+   ```
+
+5. **"Styling issues"**
+
+   ```bash
+   # Check for CSS/PatternFly warnings
+   grep -i "css\|style\|patternfly\|pf-" ../logs/frontend.log | tail -n 20
+   ```
+
+6. **"Build/Bundle errors"**
+
+   ```bash
+   # Check Vite bundling issues
+   grep -i "vite\|rollup\|module\|import" ../logs/frontend.log | tail -n 30
+   ```
+
+### Browser Console Integration
+
+Remember that frontend errors may also appear in the browser console. For runtime errors:
+
+1. Check `../logs/frontend.log` for build/compile issues
+2. Check browser DevTools Console for runtime JavaScript errors
+3. Check Network tab for failed API requests
+
+### Remember
+
+- **DO NOT** start new dev server processes
+- **DO NOT** run `npm run dev` (it's already running)
+- **DO** read the logs to understand compilation/build issues
+- **DO** check browser console for runtime errors
+- **DO** let HMR handle component updates automatically
+- **DO** tell the user if they need to manually restart for config changes
 
 ## 📚 Related Documentation
 

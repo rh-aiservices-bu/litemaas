@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, Outlet } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { AuthProvider } from '../contexts/AuthContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
+import { ConfigProvider } from '../contexts/ConfigContext';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import Layout from '../components/Layout';
 import HomePage from '../pages/HomePage';
@@ -12,17 +13,47 @@ import ChatbotPage from '../pages/ChatbotPage';
 import UsagePage from '../pages/UsagePage';
 import ToolsPage from '../pages/ToolsPage';
 import AdminModelsPage from '../pages/AdminModelsPage';
+import AdminUsagePage from '../pages/AdminUsagePage';
+import AdminSubscriptionsPage from '../pages/AdminSubscriptionsPage';
 import UsersPage from '../pages/UsersPage';
 import LoginPage from '../pages/LoginPage';
 import AuthCallbackPage from '../pages/AuthCallbackPage';
 
-// Create a client for React Query
+// Create a client for React Query with standardized error handling
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 2,
-      staleTime: 1000 * 60 * 5, // 5 minutes
-      cacheTime: 1000 * 60 * 10, // 10 minutes
+      // Retry configuration
+      retry: 2, // Retry failed queries twice
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff (max 30s)
+
+      // Caching configuration
+      staleTime: 1000 * 60 * 5, // 5 minutes - data is "fresh" for this duration
+      cacheTime: 1000 * 60 * 10, // 10 minutes - keep unused data in cache
+
+      // Refetching configuration
+      refetchOnWindowFocus: false, // Don't auto-refetch on window focus (prevents disruption)
+      refetchOnReconnect: true, // Refetch when network reconnects (good UX)
+
+      // Global error handler (fallback only - components should handle errors with useErrorHandler)
+      onError: (error) => {
+        // This only fires if component doesn't have its own onError handler
+        // Log to console in development for debugging
+        if (import.meta.env.DEV) {
+          console.error('Unhandled query error:', error);
+        }
+      },
+    },
+    mutations: {
+      // Mutations are more critical - don't retry automatically (may have side effects)
+      retry: 0,
+
+      // Global error handler for mutations (fallback only)
+      onError: (error) => {
+        if (import.meta.env.DEV) {
+          console.error('Unhandled mutation error:', error);
+        }
+      },
     },
   },
 });
@@ -30,11 +61,13 @@ const queryClient = new QueryClient({
 // Root component that provides all contexts
 const Root = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <NotificationProvider>
-        <Outlet />
-      </NotificationProvider>
-    </AuthProvider>
+    <ConfigProvider>
+      <AuthProvider>
+        <NotificationProvider>
+          <Outlet />
+        </NotificationProvider>
+      </AuthProvider>
+    </ConfigProvider>
   </QueryClientProvider>
 );
 
@@ -85,12 +118,20 @@ export const router = createBrowserRouter(
               element: <AdminModelsPage />,
             },
             {
+              path: 'admin/usage',
+              element: <AdminUsagePage />,
+            },
+            {
               path: 'admin/users',
               element: <UsersPage />,
             },
             {
               path: 'admin/tools',
               element: <ToolsPage />,
+            },
+            {
+              path: 'admin/subscriptions',
+              element: <AdminSubscriptionsPage />,
             },
           ],
         },

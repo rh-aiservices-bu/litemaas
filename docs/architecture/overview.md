@@ -4,6 +4,8 @@
 
 LiteMaaS follows a microservices architecture with clear separation between frontend and backend services, utilizing OAuth2 for authentication and deep integration with LiteLLM for model management, budget tracking, and usage analytics.
 
+> **📁 Project Structure**: For detailed directory structure and file organization, see [Project Structure](project-structure.md).
+
 ## High-Level Architecture
 
 ```mermaid

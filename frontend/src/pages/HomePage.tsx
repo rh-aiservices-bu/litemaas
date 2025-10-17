@@ -54,10 +54,10 @@ const HomePage: React.FC = () => {
                       alignItems={{ default: 'alignItemsCenter' }}
                     >
                       <FlexItem>
-                        <CatalogIcon style={{ fontSize: '2rem' }} />
+                        <CatalogIcon style={{ fontSize: 'var(--pf-t--global--font--size--2xl)' }} />
                       </FlexItem>
                       <FlexItem>
-                        <Title headingLevel="h3" size="md">
+                        <Title headingLevel="h2" size="md">
                           {t('nav.models')}
                         </Title>
                       </FlexItem>
@@ -82,10 +82,10 @@ const HomePage: React.FC = () => {
                       alignItems={{ default: 'alignItemsCenter' }}
                     >
                       <FlexItem>
-                        <CubesIcon style={{ fontSize: '2rem' }} />
+                        <CubesIcon style={{ fontSize: 'var(--pf-t--global--font--size--2xl)' }} />
                       </FlexItem>
                       <FlexItem>
-                        <Title headingLevel="h3" size="md">
+                        <Title headingLevel="h2" size="md">
                           {t('nav.subscriptions')}
                         </Title>
                       </FlexItem>
@@ -110,10 +110,10 @@ const HomePage: React.FC = () => {
                       alignItems={{ default: 'alignItemsCenter' }}
                     >
                       <FlexItem>
-                        <KeyIcon style={{ fontSize: '2rem' }} />
+                        <KeyIcon style={{ fontSize: 'var(--pf-t--global--font--size--2xl)' }} />
                       </FlexItem>
                       <FlexItem>
-                        <Title headingLevel="h3" size="md">
+                        <Title headingLevel="h2" size="md">
                           {t('nav.apiKeys')}
                         </Title>
                       </FlexItem>
@@ -147,10 +147,12 @@ const HomePage: React.FC = () => {
                       alignItems={{ default: 'alignItemsCenter' }}
                     >
                       <FlexItem>
-                        <CommentsIcon style={{ fontSize: '2rem' }} />
+                        <CommentsIcon
+                          style={{ fontSize: 'var(--pf-t--global--font--size--2xl)' }}
+                        />
                       </FlexItem>
                       <FlexItem>
-                        <Title headingLevel="h3" size="md">
+                        <Title headingLevel="h2" size="md">
                           {t('nav.chatbot')}
                         </Title>
                       </FlexItem>
@@ -175,10 +177,12 @@ const HomePage: React.FC = () => {
                       alignItems={{ default: 'alignItemsCenter' }}
                     >
                       <FlexItem>
-                        <ChartLineIcon style={{ fontSize: '2rem' }} />
+                        <ChartLineIcon
+                          style={{ fontSize: 'var(--pf-t--global--font--size--2xl)' }}
+                        />
                       </FlexItem>
                       <FlexItem>
-                        <Title headingLevel="h3" size="md">
+                        <Title headingLevel="h2" size="md">
                           {t('nav.usage')}
                         </Title>
                       </FlexItem>

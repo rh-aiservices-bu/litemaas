@@ -38,7 +38,7 @@ import {
   TrashIcon,
 } from '@patternfly/react-icons';
 import { ActionsColumn, Table, Tbody, Td, Th, Thead, Tr } from '@patternfly/react-table';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useAuth } from '../contexts/AuthContext';
@@ -76,8 +76,10 @@ const AdminModelsPage: React.FC = () => {
     supports_function_calling: false,
     supports_parallel_function_calling: false,
     supports_tool_choice: false,
+    restrictedAccess: false,
   });
   const [formErrors, setFormErrors] = useState<AdminModelFormErrors>({});
+  const [isRestrictedAccessWarningOpen, setIsRestrictedAccessWarningOpen] = useState(false);
 
   // Display state for cost inputs (per million tokens for better UX)
   const [displayInputCost, setDisplayInputCost] = useState<number>(0);
@@ -86,10 +88,20 @@ const AdminModelsPage: React.FC = () => {
   // Expandable rows state for API Base column
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
+  // Test configuration state
+  const [isTestingConfig, setIsTestingConfig] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    type: 'success' | 'danger' | 'warning' | null;
+    message: string;
+    availableModels?: string[];
+  }>({ type: null, message: '' });
+
   // Check permissions
   const canModifyModels = currentUser?.roles?.includes('admin') || false;
   const canReadModels =
-    currentUser?.roles?.includes('admin') || currentUser?.roles?.includes('adminReadonly') || false;
+    currentUser?.roles?.includes('admin') ||
+    currentUser?.roles?.includes('admin-readonly') ||
+    false;
 
   // Fetch models data
   const {
@@ -210,6 +222,11 @@ const AdminModelsPage: React.FC = () => {
     },
   );
 
+  // Clear test result when critical fields change
+  useEffect(() => {
+    setTestResult({ type: null, message: '' });
+  }, [formData.api_base, formData.api_key, formData.backend_model_name]);
+
   const resetForm = () => {
     setFormData({
       model_name: '',
@@ -226,6 +243,7 @@ const AdminModelsPage: React.FC = () => {
       supports_function_calling: false,
       supports_parallel_function_calling: false,
       supports_tool_choice: false,
+      restrictedAccess: false,
     });
     setDisplayInputCost(0);
     setDisplayOutputCost(0);
@@ -316,6 +334,7 @@ const AdminModelsPage: React.FC = () => {
       supports_function_calling: model.supportsFunctionCalling || false,
       supports_parallel_function_calling: model.supportsParallelFunctionCalling || false,
       supports_tool_choice: model.supportsToolChoice || false,
+      restrictedAccess: model.restrictedAccess || false,
     });
 
     // Set display values for cost inputs
@@ -362,6 +381,75 @@ const AdminModelsPage: React.FC = () => {
       newExpanded.add(modelId);
     }
     setExpandedRows(newExpanded);
+  };
+
+  const handleTestConfiguration = async () => {
+    // Validate required fields first
+    if (!formData.api_base || !formData.api_key || !formData.backend_model_name) {
+      setTestResult({
+        type: 'danger',
+        message:
+          t('models.admin.apiBaseUrlIsRequired') +
+          ', ' +
+          t('models.admin.apiKeyIsRequired') +
+          ', ' +
+          t('models.admin.backendModelNameIsRequired'),
+      });
+      return;
+    }
+
+    setIsTestingConfig(true);
+    setTestResult({ type: null, message: '' });
+
+    try {
+      const response = await fetch(`${formData.api_base}/models`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${formData.api_key}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        // Handle auth errors
+        if (response.status === 401 || response.status === 403) {
+          setTestResult({
+            type: 'danger',
+            message: t('models.admin.authenticationFailed'),
+          });
+        } else {
+          setTestResult({
+            type: 'danger',
+            message: t('models.admin.cannotContactEndpoint'),
+          });
+        }
+        return;
+      }
+
+      const data = await response.json();
+      const availableModels = data.data?.map((m: any) => m.id) || [];
+
+      if (availableModels.includes(formData.backend_model_name)) {
+        setTestResult({
+          type: 'success',
+          message: t('models.admin.connectionSuccessful'),
+        });
+      } else {
+        setTestResult({
+          type: 'warning',
+          message: t('models.admin.modelNotAvailable'),
+          availableModels: availableModels.slice(0, 5), // Show first 5
+        });
+      }
+    } catch (error) {
+      console.error('Test configuration error:', error);
+      setTestResult({
+        type: 'danger',
+        message: t('models.admin.cannotContactEndpoint'),
+      });
+    } finally {
+      setIsTestingConfig(false);
+    }
   };
 
   // Permission check
@@ -486,7 +574,12 @@ const AdminModelsPage: React.FC = () => {
                   <div>
                     {t('models.admin.table.inputCost')}
                     <br />
-                    <small style={{ fontSize: '0.875rem', fontWeight: 'normal' }}>
+                    <small
+                      style={{
+                        fontSize: 'var(--pf-t--global--font--size--sm)',
+                        fontWeight: 'normal',
+                      }}
+                    >
                       {t('models.admin.table.1mTokens')}
                     </small>
                   </div>
@@ -495,7 +588,12 @@ const AdminModelsPage: React.FC = () => {
                   <div>
                     {t('models.admin.table.outputCost')}
                     <br />
-                    <small style={{ fontSize: '0.875rem', fontWeight: 'normal' }}>
+                    <small
+                      style={{
+                        fontSize: 'var(--pf-t--global--font--size--sm)',
+                        fontWeight: 'normal',
+                      }}
+                    >
                       {t('models.admin.table.1mTokens')}
                     </small>
                   </div>
@@ -891,6 +989,20 @@ const AdminModelsPage: React.FC = () => {
                           setFormData({ ...formData, supports_tool_choice: checked })
                         }
                       />
+                      <Checkbox
+                        id="restricted-access"
+                        label={t('models.admin.restrictedAccessLabel')}
+                        description={t('models.admin.restrictedAccessHelp')}
+                        isChecked={formData.restrictedAccess}
+                        onChange={(_event, checked) => {
+                          // If enabling restricted access for existing model, show warning
+                          if (checked && !formData.restrictedAccess && selectedModel) {
+                            setIsRestrictedAccessWarningOpen(true);
+                          } else {
+                            setFormData({ ...formData, restrictedAccess: checked });
+                          }
+                        }}
+                      />
                     </Stack>
                   </FormGroup>
                 </GridItem>
@@ -898,32 +1010,61 @@ const AdminModelsPage: React.FC = () => {
             </Form>
           </ModalBody>
           <ModalFooter>
-            <div
-              style={{
-                marginTop: '1.5rem',
-                display: 'flex',
-                gap: '1rem',
-                justifyContent: 'flex-end',
-              }}
-            >
-              <Button
-                variant="primary"
-                onClick={handleSubmit}
-                isLoading={createModelMutation.isLoading || updateModelMutation.isLoading}
-              >
-                {isCreateModalOpen ? t('common.create') : t('common.update')}
-              </Button>
-              <Button
-                variant="link"
-                onClick={() => {
-                  setIsCreateModalOpen(false);
-                  setIsEditModalOpen(false);
-                  resetForm();
-                }}
-              >
-                {t('common.cancel')}
-              </Button>
-            </div>
+            <Flex direction={{ default: 'column' }}>
+              <FlexItem>
+                {/* Test result alert */}
+                {testResult.type && (
+                  <Alert
+                    variant={testResult.type}
+                    title={testResult.message}
+                    isInline
+                    className="pf-v6-u-mb-md"
+                  >
+                    {testResult.availableModels && testResult.availableModels.length > 0 && (
+                      <div>
+                        <p>{t('models.admin.availableModels')}</p>
+                        <ul>
+                          {testResult.availableModels.map((model) => (
+                            <li key={model}>{model}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </Alert>
+                )}
+              </FlexItem>
+              <FlexItem>
+                <Flex columnGap={{ default: 'columnGapSm' }}>
+                  <Button
+                    variant="secondary"
+                    onClick={handleTestConfiguration}
+                    isLoading={isTestingConfig}
+                    isDisabled={
+                      !formData.api_base || !formData.api_key || !formData.backend_model_name
+                    }
+                  >
+                    {t('models.admin.testConfiguration')}
+                  </Button>
+                  <Button
+                    variant="primary"
+                    onClick={handleSubmit}
+                    isLoading={createModelMutation.isLoading || updateModelMutation.isLoading}
+                  >
+                    {isCreateModalOpen ? t('common.create') : t('common.update')}
+                  </Button>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      setIsCreateModalOpen(false);
+                      setIsEditModalOpen(false);
+                      resetForm();
+                    }}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+                </Flex>
+              </FlexItem>
+            </Flex>
           </ModalFooter>
         </Modal>
 
@@ -977,6 +1118,44 @@ const AdminModelsPage: React.FC = () => {
                 {t('common.cancel')}
               </Button>
             </div>
+          </ModalFooter>
+        </Modal>
+
+        {/* Restricted Access Warning Modal */}
+        <Modal
+          variant={ModalVariant.small}
+          title={t('models.admin.restrictedAccessWarning.title')}
+          isOpen={isRestrictedAccessWarningOpen}
+          onClose={() => setIsRestrictedAccessWarningOpen(false)}
+        >
+          <ModalHeader />
+          <ModalBody>
+            <Alert
+              variant="warning"
+              title={t('models.admin.restrictedAccessWarning.title')}
+              isInline
+            >
+              <p>{t('models.admin.restrictedAccessWarning.message')}</p>
+            </Alert>
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              variant="primary"
+              onClick={() => {
+                setFormData({ ...formData, restrictedAccess: true });
+                setIsRestrictedAccessWarningOpen(false);
+              }}
+            >
+              {t('common.yes')}
+            </Button>
+            <Button
+              variant="link"
+              onClick={() => {
+                setIsRestrictedAccessWarningOpen(false);
+              }}
+            >
+              {t('common.no')}
+            </Button>
           </ModalFooter>
         </Modal>
       </PageSection>

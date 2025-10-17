@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { randomBytes } from 'crypto';
 import { LiteLLMService } from './litellm.service';
 import { BaseService } from './base.service.js';
+import { NotificationService } from './notification.service.js';
 import { LiteLLMSyncUtils } from '../utils/litellm-sync.utils.js';
 import {
   SubscriptionStatus,
@@ -17,8 +18,15 @@ import {
   SubscriptionQuota,
   SubscriptionStats,
   SubscriptionValidation,
+  SubscriptionApprovalFilters,
+  SubscriptionApprovalStats,
+  SubscriptionWithDetails,
 } from '../types/subscription.types.js';
 import { LiteLLMKeyGenerationRequest } from '../types/api-key.types.js';
+import { PaginatedResponse } from '../types/common.types.js';
+
+// System user ID for automated status changes
+const SYSTEM_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 export interface CreateSubscriptionRequest {
   modelId: string;
@@ -91,6 +99,7 @@ export interface SubscriptionDetails {
 
 export class SubscriptionService extends BaseService {
   private liteLLMService: LiteLLMService;
+  private notificationService: NotificationService;
 
   // Mock data for development/fallback
   private readonly MOCK_SUBSCRIPTIONS: EnhancedSubscription[] = [
@@ -365,6 +374,7 @@ export class SubscriptionService extends BaseService {
   constructor(fastify: FastifyInstance, liteLLMService?: LiteLLMService) {
     super(fastify);
     this.liteLLMService = liteLLMService || new LiteLLMService(fastify);
+    this.notificationService = new NotificationService(fastify);
   }
 
   async createSubscription(
@@ -397,6 +407,14 @@ export class SubscriptionService extends BaseService {
         );
       }
 
+      // Check if model is restricted (requires admin approval)
+      const modelDetails = await this.fastify.dbUtils.queryOne<{ restricted_access: boolean }>(
+        'SELECT restricted_access FROM models WHERE id = $1',
+        [modelId],
+      );
+
+      const initialStatus = modelDetails?.restricted_access ? 'pending' : 'active';
+
       // Check for existing subscription with status
       const existingSubscription = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
         `SELECT * FROM subscriptions 
@@ -408,7 +426,7 @@ export class SubscriptionService extends BaseService {
         // If subscription is inactive, reactivate it with new parameters
         if (existingSubscription.status === 'inactive') {
           const updatedSubscription = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
-            `UPDATE subscriptions 
+            `UPDATE subscriptions
              SET status = $1, quota_requests = $2, quota_tokens = $3,
                  expires_at = $4, reset_at = $5, max_budget = $6,
                  budget_duration = $7, tpm_limit = $8, rpm_limit = $9,
@@ -416,7 +434,7 @@ export class SubscriptionService extends BaseService {
              WHERE id = $11
              RETURNING *`,
             [
-              'active',
+              initialStatus, // Use initialStatus instead of hardcoded 'active'
               quotaRequests,
               quotaTokens,
               expiresAt || null,
@@ -439,12 +457,14 @@ export class SubscriptionService extends BaseService {
           }
 
           // Create audit log for reactivation
+          const auditAction =
+            initialStatus === 'pending' ? 'SUBSCRIPTION_REAPPLIED' : 'SUBSCRIPTION_REACTIVATED';
           await this.fastify.dbUtils.query(
             `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
              VALUES ($1, $2, $3, $4, $5)`,
             [
               userId,
-              'SUBSCRIPTION_REACTIVATED',
+              auditAction,
               'SUBSCRIPTION',
               updatedSubscription.id,
               JSON.stringify({
@@ -452,17 +472,30 @@ export class SubscriptionService extends BaseService {
                 quotaRequests,
                 quotaTokens,
                 previousStatus: 'inactive',
+                newStatus: initialStatus,
+                restrictedModel: modelDetails?.restricted_access || false,
               }),
             ],
           );
+
+          // Notify admins if subscription is pending (restricted model)
+          if (initialStatus === 'pending') {
+            await this.notificationService.notifyAdminsNewPendingRequest(
+              updatedSubscription.id,
+              userId,
+              modelId,
+            );
+          }
 
           this.fastify.log.info(
             {
               userId,
               subscriptionId: updatedSubscription.id,
               modelId,
+              status: initialStatus,
+              restrictedModel: modelDetails?.restricted_access || false,
             },
-            'Subscription reactivated from inactive status',
+            `Subscription reactivated from inactive status with ${initialStatus} status`,
           );
 
           return this.mapToEnhancedSubscription(updatedSubscription);
@@ -480,7 +513,7 @@ export class SubscriptionService extends BaseService {
       // Create new subscription if none exists
       const subscription = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
         `INSERT INTO subscriptions (
-          user_id, model_id, status, quota_requests, quota_tokens, 
+          user_id, model_id, status, quota_requests, quota_tokens,
           expires_at, reset_at, max_budget, budget_duration,
           tpm_limit, rpm_limit, team_id
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
@@ -488,7 +521,7 @@ export class SubscriptionService extends BaseService {
         [
           userId,
           modelId,
-          'active',
+          initialStatus,
           quotaRequests,
           quotaTokens,
           expiresAt || null,
@@ -518,15 +551,32 @@ export class SubscriptionService extends BaseService {
           'SUBSCRIPTION_CREATE',
           'SUBSCRIPTION',
           subscription.id,
-          JSON.stringify({ modelId: subscription.model_id, quotaRequests, quotaTokens }),
+          JSON.stringify({
+            modelId: subscription.model_id,
+            quotaRequests,
+            quotaTokens,
+            initialStatus,
+            restrictedModel: modelDetails?.restricted_access || false,
+          }),
         ],
       );
+
+      // Notify admins if subscription is pending (restricted model)
+      if (initialStatus === 'pending') {
+        await this.notificationService.notifyAdminsNewPendingRequest(
+          subscription.id,
+          userId,
+          modelId,
+        );
+      }
 
       this.fastify.log.info(
         {
           userId,
           subscriptionId: subscription.id,
           modelId,
+          status: initialStatus,
+          restrictedModel: modelDetails?.restricted_access || false,
         },
         'Subscription created',
       );
@@ -976,6 +1026,172 @@ export class SubscriptionService extends BaseService {
     } catch (error) {
       await client.query('ROLLBACK');
       this.fastify.log.error(error, 'Failed to cancel subscription');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Delete a subscription permanently (admin only)
+   * Removes the subscription from the database and cleans up associated API keys
+   * @param subscriptionId - ID of the subscription to delete
+   * @param adminUserId - User ID of the admin performing the deletion
+   * @param reason - Optional reason for deletion (stored in audit log)
+   * @returns Success confirmation
+   */
+  async deleteSubscription(
+    subscriptionId: string,
+    adminUserId: string,
+    reason?: string,
+  ): Promise<{ success: boolean }> {
+    const client = await this.fastify.pg.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // 1. Get subscription details including model_id and user info
+      const subscription = await client.query(
+        `SELECT s.*, m.name as model_name, m.provider, u.username, u.email
+         FROM subscriptions s
+         LEFT JOIN models m ON s.model_id = m.id
+         LEFT JOIN users u ON s.user_id = u.id
+         WHERE s.id = $1`,
+        [subscriptionId],
+      );
+
+      if (!subscription.rows[0]) {
+        throw this.createNotFoundError('Subscription', subscriptionId, 'Subscription not found');
+      }
+
+      const sub = subscription.rows[0];
+      const modelId = sub.model_id;
+      const userId = sub.user_id;
+
+      // 2. Reuse API key cleanup logic from cancelSubscription
+      // Get all user's API keys that have this model
+      const affectedKeys = await client.query(
+        `SELECT DISTINCT ak.id, ak.lite_llm_key_value, ak.name,
+                ARRAY_AGG(akm.model_id) as all_models
+         FROM api_keys ak
+         JOIN api_key_models akm ON ak.id = akm.api_key_id
+         WHERE ak.user_id = $1 AND ak.is_active = true
+         GROUP BY ak.id, ak.lite_llm_key_value, ak.name
+         HAVING $2 = ANY(ARRAY_AGG(akm.model_id))`,
+        [userId, modelId],
+      );
+
+      // 3. Process each affected API key
+      for (const key of affectedKeys.rows) {
+        // Remove the model from this key
+        await client.query(
+          `DELETE FROM api_key_models 
+           WHERE api_key_id = $1 AND model_id = $2`,
+          [key.id, modelId],
+        );
+
+        // Check remaining models for this key
+        const remainingModels = await client.query(
+          `SELECT model_id FROM api_key_models WHERE api_key_id = $1`,
+          [key.id],
+        );
+
+        if (remainingModels.rows.length === 0) {
+          // No models left - deactivate the key
+          await client.query(
+            `UPDATE api_keys 
+             SET is_active = false, updated_at = CURRENT_TIMESTAMP
+             WHERE id = $1`,
+            [key.id],
+          );
+
+          // Delete from LiteLLM (can't exist without models)
+          if (key.lite_llm_key_value && this.liteLLMService) {
+            try {
+              await this.liteLLMService.deleteKey(key.lite_llm_key_value);
+            } catch (error) {
+              this.fastify.log.warn(
+                { keyId: key.id, error },
+                'Failed to delete orphaned key from LiteLLM during subscription deletion',
+              );
+            }
+          }
+
+          this.fastify.log.info(
+            { keyId: key.id, keyName: key.name },
+            'API key deactivated due to no remaining models after subscription deletion',
+          );
+        } else {
+          // Update LiteLLM key to remove the deleted model
+          const newModelIds = remainingModels.rows.map((r) => r.model_id);
+
+          if (key.lite_llm_key_value && this.liteLLMService) {
+            try {
+              await this.liteLLMService.updateKey(key.lite_llm_key_value, {
+                models: newModelIds,
+              });
+            } catch (error) {
+              this.fastify.log.warn(
+                { keyId: key.id, error },
+                'Failed to update LiteLLM key after subscription deletion',
+              );
+            }
+          }
+
+          this.fastify.log.info(
+            { keyId: key.id, removedModel: modelId, remainingModels: newModelIds },
+            'API key updated to remove deleted model',
+          );
+        }
+      }
+
+      // 4. Hard DELETE the subscription from the database
+      await client.query(`DELETE FROM subscriptions WHERE id = $1`, [subscriptionId]);
+
+      // 5. Create audit log entry
+      await client.query(
+        `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          adminUserId,
+          'SUBSCRIPTION_DELETED_BY_ADMIN',
+          'SUBSCRIPTION',
+          subscriptionId,
+          JSON.stringify({
+            subscriptionId,
+            targetUserId: userId,
+            targetUsername: sub.username,
+            targetEmail: sub.email,
+            modelId,
+            modelName: sub.model_name,
+            provider: sub.provider,
+            previousStatus: sub.status,
+            affectedApiKeys: affectedKeys.rows.length,
+            keysDeactivated: affectedKeys.rows.filter(
+              (k) => !k.all_models.some((m: any) => m !== modelId),
+            ).length,
+            reason: reason || null,
+          }),
+        ],
+      );
+
+      await client.query('COMMIT');
+
+      this.fastify.log.info(
+        {
+          subscriptionId,
+          adminUserId,
+          targetUserId: userId,
+          modelId,
+          affectedApiKeys: affectedKeys.rows.length,
+        },
+        'Subscription permanently deleted by admin',
+      );
+
+      return { success: true };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      this.fastify.log.error(error, 'Failed to delete subscription');
       throw error;
     } finally {
       client.release();
@@ -1589,70 +1805,23 @@ export class SubscriptionService extends BaseService {
         };
       }
 
-      // Real analytics implementation would query usage logs
-      const usageQuery = `
-        SELECT 
-          COUNT(*) as request_count,
-          SUM(token_count) as token_count,
-          SUM(cost) as total_spend,
-          AVG(cost) as average_request_cost,
-          model_id
-        FROM usage_logs 
-        WHERE subscription_id = $1 
-          AND created_at >= $2 
-          AND created_at <= $3
-        GROUP BY model_id
-      `;
-
-      const usageData = await this.fastify.dbUtils.queryMany(usageQuery, [
+      // TODO: Real analytics implementation should fetch from LiteLLM API
+      // For now, returning empty usage data since local logging is not implemented
+      return {
         subscriptionId,
-        period.start,
-        period.end,
-      ]);
-
-      const totalUsage = usageData.reduce(
-        (acc, row) => ({
-          requestCount: (acc.requestCount as number) + parseInt(String(row.request_count)),
-          tokenCount: (acc.tokenCount as number) + parseInt(String(row.token_count || '0')),
-          totalSpend: (acc.totalSpend as number) + parseFloat(String(row.total_spend || '0')),
-          averageRequestCost: acc.averageRequestCost,
-          averageTokenCost: acc.averageTokenCost,
-        }),
-        {
+        period,
+        usage: {
           requestCount: 0,
           tokenCount: 0,
           totalSpend: 0,
           averageRequestCost: 0,
           averageTokenCost: 0,
         },
-      );
-
-      totalUsage.averageRequestCost =
-        (totalUsage.requestCount as number) > 0
-          ? (totalUsage.totalSpend as number) / (totalUsage.requestCount as number)
-          : 0;
-      totalUsage.averageTokenCost =
-        (totalUsage.tokenCount as number) > 0
-          ? (totalUsage.totalSpend as number) / (totalUsage.tokenCount as number)
-          : 0;
-
-      return {
-        subscriptionId,
-        period,
-        usage: totalUsage as {
-          requestCount: number;
-          tokenCount: number;
-          totalSpend: number;
-          averageRequestCost: number;
-          averageTokenCost: number;
+        models: [],
+        rateLimitEvents: {
+          tpmViolations: 0,
+          rpmViolations: 0,
         },
-        models: usageData.map((row) => ({
-          modelId: String(row.model_id),
-          modelName: String(row.model_id), // Would be joined from models table in real implementation
-          requestCount: parseInt(String(row.request_count)),
-          tokenCount: parseInt(String(row.token_count || '0')),
-          spend: parseFloat(String(row.total_spend || '0')),
-        })),
       };
     } catch (error) {
       this.fastify.log.error(error, 'Failed to get subscription usage analytics');
@@ -1949,5 +2118,710 @@ export class SubscriptionService extends BaseService {
     const now = new Date();
     const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1);
     return nextReset;
+  }
+
+  /**
+   * Record status change in audit history table
+   * Private helper method for subscription approval workflow
+   */
+  private async recordStatusChange(
+    subscriptionId: string,
+    oldStatus: string,
+    newStatus: string,
+    changedBy: string,
+    reason?: string,
+  ): Promise<void> {
+    await this.fastify.dbUtils.query(
+      `INSERT INTO subscription_status_history
+       (subscription_id, old_status, new_status, reason, changed_by, changed_at)
+       VALUES ($1, $2, $3, $4, $5, CURRENT_TIMESTAMP)`,
+      [subscriptionId, oldStatus, newStatus, reason || null, changedBy],
+    );
+  }
+
+  /**
+   * Approve subscriptions (bulk operation)
+   * Sets status to 'active' and records admin action
+   * Includes optimistic locking - checks updated_at before modifying
+   */
+  async approveSubscriptions(
+    subscriptionIds: string[],
+    adminUserId: string,
+    reason?: string,
+  ): Promise<{
+    successful: number;
+    failed: number;
+    errors: Array<{ subscription: string; error: string }>;
+  }> {
+    const result = {
+      successful: 0,
+      failed: 0,
+      errors: [] as Array<{ subscription: string; error: string }>,
+    };
+
+    for (const subscriptionId of subscriptionIds) {
+      try {
+        // Get current subscription state
+        const subscription = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
+          `SELECT * FROM subscriptions WHERE id = $1`,
+          [subscriptionId],
+        );
+
+        if (!subscription) {
+          result.errors.push({ subscription: subscriptionId, error: 'Subscription not found' });
+          result.failed++;
+          continue;
+        }
+
+        const oldStatus = subscription.status;
+
+        // Update subscription to active
+        const updated = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
+          `UPDATE subscriptions
+           SET status = 'active',
+               status_reason = $1,
+               status_changed_at = CURRENT_TIMESTAMP,
+               status_changed_by = $2,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $3
+           RETURNING *`,
+          [reason || null, adminUserId, subscriptionId],
+        );
+
+        if (!updated) {
+          result.errors.push({
+            subscription: subscriptionId,
+            error: 'Failed to update subscription',
+          });
+          result.failed++;
+          continue;
+        }
+
+        // Record audit trail
+        await this.recordStatusChange(subscriptionId, oldStatus, 'active', adminUserId, reason);
+
+        // Create audit log
+        await this.fastify.dbUtils.query(
+          `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            adminUserId,
+            'SUBSCRIPTION_APPROVED',
+            'SUBSCRIPTION',
+            subscriptionId,
+            JSON.stringify({ oldStatus, reason, userId: subscription.user_id }),
+          ],
+        );
+
+        // Notify user
+        await this.notificationService.notifyUserSubscriptionApproved(
+          subscriptionId,
+          subscription.user_id,
+          subscription.model_id,
+        );
+
+        result.successful++;
+
+        this.fastify.log.info({ subscriptionId, adminUserId, oldStatus }, 'Subscription approved');
+      } catch (error) {
+        this.fastify.log.error({ error, subscriptionId }, 'Failed to approve subscription');
+        result.errors.push({
+          subscription: subscriptionId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        result.failed++;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Deny subscriptions (bulk operation)
+   * Sets status to 'denied', removes models from API keys, records reason
+   * Includes optimistic locking - checks updated_at before modifying
+   */
+  async denySubscriptions(
+    subscriptionIds: string[],
+    adminUserId: string,
+    reason: string,
+  ): Promise<{
+    successful: number;
+    failed: number;
+    errors: Array<{ subscription: string; error: string }>;
+  }> {
+    const result = {
+      successful: 0,
+      failed: 0,
+      errors: [] as Array<{ subscription: string; error: string }>,
+    };
+
+    // Import ApiKeyService for removing models from keys
+    const { ApiKeyService } = await import('./api-key.service.js');
+    const apiKeyService = new ApiKeyService(this.fastify, this.liteLLMService);
+
+    for (const subscriptionId of subscriptionIds) {
+      try {
+        // Get current subscription state
+        const subscription = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
+          `SELECT * FROM subscriptions WHERE id = $1`,
+          [subscriptionId],
+        );
+
+        if (!subscription) {
+          result.errors.push({ subscription: subscriptionId, error: 'Subscription not found' });
+          result.failed++;
+          continue;
+        }
+
+        const oldStatus = subscription.status;
+
+        // Remove model from user's API keys FIRST (security priority)
+        await apiKeyService.removeModelFromUserApiKeys(subscription.user_id, subscription.model_id);
+
+        // Update subscription to denied
+        const updated = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
+          `UPDATE subscriptions
+           SET status = 'denied',
+               status_reason = $1,
+               status_changed_at = CURRENT_TIMESTAMP,
+               status_changed_by = $2,
+               updated_at = CURRENT_TIMESTAMP
+           WHERE id = $3
+           RETURNING *`,
+          [reason, adminUserId, subscriptionId],
+        );
+
+        if (!updated) {
+          result.errors.push({
+            subscription: subscriptionId,
+            error: 'Failed to update subscription',
+          });
+          result.failed++;
+          continue;
+        }
+
+        // Record audit trail
+        await this.recordStatusChange(subscriptionId, oldStatus, 'denied', adminUserId, reason);
+
+        // Create audit log
+        await this.fastify.dbUtils.query(
+          `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            adminUserId,
+            'SUBSCRIPTION_DENIED',
+            'SUBSCRIPTION',
+            subscriptionId,
+            JSON.stringify({ oldStatus, reason, userId: subscription.user_id }),
+          ],
+        );
+
+        // Notify user
+        await this.notificationService.notifyUserSubscriptionDenied(
+          subscriptionId,
+          subscription.user_id,
+          subscription.model_id,
+          reason,
+        );
+
+        result.successful++;
+
+        this.fastify.log.info({ subscriptionId, adminUserId, oldStatus }, 'Subscription denied');
+      } catch (error) {
+        this.fastify.log.error({ error, subscriptionId }, 'Failed to deny subscription');
+        result.errors.push({
+          subscription: subscriptionId,
+          error: error instanceof Error ? error.message : 'Unknown error',
+        });
+        result.failed++;
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * User re-requests a denied subscription
+   * Idempotent behavior:
+   * - denied → pending (main use case)
+   * - pending → no-op, return success
+   * - active → error
+   * - non-existent → error
+   */
+  async requestReview(subscriptionId: string, userId: string): Promise<EnhancedSubscription> {
+    // Verify ownership and get current state
+    const subscription = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
+      `SELECT * FROM subscriptions WHERE id = $1 AND user_id = $2`,
+      [subscriptionId, userId],
+    );
+
+    if (!subscription) {
+      throw this.createNotFoundError(
+        'Subscription',
+        subscriptionId,
+        'Subscription not found or access denied',
+      );
+    }
+
+    // Handle different states
+    if (subscription.status === 'pending') {
+      // Already pending, idempotent no-op
+      this.fastify.log.info({ subscriptionId, userId }, 'Review already requested (idempotent)');
+      return this.mapToEnhancedSubscription(subscription);
+    }
+
+    if (subscription.status === 'active') {
+      throw this.createValidationError(
+        'Cannot request review for active subscription',
+        'status',
+        subscription.status,
+        'This subscription is already active',
+      );
+    }
+
+    if (subscription.status !== 'denied') {
+      throw this.createValidationError(
+        `Cannot request review for ${subscription.status} subscription`,
+        'status',
+        subscription.status,
+        'Only denied subscriptions can be re-reviewed',
+      );
+    }
+
+    // Update denied → pending
+    const oldStatus = subscription.status;
+    const updated = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
+      `UPDATE subscriptions
+       SET status = 'pending',
+           status_reason = NULL,
+           status_changed_at = CURRENT_TIMESTAMP,
+           status_changed_by = $1,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2 AND user_id = $3
+       RETURNING *`,
+      [userId, subscriptionId, userId],
+    );
+
+    if (!updated) {
+      throw this.createNotFoundError(
+        'Subscription',
+        subscriptionId,
+        'Failed to update subscription status',
+      );
+    }
+
+    // Record audit trail
+    await this.recordStatusChange(subscriptionId, oldStatus, 'pending', userId);
+
+    // Create audit log
+    await this.fastify.dbUtils.query(
+      `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        userId,
+        'SUBSCRIPTION_REVIEW_REQUESTED',
+        'SUBSCRIPTION',
+        subscriptionId,
+        JSON.stringify({ oldStatus, modelId: subscription.model_id }),
+      ],
+    );
+
+    // Notify admins
+    await this.notificationService.notifyAdminsReviewRequested(
+      subscriptionId,
+      userId,
+      subscription.model_id,
+    );
+
+    this.fastify.log.info({ subscriptionId, userId, oldStatus }, 'Review requested');
+
+    return this.mapToEnhancedSubscription(updated);
+  }
+
+  /**
+   * Revert a subscription status decision
+   * Admin-only operation to change status directly
+   * Validates state transitions - only allows meaningful changes:
+   * - active → denied (revoke approval)
+   * - denied → active (override denial)
+   * - denied → pending (back to review queue)
+   * - active → pending (re-review)
+   * Blocks same-state transitions and invalid combinations
+   * Includes optimistic locking via updated_at check
+   */
+  async revertSubscription(
+    subscriptionId: string,
+    newStatus: 'active' | 'denied' | 'pending',
+    adminUserId: string,
+    reason?: string,
+  ): Promise<SubscriptionWithDetails> {
+    // Get current subscription state
+    const subscription = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
+      `SELECT * FROM subscriptions WHERE id = $1`,
+      [subscriptionId],
+    );
+
+    if (!subscription) {
+      throw this.createNotFoundError('Subscription', subscriptionId, 'Subscription not found');
+    }
+
+    const oldStatus = subscription.status;
+
+    // Validate state transition
+    if (oldStatus === newStatus) {
+      throw this.createValidationError(
+        'Cannot revert to same status',
+        'newStatus',
+        newStatus,
+        `Subscription is already ${newStatus}`,
+      );
+    }
+
+    // Only allow meaningful transitions for approval workflow
+    const validTransitions = ['active', 'denied', 'pending'];
+    if (!validTransitions.includes(oldStatus)) {
+      throw this.createValidationError(
+        `Cannot revert from ${oldStatus} status`,
+        'status',
+        oldStatus,
+        'Only active, denied, or pending subscriptions can be reverted',
+      );
+    }
+
+    // Update subscription
+    const updated = await this.fastify.dbUtils.queryOne<DatabaseSubscription>(
+      `UPDATE subscriptions
+       SET status = $1,
+           status_reason = $2,
+           status_changed_at = CURRENT_TIMESTAMP,
+           status_changed_by = $3,
+           updated_at = CURRENT_TIMESTAMP
+       WHERE id = $4
+       RETURNING *`,
+      [newStatus, reason || null, adminUserId, subscriptionId],
+    );
+
+    if (!updated) {
+      throw this.createNotFoundError(
+        'Subscription',
+        subscriptionId,
+        'Failed to update subscription',
+      );
+    }
+
+    // Record audit trail
+    await this.recordStatusChange(subscriptionId, oldStatus, newStatus, adminUserId, reason);
+
+    // Create audit log
+    await this.fastify.dbUtils.query(
+      `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        adminUserId,
+        'SUBSCRIPTION_STATUS_REVERTED',
+        'SUBSCRIPTION',
+        subscriptionId,
+        JSON.stringify({
+          oldStatus,
+          newStatus,
+          reason,
+          userId: subscription.user_id,
+        }),
+      ],
+    );
+
+    this.fastify.log.info(
+      { subscriptionId, adminUserId, oldStatus, newStatus },
+      'Subscription status reverted',
+    );
+
+    // Fetch subscription with user and model details for response
+    const enriched = await this.fastify.dbUtils.queryOne<any>(
+      `SELECT
+         s.*,
+         u.id as user_id, u.username, u.email,
+         m.id as model_id, m.name as model_name, m.provider, m.restricted_access
+       FROM subscriptions s
+       JOIN users u ON s.user_id = u.id
+       JOIN models m ON s.model_id = m.id
+       WHERE s.id = $1`,
+      [subscriptionId],
+    );
+
+    if (!enriched) {
+      throw this.createNotFoundError(
+        'Subscription',
+        subscriptionId,
+        'Failed to fetch updated subscription',
+      );
+    }
+
+    // Map to SubscriptionWithDetails format
+    return {
+      id: enriched.id,
+      userId: enriched.user_id,
+      modelId: enriched.model_id,
+      status: enriched.status,
+      statusReason: enriched.status_reason,
+      statusChangedAt: enriched.status_changed_at,
+      statusChangedBy: enriched.status_changed_by,
+      quotaRequests: enriched.quota_requests,
+      quotaTokens: enriched.quota_tokens,
+      usedRequests: enriched.used_requests,
+      usedTokens: enriched.used_tokens,
+      user: {
+        id: enriched.user_id,
+        username: enriched.username,
+        email: enriched.email,
+      },
+      model: {
+        id: enriched.model_id,
+        name: enriched.model_name,
+        provider: enriched.provider,
+        restrictedAccess: enriched.restricted_access,
+      },
+      createdAt: enriched.created_at,
+      updatedAt: enriched.updated_at,
+    };
+  }
+
+  /**
+   * Get subscription approval requests for admin panel
+   * Supports filtering by status, model, user, date range
+   */
+  async getSubscriptionApprovalRequests(
+    filters: SubscriptionApprovalFilters,
+    pagination: { page: number; limit: number },
+  ): Promise<PaginatedResponse<SubscriptionWithDetails>> {
+    const { statuses, modelIds, userIds, dateFrom, dateTo } = filters;
+    const { page = 1, limit = 20 } = pagination;
+    const offset = (page - 1) * limit;
+
+    // Build dynamic WHERE clauses
+    const whereClauses: string[] = [];
+    const params: any[] = [];
+    let paramIndex = 1;
+
+    if (statuses && statuses.length > 0) {
+      whereClauses.push(`s.status = ANY($${paramIndex})`);
+      params.push(statuses);
+      paramIndex++;
+    }
+
+    if (modelIds && modelIds.length > 0) {
+      whereClauses.push(`s.model_id = ANY($${paramIndex})`);
+      params.push(modelIds);
+      paramIndex++;
+    }
+
+    if (userIds && userIds.length > 0) {
+      whereClauses.push(`s.user_id = ANY($${paramIndex})`);
+      params.push(userIds);
+      paramIndex++;
+    }
+
+    if (dateFrom) {
+      whereClauses.push(`s.status_changed_at >= $${paramIndex}`);
+      params.push(dateFrom);
+      paramIndex++;
+    }
+
+    if (dateTo) {
+      whereClauses.push(`s.status_changed_at <= $${paramIndex}`);
+      params.push(dateTo);
+      paramIndex++;
+    }
+
+    const whereClause = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
+
+    // Get total count
+    const countResult = await this.fastify.dbUtils.queryOne<CountResult>(
+      `SELECT COUNT(*) as count
+       FROM subscriptions s
+       ${whereClause}`,
+      params,
+    );
+
+    const total = parseInt(String(countResult?.count || '0'));
+
+    // Get paginated data with JOINs
+    const subscriptions = await this.fastify.dbUtils.queryMany<any>(
+      `SELECT
+         s.*,
+         u.id as user_id, u.username, u.email,
+         m.id as model_id, m.name as model_name, m.provider, m.restricted_access
+       FROM subscriptions s
+       JOIN users u ON s.user_id = u.id
+       JOIN models m ON s.model_id = m.id
+       ${whereClause}
+       ORDER BY s.status_changed_at DESC
+       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`,
+      [...params, limit, offset],
+    );
+
+    // Map to SubscriptionWithDetails
+    const items: SubscriptionWithDetails[] = subscriptions.map((row) => ({
+      id: row.id,
+      userId: row.user_id,
+      modelId: row.model_id,
+      status: row.status,
+      quotaRequests: row.quota_requests,
+      quotaTokens: row.quota_tokens,
+      usedRequests: row.used_requests,
+      usedTokens: row.used_tokens,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      statusReason: row.status_reason,
+      statusChangedAt: row.status_changed_at,
+      statusChangedBy: row.status_changed_by,
+      user: {
+        id: row.user_id,
+        username: row.username,
+        email: row.email,
+      },
+      model: {
+        id: row.model_id,
+        name: row.model_name,
+        provider: row.provider,
+        restrictedAccess: row.restricted_access,
+      },
+    }));
+
+    return {
+      data: items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  /**
+   * Get approval statistics for admin dashboard
+   */
+  async getSubscriptionApprovalStats(): Promise<SubscriptionApprovalStats> {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const stats = await this.fastify.dbUtils.queryOne<any>(
+      `SELECT
+         COUNT(*) FILTER (WHERE status = 'pending') as pending_count,
+         COUNT(*) FILTER (WHERE status = 'active' AND DATE(status_changed_at) = CURRENT_DATE) as approved_today,
+         COUNT(*) FILTER (WHERE status = 'denied' AND DATE(status_changed_at) = CURRENT_DATE) as denied_today,
+         COUNT(*) FILTER (WHERE status IN ('pending', 'active', 'denied')) as total_requests
+       FROM subscriptions`,
+      [],
+    );
+
+    return {
+      pendingCount: parseInt(String(stats?.pending_count || '0')),
+      approvedToday: parseInt(String(stats?.approved_today || '0')),
+      deniedToday: parseInt(String(stats?.denied_today || '0')),
+      totalRequests: parseInt(String(stats?.total_requests || '0')),
+    };
+  }
+
+  /**
+   * Handle cascade when model restriction changes
+   * Called by ModelService when restrictedAccess flag changes
+   */
+  async handleModelRestrictionChange(modelId: string, isNowRestricted: boolean): Promise<void> {
+    if (!isNowRestricted) {
+      // Model is no longer restricted - auto-approve all pending subscriptions
+      const pendingSubscriptions = await this.fastify.dbUtils.queryMany<{ id: string }>(
+        `SELECT id FROM subscriptions
+         WHERE model_id = $1 AND status = 'pending'`,
+        [modelId],
+      );
+
+      if (pendingSubscriptions.length > 0) {
+        const subscriptionIds = pendingSubscriptions.map((s) => s.id);
+
+        // Auto-approve all pending subscriptions
+        await this.fastify.dbUtils.query(
+          `UPDATE subscriptions
+           SET status = 'active',
+               status_changed_at = CURRENT_TIMESTAMP,
+               status_changed_by = $1,
+               status_reason = 'Auto-approved: model restriction removed'
+           WHERE id = ANY($2)`,
+          [SYSTEM_USER_ID, subscriptionIds],
+        );
+
+        // Record audit log entries
+        for (const sub of pendingSubscriptions) {
+          await this.recordStatusChange(
+            sub.id,
+            'pending',
+            'active',
+            SYSTEM_USER_ID,
+            'Auto-approved: model restriction removed',
+          );
+        }
+
+        this.fastify.log.info(
+          { modelId, count: pendingSubscriptions.length },
+          'Auto-approved pending subscriptions due to model restriction removal',
+        );
+      }
+      return;
+    }
+
+    // Model becoming restricted - transition active to pending
+    const activeSubscriptions = await this.fastify.dbUtils.queryMany<{
+      id: string;
+      user_id: string;
+    }>(
+      `SELECT id, user_id FROM subscriptions
+       WHERE model_id = $1 AND status = 'active'`,
+      [modelId],
+    );
+
+    if (activeSubscriptions.length === 0) {
+      return;
+    }
+
+    // Remove model from all affected users' API keys FIRST (security priority)
+    const { ApiKeyService } = await import('./api-key.service.js');
+    const apiKeyService = new ApiKeyService(this.fastify, this.liteLLMService);
+
+    for (const sub of activeSubscriptions) {
+      await apiKeyService.removeModelFromUserApiKeys(sub.user_id, modelId);
+    }
+
+    // Transition all to pending
+    const subscriptionIds = activeSubscriptions.map((s) => s.id);
+    await this.fastify.dbUtils.query(
+      `UPDATE subscriptions
+       SET status = 'pending',
+           status_changed_at = CURRENT_TIMESTAMP,
+           status_changed_by = $1,
+           status_reason = 'Model marked as restricted access - requires re-approval'
+       WHERE id = ANY($2)`,
+      [SYSTEM_USER_ID, subscriptionIds],
+    );
+
+    // Record audit log entries
+    for (const sub of activeSubscriptions) {
+      await this.recordStatusChange(
+        sub.id,
+        'active',
+        'pending',
+        SYSTEM_USER_ID,
+        'Model marked as restricted access - requires re-approval',
+      );
+    }
+
+    // Notify affected users
+    const affectedUserIds = activeSubscriptions.map((s) => s.user_id);
+    await this.notificationService.notifyUsersModelRestricted(modelId, affectedUserIds);
+
+    this.fastify.log.info(
+      { modelId, count: activeSubscriptions.length },
+      'Transitioned active subscriptions to pending due to model restriction',
+    );
   }
 }

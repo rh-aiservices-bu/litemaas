@@ -8,15 +8,26 @@ import {
   AuthenticatedRequest,
 } from '../types';
 import { UsageStatsService } from '../services/usage-stats.service';
+import { AdminUsageStatsService } from '../services/admin-usage-stats.service';
+import { DailyUsageCacheManager } from '../services/daily-usage-cache-manager';
+import { LiteLLMService } from '../services/litellm.service';
 import {
   validateUsageMetricsQuery,
   validateUsageSummaryQuery,
   validateUsageExportQuery,
 } from '../validators/usage.validator';
+import { AnalyticsResponseSchema, AdminUsageErrorResponseSchema } from '../schemas/admin-usage';
+import { Type } from '@sinclair/typebox';
+import type { AdminUsageFilters } from '../types/admin-usage.types';
 
 const usageRoutes: FastifyPluginAsync = async (fastify) => {
   // Initialize usage stats service
   const usageStatsService = new UsageStatsService(fastify);
+
+  // Initialize admin services for user analytics endpoint
+  const liteLLMService = new LiteLLMService(fastify);
+  const cacheManager = new DailyUsageCacheManager(fastify);
+  const adminUsageStatsService = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
 
   // Get usage metrics (for frontend)
   fastify.get<{
@@ -147,6 +158,184 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
     },
   });
 
+  /**
+   * POST /api/v1/usage/analytics
+   * Get comprehensive usage analytics for the current user
+   *
+   * This endpoint provides the same analytics depth as the admin endpoint,
+   * but automatically scoped to the authenticated user's data.
+   */
+  const UserAnalyticsFiltersSchema = Type.Object({
+    startDate: Type.String({
+      format: 'date',
+      description: 'Start date for filtering (ISO 8601 format: YYYY-MM-DD)',
+    }),
+    endDate: Type.String({
+      format: 'date',
+      description: 'End date for filtering (ISO 8601 format: YYYY-MM-DD)',
+    }),
+    modelIds: Type.Optional(
+      Type.Array(Type.String(), {
+        description: 'Optional array of model IDs to filter by',
+      }),
+    ),
+    providerIds: Type.Optional(
+      Type.Array(Type.String(), {
+        description: 'Optional array of provider IDs to filter by',
+      }),
+    ),
+    apiKeyIds: Type.Optional(
+      Type.Array(Type.String(), {
+        description: 'Optional array of API key aliases (litellm_key_alias) to filter by',
+      }),
+    ),
+  });
+
+  fastify.post<{
+    Body: {
+      startDate: string;
+      endDate: string;
+      modelIds?: string[];
+      providerIds?: string[];
+      apiKeyIds?: string[];
+    };
+  }>('/analytics', {
+    schema: {
+      tags: ['Usage'],
+      summary: 'Get comprehensive usage analytics',
+      description:
+        'Get comprehensive usage analytics for the authenticated user. Returns the same detailed metrics as admin endpoint, scoped to current user.',
+      security: [{ bearerAuth: [] }],
+      body: UserAnalyticsFiltersSchema,
+      response: {
+        200: AnalyticsResponseSchema,
+        400: AdminUsageErrorResponseSchema,
+        401: AdminUsageErrorResponseSchema,
+        403: AdminUsageErrorResponseSchema,
+        500: AdminUsageErrorResponseSchema,
+      },
+    },
+    preHandler: [fastify.authenticate],
+    handler: async (request, reply) => {
+      const authRequest = request as AuthenticatedRequest;
+      const userId = authRequest.user?.userId;
+      const queryFilters = request.body;
+
+      if (!userId) {
+        return reply.code(401).send({
+          error: 'User ID not found in authentication context',
+          code: 'UNAUTHORIZED',
+        });
+      }
+
+      let filters: AdminUsageFilters | undefined;
+
+      try {
+        // Use date strings directly (no timezone conversion)
+        const startDate = queryFilters.startDate;
+        const endDate = queryFilters.endDate;
+
+        // Simple string comparison is valid for YYYY-MM-DD format
+        if (startDate > endDate) {
+          return reply.code(400).send({
+            error: 'Start date must be before or equal to end date',
+            code: 'INVALID_DATE_RANGE',
+          });
+        }
+
+        // Validate that provided API key IDs belong to the user
+        if (queryFilters.apiKeyIds && queryFilters.apiKeyIds.length > 0) {
+          // Query user's API keys from database
+          const userApiKeysResult = await fastify.dbUtils.query<{ litellm_key_alias: string }>(
+            `SELECT litellm_key_alias FROM api_keys WHERE user_id = $1 AND is_active = true`,
+            [userId],
+          );
+
+          const userApiKeyAliases = new Set(
+            userApiKeysResult.rows.map((row) => row.litellm_key_alias),
+          );
+
+          // Check if all provided API key IDs belong to the user
+          const invalidApiKeys = queryFilters.apiKeyIds.filter(
+            (keyId) => !userApiKeyAliases.has(keyId),
+          );
+
+          if (invalidApiKeys.length > 0) {
+            fastify.log.warn(
+              {
+                userId,
+                requestedApiKeys: queryFilters.apiKeyIds,
+                invalidApiKeys,
+              },
+              'User attempted to query API keys they do not own',
+            );
+
+            return reply.code(403).send({
+              error: 'Access denied: Some API keys do not belong to you',
+              code: 'FORBIDDEN_API_KEYS',
+              details: { invalidApiKeys },
+            });
+          }
+        }
+
+        // Create filters object with automatic user scoping
+        filters = {
+          startDate,
+          endDate,
+          userIds: [userId], // Automatically scope to current user
+          modelIds: queryFilters.modelIds,
+          providerIds: queryFilters.providerIds,
+          apiKeyIds: queryFilters.apiKeyIds,
+        };
+
+        fastify.log.info(
+          {
+            userId,
+            username: authRequest.user?.username,
+            filters: queryFilters,
+            action: 'get_user_analytics',
+          },
+          'User requested usage analytics',
+        );
+
+        // Use the same analytics service as admin endpoint
+        const result = await adminUsageStatsService.getAnalytics(filters);
+
+        // Serialize dates for response
+        const serializeDates = (obj: any): any => {
+          if (obj === null || obj === undefined) return obj;
+          if (obj instanceof Date) return obj.toISOString();
+          if (Array.isArray(obj)) return obj.map(serializeDates);
+          if (typeof obj === 'object') {
+            const serialized: any = {};
+            for (const [key, value] of Object.entries(obj)) {
+              serialized[key] = serializeDates(value);
+            }
+            return serialized;
+          }
+          return obj;
+        };
+
+        const serializedResult = serializeDates(result);
+        return reply.code(200).send(serializedResult);
+      } catch (error) {
+        fastify.log.error(
+          {
+            error,
+            userId,
+            filters: filters || queryFilters,
+          },
+          'Failed to get user usage analytics',
+        );
+
+        return reply.code(500).send({
+          error: 'Internal server error while retrieving usage analytics',
+          code: 'USER_ANALYTICS_FAILED',
+        });
+      }
+    },
+  });
+
   // Get usage summary
   fastify.get<{
     Querystring: UsageSummaryParams;
@@ -183,8 +372,8 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
               properties: {
                 requests: { type: 'number' },
                 tokens: { type: 'number' },
-                inputTokens: { type: 'number' },
-                outputTokens: { type: 'number' },
+                promptTokens: { type: 'number' },
+                completionTokens: { type: 'number' },
                 averageLatency: { type: 'number' },
                 errorRate: { type: 'number' },
                 successRate: { type: 'number' },
@@ -200,8 +389,8 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
                   provider: { type: 'string' },
                   totalRequests: { type: 'number' },
                   totalTokens: { type: 'number' },
-                  totalInputTokens: { type: 'number' },
-                  totalOutputTokens: { type: 'number' },
+                  totalPromptTokens: { type: 'number' },
+                  totalCompletionTokens: { type: 'number' },
                   averageLatency: { type: 'number' },
                   errorRate: { type: 'number' },
                   successRate: { type: 'number' },
@@ -237,8 +426,8 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
             requests: stats.totalMetrics.totalRequests,
             tokens: stats.totalMetrics.totalTokens,
             cost: stats.totalMetrics.totalCost || 0,
-            inputTokens: stats.totalMetrics.totalInputTokens,
-            outputTokens: stats.totalMetrics.totalOutputTokens,
+            promptTokens: stats.totalMetrics.totalPromptTokens,
+            completionTokens: stats.totalMetrics.totalCompletionTokens,
             averageLatency: stats.totalMetrics.averageLatency,
             errorRate: stats.totalMetrics.errorRate,
             successRate: stats.totalMetrics.successRate,
@@ -293,8 +482,8 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
                   endTime: { type: 'string', format: 'date-time' },
                   totalRequests: { type: 'number' },
                   totalTokens: { type: 'number' },
-                  totalInputTokens: { type: 'number' },
-                  totalOutputTokens: { type: 'number' },
+                  totalPromptTokens: { type: 'number' },
+                  totalCompletionTokens: { type: 'number' },
                   averageLatency: { type: 'number' },
                   errorRate: { type: 'number' },
                   successRate: { type: 'number' },
@@ -333,8 +522,8 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
             endTime: period.endTime,
             totalRequests: period.totalRequests,
             totalTokens: period.totalTokens,
-            totalInputTokens: period.totalInputTokens,
-            totalOutputTokens: period.totalOutputTokens,
+            totalPromptTokens: period.totalPromptTokens,
+            totalCompletionTokens: period.totalCompletionTokens,
             averageLatency: period.averageLatency,
             errorRate: period.errorRate,
             successRate: period.successRate,
@@ -384,27 +573,45 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, _reply) => {
-      const user = (request as AuthenticatedRequest).user;
-      const { timeRange = 'month' } = request.query as { timeRange?: 'day' | 'week' | 'month' };
-
-      try {
-        const [summary, topStats] = await Promise.all([
-          usageStatsService.getUserUsageSummary(user.userId, timeRange),
-          usageStatsService.getTopStats({ userId: user.userId, timeRange }),
-        ]);
-
-        return {
-          summary,
-          topStats: {
-            topModels: topStats.topModels,
-            recentActivity: topStats.recentActivity,
+    handler: async (_request, _reply) => {
+      // TODO: This endpoint should fetch from LiteLLM API
+      // For now, returning empty data since local logging is not implemented
+      return {
+        summary: {
+          currentPeriod: {
+            totalRequests: 0,
+            totalTokens: 0,
+            totalPromptTokens: 0,
+            totalCompletionTokens: 0,
+            totalCost: 0,
+            averageLatency: 0,
+            errorRate: 0,
+            successRate: 0,
           },
-        };
-      } catch (error: unknown) {
-        fastify.log.error(error, 'Failed to get usage dashboard');
-        throw fastify.createError(500, 'Failed to get usage dashboard');
-      }
+          previousPeriod: {
+            totalRequests: 0,
+            totalTokens: 0,
+            totalPromptTokens: 0,
+            totalCompletionTokens: 0,
+            totalCost: 0,
+            averageLatency: 0,
+            errorRate: 0,
+            successRate: 0,
+          },
+          percentChange: {
+            requests: 0,
+            tokens: 0,
+          },
+          quotaUtilization: {
+            requests: 0,
+            tokens: 0,
+          },
+        },
+        topStats: {
+          topModels: [],
+          recentActivity: [],
+        },
+      };
     },
   });
 
@@ -455,28 +662,13 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, _reply) => {
-      const user = (request as AuthenticatedRequest).user;
-      const { timeRange = 'month', limit = 10 } = request.query as {
-        timeRange?: 'day' | 'week' | 'month';
-        limit?: number;
+    handler: async (_request, _reply) => {
+      // TODO: This endpoint should fetch from LiteLLM API
+      // For now, returning empty data since local logging is not implemented
+      return {
+        topModels: [],
+        recentActivity: [],
       };
-
-      try {
-        const topStats = await usageStatsService.getTopStats({
-          userId: user.userId,
-          timeRange,
-          limit,
-        });
-
-        return {
-          topModels: topStats.topModels,
-          recentActivity: topStats.recentActivity,
-        };
-      } catch (error: unknown) {
-        fastify.log.error(error, 'Failed to get top statistics');
-        throw fastify.createError(500, 'Failed to get top statistics');
-      }
     },
   });
 
@@ -539,14 +731,14 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         if (format === 'csv') {
           // Generate CSV
           const csvHeader =
-            'Date,Requests,Total Tokens,Input Tokens,Output Tokens,Avg Latency (ms),Error Rate (%),Success Rate (%)';
+            'Date,Requests,Total Tokens,Prompt Tokens,Completion Tokens,Avg Latency (ms),Error Rate (%),Success Rate (%)';
           const csvRows = (stats.timeSeriesData || []).map((row) =>
             [
               row.startTime.toISOString().split('T')[0],
               row.totalRequests,
               row.totalTokens,
-              row.totalInputTokens,
-              row.totalOutputTokens,
+              row.totalPromptTokens,
+              row.totalCompletionTokens,
               row.averageLatency,
               row.errorRate,
               row.successRate,
@@ -574,74 +766,6 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       } catch (error: unknown) {
         fastify.log.error(error, 'Failed to export usage data');
         throw fastify.createError(500, 'Failed to export usage data');
-      }
-    },
-  });
-
-  // Real-time usage tracking endpoint (for API key usage)
-  fastify.post('/track', {
-    schema: {
-      tags: ['Usage'],
-      description: 'Track real-time usage (internal)',
-      security: [{ bearerAuth: [] }],
-      body: {
-        type: 'object',
-        properties: {
-          subscriptionId: { type: 'string' },
-          modelId: { type: 'string' },
-          requestTokens: { type: 'number', minimum: 0 },
-          responseTokens: { type: 'number', minimum: 0 },
-          latencyMs: { type: 'number', minimum: 0 },
-          statusCode: { type: 'number' },
-        },
-        required: ['subscriptionId', 'modelId', 'requestTokens', 'responseTokens', 'statusCode'],
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            message: { type: 'string' },
-            tracked: { type: 'boolean' },
-          },
-        },
-      },
-    },
-    preHandler: [fastify.authenticate, fastify.requirePermission('usage:write')],
-    handler: async (request, _reply) => {
-      const {
-        subscriptionId,
-        modelId,
-        requestTokens,
-        responseTokens,
-        latencyMs = 0,
-        statusCode,
-      } = request.body as {
-        subscriptionId: string;
-        modelId: string;
-        requestTokens: number;
-        responseTokens: number;
-        latencyMs?: number;
-        statusCode: number;
-      };
-
-      try {
-        await usageStatsService.recordUsage({
-          subscriptionId,
-          modelId,
-          requestTokens,
-          responseTokens,
-          latencyMs,
-          statusCode,
-          timestamp: new Date(),
-        });
-
-        return {
-          message: 'Usage tracked successfully',
-          tracked: true,
-        };
-      } catch (error: unknown) {
-        fastify.log.error(error, 'Failed to track usage');
-        throw fastify.createError(500, 'Failed to track usage');
       }
     },
   });
@@ -685,21 +809,22 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       };
 
       try {
-        const [stats, topStats] = await Promise.all([
-          usageStatsService.getUsageStats({
-            startDate: startDate ? new Date(startDate) : undefined,
-            endDate: endDate ? new Date(endDate) : undefined,
-            granularity,
-            aggregateBy,
-          }),
-          usageStatsService.getTopStats({ timeRange: 'month' }),
-        ]);
+        const stats = await usageStatsService.getUsageStats({
+          startDate: startDate ? new Date(startDate) : undefined,
+          endDate: endDate ? new Date(endDate) : undefined,
+          granularity,
+          aggregateBy,
+        });
 
         return {
           totalMetrics: stats.totalMetrics,
           timeSeriesData: stats.timeSeriesData,
           modelBreakdown: stats.modelBreakdown,
-          topStats,
+          topStats: {
+            topModels: [],
+            topUsers: [],
+            recentActivity: [],
+          },
         };
       } catch (error: unknown) {
         fastify.log.error(error, 'Failed to get global usage statistics');
@@ -736,7 +861,8 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
       const { retentionDays = 90 } = request.body as { retentionDays?: number };
 
       try {
-        const deletedCount = await usageStatsService.cleanupOldData(retentionDays);
+        // TODO: No local usage logs to clean up since we use LiteLLM API
+        const deletedCount = 0;
 
         // Create audit log
         await fastify.dbUtils.query(

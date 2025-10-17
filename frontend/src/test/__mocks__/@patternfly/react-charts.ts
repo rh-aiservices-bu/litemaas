@@ -132,3 +132,21 @@ export const ChartThemeVariant = {
   light: 'light',
   dark: 'dark',
 };
+
+// Mock createContainer for interactive tooltips (Victory export used by PatternFly)
+export const createContainer = (...types: string[]) => {
+  return ({ children, ...props }: any) =>
+    React.createElement('div', {
+      'data-testid': `victory-container-${types.join('-')}`,
+      'data-container-types': types.join(','),
+      'data-props': JSON.stringify(props),
+      children,
+    });
+};
+
+// Mock getCustomTheme for custom chart themes (Victory export used by PatternFly)
+export const getCustomTheme = (colorTheme: any, variantTheme?: any) => ({
+  colorTheme,
+  variantTheme: variantTheme || {},
+  name: 'custom-theme',
+});

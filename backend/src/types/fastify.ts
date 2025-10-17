@@ -26,6 +26,7 @@ declare module 'fastify' {
       OAUTH_CLIENT_SECRET: string;
       OAUTH_ISSUER: string;
       OAUTH_CALLBACK_URL: string;
+      K8S_API_SKIP_TLS_VERIFY?: string;
 
       // LiteLLM
       LITELLM_API_URL: string;
@@ -33,6 +34,9 @@ declare module 'fastify' {
       LITELLM_TIMEOUT: string;
       LITELLM_RETRIES: string;
       LITELLM_RETRY_DELAY: string;
+
+      // Usage Cache
+      USAGE_CACHE_TTL_MINUTES: string;
 
       // Rate Limiting
       RATE_LIMIT_MAX: string;

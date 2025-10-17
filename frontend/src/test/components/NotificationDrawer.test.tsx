@@ -4,6 +4,17 @@ import { NotificationDrawer, NotificationBadgeButton } from '../../components/No
 import { NotificationContext, Notification } from '../../contexts/NotificationContext';
 import { vi } from 'vitest';
 
+// Mock react-i18next
+vi.mock('react-i18next', async () => {
+  const actual = await vi.importActual('react-i18next');
+  return {
+    ...actual,
+    useTranslation: () => ({
+      t: (key: string) => key,
+    }),
+  };
+});
+
 // Mock the ScreenReaderAnnouncement component
 vi.mock('../../components/ScreenReaderAnnouncement', () => ({
   ScreenReaderAnnouncement: ({ message, priority, announcementKey }: any) => (
@@ -61,8 +72,8 @@ describe('NotificationDrawer', () => {
 
       renderWithNotificationContext(<NotificationDrawer isOpen onClose={() => {}} />, context);
 
-      expect(screen.getByText('No notifications found')).toBeInTheDocument();
-      expect(screen.getByText('There are currently no notifications.')).toBeInTheDocument();
+      expect(screen.getByText(/ui.notifications.noNotificationsFound/)).toBeInTheDocument();
+      expect(screen.getByText(/ui.notifications.noNotificationsDescription/)).toBeInTheDocument();
     });
 
     // TODO: Fix notification description rendering test
@@ -299,7 +310,7 @@ describe('NotificationDrawer', () => {
 
       renderWithNotificationContext(<NotificationDrawer isOpen onClose={() => {}} />, context);
 
-      expect(screen.getByLabelText('Notification drawer actions')).toBeInTheDocument();
+      expect(screen.getByLabelText(/ui.notifications.drawerActions/)).toBeInTheDocument();
     });
 
     // TODO: Fix act() warning in dropdown toggle test
@@ -561,8 +572,11 @@ describe('NotificationDrawer', () => {
 
       renderWithNotificationContext(<NotificationDrawer />, context);
 
-      expect(screen.getByLabelText('Notification drawer actions')).toBeInTheDocument();
-      expect(screen.getByLabelText('Notification actions')).toBeInTheDocument();
+      expect(screen.getByLabelText(/ui.notifications.drawerActions/)).toBeInTheDocument();
+      // The dropdown button only has "Notification drawer actions" label, no separate "Notification actions"
+      // Check that the dropdown button exists
+      const dropdownButton = screen.getByLabelText(/ui.notifications.drawerActions/);
+      expect(dropdownButton).toHaveAttribute('aria-expanded', 'false');
     });
 
     it('uses proper heading hierarchy', () => {
@@ -582,7 +596,7 @@ describe('NotificationDrawer', () => {
       );
 
       const heading = screen.getByRole('heading', { level: 3 });
-      expect(heading).toHaveTextContent('No notifications found');
+      expect(heading).toHaveTextContent(/ui.notifications.noNotificationsFound/);
     });
 
     it('provides screen reader text for notification items', () => {
@@ -608,14 +622,14 @@ describe('NotificationBadgeButton', () => {
     it('renders with zero count', () => {
       render(<NotificationBadgeButton onClick={mockOnClick} unreadCount={0} />);
 
-      const button = screen.getByLabelText('Notifications');
+      const button = screen.getByLabelText(/ui.notifications.notificationsLabel/);
       expect(button).toBeInTheDocument();
     });
 
     it('renders with unread count', () => {
       render(<NotificationBadgeButton onClick={mockOnClick} unreadCount={5} />);
 
-      const button = screen.getByLabelText('Notifications');
+      const button = screen.getByLabelText(/ui.notifications.notificationsLabel/);
       expect(button).toBeInTheDocument();
       // NotificationBadge should display the count
     });
@@ -623,7 +637,7 @@ describe('NotificationBadgeButton', () => {
     it('calls onClick when clicked', () => {
       render(<NotificationBadgeButton onClick={mockOnClick} unreadCount={3} />);
 
-      const button = screen.getByLabelText('Notifications');
+      const button = screen.getByLabelText(/ui.notifications.notificationsLabel/);
       fireEvent.click(button);
 
       expect(mockOnClick).toHaveBeenCalled();
@@ -632,7 +646,7 @@ describe('NotificationBadgeButton', () => {
     it('handles large unread counts', () => {
       render(<NotificationBadgeButton onClick={mockOnClick} unreadCount={999} />);
 
-      const button = screen.getByLabelText('Notifications');
+      const button = screen.getByLabelText(/ui.notifications.notificationsLabel/);
       expect(button).toBeInTheDocument();
     });
   });
@@ -641,13 +655,13 @@ describe('NotificationBadgeButton', () => {
     it('provides proper aria-label', () => {
       render(<NotificationBadgeButton onClick={mockOnClick} unreadCount={2} />);
 
-      expect(screen.getByLabelText('Notifications')).toBeInTheDocument();
+      expect(screen.getByLabelText(/ui.notifications.notificationsLabel/)).toBeInTheDocument();
     });
 
     it('is keyboard accessible', () => {
       render(<NotificationBadgeButton onClick={mockOnClick} unreadCount={1} />);
 
-      const button = screen.getByLabelText('Notifications');
+      const button = screen.getByLabelText(/ui.notifications.notificationsLabel/);
 
       // Should be focusable
       button.focus();

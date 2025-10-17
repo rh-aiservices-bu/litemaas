@@ -453,65 +453,6 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
     },
   });
 
-  // Get API key usage statistics
-  fastify.get<{
-    Params: { id: string };
-    Reply: {
-      totalRequests: number;
-      requestsThisMonth: number;
-      lastUsedAt?: string;
-      createdAt: string;
-    };
-  }>('/:id/usage', {
-    schema: {
-      tags: ['API Keys'],
-      description: 'Get API key usage statistics',
-      security: [{ bearerAuth: [] }],
-      params: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-        },
-        required: ['id'],
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            totalRequests: { type: 'number' },
-            requestsThisMonth: { type: 'number' },
-            lastUsedAt: { type: 'string', format: 'date-time' },
-            createdAt: { type: 'string', format: 'date-time' },
-          },
-        },
-      },
-    },
-    preHandler: fastify.authenticateWithDevBypass,
-    handler: async (request, _reply) => {
-      const user = (request as AuthenticatedRequest).user;
-      const { id } = request.params;
-
-      try {
-        const usage = await apiKeyService.getApiKeyUsage(id, user.userId);
-
-        return {
-          totalRequests: usage.totalRequests,
-          requestsThisMonth: usage.requestsThisMonth,
-          lastUsedAt: usage.lastUsedAt?.toISOString(),
-          createdAt: usage.createdAt.toISOString(),
-        };
-      } catch (error) {
-        fastify.log.error(error, 'Failed to get API key usage');
-
-        if ((error as ErrorWithStatusCode).statusCode) {
-          throw error;
-        }
-
-        throw fastify.createError(500, 'Failed to get API key usage');
-      }
-    },
-  });
-
   // Get API key statistics
   fastify.get('/stats', {
     schema: {

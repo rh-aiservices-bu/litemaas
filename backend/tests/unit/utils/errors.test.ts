@@ -600,7 +600,7 @@ describe('ApplicationError', () => {
         expect(json.details?.field).toBe('email');
         expect(json.details?.value).toBe('invalid-email@');
         expect(json.details?.suggestion).toBe('Please provide a valid email');
-        expect(json.requestId).toBe('');
+        expect(json.requestId).toBeUndefined(); // Will be added by error handler middleware
         expect(json.correlationId).toBeUndefined();
         expect(json.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/);
         expect(json.retry).toBeUndefined();

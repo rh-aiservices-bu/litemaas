@@ -115,7 +115,7 @@ LiteMaaS uses OpenShift's built-in OAuth for authentication. Follow these steps 
 
 4. Click **Create**
 
-**Alternatively** save the above as a file `litemass-oauth.yaml` and apply with `oc apply -f litemass-oauth.yaml` 
+**Alternatively** save the above as a file `litemass-oauth.yaml` and apply with `oc apply -f litemass-oauth.yaml`
 
 ### Step 4: Retrieve OAuth Information
 
