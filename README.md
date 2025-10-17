@@ -5,9 +5,9 @@
 
 # LiteMaaS - Models as a Service Platform
 
-**LiteMaaS** is a proof-of-concept application for managing LLM subscriptions, API keys, and usage tracking. It seamlessly integrates with LiteLLM to provide a unified interface for accessing multiple LLMs with comprehensive budget management and team collaboration features.
+**LiteMaaS** is a proof-of-concept application for managing LLM subscriptions, API keys, and usage tracking. It seamlessly integrates with LiteLLM to provide a unified interface for accessing multiple LLMs with comprehensive budget management.
 
-## 🎟️ Key Benefits
+## 🎟️ Key Features
 
 - **Self-Service**: Users can independently manage subscriptions and API keys
 - **Multi-Model Access**: One API key can access multiple models
@@ -16,13 +16,13 @@
   - **User View**: Personal usage, token consumption, and costs
   - **Admin View**: System-wide analytics with trends, multi-dimensional filtering (users/models/providers/API keys), and data export
 - **Role-Based Access Control**: Three-tier hierarchy (admin/adminReadonly/user) with OpenShift group integration
-- **Team Collaboration**: Share budgets and manage access across teams (upcoming feature)
+- **Restricted Access Models**: Models can be restricted to admin approval.
 - **Enterprise Security**: OAuth2 authentication with JWT tokens and audit logging
 - **Easy Deployment and Usage**: Automated deployment on OpenShift with PatternFly 6 UI
 
 ## 📸 Screenshots
 
-> **Note**: Screenshots below show core functionality. Admin-specific features (system-wide usage analytics, user management, role administration) are available but not yet captured in screenshots.
+> **Note**: Screenshots below show core functionality. Admin-specific features (,model, subscription, user management, tools,...) are available but not captured in screenshots.
 
 ### Model Discovery
 
@@ -40,165 +40,23 @@
 
 ![api-key-details.png](img/api-key-details.png)
 
-### Usage Statistics (User View)
+### Chatbot Playground
 
-![usage-statistics.png](img/usage-statistics.png)
+![chatbot-playground.png](img/chatbot-playground.png)
 
-## 🚀 Quick Start
+### Usage Analytics (Admin View shown)
 
-```bash
-# Install dependencies
-npm install
+![usage-analytics-admin.png](img/usage-analytics-admin.png)
 
-# Start development servers (both backend and frontend)
-npm run dev
-
-# Backend only (http://localhost:8081)
-npm run dev:backend
-
-# Frontend only (http://localhost:3000)
-npm run dev:frontend
-```
-
-## 📋 Prerequisites
-
-- Node.js 18.x or 20.x
-- PostgreSQL 12+
-- npm 8+
-- LiteLLM instance (optional, has mock fallback)
-
-## 🏗️ Architecture
-
-LiteMaaS is a **monorepo** using npm workspaces with two main packages:
-
-- **Backend** (`@litemaas/backend`): High-performance Fastify API server with PostgreSQL
-- **Frontend** (`@litemaas/frontend`): Modern React application with PatternFly 6 UI
-
-## 🎯 System Architecture
-
-```mermaid
-graph TB
-    subgraph "Frontend"
-        UI[React + PatternFly 6]
-    end
-
-    subgraph "Backend Services"
-        API[Fastify API Server]
-        Auth[OAuth2/JWT Auth]
-        DB[(PostgreSQL)]
-    end
-
-    subgraph "External Services"
-        LiteLLM[LiteLLM Gateway]
-        OAuth[OpenShift OAuth]
-    end
-
-    UI <--> API
-    API <--> Auth
-    API <--> DB
-    API <--> LiteLLM
-    Auth <--> OAuth
-
-    style UI fill:#e3f2fd
-    style API fill:#fff3e0
-    style LiteLLM fill:#f3e5f5
-```
-
-## 🛠️ Development Setup
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/rh-aiservices-bu/litemaas.git
-   cd litemaas
-   ```
-
-2. **Set up environment variables**
-
-   ```bash
-   # Copy example environment files
-   cp backend/.env.example backend/.env
-   cp frontend/.env.example frontend/.env
-   ```
-
-3. **Configure your environment**
-   - See [Configuration Guide](docs/deployment/configuration.md) for all available options
-   - Minimum required: `DATABASE_URL`, `JWT_SECRET`, OAuth credentials
-
-4. **Start PostgreSQL** (using Docker)
-
-   ```bash
-   docker compose -f dev-tools/compose.yaml up -d postgres
-   ```
-
-5. **Run the application**
-
-   ```bash
-   npm run dev
-   ```
-
-## 📚 Documentation
-
-### Core Documentation
-
-- 🏗️ [Architecture Overview](docs/architecture/overview.md) - System design and data flows
-- 📖 [API Reference](docs/api/README.md) - Complete REST API documentation
-- 🗂️ [Project Structure](docs/architecture/project-structure.md) - Complete file organization map
-- 🔧 [Configuration Guide](docs/deployment/configuration.md) - Environment variables and setup
-- 🛠️ [Development Guide](docs/development/setup.md) - Local development setup
-- 🚀 [Production Deployment](docs/deployment/production-guide.md) - Production deployment options
-- 🎨 [UI Guidelines (PatternFly 6)](docs/development/pf6-guide/README.md) - Frontend development standards
-
-### Feature Documentation
-
-- 📊 [Admin Usage Analytics](docs/features/admin-usage-analytics-implementation-plan.md) - Comprehensive system-wide analytics with caching
-- 🔐 [RBAC & User Roles](docs/features/user-roles-administration.md) - Three-tier role hierarchy and permissions
-- 🔑 [Multi-Model API Keys](docs/features/multi-model-api-keys-implementation.md) - API key architecture
-
-### Quick Links
-
-- 📝 [Project Roadmap](PROJECT_PLAN.md) - Development phases and milestones
-- 🔧 [Contributing Guide](CONTRIBUTING.md) - How to contribute
-- 🔒 [Authentication & Security](docs/deployment/authentication.md) - OAuth2/JWT implementation
-
-## 🧪 Testing
-
-**First time running backend tests?** You need to set up the test database first:
-
-```bash
-# Create test database
-psql -U pgadmin -h localhost -p 5432 -d postgres -c "CREATE DATABASE litemaas_test;"
-
-# Initialize schema and seed data
-cd backend && npm run test:db:setup
-```
-
-**Run tests:**
-
-```bash
-# Run all tests
-npm run test
-
-# Backend tests
-npm run test:backend
-
-# Frontend tests
-npm run test:frontend
-
-# E2E tests
-npm run test:e2e
-
-# Performance tests
-npm run test:perf
-```
-
-**Backend integration tests use a separate `litemaas_test` database** to prevent contamination of development data. See [Development Setup Guide](docs/development/setup.md#test-database-setup) for details.
+And more...
 
 ## 🚀 Deployment
 
 LiteMaaS supports multiple deployment methods:
 
 ### OpenShift/Kubernetes Deployment (Recommended for Production)
+
+**Quick OpenShift Deployment**: [Readme](deployment/openshift/README.md)
 
 Deploy to OpenShift or Kubernetes using the provided manifests and Kustomize configuration:
 
@@ -284,6 +142,152 @@ npm run push:containers
 # Build with local tags only (no registry prefix)
 ./scripts/build-containers.sh --local
 ```
+
+## 📚 Documentation
+
+### Core Documentation
+
+- 🏗️ [Architecture Overview](docs/architecture/overview.md) - System design and data flows
+- 📖 [API Reference](docs/api/README.md) - Complete REST API documentation
+- 🗂️ [Project Structure](docs/architecture/project-structure.md) - Complete file organization map
+- 🔧 [Configuration Guide](docs/deployment/configuration.md) - Environment variables and setup
+- 🛠️ [Development Guide](docs/development/setup.md) - Local development setup
+- 🚀 [Production Deployment](docs/deployment/production-guide.md) - Production deployment options
+- 🎨 [UI Guidelines (PatternFly 6)](docs/development/pf6-guide/README.md) - Frontend development standards
+
+### Feature Documentation
+
+- 📊 [Admin Usage Analytics](docs/features/admin-usage-analytics-implementation-plan.md) - Comprehensive system-wide analytics with caching
+- 🔐 [RBAC & User Roles](docs/features/user-roles-administration.md) - Three-tier role hierarchy and permissions
+- 🔑 [Multi-Model API Keys](docs/features/multi-model-api-keys-implementation.md) - API key architecture
+
+## Development
+
+### 🚀 Development Quick Start
+
+```bash
+# Install dependencies
+npm install
+
+# Start development servers (both backend and frontend)
+npm run dev
+
+# Backend only (http://localhost:8081)
+npm run dev:backend
+
+# Frontend only (http://localhost:3000)
+npm run dev:frontend
+```
+
+### 📋 Prerequisites
+
+- Node.js 18.x or 20.x
+- PostgreSQL 12+
+- npm 8+
+- LiteLLM instance (optional, has mock fallback)
+
+### 🏗️ Architecture
+
+LiteMaaS is a **monorepo** using npm workspaces with two main packages:
+
+- **Backend** (`@litemaas/backend`): High-performance Fastify API server with PostgreSQL
+- **Frontend** (`@litemaas/frontend`): Modern React application with PatternFly 6 UI
+
+### 🎯 System Architecture
+
+```mermaid
+graph TB
+    subgraph "Frontend"
+        UI[React + PatternFly 6]
+    end
+
+    subgraph "Backend Services"
+        API[Fastify API Server]
+        Auth[OAuth2/JWT Auth]
+        DB[(PostgreSQL)]
+    end
+
+    subgraph "External Services"
+        LiteLLM[LiteLLM Gateway]
+        OAuth[OpenShift OAuth]
+    end
+
+    UI <--> API
+    API <--> Auth
+    API <--> DB
+    API <--> LiteLLM
+    Auth <--> OAuth
+
+    style UI fill:#e3f2fd
+    style API fill:#fff3e0
+    style LiteLLM fill:#f3e5f5
+```
+
+### 🛠️ Development Setup
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/rh-aiservices-bu/litemaas.git
+   cd litemaas
+   ```
+
+2. **Set up environment variables**
+
+   ```bash
+   # Copy example environment files
+   cp backend/.env.example backend/.env
+   cp frontend/.env.example frontend/.env
+   ```
+
+3. **Configure your environment**
+   - See [Configuration Guide](docs/deployment/configuration.md) for all available options
+   - Minimum required: `DATABASE_URL`, `JWT_SECRET`, OAuth credentials
+
+4. **Start PostgreSQL** (using Docker)
+
+   ```bash
+   docker compose -f dev-tools/compose.yaml up -d postgres
+   ```
+
+5. **Run the application**
+
+   ```bash
+   npm run dev
+   ```
+
+### 🧪 Testing
+
+**First time running backend tests?** You need to set up the test database first:
+
+```bash
+# Create test database
+psql -U pgadmin -h localhost -p 5432 -d postgres -c "CREATE DATABASE litemaas_test;"
+
+# Initialize schema and seed data
+cd backend && npm run test:db:setup
+```
+
+**Run tests:**
+
+```bash
+# Run all tests
+npm run test
+
+# Backend tests
+npm run test:backend
+
+# Frontend tests
+npm run test:frontend
+
+# E2E tests
+npm run test:e2e
+
+# Performance tests
+npm run test:perf
+```
+
+**Backend integration tests use a separate `litemaas_test` database** to prevent contamination of development data. See [Development Setup Guide](docs/development/setup.md#test-database-setup) for details.
 
 ## 🤝 Contributing
 
