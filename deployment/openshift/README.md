@@ -32,7 +32,7 @@ The deployment uses a **template-based configuration system**:
    ```
 
 2. **Edit `user-values.env`** and customize the following **required values**:
-   - `LITEMAAS_VERSION` - LiteMaaS version to deploy (e.g., `0.1.0`)
+   - `LITEMAAS_VERSION` - LiteMaaS version to deploy (e.g., `0.1.2`)
    - `CLUSTER_DOMAIN_NAME` - Your OpenShift cluster domain (e.g., `apps.cluster.example.com`)
    - `NAMESPACE` - Namespace/project name (e.g., `litemaas`)
    - `PG_ADMIN_PASSWORD` - Secure PostgreSQL password (generate with `openssl rand -base64 32`)

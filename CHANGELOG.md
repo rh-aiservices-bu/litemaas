@@ -5,6 +5,26 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.2] - 2025-10-17
+
+This patch release fixes a critical database migration issue that could prevent successful deployments.
+
+### Fixed
+
+- **Database Migration Resilience**: Fixed `litellm_key_alias` backfill migration to skip inactive API keys
+  - Migration now filters for `is_active = true` to avoid processing inactive/revoked keys
+  - Prevents 404 errors from LiteLLM when trying to fetch details for deleted keys
+  - Eliminates circuit breaker opening after 5 consecutive failures
+  - Ensures active keys are successfully processed during backfill operations
+  - Added explanatory comment about skipping inactive keys
+
+### Contributors
+
+- Guillaume Moutier
+- Co-authored-by: Claude (AI pair programming assistant)
+
+---
+
 ## [0.1.1] - 2025-10-17
 
 This patch release improves test reliability, server startup performance, and handles edge cases in database migrations.
