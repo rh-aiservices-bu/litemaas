@@ -637,6 +637,7 @@ COMMENT ON COLUMN subscriptions.status_changed_by IS 'Existing subscriptions mig
 export const backfillLiteLLMKeyAlias = async (dbUtils: DatabaseUtils, liteLLMService: any) => {
   try {
     // Find all API keys that don't have litellm_key_alias set
+    // Only process active keys to avoid 404s from inactive/revoked keys
     const keysToBackfill = await dbUtils.queryMany<{
       id: string;
       lite_llm_key_value: string;
@@ -644,7 +645,8 @@ export const backfillLiteLLMKeyAlias = async (dbUtils: DatabaseUtils, liteLLMSer
       `SELECT id, lite_llm_key_value
        FROM api_keys
        WHERE litellm_key_alias IS NULL
-         AND lite_llm_key_value IS NOT NULL`,
+         AND lite_llm_key_value IS NOT NULL
+         AND is_active = true`,
       [],
     );
 
