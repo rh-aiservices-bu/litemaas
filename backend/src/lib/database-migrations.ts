@@ -656,6 +656,7 @@ export const backfillLiteLLMKeyAlias = async (dbUtils: DatabaseUtils, liteLLMSer
     console.log(`🔄 Backfilling litellm_key_alias for ${keysToBackfill.length} API keys...`);
 
     let successCount = 0;
+    let orphanedCount = 0;
     let errorCount = 0;
 
     for (const key of keysToBackfill) {
@@ -671,15 +672,26 @@ export const backfillLiteLLMKeyAlias = async (dbUtils: DatabaseUtils, liteLLMSer
 
         successCount++;
       } catch (error) {
-        console.error(
-          `Failed to backfill key_alias for API key ${key.id}:`,
-          error instanceof Error ? error.message : error,
-        );
-        errorCount++;
+        // Handle 404s (orphaned keys) differently - mark without verbose logging
+        if (error instanceof Error && error.message?.includes('404')) {
+          await dbUtils.query(`UPDATE api_keys SET litellm_key_alias = $1 WHERE id = $2`, [
+            `orphaned_${key.id}`,
+            key.id,
+          ]);
+          orphanedCount++;
+        } else {
+          console.error(
+            `Failed to backfill key_alias for API key ${key.id}:`,
+            error instanceof Error ? error.message : error,
+          );
+          errorCount++;
+        }
       }
     }
 
-    console.log(`✅ Backfilled litellm_key_alias: ${successCount} succeeded, ${errorCount} failed`);
+    console.log(
+      `✅ Backfilled litellm_key_alias: ${successCount} succeeded, ${orphanedCount} orphaned, ${errorCount} failed`,
+    );
   } catch (error) {
     console.error('❌ Failed to backfill litellm_key_alias:', error);
     // Don't throw - this is a best-effort migration
