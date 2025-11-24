@@ -61,6 +61,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         supports_function_calling,
         supports_parallel_function_calling,
         supports_tool_choice,
+        restrictedAccess,
       } = request.body;
 
       try {
@@ -112,6 +113,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
               supports_function_calling,
               supports_parallel_function_calling,
               supports_tool_choice,
+              restrictedAccess,
             }),
           ],
         );
@@ -124,6 +126,14 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           if (description) {
             await fastify.dbUtils.query('UPDATE models SET description = $1 WHERE id = $2', [
               description,
+              model_name,
+            ]);
+          }
+
+          // Update the restrictedAccess flag if provided
+          if (restrictedAccess !== undefined) {
+            await fastify.dbUtils.query('UPDATE models SET restricted_access = $1 WHERE id = $2', [
+              restrictedAccess,
               model_name,
             ]);
           }

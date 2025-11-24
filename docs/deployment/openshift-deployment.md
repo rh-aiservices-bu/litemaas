@@ -9,6 +9,7 @@ This guide provides step-by-step instructions for deploying LiteMaaS on OpenShif
 - [Prerequisites](#prerequisites)
 - [Architecture Overview](#architecture-overview)
 - [OAuth Client Configuration](#oauth-client-configuration)
+- [User Role Management and OpenShift Groups](#user-role-management-and-openshift-groups)
 - [Deployment Process](#deployment-process)
 - [Post-Deployment Configuration](#post-deployment-configuration)
 - [Accessing the Applications](#accessing-the-applications)
@@ -145,6 +146,111 @@ After creating the OAuth client, you'll need:
 curl -k https://oauth-openshift.apps.cluster.example.com/.well-known/oauth_authorization_server
 # Should return JSON with OAuth server configuration
 ```
+
+## User Role Management and OpenShift Groups
+
+LiteMaaS implements role-based access control (RBAC) by mapping OpenShift groups to application roles. **Configuring these groups is essential for proper access control** - without them, all users will have limited access regardless of their intended permissions.
+
+### Overview of OpenShift Groups
+
+LiteMaaS recognizes three OpenShift groups that map to specific application roles:
+
+| OpenShift Group | LiteMaaS Role | Capabilities |
+|----------------|---------------|--------------|
+| `litemaas-admins` | `admin` | Full system access: manage users, subscriptions, models, API keys, system configuration |
+| `litemaas-readonly` | `adminReadonly` | Read-only administrative access: view all data and statistics, no modification permissions |
+| `litemaas-users` | `user` | Standard user access: manage own subscriptions and API keys (default role for all authenticated users) |
+
+**Important Notes**:
+- Users can be members of multiple groups - the role with the highest permissions will be applied
+- All authenticated users automatically receive the `user` role, even without group membership
+- The `litemaas-users` group is optional - it's only needed if you want explicit group-based user management
+- Group membership is evaluated during OAuth login - changes take effect on next user login
+
+### Creating OpenShift Groups
+
+As a cluster administrator, create the required groups before deploying LiteMaaS:
+
+```bash
+# Create administrative groups (required)
+oc adm groups new litemaas-admins
+oc adm groups new litemaas-readonly
+
+# Create users group (optional - for explicit group management)
+oc adm groups new litemaas-users
+```
+
+### Adding Users to Groups
+
+Add users to groups based on their required access level:
+
+```bash
+# Add administrators (full access)
+oc adm groups add-users litemaas-admins admin@company.com other-admin@company.com
+
+# Add read-only administrators
+oc adm groups add-users litemaas-readonly readonly-admin@company.com viewer@company.com
+
+# Add standard users (optional)
+oc adm groups add-users litemaas-users user1@company.com user2@company.com
+```
+
+### Verifying Group Configuration
+
+```bash
+# List all groups
+oc get groups
+
+# View members of a specific group
+oc get group litemaas-admins -o yaml
+
+# Check which groups a user belongs to
+oc get groups -o json | jq -r '.items[] | select(.users[]? | contains("admin@company.com")) | .metadata.name'
+```
+
+### Group Management Best Practices
+
+1. **Principle of Least Privilege**: Only assign admin roles to users who require full system access
+2. **Use Read-Only Admin**: For users who need visibility without modification capabilities (e.g., auditors, managers)
+3. **Regular Audits**: Periodically review group membership to ensure appropriate access levels
+4. **Document Assignments**: Maintain records of why users have specific access levels
+
+### Role Mapping Technical Details
+
+The group-to-role mapping is defined in the LiteMaaS backend and automatically applied during OAuth authentication. When a user logs in:
+
+1. OpenShift OAuth returns the user's group memberships
+2. LiteMaaS maps groups to roles using this configuration:
+   ```javascript
+   {
+     'litemaas-admins': ['admin', 'user'],
+     'litemaas-readonly': ['adminReadonly', 'user'],
+     'litemaas-users': ['user']
+   }
+   ```
+3. The most privileged role is assigned to the user's session
+4. Role-based permissions are enforced on all API endpoints
+
+### Troubleshooting Group-Based Access
+
+**Issue**: User doesn't have expected permissions after group assignment
+
+**Solutions**:
+- Verify group membership: `oc get group <group-name> -o yaml`
+- Have the user log out and log back in to refresh their session
+- Check backend logs for role assignment: `oc logs deployment/backend | grep -i "role"`
+- Verify OAuth token includes group claims
+
+**Issue**: All users have admin access or no users have admin access
+
+**Solutions**:
+- Verify groups were created before deployment
+- Check that group names exactly match: `litemaas-admins`, `litemaas-readonly`, `litemaas-users`
+- Review backend configuration for any role mapping overrides
+
+For comprehensive RBAC documentation, including API endpoint permissions and testing procedures, see:
+- [`docs/deployment/authentication.md`](./authentication.md) - Complete authentication and RBAC setup
+- [`docs/features/user-roles-administration.md`](../features/user-roles-administration.md) - Detailed role capabilities and use cases
 
 ## Deployment Process
 
