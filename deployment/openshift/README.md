@@ -7,7 +7,14 @@ This directory contains Kubernetes manifests and Kustomize configuration for dep
 1. **OpenShift cluster access** with project creation permissions
 2. **OpenShift CLI (oc)** installed and logged in
 3. **OAuth client configured** in OpenShift (see [full deployment guide](../../docs/deployment/openshift-deployment.md#oauth-client-configuration))
-4. **Container images** available at:
+4. **OpenShift groups configured** for role-based access control:
+   - `litemaas-admins` - Full administrative access
+   - `litemaas-readonly` - Read-only administrative access
+   - `litemaas-users` - Standard user access (optional, default role)
+
+   See [User Role Management](../../docs/deployment/openshift-deployment.md#user-role-management-and-openshift-groups) for setup instructions.
+
+5. **Container images** available at:
    - `quay.io/rh-aiservices-bu/litemaas-backend`
    - `quay.io/rh-aiservices-bu/litemaas-frontend`
 
