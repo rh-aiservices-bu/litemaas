@@ -126,6 +126,9 @@ spec:
             - name: DEFAULT_USER_RPM_LIMIT
               value: '120'
 
+            # TLS Configuration (conditional - only set if NODE_TLS_REJECT_UNAUTHORIZED=0)
+            ${NODE_TLS_ENV_BLOCK}
+
           resources:
             requests:
               memory: '256Mi'
