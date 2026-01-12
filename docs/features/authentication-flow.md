@@ -158,7 +158,7 @@ The OAuth service correctly handles OpenShift's dual-endpoint architecture:
 // OAuth server for authentication
 const oauthServer = 'https://oauth-openshift.apps.cluster.com';
 
-// API server for user information (set OPENSHIFT_API_URL)
+// API server for user information (can be overridden via OPENSHIFT_API_URL env var)
 const apiServer = 'https://api.cluster.com:6443';
 
 // User info endpoint
