@@ -7,7 +7,7 @@ declare module 'fastify' {
       HOST: string;
       PORT: string;
       LOG_LEVEL: string;
-      OPENSHIFT_API_URL: string;
+      OPENSHIFT_API_URL?: string;
 
       // CORS
       CORS_ORIGIN: string;
