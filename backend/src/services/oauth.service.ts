@@ -191,13 +191,15 @@ export class OAuthService extends BaseService {
     }
 
     // Real OpenShift user info
-    // Convert OAuth issuer URL to API server URL
+    // Convert OAuth issuer URL to API server URL if OPENSHIFT_API_URL is not set
     // From: https://oauth-openshift.apps.dev.rhoai.rh-aiservices-bu.com
     // To:   https://api.dev.rhoai.rh-aiservices-bu.com:6443
     const oauthIssuer = this.fastify.config.OAUTH_ISSUER;
     let apiServerUrl: string;
 
-    if (oauthIssuer.includes('oauth-openshift.apps.')) {
+    if (this.fastify.config.OPENSHIFT_API_URL) {
+      apiServerUrl = this.fastify.config.OPENSHIFT_API_URL;
+    } else if (oauthIssuer.includes('oauth-openshift.apps.')) {
       // Standard OpenShift pattern
       apiServerUrl =
         oauthIssuer.replace('oauth-openshift.apps.', 'api.').replace(/\/$/, '') + ':6443';

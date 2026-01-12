@@ -168,7 +168,7 @@ Ensure the service account has permissions to:
 
 **User info retrieval fails:**
 
-- Verify OAUTH_ISSUER points to correct OpenShift API server
+- Verify OAUTH_ISSUER points to correct OpenShift API server (if not, you can use the env OPENSHIFT_API_URL)
 - Check token has required scopes
 - Ensure user has proper OpenShift groups
 

@@ -8,6 +8,7 @@ const envSchema = Type.Object({
   HOST: Type.String({ default: '0.0.0.0' }),
   PORT: Type.String({ default: '8081' }),
   LOG_LEVEL: Type.String({ default: 'info' }),
+  OPENSHIFT_API_URL: Type.Optional(Type.String()),
 
   // CORS
   CORS_ORIGIN: Type.String({ default: 'http://localhost:3000' }),

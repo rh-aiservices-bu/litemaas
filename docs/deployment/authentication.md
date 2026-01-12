@@ -58,6 +58,7 @@ LiteMaaS implements a multi-layered authentication system that supports differen
 
 ```bash
 # Backend environment variables (.env)
+OPENSHIFT_API_URL=https://api.your-cluster.com:6443
 
 # JWT Configuration
 JWT_SECRET=your-secure-jwt-secret-here
@@ -85,6 +86,7 @@ CORS_ORIGIN=http://localhost:3000,http://localhost:3001
 ```bash
 # Production environment variables
 
+OPENSHIFT_API_URL=https://api.your-cluster.com:6443
 # Remove or comment out development settings
 # ALLOWED_FRONTEND_ORIGINS=
 # ALLOW_DEV_TOKENS=false
