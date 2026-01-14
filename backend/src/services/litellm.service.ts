@@ -69,6 +69,27 @@ export class LiteLLMService extends BaseService {
       },
     },
     {
+      model_name: 'RedHatAI/gpt-oss-120b',
+      litellm_params: {
+        input_cost_per_token: 0.002,
+        output_cost_per_token: 0.008,
+        custom_llm_provider: 'RedHatAI',
+        model: 'RedHatAI/gpt-oss-120b',
+      },
+      model_info: {
+        id: 'mock-redhatai-gpt-oss-120b-id',
+        db_model: true,
+        max_tokens: 128000,
+        supports_function_calling: true,
+        supports_parallel_function_calling: true,
+        supports_vision: false,
+        direct_access: true,
+        access_via_team_ids: [],
+        input_cost_per_token: 0.002,
+        output_cost_per_token: 0.008,
+      },
+    },
+    {
       model_name: 'claude-3-5-sonnet-20241022',
       litellm_params: {
         input_cost_per_token: 0.003,
