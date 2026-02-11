@@ -7,7 +7,7 @@
 
 This document provides a comprehensive reference for integrating LiteMaaS with the LiteLLM API server.
 
-**🎉 Integration Complete**: All migration phases have been successfully implemented. See [PROJECT_PLAN.md](../PROJECT_PLAN.md) for detailed implementation status.
+**🎉 Integration Complete**: All migration phases have been successfully implemented.
 
 ## 🔐 Authentication
 

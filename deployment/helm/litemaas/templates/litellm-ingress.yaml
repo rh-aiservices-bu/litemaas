@@ -1,0 +1,31 @@
+{{- if and (eq .Values.global.platform "kubernetes") .Values.ingress.enabled .Values.ingress.litellm.enabled .Values.ingress.litellm.host }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "litemaas.litellm.fullname" . }}
+  labels:
+    {{- include "litemaas.componentLabels" (dict "context" . "component" "ai-proxy") | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className | quote }}
+  {{- end }}
+  {{- if .Values.ingress.litellm.tls }}
+  tls:
+    {{- toYaml .Values.ingress.litellm.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.litellm.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "litemaas.litellm.fullname" . }}
+                port:
+                  number: 4000
+{{- end }}

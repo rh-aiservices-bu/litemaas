@@ -1,0 +1,14 @@
+apiVersion: v2
+name: litemaas
+description: LiteMaaS - Model subscription and management platform with LiteLLM integration
+type: application
+version: 0.1.0
+appVersion: "0.1.3"
+keywords:
+  - litemaas
+  - litellm
+  - ai
+  - model-management
+home: https://github.com/pase52/litemaas
+maintainers:
+  - name: LiteMaaS Team

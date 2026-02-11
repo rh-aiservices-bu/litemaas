@@ -1,0 +1,311 @@
+# -- Global settings
+global:
+  # -- Target platform: "kubernetes" or "openshift"
+  platform: kubernetes
+  # -- Cluster apps domain (e.g. "apps.cluster.example.com").
+  # Auto-detected on OpenShift via post-install hook when empty.
+  # Set explicitly to skip auto-detection.
+  clusterDomain: ""
+  # -- Enable cluster-scoped API lookups for auto-detection of clusterDomain
+  # at template-rendering time (before resources are created).
+  # Requires read access to config.openshift.io/v1 Ingress (typically cluster-admin).
+  # Default false: the post-install hook handles auto-detection instead.
+  # Set to true only if you have cluster-admin and want values resolved at template time.
+  clusterScopedLookups: false
+  # -- Global image pull secrets
+  imagePullSecrets: []
+  # -- Global image pull policy
+  imagePullPolicy: IfNotPresent
+
+# -- Override chart name
+nameOverride: ""
+# -- Override fully qualified app name
+fullnameOverride: ""
+
+# -- ServiceAccount configuration
+serviceAccount:
+  # -- Create a ServiceAccount
+  create: true
+  # -- ServiceAccount name (auto-generated if empty)
+  name: ""
+  # -- Annotations to add to the ServiceAccount
+  annotations: {}
+
+# =============================================================================
+# OAuth
+# =============================================================================
+oauth:
+  # -- OAuth mode: "serviceaccount" uses the ServiceAccount as an OAuth client
+  # (no cluster-admin needed, OpenShift only) or "external" (provide your own
+  # client ID/secret/issuer via backend.auth.oauthClientId etc.)
+  mode: serviceaccount
+
+  # -- OAuth issuer URL. Auto-constructed on OpenShift if empty:
+  # https://oauth-openshift.<clusterDomain>
+  issuer: ""
+
+  # -- ServiceAccount token secret name for SA OAuth mode.
+  # The chart creates one automatically when mode is "serviceaccount".
+  # Set this to reference a pre-existing token secret.
+  existingTokenSecret: ""
+
+# =============================================================================
+# PostgreSQL
+# =============================================================================
+postgresql:
+  # -- Deploy built-in PostgreSQL. Set to false to use an external database.
+  enabled: true
+
+  image:
+    repository: postgres
+    tag: "16-alpine"
+
+  auth:
+    # -- PostgreSQL admin username
+    username: litemaas_admin
+    # -- PostgreSQL admin password (CHANGE THIS)
+    password: changeme
+    # -- Use an existing Secret instead of creating one.
+    # Must contain keys: username, password
+    existingSecret: ""
+
+  persistence:
+    # -- Storage size for the PostgreSQL PVC
+    size: 10Gi
+    # -- StorageClass name (empty = cluster default)
+    storageClass: ""
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# =============================================================================
+# LiteLLM
+# =============================================================================
+litellm:
+  # -- Deploy built-in LiteLLM proxy. Set to false to use an external instance.
+  enabled: true
+
+  image:
+    repository: ghcr.io/berriai/litellm-non_root
+    tag: "main-v1.74.7-stable"
+
+  # -- Explicit database URL for LiteLLM. Auto-constructed when postgresql.enabled is true.
+  databaseUrl: ""
+
+  auth:
+    # -- LiteLLM master/API key
+    masterKey: changeme
+    # -- LiteLLM admin UI username
+    uiUsername: admin
+    # -- LiteLLM admin UI password
+    uiPassword: changeme
+    # -- Use an existing Secret instead of creating one.
+    # Must contain keys: database-url, master-key, ui-username, ui-password
+    existingSecret: ""
+
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 30
+    timeoutSeconds: 10
+    failureThreshold: 3
+
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+# =============================================================================
+# Backend
+# =============================================================================
+backend:
+  image:
+    repository: quay.io/rh-aiservices-bu/litemaas-backend
+    # -- Backend image tag. Defaults to the chart's appVersion when empty.
+    tag: ""
+
+  # -- Explicit database URL for the backend. Auto-constructed when postgresql.enabled is true.
+  databaseUrl: ""
+  # -- Explicit LiteLLM API URL. Auto-constructed when litellm.enabled is true.
+  litellmApiUrl: ""
+  # -- Explicit CORS origin. Auto-derived from ingress/route hostname if empty.
+  corsOrigin: ""
+
+  auth:
+    # -- JWT signing secret (CHANGE THIS)
+    jwtSecret: changeme
+    # -- JWT token expiration
+    jwtExpiresIn: "24h"
+    # -- OAuth client ID (only used when oauth.mode is "external")
+    oauthClientId: ""
+    # -- OAuth client secret (only used when oauth.mode is "external")
+    oauthClientSecret: ""
+    # -- OAuth issuer URL (only used when oauth.mode is "external")
+    oauthIssuer: ""
+    # -- OAuth callback URL. Auto-derived from ingress/route hostname if empty.
+    # Used in both "serviceaccount" and "external" modes.
+    oauthCallbackUrl: ""
+    # -- Admin API keys (comma-separated)
+    adminApiKeys: changeme
+    # -- Initial admin users (comma-separated usernames).
+    # On OpenShift, auto-detected from the deploying user if empty.
+    initialAdminUsers: ""
+    # -- LiteLLM API key (must match litellm.auth.masterKey)
+    litellmApiKey: changeme
+    # -- Use an existing Secret instead of creating one.
+    # Must contain keys: database-url, cors-origin, jwt-secret, oauth-client-id,
+    # oauth-client-secret, oauth-issuer, oauth-callback-url, admin-api-keys, litellm-api-key
+    existingSecret: ""
+
+  # -- Rate limiting for backend API (NOT for LLM requests)
+  rateLimit:
+    max: "1000"
+    timeWindow: "5m"
+
+  # -- Default user budget/rate limits
+  defaultUser:
+    maxBudget: "100"
+    tpmLimit: "100000"
+    rpmLimit: "120"
+
+  # -- Set to "0" to disable TLS verification (not recommended for production)
+  nodeTlsRejectUnauthorized: ""
+
+  resources:
+    requests:
+      memory: "256Mi"
+      cpu: "100m"
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# =============================================================================
+# Frontend
+# =============================================================================
+frontend:
+  image:
+    repository: quay.io/rh-aiservices-bu/litemaas-frontend
+    # -- Frontend image tag. Defaults to the chart's appVersion when empty.
+    tag: ""
+
+  # -- Backend URL for the frontend container. Auto-constructed from backend service name if empty.
+  backendUrl: ""
+
+  resources:
+    requests:
+      memory: "128Mi"
+      cpu: "50m"
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+
+  livenessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+
+  readinessProbe:
+    initialDelaySeconds: 5
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
+
+# =============================================================================
+# Ingress (Kubernetes)
+# =============================================================================
+ingress:
+  # -- Enable Kubernetes Ingress resources (used when global.platform is "kubernetes")
+  enabled: false
+  # -- Ingress class name (e.g., "nginx")
+  className: ""
+  # -- Annotations for all Ingress resources
+  annotations: {}
+
+  frontend:
+    # -- Hostname for the frontend Ingress
+    host: ""
+    # -- TLS configuration for the frontend Ingress
+    # Example:
+    #   tls:
+    #     - secretName: litemaas-tls
+    #       hosts:
+    #         - litemaas.example.com
+    tls: []
+
+  litellm:
+    # -- Enable a separate Ingress for LiteLLM admin UI
+    enabled: false
+    # -- Hostname for the LiteLLM Ingress
+    host: ""
+    # -- TLS configuration for the LiteLLM Ingress
+    tls: []
+
+# =============================================================================
+# Route (OpenShift)
+# =============================================================================
+route:
+  # -- Enable OpenShift Route resources (used when global.platform is "openshift")
+  enabled: false
+  # -- Annotations for all Route resources
+  annotations: {}
+
+  frontend:
+    # -- Hostname for the frontend Route (auto-generated by OpenShift if empty)
+    host: ""
+    # -- TLS termination type (edge, passthrough, reencrypt)
+    termination: edge
+
+  litellm:
+    # -- Enable a separate Route for LiteLLM admin UI
+    enabled: false
+    # -- Hostname for the LiteLLM Route (auto-generated by OpenShift if empty)
+    host: ""
+    # -- TLS termination type
+    termination: edge
+
+# =============================================================================
+# Post-install Hook (OpenShift only)
+# =============================================================================
+hook:
+  image:
+    # -- Image for the post-install OAuth setup hook (must include kubectl)
+    repository: bitnami/kubectl
+    tag: latest

@@ -51,9 +51,7 @@ confirm_version() {
     echo
     echo "  This will build/tag the following images:"
     echo -e "    📦 ${backend_image}:${YELLOW}${version}${NC}"
-    echo -e "    📦 ${backend_image}:${YELLOW}latest${NC}"
     echo -e "    🌐 ${frontend_image}:${YELLOW}${version}${NC}"
-    echo -e "    🌐 ${frontend_image}:${YELLOW}latest${NC}"
     echo
     echo -e "${YELLOW}⚠️  This may overwrite existing images with the same tags!${NC}"
     echo
@@ -230,14 +228,8 @@ if [[ "$PUSH_ONLY" == "true" ]]; then
     if ! check_image_exists "${BACKEND_IMAGE}:${VERSION}"; then
         missing_images+=("${BACKEND_IMAGE}:${VERSION}")
     fi
-    if ! check_image_exists "${BACKEND_IMAGE}:latest"; then
-        missing_images+=("${BACKEND_IMAGE}:latest")
-    fi
     if ! check_image_exists "${FRONTEND_IMAGE}:${VERSION}"; then
         missing_images+=("${FRONTEND_IMAGE}:${VERSION}")
-    fi
-    if ! check_image_exists "${FRONTEND_IMAGE}:latest"; then
-        missing_images+=("${FRONTEND_IMAGE}:latest")
     fi
     
     if [[ ${#missing_images[@]} -gt 0 ]]; then
@@ -273,7 +265,6 @@ if [[ "$PUSH_ONLY" != "true" ]]; then
     if $CONTAINER_CMD build "${BUILD_ARGS[@]}" \
         -f backend/Containerfile \
         -t "${BACKEND_IMAGE}:${VERSION}" \
-        -t "${BACKEND_IMAGE}:latest" \
         .; then
         print_success "Backend container built successfully"
     else
@@ -286,7 +277,6 @@ if [[ "$PUSH_ONLY" != "true" ]]; then
     if $CONTAINER_CMD build "${BUILD_ARGS[@]}" \
         -f frontend/Containerfile \
         -t "${FRONTEND_IMAGE}:${VERSION}" \
-        -t "${FRONTEND_IMAGE}:latest" \
         .; then
         print_success "Frontend container built successfully"
     else
@@ -301,8 +291,7 @@ if [[ ("$PUSH_ONLY" == "true" || "$BUILD_AND_PUSH" == "true") && "$LOCAL_ONLY" =
     
     # Push backend
     print_status "Pushing backend image..."
-    if $CONTAINER_CMD push "${BACKEND_IMAGE}:${VERSION}" && \
-       $CONTAINER_CMD push "${BACKEND_IMAGE}:latest"; then
+    if $CONTAINER_CMD push "${BACKEND_IMAGE}:${VERSION}"; then
         print_success "Backend image pushed successfully"
     else
         print_error "Failed to push backend image"
@@ -311,8 +300,7 @@ if [[ ("$PUSH_ONLY" == "true" || "$BUILD_AND_PUSH" == "true") && "$LOCAL_ONLY" =
     
     # Push frontend
     print_status "Pushing frontend image..."
-    if $CONTAINER_CMD push "${FRONTEND_IMAGE}:${VERSION}" && \
-       $CONTAINER_CMD push "${FRONTEND_IMAGE}:latest"; then
+    if $CONTAINER_CMD push "${FRONTEND_IMAGE}:${VERSION}"; then
         print_success "Frontend image pushed successfully"
     else
         print_error "Failed to push frontend image"
@@ -337,9 +325,7 @@ echo
 if [[ "$PUSH_ONLY" != "true" ]]; then
     print_status "Built images:"
     echo "  📦 ${BACKEND_IMAGE}:${VERSION}"
-    echo "  📦 ${BACKEND_IMAGE}:latest"
     echo "  🌐 ${FRONTEND_IMAGE}:${VERSION}"
-    echo "  🌐 ${FRONTEND_IMAGE}:latest"
 fi
 
 if [[ "$PUSH_ONLY" == "false" && "$BUILD_AND_PUSH" == "false" && "$LOCAL_ONLY" == "false" ]]; then

@@ -1,0 +1,17 @@
+{{- if .Values.litellm.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "litemaas.litellm.fullname" . }}
+  labels:
+    {{- include "litemaas.componentLabels" (dict "context" . "component" "ai-proxy") | nindent 4 }}
+spec:
+  selector:
+    {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "ai-proxy") | nindent 4 }}
+  ports:
+    - name: http
+      port: 4000
+      targetPort: 4000
+      protocol: TCP
+  type: ClusterIP
+{{- end }}

@@ -176,7 +176,7 @@ npm run push:containers
 
 - **Single source of truth**: Only the root `package.json` version matters
 - **Workspace packages**: Backend and frontend use `"version": "workspace"`
-- **Image tagging**: Automatically tagged with version + `latest`
+- **Image tagging**: Automatically tagged with version from root `package.json`
 
 ### Build Script Features
 

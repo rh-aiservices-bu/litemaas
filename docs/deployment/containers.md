@@ -15,7 +15,7 @@ The LiteMaaS application consists of four main containers:
 
 LiteMaaS containers can be deployed in multiple ways:
 
-- **[OpenShift/Kubernetes](#openshiftkubernetes-deployment)** - Enterprise container orchestration (recommended for production)
+- **[OpenShift/Kubernetes](#openshiftkubernetes-deployment)** - Enterprise container orchestration (recommended for production). Also available via [Helm chart](helm-deployment.md).
 - **[Docker/Podman Compose](#dockerpodman-compose-deployment)** - Local development and small deployments
 - **[Manual Container Deployment](#manual-container-deployment)** - Individual container management
 
@@ -184,13 +184,13 @@ podman run -d --name litemaas-postgres \
 podman run -d --name litemaas-backend \
   --env-file production.env \
   -p 8080:8080 \
-  litemaas-backend:latest
+  litemaas-backend:0.1.3
 
 # Run frontend (with runtime configuration)
 podman run -d --name litemaas-frontend \
   -e BACKEND_URL=https://yourdomain.com \
   -p 3000:8080 \
-  litemaas-frontend:latest
+  litemaas-frontend:0.1.3
 ```
 
 ## OpenShift/Kubernetes Deployment
@@ -199,11 +199,11 @@ podman run -d --name litemaas-frontend \
 
 LiteMaaS includes comprehensive Kubernetes manifests and Kustomize configuration for enterprise deployments:
 
-### Quick OpenShift Deployment
+### Kustomize Deployment (OpenShift)
 
 ```bash
 # Deploy to OpenShift using Kustomize
-oc apply -k deployment/openshift/
+oc apply -k deployment/kustomize/
 
 # Access applications at:
 # - LiteMaaS: https://litemaas-<namespace>.<cluster-domain>
@@ -229,7 +229,7 @@ For detailed OpenShift deployment instructions including:
 - Step-by-step deployment process
 - Troubleshooting guide
 
-**📚 See: [OpenShift Deployment Guide](openshift-deployment.md)**
+**📚 See: [Kustomize Deployment Guide](kustomize-deployment.md)**
 
 ## Health Checks
 
@@ -326,10 +326,7 @@ npm run build:containers:push
 ./scripts/build-containers.sh --build-and-push
 ```
 
-The script automatically tags images with:
-
-- Version from root `package.json` (e.g., `quay.io/rh-aiservices-bu/litemaas-backend:1.0.0`)
-- Latest tag (e.g., `quay.io/rh-aiservices-bu/litemaas-backend:latest`)
+The script automatically tags images with the version from root `package.json` (e.g., `quay.io/rh-aiservices-bu/litemaas-backend:0.1.3`).
 
 ### Manual Registry Operations
 

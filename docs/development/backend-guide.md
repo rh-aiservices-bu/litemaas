@@ -6,8 +6,8 @@ This guide covers backend-specific development workflows and debugging tips for 
 
 - **[Architecture Overview](../architecture/README.md)** - System architecture and design decisions
 - **[API Reference](../api/README.md)** - Complete API documentation
-- **[Deployment Guide](../deployment/backend-deployment.md)** - Production deployment instructions
-- **[Model Sync Configuration](../../backend/docs/MODEL_SYNC_CONFIG.md)** - Model synchronization setup
+- **[Production Guide](../deployment/production-guide.md)** - Production deployment instructions
+- **[Model Sync](model-sync.md)** - Model synchronization setup
 
 ## Development Workflow
 

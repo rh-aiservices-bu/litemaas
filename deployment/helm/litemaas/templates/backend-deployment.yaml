@@ -1,0 +1,110 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "litemaas.backend.fullname" . }}
+  labels:
+    {{- include "litemaas.componentLabels" (dict "context" . "component" "api") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "api") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "litemaas.componentLabels" (dict "context" . "component" "api") | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "litemaas.serviceAccountName" . }}
+      initContainers:
+        {{- include "litemaas.initWaitForDatabase" (dict "context" . "secretName" (include "litemaas.backend.secretName" .) "secretKey" "database-url") | nindent 8 }}
+      containers:
+        - name: backend
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: 8080
+              name: http
+          envFrom:
+            - configMapRef:
+                name: {{ include "litemaas.backend.fullname" . }}-config
+          env:
+            # Database Configuration
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.backend.secretName" . }}
+                  key: database-url
+            # CORS Configuration
+            - name: CORS_ORIGIN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.backend.secretName" . }}
+                  key: cors-origin
+            # JWT Configuration
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.backend.secretName" . }}
+                  key: jwt-secret
+            # OAuth Configuration
+            - name: OAUTH_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.backend.secretName" . }}
+                  key: oauth-client-id
+            - name: OAUTH_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  {{- if eq .Values.oauth.mode "serviceaccount" }}
+                  name: {{ include "litemaas.oauth.tokenSecretName" . }}
+                  key: token
+                  {{- else }}
+                  name: {{ include "litemaas.backend.secretName" . }}
+                  key: oauth-client-secret
+                  {{- end }}
+            - name: OAUTH_ISSUER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.backend.secretName" . }}
+                  key: oauth-issuer
+            - name: OAUTH_CALLBACK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.backend.secretName" . }}
+                  key: oauth-callback-url
+            # Admin Configuration
+            - name: ADMIN_API_KEYS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.backend.secretName" . }}
+                  key: admin-api-keys
+            # LiteLLM Integration
+            - name: LITELLM_API_URL
+              value: {{ include "litemaas.litellm.url" . | quote }}
+            - name: LITELLM_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.backend.secretName" . }}
+                  key: litellm-api-key
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health/live
+              port: 8080
+            initialDelaySeconds: {{ .Values.backend.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.backend.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.backend.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health/ready
+              port: 8080
+            initialDelaySeconds: {{ .Values.backend.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.backend.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.backend.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.backend.readinessProbe.failureThreshold }}

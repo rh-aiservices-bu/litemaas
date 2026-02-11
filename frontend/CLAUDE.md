@@ -276,7 +276,7 @@ npm run check:translations  # Check all locale files for missing keys
 - [`docs/development/pf6-guide/testing-patterns/context-dependent-components.md`](../docs/development/pf6-guide/testing-patterns/context-dependent-components.md) - Context-dependent components
 - [`docs/development/pf6-guide/testing-patterns/switch-components.md`](../docs/development/pf6-guide/testing-patterns/switch-components.md) - Switch component patterns
 
-**Coverage**: 98.5% passing (975/990 tests, 15 skipped). See [`docs/archive/implementation-plans/test-improvement-plan.md`](../../docs/archive/implementation-plans/test-improvement-plan.md) for known limitations.
+**Coverage**: 98.5% passing (975/990 tests, 15 skipped). See [`docs/archive/implementation-plans/test-improvement-plan.md`](../docs/archive/implementation-plans/test-improvement-plan.md) for known limitations.
 
 ## 🎨 Styling Guidelines
 

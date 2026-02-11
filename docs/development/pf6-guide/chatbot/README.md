@@ -175,7 +175,7 @@ const createMessage = (content, role) => ({
 - **[Chatbot Overview](https://www.patternfly.org/patternfly-ai/chatbot/overview)** - Main documentation
 - **[Basic Demo](https://www.patternfly.org/patternfly-ai/chatbot/overview/demo/basic-chatbot)** - Simple implementation
 - **[Embedded Demo](https://www.patternfly.org/patternfly-ai/chatbot/overview/demo/embedded-chatbot)** - Embedded pattern
-- **[Local Documentation](../resources/local-files.md#patternfly-chatbot-txt)** - Project-specific context
+
 
 **Note**: This chatbot guidance takes precedence over general PatternFly patterns. Always consult the latest PatternFly Chatbot documentation and demo source code.
 

@@ -103,6 +103,24 @@ CORS_ORIGIN=https://your-production-domain
 
 ### 3. OAuth2/OpenShift SSO Setup
 
+There are two approaches for configuring OAuth on OpenShift:
+
+#### Option A: ServiceAccount as OAuth Client (Recommended for Helm)
+
+When deploying with the Helm chart, the default `oauth.mode: serviceaccount` uses the Kubernetes ServiceAccount as an OAuth client. This requires **no cluster-admin privileges** — only namespace-level permissions.
+
+How it works:
+- The ServiceAccount is annotated with `serviceaccounts.openshift.io/oauth-redirecturi.litemaas`
+- The OAuth client ID is `system:serviceaccount:<namespace>:<sa-name>`
+- The OAuth client secret is the ServiceAccount's API token (from a `kubernetes.io/service-account-token` Secret)
+- The chart creates the token Secret and wires everything automatically
+
+No manual `OAuthClient` CR creation is needed. See [Helm Deployment Guide](helm-deployment.md#openshift-with-serviceaccount-oauth-default) for configuration details.
+
+#### Option B: OAuthClient Custom Resource (Traditional)
+
+This approach requires cluster-admin privileges to create an `OAuthClient` CR:
+
 1. Register application in OpenShift:
 
    ```yaml
@@ -116,6 +134,8 @@ CORS_ORIGIN=https://your-production-domain
      - 'https://your-domain/api/auth/callback' # Production
    grantMethod: prompt
    ```
+
+   When using the Helm chart, set `oauth.mode: external` and provide the credentials via `backend.auth.oauthClientId`, `backend.auth.oauthClientSecret`, and `backend.auth.oauthIssuer`.
 
 2. Configure environment variables with provided credentials:
    - `OAUTH_ISSUER`: OAuth server URL (e.g., `https://oauth-openshift.apps.cluster.com`)
@@ -152,7 +172,26 @@ CORS_ORIGIN=https://your-production-domain
    };
    ```
 
-4. Test OAuth flow:
+4. **Initial Admin Users** (Alternative to OpenShift Groups):
+
+   If you don't have cluster-admin access to create OpenShift groups, you can bootstrap admin users via the `INITIAL_ADMIN_USERS` environment variable:
+
+   ```bash
+   # Backend environment variable
+   INITIAL_ADMIN_USERS=admin@example.com,lead@example.com
+   ```
+
+   When deploying with the Helm chart, this is auto-detected from the deploying user on OpenShift, or can be set explicitly:
+
+   ```yaml
+   backend:
+     auth:
+       initialAdminUsers: "admin@example.com"
+   ```
+
+   Users listed in `INITIAL_ADMIN_USERS` are granted the `admin` role on login, in addition to any roles from OpenShift groups. This is additive and does not replace group-based role assignment.
+
+5. Test OAuth flow:
 
    ```bash
    # Initiate login - returns auth URL
@@ -162,7 +201,7 @@ CORS_ORIGIN=https://your-production-domain
    # {"authUrl":"https://oauth-openshift.apps.cluster.com/oauth/authorize?..."}
    ```
 
-5. **Verify Role Assignment**:
+6. **Verify Role Assignment**:
 
    After login, check user roles:
 

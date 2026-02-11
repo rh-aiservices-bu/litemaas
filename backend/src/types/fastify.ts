@@ -43,6 +43,9 @@ declare module 'fastify' {
       RATE_LIMIT_MAX: string;
       RATE_LIMIT_TIME_WINDOW: string;
 
+      // Initial Admin Users
+      INITIAL_ADMIN_USERS?: string;
+
       // Default User Values
       DEFAULT_USER_MAX_BUDGET: string;
       DEFAULT_USER_TPM_LIMIT: string;

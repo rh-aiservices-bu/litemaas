@@ -1,0 +1,78 @@
+{{- if .Values.litellm.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "litemaas.litellm.fullname" . }}
+  labels:
+    {{- include "litemaas.componentLabels" (dict "context" . "component" "ai-proxy") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "ai-proxy") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "litemaas.componentLabels" (dict "context" . "component" "ai-proxy") | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "litemaas.serviceAccountName" . }}
+      initContainers:
+        {{- include "litemaas.initWaitForDatabase" (dict "context" . "secretName" (include "litemaas.litellm.secretName" .) "secretKey" "database-url") | nindent 8 }}
+      containers:
+        - name: litellm
+          image: "{{ .Values.litellm.image.repository }}:{{ .Values.litellm.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: 4000
+              name: http
+          env:
+            # Database Configuration
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.litellm.secretName" . }}
+                  key: database-url
+            # LiteLLM Configuration
+            - name: LITELLM_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.litellm.secretName" . }}
+                  key: master-key
+            - name: UI_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.litellm.secretName" . }}
+                  key: ui-username
+            - name: UI_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.litellm.secretName" . }}
+                  key: ui-password
+            # Application Configuration
+            - name: LITELLM_MODE
+              value: "PRODUCTION"
+            - name: STORE_MODEL_IN_DB
+              value: "True"
+          resources:
+            {{- toYaml .Values.litellm.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /health/liveness
+              port: 4000
+            initialDelaySeconds: {{ .Values.litellm.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.litellm.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.litellm.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.litellm.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /health/readiness
+              port: 4000
+            initialDelaySeconds: {{ .Values.litellm.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.litellm.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.litellm.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.litellm.readinessProbe.failureThreshold }}
+{{- end }}

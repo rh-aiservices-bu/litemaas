@@ -551,4 +551,3 @@ If the frontend can't reach the backend:
 - [Architecture Overview](../architecture/overview.md)
 - [API Reference](../api/rest-api.md) - Endpoints with role requirements
 - [Contributing Guide](../../CONTRIBUTING.md)
-- [Project Plan](../../PROJECT_PLAN.md)

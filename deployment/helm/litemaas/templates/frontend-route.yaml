@@ -1,0 +1,26 @@
+{{- if and (eq .Values.global.platform "openshift") .Values.route.enabled }}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ include "litemaas.frontend.fullname" . }}
+  labels:
+    {{- include "litemaas.componentLabels" (dict "context" . "component" "web") | nindent 4 }}
+  {{- with .Values.route.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.route.frontend.host }}
+  host: {{ .Values.route.frontend.host | quote }}
+  {{- end }}
+  to:
+    kind: Service
+    name: {{ include "litemaas.frontend.fullname" . }}
+    weight: 100
+  port:
+    targetPort: http
+  tls:
+    termination: {{ .Values.route.frontend.termination }}
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+{{- end }}

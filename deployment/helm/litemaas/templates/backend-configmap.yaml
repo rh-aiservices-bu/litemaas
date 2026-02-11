@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "litemaas.backend.fullname" . }}-config
+  labels:
+    {{- include "litemaas.componentLabels" (dict "context" . "component" "api") | nindent 4 }}
+data:
+  HOST: "0.0.0.0"
+  PORT: "8080"
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+  JWT_EXPIRES_IN: {{ .Values.backend.auth.jwtExpiresIn | quote }}
+  RATE_LIMIT_MAX: {{ .Values.backend.rateLimit.max | quote }}
+  RATE_LIMIT_TIME_WINDOW: {{ .Values.backend.rateLimit.timeWindow | quote }}
+  DEFAULT_USER_MAX_BUDGET: {{ .Values.backend.defaultUser.maxBudget | quote }}
+  DEFAULT_USER_TPM_LIMIT: {{ .Values.backend.defaultUser.tpmLimit | quote }}
+  DEFAULT_USER_RPM_LIMIT: {{ .Values.backend.defaultUser.rpmLimit | quote }}
+  {{- $initialAdmins := include "litemaas.initialAdminUsers" . }}
+  {{- if $initialAdmins }}
+  INITIAL_ADMIN_USERS: {{ $initialAdmins | quote }}
+  {{- end }}
+  {{- if .Values.backend.nodeTlsRejectUnauthorized }}
+  NODE_TLS_REJECT_UNAUTHORIZED: {{ .Values.backend.nodeTlsRejectUnauthorized | quote }}
+  {{- end }}

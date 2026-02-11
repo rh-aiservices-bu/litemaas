@@ -55,7 +55,7 @@ For detailed features, see:
 - [`frontend/CLAUDE.md`](frontend/CLAUDE.md) - UI components, state management, PatternFly 6
 - [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md) - Complete RBAC guide
 - [`docs/features/subscription-approval-workflow.md`](docs/features/subscription-approval-workflow.md) - Complete approval workflow guide
-- [`docs/features/admin-usage-analytics-implementation-plan.md`](docs/features/admin-usage-analytics-implementation-plan.md) - Comprehensive admin analytics implementation (2000 lines)
+- [`docs/archive/features/admin-usage-analytics-implementation-plan.md`](docs/archive/features/admin-usage-analytics-implementation-plan.md) - Comprehensive admin analytics implementation (2000 lines)
 - [`docs/development/chart-components-guide.md`](docs/development/chart-components-guide.md) - Chart component patterns and utilities
 - [`docs/development/pattern-reference.md`](docs/development/pattern-reference.md) - Authoritative code patterns and anti-patterns
 
@@ -79,10 +79,16 @@ cd backend && npm run test:db:setup
 npm test
 ```
 
-**Production (OpenShift):**
+**Production (Helm — Kubernetes or OpenShift):**
 
 ```bash
-oc apply -k deployment/openshift/  # Deploy to OpenShift/Kubernetes
+helm install litemaas deployment/helm/litemaas/ -n litemaas --create-namespace -f my-values.yaml
+```
+
+**Production (Kustomize — OpenShift):**
+
+```bash
+oc apply -k deployment/kustomize/  # Deploy to OpenShift with Kustomize
 ```
 
 **Development (Container):**
@@ -91,7 +97,7 @@ oc apply -k deployment/openshift/  # Deploy to OpenShift/Kubernetes
 docker compose up -d  # Local development with containers (using compose.yaml)
 ```
 
-_See `docs/development/` for detailed setup and `docs/deployment/configuration.md` for environment variables_
+_See `docs/development/` for detailed setup, `docs/deployment/helm-deployment.md` for Helm deployment, and `docs/deployment/configuration.md` for environment variables_
 
 ## 🚨 CRITICAL DEVELOPMENT NOTES
 

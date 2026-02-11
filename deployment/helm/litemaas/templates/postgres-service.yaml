@@ -1,0 +1,17 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "litemaas.postgresql.fullname" . }}
+  labels:
+    {{- include "litemaas.componentLabels" (dict "context" . "component" "database") | nindent 4 }}
+spec:
+  selector:
+    {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "database") | nindent 4 }}
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+      protocol: TCP
+  type: ClusterIP
+{{- end }}

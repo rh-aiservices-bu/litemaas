@@ -387,6 +387,6 @@ The caching strategy ensures:
 
 For complete technical documentation, see:
 
-- **[Admin Usage Analytics Implementation](admin-usage-analytics-implementation-plan.md)** - Complete feature specification
+- **[Admin Usage Analytics Implementation](../archive/features/admin-usage-analytics-implementation-plan.md)** - Complete feature specification
 - **[Usage API Documentation](../api/usage-api.md#admin-endpoints)** - API endpoints and data formats
 - **[REST API Reference](../api/rest-api.md#admin-usage-analytics-apiv1adminusage)** - Detailed endpoint specifications
