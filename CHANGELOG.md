@@ -5,6 +5,16 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **Helm Chart Defaults**: Default platform set to OpenShift (`global.platform: openshift`)
+- **Helm Chart Defaults**: LiteLLM Route and Ingress now enabled by default (`route.litellm.enabled: true`, `ingress.litellm.enabled: true`), since LiteLLM shares the same Service/endpoints as the frontend and should be exposed when the frontend is. Set to `false` to keep LiteLLM cluster-internal only.
+- **Helm Deployment Docs**: Simplified Quick Start examples and updated configuration reference tables to reflect new defaults
+
+---
+
 ## [0.1.3] - 2026-02-11
 
 This release introduces Helm chart deployment for Kubernetes and OpenShift, fixes special character handling in model names, and includes deployment improvements.
