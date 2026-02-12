@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "litemaas.frontend.fullname" . }}
+  labels:
+    {{- include "litemaas.componentLabels" (dict "context" . "component" "web") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "web") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "litemaas.componentLabels" (dict "context" . "component" "web") | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "litemaas.serviceAccountName" . }}
+      initContainers:
+        {{- include "litemaas.initWaitForBackend" . | nindent 8 }}
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: BACKEND_URL
+              value: {{ include "litemaas.backend.url" . | quote }}
+          resources:
+            {{- toYaml .Values.frontend.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: {{ .Values.frontend.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.frontend.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.frontend.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.frontend.livenessProbe.failureThreshold }}
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: {{ .Values.frontend.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.frontend.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.frontend.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.frontend.readinessProbe.failureThreshold }}

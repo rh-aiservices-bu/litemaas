@@ -1,0 +1,59 @@
+{{/*
+RBAC for the post-install/post-upgrade OAuth setup hook.
+Only deployed on OpenShift with ServiceAccount OAuth mode and Routes enabled.
+*/}}
+{{- if and (eq .Values.global.platform "openshift") (eq .Values.oauth.mode "serviceaccount") .Values.route.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "litemaas.fullname" . }}-hook
+  labels:
+    {{- include "litemaas.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "litemaas.fullname" . }}-hook
+  labels:
+    {{- include "litemaas.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+rules:
+  - apiGroups: ["route.openshift.io"]
+    resources: ["routes"]
+    verbs: ["get"]
+  - apiGroups: [""]
+    resources: ["serviceaccounts"]
+    verbs: ["get", "patch"]
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "patch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "litemaas.fullname" . }}-hook
+  labels:
+    {{- include "litemaas.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,post-install,post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "litemaas.fullname" . }}-hook
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: Role
+  name: {{ include "litemaas.fullname" . }}-hook
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

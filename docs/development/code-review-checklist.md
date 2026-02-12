@@ -194,7 +194,7 @@ useEffect(() => {
 const { data, isLoading } = useQuery(['users'], () => userService.getUsers());
 ```
 
-**Feedback**: "Please use React Query for data fetching instead of manual `fetch`/`useState`. See [State Management Guide](../frontend/CLAUDE.md#state-management)."
+**Feedback**: "Please use React Query for data fetching instead of manual `fetch`/`useState`. See [State Management Guide](../../frontend/CLAUDE.md#state-management)."
 
 ---
 
@@ -342,7 +342,7 @@ This validates:
 ### Test Quality
 
 - [ ] Tests use `test-utils.tsx` for consistent provider setup
-- [ ] Mocks use proper patterns (see [Frontend Testing Guide](../frontend/CLAUDE.md#testing-best-practices-and-debugging))
+- [ ] Mocks use proper patterns (see [Frontend Testing Guide](../../frontend/CLAUDE.md#testing-best-practices-and-debugging))
 - [ ] Tests query by accessible roles, not test IDs or classes
 - [ ] Async operations use `waitFor` appropriately
 - [ ] No `act()` warnings in test output
@@ -499,7 +499,7 @@ it('should handle fetch errors', async () => {
 
 **Testing**:
 
-> "Please add a test for the error scenario. See [Testing Guide](../frontend/CLAUDE.md#testing-best-practices-and-debugging)."
+> "Please add a test for the error scenario. See [Testing Guide](../../frontend/CLAUDE.md#testing-best-practices-and-debugging)."
 
 ---
 
@@ -510,8 +510,8 @@ it('should handle fetch errors', async () => {
 - [Pattern Reference](./pattern-reference.md)
 - [Accessibility Guide](./accessibility/README.md)
 - [Translation Management](./translation-management.md)
-- [Frontend Context](../frontend/CLAUDE.md)
-- [Backend Context](../backend/CLAUDE.md)
+- [Frontend Context](../../frontend/CLAUDE.md)
+- [Backend Context](../../backend/CLAUDE.md)
 
 ---
 

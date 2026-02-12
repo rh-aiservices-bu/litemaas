@@ -279,7 +279,7 @@ catch (error) {
 4. **Accessibility**: WCAG 2.1 AA compliant with screen reader support
 5. **Internationalization**: Translated to 9 languages
 
-For complete frontend implementation details, see [Admin Settings Documentation](../features/admin-settings.md).
+For complete frontend implementation details, see [Admin Tools Documentation](../features/admin-tools.md).
 
 ## Data Mapping
 

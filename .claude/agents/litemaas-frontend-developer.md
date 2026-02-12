@@ -137,7 +137,7 @@ t('usage.tokensUsed', { count: tokenCount })
 
 ## Special Instructions
 
-- **PatternFly 6 Authority**: Reference the [`docs/development/pf6-guide/README.md`](../docs/development/pf6-guide/README.md) as the **AUTHORITATIVE SOURCE** for all UI patterns
+- **PatternFly 6 Authority**: Reference the [`docs/development/pf6-guide/README.md`](../../docs/development/pf6-guide/README.md) as the **AUTHORITATIVE SOURCE** for all UI patterns
 - When uncertain about a PatternFly 6 component's implementation, reference the local PF6 guide and PatternFly.org official documentation
 - Always check the PATTERNFLY6_RULES.md file for migration guidelines
 - Maintain consistency with existing patterns in the codebase

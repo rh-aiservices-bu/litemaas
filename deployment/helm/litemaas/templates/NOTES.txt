@@ -1,0 +1,79 @@
+LiteMaaS has been deployed successfully!
+
+Components:
+{{- if .Values.postgresql.enabled }}
+  - PostgreSQL:  {{ include "litemaas.postgresql.fullname" . }}:5432
+{{- end }}
+{{- if .Values.litellm.enabled }}
+  - LiteLLM:     {{ include "litemaas.litellm.fullname" . }}:4000
+{{- end }}
+  - Backend:     {{ include "litemaas.backend.fullname" . }}:8080
+  - Frontend:    {{ include "litemaas.frontend.fullname" . }}:8080
+
+{{- $clusterDomain := include "litemaas.clusterDomain" . }}
+{{- if $clusterDomain }}
+
+Cluster domain: {{ $clusterDomain }}
+{{- end }}
+
+OAuth mode: {{ .Values.oauth.mode }}
+{{- if eq .Values.oauth.mode "serviceaccount" }}
+  Client ID:  {{ include "litemaas.oauth.clientId" . }}
+  Token secret: {{ include "litemaas.oauth.tokenSecretName" . }}
+  NOTE: No OAuthClient CR needed — the ServiceAccount acts as the OAuth client.
+{{- if and (eq .Values.global.platform "openshift") .Values.route.enabled }}
+  A post-install hook will auto-configure the OAuth redirect URI and backend
+  secrets from the Route hostname. The backend may restart once after install.
+{{- end }}
+{{- else }}
+  Client ID: {{ .Values.backend.auth.oauthClientId }}
+  NOTE: Ensure your OAuthClient CR is configured separately.
+{{- end }}
+{{- $issuer := include "litemaas.oauth.issuer" . }}
+{{- if $issuer }}
+  Issuer: {{ $issuer }}
+{{- end }}
+
+{{- $initialAdmins := include "litemaas.initialAdminUsers" . }}
+{{- if $initialAdmins }}
+
+Initial admin users: {{ $initialAdmins }}
+{{- if and (not .Values.backend.auth.initialAdminUsers) (include "litemaas.deployer.username" .) }}
+  (Auto-detected from deploying user)
+{{- end }}
+{{- end }}
+
+{{- if and (eq .Values.global.platform "kubernetes") .Values.ingress.enabled }}
+
+Access the application:
+{{- if .Values.ingress.frontend.host }}
+  Frontend:  https://{{ .Values.ingress.frontend.host }}
+{{- end }}
+{{- if and .Values.ingress.litellm.enabled .Values.ingress.litellm.host }}
+  LiteLLM:   https://{{ .Values.ingress.litellm.host }}
+{{- end }}
+{{- else if and (eq .Values.global.platform "openshift") .Values.route.enabled }}
+
+Access the application via OpenShift Routes:
+{{- $hostname := include "litemaas.frontend.hostname" . }}
+{{- if $hostname }}
+  Frontend: https://{{ $hostname }}
+{{- else }}
+  kubectl get routes -n {{ .Release.Namespace }}
+{{- end }}
+{{- else }}
+
+Access the application via port-forward:
+
+  # Frontend
+  kubectl port-forward svc/{{ include "litemaas.frontend.fullname" . }} 8080:8080 -n {{ .Release.Namespace }}
+  # Then open http://localhost:8080
+
+  # LiteLLM Admin UI
+  kubectl port-forward svc/{{ include "litemaas.litellm.fullname" . }} 4000:4000 -n {{ .Release.Namespace }}
+  # Then open http://localhost:4000
+{{- end }}
+
+Post-deployment:
+  1. Configure AI models via LiteMaaS or LiteLLM admin UI
+  2. Wait for backend to sync models, or restart the backend deployment

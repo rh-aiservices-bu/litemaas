@@ -35,6 +35,6 @@ This directory contains documentation for key features and functionality in Lite
 ## Related Documentation
 
 - [API Reference](../api/README.md) - API endpoints for features
-- [Development Guide](../development/README.md) - Implementing new features
+- [Development Guide](../development/setup.md) - Implementing new features
 - [Architecture](../architecture/README.md) - System design
 - [Deployment](../deployment/README.md) - Feature configuration

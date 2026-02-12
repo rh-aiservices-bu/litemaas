@@ -1,0 +1,31 @@
+{{- if and (eq .Values.global.platform "kubernetes") .Values.ingress.enabled .Values.ingress.frontend.host }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "litemaas.frontend.fullname" . }}
+  labels:
+    {{- include "litemaas.componentLabels" (dict "context" . "component" "web") | nindent 4 }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.ingress.className }}
+  ingressClassName: {{ .Values.ingress.className | quote }}
+  {{- end }}
+  {{- if .Values.ingress.frontend.tls }}
+  tls:
+    {{- toYaml .Values.ingress.frontend.tls | nindent 4 }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.ingress.frontend.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "litemaas.frontend.fullname" . }}
+                port:
+                  number: 8080
+{{- end }}
