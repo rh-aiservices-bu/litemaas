@@ -83,8 +83,6 @@ spec:
                   name: {{ include "litemaas.backend.secretName" . }}
                   key: admin-api-keys
             # LiteLLM Integration
-            - name: LITELLM_API_URL
-              value: {{ include "litemaas.litellm.url" . | quote }}
             - name: LITELLM_API_KEY
               valueFrom:
                 secretKeyRef:

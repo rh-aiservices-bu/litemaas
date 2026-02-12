@@ -13,6 +13,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Helm Chart Defaults**: LiteLLM Route and Ingress now enabled by default (`route.litellm.enabled: true`, `ingress.litellm.enabled: true`), since LiteLLM shares the same Service/endpoints as the frontend and should be exposed when the frontend is. Set to `false` to keep LiteLLM cluster-internal only.
 - **Helm Deployment Docs**: Simplified Quick Start examples and updated configuration reference tables to reflect new defaults
 
+### Fixed
+
+- **Helm: LiteLLM URL uses external Route/Ingress when available**: `LITELLM_API_URL` now resolves to the external Route or Ingress URL instead of the internal ClusterIP address when external access is enabled, so users see a reachable endpoint in the UI
+  - Kubernetes Ingress: uses `https://` or `http://` based on TLS configuration
+  - OpenShift Route with explicit host: uses `https://<host>`
+  - OpenShift Route with auto-generated host: derived from `clusterDomain` or patched at runtime by the post-install hook
+  - Explicit `backend.litellmApiUrl` override still takes precedence
+  - `LITELLM_API_URL` moved from Deployment env to ConfigMap to enable hook patching
+  - Post-install hook RBAC extended with configmaps get/patch permission
+  - NOTES.txt now shows LiteLLM URL in the OpenShift access section
+
 ---
 
 ## [0.1.3] - 2026-02-11
