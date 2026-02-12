@@ -43,6 +43,9 @@ cp backend/.env.example backend/.env
 Minimum backend configuration:
 
 ```env
+# Server
+OPENSHIFT_API_URL=https://api.your-cluster.com:6443
+
 # Database
 DATABASE_URL=postgresql://postgres:postgres@localhost:5432/litemaas_dev
 
@@ -548,4 +551,3 @@ If the frontend can't reach the backend:
 - [Architecture Overview](../architecture/overview.md)
 - [API Reference](../api/rest-api.md) - Endpoints with role requirements
 - [Contributing Guide](../../CONTRIBUTING.md)
-- [Project Plan](../../PROJECT_PLAN.md)

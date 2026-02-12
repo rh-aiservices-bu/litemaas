@@ -702,7 +702,7 @@ if (error) {
 }
 ```
 
-**Comment**: "Please use `useErrorHandler` hook for consistent error handling. See [Error Handling Guide](../docs/development/error-handling-guide.md)."
+**Comment**: "Please use `useErrorHandler` hook for consistent error handling. See [Error Handling Guide](./error-handling-guide.md)."
 
 ---
 

@@ -3,7 +3,7 @@ import { OAuthService } from '../../../src/services/oauth.service.js';
 import { FastifyInstance } from 'fastify';
 
 // Mock Fastify instance
-const createMockFastify = () =>
+const createMockFastify = (configOverrides: Record<string, unknown> = {}) =>
   ({
     dbUtils: {
       queryOne: vi.fn(),
@@ -15,6 +15,7 @@ const createMockFastify = () =>
       error: vi.fn(),
       debug: vi.fn(),
     },
+    config: { ...configOverrides },
   }) as unknown as FastifyInstance;
 
 describe('OAuthService', () => {
@@ -179,6 +180,62 @@ describe('OAuthService', () => {
       expect(result).toContain('admin'); // Should get admin role
       expect(result).toContain('user');
       expect(result).toHaveLength(2);
+    });
+  });
+
+  describe('getInitialAdminRoles', () => {
+    it('should return empty array when INITIAL_ADMIN_USERS is not set', () => {
+      const result = (service as any).getInitialAdminRoles('someuser');
+      expect(result).toEqual([]);
+    });
+
+    it('should return admin and user roles when username matches', () => {
+      const customFastify = createMockFastify({ INITIAL_ADMIN_USERS: 'admin@example.com' });
+      const customService = new OAuthService(customFastify, mockLiteLLMService, mockDefaultTeamService);
+
+      const result = (customService as any).getInitialAdminRoles('admin@example.com');
+      expect(result).toEqual(['admin', 'user']);
+    });
+
+    it('should handle comma-separated list of usernames', () => {
+      const customFastify = createMockFastify({ INITIAL_ADMIN_USERS: 'user1,user2,user3' });
+      const customService = new OAuthService(customFastify, mockLiteLLMService, mockDefaultTeamService);
+
+      expect((customService as any).getInitialAdminRoles('user2')).toEqual(['admin', 'user']);
+    });
+
+    it('should trim whitespace from usernames', () => {
+      const customFastify = createMockFastify({ INITIAL_ADMIN_USERS: ' user1 , user2 , user3 ' });
+      const customService = new OAuthService(customFastify, mockLiteLLMService, mockDefaultTeamService);
+
+      expect((customService as any).getInitialAdminRoles('user2')).toEqual(['admin', 'user']);
+    });
+
+    it('should return empty array for non-matching username', () => {
+      const customFastify = createMockFastify({ INITIAL_ADMIN_USERS: 'admin@example.com' });
+      const customService = new OAuthService(customFastify, mockLiteLLMService, mockDefaultTeamService);
+
+      const result = (customService as any).getInitialAdminRoles('other@example.com');
+      expect(result).toEqual([]);
+    });
+
+    it('should handle empty string value', () => {
+      const customFastify = createMockFastify({ INITIAL_ADMIN_USERS: '' });
+      const customService = new OAuthService(customFastify, mockLiteLLMService, mockDefaultTeamService);
+
+      const result = (customService as any).getInitialAdminRoles('someuser');
+      expect(result).toEqual([]);
+    });
+
+    it('should log info when username matches', () => {
+      const customFastify = createMockFastify({ INITIAL_ADMIN_USERS: 'admin@example.com' });
+      const customService = new OAuthService(customFastify, mockLiteLLMService, mockDefaultTeamService);
+
+      (customService as any).getInitialAdminRoles('admin@example.com');
+      expect(customFastify.log.info).toHaveBeenCalledWith(
+        { username: 'admin@example.com' },
+        'User matched INITIAL_ADMIN_USERS — granting admin role',
+      );
     });
   });
 

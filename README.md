@@ -52,24 +52,36 @@ And more...
 
 ## 🚀 Deployment
 
-LiteMaaS supports multiple deployment methods:
+### Helm Chart Deployment (Recommended)
 
-### OpenShift/Kubernetes Deployment (Recommended for Production)
-
-**Quick OpenShift Deployment**: [Readme](deployment/openshift/README.md)
-
-Deploy to OpenShift or Kubernetes using the provided manifests and Kustomize configuration:
+Deploy to OpenShift or Kubernetes using the Helm chart:
 
 ```bash
-# Deploy to OpenShift
-oc apply -k deployment/openshift/
+# OpenShift
+oc new-project litemaas
+helm install litemaas deployment/helm/litemaas/ \
+  -n litemaas \
+  -f my-values.yaml \
+  --set global.platform=openshift \
+  --set route.enabled=true
 
-# Access at:
-# - LiteMaaS: https://litemaas-<namespace>.<cluster-domain>
-# - LiteLLM UI: https://litellm-<namespace>.<cluster-domain>
+# Kubernetes
+helm install litemaas deployment/helm/litemaas/ \
+  -n litemaas --create-namespace \
+  -f my-values.yaml
 ```
 
-**📚 Complete Guide**: [OpenShift Deployment Guide](docs/deployment/openshift-deployment.md)
+**📚 Complete Guide**: [Helm Deployment Guide](docs/deployment/helm-deployment.md)
+
+### Kustomize Deployment (OpenShift)
+
+Deploy to OpenShift using Kustomize manifests: [Readme](deployment/kustomize/README.md)
+
+```bash
+oc apply -k deployment/kustomize/
+```
+
+**📚 Complete Guide**: [Kustomize Deployment Guide](docs/deployment/kustomize-deployment.md)
 
 ### Container Deployment (Development/Testing)
 
@@ -157,9 +169,9 @@ npm run push:containers
 
 ### Feature Documentation
 
-- 📊 [Admin Usage Analytics](docs/features/admin-usage-analytics-implementation-plan.md) - Comprehensive system-wide analytics with caching
+- 📊 [Admin Usage Analytics](docs/archive/features/admin-usage-analytics-implementation-plan.md) - Comprehensive system-wide analytics with caching
 - 🔐 [RBAC & User Roles](docs/features/user-roles-administration.md) - Three-tier role hierarchy and permissions
-- 🔑 [Multi-Model API Keys](docs/features/multi-model-api-keys-implementation.md) - API key architecture
+- 🔑 [Multi-Model API Keys](docs/archive/features/multi-model-api-keys-implementation.md) - API key architecture
 
 ## Development
 

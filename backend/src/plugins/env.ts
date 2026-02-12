@@ -8,6 +8,7 @@ const envSchema = Type.Object({
   HOST: Type.String({ default: '0.0.0.0' }),
   PORT: Type.String({ default: '8081' }),
   LOG_LEVEL: Type.String({ default: 'info' }),
+  OPENSHIFT_API_URL: Type.Optional(Type.String()),
 
   // CORS
   CORS_ORIGIN: Type.String({ default: 'http://localhost:3000' }),
@@ -42,6 +43,9 @@ const envSchema = Type.Object({
   // Rate Limiting
   RATE_LIMIT_MAX: Type.String({ default: '100' }),
   RATE_LIMIT_TIME_WINDOW: Type.String({ default: '1m' }),
+
+  // Initial Admin Users (comma-separated usernames)
+  INITIAL_ADMIN_USERS: Type.Optional(Type.String()),
 
   // Default User Values
   DEFAULT_USER_MAX_BUDGET: Type.String({ default: '100' }),

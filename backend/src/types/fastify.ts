@@ -7,6 +7,7 @@ declare module 'fastify' {
       HOST: string;
       PORT: string;
       LOG_LEVEL: string;
+      OPENSHIFT_API_URL?: string;
 
       // CORS
       CORS_ORIGIN: string;
@@ -41,6 +42,9 @@ declare module 'fastify' {
       // Rate Limiting
       RATE_LIMIT_MAX: string;
       RATE_LIMIT_TIME_WINDOW: string;
+
+      // Initial Admin Users
+      INITIAL_ADMIN_USERS?: string;
 
       // Default User Values
       DEFAULT_USER_MAX_BUDGET: string;

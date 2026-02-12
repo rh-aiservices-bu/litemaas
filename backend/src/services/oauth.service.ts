@@ -191,13 +191,15 @@ export class OAuthService extends BaseService {
     }
 
     // Real OpenShift user info
-    // Convert OAuth issuer URL to API server URL
+    // Convert OAuth issuer URL to API server URL if OPENSHIFT_API_URL is not set
     // From: https://oauth-openshift.apps.dev.rhoai.rh-aiservices-bu.com
     // To:   https://api.dev.rhoai.rh-aiservices-bu.com:6443
     const oauthIssuer = this.fastify.config.OAUTH_ISSUER;
     let apiServerUrl: string;
 
-    if (oauthIssuer.includes('oauth-openshift.apps.')) {
+    if (this.fastify.config.OPENSHIFT_API_URL) {
+      apiServerUrl = this.fastify.config.OPENSHIFT_API_URL;
+    } else if (oauthIssuer.includes('oauth-openshift.apps.')) {
       // Standard OpenShift pattern
       apiServerUrl =
         oauthIssuer.replace('oauth-openshift.apps.', 'api.').replace(/\/$/, '') + ':6443';
@@ -331,6 +333,31 @@ export class OAuthService extends BaseService {
     }
 
     return Array.from(roles);
+  }
+
+  /**
+   * Returns admin roles if the username matches the INITIAL_ADMIN_USERS env var.
+   */
+  private getInitialAdminRoles(username: string): string[] {
+    const initialAdminUsers = this.fastify.config.INITIAL_ADMIN_USERS;
+    if (!initialAdminUsers) {
+      return [];
+    }
+
+    const adminUsernames = initialAdminUsers
+      .split(',')
+      .map((u) => u.trim())
+      .filter((u) => u.length > 0);
+
+    if (adminUsernames.includes(username)) {
+      this.fastify.log.info(
+        { username },
+        'User matched INITIAL_ADMIN_USERS — granting admin role',
+      );
+      return ['admin', 'user'];
+    }
+
+    return [];
   }
 
   /**
@@ -469,6 +496,8 @@ export class OAuthService extends BaseService {
     roles: string[];
   }> {
     const openShiftRoles = this.mapGroupsToRoles(userInfo.groups || []);
+    const initialAdminRoles = this.getInitialAdminRoles(userInfo.preferred_username);
+    const derivedRoles = this.mergeRoles(openShiftRoles, initialAdminRoles);
 
     // Check if user exists in database
     const existingUser = await this.fastify.dbUtils.queryOne(
@@ -487,7 +516,7 @@ export class OAuthService extends BaseService {
     if (existingUser) {
       // Merge existing roles with OpenShift group roles
       const existingRoles = Array.isArray(existingUser.roles) ? existingUser.roles : [];
-      const mergedRoles = this.mergeRoles(existingRoles, openShiftRoles);
+      const mergedRoles = this.mergeRoles(existingRoles, derivedRoles);
 
       // Update existing user - pass merged roles array directly for PostgreSQL array column
       await this.fastify.dbUtils.query(
@@ -522,7 +551,7 @@ export class OAuthService extends BaseService {
           userInfo.name || null,
           'openshift',
           userInfo.sub,
-          openShiftRoles, // Pass array directly, PostgreSQL will handle the formatting
+          derivedRoles, // Pass array directly, PostgreSQL will handle the formatting
         ],
       );
 
@@ -539,7 +568,7 @@ export class OAuthService extends BaseService {
         username: newUser.username,
         email: newUser.email,
         fullName: newUser.full_name,
-        roles: openShiftRoles,
+        roles: derivedRoles,
       };
     }
 

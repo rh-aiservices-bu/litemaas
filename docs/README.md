@@ -31,7 +31,8 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 #### 🚀 Deployment
 
 - **[Configuration](deployment/configuration.md)** - Environment variables and settings
-- **[OpenShift Deployment](deployment/openshift-deployment.md)** - Kubernetes/OpenShift guide
+- **[Helm Chart Deployment](deployment/helm-deployment.md)** - Helm-based deployment for Kubernetes and OpenShift
+- **[Kustomize Deployment](deployment/kustomize-deployment.md)** - Kustomize-based deployment for OpenShift
 - **[Container Deployment](deployment/containers.md)** - Docker/Podman deployment
 - **[Production Guide](deployment/production-guide.md)** - Production best practices
 - **[Authentication Setup](deployment/authentication.md)** - OAuth configuration
@@ -76,7 +77,7 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 
 ### For DevOps/SREs
 
-1. Read [OpenShift Deployment](deployment/openshift-deployment.md)
+1. Read [Helm Chart Deployment](deployment/helm-deployment.md) or [Kustomize Deployment](deployment/kustomize-deployment.md)
 2. Configure using [Configuration Guide](deployment/configuration.md)
 3. Review [Production Guide](deployment/production-guide.md)
 4. Set up [Authentication](deployment/authentication.md)

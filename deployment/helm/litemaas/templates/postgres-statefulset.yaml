@@ -1,0 +1,90 @@
+{{- if .Values.postgresql.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "litemaas.postgresql.fullname" . }}
+  labels:
+    {{- include "litemaas.componentLabels" (dict "context" . "component" "database") | nindent 4 }}
+spec:
+  serviceName: {{ include "litemaas.postgresql.fullname" . }}
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "database") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "litemaas.componentLabels" (dict "context" . "component" "database") | nindent 8 }}
+    spec:
+      {{- with .Values.global.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "litemaas.serviceAccountName" . }}
+      volumes:
+        - name: postgres-init-script
+          configMap:
+            name: {{ include "litemaas.postgresql.fullname" . }}-init
+            defaultMode: 0755
+      containers:
+        - name: postgres
+          image: "{{ .Values.postgresql.image.repository }}:{{ .Values.postgresql.image.tag }}"
+          imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          ports:
+            - containerPort: 5432
+              name: postgres
+          env:
+            - name: POSTGRES_DB
+              value: "litemaas_db"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.postgresql.secretName" . }}
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.postgresql.secretName" . }}
+                  key: password
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          resources:
+            {{- toYaml .Values.postgresql.resources | nindent 12 }}
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-init-script
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+          livenessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: {{ .Values.postgresql.livenessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.postgresql.livenessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.postgresql.livenessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.postgresql.livenessProbe.failureThreshold }}
+          readinessProbe:
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"
+            initialDelaySeconds: {{ .Values.postgresql.readinessProbe.initialDelaySeconds }}
+            periodSeconds: {{ .Values.postgresql.readinessProbe.periodSeconds }}
+            timeoutSeconds: {{ .Values.postgresql.readinessProbe.timeoutSeconds }}
+            failureThreshold: {{ .Values.postgresql.readinessProbe.failureThreshold }}
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        {{- if .Values.postgresql.persistence.storageClass }}
+        storageClassName: {{ .Values.postgresql.persistence.storageClass | quote }}
+        {{- end }}
+        resources:
+          requests:
+            storage: {{ .Values.postgresql.persistence.size }}
+{{- end }}
