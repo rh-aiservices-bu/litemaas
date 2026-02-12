@@ -54,6 +54,12 @@ spec:
               value: {{ include "litemaas.oauth.issuer" . | quote }}
             - name: EXPLICIT_CALLBACK
               value: {{ .Values.backend.auth.oauthCallbackUrl | quote }}
+            - name: CONFIGMAP_NAME
+              value: {{ include "litemaas.backend.fullname" . }}-config
+            - name: LITELLM_ROUTE_NAME
+              value: {{ include "litemaas.litellm.fullname" . | quote }}
+            - name: LITELLM_ROUTE_ENABLED
+              value: {{ if .Values.route.litellm.enabled }}"true"{{ else }}"false"{{ end }}
           command:
             - /bin/sh
             - -c
@@ -148,6 +154,29 @@ spec:
                   fi
                   echo "  Done."
                   NEED_RESTART="true"
+              fi
+              echo ""
+
+              # ── Step 4b: Patch LiteLLM URL in ConfigMap ─────────────────
+              if [ "$LITELLM_ROUTE_ENABLED" = "true" ]; then
+                  echo "Step 4b: Checking LiteLLM Route..."
+                  LITELLM_HOST=""
+                  if kubectl get route "$LITELLM_ROUTE_NAME" -n "$NAMESPACE" >/dev/null 2>&1; then
+                      LITELLM_HOST=$(kubectl get route "$LITELLM_ROUTE_NAME" -n "$NAMESPACE" \
+                          -o jsonpath='{.spec.host}' 2>/dev/null || true)
+                  fi
+                  if [ -n "$LITELLM_HOST" ]; then
+                      LITELLM_URL="https://${LITELLM_HOST}"
+                      echo "  Patching LITELLM_API_URL → $LITELLM_URL"
+                      kubectl patch configmap "$CONFIGMAP_NAME" -n "$NAMESPACE" --type merge \
+                          -p "{\"data\":{\"LITELLM_API_URL\":\"${LITELLM_URL}\"}}"
+                      NEED_RESTART="true"
+                      echo "  Done."
+                  else
+                      echo "  LiteLLM Route host not found; keeping template-time URL."
+                  fi
+              else
+                  echo "Step 4b: Skipped (LiteLLM Route not enabled)."
               fi
               echo ""
 

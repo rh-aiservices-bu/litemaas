@@ -61,6 +61,18 @@ Access the application via OpenShift Routes:
 {{- else }}
   kubectl get routes -n {{ .Release.Namespace }}
 {{- end }}
+{{- if .Values.route.litellm.enabled }}
+{{- if .Values.route.litellm.host }}
+  LiteLLM:  https://{{ .Values.route.litellm.host }}
+{{- else }}
+{{- $domain := include "litemaas.clusterDomain" . }}
+{{- if $domain }}
+  LiteLLM:  https://{{ include "litemaas.litellm.fullname" . }}-{{ .Release.Namespace }}.{{ $domain }}
+{{- else }}
+  LiteLLM:  kubectl get route {{ include "litemaas.litellm.fullname" . }} -n {{ .Release.Namespace }} -o jsonpath='{.spec.host}'
+{{- end }}
+{{- end }}
+{{- end }}
 {{- else }}
 
 Access the application via port-forward:

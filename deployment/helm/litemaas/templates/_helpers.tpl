@@ -45,7 +45,7 @@ Component fullnames
 {{- end }}
 
 {{- define "litemaas.frontend.fullname" -}}
-{{- printf "%s-frontend" (include "litemaas.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- printf "%s" (include "litemaas.fullname" .) | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -251,13 +251,35 @@ otherwise must be provided explicitly via litellm.databaseUrl.
 {{- end }}
 
 {{/*
-LiteLLM internal URL — used by backend to reach LiteLLM.
-When co-deployed, points at the ClusterIP service.
+LiteLLM URL — used by the backend for API calls and shown to users in the UI.
+Prefers the external Route/Ingress URL when available so that users see a
+reachable endpoint; falls back to the internal ClusterIP service URL.
 */}}
 {{- define "litemaas.litellm.url" -}}
 {{- if .Values.backend.litellmApiUrl }}
+{{- /* 1. Explicit override — always wins */ -}}
 {{- .Values.backend.litellmApiUrl }}
+{{- else if and (eq .Values.global.platform "kubernetes") .Values.ingress.enabled .Values.ingress.litellm.enabled .Values.ingress.litellm.host }}
+{{- /* 2. Kubernetes Ingress with host */ -}}
+{{- if .Values.ingress.litellm.tls }}
+{{- printf "https://%s" .Values.ingress.litellm.host }}
+{{- else }}
+{{- printf "http://%s" .Values.ingress.litellm.host }}
+{{- end }}
+{{- else if and (eq .Values.global.platform "openshift") .Values.route.enabled .Values.route.litellm.enabled .Values.route.litellm.host }}
+{{- /* 3. OpenShift Route with explicit host */ -}}
+{{- printf "https://%s" .Values.route.litellm.host }}
+{{- else if and (eq .Values.global.platform "openshift") .Values.route.enabled .Values.route.litellm.enabled }}
+{{- /* 4. OpenShift Route with auto-generated host — try clusterDomain */ -}}
+{{- $domain := include "litemaas.clusterDomain" . }}
+{{- if $domain }}
+{{- printf "https://%s-%s.%s" (include "litemaas.litellm.fullname" .) .Release.Namespace $domain }}
+{{- else }}
+{{- /* clusterDomain unknown at template time — post-install hook will patch */ -}}
+{{- printf "http://%s:4000" (include "litemaas.litellm.fullname" .) }}
+{{- end }}
 {{- else if .Values.litellm.enabled }}
+{{- /* 5. No external exposure — internal ClusterIP service */ -}}
 {{- printf "http://%s:4000" (include "litemaas.litellm.fullname" .) }}
 {{- else }}
 {{- fail "backend.litellmApiUrl is required when litellm.enabled is false" }}
