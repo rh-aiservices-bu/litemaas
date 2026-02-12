@@ -47,15 +47,7 @@ backend:
 
 ### 2. Install the chart
 
-**Kubernetes:**
-
-```bash
-helm install litemaas deployment/helm/litemaas/ \
-  -n litemaas --create-namespace \
-  -f my-values.yaml
-```
-
-**OpenShift:**
+**OpenShift (default):**
 
 ```bash
 # Create the project first (grants you admin rights in the namespace)
@@ -64,9 +56,16 @@ oc new-project litemaas
 helm install litemaas deployment/helm/litemaas/ \
   -n litemaas \
   -f my-values.yaml \
-  --set global.platform=openshift \
-  --set route.enabled=true \
-  --set route.litellm.enabled=true
+  --set route.enabled=true
+```
+
+**Kubernetes:**
+
+```bash
+helm install litemaas deployment/helm/litemaas/ \
+  -n litemaas --create-namespace \
+  -f my-values.yaml \
+  --set global.platform=kubernetes
 ```
 
 > **Note**: On OpenShift, use `oc new-project` instead of `--create-namespace`. OpenShift Projects automatically grant the creator admin rights in the namespace, which Helm needs to manage resources.
@@ -87,7 +86,7 @@ helm test litemaas -n litemaas
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `global.platform` | Target platform: `kubernetes` or `openshift` | `kubernetes` |
+| `global.platform` | Target platform: `kubernetes` or `openshift` | `openshift` |
 | `global.clusterDomain` | Cluster apps domain (auto-detected via post-install hook if empty) | `""` |
 | `global.clusterScopedLookups` | Enable cluster-scoped API lookups at template time (requires cluster-admin) | `false` |
 | `global.imagePullSecrets` | Global image pull secrets | `[]` |
@@ -172,7 +171,7 @@ helm test litemaas -n litemaas
 | `ingress.annotations` | Ingress annotations | `{}` |
 | `ingress.frontend.host` | Frontend hostname | `""` |
 | `ingress.frontend.tls` | Frontend TLS config | `[]` |
-| `ingress.litellm.enabled` | Enable LiteLLM Ingress | `false` |
+| `ingress.litellm.enabled` | Enable LiteLLM Ingress | `true` |
 | `ingress.litellm.host` | LiteLLM hostname | `""` |
 | `ingress.litellm.tls` | LiteLLM TLS config | `[]` |
 
@@ -184,7 +183,7 @@ helm test litemaas -n litemaas
 | `route.annotations` | Route annotations | `{}` |
 | `route.frontend.host` | Frontend hostname (auto-generated if empty) | `""` |
 | `route.frontend.termination` | TLS termination type | `edge` |
-| `route.litellm.enabled` | Enable LiteLLM Route | `false` |
+| `route.litellm.enabled` | Enable LiteLLM Route | `true` |
 | `route.litellm.host` | LiteLLM hostname (auto-generated if empty) | `""` |
 | `route.litellm.termination` | TLS termination type | `edge` |
 
@@ -286,8 +285,6 @@ global:
 
 route:
   enabled: true
-  litellm:
-    enabled: true
 ```
 
 The chart will:
@@ -347,8 +344,6 @@ backend:
 
 route:
   enabled: true
-  litellm:
-    enabled: true
 ```
 
 > **Migration note**: If upgrading from a previous chart version that used an `OAuthClient` CR, set `oauth.mode: external` to preserve your existing configuration.
