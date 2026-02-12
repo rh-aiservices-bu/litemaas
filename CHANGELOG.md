@@ -5,6 +5,54 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-02-11
+
+This release introduces Helm chart deployment for Kubernetes and OpenShift, fixes special character handling in model names, and includes deployment improvements.
+
+### Added
+
+- **Helm Chart Deployment**: Full Helm chart for Kubernetes and OpenShift (`deployment/helm/litemaas/`)
+  - Backend, frontend, LiteLLM, and PostgreSQL components
+  - OpenShift Route and Kubernetes Ingress support
+  - OAuth token patching post-install hook for OpenShift
+  - ServiceAccount and RBAC configuration
+  - Comprehensive `values.yaml` with sensible defaults
+  - Helm chart documentation (`deployment/helm/README.md`)
+
+- **`OPENSHIFT_API_URL` Environment Variable**: Manual override for the OpenShift API server URL
+  - Supports customized OpenShift environments where automatic URL derivation from the OAuth issuer doesn't work
+  - Falls back to existing auto-detection logic when unset
+
+- **`INITIAL_ADMIN_USERS` Environment Variable**: Bootstrap admin users via comma-separated usernames
+  - Grants admin + user roles to specified users on login
+  - Useful for initial deployment where no OpenShift groups exist yet
+
+### Fixed
+
+- **Special Characters in Model Names**: Model IDs containing slashes (e.g., `RedHatAI/gpt-oss-120b`) now work correctly
+  - Frontend URL-encodes model IDs when calling the backend API
+  - Nginx `proxy_pass` corrected to avoid unintended URL rewriting
+  - Added mock model with slash in name for development/testing
+
+### Changed
+
+- **Deployment Directory Renamed**: `deployment/openshift/` → `deployment/kustomize/` to better reflect the tooling used
+- **Container Build Script**: Removed automatic `latest` tag — containers are now tagged with version only
+- **Documentation Cleanup**: Removed ~30,000 lines of obsolete refactoring phase documentation (`docs/development/refactor/`)
+
+### Documentation
+
+- New: `docs/deployment/helm-deployment.md` — Comprehensive Helm deployment guide
+- Renamed: `docs/deployment/openshift-deployment.md` → `docs/deployment/kustomize-deployment.md`
+- Updated: deployment docs, authentication docs, and README to reflect Helm and Kustomize options
+
+### Contributors
+
+- Guillaume Moutier
+- Co-authored-by: Claude (AI pair programming assistant)
+
+---
+
 ## [0.1.2] - 2025-10-17
 
 This patch release fixes a critical database migration issue that could prevent successful deployments.
