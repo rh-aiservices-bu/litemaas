@@ -50,6 +50,7 @@ export const ChartVoronoiContainer = createMinimalMock('ChartVoronoiContainer', 
 
 // Complex form components that have positioning/measurement issues
 export const Select = React.forwardRef<any, any>((props: any, ref) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { children, selections, onSelect, isOpen, ...rest } = props;
   return React.createElement(
     'select',
@@ -129,7 +130,7 @@ export const LoginPage = React.forwardRef<any, any>((props: any, ref) => {
     children,
     brandImgSrc,
     brandImgAlt,
-    backgroundImgSrc,
+    backgroundImgSrc, // eslint-disable-line @typescript-eslint/no-unused-vars
     loginTitle,
     loginSubtitle,
     className,
@@ -154,6 +155,7 @@ LoginPage.displayName = 'MockLoginPage';
 
 // PatternFly 6 Dropdown components
 export const Dropdown = React.forwardRef<any, any>((props: any, ref) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { children, isOpen, onSelect, onOpenChange, toggle, ...rest } = props;
   return (
     <div
@@ -293,6 +295,7 @@ export interface SelectProps {
 }
 
 // Drawer components (needed for NotificationDrawer tests)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const Drawer = ({ children, isExpanded, onExpand, ...props }: any) => {
   const DrawerComponent = (
     <div data-testid="pf-drawer" data-expanded={isExpanded} {...props}>

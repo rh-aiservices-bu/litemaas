@@ -318,7 +318,9 @@ global.URL.revokeObjectURL = vi.fn();
 if (typeof global !== 'undefined' && typeof window !== 'undefined') {
   // Add Node.js specific polyfills for better SSR compatibility
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     global.TextEncoder = global.TextEncoder || require('util').TextEncoder;
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     global.TextDecoder = global.TextDecoder || require('util').TextDecoder;
   } catch (e) {
     // Fallback if util is not available

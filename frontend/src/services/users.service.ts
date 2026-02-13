@@ -7,6 +7,13 @@ import {
   UserActivity,
   UserStats,
   UserProfile,
+  AdminUserDetails,
+  UserBudgetLimitsUpdate,
+  UserBudgetUpdated,
+  UserApiKey,
+  CreateApiKeyForUserRequest,
+  CreatedApiKeyResponse,
+  UserSubscription,
 } from '../types/users';
 
 export class UsersService {
@@ -173,6 +180,115 @@ export class UsersService {
     };
 
     return roleDisplayNames[role] || role;
+  }
+
+  // ============================================
+  // Admin User Management Methods
+  // ============================================
+
+  /**
+   * Get detailed user information (admin only)
+   * Includes budget, limits, and counts
+   */
+  async getAdminUserDetails(userId: string): Promise<AdminUserDetails> {
+    return apiClient.get<AdminUserDetails>(`/admin/users/${userId}`);
+  }
+
+  /**
+   * Update user budget and rate limits (admin only)
+   */
+  async updateUserBudgetLimits(
+    userId: string,
+    data: UserBudgetLimitsUpdate,
+  ): Promise<UserBudgetUpdated> {
+    return apiClient.patch<UserBudgetUpdated>(`/admin/users/${userId}/budget-limits`, data);
+  }
+
+  /**
+   * Get user's API keys (admin only)
+   */
+  async getUserApiKeys(
+    userId: string,
+    params: { page?: number; limit?: number; isActive?: boolean } = {},
+  ): Promise<PaginatedResponse<UserApiKey>> {
+    const searchParams = new URLSearchParams();
+
+    if (params.page) {
+      searchParams.append('page', params.page.toString());
+    }
+    if (params.limit) {
+      searchParams.append('limit', params.limit.toString());
+    }
+    if (typeof params.isActive === 'boolean') {
+      searchParams.append('isActive', params.isActive.toString());
+    }
+
+    const queryString = searchParams.toString();
+    const url = queryString
+      ? `/admin/users/${userId}/api-keys?${queryString}`
+      : `/admin/users/${userId}/api-keys`;
+
+    return apiClient.get<PaginatedResponse<UserApiKey>>(url);
+  }
+
+  /**
+   * Create API key for user (admin only)
+   */
+  async createApiKeyForUser(
+    userId: string,
+    data: CreateApiKeyForUserRequest,
+  ): Promise<CreatedApiKeyResponse> {
+    return apiClient.post<CreatedApiKeyResponse>(`/admin/users/${userId}/api-keys`, data);
+  }
+
+  /**
+   * Revoke user's API key (admin only)
+   */
+  async revokeUserApiKey(userId: string, keyId: string, reason?: string): Promise<void> {
+    await apiClient.delete(`/admin/users/${userId}/api-keys/${keyId}`, {
+      data: reason ? { reason } : undefined,
+    });
+  }
+
+  /**
+   * Update user's API key models (admin only)
+   */
+  async updateUserApiKeyModels(
+    userId: string,
+    keyId: string,
+    data: { modelIds?: string[]; name?: string },
+  ): Promise<{ id: string; name: string; models: string[]; updatedAt: string }> {
+    return apiClient.patch<{ id: string; name: string; models: string[]; updatedAt: string }>(
+      `/admin/users/${userId}/api-keys/${keyId}`,
+      data,
+    );
+  }
+
+  /**
+   * Get user's subscriptions (admin only)
+   */
+  async getUserSubscriptions(
+    userId: string,
+    params: { page?: number; limit?: number; status?: string } = {},
+  ): Promise<PaginatedResponse<UserSubscription>> {
+    const searchParams = new URLSearchParams();
+
+    if (params.page) {
+      searchParams.append('page', params.page.toString());
+    }
+    if (params.limit) {
+      searchParams.append('limit', params.limit.toString());
+    }
+    if (params.status) {
+      searchParams.append('status', params.status);
+    }
+
+    const queryString = searchParams.toString();
+    const url = queryString
+      ? `/admin/users/${userId}/subscriptions?${queryString}`
+      : `/admin/users/${userId}/subscriptions`;
+
+    return apiClient.get<PaginatedResponse<UserSubscription>>(url);
   }
 }
 

@@ -5,6 +5,7 @@ import {
   LiteLLMKeyGenerationRequest,
   LiteLLMKeyGenerationResponse,
   LiteLLMKeyInfo,
+  LiteLLMKeyInfoResponse,
 } from '../types/api-key.types.js';
 import {
   LiteLLMUserRequest,
@@ -429,14 +430,14 @@ export class LiteLLMService extends BaseService {
         status: 'healthy',
         db: 'connected',
         redis: 'connected',
-        litellm_version: '1.74.3-mock',
+        litellm_version: '1.81.0-mock',
       };
       this.setCache(cacheKey, health, 30000);
       return this.createMockResponse(health);
     }
 
     try {
-      const health = await this.makeRequest<LiteLLMHealth>('/health/liveliness');
+      const health = await this.makeRequest<LiteLLMHealth>('/health/liveness');
       this.setCache(cacheKey, health, 30000);
       return health;
     } catch (error) {
@@ -551,9 +552,17 @@ export class LiteLLMService extends BaseService {
     }
 
     try {
-      return await this.makeRequest<LiteLLMKeyInfo>('/key/info', {
-        headers: { 'x-litellm-api-key': apiKey },
-      });
+      // v1.81.0+: response is nested { key, info }; v1.74.x: flat LiteLLMKeyInfo
+      const response = await this.makeRequest<LiteLLMKeyInfoResponse | LiteLLMKeyInfo>(
+        '/key/info',
+        {
+          headers: { 'x-litellm-api-key': apiKey },
+        },
+      );
+      if ('info' in response && typeof response.info === 'object' && response.info !== null) {
+        return response.info as LiteLLMKeyInfo;
+      }
+      return response as LiteLLMKeyInfo;
     } catch (error) {
       this.fastify.log.error(error, 'Failed to get key info');
       throw error;
@@ -605,24 +614,19 @@ export class LiteLLMService extends BaseService {
     }
 
     try {
-      const response = await this.makeRequest<{
-        key: string;
-        info: {
-          key_name: string;
-          key_alias: string;
-          soft_budget_cooldown: boolean;
-          spend: number;
-          expires: string | null;
-          models: string[];
-        };
-      }>(`/key/info?key=${encodeURIComponent(apiKey)}`, {
-        method: 'GET',
-      });
+      // v1.81.0+: response is nested { key, info }; v1.74.x: flat with key_alias at top level
+      const response = await this.makeRequest<Record<string, unknown>>(
+        `/key/info?key=${encodeURIComponent(apiKey)}`,
+        {
+          method: 'GET',
+        },
+      );
 
-      return {
-        key: response.key,
-        key_alias: response.info.key_alias,
-      };
+      if ('info' in response && typeof response.info === 'object' && response.info !== null) {
+        const info = response.info as { key_alias: string };
+        return { key: response.key as string, key_alias: info.key_alias };
+      }
+      return { key: apiKey, key_alias: (response as { key_alias: string }).key_alias };
     } catch (error) {
       this.fastify.log.error(error, 'Failed to get key alias info');
       throw error;

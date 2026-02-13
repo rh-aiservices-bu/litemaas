@@ -350,10 +350,7 @@ export class OAuthService extends BaseService {
       .filter((u) => u.length > 0);
 
     if (adminUsernames.includes(username)) {
-      this.fastify.log.info(
-        { username },
-        'User matched INITIAL_ADMIN_USERS — granting admin role',
-      );
+      this.fastify.log.info({ username }, 'User matched INITIAL_ADMIN_USERS — granting admin role');
       return ['admin', 'user'];
     }
 

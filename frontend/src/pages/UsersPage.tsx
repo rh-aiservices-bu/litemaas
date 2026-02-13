@@ -11,16 +11,11 @@ import {
   ContentVariants,
   Flex,
   FlexItem,
-  Modal,
-  ModalVariant,
-  ModalHeader,
-  ModalBody,
   Spinner,
   EmptyState,
   EmptyStateVariant,
   EmptyStateBody,
   EmptyStateActions,
-  Alert,
   Bullseye,
   SearchInput,
   Select,
@@ -35,10 +30,6 @@ import {
   ToolbarItem,
   ToolbarGroup,
   Divider,
-  DescriptionList,
-  DescriptionListGroup,
-  DescriptionListTerm,
-  DescriptionListDescription,
 } from '@patternfly/react-core';
 import {
   UsersIcon,
@@ -47,8 +38,6 @@ import {
   CheckCircleIcon,
   TimesCircleIcon,
   UserIcon,
-  EditIcon,
-  EyeIcon,
 } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn } from '@patternfly/react-table';
 import { useAuth } from '../contexts/AuthContext';
@@ -65,7 +54,6 @@ const UsersPage: React.FC = () => {
 
   // State management
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [searchValue, setSearchValue] = useState(searchParams.get('search') || '');
   const [roleFilter, setRoleFilter] = useState(searchParams.get('role') || '');
@@ -75,8 +63,7 @@ const UsersPage: React.FC = () => {
   const [page, setPage] = useState(parseInt(searchParams.get('page') || '1', 10));
   const [perPage, setPerPage] = useState(parseInt(searchParams.get('limit') || '10', 10));
 
-  // Modal focus management refs
-  const viewModalTriggerRef = useRef<HTMLElement | null>(null);
+  // Modal focus management ref
   const editModalTriggerRef = useRef<HTMLElement | null>(null);
 
   // Check permissions
@@ -124,47 +111,6 @@ const UsersPage: React.FC = () => {
 
     setSearchParams(newParams);
   }, [page, perPage, searchValue, roleFilter, statusFilter, setSearchParams]);
-
-  // Focus management for view modal
-  useEffect(() => {
-    if (isViewModalOpen) {
-      setTimeout(() => {
-        const closeButton = document.querySelector(
-          '[data-modal="view"] button[variant="link"]',
-        ) as HTMLButtonElement;
-        closeButton?.focus();
-      }, 100);
-
-      const handleKeyDown = (event: KeyboardEvent) => {
-        if (event.key === 'Tab') {
-          const modal = document.querySelector(
-            '[data-modal="view"][aria-modal="true"]',
-          ) as HTMLElement;
-          if (!modal) return;
-
-          const focusableElements = modal.querySelectorAll(
-            'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"]):not([disabled])',
-          );
-          const firstFocusable = focusableElements[0] as HTMLElement;
-          const lastFocusable = focusableElements[focusableElements.length - 1] as HTMLElement;
-
-          if (event.shiftKey && document.activeElement === firstFocusable) {
-            event.preventDefault();
-            lastFocusable?.focus();
-          } else if (!event.shiftKey && document.activeElement === lastFocusable) {
-            event.preventDefault();
-            firstFocusable?.focus();
-          }
-        }
-      };
-
-      document.addEventListener('keydown', handleKeyDown);
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-    return undefined;
-  }, [isViewModalOpen]);
 
   // Helper functions
   const getStatusBadge = (isActive: boolean) => {
@@ -216,15 +162,7 @@ const UsersPage: React.FC = () => {
     setIsStatusFilterOpen(false);
   };
 
-  const handleViewUser = (user: User, triggerElement?: HTMLElement) => {
-    setSelectedUser(user);
-    if (triggerElement) {
-      viewModalTriggerRef.current = triggerElement;
-    }
-    setIsViewModalOpen(true);
-  };
-
-  const handleEditUser = (user: User, triggerElement?: HTMLElement) => {
+  const handleManageUser = (user: User, triggerElement?: HTMLElement) => {
     setSelectedUser(user);
     if (triggerElement) {
       editModalTriggerRef.current = triggerElement;
@@ -461,24 +399,14 @@ const UsersPage: React.FC = () => {
                     {users.map((user) => {
                       const actions = [
                         {
-                          title: t('users.actions.view'),
-                          icon: <EyeIcon />,
+                          title: t('users.actions.manage'),
                           onClick: (event: React.MouseEvent) =>
-                            handleViewUser(user, event.currentTarget as HTMLElement),
+                            handleManageUser(user, event.currentTarget as HTMLElement),
                         },
                       ];
 
-                      if (canModifyUsers) {
-                        actions.push({
-                          title: t('users.actions.edit'),
-                          icon: <EditIcon />,
-                          onClick: (event) =>
-                            handleEditUser(user, event.currentTarget as HTMLElement),
-                        });
-                      }
-
                       return (
-                        <Tr key={user.id}>
+                        <Tr key={user.id} isClickable onRowClick={() => handleManageUser(user)}>
                           <Th scope="row">
                             <Flex
                               alignItems={{ default: 'alignItemsCenter' }}
@@ -508,7 +436,7 @@ const UsersPage: React.FC = () => {
                           </Td>
                           <Td>{formatRoles(user.roles)}</Td>
                           <Td>{getStatusBadge(user.isActive)}</Td>
-                          <Td>
+                          <Td isActionCell onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                             <ActionsColumn items={actions} />
                           </Td>
                         </Tr>
@@ -539,151 +467,7 @@ const UsersPage: React.FC = () => {
         )}
       </PageSection>
 
-      {/* User Details Modal */}
-      <Modal
-        variant={ModalVariant.medium}
-        title={selectedUser?.username || t('users.modal.defaultTitle')}
-        isOpen={isViewModalOpen}
-        onClose={() => {
-          setIsViewModalOpen(false);
-          setTimeout(() => {
-            viewModalTriggerRef.current?.focus();
-          }, 100);
-        }}
-        aria-modal="true"
-        data-modal="view"
-        onEscapePress={() => {
-          setIsViewModalOpen(false);
-          setTimeout(() => {
-            viewModalTriggerRef.current?.focus();
-          }, 100);
-        }}
-      >
-        <ModalHeader>
-          <Flex
-            alignItems={{ default: 'alignItemsCenter' }}
-            spaceItems={{ default: 'spaceItemsMd' }}
-          >
-            <FlexItem>
-              <UserIcon />
-            </FlexItem>
-            <FlexItem>
-              <Title headingLevel="h2" size="xl">
-                {selectedUser?.username}
-              </Title>
-            </FlexItem>
-            <FlexItem>{selectedUser && getStatusBadge(selectedUser.isActive)}</FlexItem>
-          </Flex>
-        </ModalHeader>
-        <ModalBody>
-          {selectedUser && (
-            <>
-              <DescriptionList isHorizontal>
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('users.form.username')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    <strong>{selectedUser.username}</strong>
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('users.form.email')}</DescriptionListTerm>
-                  <DescriptionListDescription>{selectedUser.email}</DescriptionListDescription>
-                </DescriptionListGroup>
-
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('users.form.fullName')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {selectedUser.fullName || t('users.table.notProvided')}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('users.form.roles')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {formatRoles(selectedUser.roles)}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('users.form.status')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {getStatusBadge(selectedUser.isActive)}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('users.form.lastLogin')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {selectedUser.lastLoginAt
-                      ? new Date(selectedUser.lastLoginAt).toLocaleString()
-                      : t('users.never')}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('users.form.createdAt')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {new Date(selectedUser.createdAt).toLocaleString()}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-              </DescriptionList>
-
-              {!selectedUser.isActive && (
-                <Alert
-                  variant="warning"
-                  title={t('users.alerts.inactive.title')}
-                  style={{ marginTop: '1rem' }}
-                >
-                  {t('users.alerts.inactive.description')}
-                </Alert>
-              )}
-
-              {selectedUser.roles.includes('admin') && (
-                <Alert
-                  variant="info"
-                  title={t('users.alerts.admin.title')}
-                  style={{ marginTop: '1rem' }}
-                >
-                  {t('users.alerts.admin.description')}
-                </Alert>
-              )}
-            </>
-          )}
-
-          <div
-            style={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'flex-end',
-            }}
-          >
-            {canModifyUsers && selectedUser && (
-              <Button
-                variant="primary"
-                onClick={() => handleEditUser(selectedUser)}
-                icon={<EditIcon />}
-              >
-                {t('users.actions.edit')}
-              </Button>
-            )}
-            <Button
-              variant="link"
-              onClick={() => {
-                setIsViewModalOpen(false);
-                setTimeout(() => {
-                  viewModalTriggerRef.current?.focus();
-                }, 100);
-              }}
-            >
-              {t('users.modal.close')}
-            </Button>
-          </div>
-        </ModalBody>
-      </Modal>
-
-      {/* User Edit Modal */}
+      {/* User Management Modal */}
       {selectedUser && isEditModalOpen && (
         <UserEditModal
           user={selectedUser}

@@ -10,8 +10,6 @@ import {
   releaseAdvisoryLock,
   withAdvisoryLock,
 } from '../../src/utils/advisory-lock.utils';
-import { DailyUsageCacheManager } from '../../src/services/daily-usage-cache-manager';
-import type { EnrichedDayData } from '../../src/types/admin-usage.types';
 
 describe('Cache Race Condition Scenarios', () => {
   let app: FastifyInstance;

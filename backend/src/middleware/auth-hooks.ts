@@ -90,7 +90,10 @@ const authHooksPlugin: FastifyPluginAsync = async (fastify) => {
          VALUES ($1, $2, $3, $4, $5, $6, $7)`,
         [
           userId,
-          `${request.method}_${request.url.split('?')[0]}`,
+          `${request.method}_${request.routeOptions?.url || request.url.split('?')[0]}`.substring(
+            0,
+            100,
+          ),
           'API_ACCESS',
           null,
           request.ip,

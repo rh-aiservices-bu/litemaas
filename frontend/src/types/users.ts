@@ -72,3 +72,94 @@ export interface UserProfile {
   roles: string[];
   createdAt: string;
 }
+
+// Admin User Details - Extended user info with budget and counts
+export interface AdminUserDetails {
+  id: string;
+  username: string;
+  email: string;
+  fullName?: string;
+  roles: string[];
+  isActive: boolean;
+  maxBudget?: number;
+  currentSpend?: number;
+  tpmLimit?: number;
+  rpmLimit?: number;
+  syncStatus?: string;
+  lastLoginAt?: string;
+  createdAt: string;
+  subscriptionsCount: number;
+  activeSubscriptionsCount: number;
+  apiKeysCount: number;
+  activeApiKeysCount: number;
+}
+
+// Budget and limits update request
+export interface UserBudgetLimitsUpdate {
+  maxBudget?: number;
+  tpmLimit?: number;
+  rpmLimit?: number;
+}
+
+// Budget update response
+export interface UserBudgetUpdated {
+  id: string;
+  maxBudget?: number;
+  tpmLimit?: number;
+  rpmLimit?: number;
+  updatedAt: string;
+}
+
+// User's API key for display
+export interface UserApiKey {
+  id: string;
+  name: string;
+  keyPrefix: string;
+  models: string[];
+  modelDetails?: {
+    id: string;
+    name: string;
+    provider?: string;
+  }[];
+  isActive: boolean;
+  maxBudget?: number;
+  currentSpend?: number;
+  lastUsedAt?: string;
+  createdAt: string;
+  expiresAt?: string;
+  revokedAt?: string;
+}
+
+// Create API key for user request
+export interface CreateApiKeyForUserRequest {
+  name: string;
+  modelIds: string[];
+  expiresAt?: string;
+  maxBudget?: number;
+  tpmLimit?: number;
+  rpmLimit?: number;
+}
+
+// Created API key response (includes full key shown once)
+export interface CreatedApiKeyResponse {
+  id: string;
+  name: string;
+  key: string;
+  keyPrefix: string;
+  models: string[];
+  isActive: boolean;
+  createdAt: string;
+  expiresAt?: string;
+}
+
+// User's subscription for display
+export interface UserSubscription {
+  id: string;
+  modelId: string;
+  modelName: string;
+  provider?: string;
+  status: string;
+  statusReason?: string;
+  createdAt: string;
+  statusChangedAt?: string;
+}

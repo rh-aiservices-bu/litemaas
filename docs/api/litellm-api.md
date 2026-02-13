@@ -1,6 +1,6 @@
 # LiteLLM API Integration Reference
 
-> **Version**: 1.74.3  
+> **Version**: 1.81.0
 > **Base URL**: http://localhost:4000  
 > **Authentication**: API Key Header (`x-litellm-api-key`)  
 > **Integration Status**: ✅ **FULLY IMPLEMENTED** - All critical endpoints integrated
@@ -23,7 +23,7 @@ x-litellm-api-key: sk-your-api-key-here
 
 | Endpoint             | Method | Purpose                                  | Priority     |
 | -------------------- | ------ | ---------------------------------------- | ------------ |
-| `/health/liveliness` | GET    | Service health check                     | **Critical** |
+| `/health/liveness` | GET    | Service health check                     | **Critical** |
 | `/model/info`        | GET    | List available models with detailed info | **Critical** |
 | `/key/generate`      | POST   | Create API keys                          | **Critical** |
 | `/key/info`          | GET    | Get key details                          | **High**     |
@@ -162,22 +162,27 @@ GET /key/info
 x-litellm-api-key: sk-litellm-1234567890abcdef
 ```
 
-**Response**:
+**Response** (v1.81.0+):
 
 ```json
 {
-  "key_name": "user-john-production",
-  "spend": 15.75,
-  "max_budget": 100.0,
-  "models": ["gpt-4o", "gpt-3.5-turbo"],
-  "tpm_limit": 1000,
-  "rpm_limit": 60,
-  "user_id": "user_12345",
-  "team_id": "team_67890",
-  "expires": "2024-08-24T14:06:00Z",
-  "budget_reset_at": "2024-08-01T00:00:00Z"
+  "key": "sk-litellm-1234567890abcdef",
+  "info": {
+    "key_name": "user-john-production",
+    "spend": 15.75,
+    "max_budget": 100.0,
+    "models": ["gpt-4o", "gpt-3.5-turbo"],
+    "tpm_limit": 1000,
+    "rpm_limit": 60,
+    "user_id": "user_12345",
+    "team_id": "team_67890",
+    "expires": "2024-08-24T14:06:00Z",
+    "budget_reset_at": "2024-08-01T00:00:00Z"
+  }
 }
 ```
+
+> **Note**: In v1.74.x, the response was flat (without the `key`/`info` wrapper). LiteMaaS handles both formats.
 
 ### Update Key Settings
 
@@ -423,7 +428,7 @@ x-litellm-api-key: sk-litellm-1234567890abcdef
 // Health check with timeout
 async checkLiteLLMHealth(): Promise<boolean> {
   try {
-    const response = await axios.get('/health/liveliness', {
+    const response = await axios.get('/health/liveness', {
       timeout: 5000
     });
     return response.status === 200;
