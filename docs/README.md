@@ -60,6 +60,7 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 #### ✨ Features
 
 - **[User Roles & Administration](features/user-roles-administration.md)** - RBAC with three-tier role hierarchy
+- **[Users Management](features/users-management.md)** - Admin user management (profile, budget, API keys, subscriptions)
 - **[Admin Tools](features/admin-tools.md)** - Administrative tools and model sync
 - **[Admin Usage API Key Filter](features/admin-usage-api-key-filter.md)** - API key filtering for usage analytics
 - **[Authentication Flow](features/authentication-flow.md)** - OAuth integration details
@@ -146,6 +147,7 @@ See our [Contributing Guide](../CONTRIBUTING.md) for information on:
 - **Error Handling**: `docs/development/error-handling.md`
 - **Pattern Reference**: `docs/development/pattern-reference.md`
 - **Admin Features**: `docs/features/admin-tools.md`
+- **Users Management**: `docs/features/users-management.md`
 - **User Roles/RBAC**: `docs/features/user-roles-administration.md`
 - **PatternFly 6 Components**: `docs/development/pf6-guide/`
 - **Accessibility Testing**: `docs/development/accessibility/`

@@ -223,8 +223,14 @@ export class AdminUsageStatsService extends BaseService {
 
       // Remove the temporary flattened fields from the result
       const cleanedData = paginatedResult.data.map(
-        ({ totalRequests, totalTokens, promptTokens, completionTokens, totalCost, ...user }) =>
-          user as UserBreakdown,
+        ({
+          totalRequests: _tr,
+          totalTokens: _tt,
+          promptTokens: _pt,
+          completionTokens: _ct,
+          totalCost: _tc,
+          ...user
+        }) => user as UserBreakdown,
       );
 
       this.fastify.log.info(
@@ -320,8 +326,14 @@ export class AdminUsageStatsService extends BaseService {
 
       // Remove temporary flattened fields
       const cleanedData = paginatedResult.data.map(
-        ({ totalRequests, totalTokens, promptTokens, completionTokens, totalCost, ...model }) =>
-          model as ModelBreakdown,
+        ({
+          totalRequests: _tr,
+          totalTokens: _tt,
+          promptTokens: _pt,
+          completionTokens: _ct,
+          totalCost: _tc,
+          ...model
+        }) => model as ModelBreakdown,
       );
 
       this.fastify.log.info(
@@ -411,12 +423,12 @@ export class AdminUsageStatsService extends BaseService {
       // Remove temporary flattened fields
       const cleanedData = paginatedResult.data.map(
         ({
-          providerName,
-          totalRequests,
-          totalTokens,
-          promptTokens,
-          completionTokens,
-          totalCost,
+          providerName: _pn,
+          totalRequests: _tr,
+          totalTokens: _tt,
+          promptTokens: _pt,
+          completionTokens: _ct,
+          totalCost: _tc,
           ...provider
         }) => provider as ProviderBreakdown,
       );

@@ -400,7 +400,7 @@ describe('Error Flows Integration', () => {
 
       // Make multiple rapid requests to trigger rate limiting
       // Note: This test may need adjustment based on actual rate limiting configuration
-      const requests = Array.from({ length: 10 }, (_, i) =>
+      const requests = Array.from({ length: 10 }, (_) =>
         app.inject({
           method: 'GET',
           url: '/api/v1/models',
@@ -513,8 +513,6 @@ describe('Error Flows Integration', () => {
     it('should include retry information for retryable errors', async () => {
       // This test would need a way to trigger retryable errors
       // For now, we'll test the structure when it's available
-      const token = generateTestToken('user-123', ['user']);
-
       // Try to access a potentially external service endpoint that might fail
       const response = await app.inject({
         method: 'POST',

@@ -123,6 +123,11 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
   - `UserFilterSelect.tsx` - Multi-select user filter with search
   - `ApiKeyFilterSelect.tsx` - Cascading API key filter (depends on selected users)
   - `ProviderBreakdownTable.tsx` - Provider metrics (component ready, integration pending)
+- `components/admin/` - Admin user management components
+  - `UserProfileTab.tsx` - User profile display with role toggles
+  - `UserBudgetLimitsTab.tsx` - Budget and rate limit configuration with utilization tracking
+  - `UserApiKeysTab.tsx` - API key lifecycle management (create, view, revoke)
+  - `UserSubscriptionsTab.tsx` - Read-only subscription list with status display
 - `components/charts/` - Shared chart components
   - `UsageTrends.tsx`, `ModelDistributionChart.tsx`, `ModelUsageTrends.tsx`
   - `UsageHeatmap.tsx` - Weekly heatmap (component ready, integration pending)
@@ -141,6 +146,7 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 - `apiKeys.service.ts` - API key management
 - `usage.service.ts` - **User usage analytics** (individual user data)
 - `adminUsage.service.ts` - **Admin usage analytics** (system-wide data, all endpoints)
+- `users.service.ts` - **Admin user management** (user details, budget/limits, API keys, subscriptions)
 - `chat.service.ts` - Chatbot integration
 - `config.service.ts` - Application configuration
 
@@ -150,7 +156,12 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 
 **Admin Routes** (admin/adminReadonly roles required):
 
-- `/admin/users` - User management (UsersPage.tsx)
+- `/admin/users` - **Admin user management (UsersPage.tsx)** - Consolidated modal-based interface:
+  - Tabbed management: Profile, Budget & Limits, API Keys, Subscriptions
+  - Role management with admin/adminReadonly/user toggles
+  - Budget and rate limit configuration with progress indicators
+  - API key creation with auto-subscription and revocation
+  - RBAC: admin (full access) vs adminReadonly (view only)
 - `/admin/models` - Model configuration testing (AdminModelsPage.tsx)
 - `/admin/tools` - Administrative tools (ToolsPage.tsx)
 - `/admin/subscriptions` - **Subscription approval management (AdminSubscriptionsPage.tsx)** - Approve/deny restricted model access:

@@ -5,6 +5,7 @@ import SubscriptionsPage from '../../pages/SubscriptionsPage';
 import { mockApiResponses } from '../test-utils';
 import type { Subscription } from '../../services/subscriptions.service';
 // @ts-expect-error - subscriptionsService is used in vi.mocked() calls below
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { subscriptionsService } from '../../services/subscriptions.service';
 
 // Mock the subscriptions service

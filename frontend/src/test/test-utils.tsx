@@ -12,6 +12,7 @@ import { vi } from 'vitest';
 
 // Mock ConfigContext module to provide synchronous config
 vi.mock('../contexts/ConfigContext', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const React = require('react');
 
   // Define mock config inside the factory to avoid hoisting issues

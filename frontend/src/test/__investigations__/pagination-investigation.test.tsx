@@ -403,7 +403,11 @@ describe('PatternFly 6 Pagination Dropdown Investigation', () => {
 
     it('ALTERNATIVE 2: Test state management logic separately', () => {
       // Extract pagination logic into a hook or utility function
-      const handlePerPageChange = (newPerPage: number, setPerPage: Function, setPage: Function) => {
+      const handlePerPageChange = (
+        newPerPage: number,
+        setPerPage: (v: number) => void,
+        setPage: (v: number) => void,
+      ) => {
         setPerPage(newPerPage);
         setPage(1); // Reset to first page
       };

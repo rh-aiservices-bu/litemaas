@@ -191,7 +191,11 @@ describe('OAuthService', () => {
 
     it('should return admin and user roles when username matches', () => {
       const customFastify = createMockFastify({ INITIAL_ADMIN_USERS: 'admin@example.com' });
-      const customService = new OAuthService(customFastify, mockLiteLLMService, mockDefaultTeamService);
+      const customService = new OAuthService(
+        customFastify,
+        mockLiteLLMService,
+        mockDefaultTeamService,
+      );
 
       const result = (customService as any).getInitialAdminRoles('admin@example.com');
       expect(result).toEqual(['admin', 'user']);
@@ -199,21 +203,33 @@ describe('OAuthService', () => {
 
     it('should handle comma-separated list of usernames', () => {
       const customFastify = createMockFastify({ INITIAL_ADMIN_USERS: 'user1,user2,user3' });
-      const customService = new OAuthService(customFastify, mockLiteLLMService, mockDefaultTeamService);
+      const customService = new OAuthService(
+        customFastify,
+        mockLiteLLMService,
+        mockDefaultTeamService,
+      );
 
       expect((customService as any).getInitialAdminRoles('user2')).toEqual(['admin', 'user']);
     });
 
     it('should trim whitespace from usernames', () => {
       const customFastify = createMockFastify({ INITIAL_ADMIN_USERS: ' user1 , user2 , user3 ' });
-      const customService = new OAuthService(customFastify, mockLiteLLMService, mockDefaultTeamService);
+      const customService = new OAuthService(
+        customFastify,
+        mockLiteLLMService,
+        mockDefaultTeamService,
+      );
 
       expect((customService as any).getInitialAdminRoles('user2')).toEqual(['admin', 'user']);
     });
 
     it('should return empty array for non-matching username', () => {
       const customFastify = createMockFastify({ INITIAL_ADMIN_USERS: 'admin@example.com' });
-      const customService = new OAuthService(customFastify, mockLiteLLMService, mockDefaultTeamService);
+      const customService = new OAuthService(
+        customFastify,
+        mockLiteLLMService,
+        mockDefaultTeamService,
+      );
 
       const result = (customService as any).getInitialAdminRoles('other@example.com');
       expect(result).toEqual([]);
@@ -221,7 +237,11 @@ describe('OAuthService', () => {
 
     it('should handle empty string value', () => {
       const customFastify = createMockFastify({ INITIAL_ADMIN_USERS: '' });
-      const customService = new OAuthService(customFastify, mockLiteLLMService, mockDefaultTeamService);
+      const customService = new OAuthService(
+        customFastify,
+        mockLiteLLMService,
+        mockDefaultTeamService,
+      );
 
       const result = (customService as any).getInitialAdminRoles('someuser');
       expect(result).toEqual([]);
@@ -229,7 +249,11 @@ describe('OAuthService', () => {
 
     it('should log info when username matches', () => {
       const customFastify = createMockFastify({ INITIAL_ADMIN_USERS: 'admin@example.com' });
-      const customService = new OAuthService(customFastify, mockLiteLLMService, mockDefaultTeamService);
+      const customService = new OAuthService(
+        customFastify,
+        mockLiteLLMService,
+        mockDefaultTeamService,
+      );
 
       (customService as any).getInitialAdminRoles('admin@example.com');
       expect(customFastify.log.info).toHaveBeenCalledWith(

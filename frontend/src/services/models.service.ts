@@ -193,7 +193,9 @@ class ModelsService {
   }
 
   async getModel(modelId: string): Promise<Model> {
-    const backendModel = await apiClient.get<BackendModel>(`/models/${encodeURIComponent(modelId)}`);
+    const backendModel = await apiClient.get<BackendModel>(
+      `/models/${encodeURIComponent(modelId)}`,
+    );
     return this.convertBackendModel(backendModel);
   }
 

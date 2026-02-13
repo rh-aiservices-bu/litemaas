@@ -140,6 +140,7 @@ export const useAccessibilityTest = (
   }
 
   try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
     const { useEffect } = require('react');
 
     useEffect(() => {

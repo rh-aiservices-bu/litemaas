@@ -3,7 +3,7 @@
  * Tests OAuth flow, token validation, and authentication endpoints
  */
 
-import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { createApp } from '../../../src/app';
 import { generateTestToken, generateExpiredToken, createTestUsers, TEST_USER_IDS } from '../setup';
@@ -333,6 +333,7 @@ describe('Auth Routes Integration', () => {
     it('should reject token with invalid signature', async () => {
       // Create a token with a different secret
       const testSecret = 'different-secret';
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const jwt = require('jsonwebtoken');
       const invalidToken = jwt.sign(
         {
