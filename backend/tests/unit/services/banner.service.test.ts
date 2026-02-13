@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { BannerService } from '../../../src/services/banner.service';
 import type { FastifyInstance } from 'fastify';
-import { mockUser } from '../../setup';
 import type {
   CreateBannerRequest,
   UpdateBannerRequest,

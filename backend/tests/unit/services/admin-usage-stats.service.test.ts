@@ -1210,7 +1210,7 @@ describe('AdminUsageStatsService', () => {
 
       (cacheManager.getCachedDailyData as Mock).mockResolvedValue(null);
 
-      const result = await service.getAnalytics(filters);
+      await service.getAnalytics(filters);
 
       // Should have skipped the empty key (10 requests)
       expect(fastify.log.debug).toHaveBeenCalledWith(

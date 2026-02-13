@@ -1440,7 +1440,81 @@
   "users": {
     "actions": {
       "edit": "Orthad",
-      "view": "Tira Vuin"
+      "manage": "Tirith",
+      "view": "Tira Vuin",
+      "viewUsage": "Tira Ûs-Orthad"
+    },
+    "apiKeys": {
+      "createNew": "Echad API-Cair",
+      "createSuccess": "API Key Created",
+      "createSuccessDesc": "The API key has been created successfully.",
+      "createError": "Create Failed",
+      "form": {
+        "name": "Key Name",
+        "namePlaceholder": "Enter a name for this API key",
+        "models": "Models",
+        "modelsHelp": "Select one or more models for this API key.",
+        "noModels": "No models available",
+        "expiration": "Expiration",
+        "expirationNever": "Never",
+        "expiration30": "30 days",
+        "expiration60": "60 days",
+        "expiration90": "90 days",
+        "maxBudget": "Max Budget (USD)",
+        "create": "Create",
+        "apiKey": "API Key"
+      },
+      "keyGenerated": "API Key Generated",
+      "keyWarning": "Save this key now",
+      "keyWarningDesc": "This is the only time the full API key will be shown. Copy it now and store it securely.",
+      "loadError": "API-cair ú-gwannad",
+      "models": "Sanar",
+      "name": "Ess",
+      "noKeys": "Ú-API-Cair",
+      "noKeysDesc": "Sí adan ú-API-cair.",
+      "revoke": "Thurio",
+      "revokeConfirmDesc": "Ma celich thurio sí API-cair? Sí ú-theliant.",
+      "revokeConfirmTitle": "Thurio API-Cair",
+      "revokeError": "Thurio ú-gwannad",
+      "revokeSuccess": "API-Cair Thurion",
+      "revokeSuccessDesc": "API-cair thurion maer.",
+      "status": "Said",
+      "tableLabel": "Adan API-Cair",
+      "lastUsed": "Vedui Ûs",
+      "viewUsage": "Tira Ûs"
+    },
+    "budget": {
+      "budgetUtilization": "Minad ûs",
+      "currentSpend": "Sí Minad",
+      "loadError": "Minad ú-gwannad",
+      "maxBudget": "Anor Minad",
+      "maxBudgetHelp": "Anor minad in USD. Pedo 0 an pen-rim.",
+      "readOnlyNote": "Le tirith-môr sí orthad.",
+      "rpmLimit": "RPM Rim",
+      "rpmLimitHelp": "Ceri per arad. Pedo 0 an pen-rim.",
+      "tpmLimit": "TPM Rim",
+      "tpmLimitHelp": "Tengwi per arad. Pedo 0 an pen-rim.",
+      "unlimited": "Pen-rim",
+      "updateError": "Prestanno ú-gwannad",
+      "updateSuccess": "Minad Prestannen",
+      "updateSuccessDesc": "Adan minad a rim prestannen maer."
+    },
+    "subscriptions": {
+      "createdAt": "Echant",
+      "loadError": "Gwerth ú-gwannad",
+      "model": "Sanar",
+      "noSubscriptions": "Ú-Gwerth",
+      "noSubscriptionsDesc": "Sí adan ú-gwerth.",
+      "provider": "Annas",
+      "status": "Said",
+      "tableLabel": "Adan Gwerth"
+    },
+    "tabs": {
+      "apiKeys": "API-Cair",
+      "ariaLabel": "Adan vuin tabar",
+      "budgetLimits": "Minad a Rim",
+      "profile": "Adan-Thîr",
+      "subscriptions": "Gwerth"
     },
     "alerts": {
       "admin": {

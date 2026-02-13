@@ -166,7 +166,7 @@ export class UsageStatsService extends BaseService {
         apiKeyId,
         startDate,
         endDate,
-        granularity: _granularity = 'day',
+        granularity: _granularity = 'day', // eslint-disable-line @typescript-eslint/no-unused-vars
         aggregateBy = 'time',
       } = query;
 

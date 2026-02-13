@@ -44,7 +44,8 @@ describe('UserEditModal', () => {
 
       // Modal should be present
       expect(screen.getByRole('dialog')).toBeInTheDocument();
-      expect(screen.getByText('john.doe')).toBeInTheDocument();
+      // Username appears in both header and description list
+      expect(screen.getAllByText('john.doe').length).toBeGreaterThanOrEqual(1);
       expect(screen.getByText('john.doe@example.com')).toBeInTheDocument();
       expect(screen.getByText('John Doe')).toBeInTheDocument();
     });
@@ -70,8 +71,8 @@ describe('UserEditModal', () => {
         { user: mockAdminUser },
       );
 
-      // Username is displayed but not in an input field
-      expect(screen.getByText('john.doe')).toBeInTheDocument();
+      // Username is displayed in header and description list
+      expect(screen.getAllByText('john.doe').length).toBeGreaterThanOrEqual(1);
       // No separate username input exists
       const inputs = screen.queryAllByRole('textbox');
       expect(inputs.every((input) => !input.getAttribute('value')?.includes('john.doe'))).toBe(
@@ -498,7 +499,8 @@ describe('UserEditModal', () => {
         { user: mockAdminUser },
       );
 
-      expect(screen.getByText(/active/i)).toBeInTheDocument();
+      // Status appears in the header badge
+      expect(screen.getAllByText(/active/i).length).toBeGreaterThanOrEqual(1);
     });
 
     it('should display inactive status badge', () => {
@@ -508,7 +510,8 @@ describe('UserEditModal', () => {
         { user: mockAdminUser },
       );
 
-      expect(screen.getByText(/inactive/i)).toBeInTheDocument();
+      // Inactive status appears in the header badge and alert
+      expect(screen.getAllByText(/inactive/i).length).toBeGreaterThanOrEqual(1);
     });
   });
 

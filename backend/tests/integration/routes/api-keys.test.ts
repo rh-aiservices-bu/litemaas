@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { createApp } from '../../../src/app';
-import { generateTestToken, mockUser, mockApiKey, createTestUsers } from '../setup';
+import { generateTestToken, mockApiKey, createTestUsers } from '../setup';
 
 describe('API Keys Routes', () => {
   let app: FastifyInstance;

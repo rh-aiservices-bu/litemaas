@@ -6,21 +6,6 @@ import { generateTestToken, mockUser, createTestUsers } from '../setup';
 describe('Banner Routes', () => {
   let app: FastifyInstance;
 
-  const mockBanner = {
-    id: 'banner-123',
-    name: 'Test Banner',
-    isActive: true,
-    priority: 0,
-    content: { en: 'Test banner content' },
-    variant: 'info',
-    isDismissible: true,
-    markdownEnabled: false,
-    createdBy: 'admin-123',
-    updatedBy: 'admin-123',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
   const mockCreateBannerRequest = {
     name: 'New Banner',
     content: { en: 'New banner content' },

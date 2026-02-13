@@ -520,13 +520,14 @@ export const patternFlyA11yUtils = {
           ).toBeTruthy();
           break;
 
-        case 'card':
+        case 'card': {
           // Cards should have proper heading structure if they contain headings
           const cardHeadings = component.querySelectorAll('h1, h2, h3, h4, h5, h6');
           if (cardHeadings.length > 0) {
             ariaTestUtils.testHeadingHierarchy(component as HTMLElement);
           }
           break;
+        }
 
         case 'modal':
           // Modals should have proper labeling and focus management
@@ -538,7 +539,7 @@ export const patternFlyA11yUtils = {
           expect(component.getAttribute('role')).toBe('dialog');
           break;
 
-        case 'table':
+        case 'table': {
           // Tables should have proper headers
           const headers = component.querySelectorAll('th');
           const cells = component.querySelectorAll('td');
@@ -547,6 +548,7 @@ export const patternFlyA11yUtils = {
             expect(headers.length).toBeGreaterThan(0);
           }
           break;
+        }
       }
     }
 

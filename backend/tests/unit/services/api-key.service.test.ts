@@ -15,12 +15,6 @@ describe('ApiKeyService', () => {
   let mockDbUtils: any;
   let mockPgClient: any;
 
-  const mockUser = {
-    id: 'user-123',
-    username: 'testuser',
-    email: 'test@example.com',
-  };
-
   const mockLiteLLMKeyResponse = {
     key: 'sk-litellm-abc123def456',
     key_name: 'test-key-alias',
@@ -466,6 +460,7 @@ describe('ApiKeyService', () => {
     it('should validate active API key', async () => {
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
 
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const keyHash = require('crypto').createHash('sha256').update(validTestKey).digest('hex');
       mockDbUtils.queryOne.mockResolvedValue({
         ...mockApiKeyDbRow,
@@ -484,6 +479,7 @@ describe('ApiKeyService', () => {
     it('should reject expired API key', async () => {
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
 
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const keyHash = require('crypto').createHash('sha256').update(validTestKey).digest('hex');
       mockDbUtils.queryOne.mockResolvedValue({
         ...mockApiKeyDbRow,
@@ -522,6 +518,7 @@ describe('ApiKeyService', () => {
     it('should update last used timestamp', async () => {
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
 
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const keyHash = require('crypto').createHash('sha256').update(validTestKey).digest('hex');
       mockDbUtils.queryOne.mockResolvedValue({
         ...mockApiKeyDbRow,
@@ -901,10 +898,6 @@ describe('ApiKeyService', () => {
   });
 
   describe('Subscription Status Validation', () => {
-    const activeSubscription = { model_id: 'gpt-4o', status: 'active' };
-    const pendingSubscription = { model_id: 'claude-3-5-sonnet', status: 'pending' };
-    const deniedSubscription = { model_id: 'llama-3', status: 'denied' };
-
     describe('createApiKey with subscription validation', () => {
       it('should allow creating key with active subscription models', async () => {
         vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);

@@ -175,7 +175,7 @@ export class ValidationUtils {
 
     return input
       .trim()
-      .replace(/[<>\"']/g, '') // Remove potentially dangerous characters
+      .replace(/[<>"']/g, '') // Remove potentially dangerous characters
       .substring(0, maxLength);
   }
 

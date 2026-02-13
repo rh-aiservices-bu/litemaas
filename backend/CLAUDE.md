@@ -78,6 +78,8 @@ Fastify plugins are registered in specific order:
 
 **System User**: Fixed UUID `00000000-0000-0000-0000-000000000001` for audit trail of automated actions (e.g., model restriction cascades).
 
+**Admin User Management Audit**: All admin-initiated user management actions (API key creation/revocation, budget updates) are logged to `audit_logs` with action type, admin user ID, target user ID, and operation metadata.
+
 **Admin Usage Analytics Caching**: `daily_usage_cache` table implements intelligent day-by-day incremental caching:
 
 - **Historical days** (>1 day old): Permanent cache with `is_complete = true`, never refreshed
@@ -95,6 +97,8 @@ For complete schema and caching details, see [`docs/architecture/database-schema
 **RBAC**: Three-tier hierarchy `admin > adminReadonly > user` with OpenShift group mapping.
 
 **Subscription Approval Permissions**: `admin:subscriptions:read` (admin, adminReadonly), `admin:subscriptions:write` (admin only), `admin:subscriptions:delete` (admin only)
+
+**User Management Permissions**: `users:read` (admin, adminReadonly — view user details, API keys, subscriptions), `users:write` (admin only — update budget/limits, create/revoke API keys)
 
 **API Keys**: `Authorization: Bearer sk-litellm-{key}`
 
@@ -115,7 +119,7 @@ For details, see [`docs/features/user-roles-administration.md`](../docs/features
   - `AdminUsageStatsService` - **System-wide analytics** with trend analysis and multi-dimensional filtering
   - `DailyUsageCacheManager` - **Day-by-day incremental caching** (permanent historical cache, 5-min TTL for current day)
 - **Integration**: LiteLLMService, LiteLLMIntegrationService
-- **Admin**: AdminService
+- **Admin**: AdminService, admin-users route (user details, budget/limits, API keys, subscriptions)
 
 **Admin Analytics Architecture**: Uses specialized service architecture with orchestrator pattern:
 

@@ -1255,107 +1255,235 @@ Response: Prometheus format metrics
 
 ### User Management (/api/v1/admin/users)
 
-#### GET /api/v1/admin/users
+Comprehensive per-user management endpoints for viewing user details, configuring budget/limits, and managing API keys and subscriptions.
 
-**Authorization**: Requires `admin` or `adminReadonly` role
+**Permission Levels**:
 
-List all users in the system
+| Permission     | Role                | Capabilities                                           |
+| -------------- | ------------------- | ------------------------------------------------------ |
+| `users:read`   | admin, adminReadonly | View user details, API keys, subscriptions             |
+| `users:write`  | admin                | Update budget/limits, create/revoke API keys, update models |
 
-```json
-Query Parameters:
-- page: number (default: 1)
-- limit: number (default: 20)
-- role: string (optional) - Filter by role
-- search: string (optional) - Search by name or email
+**Auto-Subscription System**: When creating or updating API keys for a user, the system automatically creates or reactivates subscriptions for the specified models. This eliminates the need for manual subscription setup before key creation.
 
-Response:
-{
-  "data": [
-    {
-      "id": "uuid",
-      "username": "user@example.com",
-      "email": "user@example.com",
-      "fullName": "User Full Name",
-      "roles": ["user"],
-      "isActive": true,
-      "lastLogin": "2024-01-20T10:00:00Z",
-      "createdAt": "2024-01-01T00:00:00Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 20,
-    "total": 100,
-    "totalPages": 5
-  }
-}
-```
+#### GET /api/v1/admin/users/:id
 
-#### POST /api/v1/admin/users
+**Authorization**: Requires `users:read` permission (admin or adminReadonly role)
 
-**Authorization**: Requires `admin` role (write operation)
-
-Create new user (admin only)
+Get detailed user information including budget, rate limits, and resource counts
 
 ```json
-Request:
-{
-  "username": "newuser@example.com",
-  "email": "newuser@example.com",
-  "fullName": "New User",
-  "roles": ["user"],  // Optional, defaults to ["user"]
-  "isActive": true     // Optional, defaults to true
-}
-
-Response:
-{
-  "id": "new-uuid",
-  "username": "newuser@example.com",
-  "email": "newuser@example.com",
-  "fullName": "New User",
-  "roles": ["user"],
-  "isActive": true,
-  "createdAt": "2024-01-20T10:00:00Z"
-}
-```
-
-#### PUT /api/v1/admin/users/:id
-
-**Authorization**: Requires `admin` role (write operation)
-
-Update user (admin only)
-
-```json
-Request:
-{
-  "fullName": "Updated User Name",  // Optional
-  "roles": ["admin", "user"],       // Optional - update roles
-  "isActive": false                  // Optional - deactivate user
-}
-
 Response:
 {
   "id": "uuid",
   "username": "user@example.com",
   "email": "user@example.com",
-  "fullName": "Updated User Name",
-  "roles": ["admin", "user"],
-  "isActive": false,
+  "fullName": "User Full Name",
+  "roles": ["user"],
+  "isActive": true,
+  "maxBudget": 100.00,
+  "currentSpend": 45.50,
+  "tpmLimit": 10000,
+  "rpmLimit": 60,
+  "syncStatus": "synced",
+  "lastLoginAt": "2024-01-20T10:00:00Z",
+  "createdAt": "2024-01-01T00:00:00Z",
+  "subscriptionsCount": 5,
+  "activeSubscriptionsCount": 3,
+  "apiKeysCount": 4,
+  "activeApiKeysCount": 2
+}
+```
+
+#### PATCH /api/v1/admin/users/:id/budget-limits
+
+**Authorization**: Requires `users:write` permission (admin role only)
+
+Update user budget and rate limits
+
+```json
+Request:
+{
+  "maxBudget": 200.00,    // Optional
+  "tpmLimit": 20000,      // Optional: tokens per minute
+  "rpmLimit": 120         // Optional: requests per minute
+}
+
+Response:
+{
+  "id": "uuid",
+  "maxBudget": 200.00,
+  "tpmLimit": 20000,
+  "rpmLimit": 120,
   "updatedAt": "2024-01-20T10:00:00Z"
 }
 ```
 
-#### DELETE /api/v1/admin/users/:id
+**Notes**:
 
-**Authorization**: Requires `admin` role (write operation)
+- All fields are optional — only provided fields are updated
+- Changes are synced to LiteLLM
+- Action is logged in the audit trail
 
-Deactivate user (admin only) - Soft delete to preserve data integrity
+#### GET /api/v1/admin/users/:id/api-keys
+
+**Authorization**: Requires `users:read` permission (admin or adminReadonly role)
+
+List a user's API keys with pagination and optional active status filtering
+
+```json
+Query Parameters:
+- page: number (default: 1)
+- limit: number (default: 20)
+- isActive: boolean (optional) - Filter by active status
+
+Response:
+{
+  "data": [
+    {
+      "id": "key_123",
+      "name": "Production Key",
+      "keyPrefix": "sk-LaAy",
+      "models": ["gpt-4", "gpt-3.5-turbo"],
+      "modelDetails": [
+        {
+          "id": "gpt-4",
+          "name": "GPT-4",
+          "provider": "openai"
+        }
+      ],
+      "isActive": true,
+      "maxBudget": 50.00,
+      "currentSpend": 12.30,
+      "lastUsedAt": "2024-01-15T10:30:00Z",
+      "createdAt": "2024-01-01T00:00:00Z",
+      "expiresAt": null,
+      "revokedAt": null
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 4,
+    "totalPages": 1
+  }
+}
+```
+
+#### POST /api/v1/admin/users/:id/api-keys
+
+**Authorization**: Requires `users:write` permission (admin role only)
+
+Create an API key for a user. Automatically creates or reactivates subscriptions for the specified models.
+
+```json
+Request:
+{
+  "name": "Development Key",           // Required
+  "modelIds": ["gpt-4", "claude-3"],   // Required: at least one model
+  "expiresAt": "2024-12-31T23:59:59Z", // Optional
+  "maxBudget": 100.00,                 // Optional
+  "tpmLimit": 5000,                    // Optional
+  "rpmLimit": 30                       // Optional
+}
+
+Response:
+{
+  "id": "key_456",
+  "name": "Development Key",
+  "key": "sk-litellm-abcdef1234567890",  // Full key — shown only once
+  "keyPrefix": "sk-litellm",
+  "models": ["gpt-4", "claude-3"],
+  "isActive": true,
+  "createdAt": "2024-01-20T00:00:00Z",
+  "expiresAt": "2024-12-31T23:59:59Z"
+}
+```
+
+**Notes**:
+
+- The full `key` value is returned only at creation time and cannot be retrieved later
+- Subscriptions for each model are auto-created if they don't exist, or reactivated if previously cancelled
+- Action is logged in the audit trail with admin user ID and target user ID
+
+#### DELETE /api/v1/admin/users/:id/api-keys/:keyId
+
+**Authorization**: Requires `users:write` permission (admin role only)
+
+Revoke (deactivate) a user's API key
 
 ```json
 Response:
 {
-  "message": "User deactivated successfully",
-  "deactivatedAt": "2024-01-20T10:00:00Z"
+  "message": "API key revoked successfully"
+}
+```
+
+**Notes**:
+
+- Revokes the key in both LiteMaaS and LiteLLM
+- The key is deactivated, not deleted — it remains in the database for audit purposes
+- Action is logged in the audit trail
+
+#### PATCH /api/v1/admin/users/:id/api-keys/:keyId
+
+**Authorization**: Requires `users:write` permission (admin role only)
+
+Update models associated with an API key, and optionally update the key name
+
+```json
+Request:
+{
+  "modelIds": ["gpt-4", "claude-3", "gemini-pro"],  // Required: updated model list
+  "name": "Updated Key Name"                         // Optional
+}
+
+Response:
+{
+  "id": "key_123",
+  "name": "Updated Key Name",
+  "models": ["gpt-4", "claude-3", "gemini-pro"],
+  "updatedAt": "2024-01-20T10:00:00Z"
+}
+```
+
+**Notes**:
+
+- Auto-creates subscriptions for any newly added models
+- Updates both local database and LiteLLM configuration
+
+#### GET /api/v1/admin/users/:id/subscriptions
+
+**Authorization**: Requires `users:read` permission (admin or adminReadonly role)
+
+List a user's subscriptions with pagination and optional status filtering
+
+```json
+Query Parameters:
+- page: number (default: 1)
+- limit: number (default: 20)
+- status: string (optional) - Filter by status (active, pending, denied)
+
+Response:
+{
+  "data": [
+    {
+      "id": "sub_123",
+      "modelId": "gpt-4",
+      "modelName": "GPT-4",
+      "provider": "openai",
+      "status": "active",
+      "statusReason": null,
+      "createdAt": "2024-01-01T00:00:00Z",
+      "statusChangedAt": "2024-01-15T10:00:00Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 5,
+    "totalPages": 1
+  }
 }
 ```
 

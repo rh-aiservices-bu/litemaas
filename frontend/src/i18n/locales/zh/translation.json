@@ -1440,7 +1440,81 @@
   "users": {
     "actions": {
       "edit": "编辑",
-      "view": "查看详情"
+      "manage": "管理",
+      "view": "查看详情",
+      "viewUsage": "查看使用分析"
+    },
+    "apiKeys": {
+      "createNew": "创建 API 密钥",
+      "createSuccess": "API Key Created",
+      "createSuccessDesc": "The API key has been created successfully.",
+      "createError": "Create Failed",
+      "form": {
+        "name": "Key Name",
+        "namePlaceholder": "Enter a name for this API key",
+        "models": "Models",
+        "modelsHelp": "Select one or more models for this API key.",
+        "noModels": "No models available",
+        "expiration": "Expiration",
+        "expirationNever": "Never",
+        "expiration30": "30 days",
+        "expiration60": "60 days",
+        "expiration90": "90 days",
+        "maxBudget": "Max Budget (USD)",
+        "create": "Create",
+        "apiKey": "API Key"
+      },
+      "keyGenerated": "API Key Generated",
+      "keyWarning": "Save this key now",
+      "keyWarningDesc": "This is the only time the full API key will be shown. Copy it now and store it securely.",
+      "loadError": "加载 API 密钥失败",
+      "models": "模型",
+      "name": "名称",
+      "noKeys": "无 API 密钥",
+      "noKeysDesc": "该用户没有 API 密钥。",
+      "revoke": "撤销",
+      "revokeConfirmDesc": "您确定要撤销此 API 密钥吗？此操作无法撤消。",
+      "revokeConfirmTitle": "撤销 API 密钥",
+      "revokeError": "撤销失败",
+      "revokeSuccess": "API 密钥已撤销",
+      "revokeSuccessDesc": "API 密钥已成功撤销。",
+      "status": "状态",
+      "tableLabel": "用户 API 密钥",
+      "lastUsed": "最后使用",
+      "viewUsage": "查看使用情况"
+    },
+    "budget": {
+      "budgetUtilization": "预算使用率",
+      "currentSpend": "当前支出",
+      "loadError": "加载预算信息失败",
+      "maxBudget": "最大预算",
+      "maxBudgetHelp": "以美元为单位的最大支出限额。设置为0表示无限制。",
+      "readOnlyNote": "您对这些设置只有只读访问权限。",
+      "rpmLimit": "RPM 限制",
+      "rpmLimitHelp": "每分钟请求数。设置为0表示无限制。",
+      "tpmLimit": "TPM 限制",
+      "tpmLimitHelp": "每分钟令牌数。设置为0表示无限制。",
+      "unlimited": "无限制",
+      "updateError": "更新失败",
+      "updateSuccess": "预算已更新",
+      "updateSuccessDesc": "用户预算和限制已成功更新。"
+    },
+    "subscriptions": {
+      "createdAt": "创建于",
+      "loadError": "加载订阅失败",
+      "model": "模型",
+      "noSubscriptions": "无订阅",
+      "noSubscriptionsDesc": "该用户没有订阅。",
+      "provider": "供应商",
+      "status": "状态",
+      "tableLabel": "用户订阅"
+    },
+    "tabs": {
+      "apiKeys": "API 密钥",
+      "ariaLabel": "用户详情标签页",
+      "budgetLimits": "预算和限制",
+      "profile": "个人资料",
+      "subscriptions": "订阅"
     },
     "alerts": {
       "admin": {
