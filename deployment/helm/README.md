@@ -32,7 +32,7 @@ helm install litemaas deployment/helm/litemaas/ \
 | Backend    | `quay.io/rh-aiservices-bu/litemaas-backend:<appVersion>` |
 | Frontend   | `quay.io/rh-aiservices-bu/litemaas-frontend:<appVersion>` |
 
-Backend and frontend image tags default to the chart's `appVersion` (currently `0.1.3`). Override with `backend.image.tag` / `frontend.image.tag`.
+Backend and frontend image tags default to the chart's `appVersion` (currently `0.2.0`). Override with `backend.image.tag` / `frontend.image.tag`.
 
 ## Documentation
 

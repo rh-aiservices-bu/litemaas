@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.2.0] - 2026-02-13
+
 ### Added
 
 - **Admin User Management**: Consolidated admin interface for viewing and managing users through a modal-based workflow with tabbed views
@@ -21,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **LiteLLM upgraded to v1.81.0**: Bundled LiteLLM proxy updated from v1.74.x to v1.81.0 with backward-compatible API handling. Requires a two-phase deployment -- see the [Upgrade Guide for v0.2.0](docs/deployment/upgrading-to-v0.2.md).
 - **Helm Chart Defaults**: Default platform set to OpenShift (`global.platform: openshift`)
 - **Helm Chart Defaults**: LiteLLM Route and Ingress now enabled by default (`route.litellm.enabled: true`, `ingress.litellm.enabled: true`), since LiteLLM shares the same Service/endpoints as the frontend and should be exposed when the frontend is. Set to `false` to keep LiteLLM cluster-internal only.
 - **Helm Deployment Docs**: Simplified Quick Start examples and updated configuration reference tables to reflect new defaults
@@ -40,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Documentation
 
 - New: `docs/features/users-management.md` — Admin user management feature guide
+- New: `docs/deployment/upgrading-to-v0.2.md` — Migration guide for upgrading existing deployments to v0.2.0
 
 ---
 

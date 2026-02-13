@@ -184,13 +184,13 @@ podman run -d --name litemaas-postgres \
 podman run -d --name litemaas-backend \
   --env-file production.env \
   -p 8080:8080 \
-  litemaas-backend:0.1.3
+  litemaas-backend:0.2.0
 
 # Run frontend (with runtime configuration)
 podman run -d --name litemaas-frontend \
   -e BACKEND_URL=https://yourdomain.com \
   -p 3000:8080 \
-  litemaas-frontend:0.1.3
+  litemaas-frontend:0.2.0
 ```
 
 ## OpenShift/Kubernetes Deployment
@@ -326,7 +326,7 @@ npm run build:containers:push
 ./scripts/build-containers.sh --build-and-push
 ```
 
-The script automatically tags images with the version from root `package.json` (e.g., `quay.io/rh-aiservices-bu/litemaas-backend:0.1.3`).
+The script automatically tags images with the version from root `package.json` (e.g., `quay.io/rh-aiservices-bu/litemaas-backend:0.2.0`).
 
 ### Manual Registry Operations
 

@@ -120,7 +120,7 @@ describe('LiteLLMService', () => {
         status: 'healthy',
         db: 'connected',
         redis: 'connected',
-        litellm_version: '1.74.3',
+        litellm_version: '1.81.0',
       };
 
       const mockResponse: MockResponse = {
@@ -132,7 +132,7 @@ describe('LiteLLMService', () => {
       const result = await service.getHealth();
 
       expect(result).toEqual(mockHealth);
-      expect(fetch).toHaveBeenCalledWith('http://localhost:4000/health/liveliness', {
+      expect(fetch).toHaveBeenCalledWith('http://localhost:4000/health/liveness', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -211,7 +211,9 @@ describe('LiteLLMService', () => {
     it('should validate API key successfully', async () => {
       const mockResponse: MockResponse = {
         ok: true,
-        json: vi.fn().mockResolvedValue({ key_name: 'test-key' }),
+        json: vi
+          .fn()
+          .mockResolvedValue({ key: 'sk-test', info: { key_name: 'test-key', spend: 0 } }),
       };
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
@@ -231,6 +233,117 @@ describe('LiteLLMService', () => {
       const result = await service.validateApiKey('invalid-key');
 
       expect(result).toBe(false);
+    });
+  });
+
+  describe('getKeyInfo', () => {
+    it('should unwrap nested v1.81.0 response format', async () => {
+      const keyInfo = {
+        key_name: 'test-key',
+        spend: 25.5,
+        max_budget: 100,
+        models: ['gpt-4o'],
+        tpm_limit: 1000,
+        rpm_limit: 60,
+        user_id: 'user-123',
+      };
+      const mockResponse: MockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({ key: 'sk-test123', info: keyInfo }),
+      };
+      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
+
+      const result = await service.getKeyInfo('sk-test123');
+
+      expect(result).toEqual(keyInfo);
+      expect(result.spend).toBe(25.5);
+      expect(result.max_budget).toBe(100);
+    });
+
+    it('should handle flat response format for backward compatibility', async () => {
+      const keyInfo = {
+        key_name: 'test-key',
+        spend: 10.0,
+        max_budget: 50,
+        models: ['gpt-4o'],
+        tpm_limit: 500,
+        rpm_limit: 30,
+        user_id: 'user-456',
+      };
+      const mockResponse: MockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(keyInfo),
+      };
+      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
+
+      const result = await service.getKeyInfo('sk-flat-key');
+
+      expect(result).toEqual(keyInfo);
+      expect(result.spend).toBe(10.0);
+    });
+
+    it('should throw on API error', async () => {
+      const mockResponse: MockResponse = {
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        json: vi.fn().mockResolvedValue({ error: { message: 'Invalid key' } }),
+      };
+      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
+
+      await expect(service.getKeyInfo('sk-invalid')).rejects.toThrow();
+    });
+  });
+
+  describe('getKeyAlias', () => {
+    it('should unwrap nested v1.81.0 response format', async () => {
+      const mockResponse: MockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          key: 'sk-test123',
+          info: {
+            key_alias: 'my-alias',
+            key_name: 'test-key',
+            spend: 10,
+            expires: null,
+            models: ['gpt-4o'],
+          },
+        }),
+      };
+      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
+
+      const result = await service.getKeyAlias('sk-test123');
+
+      expect(result).toEqual({ key: 'sk-test123', key_alias: 'my-alias' });
+    });
+
+    it('should handle flat response format for backward compatibility', async () => {
+      const mockResponse: MockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          key_alias: 'flat-alias',
+          key_name: 'test-key',
+          spend: 5,
+          models: ['gpt-4o'],
+        }),
+      };
+      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
+
+      const result = await service.getKeyAlias('sk-flat-key');
+
+      expect(result).toEqual({ key: 'sk-flat-key', key_alias: 'flat-alias' });
+    });
+
+    it('should throw on API error', async () => {
+      const mockResponse: MockResponse = {
+        ok: false,
+        status: 401,
+        statusText: 'Unauthorized',
+        json: vi.fn().mockResolvedValue({ error: { message: 'Invalid key' } }),
+      };
+      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
+
+      await expect(service.getKeyAlias('sk-invalid')).rejects.toThrow();
     });
   });
 

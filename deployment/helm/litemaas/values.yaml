@@ -104,7 +104,7 @@ litellm:
 
   image:
     repository: ghcr.io/berriai/litellm-non_root
-    tag: "main-v1.74.7-stable"
+    tag: "main-v1.81.0-stable"
 
   # -- Explicit database URL for LiteLLM. Auto-constructed when postgresql.enabled is true.
   databaseUrl: ""
