@@ -11,7 +11,7 @@ The following table lists all LiteLLM endpoints currently used by LiteMaaS:
 | Endpoint               | Method | Purpose                   | Used By                                |
 | ---------------------- | ------ | ------------------------- | -------------------------------------- |
 | `/model/info`          | GET    | Fetch available models    | Model sync, model listing              |
-| `/health/liveliness`   | GET    | Check service health      | Health monitoring                      |
+| `/health/liveness`   | GET    | Check service health      | Health monitoring                      |
 | `/user/new`            | POST   | Create new user           | User registration                      |
 | `/user/info`           | GET    | Get user information      | User existence check, key token lookup |
 | `/user/update`         | POST   | Update user properties    | User profile updates                   |
@@ -65,7 +65,7 @@ The following table lists all LiteLLM endpoints currently used by LiteMaaS:
 
 **Usage**: Called during startup for model synchronization and by model listing endpoints
 
-#### `GET /health/liveliness`
+#### `GET /health/liveness`
 
 **Purpose**: Check LiteLLM service health status
 
@@ -76,7 +76,7 @@ The following table lists all LiteLLM endpoints currently used by LiteMaaS:
   "status": "healthy",
   "db": "connected",
   "redis": "connected",
-  "litellm_version": "1.74.3"
+  "litellm_version": "1.81.0"
 }
 ```
 
@@ -258,19 +258,22 @@ The following table lists all LiteLLM endpoints currently used by LiteMaaS:
 
 - `x-litellm-api-key`: The actual API key value
 
-**Response Format**:
+**Response Format** (v1.81.0+):
 
 ```json
 {
-  "key_name": "production-key",
-  "spend": 25.5,
-  "max_budget": 50.0,
-  "models": ["gpt-4", "claude-3"],
-  "tpm_limit": 1000,
-  "rpm_limit": 60,
-  "user_id": "uuid-string",
-  "expires": "2025-02-01T00:00:00Z",
-  "budget_reset_at": "2025-02-01T00:00:00Z"
+  "key": "sk-litellm-abc123def456...",
+  "info": {
+    "key_name": "production-key",
+    "spend": 25.5,
+    "max_budget": 50.0,
+    "models": ["gpt-4", "claude-3"],
+    "tpm_limit": 1000,
+    "rpm_limit": 60,
+    "user_id": "uuid-string",
+    "expires": "2025-02-01T00:00:00Z",
+    "budget_reset_at": "2025-02-01T00:00:00Z"
+  }
 }
 ```
 
@@ -799,7 +802,7 @@ The replacement engine should support a mock/development mode that:
 
 #### Health Monitoring
 
-Implement the `/health/liveliness` endpoint for service monitoring with:
+Implement the `/health/liveness` endpoint for service monitoring with:
 
 - Database connectivity status
 - Service version information
