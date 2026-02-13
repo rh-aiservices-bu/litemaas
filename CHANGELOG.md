@@ -7,14 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+---
+
+## [0.2.0] - 2026-02-13
+
+### Added
+
+- **Admin User Management**: Consolidated admin interface for viewing and managing users through a modal-based workflow with tabbed views
+  - **Unified Management Modal**: Single modal with Profile, Budget & Limits, API Keys, and Subscriptions tabs for complete user management
+  - **Role Management**: Toggle user/admin/adminReadonly roles with conflict detection (warns if both admin and admin-readonly are selected)
+  - **Budget & Rate Limits**: Configure max budget, TPM, and RPM limits with real-time utilization tracking and color-coded progress bars
+  - **API Key Lifecycle**: Create, view, and revoke API keys for users with auto-subscription creation for associated models
+  - **Subscription Visibility**: View all user subscriptions with status and reason tracking
+  - **Full Audit Trail**: All admin actions logged with admin user ID, target user, and metadata
+  - **RBAC**: `users:read` (admin, adminReadonly) for viewing, `users:write` (admin only) for modifications
+  - **AdminReadonly Support**: Read-only users can view all details but cannot modify budget/limits, create/revoke keys, or toggle roles
+
 ### Changed
 
+- **LiteLLM upgraded to v1.81.0**: Bundled LiteLLM proxy updated from v1.74.x to v1.81.0 with backward-compatible API handling. Requires a two-phase deployment -- see the [Upgrade Guide for v0.2.0](docs/deployment/upgrading-to-v0.2.md).
 - **Helm Chart Defaults**: Default platform set to OpenShift (`global.platform: openshift`)
 - **Helm Chart Defaults**: LiteLLM Route and Ingress now enabled by default (`route.litellm.enabled: true`, `ingress.litellm.enabled: true`), since LiteLLM shares the same Service/endpoints as the frontend and should be exposed when the frontend is. Set to `false` to keep LiteLLM cluster-internal only.
 - **Helm Deployment Docs**: Simplified Quick Start examples and updated configuration reference tables to reflect new defaults
 
 ### Fixed
 
+- **Admin API Key Revocation**: Fixed schema validation and audit log overflow issues in admin API key management
 - **Helm: LiteLLM URL uses external Route/Ingress when available**: `LITELLM_API_URL` now resolves to the external Route or Ingress URL instead of the internal ClusterIP address when external access is enabled, so users see a reachable endpoint in the UI
   - Kubernetes Ingress: uses `https://` or `http://` based on TLS configuration
   - OpenShift Route with explicit host: uses `https://<host>`
@@ -23,6 +41,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `LITELLM_API_URL` moved from Deployment env to ConfigMap to enable hook patching
   - Post-install hook RBAC extended with configmaps get/patch permission
   - NOTES.txt now shows LiteLLM URL in the OpenShift access section
+
+### Documentation
+
+- New: `docs/features/users-management.md` — Admin user management feature guide
+- New: `docs/deployment/upgrading-to-v0.2.md` — Migration guide for upgrading existing deployments to v0.2.0
 
 ---
 

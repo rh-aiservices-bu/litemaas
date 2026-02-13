@@ -11,7 +11,6 @@ import { generateTestToken } from '../setup';
 describe('Usage Routes Integration', () => {
   let app: FastifyInstance;
   let userToken: string;
-  let adminToken: string;
 
   beforeAll(async () => {
     // Set test environment
@@ -23,7 +22,6 @@ describe('Usage Routes Integration', () => {
 
     // Generate test tokens
     userToken = generateTestToken('user-123', ['user']);
-    adminToken = generateTestToken('admin-123', ['admin']);
   });
 
   afterAll(async () => {

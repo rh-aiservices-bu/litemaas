@@ -42,6 +42,7 @@ litemaas/
 │   │   │   ├── users.ts      # User management (/api/v1/users)
 │   │   │   ├── admin.ts      # Admin endpoints (/api/v1/admin)
 │   │   │   ├── admin-models.ts # Admin model management (/api/v1/admin/models)
+│   │   │   ├── admin-users.ts # Admin user management (/api/v1/admin/users)
 │   │   │   ├── admin-usage.ts # Admin usage analytics (/api/v1/admin/usage)
 │   │   │   ├── usage.ts      # Usage tracking (/api/v1/usage)
 │   │   │   ├── config.ts     # Configuration endpoints (/api/v1/config)
@@ -56,6 +57,7 @@ litemaas/
 │   │   │   ├── auth.ts       # Authentication schemas
 │   │   │   ├── users.ts      # User schemas
 │   │   │   ├── usage.ts      # Usage schemas
+│   │   │   ├── admin-users.ts # Admin user management schemas
 │   │   │   ├── admin-usage.ts # Admin usage analytics schemas
 │   │   │   ├── health.ts     # Health check schemas
 │   │   │   └── index.ts      # Schema exports
@@ -117,6 +119,10 @@ litemaas/
 │   │   │   │   ├── ApiKeyFilterSelect.tsx # API key filter (cascading)
 │   │   │   │   ├── TopUsersTable.tsx # Top users by usage table
 │   │   │   │   ├── ProviderBreakdownTable.tsx # Provider breakdown table
+│   │   │   │   ├── UserProfileTab.tsx # User profile display with role toggles
+│   │   │   │   ├── UserBudgetLimitsTab.tsx # Budget & rate limit configuration
+│   │   │   │   ├── UserApiKeysTab.tsx # API key lifecycle management
+│   │   │   │   ├── UserSubscriptionsTab.tsx # User subscriptions list
 │   │   │   │   └── index.ts  # Admin component exports
 │   │   │   ├── charts/       # Chart components (AccessibleChart, etc.)
 │   │   │   ├── AlertToastGroup.tsx # Toast notifications
@@ -169,12 +175,14 @@ litemaas/
 │   │   │   ├── apiKeys.service.ts # API keys API
 │   │   │   ├── usage.service.ts # User usage analytics API
 │   │   │   ├── adminUsage.service.ts # Admin usage analytics API
+│   │   │   ├── users.service.ts # Admin user management API
 │   │   │   ├── chat.service.ts # Chatbot API
 │   │   │   ├── prompts.service.ts # Prompt management API
 │   │   │   └── config.service.ts # Configuration API
 │   │   ├── types/             # TypeScript interfaces
 │   │   │   ├── auth.ts       # Auth types
 │   │   │   ├── models.ts     # Model types
+│   │   │   ├── users.ts      # Admin user management types
 │   │   │   └── api.ts        # API response types
 │   │   ├── utils/             # Utility functions
 │   │   │   ├── formatters.ts # Data formatting

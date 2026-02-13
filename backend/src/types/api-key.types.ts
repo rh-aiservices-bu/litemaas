@@ -165,6 +165,14 @@ export interface LiteLLMKeyInfo {
 }
 
 /**
+ * LiteLLM v1.81.0+ wraps /key/info response in { key, info } structure
+ */
+export interface LiteLLMKeyInfoResponse {
+  key: string;
+  info: LiteLLMKeyInfo;
+}
+
+/**
  * Enhanced API key interface that includes model and subscription details
  */
 export interface EnhancedApiKey extends ApiKey {

@@ -1,27 +1,27 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import {
   Modal,
   ModalVariant,
   ModalBody,
-  Form,
-  Switch,
   Button,
-  Badge,
-  Label,
   Alert,
   Spinner,
+  Tabs,
+  Tab,
+  TabTitleText,
   Flex,
   FlexItem,
-  Grid,
-  GridItem,
-  Content,
-  ContentVariants,
 } from '@patternfly/react-core';
-import { CheckCircleIcon, ExclamationTriangleIcon } from '@patternfly/react-icons';
+import { ExternalLinkAltIcon } from '@patternfly/react-icons';
 import { User, UserUpdateData } from '../types/users';
 import { usersService } from '../services/users.service';
 import { useNotifications } from '../contexts/NotificationContext';
+import UserProfileTab from './admin/UserProfileTab';
+import UserBudgetLimitsTab from './admin/UserBudgetLimitsTab';
+import UserApiKeysTab from './admin/UserApiKeysTab';
+import UserSubscriptionsTab from './admin/UserSubscriptionsTab';
 
 interface UserEditModalProps {
   user: User;
@@ -32,9 +32,13 @@ interface UserEditModalProps {
 
 const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, onSave }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { addNotification } = useNotifications();
 
-  // Form state
+  // Tab state
+  const [activeTabKey, setActiveTabKey] = useState<string | number>('profile');
+
+  // Form state for profile tab (roles)
   const [roles, setRoles] = useState<string[]>(user.roles || []);
 
   // UI state
@@ -46,7 +50,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
   const modalTriggerRef = useRef<HTMLElement | null>(null);
   const saveButtonRef = useRef<HTMLButtonElement>(null);
 
-  // Track changes
+  // Track changes (for profile/roles tab)
   useEffect(() => {
     const rolesChanged = JSON.stringify(roles.sort()) !== JSON.stringify((user.roles || []).sort());
     setHasChanges(rolesChanged);
@@ -57,6 +61,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
     setRoles(user.roles || []);
     setError(null);
     setHasChanges(false);
+    setActiveTabKey('profile');
   }, [user]);
 
   const handleRoleToggle = (role: string, checked: boolean) => {
@@ -94,19 +99,23 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
       });
 
       onSave();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to update user:', err);
 
       let errorMessage = t('users.error.update', 'Failed to update user');
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.error) {
+      const error = err as {
+        response?: { data?: { message?: string; error?: string | { message?: string } } };
+        message?: string;
+      };
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
         errorMessage =
-          typeof err.response.data.error === 'string'
-            ? err.response.data.error
-            : err.response.data.error.message || errorMessage;
-      } else if (err.message) {
-        errorMessage = err.message;
+          typeof error.response.data.error === 'string'
+            ? error.response.data.error
+            : error.response.data.error.message || errorMessage;
+      } else if (error.message) {
+        errorMessage = error.message;
       }
 
       setError(errorMessage);
@@ -128,25 +137,14 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
     }, 100);
   };
 
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return t('users.never', 'Never');
-    return new Date(dateString).toLocaleDateString();
+  const handleViewUsageAnalytics = () => {
+    handleClose();
+    navigate(`/admin/usage?userIds=${user.id}`);
   };
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
-  };
-
-  // Available roles for management
-  const availableRoles = [
-    { key: 'user', label: t('role.user', 'User') },
-    { key: 'admin', label: t('role.admin', 'Administrator') },
-    { key: 'admin-readonly', label: t('role.adminReadonly', 'Administrator (Read-only)') },
-  ];
 
   return (
     <Modal
-      variant={ModalVariant.medium}
+      variant={ModalVariant.large}
       title={
         canEdit
           ? t('users.modal.edit.title', 'Edit User')
@@ -168,183 +166,100 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
           </Alert>
         )}
 
-        <Form>
-          {/* User Information Section - Compact Grid Layout */}
-          <Content component={ContentVariants.h3} style={{ marginBottom: '0.75rem' }}>
-            {t('users.form.userInfo', 'User Information')}
-          </Content>
-
-          <Grid hasGutter md={6} lg={4} style={{ marginBottom: '1rem' }}>
-            <GridItem>
-              <strong style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
-                {t('users.form.username', 'Username')}:
-              </strong>
-              <div style={{ marginTop: '0.25rem' }}>{user.username}</div>
-            </GridItem>
-            <GridItem>
-              <strong style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
-                {t('users.form.email', 'Email')}:
-              </strong>
-              <div style={{ marginTop: '0.25rem' }}>{user.email}</div>
-            </GridItem>
-            <GridItem>
-              <strong style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
-                {t('users.form.fullName', 'Full Name')}:
-              </strong>
-              <div style={{ marginTop: '0.25rem' }}>
-                {user.fullName || (
-                  <span
-                    style={{
-                      fontStyle: 'italic',
-                      color: 'var(--pf-t--global--text--color--subtle)',
-                    }}
-                  >
-                    {t('common.notAvailable', 'N/A')}
-                  </span>
-                )}
-              </div>
-            </GridItem>
-            <GridItem>
-              <strong style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
-                {t('users.form.createdAt', 'Created At')}:
-              </strong>
-              <div
-                style={{ marginTop: '0.25rem', fontSize: 'var(--pf-t--global--font--size--sm)' }}
-              >
-                {formatDateTime(user.createdAt)}
-              </div>
-            </GridItem>
-            <GridItem>
-              <strong style={{ fontSize: 'var(--pf-t--global--font--size--sm)' }}>
-                {t('users.form.lastLogin', 'Last Login')}:
-              </strong>
-              <div
-                style={{ marginTop: '0.25rem', fontSize: 'var(--pf-t--global--font--size--sm)' }}
-              >
-                {formatDate(user.lastLoginAt)}
-              </div>
-            </GridItem>
-          </Grid>
-
-          {/* Roles Section - Compact */}
-          <Content component={ContentVariants.h3} style={{ marginBottom: '0.75rem' }}>
-            {t('users.form.roles', 'Roles')}
-          </Content>
-
-          {canEdit ? (
-            <div style={{ marginBottom: '1rem' }}>
-              <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsSm' }}>
-                {availableRoles.map((role) => (
-                  <FlexItem key={role.key}>
-                    <Switch
-                      id={`role-${role.key}`}
-                      label={role.label}
-                      isChecked={roles.includes(role.key)}
-                      onChange={(_event, checked) => handleRoleToggle(role.key, checked)}
-                      aria-label={t('users.form.toggleRole', 'Toggle {{role}} role', {
-                        role: role.label,
-                      })}
-                      isDisabled={isUpdating}
-                    />
-                  </FlexItem>
-                ))}
-              </Flex>
-
-              {/* Handle role conflicts */}
-              {roles.includes('admin') && roles.includes('admin-readonly') && (
-                <Alert
-                  variant="warning"
-                  title={t('users.warnings.roleConflict', 'Role Conflict')}
-                  isInline
-                  style={{ marginTop: '0.75rem' }}
-                >
-                  {t(
-                    'users.warnings.roleConflictDesc',
-                    'Admin and Admin-readonly roles conflict. Admin role will take precedence.',
-                  )}
-                </Alert>
-              )}
+        <Tabs
+          activeKey={activeTabKey}
+          onSelect={(_event, tabIndex) => setActiveTabKey(tabIndex)}
+          aria-label={t('users.tabs.ariaLabel', 'User details tabs')}
+        >
+          <Tab
+            eventKey="profile"
+            title={<TabTitleText>{t('users.tabs.profile', 'Profile')}</TabTitleText>}
+          >
+            <div style={{ paddingTop: '1rem' }}>
+              <UserProfileTab
+                user={user}
+                roles={roles}
+                canEdit={canEdit}
+                isUpdating={isUpdating}
+                onRoleToggle={handleRoleToggle}
+              />
             </div>
-          ) : (
-            <div style={{ marginBottom: '1rem' }}>
-              <Flex direction={{ default: 'row' }} spaceItems={{ default: 'spaceItemsSm' }}>
-                {roles.length > 0 ? (
-                  roles.map((role) => {
-                    const roleInfo = availableRoles.find((r) => r.key === role);
-                    return (
-                      <FlexItem key={role}>
-                        <Badge isRead>{roleInfo?.label || role}</Badge>
-                      </FlexItem>
-                    );
-                  })
-                ) : (
-                  <FlexItem>
-                    <Badge>{t('users.form.noRoles', 'No roles assigned')}</Badge>
-                  </FlexItem>
-                )}
-              </Flex>
-            </div>
-          )}
+          </Tab>
 
-          {/* Status Section - Compact */}
-          <Content component={ContentVariants.h3} style={{ marginBottom: '0.5rem' }}>
-            {t('users.form.status', 'Status')}
-          </Content>
+          <Tab
+            eventKey="budget"
+            title={<TabTitleText>{t('users.tabs.budgetLimits', 'Budget & Limits')}</TabTitleText>}
+          >
+            <UserBudgetLimitsTab userId={user.id} canEdit={canEdit} />
+          </Tab>
 
-          <div style={{ marginBottom: '1rem' }}>
-            <Label color={user.isActive ? 'green' : 'red'} style={{ marginBottom: '0.5rem' }}>
-              {user.isActive ? (
-                <>
-                  <CheckCircleIcon /> {t('status.active', 'Active')}
-                </>
-              ) : (
-                <>
-                  <ExclamationTriangleIcon /> {t('status.inactive', 'Inactive')}
-                </>
-              )}
-            </Label>
-            <div>
-              <Content
-                component={ContentVariants.small}
-                style={{ fontStyle: 'italic', color: 'var(--pf-t--global--text--color--subtle)' }}
-              >
-                {t('users.status.oauthManaged')}
-              </Content>
-            </div>
-          </div>
-        </Form>
+          <Tab
+            eventKey="apiKeys"
+            title={<TabTitleText>{t('users.tabs.apiKeys', 'API Keys')}</TabTitleText>}
+          >
+            <UserApiKeysTab userId={user.id} canEdit={canEdit} />
+          </Tab>
+
+          <Tab
+            eventKey="subscriptions"
+            title={<TabTitleText>{t('users.tabs.subscriptions', 'Subscriptions')}</TabTitleText>}
+          >
+            <UserSubscriptionsTab userId={user.id} />
+          </Tab>
+        </Tabs>
 
         {/* Action Buttons */}
         <div
           style={{
-            marginTop: '0.75rem',
+            marginTop: '1.5rem',
             display: 'flex',
-            gap: '0.75rem',
-            justifyContent: 'flex-end',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}
         >
-          {canEdit && (
-            <Button
-              variant="primary"
-              onClick={handleSave}
-              isDisabled={!hasChanges || isUpdating}
-              isLoading={isUpdating}
-              spinnerAriaValueText={t('ui.actions.saving', 'Saving...')}
-              ref={saveButtonRef}
-            >
-              {isUpdating ? (
-                <>
-                  <Spinner size="sm" aria-hidden="true" />
-                  {t('ui.actions.saving', 'Saving...')}
-                </>
-              ) : (
-                t('ui.actions.save', 'Save')
-              )}
-            </Button>
-          )}
-          <Button variant="link" onClick={handleClose} isDisabled={isUpdating}>
-            {canEdit ? t('ui.actions.cancel', 'Cancel') : t('ui.actions.close', 'Close')}
-          </Button>
+          <Flex>
+            <FlexItem>
+              <Button
+                variant="link"
+                icon={<ExternalLinkAltIcon />}
+                iconPosition="right"
+                onClick={handleViewUsageAnalytics}
+              >
+                {t('users.actions.viewUsage', 'View Usage Analytics')}
+              </Button>
+            </FlexItem>
+          </Flex>
+
+          <Flex spaceItems={{ default: 'spaceItemsSm' }}>
+            {canEdit && activeTabKey === 'profile' && (
+              <FlexItem>
+                <Button
+                  variant="primary"
+                  onClick={handleSave}
+                  isDisabled={!hasChanges || isUpdating}
+                  isLoading={isUpdating}
+                  spinnerAriaValueText={t('ui.actions.saving', 'Saving...')}
+                  ref={saveButtonRef}
+                >
+                  {isUpdating ? (
+                    <>
+                      <Spinner size="sm" aria-hidden="true" />
+                      {t('ui.actions.saving', 'Saving...')}
+                    </>
+                  ) : (
+                    t('ui.actions.save', 'Save')
+                  )}
+                </Button>
+              </FlexItem>
+            )}
+            <FlexItem>
+              <Button variant="link" onClick={handleClose} isDisabled={isUpdating}>
+                {canEdit && activeTabKey === 'profile'
+                  ? t('ui.actions.cancel', 'Cancel')
+                  : t('ui.actions.close', 'Close')}
+              </Button>
+            </FlexItem>
+          </Flex>
         </div>
       </ModalBody>
     </Modal>

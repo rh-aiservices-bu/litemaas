@@ -51,7 +51,7 @@ export const UserBreakdownTable: React.FC<UserBreakdownTableProps> = ({ filters 
   // Reset pagination when filters change
   React.useEffect(() => {
     pagination.reset();
-  }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filters]); // pagination.reset is stable
 
   // Sort handler for table headers
   const handleSort = (columnKey: string) => {

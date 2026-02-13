@@ -1446,7 +1446,81 @@
   "users": {
     "actions": {
       "edit": "편집",
-      "view": "세부사항 보기"
+      "manage": "관리",
+      "view": "세부사항 보기",
+      "viewUsage": "사용량 분석 보기"
+    },
+    "apiKeys": {
+      "createNew": "API 키 생성",
+      "createSuccess": "API Key Created",
+      "createSuccessDesc": "The API key has been created successfully.",
+      "createError": "Create Failed",
+      "form": {
+        "name": "Key Name",
+        "namePlaceholder": "Enter a name for this API key",
+        "models": "Models",
+        "modelsHelp": "Select one or more models for this API key.",
+        "noModels": "No models available",
+        "expiration": "Expiration",
+        "expirationNever": "Never",
+        "expiration30": "30 days",
+        "expiration60": "60 days",
+        "expiration90": "90 days",
+        "maxBudget": "Max Budget (USD)",
+        "create": "Create",
+        "apiKey": "API Key"
+      },
+      "keyGenerated": "API Key Generated",
+      "keyWarning": "Save this key now",
+      "keyWarningDesc": "This is the only time the full API key will be shown. Copy it now and store it securely.",
+      "loadError": "API 키를 불러오지 못했습니다",
+      "models": "모델",
+      "name": "이름",
+      "noKeys": "API 키 없음",
+      "noKeysDesc": "이 사용자에게는 API 키가 없습니다.",
+      "revoke": "취소",
+      "revokeConfirmDesc": "이 API 키를 취소하시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "revokeConfirmTitle": "API 키 취소",
+      "revokeError": "취소 실패",
+      "revokeSuccess": "API 키가 취소되었습니다",
+      "revokeSuccessDesc": "API 키가 성공적으로 취소되었습니다.",
+      "status": "상태",
+      "tableLabel": "사용자 API 키",
+      "lastUsed": "마지막 사용",
+      "viewUsage": "사용량 보기"
+    },
+    "budget": {
+      "budgetUtilization": "예산 사용률",
+      "currentSpend": "현재 지출",
+      "loadError": "예산 정보를 불러오지 못했습니다",
+      "maxBudget": "최대 예산",
+      "maxBudgetHelp": "USD 기준 최대 지출 한도. 무제한의 경우 0으로 설정.",
+      "readOnlyNote": "이 설정에 대한 읽기 전용 액세스 권한이 있습니다.",
+      "rpmLimit": "RPM 제한",
+      "rpmLimitHelp": "분당 요청 수. 무제한의 경우 0으로 설정.",
+      "tpmLimit": "TPM 제한",
+      "tpmLimitHelp": "분당 토큰 수. 무제한의 경우 0으로 설정.",
+      "unlimited": "무제한",
+      "updateError": "업데이트 실패",
+      "updateSuccess": "예산 업데이트됨",
+      "updateSuccessDesc": "사용자 예산 및 제한이 성공적으로 업데이트되었습니다."
+    },
+    "subscriptions": {
+      "createdAt": "생성일",
+      "loadError": "구독을 불러오지 못했습니다",
+      "model": "모델",
+      "noSubscriptions": "구독 없음",
+      "noSubscriptionsDesc": "이 사용자에게는 구독이 없습니다.",
+      "provider": "제공업체",
+      "status": "상태",
+      "tableLabel": "사용자 구독"
+    },
+    "tabs": {
+      "apiKeys": "API 키",
+      "ariaLabel": "사용자 세부 정보 탭",
+      "budgetLimits": "예산 및 제한",
+      "profile": "프로필",
+      "subscriptions": "구독"
     },
     "alerts": {
       "admin": {
