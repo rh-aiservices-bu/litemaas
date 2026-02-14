@@ -20,6 +20,6 @@ data:
   INITIAL_ADMIN_USERS: {{ $initialAdmins | quote }}
   {{- end }}
   LITELLM_API_URL: {{ include "litemaas.litellm.url" . | quote }}
-  {{- if .Values.backend.nodeTlsRejectUnauthorized }}
+  {{- if ne (.Values.backend.nodeTlsRejectUnauthorized | toString) "" }}
   NODE_TLS_REJECT_UNAUTHORIZED: {{ .Values.backend.nodeTlsRejectUnauthorized | quote }}
   {{- end }}
