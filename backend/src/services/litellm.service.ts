@@ -437,9 +437,50 @@ export class LiteLLMService extends BaseService {
     }
 
     try {
-      const health = await this.makeRequest<LiteLLMHealth>('/health/liveness');
-      this.setCache(cacheKey, health, 30000);
-      return health;
+      // LiteLLM v1.81.0+ returns plain text "I'm alive!" from /health/liveness
+      // instead of JSON. Handle both formats gracefully.
+      const url = `${this.config.baseUrl}/health/liveness`;
+      const requestHeaders: Record<string, string> = {};
+      if (this.config.apiKey) {
+        requestHeaders['x-litellm-api-key'] = this.config.apiKey;
+      }
+
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: requestHeaders,
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok) {
+        let health: LiteLLMHealth;
+
+        try {
+          const data = await response.json();
+          // LiteLLM v1.81.0+ returns a JSON string "I'm alive!" instead of
+          // a JSON object { status, db }. Handle both formats.
+          if (typeof data === 'string') {
+            health = { status: 'healthy', db: 'connected' };
+          } else if (data && typeof data === 'object' && data.status) {
+            health = data as LiteLLMHealth;
+          } else {
+            health = { status: 'healthy', db: 'connected' };
+          }
+        } catch {
+          // Non-JSON response — treat 200 OK as healthy
+          health = { status: 'healthy', db: 'connected' };
+        }
+
+        this.setCache(cacheKey, health, 30000);
+        this.recordSuccess();
+        return health;
+      }
+
+      throw new Error(`LiteLLM health check returned ${response.status}`);
     } catch (error) {
       this.fastify.log.error(error, 'Failed to check LiteLLM health');
 
