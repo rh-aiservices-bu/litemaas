@@ -402,47 +402,41 @@ const AdminModelsPage: React.FC = () => {
     setTestResult({ type: null, message: '' });
 
     try {
-      const response = await fetch(`${formData.api_base}/models`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${formData.api_key}`,
-          'Content-Type': 'application/json',
-        },
+      const response = await adminModelsService.testConfiguration({
+        api_base: formData.api_base,
+        api_key: formData.api_key,
+        backend_model_name: formData.backend_model_name,
       });
 
-      if (!response.ok) {
-        // Handle auth errors
-        if (response.status === 401 || response.status === 403) {
+      switch (response.result) {
+        case 'model_found':
+          setTestResult({
+            type: 'success',
+            message: t('models.admin.connectionSuccessful'),
+          });
+          break;
+        case 'model_not_found':
+          setTestResult({
+            type: 'warning',
+            message: t('models.admin.modelNotAvailable'),
+            availableModels: response.availableModels,
+          });
+          break;
+        case 'auth_error':
           setTestResult({
             type: 'danger',
             message: t('models.admin.authenticationFailed'),
           });
-        } else {
+          break;
+        case 'timeout':
+        case 'connection_error':
           setTestResult({
             type: 'danger',
             message: t('models.admin.cannotContactEndpoint'),
           });
-        }
-        return;
+          break;
       }
-
-      const data = await response.json();
-      const availableModels = data.data?.map((m: any) => m.id) || [];
-
-      if (availableModels.includes(formData.backend_model_name)) {
-        setTestResult({
-          type: 'success',
-          message: t('models.admin.connectionSuccessful'),
-        });
-      } else {
-        setTestResult({
-          type: 'warning',
-          message: t('models.admin.modelNotAvailable'),
-          availableModels: availableModels.slice(0, 5), // Show first 5
-        });
-      }
-    } catch (error) {
-      console.error('Test configuration error:', error);
+    } catch {
       setTestResult({
         type: 'danger',
         message: t('models.admin.cannotContactEndpoint'),

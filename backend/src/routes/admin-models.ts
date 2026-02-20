@@ -12,6 +12,8 @@ import {
   AdminModelDeleteResponseSchema,
   AdminModelParamsSchema,
   AdminModelErrorResponseSchema,
+  AdminTestModelConfigSchema,
+  AdminTestModelConfigResponseSchema,
 } from '../schemas/admin-models.js';
 
 interface ModelRow {
@@ -23,6 +25,94 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
   const liteLLMService = new LiteLLMService(fastify);
   const modelSyncService = new ModelSyncService(fastify);
   const subscriptionService = new SubscriptionService(fastify);
+
+  // Test model configuration (connectivity + model availability)
+  fastify.post<{
+    Body: Static<typeof AdminTestModelConfigSchema>;
+    Reply: Static<typeof AdminTestModelConfigResponseSchema>;
+  }>('/test', {
+    schema: {
+      tags: ['Admin Models'],
+      description: 'Test model endpoint connectivity and model availability',
+      security: [{ bearerAuth: [] }],
+      body: AdminTestModelConfigSchema,
+      response: {
+        200: AdminTestModelConfigResponseSchema,
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:models')],
+    handler: async (request) => {
+      const { api_base, api_key, backend_model_name } = request.body;
+
+      // Build URL: strip trailing slashes, append /models
+      const baseUrl = api_base.replace(/\/+$/, '');
+      const modelsUrl = `${baseUrl}/models`;
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+
+      try {
+        const response = await fetch(modelsUrl, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${api_key}`,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          return {
+            success: false,
+            result: 'auth_error' as const,
+            message: 'Authentication failed. Check your API key.',
+          };
+        }
+
+        if (!response.ok) {
+          return {
+            success: false,
+            result: 'connection_error' as const,
+            message: `Endpoint returned HTTP ${response.status}`,
+          };
+        }
+
+        const data = await response.json();
+        const availableModels: string[] = data.data?.map((m: any) => m.id) || [];
+
+        if (availableModels.includes(backend_model_name)) {
+          return {
+            success: true,
+            result: 'model_found' as const,
+            message: `Model '${backend_model_name}' is available at this endpoint.`,
+          };
+        }
+
+        return {
+          success: false,
+          result: 'model_not_found' as const,
+          message: `Model '${backend_model_name}' was not found at this endpoint.`,
+          availableModels: availableModels.slice(0, 5),
+        };
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          return {
+            success: false,
+            result: 'timeout' as const,
+            message: 'Connection timed out after 10 seconds.',
+          };
+        }
+
+        return {
+          success: false,
+          result: 'connection_error' as const,
+          message: `Cannot connect to endpoint: ${error.message}`,
+        };
+      } finally {
+        clearTimeout(timeout);
+      }
+    },
+  });
 
   // Create a new model
   fastify.post<{

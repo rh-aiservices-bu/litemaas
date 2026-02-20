@@ -86,6 +86,20 @@ export interface AdminModelFormErrors {
   max_tokens?: string;
 }
 
+// Test model configuration types
+export interface TestModelConfigRequest {
+  api_base: string;
+  api_key: string;
+  backend_model_name: string;
+}
+
+export interface TestModelConfigResponse {
+  success: boolean;
+  result: 'model_found' | 'model_not_found' | 'auth_error' | 'connection_error' | 'timeout';
+  message: string;
+  availableModels?: string[];
+}
+
 // Subscription Approval Workflow Types
 
 export type SubscriptionStatus =
