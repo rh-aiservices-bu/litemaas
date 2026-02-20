@@ -439,5 +439,101 @@ describe('LiteLLMService', () => {
 
       expect(result).toBeNull();
     });
+
+    it('should return null when LiteLLM returns 404 for non-existent user', async () => {
+      const mockResponse: MockResponse = {
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        json: vi.fn().mockResolvedValue({ error: { message: 'User not found' } }),
+      };
+      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
+
+      const result = await service.getUserInfo('non-existent-user');
+
+      expect(result).toBeNull();
+      expect(mockFastify.log.info).toHaveBeenCalledWith(
+        { userId: 'non-existent-user' },
+        'User does not exist in LiteLLM (404 response)',
+      );
+    });
+
+    it('should throw on non-404 errors in getUserInfo', async () => {
+      const mockResponse: MockResponse = {
+        ok: false,
+        status: 500,
+        statusText: 'Internal Server Error',
+        json: vi.fn().mockResolvedValue({ error: { message: 'Server error' } }),
+      };
+      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
+
+      await expect(service.getUserInfo('user-123')).rejects.toThrow();
+    });
+  });
+
+  describe('getUserInfoFull', () => {
+    it('should return null when LiteLLM returns 404 for non-existent user', async () => {
+      const mockResponse: MockResponse = {
+        ok: false,
+        status: 404,
+        statusText: 'Not Found',
+        json: vi.fn().mockResolvedValue({ error: { message: 'User not found' } }),
+      };
+      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
+
+      const result = await service.getUserInfoFull('non-existent-user');
+
+      expect(result).toBeNull();
+      expect(mockFastify.log.info).toHaveBeenCalledWith(
+        { userId: 'non-existent-user' },
+        'User does not exist in LiteLLM (404 response)',
+      );
+    });
+
+    it('should return full user info successfully', async () => {
+      const mockFullUserResponse = {
+        user_id: 'user-123',
+        user_info: {
+          user_id: 'user-123',
+          teams: ['default-team'],
+          max_budget: 100,
+          spend: 25,
+        },
+        keys: [{ key_name: 'sk-...abcd', spend: 10 }],
+        teams: [{ team_id: 'default-team' }],
+      };
+
+      const mockResponse: MockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockFullUserResponse),
+      };
+      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
+
+      const result = await service.getUserInfoFull('user-123');
+
+      expect(result).toEqual(mockFullUserResponse);
+    });
+
+    it('should return null for user with empty teams in full info', async () => {
+      const mockFullUserResponse = {
+        user_id: 'user-123',
+        user_info: {
+          user_id: 'user-123',
+          teams: [],
+        },
+        keys: [],
+        teams: [],
+      };
+
+      const mockResponse: MockResponse = {
+        ok: true,
+        json: vi.fn().mockResolvedValue(mockFullUserResponse),
+      };
+      vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
+
+      const result = await service.getUserInfoFull('user-123');
+
+      expect(result).toBeNull();
+    });
   });
 });

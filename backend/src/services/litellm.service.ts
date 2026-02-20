@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import { BaseService } from './base.service.js';
+import { ApplicationError } from '../utils/errors.js';
 import { LiteLLMModel, LiteLLMHealth, LiteLLMError, LiteLLMConfig } from '../types/model.types.js';
 import {
   LiteLLMKeyGenerationRequest,
@@ -135,6 +136,14 @@ export class LiteLLMService extends BaseService {
       },
       'LiteLLM service initialized',
     );
+  }
+
+  /**
+   * Check if an error is a LiteLLM 404 (user/resource not found).
+   * makeRequest() stores the HTTP status in details.value via createValidationError().
+   */
+  private isLiteLLM404Error(error: unknown): boolean {
+    return error instanceof ApplicationError && error.details?.value === 404;
   }
 
   private getCacheKey(key: string): string {
@@ -801,6 +810,15 @@ export class LiteLLMService extends BaseService {
 
       return response;
     } catch (error) {
+      // LiteLLM v1.81.0+ returns 404 for non-existent users
+      if (this.isLiteLLM404Error(error)) {
+        this.fastify.log.info(
+          { userId },
+          'User does not exist in LiteLLM (404 response)',
+        );
+        return null;
+      }
+
       this.fastify.log.error(
         {
           userId,
@@ -940,6 +958,15 @@ export class LiteLLMService extends BaseService {
 
       return response;
     } catch (error) {
+      // LiteLLM v1.81.0+ returns 404 for non-existent users
+      if (this.isLiteLLM404Error(error)) {
+        this.fastify.log.info(
+          { userId },
+          'User does not exist in LiteLLM (404 response)',
+        );
+        return null;
+      }
+
       this.fastify.log.error(
         {
           userId,
