@@ -372,9 +372,10 @@ export class ApiKeyService extends BaseService {
             user_id, name, key_hash, key_prefix,
             expires_at, is_active, lite_llm_key_value, litellm_key_alias,
             max_budget, current_spend, tpm_limit, rpm_limit,
+            budget_duration, soft_budget,
             last_sync_at, sync_status, metadata
             ${isLegacyRequest ? ', subscription_id' : ''}
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15${isLegacyRequest ? ', $16' : ''})
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17${isLegacyRequest ? ', $18' : ''})
           RETURNING *`,
           [
             userId,
@@ -389,6 +390,8 @@ export class ApiKeyService extends BaseService {
             0,
             request.tpmLimit,
             request.rpmLimit,
+            request.budgetDuration || null,
+            request.softBudget || null,
             new Date(),
             'synced',
             request.metadata || {},
@@ -1055,6 +1058,8 @@ export class ApiKeyService extends BaseService {
       maxBudget?: number;
       tpmLimit?: number;
       rpmLimit?: number;
+      budgetDuration?: string;
+      softBudget?: number;
       allowedModels?: string[];
     },
   ): Promise<EnhancedApiKey> {
@@ -1083,6 +1088,8 @@ export class ApiKeyService extends BaseService {
           max_budget: updates.maxBudget,
           tpm_limit: updates.tpmLimit,
           rpm_limit: updates.rpmLimit,
+          budget_duration: updates.budgetDuration,
+          soft_budget: updates.softBudget,
           models: updates.allowedModels,
         });
       }
@@ -1108,17 +1115,29 @@ export class ApiKeyService extends BaseService {
         current_spend?: number;
         tpm_limit?: number;
         rpm_limit?: number;
+        budget_duration?: string;
+        soft_budget?: number;
+        budget_reset_at?: Date | string;
         metadata?: Record<string, unknown>;
         subscription_id?: string;
       }>(
-        `UPDATE api_keys 
+        `UPDATE api_keys
          SET max_budget = COALESCE($1, max_budget),
              tpm_limit = COALESCE($2, tpm_limit),
              rpm_limit = COALESCE($3, rpm_limit),
+             budget_duration = COALESCE($4, budget_duration),
+             soft_budget = COALESCE($5, soft_budget),
              last_sync_at = CURRENT_TIMESTAMP
-         WHERE id = $4
+         WHERE id = $6
          RETURNING *`,
-        [updates.maxBudget ?? null, updates.tpmLimit ?? null, updates.rpmLimit ?? null, keyId],
+        [
+          updates.maxBudget ?? null,
+          updates.tpmLimit ?? null,
+          updates.rpmLimit ?? null,
+          updates.budgetDuration ?? null,
+          updates.softBudget ?? null,
+          keyId,
+        ],
       );
 
       // Create audit log
@@ -1868,6 +1887,9 @@ export class ApiKeyService extends BaseService {
       current_spend?: number;
       tpm_limit?: number;
       rpm_limit?: number;
+      budget_duration?: string;
+      soft_budget?: number;
+      budget_reset_at?: Date | string;
       metadata?: Record<string, unknown>;
       model_details?: unknown[];
       subscription_id?: string;
@@ -1875,6 +1897,11 @@ export class ApiKeyService extends BaseService {
     liteLLMResponse?: LiteLLMKeyGenerationResponse,
     _liteLLMInfo?: LiteLLMKeyInfo,
   ): EnhancedApiKey {
+    const budgetUtilization =
+      apiKey.max_budget && apiKey.current_spend
+        ? Math.round((Number(apiKey.current_spend) / Number(apiKey.max_budget)) * 100)
+        : undefined;
+
     return {
       id: apiKey.id,
       userId: apiKey.user_id,
@@ -1895,6 +1922,10 @@ export class ApiKeyService extends BaseService {
       currentSpend: apiKey.current_spend,
       tpmLimit: apiKey.tpm_limit,
       rpmLimit: apiKey.rpm_limit,
+      budgetDuration: apiKey.budget_duration,
+      softBudget: apiKey.soft_budget,
+      budgetResetAt: apiKey.budget_reset_at ? new Date(apiKey.budget_reset_at) : undefined,
+      budgetUtilization,
       metadata: apiKey.metadata,
       // Include model details if available
       modelDetails: apiKey.model_details as

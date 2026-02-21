@@ -451,6 +451,8 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           maxBudget?: number;
           tpmLimit?: number;
           rpmLimit?: number;
+          budgetDuration?: string;
+          softBudget?: number;
         };
         const currentUser = (request as AuthenticatedRequest).user;
 
@@ -479,6 +481,8 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           maxBudget: body.maxBudget,
           tpmLimit: body.tpmLimit,
           rpmLimit: body.rpmLimit,
+          budgetDuration: body.budgetDuration,
+          softBudget: body.softBudget,
         });
 
         // Additional audit log for admin action

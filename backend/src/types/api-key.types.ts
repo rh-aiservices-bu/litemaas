@@ -176,6 +176,10 @@ export interface LiteLLMKeyInfoResponse {
  * Enhanced API key interface that includes model and subscription details
  */
 export interface EnhancedApiKey extends ApiKey {
+  budgetDuration?: string;
+  softBudget?: number;
+  budgetResetAt?: Date;
+  budgetUtilization?: number; // calculated: currentSpend / maxBudget * 100
   modelDetails?: Array<{
     id: string;
     name: string;

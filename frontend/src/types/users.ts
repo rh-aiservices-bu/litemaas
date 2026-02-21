@@ -124,6 +124,11 @@ export interface UserApiKey {
   isActive: boolean;
   maxBudget?: number;
   currentSpend?: number;
+  tpmLimit?: number;
+  rpmLimit?: number;
+  budgetDuration?: string;
+  softBudget?: number;
+  budgetUtilization?: number;
   lastUsedAt?: string;
   createdAt: string;
   expiresAt?: string;
@@ -138,6 +143,8 @@ export interface CreateApiKeyForUserRequest {
   maxBudget?: number;
   tpmLimit?: number;
   rpmLimit?: number;
+  budgetDuration?: string;
+  softBudget?: number;
 }
 
 // Created API key response (includes full key shown once)

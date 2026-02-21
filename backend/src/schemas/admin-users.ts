@@ -66,6 +66,11 @@ export const UserApiKeySchema = Type.Object({
   isActive: Type.Boolean(),
   maxBudget: Type.Optional(Type.Number()),
   currentSpend: Type.Optional(Type.Number()),
+  tpmLimit: Type.Optional(Type.Integer()),
+  rpmLimit: Type.Optional(Type.Integer()),
+  budgetDuration: Type.Optional(Type.String()),
+  softBudget: Type.Optional(Type.Number()),
+  budgetUtilization: Type.Optional(Type.Number()),
   lastUsedAt: Type.Optional(Type.String({ format: 'date-time' })),
   createdAt: Type.String({ format: 'date-time' }),
   expiresAt: Type.Optional(Type.String({ format: 'date-time' })),
@@ -84,6 +89,15 @@ export const CreateApiKeyForUserSchema = Type.Object({
   maxBudget: Type.Optional(Type.Number({ minimum: 0 })),
   tpmLimit: Type.Optional(Type.Integer({ minimum: 0 })),
   rpmLimit: Type.Optional(Type.Integer({ minimum: 0 })),
+  budgetDuration: Type.Optional(
+    Type.Union([
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+    ]),
+  ),
+  softBudget: Type.Optional(Type.Number({ minimum: 0 })),
 });
 
 export type CreateApiKeyForUser = Static<typeof CreateApiKeyForUserSchema>;
