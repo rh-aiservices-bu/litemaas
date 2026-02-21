@@ -20,6 +20,10 @@ export interface CreateApiKeyRequest {
   budgetDuration?: string;
   tpmLimit?: number;
   rpmLimit?: number;
+  maxParallelRequests?: number;
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  modelRpmLimit?: Record<string, number>;
+  modelTpmLimit?: Record<string, number>;
   teamId?: string;
   tags?: string[];
   permissions?: ApiKeyPermissions;
@@ -118,7 +122,11 @@ export interface LiteLLMKeyGenerationRequest {
   metadata?: ApiKeyMetadata;
   tpm_limit?: number; // tokens per minute
   rpm_limit?: number; // requests per minute
-  budget_duration?: string; // "monthly", "daily", etc.
+  max_parallel_requests?: number; // concurrent in-flight requests
+  budget_duration?: string; // "monthly", "daily", "30d", "1mo", etc.
+  model_max_budget?: Record<string, { budget_limit: number; time_period: string }>; // per-model budgets
+  model_rpm_limit?: Record<string, number>; // per-model RPM
+  model_tpm_limit?: Record<string, number>; // per-model TPM
   permissions?: {
     allow_chat_completions?: boolean;
     allow_embeddings?: boolean;
@@ -154,6 +162,10 @@ export interface LiteLLMKeyInfo {
   models?: string[];
   tpm_limit?: number;
   rpm_limit?: number;
+  max_parallel_requests?: number;
+  model_max_budget?: Record<string, { budget_limit: number; time_period: string }>;
+  model_rpm_limit?: Record<string, number>;
+  model_tpm_limit?: Record<string, number>;
   user_id?: string;
   team_id?: string;
   expires?: string;
@@ -180,6 +192,10 @@ export interface EnhancedApiKey extends ApiKey {
   softBudget?: number;
   budgetResetAt?: Date;
   budgetUtilization?: number; // calculated: currentSpend / maxBudget * 100
+  maxParallelRequests?: number;
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  modelRpmLimit?: Record<string, number>;
+  modelTpmLimit?: Record<string, number>;
   modelDetails?: Array<{
     id: string;
     name: string;

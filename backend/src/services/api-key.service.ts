@@ -326,7 +326,18 @@ export class ApiKeyService extends BaseService {
         team_id: request.teamId,
         tpm_limit: request.tpmLimit,
         rpm_limit: request.rpmLimit,
+        max_parallel_requests: request.maxParallelRequests,
         budget_duration: request.budgetDuration,
+        model_max_budget: request.modelMaxBudget
+          ? Object.fromEntries(
+              Object.entries(request.modelMaxBudget).map(([model, config]) => [
+                model,
+                { budget_limit: config.budgetLimit, time_period: config.timePeriod },
+              ]),
+            )
+          : undefined,
+        model_rpm_limit: request.modelRpmLimit,
+        model_tpm_limit: request.modelTpmLimit,
         permissions: request.permissions
           ? {
               allow_chat_completions: request.permissions.allowChatCompletions,
@@ -372,10 +383,12 @@ export class ApiKeyService extends BaseService {
             user_id, name, key_hash, key_prefix,
             expires_at, is_active, lite_llm_key_value, litellm_key_alias,
             max_budget, current_spend, tpm_limit, rpm_limit,
+            max_parallel_requests,
             budget_duration, soft_budget,
+            model_max_budget, model_rpm_limit, model_tpm_limit,
             last_sync_at, sync_status, metadata
             ${isLegacyRequest ? ', subscription_id' : ''}
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17${isLegacyRequest ? ', $18' : ''})
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21${isLegacyRequest ? ', $22' : ''})
           RETURNING *`,
           [
             userId,
@@ -390,8 +403,12 @@ export class ApiKeyService extends BaseService {
             0,
             request.tpmLimit,
             request.rpmLimit,
+            request.maxParallelRequests || null,
             request.budgetDuration || null,
             request.softBudget || null,
+            request.modelMaxBudget ? JSON.stringify(request.modelMaxBudget) : null,
+            request.modelRpmLimit ? JSON.stringify(request.modelRpmLimit) : null,
+            request.modelTpmLimit ? JSON.stringify(request.modelTpmLimit) : null,
             new Date(),
             'synced',
             request.metadata || {},
@@ -463,6 +480,10 @@ export class ApiKeyService extends BaseService {
           current_spend?: number;
           tpm_limit?: number;
           rpm_limit?: number;
+          max_parallel_requests?: number;
+          model_max_budget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+          model_rpm_limit?: Record<string, number>;
+          model_tpm_limit?: Record<string, number>;
           metadata?: Record<string, unknown>;
           subscription_id?: string;
         };
@@ -1887,6 +1908,10 @@ export class ApiKeyService extends BaseService {
       current_spend?: number;
       tpm_limit?: number;
       rpm_limit?: number;
+      max_parallel_requests?: number;
+      model_max_budget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+      model_rpm_limit?: Record<string, number>;
+      model_tpm_limit?: Record<string, number>;
       budget_duration?: string;
       soft_budget?: number;
       budget_reset_at?: Date | string;
@@ -1926,6 +1951,10 @@ export class ApiKeyService extends BaseService {
       softBudget: apiKey.soft_budget,
       budgetResetAt: apiKey.budget_reset_at ? new Date(apiKey.budget_reset_at) : undefined,
       budgetUtilization,
+      maxParallelRequests: apiKey.max_parallel_requests,
+      modelMaxBudget: apiKey.model_max_budget,
+      modelRpmLimit: apiKey.model_rpm_limit,
+      modelTpmLimit: apiKey.model_tpm_limit,
       metadata: apiKey.metadata,
       // Include model details if available
       modelDetails: apiKey.model_details as

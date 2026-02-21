@@ -129,6 +129,10 @@ export interface UserApiKey {
   budgetDuration?: string;
   softBudget?: number;
   budgetUtilization?: number;
+  maxParallelRequests?: number;
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  modelRpmLimit?: Record<string, number>;
+  modelTpmLimit?: Record<string, number>;
   lastUsedAt?: string;
   createdAt: string;
   expiresAt?: string;
@@ -143,8 +147,12 @@ export interface CreateApiKeyForUserRequest {
   maxBudget?: number;
   tpmLimit?: number;
   rpmLimit?: number;
+  maxParallelRequests?: number;
   budgetDuration?: string;
   softBudget?: number;
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  modelRpmLimit?: Record<string, number>;
+  modelTpmLimit?: Record<string, number>;
 }
 
 // Created API key response (includes full key shown once)
