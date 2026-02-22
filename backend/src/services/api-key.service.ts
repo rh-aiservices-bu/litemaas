@@ -1831,7 +1831,7 @@ export class ApiKeyService extends BaseService {
     _liteLLMInfo?: LiteLLMKeyInfo,
   ): EnhancedApiKey {
     const budgetUtilization =
-      apiKey.max_budget != null && apiKey.current_spend != null
+      apiKey.max_budget != null && apiKey.max_budget > 0 && apiKey.current_spend != null
         ? Math.round((Number(apiKey.current_spend) / Number(apiKey.max_budget)) * 100)
         : undefined;
 
