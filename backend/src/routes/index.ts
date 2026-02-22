@@ -13,6 +13,7 @@ import adminModelsRoutes from './admin-models';
 import adminSubscriptionsRoutes from './admin-subscriptions';
 import adminUsageRoutes from './admin-usage';
 import adminUsersRoutes from './admin-users';
+import adminSettingsRoutes from './admin-settings';
 import bannerRoutes from './banners';
 import brandingRoutes from './branding';
 
@@ -38,6 +39,7 @@ const routes: FastifyPluginAsync = async (fastify) => {
   await fastify.register(adminSubscriptionsRoutes, { prefix: '/admin/subscriptions' });
   await fastify.register(adminUsageRoutes, { prefix: '/admin/usage' });
   await fastify.register(adminUsersRoutes, { prefix: '/admin/users' });
+  await fastify.register(adminSettingsRoutes, { prefix: '/admin/settings' });
 
   // Banner endpoints
   await fastify.register(bannerRoutes, { prefix: '/banners' });

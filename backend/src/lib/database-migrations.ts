@@ -762,6 +762,23 @@ CREATE TABLE IF NOT EXISTS branding_settings (
 INSERT INTO branding_settings (id) VALUES (1) ON CONFLICT DO NOTHING;
 `;
 
+// System settings table (key-value store for admin-configurable settings)
+export const systemSettingsTable = `
+CREATE TABLE IF NOT EXISTS system_settings (
+    key VARCHAR(100) PRIMARY KEY,
+    value JSONB NOT NULL DEFAULT '{}',
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_by UUID REFERENCES users(id)
+);
+
+COMMENT ON TABLE system_settings IS 'Key-value store for admin-configurable system settings';
+
+-- Seed default api_key_defaults row
+INSERT INTO system_settings (key, value)
+VALUES ('api_key_defaults', '{}')
+ON CONFLICT (key) DO NOTHING;
+`;
+
 // Main migration function
 export const applyMigrations = async (dbUtils: DatabaseUtils) => {
   console.log('🚀 Starting database migrations...');
@@ -836,6 +853,9 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
 
     console.log('🎨 Creating branding_settings table...');
     await dbUtils.query(brandingSettingsTable);
+
+    console.log('⚙️ Creating system_settings table...');
+    await dbUtils.query(systemSettingsTable);
 
     console.log('✅ Database migrations completed successfully!');
   } catch (error) {

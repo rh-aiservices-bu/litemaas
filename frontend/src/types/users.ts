@@ -167,6 +167,22 @@ export interface CreatedApiKeyResponse {
   expiresAt?: string;
 }
 
+// Admin-configurable defaults and maximums for user-created API keys
+export interface ApiKeyQuotaDefaults {
+  defaults: {
+    maxBudget?: number | null;
+    tpmLimit?: number | null;
+    rpmLimit?: number | null;
+    budgetDuration?: string | null;
+    softBudget?: number | null;
+  };
+  maximums: {
+    maxBudget?: number | null;
+    tpmLimit?: number | null;
+    rpmLimit?: number | null;
+  };
+}
+
 // User's subscription for display
 export interface UserSubscription {
   id: string;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   PageSection,
@@ -25,6 +25,11 @@ import {
   TabTitleText,
   TabContent,
   TabContentBody,
+  Divider,
+  Content,
+  ContentVariants,
+  FormSelect,
+  FormSelectOption,
 } from '@patternfly/react-core';
 import { SyncAltIcon, UsersIcon, PlusIcon } from '@patternfly/react-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -38,6 +43,7 @@ import {
   type BulkUpdateUserLimitsResponse,
 } from '../services/admin.service';
 import type { SimpleBannerUpdateRequest, CreateBannerRequest, Banner } from '../types/banners';
+import type { ApiKeyQuotaDefaults } from '../types/users';
 import { BannerEditModal, BannerTable } from '../components/banners';
 import BrandingTab from '../components/branding/BrandingTab';
 import { useQuery, useQueryClient } from 'react-query';
@@ -83,6 +89,14 @@ const ToolsPage: React.FC = () => {
     new Map(),
   );
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // API Key Defaults state
+  const [apiKeyDefaults, setApiKeyDefaults] = useState<ApiKeyQuotaDefaults>({
+    defaults: {},
+    maximums: {},
+  });
+  const [isDefaultsLoading, setIsDefaultsLoading] = useState(false);
+  const [defaultsSaveSuccess, setDefaultsSaveSuccess] = useState(false);
 
   // Check permissions - separate view from modify access
   const canSync = user?.roles?.includes('admin') ?? false; // Only full admins can sync
@@ -382,6 +396,61 @@ const ToolsPage: React.FC = () => {
     }
   };
 
+  // Load API key defaults when limits tab is active
+  useEffect(() => {
+    if (activeTabKey === 'limits' && canViewLimits) {
+      adminService.getApiKeyDefaults().then((data) => {
+        setApiKeyDefaults(data);
+      }).catch((err) => {
+        console.error('Failed to load API key defaults:', err);
+      });
+    }
+  }, [activeTabKey, canViewLimits]);
+
+  const handleDefaultsFieldChange = (
+    section: 'defaults' | 'maximums',
+    field: string,
+    value: string,
+  ) => {
+    setDefaultsSaveSuccess(false);
+    setApiKeyDefaults((prev) => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [field]: value === '' ? null : (field === 'budgetDuration' ? value : parseFloat(value)),
+      },
+    }));
+  };
+
+  const handleSaveApiKeyDefaults = async () => {
+    if (!canUpdateLimits) return;
+
+    setIsDefaultsLoading(true);
+    setDefaultsSaveSuccess(false);
+
+    try {
+      const result = await adminService.updateApiKeyDefaults(apiKeyDefaults);
+      setApiKeyDefaults(result);
+      setDefaultsSaveSuccess(true);
+
+      addNotification({
+        variant: 'success',
+        title: t('pages.tools.apiKeyDefaults.saveSuccess'),
+        description: t('pages.tools.apiKeyDefaults.saveSuccessDescription'),
+      });
+    } catch (error) {
+      console.error('Failed to save API key defaults:', error);
+      addNotification({
+        variant: 'danger',
+        title: t('pages.tools.apiKeyDefaults.saveError'),
+        description:
+          error instanceof Error ? error.message : t('pages.tools.apiKeyDefaults.saveErrorGeneric'),
+      });
+    } finally {
+      setIsDefaultsLoading(false);
+    }
+  };
+
   const syncButton = (
     <Button
       variant="primary"
@@ -602,6 +671,194 @@ const ToolsPage: React.FC = () => {
                             {isLimitsLoading
                               ? t('pages.tools.processing')
                               : t('pages.tools.applyToAllUsers')}
+                          </Button>
+                        </ActionGroup>
+                      </Form>
+                    </FlexItem>
+
+                    {/* API Key Quota Defaults Section */}
+                    <FlexItem>
+                      <Divider style={{ margin: '1.5rem 0' }} />
+                      <Title headingLevel="h3" size="lg" style={{ marginBottom: '0.5rem' }}>
+                        {t('pages.tools.apiKeyDefaults.title')}
+                      </Title>
+                      <Content component={ContentVariants.p} style={{ marginBottom: '1rem' }}>
+                        {t('pages.tools.apiKeyDefaults.description')}
+                      </Content>
+
+                      {defaultsSaveSuccess && (
+                        <Alert
+                          variant="success"
+                          title={t('pages.tools.apiKeyDefaults.saveSuccess')}
+                          isInline
+                          style={{ marginBottom: '1rem' }}
+                        />
+                      )}
+
+                      <Form>
+                        <Title headingLevel="h4" size="md" style={{ marginBottom: '0.25rem' }}>
+                          {t('pages.tools.apiKeyDefaults.defaultsSection')}
+                        </Title>
+                        <Content component={ContentVariants.small} style={{ marginBottom: '0.5rem' }}>
+                          {t('pages.tools.apiKeyDefaults.defaultsSectionHelper')}
+                        </Content>
+
+                        <FormGroup
+                          label={t('pages.tools.apiKeyDefaults.defaultMaxBudget')}
+                          fieldId="defaults-max-budget"
+                        >
+                          <TextInput
+                            id="defaults-max-budget"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={apiKeyDefaults.defaults.maxBudget ?? ''}
+                            onChange={(_event, value) => handleDefaultsFieldChange('defaults', 'maxBudget', value)}
+                            placeholder={t('pages.tools.apiKeyDefaults.noDefault')}
+                            isDisabled={!canUpdateLimits}
+                          />
+                          <FormHelperText>{t('pages.tools.apiKeyDefaults.defaultMaxBudgetHelper')}</FormHelperText>
+                        </FormGroup>
+
+                        <FormGroup
+                          label={t('pages.tools.apiKeyDefaults.defaultTpmLimit')}
+                          fieldId="defaults-tpm-limit"
+                        >
+                          <TextInput
+                            id="defaults-tpm-limit"
+                            type="number"
+                            min="0"
+                            step="1000"
+                            value={apiKeyDefaults.defaults.tpmLimit ?? ''}
+                            onChange={(_event, value) => handleDefaultsFieldChange('defaults', 'tpmLimit', value)}
+                            placeholder={t('pages.tools.apiKeyDefaults.noDefault')}
+                            isDisabled={!canUpdateLimits}
+                          />
+                          <FormHelperText>{t('pages.tools.apiKeyDefaults.defaultTpmLimitHelper')}</FormHelperText>
+                        </FormGroup>
+
+                        <FormGroup
+                          label={t('pages.tools.apiKeyDefaults.defaultRpmLimit')}
+                          fieldId="defaults-rpm-limit"
+                        >
+                          <TextInput
+                            id="defaults-rpm-limit"
+                            type="number"
+                            min="0"
+                            step="10"
+                            value={apiKeyDefaults.defaults.rpmLimit ?? ''}
+                            onChange={(_event, value) => handleDefaultsFieldChange('defaults', 'rpmLimit', value)}
+                            placeholder={t('pages.tools.apiKeyDefaults.noDefault')}
+                            isDisabled={!canUpdateLimits}
+                          />
+                          <FormHelperText>{t('pages.tools.apiKeyDefaults.defaultRpmLimitHelper')}</FormHelperText>
+                        </FormGroup>
+
+                        <FormGroup
+                          label={t('pages.tools.apiKeyDefaults.defaultBudgetDuration')}
+                          fieldId="defaults-budget-duration"
+                        >
+                          <FormSelect
+                            id="defaults-budget-duration"
+                            value={apiKeyDefaults.defaults.budgetDuration ?? ''}
+                            onChange={(_event, value) => handleDefaultsFieldChange('defaults', 'budgetDuration', value)}
+                            isDisabled={!canUpdateLimits}
+                          >
+                            <FormSelectOption value="" label={t('pages.tools.apiKeyDefaults.noDefault')} />
+                            <FormSelectOption value="daily" label={t('pages.tools.apiKeyDefaults.daily')} />
+                            <FormSelectOption value="weekly" label={t('pages.tools.apiKeyDefaults.weekly')} />
+                            <FormSelectOption value="monthly" label={t('pages.tools.apiKeyDefaults.monthly')} />
+                            <FormSelectOption value="yearly" label={t('pages.tools.apiKeyDefaults.yearly')} />
+                          </FormSelect>
+                          <FormHelperText>{t('pages.tools.apiKeyDefaults.defaultBudgetDurationHelper')}</FormHelperText>
+                        </FormGroup>
+
+                        <FormGroup
+                          label={t('pages.tools.apiKeyDefaults.defaultSoftBudget')}
+                          fieldId="defaults-soft-budget"
+                        >
+                          <TextInput
+                            id="defaults-soft-budget"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={apiKeyDefaults.defaults.softBudget ?? ''}
+                            onChange={(_event, value) => handleDefaultsFieldChange('defaults', 'softBudget', value)}
+                            placeholder={t('pages.tools.apiKeyDefaults.noDefault')}
+                            isDisabled={!canUpdateLimits}
+                          />
+                          <FormHelperText>{t('pages.tools.apiKeyDefaults.defaultSoftBudgetHelper')}</FormHelperText>
+                        </FormGroup>
+
+                        <Divider style={{ margin: '1rem 0' }} />
+                        <Title headingLevel="h4" size="md" style={{ marginBottom: '0.25rem' }}>
+                          {t('pages.tools.apiKeyDefaults.maximumsSection')}
+                        </Title>
+                        <Content component={ContentVariants.small} style={{ marginBottom: '0.5rem' }}>
+                          {t('pages.tools.apiKeyDefaults.maximumsSectionHelper')}
+                        </Content>
+
+                        <FormGroup
+                          label={t('pages.tools.apiKeyDefaults.maxMaxBudget')}
+                          fieldId="maximums-max-budget"
+                        >
+                          <TextInput
+                            id="maximums-max-budget"
+                            type="number"
+                            min="0"
+                            step="1"
+                            value={apiKeyDefaults.maximums.maxBudget ?? ''}
+                            onChange={(_event, value) => handleDefaultsFieldChange('maximums', 'maxBudget', value)}
+                            placeholder={t('pages.tools.apiKeyDefaults.noMaximum')}
+                            isDisabled={!canUpdateLimits}
+                          />
+                          <FormHelperText>{t('pages.tools.apiKeyDefaults.maxMaxBudgetHelper')}</FormHelperText>
+                        </FormGroup>
+
+                        <FormGroup
+                          label={t('pages.tools.apiKeyDefaults.maxTpmLimit')}
+                          fieldId="maximums-tpm-limit"
+                        >
+                          <TextInput
+                            id="maximums-tpm-limit"
+                            type="number"
+                            min="0"
+                            step="1000"
+                            value={apiKeyDefaults.maximums.tpmLimit ?? ''}
+                            onChange={(_event, value) => handleDefaultsFieldChange('maximums', 'tpmLimit', value)}
+                            placeholder={t('pages.tools.apiKeyDefaults.noMaximum')}
+                            isDisabled={!canUpdateLimits}
+                          />
+                          <FormHelperText>{t('pages.tools.apiKeyDefaults.maxTpmLimitHelper')}</FormHelperText>
+                        </FormGroup>
+
+                        <FormGroup
+                          label={t('pages.tools.apiKeyDefaults.maxRpmLimit')}
+                          fieldId="maximums-rpm-limit"
+                        >
+                          <TextInput
+                            id="maximums-rpm-limit"
+                            type="number"
+                            min="0"
+                            step="10"
+                            value={apiKeyDefaults.maximums.rpmLimit ?? ''}
+                            onChange={(_event, value) => handleDefaultsFieldChange('maximums', 'rpmLimit', value)}
+                            placeholder={t('pages.tools.apiKeyDefaults.noMaximum')}
+                            isDisabled={!canUpdateLimits}
+                          />
+                          <FormHelperText>{t('pages.tools.apiKeyDefaults.maxRpmLimitHelper')}</FormHelperText>
+                        </FormGroup>
+
+                        <ActionGroup>
+                          <Button
+                            variant="primary"
+                            onClick={handleSaveApiKeyDefaults}
+                            isDisabled={!canUpdateLimits || isDefaultsLoading}
+                            isLoading={isDefaultsLoading}
+                          >
+                            {isDefaultsLoading
+                              ? t('pages.tools.apiKeyDefaults.saving')
+                              : t('pages.tools.apiKeyDefaults.saveDefaults')}
                           </Button>
                         </ActionGroup>
                       </Form>
