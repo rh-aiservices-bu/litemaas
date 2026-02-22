@@ -211,4 +211,120 @@ describe('UserApiKeysTab', () => {
       expect(screen.queryByRole('button', { name: /create api key/i })).not.toBeInTheDocument();
     });
   });
+
+  describe('Budget Column', () => {
+    it('should render budget with spend/budget and progress bar', async () => {
+      const responseWithBudget = {
+        data: [
+          {
+            ...mockApiKeysResponse.data[0],
+            maxBudget: 100,
+            currentSpend: 45,
+            budgetUtilization: 45,
+            budgetDuration: 'monthly',
+          },
+        ],
+        pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+      };
+      mockUsersService.getUserApiKeys.mockResolvedValue(responseWithBudget);
+      renderWithAuth(<UserApiKeysTab userId="user-123" canEdit={true} />, { user: mockAdminUser });
+
+      expect(await screen.findByText('$45.00 / $100.00')).toBeInTheDocument();
+      expect(screen.getByText('monthly')).toBeInTheDocument();
+      // Progress bar should be rendered
+      const progressBar = document.querySelector('.pf-v6-c-progress');
+      expect(progressBar).toBeInTheDocument();
+    });
+  });
+
+  describe('Rate Limits Column', () => {
+    it('should render TPM/RPM/Parallel labels', async () => {
+      const responseWithLimits = {
+        data: [
+          {
+            ...mockApiKeysResponse.data[0],
+            tpmLimit: 10000,
+            rpmLimit: 100,
+            maxParallelRequests: 5,
+          },
+        ],
+        pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+      };
+      mockUsersService.getUserApiKeys.mockResolvedValue(responseWithLimits);
+      renderWithAuth(<UserApiKeysTab userId="user-123" canEdit={true} />, { user: mockAdminUser });
+
+      expect(await screen.findByText(/TPM.*10,000/)).toBeInTheDocument();
+      expect(screen.getByText(/RPM.*100/)).toBeInTheDocument();
+      expect(screen.getByText(/Parallel.*5/)).toBeInTheDocument();
+    });
+
+    it('should show Per-model label when modelRpmLimit is set', async () => {
+      const responseWithPerModel = {
+        data: [
+          {
+            ...mockApiKeysResponse.data[0],
+            modelRpmLimit: { 'model-1': 50 },
+          },
+        ],
+        pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+      };
+      mockUsersService.getUserApiKeys.mockResolvedValue(responseWithPerModel);
+      renderWithAuth(<UserApiKeysTab userId="user-123" canEdit={true} />, { user: mockAdminUser });
+
+      expect(await screen.findByText('Per-model')).toBeInTheDocument();
+    });
+  });
+
+  describe('Create Form - Conditional Fields', () => {
+    it('should hide budget duration when max budget is 0', async () => {
+      mockUsersService.getUserApiKeys.mockResolvedValue(mockApiKeysResponse);
+      mockModelsService.getModels.mockResolvedValue({
+        models: [{ id: 'model-1', name: 'GPT-4' }],
+        pagination: { page: 1, limit: 100, total: 1, totalPages: 1 },
+      });
+
+      renderWithAuth(<UserApiKeysTab userId="user-123" canEdit={true} />, { user: mockAdminUser });
+
+      const createButton = await screen.findByRole('button', { name: /create api key/i });
+      const userEvent = (await import('@testing-library/user-event')).default.setup();
+      await userEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('dialog').length).toBeGreaterThan(0);
+      });
+
+      // Budget Duration should NOT be visible when max budget is 0
+      expect(screen.queryByText('Budget Duration')).not.toBeInTheDocument();
+      // Soft Budget should NOT be visible when max budget is 0
+      expect(screen.queryByText('Soft Budget Warning (USD)')).not.toBeInTheDocument();
+    });
+
+    it('should show budget duration when max budget is greater than 0', async () => {
+      mockUsersService.getUserApiKeys.mockResolvedValue(mockApiKeysResponse);
+      mockModelsService.getModels.mockResolvedValue({
+        models: [{ id: 'model-1', name: 'GPT-4' }],
+        pagination: { page: 1, limit: 100, total: 1, totalPages: 1 },
+      });
+
+      renderWithAuth(<UserApiKeysTab userId="user-123" canEdit={true} />, { user: mockAdminUser });
+
+      const createButton = await screen.findByRole('button', { name: /create api key/i });
+      const userEvent = (await import('@testing-library/user-event')).default.setup();
+      await userEvent.click(createButton);
+
+      await waitFor(() => {
+        expect(screen.getAllByRole('dialog').length).toBeGreaterThan(0);
+      });
+
+      // Increase the max budget using the plus button
+      const budgetPlusButton = screen.getAllByRole('button', { name: /plus/i })[0];
+      await userEvent.click(budgetPlusButton);
+
+      // Budget Duration should now be visible
+      await waitFor(() => {
+        expect(screen.getByText('Budget Duration')).toBeInTheDocument();
+      });
+      expect(screen.getByText('Soft Budget Warning (USD)')).toBeInTheDocument();
+    });
+  });
 });

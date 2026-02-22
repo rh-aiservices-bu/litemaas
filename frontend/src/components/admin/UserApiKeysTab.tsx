@@ -25,6 +25,10 @@ import {
   ClipboardCopy,
   HelperText,
   HelperTextItem,
+  Progress,
+  ProgressMeasureLocation,
+  ProgressVariant,
+  ExpandableSection,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn } from '@patternfly/react-table';
 import { KeyIcon, ExternalLinkAltIcon, PlusCircleIcon } from '@patternfly/react-icons';
@@ -59,6 +63,12 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
   const [newKeyExpiration, setNewKeyExpiration] = useState('never');
   const [newKeyMaxBudget, setNewKeyMaxBudget] = useState<number | undefined>(undefined);
+  const [newKeyTpmLimit, setNewKeyTpmLimit] = useState<number | undefined>(undefined);
+  const [newKeyRpmLimit, setNewKeyRpmLimit] = useState<number | undefined>(undefined);
+  const [newKeyBudgetDuration, setNewKeyBudgetDuration] = useState('monthly');
+  const [newKeySoftBudget, setNewKeySoftBudget] = useState<number | undefined>(undefined);
+  const [newKeyMaxParallelRequests, setNewKeyMaxParallelRequests] = useState<number | undefined>(undefined);
+  const [newKeyModelLimits, setNewKeyModelLimits] = useState<Record<string, { budget?: number; timePeriod?: string; rpm?: number; tpm?: number }>>({});
   const [availableModels, setAvailableModels] = useState<ModelOption[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [generatedKey, setGeneratedKey] = useState<CreatedApiKeyResponse | null>(null);
@@ -162,6 +172,12 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
     setSelectedModelIds([]);
     setNewKeyExpiration('never');
     setNewKeyMaxBudget(undefined);
+    setNewKeyTpmLimit(undefined);
+    setNewKeyRpmLimit(undefined);
+    setNewKeyMaxParallelRequests(undefined);
+    setNewKeyBudgetDuration('monthly');
+    setNewKeySoftBudget(undefined);
+    setNewKeyModelLimits({});
     setGeneratedKey(null);
     loadAvailableModels();
     setCreateModalOpen(true);
@@ -178,18 +194,56 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
       expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
     }
 
+    // Build per-model limits from state (only include non-zero values)
+    const modelMaxBudget: Record<string, { budgetLimit: number; timePeriod: string }> = {};
+    const modelRpmLimit: Record<string, number> = {};
+    const modelTpmLimit: Record<string, number> = {};
+
+    for (const [modelId, limits] of Object.entries(newKeyModelLimits)) {
+      if (!selectedModelIds.includes(modelId)) continue;
+      if (limits.budget && limits.budget > 0) {
+        modelMaxBudget[modelId] = {
+          budgetLimit: limits.budget,
+          timePeriod: limits.timePeriod || 'monthly',
+        };
+      }
+      if (limits.rpm && limits.rpm > 0) {
+        modelRpmLimit[modelId] = limits.rpm;
+      }
+      if (limits.tpm && limits.tpm > 0) {
+        modelTpmLimit[modelId] = limits.tpm;
+      }
+    }
+
     createMutation.mutate({
       name: newKeyName.trim(),
       modelIds: selectedModelIds,
       expiresAt,
       maxBudget: newKeyMaxBudget,
+      tpmLimit: newKeyTpmLimit,
+      rpmLimit: newKeyRpmLimit,
+      budgetDuration: newKeyMaxBudget ? newKeyBudgetDuration : undefined,
+      softBudget: newKeySoftBudget,
+      maxParallelRequests: newKeyMaxParallelRequests,
+      modelMaxBudget: Object.keys(modelMaxBudget).length > 0 ? modelMaxBudget : undefined,
+      modelRpmLimit: Object.keys(modelRpmLimit).length > 0 ? modelRpmLimit : undefined,
+      modelTpmLimit: Object.keys(modelTpmLimit).length > 0 ? modelTpmLimit : undefined,
     });
   };
 
   const handleModelToggle = (modelId: string) => {
-    setSelectedModelIds((prev) =>
-      prev.includes(modelId) ? prev.filter((id) => id !== modelId) : [...prev, modelId],
-    );
+    setSelectedModelIds((prev) => {
+      if (prev.includes(modelId)) {
+        // Clean up per-model limits when deselecting
+        setNewKeyModelLimits((prevLimits) => {
+          const updated = { ...prevLimits };
+          delete updated[modelId];
+          return updated;
+        });
+        return prev.filter((id) => id !== modelId);
+      }
+      return [...prev, modelId];
+    });
   };
 
   const formatDate = (dateString?: string) => {
@@ -260,6 +314,8 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
               <Th>{t('users.apiKeys.name', 'Name')}</Th>
               <Th>{t('users.apiKeys.status', 'Status')}</Th>
               <Th>{t('users.apiKeys.models', 'Models')}</Th>
+              <Th>{t('users.apiKeys.budget', 'Budget')}</Th>
+              <Th>{t('users.apiKeys.rateLimits', 'Rate Limits')}</Th>
               <Th>{t('users.apiKeys.lastUsed', 'Last Used')}</Th>
               <Th screenReaderText={t('common.actions', 'Actions')} />
             </Tr>
@@ -302,6 +358,55 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                   ) : (
                     <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>-</span>
                   )}
+                </Td>
+                <Td dataLabel={t('users.apiKeys.budget', 'Budget')}>
+                  {key.maxBudget ? (
+                    <div>
+                      <Content component={ContentVariants.small}>
+                        ${(key.currentSpend || 0).toFixed(2)} / ${key.maxBudget.toFixed(2)}
+                      </Content>
+                      {key.budgetUtilization !== undefined && key.budgetUtilization !== null && (
+                        <Progress
+                          value={key.budgetUtilization}
+                          measureLocation={ProgressMeasureLocation.none}
+                          variant={
+                            key.budgetUtilization > 90
+                              ? ProgressVariant.danger
+                              : key.budgetUtilization > 75
+                                ? ProgressVariant.warning
+                                : undefined
+                          }
+                          style={{ maxWidth: '120px' }}
+                        />
+                      )}
+                      {key.budgetDuration && (
+                        <Label isCompact color="blue" style={{ marginTop: '0.25rem' }}>
+                          {key.budgetDuration}
+                        </Label>
+                      )}
+                    </div>
+                  ) : (
+                    <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>-</span>
+                  )}
+                </Td>
+                <Td dataLabel={t('users.apiKeys.rateLimits', 'Rate Limits')}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                    {key.tpmLimit ? (
+                      <Label isCompact>{t('users.apiKeys.tpm', 'TPM')}: {key.tpmLimit.toLocaleString()}</Label>
+                    ) : null}
+                    {key.rpmLimit ? (
+                      <Label isCompact>{t('users.apiKeys.rpm', 'RPM')}: {key.rpmLimit}</Label>
+                    ) : null}
+                    {key.maxParallelRequests ? (
+                      <Label isCompact>{t('users.apiKeys.parallel', 'Parallel')}: {key.maxParallelRequests}</Label>
+                    ) : null}
+                    {!key.tpmLimit && !key.rpmLimit && !key.maxParallelRequests && (
+                      <span style={{ color: 'var(--pf-t--global--text--color--subtle)' }}>-</span>
+                    )}
+                    {(key.modelRpmLimit || key.modelTpmLimit || key.modelMaxBudget) && (
+                      <Label isCompact color="blue">{t('users.apiKeys.perModel', 'Per-model')}</Label>
+                    )}
+                  </div>
                 </Td>
                 <Td dataLabel={t('users.apiKeys.lastUsed', 'Last Used')}>
                   {formatDate(key.lastUsedAt)}
@@ -495,6 +600,235 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                 widthChars={10}
               />
             </FormGroup>
+
+            {newKeyMaxBudget !== undefined && newKeyMaxBudget > 0 && (
+              <FormGroup
+                label={t('users.apiKeys.form.budgetDuration', 'Budget Duration')}
+                fieldId="create-key-budget-duration"
+              >
+                <FormSelect
+                  id="create-key-budget-duration"
+                  value={newKeyBudgetDuration}
+                  onChange={(_event, value) => setNewKeyBudgetDuration(value)}
+                  isDisabled={createMutation.isLoading}
+                >
+                  <FormSelectOption value="daily" label={t('common.daily', 'Daily')} />
+                  <FormSelectOption value="weekly" label={t('common.weekly', 'Weekly')} />
+                  <FormSelectOption value="monthly" label={t('common.monthly', 'Monthly')} />
+                  <FormSelectOption value="yearly" label={t('common.yearly', 'Yearly')} />
+                  <FormSelectOption value="1h" label={t('common.hourly', '1 Hour')} />
+                  <FormSelectOption value="30d" label={t('common.thirtyDays', '30 Days')} />
+                  <FormSelectOption value="1mo" label={t('common.oneMonth', '1 Month (calendar)')} />
+                </FormSelect>
+                <HelperText>
+                  <HelperTextItem>
+                    {t('users.apiKeys.form.budgetDurationHelp', 'How often the budget resets.')}
+                  </HelperTextItem>
+                </HelperText>
+              </FormGroup>
+            )}
+
+            <FormGroup
+              label={t('users.apiKeys.form.tpmLimit', 'Tokens per Minute (TPM)')}
+              fieldId="create-key-tpm"
+            >
+              <NumberInput
+                id="create-key-tpm"
+                value={newKeyTpmLimit ?? 0}
+                min={0}
+                onMinus={() => setNewKeyTpmLimit((prev) => Math.max(0, (prev || 0) - 1000))}
+                onPlus={() => setNewKeyTpmLimit((prev) => (prev || 0) + 1000)}
+                onChange={(event) => {
+                  const target = event.target as HTMLInputElement;
+                  const value = parseInt(target.value);
+                  setNewKeyTpmLimit(isNaN(value) ? undefined : value);
+                }}
+                isDisabled={createMutation.isLoading}
+                aria-label={t('users.apiKeys.form.tpmLimit', 'Tokens per Minute (TPM)')}
+                widthChars={10}
+              />
+              <HelperText>
+                <HelperTextItem>
+                  {t('users.apiKeys.form.tpmLimitHelp', 'Leave at 0 for no limit. Superseded by user-level limit.')}
+                </HelperTextItem>
+              </HelperText>
+            </FormGroup>
+
+            <FormGroup
+              label={t('users.apiKeys.form.rpmLimit', 'Requests per Minute (RPM)')}
+              fieldId="create-key-rpm"
+            >
+              <NumberInput
+                id="create-key-rpm"
+                value={newKeyRpmLimit ?? 0}
+                min={0}
+                onMinus={() => setNewKeyRpmLimit((prev) => Math.max(0, (prev || 0) - 10))}
+                onPlus={() => setNewKeyRpmLimit((prev) => (prev || 0) + 10)}
+                onChange={(event) => {
+                  const target = event.target as HTMLInputElement;
+                  const value = parseInt(target.value);
+                  setNewKeyRpmLimit(isNaN(value) ? undefined : value);
+                }}
+                isDisabled={createMutation.isLoading}
+                aria-label={t('users.apiKeys.form.rpmLimit', 'Requests per Minute (RPM)')}
+                widthChars={10}
+              />
+              <HelperText>
+                <HelperTextItem>
+                  {t('users.apiKeys.form.rpmLimitHelp', 'Leave at 0 for no limit. Superseded by user-level limit.')}
+                </HelperTextItem>
+              </HelperText>
+            </FormGroup>
+
+            {newKeyMaxBudget !== undefined && newKeyMaxBudget > 0 && (
+              <FormGroup
+                label={t('users.apiKeys.form.softBudget', 'Soft Budget Warning (USD)')}
+                fieldId="create-key-soft-budget"
+              >
+                <NumberInput
+                  id="create-key-soft-budget"
+                  value={newKeySoftBudget ?? 0}
+                  min={0}
+                  onMinus={() => setNewKeySoftBudget((prev) => Math.max(0, (prev || 0) - 5))}
+                  onPlus={() => setNewKeySoftBudget((prev) => (prev || 0) + 5)}
+                  onChange={(event) => {
+                    const target = event.target as HTMLInputElement;
+                    const value = parseFloat(target.value);
+                    setNewKeySoftBudget(isNaN(value) ? undefined : value);
+                  }}
+                  isDisabled={createMutation.isLoading}
+                  aria-label={t('users.apiKeys.form.softBudget', 'Soft Budget Warning (USD)')}
+                  widthChars={10}
+                />
+                <HelperText>
+                  <HelperTextItem>
+                    {t('users.apiKeys.form.softBudgetHelp', 'Alert threshold before hitting max budget. Leave at 0 for none.')}
+                  </HelperTextItem>
+                </HelperText>
+              </FormGroup>
+            )}
+
+            <FormGroup
+              label={t('users.apiKeys.form.maxParallelRequests', 'Max Parallel Requests')}
+              fieldId="create-key-max-parallel"
+            >
+              <NumberInput
+                id="create-key-max-parallel"
+                value={newKeyMaxParallelRequests ?? 0}
+                min={0}
+                onMinus={() => setNewKeyMaxParallelRequests((prev) => Math.max(0, (prev || 0) - 1))}
+                onPlus={() => setNewKeyMaxParallelRequests((prev) => (prev || 0) + 1)}
+                onChange={(event) => {
+                  const target = event.target as HTMLInputElement;
+                  const value = parseInt(target.value);
+                  setNewKeyMaxParallelRequests(isNaN(value) || value === 0 ? undefined : value);
+                }}
+                isDisabled={createMutation.isLoading}
+                aria-label={t('users.apiKeys.form.maxParallelRequests', 'Max Parallel Requests')}
+                widthChars={10}
+              />
+              <HelperText>
+                <HelperTextItem>
+                  {t('users.apiKeys.form.maxParallelRequestsHelp', 'Maximum concurrent in-flight requests. Leave at 0 for no limit.')}
+                </HelperTextItem>
+              </HelperText>
+            </FormGroup>
+
+            {selectedModelIds.length > 0 && (
+              <ExpandableSection
+                toggleText={t('users.apiKeys.form.perModelLimits', 'Per-Model Limits')}
+                isIndented
+              >
+                <HelperText style={{ marginBottom: '0.75rem' }}>
+                  <HelperTextItem>
+                    {t('users.apiKeys.form.perModelLimitsHelp', 'Set per-model budget and rate limits. These apply independently of global key limits.')}
+                  </HelperTextItem>
+                </HelperText>
+                {selectedModelIds.map((modelId) => {
+                  const modelName = availableModels.find((m) => m.id === modelId)?.name || modelId;
+                  const limits = newKeyModelLimits[modelId] || {};
+                  const updateModelLimit = (field: string, value: number | string | undefined) => {
+                    setNewKeyModelLimits((prev) => ({
+                      ...prev,
+                      [modelId]: { ...prev[modelId], [field]: value },
+                    }));
+                  };
+                  return (
+                    <div key={modelId} style={{ marginBottom: '1rem', padding: '0.75rem', border: '1px solid var(--pf-t--global--border--color--default)', borderRadius: 'var(--pf-t--global--border--radius--small)' }}>
+                      <Content component={ContentVariants.small} style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>
+                        {modelName}
+                      </Content>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                        <FormGroup label={t('users.apiKeys.form.modelBudget', 'Budget ($)')} fieldId={`model-budget-${modelId}`}>
+                          <NumberInput
+                            id={`model-budget-${modelId}`}
+                            value={limits.budget ?? 0}
+                            min={0}
+                            onMinus={() => updateModelLimit('budget', Math.max(0, (limits.budget || 0) - 10))}
+                            onPlus={() => updateModelLimit('budget', (limits.budget || 0) + 10)}
+                            onChange={(event) => {
+                              const target = event.target as HTMLInputElement;
+                              const val = parseFloat(target.value);
+                              updateModelLimit('budget', isNaN(val) ? undefined : val);
+                            }}
+                            isDisabled={createMutation.isLoading}
+                            aria-label={`${modelName} budget`}
+                            widthChars={8}
+                          />
+                        </FormGroup>
+                        <FormGroup label={t('users.apiKeys.form.modelTimePeriod', 'Time Period')} fieldId={`model-period-${modelId}`}>
+                          <FormSelect
+                            id={`model-period-${modelId}`}
+                            value={limits.timePeriod || 'monthly'}
+                            onChange={(_event, value) => updateModelLimit('timePeriod', value)}
+                            isDisabled={createMutation.isLoading}
+                          >
+                            <FormSelectOption value="daily" label={t('common.daily', 'Daily')} />
+                            <FormSelectOption value="monthly" label={t('common.monthly', 'Monthly')} />
+                            <FormSelectOption value="30d" label={t('common.thirtyDays', '30 Days')} />
+                            <FormSelectOption value="1mo" label={t('common.oneMonth', '1 Month (calendar)')} />
+                          </FormSelect>
+                        </FormGroup>
+                        <FormGroup label={t('users.apiKeys.form.modelRpm', 'RPM')} fieldId={`model-rpm-${modelId}`}>
+                          <NumberInput
+                            id={`model-rpm-${modelId}`}
+                            value={limits.rpm ?? 0}
+                            min={0}
+                            onMinus={() => updateModelLimit('rpm', Math.max(0, (limits.rpm || 0) - 10))}
+                            onPlus={() => updateModelLimit('rpm', (limits.rpm || 0) + 10)}
+                            onChange={(event) => {
+                              const target = event.target as HTMLInputElement;
+                              const val = parseInt(target.value);
+                              updateModelLimit('rpm', isNaN(val) ? undefined : val);
+                            }}
+                            isDisabled={createMutation.isLoading}
+                            aria-label={`${modelName} RPM`}
+                            widthChars={8}
+                          />
+                        </FormGroup>
+                        <FormGroup label={t('users.apiKeys.form.modelTpm', 'TPM')} fieldId={`model-tpm-${modelId}`}>
+                          <NumberInput
+                            id={`model-tpm-${modelId}`}
+                            value={limits.tpm ?? 0}
+                            min={0}
+                            onMinus={() => updateModelLimit('tpm', Math.max(0, (limits.tpm || 0) - 1000))}
+                            onPlus={() => updateModelLimit('tpm', (limits.tpm || 0) + 1000)}
+                            onChange={(event) => {
+                              const target = event.target as HTMLInputElement;
+                              const val = parseInt(target.value);
+                              updateModelLimit('tpm', isNaN(val) ? undefined : val);
+                            }}
+                            isDisabled={createMutation.isLoading}
+                            aria-label={`${modelName} TPM`}
+                            widthChars={8}
+                          />
+                        </FormGroup>
+                      </div>
+                    </div>
+                  );
+                })}
+              </ExpandableSection>
+            )}
           </Form>
 
           <div

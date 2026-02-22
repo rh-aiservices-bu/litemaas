@@ -278,6 +278,17 @@ ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS litellm_key_alias VARCHAR(255);
 CREATE INDEX IF NOT EXISTS idx_api_keys_litellm_key_alias ON api_keys(litellm_key_alias);
 
 COMMENT ON COLUMN api_keys.litellm_key_alias IS 'The key_alias from LiteLLM used to match usage analytics data';
+
+-- Per-key budget and limit fields
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS budget_duration VARCHAR(20);
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS soft_budget DECIMAL(10,2);
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS budget_reset_at TIMESTAMP WITH TIME ZONE;
+
+-- Phase 3: Advanced per-key limits
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS max_parallel_requests INTEGER;
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS model_max_budget JSONB;
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS model_rpm_limit JSONB;
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS model_tpm_limit JSONB;
 `;
 
 // API Key Models junction table

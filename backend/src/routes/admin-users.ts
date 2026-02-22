@@ -402,6 +402,15 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
             createdAt: String(key.createdAt),
             expiresAt: key.expiresAt ? String(key.expiresAt) : undefined,
             revokedAt: key.revokedAt ? String(key.revokedAt) : undefined,
+            tpmLimit: key.tpmLimit,
+            rpmLimit: key.rpmLimit,
+            budgetDuration: key.budgetDuration,
+            softBudget: key.softBudget,
+            budgetUtilization: key.budgetUtilization,
+            maxParallelRequests: key.maxParallelRequests,
+            modelMaxBudget: key.modelMaxBudget,
+            modelRpmLimit: key.modelRpmLimit,
+            modelTpmLimit: key.modelTpmLimit,
           })),
           pagination: {
             page,
@@ -451,6 +460,12 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           maxBudget?: number;
           tpmLimit?: number;
           rpmLimit?: number;
+          maxParallelRequests?: number;
+          budgetDuration?: string;
+          softBudget?: number;
+          modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+          modelRpmLimit?: Record<string, number>;
+          modelTpmLimit?: Record<string, number>;
         };
         const currentUser = (request as AuthenticatedRequest).user;
 
@@ -479,6 +494,12 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           maxBudget: body.maxBudget,
           tpmLimit: body.tpmLimit,
           rpmLimit: body.rpmLimit,
+          maxParallelRequests: body.maxParallelRequests,
+          budgetDuration: body.budgetDuration,
+          softBudget: body.softBudget,
+          modelMaxBudget: body.modelMaxBudget,
+          modelRpmLimit: body.modelRpmLimit,
+          modelTpmLimit: body.modelTpmLimit,
         });
 
         // Additional audit log for admin action

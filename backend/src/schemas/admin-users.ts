@@ -66,6 +66,23 @@ export const UserApiKeySchema = Type.Object({
   isActive: Type.Boolean(),
   maxBudget: Type.Optional(Type.Number()),
   currentSpend: Type.Optional(Type.Number()),
+  tpmLimit: Type.Optional(Type.Integer()),
+  rpmLimit: Type.Optional(Type.Integer()),
+  budgetDuration: Type.Optional(Type.String()),
+  softBudget: Type.Optional(Type.Number()),
+  budgetUtilization: Type.Optional(Type.Number()),
+  maxParallelRequests: Type.Optional(Type.Integer()),
+  modelMaxBudget: Type.Optional(
+    Type.Record(
+      Type.String(),
+      Type.Object({
+        budgetLimit: Type.Number(),
+        timePeriod: Type.String(),
+      }),
+    ),
+  ),
+  modelRpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+  modelTpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
   lastUsedAt: Type.Optional(Type.String({ format: 'date-time' })),
   createdAt: Type.String({ format: 'date-time' }),
   expiresAt: Type.Optional(Type.String({ format: 'date-time' })),
@@ -84,6 +101,28 @@ export const CreateApiKeyForUserSchema = Type.Object({
   maxBudget: Type.Optional(Type.Number({ minimum: 0 })),
   tpmLimit: Type.Optional(Type.Integer({ minimum: 0 })),
   rpmLimit: Type.Optional(Type.Integer({ minimum: 0 })),
+  maxParallelRequests: Type.Optional(Type.Integer({ minimum: 1 })),
+  budgetDuration: Type.Optional(
+    Type.Union([
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+      Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$' }),
+    ]),
+  ),
+  softBudget: Type.Optional(Type.Number({ minimum: 0 })),
+  modelMaxBudget: Type.Optional(
+    Type.Record(
+      Type.String(),
+      Type.Object({
+        budgetLimit: Type.Number({ minimum: 0 }),
+        timePeriod: Type.String(),
+      }),
+    ),
+  ),
+  modelRpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer({ minimum: 0 }))),
+  modelTpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer({ minimum: 0 }))),
 });
 
 export type CreateApiKeyForUser = Static<typeof CreateApiKeyForUserSchema>;

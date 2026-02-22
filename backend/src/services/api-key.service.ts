@@ -88,6 +88,39 @@ export interface ApiKeyStats {
   bySubscription: Record<string, number>;
 }
 
+/** Shared type for rows returned by SELECT * on api_keys */
+interface ApiKeyDbRow {
+  id: string;
+  user_id: string;
+  models?: string[];
+  name?: string;
+  key_hash: string;
+  key_prefix: string;
+  last_used_at?: Date | string;
+  expires_at?: Date | string;
+  is_active: boolean;
+  created_at: Date | string;
+  revoked_at?: Date | string;
+  lite_llm_key_value?: string;
+  last_sync_at?: Date | string;
+  sync_status?: string;
+  sync_error?: string;
+  max_budget?: number;
+  current_spend?: number;
+  tpm_limit?: number;
+  rpm_limit?: number;
+  max_parallel_requests?: number;
+  model_max_budget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  model_rpm_limit?: Record<string, number>;
+  model_tpm_limit?: Record<string, number>;
+  budget_duration?: string;
+  soft_budget?: number;
+  budget_reset_at?: Date | string;
+  metadata?: Record<string, unknown>;
+  model_details?: unknown[];
+  subscription_id?: string;
+}
+
 export class ApiKeyService extends BaseService {
   private liteLLMService: LiteLLMService;
   private readonly KEY_PREFIX = 'sk-';
@@ -326,7 +359,18 @@ export class ApiKeyService extends BaseService {
         team_id: request.teamId,
         tpm_limit: request.tpmLimit,
         rpm_limit: request.rpmLimit,
+        max_parallel_requests: request.maxParallelRequests,
         budget_duration: request.budgetDuration,
+        model_max_budget: request.modelMaxBudget
+          ? Object.fromEntries(
+              Object.entries(request.modelMaxBudget).map(([model, config]) => [
+                model,
+                { budget_limit: config.budgetLimit, time_period: config.timePeriod },
+              ]),
+            )
+          : undefined,
+        model_rpm_limit: request.modelRpmLimit,
+        model_tpm_limit: request.modelTpmLimit,
         permissions: request.permissions
           ? {
               allow_chat_completions: request.permissions.allowChatCompletions,
@@ -372,9 +416,12 @@ export class ApiKeyService extends BaseService {
             user_id, name, key_hash, key_prefix,
             expires_at, is_active, lite_llm_key_value, litellm_key_alias,
             max_budget, current_spend, tpm_limit, rpm_limit,
+            max_parallel_requests,
+            budget_duration, soft_budget,
+            model_max_budget, model_rpm_limit, model_tpm_limit,
             last_sync_at, sync_status, metadata
             ${isLegacyRequest ? ', subscription_id' : ''}
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15${isLegacyRequest ? ', $16' : ''})
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21${isLegacyRequest ? ', $22' : ''})
           RETURNING *`,
           [
             userId,
@@ -389,6 +436,12 @@ export class ApiKeyService extends BaseService {
             0,
             request.tpmLimit,
             request.rpmLimit,
+            request.maxParallelRequests ?? null,
+            request.budgetDuration ?? null,
+            request.softBudget ?? null,
+            request.modelMaxBudget ? JSON.stringify(request.modelMaxBudget) : null,
+            request.modelRpmLimit ? JSON.stringify(request.modelRpmLimit) : null,
+            request.modelTpmLimit ? JSON.stringify(request.modelTpmLimit) : null,
             new Date(),
             'synced',
             request.metadata || {},
@@ -440,29 +493,7 @@ export class ApiKeyService extends BaseService {
           'API key created with multi-model support',
         );
 
-        const apiKeyData = apiKey.rows[0] as {
-          id: string;
-          user_id: string;
-          models?: string[];
-          name?: string;
-          key_hash: string;
-          key_prefix: string;
-          last_used_at?: Date | string;
-          expires_at?: Date | string;
-          is_active: boolean;
-          created_at: Date | string;
-          revoked_at?: Date | string;
-          lite_llm_key_value?: string;
-          last_sync_at?: Date | string;
-          sync_status?: string;
-          sync_error?: string;
-          max_budget?: number;
-          current_spend?: number;
-          tpm_limit?: number;
-          rpm_limit?: number;
-          metadata?: Record<string, unknown>;
-          subscription_id?: string;
-        };
+        const apiKeyData = apiKey.rows[0] as ApiKeyDbRow;
         const enhancedApiKey = this.mapToEnhancedApiKey(apiKeyData, liteLLMResponse);
         return {
           id: enhancedApiKey.id,
@@ -515,29 +546,7 @@ export class ApiKeyService extends BaseService {
 
     try {
       // Updated query to handle both multi-model and legacy subscription-based keys
-      const apiKey = await this.fastify.dbUtils.queryOne<{
-        id: string;
-        user_id: string;
-        models?: string[];
-        name?: string;
-        key_hash: string;
-        key_prefix: string;
-        last_used_at?: Date | string;
-        expires_at?: Date | string;
-        is_active: boolean;
-        created_at: Date | string;
-        revoked_at?: Date | string;
-        lite_llm_key_value?: string;
-        last_sync_at?: Date | string;
-        sync_status?: string;
-        sync_error?: string;
-        max_budget?: number;
-        current_spend?: number;
-        tpm_limit?: number;
-        rpm_limit?: number;
-        metadata?: Record<string, unknown>;
-        subscription_id?: string;
-      }>(
+      const apiKey = await this.fastify.dbUtils.queryOne<ApiKeyDbRow>(
         `
         SELECT ak.*
         FROM api_keys ak
@@ -840,30 +849,7 @@ export class ApiKeyService extends BaseService {
       // Enhanced mapping to include masked LiteLLM keys
       return {
         data: apiKeys.map((key) => {
-          const typedKey = key as {
-            id: string;
-            user_id: string;
-            models?: string[];
-            name?: string;
-            key_hash: string;
-            key_prefix: string;
-            last_used_at?: Date | string;
-            expires_at?: Date | string;
-            is_active: boolean;
-            created_at: Date | string;
-            revoked_at?: Date | string;
-            lite_llm_key_value?: string;
-            last_sync_at?: Date | string;
-            sync_status?: string;
-            sync_error?: string;
-            max_budget?: number;
-            current_spend?: number;
-            tpm_limit?: number;
-            rpm_limit?: number;
-            metadata?: Record<string, unknown>;
-            model_details?: unknown[];
-            subscription_id?: string;
-          };
+          const typedKey = key as unknown as ApiKeyDbRow;
           const enhancedKey = this.mapToEnhancedApiKey(typedKey);
 
           // Add the actual LiteLLM key with masking for security in list views
@@ -929,43 +915,43 @@ export class ApiKeyService extends BaseService {
       const liteLLMInfo = await this.liteLLMService.getKeyInfo(apiKey.liteLLMKeyId);
 
       // Update local database with LiteLLM data
-      const updatedApiKey = await this.fastify.dbUtils.queryOne<{
-        id: string;
-        user_id: string;
-        models?: string[];
-        name?: string;
-        key_hash: string;
-        key_prefix: string;
-        last_used_at?: Date | string;
-        expires_at?: Date | string;
-        is_active: boolean;
-        created_at: Date | string;
-        revoked_at?: Date | string;
-        lite_llm_key_value?: string;
-        last_sync_at?: Date | string;
-        sync_status?: string;
-        sync_error?: string;
-        max_budget?: number;
-        current_spend?: number;
-        tpm_limit?: number;
-        rpm_limit?: number;
-        metadata?: Record<string, unknown>;
-        subscription_id?: string;
-      }>(
-        `UPDATE api_keys 
-         SET current_spend = $1, 
+      // Transform model_max_budget from LiteLLM snake_case to camelCase for consistency
+      const modelMaxBudget = liteLLMInfo.model_max_budget
+        ? Object.fromEntries(
+            Object.entries(liteLLMInfo.model_max_budget).map(([model, config]) => [
+              model,
+              { budgetLimit: config.budget_limit, timePeriod: config.time_period },
+            ]),
+          )
+        : null;
+
+      const updatedApiKey = await this.fastify.dbUtils.queryOne<ApiKeyDbRow>(
+        `UPDATE api_keys
+         SET current_spend = $1,
              max_budget = $2,
              tpm_limit = $3,
              rpm_limit = $4,
+             budget_duration = $5,
+             soft_budget = $6,
+             max_parallel_requests = $7,
+             model_max_budget = $8,
+             model_rpm_limit = $9,
+             model_tpm_limit = $10,
              last_sync_at = CURRENT_TIMESTAMP,
              sync_status = 'synced'
-         WHERE id = $5
+         WHERE id = $11
          RETURNING *`,
         [
           liteLLMInfo.spend ?? null,
           liteLLMInfo.max_budget ?? null,
           liteLLMInfo.tpm_limit ?? null,
           liteLLMInfo.rpm_limit ?? null,
+          liteLLMInfo.budget_duration ?? null,
+          liteLLMInfo.soft_budget ?? null,
+          liteLLMInfo.max_parallel_requests ?? null,
+          modelMaxBudget ? JSON.stringify(modelMaxBudget) : null,
+          liteLLMInfo.model_rpm_limit ? JSON.stringify(liteLLMInfo.model_rpm_limit) : null,
+          liteLLMInfo.model_tpm_limit ? JSON.stringify(liteLLMInfo.model_tpm_limit) : null,
           keyId,
         ],
       );
@@ -1055,6 +1041,12 @@ export class ApiKeyService extends BaseService {
       maxBudget?: number;
       tpmLimit?: number;
       rpmLimit?: number;
+      budgetDuration?: string;
+      softBudget?: number;
+      maxParallelRequests?: number;
+      modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+      modelRpmLimit?: Record<string, number>;
+      modelTpmLimit?: Record<string, number>;
       allowedModels?: string[];
     },
   ): Promise<EnhancedApiKey> {
@@ -1083,42 +1075,50 @@ export class ApiKeyService extends BaseService {
           max_budget: updates.maxBudget,
           tpm_limit: updates.tpmLimit,
           rpm_limit: updates.rpmLimit,
+          budget_duration: updates.budgetDuration,
+          soft_budget: updates.softBudget,
+          max_parallel_requests: updates.maxParallelRequests,
+          model_max_budget: updates.modelMaxBudget
+            ? Object.fromEntries(
+                Object.entries(updates.modelMaxBudget).map(([model, config]) => [
+                  model,
+                  { budget_limit: config.budgetLimit, time_period: config.timePeriod },
+                ]),
+              )
+            : undefined,
+          model_rpm_limit: updates.modelRpmLimit,
+          model_tpm_limit: updates.modelTpmLimit,
           models: updates.allowedModels,
         });
       }
 
       // Update local database
-      const updatedApiKey = await this.fastify.dbUtils.queryOne<{
-        id: string;
-        user_id: string;
-        models?: string[];
-        name?: string;
-        key_hash: string;
-        key_prefix: string;
-        last_used_at?: Date | string;
-        expires_at?: Date | string;
-        is_active: boolean;
-        created_at: Date | string;
-        revoked_at?: Date | string;
-        lite_llm_key_value?: string;
-        last_sync_at?: Date | string;
-        sync_status?: string;
-        sync_error?: string;
-        max_budget?: number;
-        current_spend?: number;
-        tpm_limit?: number;
-        rpm_limit?: number;
-        metadata?: Record<string, unknown>;
-        subscription_id?: string;
-      }>(
-        `UPDATE api_keys 
+      const updatedApiKey = await this.fastify.dbUtils.queryOne<ApiKeyDbRow>(
+        `UPDATE api_keys
          SET max_budget = COALESCE($1, max_budget),
              tpm_limit = COALESCE($2, tpm_limit),
              rpm_limit = COALESCE($3, rpm_limit),
+             budget_duration = COALESCE($4, budget_duration),
+             soft_budget = COALESCE($5, soft_budget),
+             max_parallel_requests = COALESCE($6, max_parallel_requests),
+             model_max_budget = COALESCE($7, model_max_budget),
+             model_rpm_limit = COALESCE($8, model_rpm_limit),
+             model_tpm_limit = COALESCE($9, model_tpm_limit),
              last_sync_at = CURRENT_TIMESTAMP
-         WHERE id = $4
+         WHERE id = $10
          RETURNING *`,
-        [updates.maxBudget ?? null, updates.tpmLimit ?? null, updates.rpmLimit ?? null, keyId],
+        [
+          updates.maxBudget ?? null,
+          updates.tpmLimit ?? null,
+          updates.rpmLimit ?? null,
+          updates.budgetDuration ?? null,
+          updates.softBudget ?? null,
+          updates.maxParallelRequests ?? null,
+          updates.modelMaxBudget ? JSON.stringify(updates.modelMaxBudget) : null,
+          updates.modelRpmLimit ? JSON.stringify(updates.modelRpmLimit) : null,
+          updates.modelTpmLimit ? JSON.stringify(updates.modelTpmLimit) : null,
+          keyId,
+        ],
       );
 
       // Create audit log
@@ -1252,30 +1252,8 @@ export class ApiKeyService extends BaseService {
       const whereClause = `WHERE id = $${paramCount}`;
 
       // Update local database
-      const updatedApiKey = await this.fastify.dbUtils.queryOne<{
-        id: string;
-        user_id: string;
-        models?: string[];
-        name?: string;
-        key_hash: string;
-        key_prefix: string;
-        last_used_at?: Date | string;
-        expires_at?: Date | string;
-        is_active: boolean;
-        created_at: Date | string;
-        revoked_at?: Date | string;
-        lite_llm_key_value?: string;
-        last_sync_at?: Date | string;
-        sync_status?: string;
-        sync_error?: string;
-        max_budget?: number;
-        current_spend?: number;
-        tpm_limit?: number;
-        rpm_limit?: number;
-        metadata?: Record<string, unknown>;
-        subscription_id?: string;
-      }>(
-        `UPDATE api_keys 
+      const updatedApiKey = await this.fastify.dbUtils.queryOne<ApiKeyDbRow>(
+        `UPDATE api_keys
          SET ${updateFields.join(', ')}
          ${whereClause}
          RETURNING *`,
@@ -1848,33 +1826,15 @@ export class ApiKeyService extends BaseService {
   }
 
   private mapToEnhancedApiKey(
-    apiKey: {
-      id: string;
-      user_id: string;
-      models?: string[];
-      name?: string;
-      key_hash: string;
-      key_prefix: string;
-      last_used_at?: Date | string;
-      expires_at?: Date | string;
-      is_active: boolean;
-      created_at: Date | string;
-      revoked_at?: Date | string;
-      lite_llm_key_value?: string;
-      last_sync_at?: Date | string;
-      sync_status?: string;
-      sync_error?: string;
-      max_budget?: number;
-      current_spend?: number;
-      tpm_limit?: number;
-      rpm_limit?: number;
-      metadata?: Record<string, unknown>;
-      model_details?: unknown[];
-      subscription_id?: string;
-    },
+    apiKey: ApiKeyDbRow,
     liteLLMResponse?: LiteLLMKeyGenerationResponse,
     _liteLLMInfo?: LiteLLMKeyInfo,
   ): EnhancedApiKey {
+    const budgetUtilization =
+      apiKey.max_budget != null && apiKey.max_budget > 0 && apiKey.current_spend != null
+        ? Math.round((Number(apiKey.current_spend) / Number(apiKey.max_budget)) * 100)
+        : undefined;
+
     return {
       id: apiKey.id,
       userId: apiKey.user_id,
@@ -1895,6 +1855,14 @@ export class ApiKeyService extends BaseService {
       currentSpend: apiKey.current_spend,
       tpmLimit: apiKey.tpm_limit,
       rpmLimit: apiKey.rpm_limit,
+      budgetDuration: apiKey.budget_duration,
+      softBudget: apiKey.soft_budget,
+      budgetResetAt: apiKey.budget_reset_at ? new Date(apiKey.budget_reset_at) : undefined,
+      budgetUtilization,
+      maxParallelRequests: apiKey.max_parallel_requests,
+      modelMaxBudget: apiKey.model_max_budget,
+      modelRpmLimit: apiKey.model_rpm_limit,
+      modelTpmLimit: apiKey.model_tpm_limit,
       metadata: apiKey.metadata,
       // Include model details if available
       modelDetails: apiKey.model_details as

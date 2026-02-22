@@ -1146,4 +1146,307 @@ describe('ApiKeyService', () => {
       });
     });
   });
+
+  describe('createApiKey - Per-key quota fields', () => {
+    it('should pass new quota fields to LiteLLM request', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+      const request: CreateApiKeyRequest = {
+        modelIds: ['gpt-4o'],
+        name: 'Quota Key',
+        maxBudget: 100,
+        maxParallelRequests: 5,
+        budgetDuration: 'monthly',
+        softBudget: 80,
+        modelMaxBudget: {
+          'gpt-4o': { budgetLimit: 50, timePeriod: 'monthly' },
+        },
+        modelRpmLimit: { 'gpt-4o': 60 },
+        modelTpmLimit: { 'gpt-4o': 5000 },
+      };
+
+      mockDbUtils.queryMany.mockResolvedValue([
+        { model_id: 'gpt-4o', model_name: 'GPT-4o', provider: 'openai' },
+      ]);
+      mockDbUtils.queryOne.mockResolvedValue({ count: 0 });
+
+      vi.mocked(mockLiteLLMService.generateApiKey!).mockResolvedValue(mockLiteLLMKeyResponse);
+
+      mockPgClient.query.mockResolvedValue(undefined);
+      mockPgClient.query.mockResolvedValueOnce(undefined); // BEGIN
+      mockPgClient.query.mockResolvedValueOnce({ rows: [mockApiKeyDbRow] }); // INSERT
+
+      await service.createApiKey('user-123', request);
+
+      expect(mockLiteLLMService.generateApiKey).toHaveBeenCalledWith(
+        expect.objectContaining({
+          max_parallel_requests: 5,
+          budget_duration: 'monthly',
+          soft_budget: 80,
+          model_max_budget: {
+            'gpt-4o': { budget_limit: 50, time_period: 'monthly' },
+          },
+          model_rpm_limit: { 'gpt-4o': 60 },
+          model_tpm_limit: { 'gpt-4o': 5000 },
+        }),
+      );
+    });
+
+    it('should store softBudget=0 as 0 not null (nullish coalescing fix)', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+      const request: CreateApiKeyRequest = {
+        modelIds: ['gpt-4o'],
+        name: 'Zero Budget Key',
+        softBudget: 0,
+        maxParallelRequests: 0,
+        budgetDuration: '',
+      };
+
+      mockDbUtils.queryMany.mockResolvedValue([
+        { model_id: 'gpt-4o', model_name: 'GPT-4o', provider: 'openai' },
+      ]);
+      mockDbUtils.queryOne.mockResolvedValue({ count: 0 });
+
+      vi.mocked(mockLiteLLMService.generateApiKey!).mockResolvedValue(mockLiteLLMKeyResponse);
+
+      mockPgClient.query.mockResolvedValue(undefined);
+      mockPgClient.query.mockResolvedValueOnce(undefined); // BEGIN
+      mockPgClient.query.mockResolvedValueOnce({ rows: [mockApiKeyDbRow] }); // INSERT
+
+      await service.createApiKey('user-123', request);
+
+      // The INSERT query is the second call (after BEGIN)
+      const insertCall = mockPgClient.query.mock.calls.find(
+        (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('INSERT INTO api_keys'),
+      );
+
+      expect(insertCall).toBeDefined();
+      const params = insertCall![1] as unknown[];
+      // softBudget=0 should be 0, not null (param index 14 = softBudget)
+      // maxParallelRequests=0 should be 0, not null (param index 12)
+      // budgetDuration='' should be '', not null (param index 13)
+      expect(params[14]).toBe(0); // softBudget
+      expect(params[12]).toBe(0); // maxParallelRequests
+      expect(params[13]).toBe(''); // budgetDuration
+    });
+  });
+
+  describe('mapToEnhancedApiKey - budgetUtilization', () => {
+    it('should return budgetUtilization=0 when current_spend=0 and max_budget is set', () => {
+      const row = {
+        ...mockApiKeyDbRow,
+        current_spend: 0,
+        max_budget: 100,
+      };
+
+      // Access private method via bracket notation
+      const result = service['mapToEnhancedApiKey'](row);
+
+      expect(result.budgetUtilization).toBe(0);
+    });
+
+    it('should return correct budgetUtilization percentage', () => {
+      const row = {
+        ...mockApiKeyDbRow,
+        current_spend: 50,
+        max_budget: 100,
+      };
+
+      const result = service['mapToEnhancedApiKey'](row);
+
+      expect(result.budgetUtilization).toBe(50);
+    });
+
+    it('should return undefined budgetUtilization when max_budget is null', () => {
+      const row = {
+        ...mockApiKeyDbRow,
+        current_spend: 10,
+        max_budget: undefined,
+      };
+
+      const result = service['mapToEnhancedApiKey'](row);
+
+      expect(result.budgetUtilization).toBeUndefined();
+    });
+
+    it('should include per-key quota fields in mapped output', () => {
+      const row = {
+        ...mockApiKeyDbRow,
+        max_parallel_requests: 5,
+        budget_duration: 'monthly',
+        soft_budget: 80,
+        model_max_budget: { 'gpt-4o': { budgetLimit: 50, timePeriod: 'monthly' } },
+        model_rpm_limit: { 'gpt-4o': 60 },
+        model_tpm_limit: { 'gpt-4o': 5000 },
+      };
+
+      const result = service['mapToEnhancedApiKey'](row);
+
+      expect(result.maxParallelRequests).toBe(5);
+      expect(result.budgetDuration).toBe('monthly');
+      expect(result.softBudget).toBe(80);
+      expect(result.modelMaxBudget).toEqual({ 'gpt-4o': { budgetLimit: 50, timePeriod: 'monthly' } });
+      expect(result.modelRpmLimit).toEqual({ 'gpt-4o': 60 });
+      expect(result.modelTpmLimit).toEqual({ 'gpt-4o': 5000 });
+    });
+  });
+
+  describe('updateApiKeyLimits - new fields', () => {
+    it('should pass new fields to LiteLLM update', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+      vi.spyOn(service, 'getApiKey').mockResolvedValue({
+        ...mockApiKeyDbRow,
+        keyHash: 'hashed',
+        keyPrefix: 'sk-abc1',
+        userId: 'user-123',
+        models: ['gpt-4o'],
+        isActive: true,
+        createdAt: new Date(),
+        liteLLMKeyId: 'sk-litellm-abc123def456',
+        syncStatus: 'synced',
+      } as any);
+
+      mockDbUtils.queryOne.mockResolvedValue(mockApiKeyDbRow);
+      mockDbUtils.query.mockResolvedValue({ rowCount: 1 });
+      vi.mocked(mockLiteLLMService.updateKey!).mockResolvedValue(undefined);
+
+      await service.updateApiKeyLimits('key-123', 'user-123', {
+        maxParallelRequests: 10,
+        modelMaxBudget: { 'gpt-4o': { budgetLimit: 50, timePeriod: 'monthly' } },
+        modelRpmLimit: { 'gpt-4o': 30 },
+        modelTpmLimit: { 'gpt-4o': 3000 },
+      });
+
+      expect(mockLiteLLMService.updateKey).toHaveBeenCalledWith(
+        'sk-litellm-abc123def456',
+        expect.objectContaining({
+          max_parallel_requests: 10,
+          model_max_budget: { 'gpt-4o': { budget_limit: 50, time_period: 'monthly' } },
+          model_rpm_limit: { 'gpt-4o': 30 },
+          model_tpm_limit: { 'gpt-4o': 3000 },
+        }),
+      );
+    });
+
+    it('should include new fields in SQL UPDATE query', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+      vi.spyOn(service, 'getApiKey').mockResolvedValue({
+        ...mockApiKeyDbRow,
+        keyHash: 'hashed',
+        keyPrefix: 'sk-abc1',
+        userId: 'user-123',
+        models: ['gpt-4o'],
+        isActive: true,
+        createdAt: new Date(),
+        liteLLMKeyId: 'sk-litellm-abc123def456',
+        syncStatus: 'synced',
+      } as any);
+
+      mockDbUtils.queryOne.mockResolvedValue(mockApiKeyDbRow);
+      mockDbUtils.query.mockResolvedValue({ rowCount: 1 });
+      vi.mocked(mockLiteLLMService.updateKey!).mockResolvedValue(undefined);
+
+      await service.updateApiKeyLimits('key-123', 'user-123', {
+        maxParallelRequests: 10,
+      });
+
+      expect(mockDbUtils.queryOne).toHaveBeenCalledWith(
+        expect.stringContaining('max_parallel_requests'),
+        expect.anything(),
+      );
+    });
+  });
+
+  describe('syncApiKeyWithLiteLLM - new fields', () => {
+    it('should sync all per-key quota fields from LiteLLM', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+      vi.spyOn(service, 'getApiKey').mockResolvedValue({
+        ...mockApiKeyDbRow,
+        keyHash: 'hashed',
+        keyPrefix: 'sk-abc1',
+        userId: 'user-123',
+        models: ['gpt-4o'],
+        isActive: true,
+        createdAt: new Date(),
+        liteLLMKeyId: 'sk-litellm-abc123def456',
+        syncStatus: 'synced',
+      } as any);
+
+      const liteLLMInfo = {
+        spend: 25,
+        max_budget: 100,
+        tpm_limit: 10000,
+        rpm_limit: 100,
+        budget_duration: 'monthly',
+        soft_budget: 80,
+        max_parallel_requests: 5,
+        model_max_budget: {
+          'gpt-4o': { budget_limit: 50, time_period: 'monthly' },
+        },
+        model_rpm_limit: { 'gpt-4o': 60 },
+        model_tpm_limit: { 'gpt-4o': 5000 },
+      };
+
+      vi.mocked(mockLiteLLMService.getKeyInfo!).mockResolvedValue(liteLLMInfo);
+      mockDbUtils.queryOne.mockResolvedValue(mockApiKeyDbRow);
+
+      await service.syncApiKeyWithLiteLLM('key-123', 'user-123');
+
+      expect(mockDbUtils.queryOne).toHaveBeenCalledWith(
+        expect.stringContaining('budget_duration'),
+        expect.arrayContaining([
+          25,      // spend
+          100,     // max_budget
+          10000,   // tpm_limit
+          100,     // rpm_limit
+          'monthly', // budget_duration
+          80,      // soft_budget
+          5,       // max_parallel_requests
+        ]),
+      );
+    });
+
+    it('should transform model_max_budget from snake_case to camelCase', async () => {
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+      vi.spyOn(service, 'getApiKey').mockResolvedValue({
+        ...mockApiKeyDbRow,
+        keyHash: 'hashed',
+        keyPrefix: 'sk-abc1',
+        userId: 'user-123',
+        models: ['gpt-4o'],
+        isActive: true,
+        createdAt: new Date(),
+        liteLLMKeyId: 'sk-litellm-abc123def456',
+        syncStatus: 'synced',
+      } as any);
+
+      const liteLLMInfo = {
+        spend: 0,
+        max_budget: 100,
+        model_max_budget: {
+          'gpt-4o': { budget_limit: 50, time_period: 'monthly' },
+        },
+      };
+
+      vi.mocked(mockLiteLLMService.getKeyInfo!).mockResolvedValue(liteLLMInfo);
+      mockDbUtils.queryOne.mockResolvedValue(mockApiKeyDbRow);
+
+      await service.syncApiKeyWithLiteLLM('key-123', 'user-123');
+
+      // Verify the stored JSON has camelCase keys
+      const updateCall = mockDbUtils.queryOne.mock.calls.find(
+        (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('budget_duration'),
+      );
+
+      expect(updateCall).toBeDefined();
+      const params = updateCall![1] as unknown[];
+      // param index 7 = model_max_budget (JSON.stringified)
+      const storedModelBudget = JSON.parse(params[7] as string);
+      expect(storedModelBudget['gpt-4o']).toEqual({
+        budgetLimit: 50,
+        timePeriod: 'monthly',
+      });
+    });
+  });
 });
