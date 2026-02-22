@@ -258,6 +258,8 @@ export class LiteLLMService extends BaseService {
       method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
       body?: any;
       headers?: Record<string, string>;
+      /** When true, returns raw text instead of parsing JSON (for endpoints that may return plain text) */
+      rawText?: boolean;
     } = {},
   ): Promise<T> {
     if (this.isCircuitBreakerTripped()) {
@@ -268,7 +270,7 @@ export class LiteLLMService extends BaseService {
       );
     }
 
-    const { method = 'GET', body, headers = {} } = options;
+    const { method = 'GET', body, headers = {}, rawText = false } = options;
 
     const url = `${this.config.baseUrl}${endpoint}`;
 
@@ -331,7 +333,25 @@ export class LiteLLMService extends BaseService {
           );
         }
 
-        const data = await response.json();
+        let data: unknown;
+        if (rawText) {
+          data = await response.text();
+        } else {
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            data = await response.json();
+          } else {
+            // Try JSON first, fall back to text for endpoints that may
+            // return plain text (e.g. LiteLLM v1.81.0+ /health/liveness)
+            const text = await response.text();
+            try {
+              data = JSON.parse(text);
+            } catch {
+              data = text;
+            }
+          }
+        }
+
         this.recordSuccess();
 
         this.fastify.log.debug(
@@ -446,7 +466,15 @@ export class LiteLLMService extends BaseService {
     }
 
     try {
-      const health = await this.makeRequest<LiteLLMHealth>('/health/liveness');
+      const data = await this.makeRequest<LiteLLMHealth | string>('/health/liveness');
+
+      // LiteLLM v1.81.0+ returns plain text "I'm alive!" instead of JSON.
+      // Normalize to LiteLLMHealth object for both formats.
+      const health: LiteLLMHealth =
+        typeof data === 'string' || !data || typeof data !== 'object' || !('status' in data)
+          ? { status: 'healthy', db: 'connected' }
+          : data;
+
       this.setCache(cacheKey, health, 30000);
       return health;
     } catch (error) {
