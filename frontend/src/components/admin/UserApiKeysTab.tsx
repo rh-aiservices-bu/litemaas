@@ -601,30 +601,32 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
               />
             </FormGroup>
 
-            <FormGroup
-              label={t('users.apiKeys.form.budgetDuration', 'Budget Duration')}
-              fieldId="create-key-budget-duration"
-            >
-              <FormSelect
-                id="create-key-budget-duration"
-                value={newKeyBudgetDuration}
-                onChange={(_event, value) => setNewKeyBudgetDuration(value)}
-                isDisabled={createMutation.isLoading}
+            {newKeyMaxBudget !== undefined && newKeyMaxBudget > 0 && (
+              <FormGroup
+                label={t('users.apiKeys.form.budgetDuration', 'Budget Duration')}
+                fieldId="create-key-budget-duration"
               >
-                <FormSelectOption value="daily" label={t('common.daily', 'Daily')} />
-                <FormSelectOption value="weekly" label={t('common.weekly', 'Weekly')} />
-                <FormSelectOption value="monthly" label={t('common.monthly', 'Monthly')} />
-                <FormSelectOption value="yearly" label={t('common.yearly', 'Yearly')} />
-                <FormSelectOption value="1h" label={t('common.hourly', '1 Hour')} />
-                <FormSelectOption value="30d" label={t('common.thirtyDays', '30 Days')} />
-                <FormSelectOption value="1mo" label={t('common.oneMonth', '1 Month (calendar)')} />
-              </FormSelect>
-              <HelperText>
-                <HelperTextItem>
-                  {t('users.apiKeys.form.budgetDurationHelp', 'How often the budget resets.')}
-                </HelperTextItem>
-              </HelperText>
-            </FormGroup>
+                <FormSelect
+                  id="create-key-budget-duration"
+                  value={newKeyBudgetDuration}
+                  onChange={(_event, value) => setNewKeyBudgetDuration(value)}
+                  isDisabled={createMutation.isLoading}
+                >
+                  <FormSelectOption value="daily" label={t('common.daily', 'Daily')} />
+                  <FormSelectOption value="weekly" label={t('common.weekly', 'Weekly')} />
+                  <FormSelectOption value="monthly" label={t('common.monthly', 'Monthly')} />
+                  <FormSelectOption value="yearly" label={t('common.yearly', 'Yearly')} />
+                  <FormSelectOption value="1h" label={t('common.hourly', '1 Hour')} />
+                  <FormSelectOption value="30d" label={t('common.thirtyDays', '30 Days')} />
+                  <FormSelectOption value="1mo" label={t('common.oneMonth', '1 Month (calendar)')} />
+                </FormSelect>
+                <HelperText>
+                  <HelperTextItem>
+                    {t('users.apiKeys.form.budgetDurationHelp', 'How often the budget resets.')}
+                  </HelperTextItem>
+                </HelperText>
+              </FormGroup>
+            )}
 
             <FormGroup
               label={t('users.apiKeys.form.tpmLimit', 'Tokens per Minute (TPM)')}
@@ -678,31 +680,33 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
               </HelperText>
             </FormGroup>
 
-            <FormGroup
-              label={t('users.apiKeys.form.softBudget', 'Soft Budget Warning (USD)')}
-              fieldId="create-key-soft-budget"
-            >
-              <NumberInput
-                id="create-key-soft-budget"
-                value={newKeySoftBudget ?? 0}
-                min={0}
-                onMinus={() => setNewKeySoftBudget((prev) => Math.max(0, (prev || 0) - 5))}
-                onPlus={() => setNewKeySoftBudget((prev) => (prev || 0) + 5)}
-                onChange={(event) => {
-                  const target = event.target as HTMLInputElement;
-                  const value = parseFloat(target.value);
-                  setNewKeySoftBudget(isNaN(value) ? undefined : value);
-                }}
-                isDisabled={createMutation.isLoading}
-                aria-label={t('users.apiKeys.form.softBudget', 'Soft Budget Warning (USD)')}
-                widthChars={10}
-              />
-              <HelperText>
-                <HelperTextItem>
-                  {t('users.apiKeys.form.softBudgetHelp', 'Alert threshold before hitting max budget. Leave at 0 for none.')}
-                </HelperTextItem>
-              </HelperText>
-            </FormGroup>
+            {newKeyMaxBudget !== undefined && newKeyMaxBudget > 0 && (
+              <FormGroup
+                label={t('users.apiKeys.form.softBudget', 'Soft Budget Warning (USD)')}
+                fieldId="create-key-soft-budget"
+              >
+                <NumberInput
+                  id="create-key-soft-budget"
+                  value={newKeySoftBudget ?? 0}
+                  min={0}
+                  onMinus={() => setNewKeySoftBudget((prev) => Math.max(0, (prev || 0) - 5))}
+                  onPlus={() => setNewKeySoftBudget((prev) => (prev || 0) + 5)}
+                  onChange={(event) => {
+                    const target = event.target as HTMLInputElement;
+                    const value = parseFloat(target.value);
+                    setNewKeySoftBudget(isNaN(value) ? undefined : value);
+                  }}
+                  isDisabled={createMutation.isLoading}
+                  aria-label={t('users.apiKeys.form.softBudget', 'Soft Budget Warning (USD)')}
+                  widthChars={10}
+                />
+                <HelperText>
+                  <HelperTextItem>
+                    {t('users.apiKeys.form.softBudgetHelp', 'Alert threshold before hitting max budget. Leave at 0 for none.')}
+                  </HelperTextItem>
+                </HelperText>
+              </FormGroup>
+            )}
 
             <FormGroup
               label={t('users.apiKeys.form.maxParallelRequests', 'Max Parallel Requests')}

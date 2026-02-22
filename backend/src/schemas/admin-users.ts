@@ -72,9 +72,17 @@ export const UserApiKeySchema = Type.Object({
   softBudget: Type.Optional(Type.Number()),
   budgetUtilization: Type.Optional(Type.Number()),
   maxParallelRequests: Type.Optional(Type.Integer()),
-  modelMaxBudget: Type.Optional(Type.Any()),
-  modelRpmLimit: Type.Optional(Type.Any()),
-  modelTpmLimit: Type.Optional(Type.Any()),
+  modelMaxBudget: Type.Optional(
+    Type.Record(
+      Type.String(),
+      Type.Object({
+        budgetLimit: Type.Number(),
+        timePeriod: Type.String(),
+      }),
+    ),
+  ),
+  modelRpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+  modelTpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
   lastUsedAt: Type.Optional(Type.String({ format: 'date-time' })),
   createdAt: Type.String({ format: 'date-time' }),
   expiresAt: Type.Optional(Type.String({ format: 'date-time' })),

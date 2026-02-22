@@ -163,6 +163,7 @@ export interface LiteLLMKeyInfo {
   tpm_limit?: number;
   rpm_limit?: number;
   max_parallel_requests?: number;
+  budget_duration?: string;
   model_max_budget?: Record<string, { budget_limit: number; time_period: string }>;
   model_rpm_limit?: Record<string, number>;
   model_tpm_limit?: Record<string, number>;
