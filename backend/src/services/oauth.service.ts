@@ -455,6 +455,7 @@ export class OAuthService extends BaseService {
         rpm_limit: Number(this.fastify.config.DEFAULT_USER_RPM_LIMIT), // Configurable via DEFAULT_USER_RPM_LIMIT env var
         auto_create_key: false, // Don't auto-create key during user creation
         teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
+        models: [], // Empty array = no user-level model restriction; access controlled at key level
       });
 
       this.fastify.log.info(

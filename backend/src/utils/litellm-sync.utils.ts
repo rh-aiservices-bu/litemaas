@@ -90,6 +90,7 @@ export class LiteLLMSyncUtils {
         rpm_limit: Number(user.rpm_limit) || Number(process.env.DEFAULT_USER_RPM_LIMIT) || 60,
         auto_create_key: false,
         teams: [userTeam], // CRITICAL: Always assign user to a team
+        models: [], // Empty array = no user-level model restriction; access controlled at key level
       };
 
       fastify.log.info(
