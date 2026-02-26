@@ -32,6 +32,7 @@ declare module 'fastify' {
       // LiteLLM
       LITELLM_API_URL: string;
       LITELLM_API_KEY?: string;
+      LITELLM_MASTER_KEY?: string;
       LITELLM_TIMEOUT: string;
       LITELLM_RETRIES: string;
       LITELLM_RETRY_DELAY: string;

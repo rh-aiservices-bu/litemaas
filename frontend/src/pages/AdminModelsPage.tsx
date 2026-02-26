@@ -45,7 +45,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { adminModelsService } from '../services/adminModels.service';
 import { Model, modelsService } from '../services/models.service';
-import type { AdminModelError, AdminModelFormData, AdminModelFormErrors } from '../types/admin';
+import type {
+  AdminModelError,
+  AdminModelFormData,
+  AdminModelFormErrors,
+  TestModelConfigRequest,
+} from '../types/admin';
 import { getModelFlairs } from '../utils/flairColors';
 
 const AdminModelsPage: React.FC = () => {
@@ -385,15 +390,22 @@ const AdminModelsPage: React.FC = () => {
 
   const handleTestConfiguration = async () => {
     // Validate required fields first
-    if (!formData.api_base || !formData.api_key || !formData.backend_model_name) {
+    if (!formData.api_base || !formData.backend_model_name) {
       setTestResult({
         type: 'danger',
         message:
           t('models.admin.apiBaseUrlIsRequired') +
           ', ' +
-          t('models.admin.apiKeyIsRequired') +
-          ', ' +
           t('models.admin.backendModelNameIsRequired'),
+      });
+      return;
+    }
+
+    // Require API key only when creating a new model
+    if (isCreateModalOpen && !formData.api_key) {
+      setTestResult({
+        type: 'danger',
+        message: t('models.admin.apiKeyIsRequired'),
       });
       return;
     }
@@ -402,47 +414,54 @@ const AdminModelsPage: React.FC = () => {
     setTestResult({ type: null, message: '' });
 
     try {
-      const response = await fetch(`${formData.api_base}/models`, {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${formData.api_key}`,
-          'Content-Type': 'application/json',
-        },
-      });
+      const payload: TestModelConfigRequest = {
+        api_base: formData.api_base,
+        backend_model_name: formData.backend_model_name,
+      };
 
-      if (!response.ok) {
-        // Handle auth errors
-        if (response.status === 401 || response.status === 403) {
+      if (formData.api_key) {
+        payload.api_key = formData.api_key;
+      } else if (isEditModalOpen && selectedModel) {
+        payload.model_id = selectedModel.id;
+      }
+
+      const response = await adminModelsService.testConfiguration(payload);
+
+      switch (response.result) {
+        case 'model_found':
+          setTestResult({
+            type: 'success',
+            message: t('models.admin.connectionSuccessful'),
+          });
+          break;
+        case 'model_not_found':
+          setTestResult({
+            type: 'warning',
+            message: t('models.admin.modelNotAvailable'),
+            availableModels: response.availableModels,
+          });
+          break;
+        case 'auth_error':
           setTestResult({
             type: 'danger',
             message: t('models.admin.authenticationFailed'),
           });
-        } else {
+          break;
+        case 'missing_stored_key':
+          setTestResult({
+            type: 'warning',
+            message: t('models.admin.noStoredApiKey'),
+          });
+          break;
+        case 'timeout':
+        case 'connection_error':
           setTestResult({
             type: 'danger',
             message: t('models.admin.cannotContactEndpoint'),
           });
-        }
-        return;
+          break;
       }
-
-      const data = await response.json();
-      const availableModels = data.data?.map((m: any) => m.id) || [];
-
-      if (availableModels.includes(formData.backend_model_name)) {
-        setTestResult({
-          type: 'success',
-          message: t('models.admin.connectionSuccessful'),
-        });
-      } else {
-        setTestResult({
-          type: 'warning',
-          message: t('models.admin.modelNotAvailable'),
-          availableModels: availableModels.slice(0, 5), // Show first 5
-        });
-      }
-    } catch (error) {
-      console.error('Test configuration error:', error);
+    } catch {
       setTestResult({
         type: 'danger',
         message: t('models.admin.cannotContactEndpoint'),
@@ -1040,7 +1059,9 @@ const AdminModelsPage: React.FC = () => {
                     onClick={handleTestConfiguration}
                     isLoading={isTestingConfig}
                     isDisabled={
-                      !formData.api_base || !formData.api_key || !formData.backend_model_name
+                      !formData.api_base ||
+                      !formData.backend_model_name ||
+                      (isCreateModalOpen && !formData.api_key)
                     }
                   >
                     {t('models.admin.testConfiguration')}

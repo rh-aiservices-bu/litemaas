@@ -369,6 +369,7 @@
       "backendModelName": "バックエンドモデル名",
       "backendModelNameIsRequired": "バックエンドモデル名は必須です",
       "cannotContactEndpoint": "エンドポイントに接続できません",
+      "noStoredApiKey": "このモデルはAPIキーの保存機能が有効になる前に作成されました。設定をテストするにはAPIキーを入力してください。",
       "connectionSuccessful": "接続成功！モデルを作成できます。",
       "createModel": "モデル作成",
       "createModelFailed": "モデル作成に失敗しました",

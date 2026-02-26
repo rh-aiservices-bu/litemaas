@@ -5,6 +5,7 @@
 > - **Backend Context**: [`backend/CLAUDE.md`](backend/CLAUDE.md) - Fastify API implementation details
 > - **Frontend Context**: [`frontend/CLAUDE.md`](frontend/CLAUDE.md) - React/PatternFly 6 implementation details
 > - **Project Structure**: [`docs/architecture/project-structure.md`](docs/architecture/project-structure.md) - Complete directory structure
+> - **Changelog**: [`CHANGELOG.md`](CHANGELOG.md) - All notable changes per release (Keep a Changelog format)
 > - **Documentation**: See `docs/` for comprehensive guides
 
 ## 🚀 Project Overview

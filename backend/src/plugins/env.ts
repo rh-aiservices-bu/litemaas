@@ -33,6 +33,7 @@ const envSchema = Type.Object({
   // LiteLLM
   LITELLM_API_URL: Type.String({ default: 'http://localhost:4000' }),
   LITELLM_API_KEY: Type.Optional(Type.String()),
+  LITELLM_MASTER_KEY: Type.Optional(Type.String()),
   LITELLM_TIMEOUT: Type.String({ default: '30000' }),
   LITELLM_RETRIES: Type.String({ default: '3' }),
   LITELLM_RETRY_DELAY: Type.String({ default: '1000' }),

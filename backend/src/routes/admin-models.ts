@@ -12,7 +12,10 @@ import {
   AdminModelDeleteResponseSchema,
   AdminModelParamsSchema,
   AdminModelErrorResponseSchema,
+  AdminTestModelConfigSchema,
+  AdminTestModelConfigResponseSchema,
 } from '../schemas/admin-models.js';
+import { encryptApiKey, decryptApiKey } from '../utils/encryption.js';
 
 interface ModelRow {
   litellm_model_id: string;
@@ -23,6 +26,125 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
   const liteLLMService = new LiteLLMService(fastify);
   const modelSyncService = new ModelSyncService(fastify);
   const subscriptionService = new SubscriptionService(fastify);
+
+  // Test model configuration (connectivity + model availability)
+  fastify.post<{
+    Body: Static<typeof AdminTestModelConfigSchema>;
+    Reply: Static<typeof AdminTestModelConfigResponseSchema>;
+  }>('/test', {
+    schema: {
+      tags: ['Admin Models'],
+      description: 'Test model endpoint connectivity and model availability',
+      security: [{ bearerAuth: [] }],
+      body: AdminTestModelConfigSchema,
+      response: {
+        200: AdminTestModelConfigResponseSchema,
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:models')],
+    handler: async (request) => {
+      const { api_base, api_key: providedApiKey, backend_model_name, model_id } = request.body;
+
+      let apiKey = providedApiKey;
+
+      if (!apiKey && model_id) {
+        // Retrieve encrypted API key from database
+        const result = await fastify.dbUtils.queryOne<{ encrypted_api_key: string | null }>(
+          'SELECT encrypted_api_key FROM models WHERE id = $1',
+          [model_id],
+        );
+        if (result?.encrypted_api_key) {
+          const encKey = fastify.config.LITELLM_MASTER_KEY || fastify.config.LITELLM_API_KEY;
+          if (encKey) {
+            apiKey = decryptApiKey(result.encrypted_api_key, encKey);
+          }
+        }
+        if (!apiKey) {
+          return {
+            success: false,
+            result: 'missing_stored_key' as const,
+            message: 'No stored API key found for this model. Please provide an API key.',
+          };
+        }
+      }
+
+      if (!apiKey) {
+        return {
+          success: false,
+          result: 'missing_stored_key' as const,
+          message: 'API key is required. Provide an API key or use an existing model.',
+        };
+      }
+
+      // Build URL: strip trailing slashes, append /models
+      const baseUrl = api_base.replace(/\/+$/, '');
+      const modelsUrl = `${baseUrl}/models`;
+
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+
+      try {
+        const response = await fetch(modelsUrl, {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          signal: controller.signal,
+        });
+
+        if (response.status === 401 || response.status === 403) {
+          return {
+            success: false,
+            result: 'auth_error' as const,
+            message: 'Authentication failed. Check your API key.',
+          };
+        }
+
+        if (!response.ok) {
+          return {
+            success: false,
+            result: 'connection_error' as const,
+            message: `Endpoint returned HTTP ${response.status}`,
+          };
+        }
+
+        const data = await response.json();
+        const availableModels: string[] = data.data?.map((m: any) => m.id) || [];
+
+        if (availableModels.includes(backend_model_name)) {
+          return {
+            success: true,
+            result: 'model_found' as const,
+            message: `Model '${backend_model_name}' is available at this endpoint.`,
+          };
+        }
+
+        return {
+          success: false,
+          result: 'model_not_found' as const,
+          message: `Model '${backend_model_name}' was not found at this endpoint.`,
+          availableModels: availableModels.slice(0, 10),
+        };
+      } catch (error: any) {
+        if (error.name === 'AbortError') {
+          return {
+            success: false,
+            result: 'timeout' as const,
+            message: 'Connection timed out after 10 seconds.',
+          };
+        }
+
+        return {
+          success: false,
+          result: 'connection_error' as const,
+          message: `Cannot connect to endpoint: ${error.message}`,
+        };
+      } finally {
+        clearTimeout(timeout);
+      }
+    },
+  });
 
   // Create a new model
   fastify.post<{
@@ -136,6 +258,19 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
               restrictedAccess,
               model_name,
             ]);
+          }
+
+          // Store encrypted API key if provided
+          if (api_key) {
+            const encryptionKey =
+              fastify.config.LITELLM_MASTER_KEY || fastify.config.LITELLM_API_KEY;
+            if (encryptionKey) {
+              const encrypted = encryptApiKey(api_key, encryptionKey);
+              await fastify.dbUtils.query(
+                'UPDATE models SET encrypted_api_key = $1 WHERE id = $2',
+                [encrypted, model_name],
+              );
+            }
           }
 
           fastify.log.info('Model synchronization completed after model creation');
@@ -312,6 +447,19 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
               updateData.backend_model_name,
               modelId,
             ]);
+          }
+
+          // Store encrypted API key if provided
+          if (updateData.api_key) {
+            const encryptionKey =
+              fastify.config.LITELLM_MASTER_KEY || fastify.config.LITELLM_API_KEY;
+            if (encryptionKey) {
+              const encrypted = encryptApiKey(updateData.api_key, encryptionKey);
+              await fastify.dbUtils.query(
+                'UPDATE models SET encrypted_api_key = $1 WHERE id = $2',
+                [encrypted, modelId],
+              );
+            }
           }
 
           // Handle restrictedAccess changes - triggers cascade logic

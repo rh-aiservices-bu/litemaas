@@ -3,6 +3,11 @@ set -a  # automatically export all variables
 source user-values.env
 set +a
 
+# Default LITELLM_MASTER_KEY to LITELLM_API_KEY if not set
+if [ -z "${LITELLM_MASTER_KEY}" ]; then
+    export LITELLM_MASTER_KEY="${LITELLM_API_KEY}"
+fi
+
 # Conditionally set NODE_TLS_ENV_BLOCK if NODE_TLS_REJECT_UNAUTHORIZED is "0"
 if [ "${NODE_TLS_REJECT_UNAUTHORIZED}" = "0" ]; then
     export NODE_TLS_ENV_BLOCK="- name: NODE_TLS_REJECT_UNAUTHORIZED

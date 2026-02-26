@@ -76,6 +76,8 @@ Fastify plugins are registered in specific order:
 
 **Subscription Approval Workflow**: `subscription_status_history` table tracks all status changes with full audit trail. Models table includes `restricted_access` boolean. Subscriptions enhanced with `status_reason`, `status_changed_at`, `status_changed_by` fields and unique constraint `(user_id, model_id)`.
 
+**Encrypted API Key Storage**: Models table includes `encrypted_api_key` (TEXT) column storing provider API keys encrypted with AES-256-GCM. Used to enable configuration testing during model editing without re-entering the key. Encryption key derived from `LITELLM_MASTER_KEY` (falls back to `LITELLM_API_KEY`). See `src/utils/encryption.ts`.
+
 **System User**: Fixed UUID `00000000-0000-0000-0000-000000000001` for audit trail of automated actions (e.g., model restriction cascades).
 
 **Admin User Management Audit**: All admin-initiated user management actions (API key creation/revocation, budget updates) are logged to `audit_logs` with action type, admin user ID, target user ID, and operation metadata.

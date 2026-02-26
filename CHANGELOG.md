@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Encrypted API Key Storage & Edit-Mode Testing**: Provider API keys are now stored encrypted (AES-256-GCM) in the LiteMaaS database, enabling admins to test model configuration during editing without re-entering the API key
+  - New `encrypted_api_key` column on `models` table stores keys encrypted with `LITELLM_MASTER_KEY` (falls back to `LITELLM_API_KEY`)
+  - New `LITELLM_MASTER_KEY` environment variable for encryption key derivation (optional, recommended for production)
+  - Test Configuration button is now enabled in edit mode without an API key; create mode still requires one
+  - Graceful fallback for models created before this feature: warns the admin to enter an API key manually
+  - New `encryption.ts` utility with `encryptApiKey` / `decryptApiKey` using AES-256-GCM (random IV, auth tag, base64-encoded)
+  - New `missing_stored_key` result type for the test configuration endpoint
+
+### Fixed
+
+- **Model Configuration Testing Security**: Moved model endpoint connectivity testing from browser-side to backend
+  - New `POST /api/v1/admin/models/test` endpoint with authentication and RBAC (`admin:models` permission)
+  - API keys are no longer exposed in browser network requests during configuration tests
+  - Backend-side 10-second timeout with AbortController for reliable connection handling
+  - Structured result types: `model_found`, `model_not_found`, `auth_error`, `connection_error`, `timeout`
+
 ---
 
 ## [0.2.0] - 2026-02-13

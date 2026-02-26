@@ -111,6 +111,11 @@ spec:
                 secretKeyRef:
                   name: backend-secret
                   key: litellm-api-key
+            - name: LITELLM_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: litellm-master-key
 
             # Backend API Rate Limiting (NOT for LLM requests)
             - name: RATE_LIMIT_MAX

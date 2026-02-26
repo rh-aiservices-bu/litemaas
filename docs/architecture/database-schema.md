@@ -66,6 +66,9 @@ CREATE TABLE models (
     -- Subscription Approval Workflow
     restricted_access BOOLEAN DEFAULT false,
 
+    -- Encrypted Provider API Key (AES-256-GCM)
+    encrypted_api_key TEXT,
+
     metadata JSONB DEFAULT '{}',
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

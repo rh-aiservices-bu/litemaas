@@ -189,6 +189,7 @@ JWT_EXPIRES_IN=7d
 | ----------------------------- | ---------------------------------------------- | ----------------------- | -------- |
 | `LITELLM_API_URL`             | LiteLLM API URL                                | `http://localhost:4000` | No       |
 | `LITELLM_API_KEY`             | LiteLLM API key (if required)                  | -                       | No       |
+| `LITELLM_MASTER_KEY`          | Encryption key for stored model API keys (falls back to `LITELLM_API_KEY`) | -       | No       |
 | `LITELLM_AUTO_SYNC`           | Enable automatic model sync on startup         | `true`                  | No       |
 | `LITELLM_SYNC_INTERVAL`       | Auto-sync interval (seconds)                   | `60`                    | No       |
 | `LITELLM_CONFLICT_RESOLUTION` | Sync conflict resolution strategy              | `litellm_wins`          | No       |
@@ -202,6 +203,7 @@ JWT_EXPIRES_IN=7d
 ```bash
 LITELLM_API_URL=http://litellm-service:4000
 LITELLM_API_KEY=your-litellm-api-key
+LITELLM_MASTER_KEY=your-encryption-key  # For encrypting stored model API keys (falls back to LITELLM_API_KEY)
 LITELLM_AUTO_SYNC=true
 LITELLM_SYNC_INTERVAL=300
 LITELLM_CONFLICT_RESOLUTION=database_wins
@@ -541,6 +543,7 @@ JWT_EXPIRES_IN=7d
 # LiteLLM
 LITELLM_API_URL=http://litellm-service.internal:4000
 LITELLM_API_KEY=${LITELLM_PROD_KEY}
+LITELLM_MASTER_KEY=${LITELLM_MASTER_KEY}  # Encryption key for stored model API keys
 LITELLM_AUTO_SYNC=true
 LITELLM_SYNC_INTERVAL=300
 LITELLM_TIMEOUT=60000

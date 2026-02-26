@@ -88,6 +88,11 @@ spec:
                 secretKeyRef:
                   name: {{ include "litemaas.backend.secretName" . }}
                   key: litellm-api-key
+            - name: LITELLM_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.backend.secretName" . }}
+                  key: litellm-master-key
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}
           livenessProbe:

@@ -369,6 +369,7 @@
       "backendModelName": "Nombre del Modelo Backend",
       "backendModelNameIsRequired": "El nombre del modelo backend es requerido",
       "cannotContactEndpoint": "No se puede contactar el endpoint",
+      "noStoredApiKey": "Este modelo fue creado antes de que se habilitara el almacenamiento de claves API. Ingrese una clave API para probar la configuración.",
       "connectionSuccessful": "¡Conexión exitosa! Puedes crear el modelo.",
       "createModel": "Crear Modelo",
       "createModelFailed": "Error al Crear Modelo",
