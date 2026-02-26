@@ -90,3 +90,25 @@ export const AdminModelErrorResponseSchema = Type.Object({
   message: Type.String(),
   statusCode: Type.Integer(),
 });
+
+// Test model configuration schemas
+export const AdminTestModelConfigSchema = Type.Object({
+  api_base: Type.String(),
+  api_key: Type.Optional(Type.String()),
+  backend_model_name: Type.String(),
+  model_id: Type.Optional(Type.String()),
+});
+
+export const AdminTestModelConfigResponseSchema = Type.Object({
+  success: Type.Boolean(),
+  result: Type.Union([
+    Type.Literal('model_found'),
+    Type.Literal('model_not_found'),
+    Type.Literal('auth_error'),
+    Type.Literal('connection_error'),
+    Type.Literal('timeout'),
+    Type.Literal('missing_stored_key'),
+  ]),
+  message: Type.String(),
+  availableModels: Type.Optional(Type.Array(Type.String())),
+});

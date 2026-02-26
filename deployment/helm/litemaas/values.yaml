@@ -177,9 +177,12 @@ backend:
     initialAdminUsers: ""
     # -- LiteLLM API key (must match litellm.auth.masterKey)
     litellmApiKey: changeme
+    # -- Encryption key for stored model API keys (AES-256-GCM).
+    # Falls back to litellmApiKey if empty. Recommended to set explicitly in production.
+    litellmMasterKey: ""
     # -- Use an existing Secret instead of creating one.
     # Must contain keys: database-url, cors-origin, jwt-secret, oauth-client-id,
-    # oauth-client-secret, oauth-issuer, oauth-callback-url, admin-api-keys, litellm-api-key
+    # oauth-client-secret, oauth-issuer, oauth-callback-url, admin-api-keys, litellm-api-key, litellm-master-key
     existingSecret: ""
 
   # -- Rate limiting for backend API (NOT for LLM requests)

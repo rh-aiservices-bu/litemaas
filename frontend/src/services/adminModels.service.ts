@@ -4,6 +4,8 @@ import type {
   LiteLLMModelUpdate,
   AdminModelResponse,
   AdminModelError,
+  TestModelConfigRequest,
+  TestModelConfigResponse,
 } from '../types/admin';
 
 export class AdminModelsService {
@@ -39,6 +41,22 @@ export class AdminModelsService {
       throw {
         error: 'NETWORK_ERROR',
         message: 'Failed to update model. Please check your connection and try again.',
+        statusCode: error.response?.status || 500,
+      } as AdminModelError;
+    }
+  }
+
+  async testConfiguration(data: TestModelConfigRequest): Promise<TestModelConfigResponse> {
+    try {
+      const response = await apiClient.post<TestModelConfigResponse>(`${this.basePath}/test`, data);
+      return response;
+    } catch (error: any) {
+      if (error.response?.data) {
+        throw error.response.data as AdminModelError;
+      }
+      throw {
+        error: 'NETWORK_ERROR',
+        message: 'Failed to test configuration. Please check your connection and try again.',
         statusCode: error.response?.status || 500,
       } as AdminModelError;
     }

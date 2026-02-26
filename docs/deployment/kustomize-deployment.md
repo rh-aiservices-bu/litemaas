@@ -305,6 +305,7 @@ OAUTH_CLIENT_ID=litemaas-oauth-client
 OAUTH_CLIENT_SECRET=your-oauth-client-secret-from-step-4
 ADMIN_API_KEY=ltm_admin_your-admin-key
 LITELLM_API_KEY=sk-your-litellm-master-key
+LITELLM_MASTER_KEY=  # Optional: encryption key for stored model API keys (defaults to LITELLM_API_KEY)
 LITELLM_UI_USERNAME=admin
 LITELLM_UI_PASSWORD=your-litellm-ui-password
 ```

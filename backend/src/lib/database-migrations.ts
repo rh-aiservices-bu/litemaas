@@ -160,6 +160,9 @@ ALTER TABLE models ADD COLUMN IF NOT EXISTS backend_model_name VARCHAR(255);
 -- Add restricted_access column for subscription approval workflow
 ALTER TABLE models ADD COLUMN IF NOT EXISTS restricted_access BOOLEAN DEFAULT false;
 
+-- Add encrypted_api_key column for storing encrypted provider API keys
+ALTER TABLE models ADD COLUMN IF NOT EXISTS encrypted_api_key TEXT;
+
 CREATE INDEX IF NOT EXISTS idx_models_provider ON models(provider);
 CREATE INDEX IF NOT EXISTS idx_models_category ON models(category);
 CREATE INDEX IF NOT EXISTS idx_models_availability ON models(availability);

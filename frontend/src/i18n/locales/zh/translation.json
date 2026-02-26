@@ -362,6 +362,7 @@
       "backendModelName": "后端模型名称",
       "backendModelNameIsRequired": "后端模型名称是必需的",
       "cannotContactEndpoint": "无法联系端点",
+      "noStoredApiKey": "此模型在启用API密钥存储之前创建。请输入API密钥以测试配置。",
       "connectionSuccessful": "连接成功！您可以创建模型。",
       "createModel": "创建模型",
       "createModelFailed": "创建模型失败",

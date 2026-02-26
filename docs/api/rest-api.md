@@ -2339,7 +2339,7 @@ The LiteMaaS system integrates with external AI model APIs for configuration val
 
 ### Model Configuration Testing
 
-The frontend Model Configuration Testing feature validates external AI model endpoints by making direct API calls. This testing capability enables administrators to verify model configurations before creating or updating models in LiteMaaS.
+The Model Configuration Testing feature validates external AI model endpoints via a dedicated backend endpoint (`POST /api/v1/admin/models/test`). The backend makes the external API call server-side, ensuring API keys are never exposed in browser network requests. This enables administrators to verify model configurations before creating or updating models in LiteMaaS.
 
 #### External API Endpoint Structure
 
@@ -2436,25 +2436,28 @@ Configuration testing handles various error scenarios from external APIs:
 
 #### Model Validation Process
 
-1. **Field Validation**: Ensure required fields are present (API Base URL, API Key, Backend Model Name)
-2. **HTTP Request**: Make GET request to `{API_BASE_URL}/models`
-3. **Authentication**: Use Bearer token authentication with provided API key
-4. **Response Parsing**: Extract model list from `data` array
-5. **Model Verification**: Check if specified model name exists in returned model IDs
-6. **Result Reporting**: Display success or specific error messages
+1. **Field Validation**: Ensure required fields are present (API Base URL, Backend Model Name; API Key required only in create mode)
+2. **API Key Resolution**: Use the provided API key, or if absent and `model_id` is provided, decrypt the stored encrypted key from the database
+3. **HTTP Request**: Make GET request to `{API_BASE_URL}/models`
+4. **Authentication**: Use Bearer token authentication with the resolved API key
+5. **Response Parsing**: Extract model list from `data` array
+6. **Model Verification**: Check if specified model name exists in returned model IDs
+7. **Result Reporting**: Display success or specific error messages
 
 #### Integration Security Considerations
 
+- **Server-Side Execution**: External API calls are made from the backend, not the browser
+- **RBAC Protection**: Endpoint requires `admin:models` permission
 - **HTTPS Enforcement**: All external API calls should use HTTPS
-- **API Key Protection**: Keys are used for validation only, not stored permanently
+- **Encrypted API Key Storage**: Provider API keys are stored encrypted (AES-256-GCM) in the `models` table, enabling configuration testing during model editing without re-entering the key
 - **Error Sanitization**: Error messages don't expose sensitive configuration details
-- **Request Timeout**: Implement reasonable timeout limits for external API calls
-- **Rate Limiting**: Consider implementing rate limiting for test requests
+- **Request Timeout**: Backend enforces a 10-second timeout on external API calls
 
-#### Frontend Implementation Notes
+#### Implementation Notes
 
-The model configuration testing is implemented in `AdminModelsPage.tsx` with:
+The model configuration testing backend is implemented in `backend/src/routes/admin-models.ts` (`POST /test`), with the frontend calling it via `AdminModelsService.testConfiguration()` in `AdminModelsPage.tsx`:
 
+- Structured result types: `model_found`, `model_not_found`, `auth_error`, `connection_error`, `timeout`, `missing_stored_key`
 - State management for testing progress and results
 - Automatic clearing of results when form data changes
 - Proper error categorization and user feedback

@@ -362,6 +362,7 @@
       "backendModelName": "Dâd-vegil Estel",
       "backendModelNameIsRequired": "Dâd-vegil estel prestanneth",
       "cannotContactEndpoint": "Ú-eston fael i fuin",
+      "noStoredApiKey": "I vegil cared nuin lû erin i acharn-lhaw prestanneth. Anno i acharn-lhaw celeg i prestiad.",
       "connectionSuccessful": "Yrch prestinn! Eryd carned i vegil.",
       "createModel": "Caro Vegil",
       "createModelFailed": "Caro Vegil Vuin",

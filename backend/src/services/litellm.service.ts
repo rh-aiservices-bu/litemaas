@@ -812,10 +812,7 @@ export class LiteLLMService extends BaseService {
     } catch (error) {
       // LiteLLM v1.81.0+ returns 404 for non-existent users
       if (this.isLiteLLM404Error(error)) {
-        this.fastify.log.info(
-          { userId },
-          'User does not exist in LiteLLM (404 response)',
-        );
+        this.fastify.log.info({ userId }, 'User does not exist in LiteLLM (404 response)');
         return null;
       }
 
@@ -960,10 +957,7 @@ export class LiteLLMService extends BaseService {
     } catch (error) {
       // LiteLLM v1.81.0+ returns 404 for non-existent users
       if (this.isLiteLLM404Error(error)) {
-        this.fastify.log.info(
-          { userId },
-          'User does not exist in LiteLLM (404 response)',
-        );
+        this.fastify.log.info({ userId }, 'User does not exist in LiteLLM (404 response)');
         return null;
       }
 
