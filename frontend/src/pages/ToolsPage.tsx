@@ -39,6 +39,7 @@ import {
 } from '../services/admin.service';
 import type { SimpleBannerUpdateRequest, CreateBannerRequest, Banner } from '../types/banners';
 import { BannerEditModal, BannerTable } from '../components/banners';
+import BrandingTab from '../components/branding/BrandingTab';
 import { useQuery, useQueryClient } from 'react-query';
 
 interface SyncResult {
@@ -91,6 +92,9 @@ const ToolsPage: React.FC = () => {
   const canViewBanners =
     (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
   const canManageBanners = user?.roles?.includes('admin') ?? false; // Only full admins can modify
+  const canViewBranding =
+    (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
+  const canManageBranding = user?.roles?.includes('admin') ?? false;
 
   // Fetch all banners for admin management
   const { data: allBanners = [] } = useQuery(['allBanners'], () => bannerService.getAllBanners(), {
@@ -666,6 +670,19 @@ const ToolsPage: React.FC = () => {
                       {t('pages.tools.bannerVisibilityNoteDescription')}
                     </Alert>
                   </Flex>
+                </TabContentBody>
+              </TabContent>
+            </Tab>
+          )}
+          {/* Branding Tab */}
+          {canViewBranding && (
+            <Tab
+              eventKey="branding"
+              title={<TabTitleText>{t('pages.tools.branding.tabTitle')}</TabTitleText>}
+            >
+              <TabContent id="branding-tab-content" style={{ paddingTop: '10px' }}>
+                <TabContentBody>
+                  <BrandingTab canManage={canManageBranding} />
                 </TabContentBody>
               </TabContent>
             </Tab>

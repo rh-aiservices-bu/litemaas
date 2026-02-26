@@ -26,6 +26,7 @@ curl -X POST -H "Authorization: Bearer $TOKEN" \
   - User profile management
   - Model browsing and subscription
   - Multi-model API key management
+  - Branding customization
   - Usage analytics and reporting
 
 ### Specialized APIs

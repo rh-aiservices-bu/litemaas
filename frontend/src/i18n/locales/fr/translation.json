@@ -892,9 +892,9 @@
       "bypassAuthentication": "Contourner l'authentification à des fins de développement et de test",
       "developmentMode": "Mode Développement",
       "loginAsAdmin": "Se connecter en tant qu'Administrateur (Test)",
-      "loginWithOpenShift": "Se connecter avec OpenShift",
+      "loginWithOpenShift": "Se connecter avec SSO",
       "signInText": "Connectez-vous à votre compte",
-      "subtitle": "Utilisez vos identifiants OpenShift",
+      "subtitle": "LiteMaaS gère l'accès, les clés et la consommation de vos modèles d'IA.",
       "title": "Se connecter à LiteMaaS"
     },
     "models": {
@@ -1153,7 +1153,36 @@
       "variantSuccess": "Succès (Vert)",
       "variantWarning": "Avertissement (Orange)",
       "visibility": "Visibilité",
-      "visible": "Visible"
+      "visible": "Visible",
+      "branding": {
+        "deleteError": "Échec de la suppression de l'image",
+        "deleteSuccess": "Image supprimée avec succès",
+        "description": "Personnalisez l'apparence de la page de connexion et la marque de l'en-tête. Téléchargez des logos personnalisés, modifiez le titre et le sous-titre de la page de connexion, et basculez entre les marques personnalisées et par défaut.",
+        "fileTooLarge": "La taille du fichier dépasse la limite de 2 Mo",
+        "headerBrand": "Marque de l'en-tête",
+        "headerBrandDark": "Marque de l'en-tête (thème sombre)",
+        "headerBrandDescription": "Remplacez le logo d'en-tête d'application par défaut. Fournissez des images séparées pour les thèmes clair et sombre.",
+        "headerBrandLight": "Marque de l'en-tête (thème clair)",
+        "invalidFormat": "Format de fichier non valide",
+        "loginLogo": "Logo de connexion",
+        "loginLogoDescription": "Remplacez le logo par défaut de la page de connexion par une image personnalisée.",
+        "loginSubtitle": "Sous-titre de connexion",
+        "loginSubtitleDescription": "Remplacez le texte du sous-titre par défaut de la page de connexion.",
+        "loginTitle": "Titre de connexion",
+        "loginTitleDescription": "Remplacez le texte du titre par défaut de la page de connexion.",
+        "maxSize": "La taille de fichier maximale est de 2 Mo. Formats pris en charge : JPG, PNG, SVG, GIF, WebP.",
+        "removeImage": "Supprimer l'image",
+        "save": "Enregistrer les paramètres",
+        "saveError": "Échec de l'enregistrement des paramètres de marque",
+        "saveSuccess": "Les paramètres de marque ont été enregistrés avec succès",
+        "saving": "Enregistrement...",
+        "tabTitle": "Image de marque",
+        "uploadError": "Échec du téléchargement de l'image",
+        "uploadImage": "Télécharger une image",
+        "uploadSuccess": "Image téléchargée avec succès",
+        "useCustom": "Personnalisé",
+        "useDefault": "Par défaut"
+      }
     },
     "usage": {
       "ariaLabels": {

@@ -285,6 +285,38 @@ For more technical details about the sync process, see:
 - [Model Sync Development Guide](../development/model-sync.md)
 - [Model Sync API Documentation](../api/model-sync-api.md)
 
+## Branding Customization
+
+The Branding Customization feature allows administrators to personalize the login page and application header with custom logos, titles, and subtitles. It is accessible from the **Branding** tab on the Admin Tools page (`/admin/tools`).
+
+### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access — toggle settings, edit text, upload/delete images |
+| Admin-readonly | View-only access — see current branding configuration |
+| Regular user | No access |
+
+### Customizable Elements
+
+| Element | Type | Constraints |
+|---------|------|-------------|
+| Login Logo | Image upload | 2 MB max; JPEG, PNG, SVG, GIF, WebP |
+| Login Title | Text input | 200 characters max |
+| Login Subtitle | Textarea | 500 characters max |
+| Header Brand (Light) | Image upload | 2 MB max; JPEG, PNG, SVG, GIF, WebP |
+| Header Brand (Dark) | Image upload | 2 MB max; JPEG, PNG, SVG, GIF, WebP |
+
+### How to Customize Branding
+
+1. Navigate to **Admin → Tools** and select the **Branding** tab
+2. Toggle the elements you want to customize (Login Logo, Login Title, Login Subtitle, Header Brand)
+3. For images: click **Upload Image** and select a file (takes effect immediately)
+4. For text: enter the desired title or subtitle
+5. Click **Save** to persist toggle and text changes
+
+For complete details, see the [Branding Customization](branding-customization.md) feature documentation.
+
 ## Usage Analytics
 
 The Admin Usage Analytics feature (`/admin/usage`) provides comprehensive system-wide visibility into AI model usage across all users, models, and providers.

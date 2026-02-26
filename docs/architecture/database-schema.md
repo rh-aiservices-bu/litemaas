@@ -322,6 +322,39 @@ CREATE INDEX idx_daily_cache_updated_at ON daily_usage_cache(updated_at) WHERE i
 
 **Note:** Usage data is fetched from LiteLLM's API via the `/user/daily/activity` endpoint and cached in `daily_usage_cache` for performance. Historical data (> 1 day old) is cached permanently, while current day data has a 5-minute TTL.
 
+### branding_settings
+
+Singleton table storing application branding customization (login page and header)
+
+```sql
+CREATE TABLE branding_settings (
+    id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    login_logo_enabled BOOLEAN DEFAULT false,
+    login_logo_data TEXT,
+    login_logo_mime_type VARCHAR(50),
+    login_title_enabled BOOLEAN DEFAULT false,
+    login_title TEXT,
+    login_subtitle_enabled BOOLEAN DEFAULT false,
+    login_subtitle TEXT,
+    header_brand_enabled BOOLEAN DEFAULT false,
+    header_brand_light_data TEXT,
+    header_brand_light_mime_type VARCHAR(50),
+    header_brand_dark_data TEXT,
+    header_brand_dark_mime_type VARCHAR(50),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_by UUID REFERENCES users(id)
+);
+
+INSERT INTO branding_settings (id) VALUES (1) ON CONFLICT DO NOTHING;
+```
+
+**Design Notes**:
+
+- **Singleton pattern**: The `CHECK (id = 1)` constraint ensures only one row exists. The seed INSERT guarantees the row is always present.
+- **Base64 image storage**: Image data is stored as base64-encoded text. The `_mime_type` columns track the original format for serving with the correct `Content-Type` header.
+- **Enable/disable toggles**: Each branding element (`login_logo`, `login_title`, `login_subtitle`, `header_brand`) has an independent `_enabled` boolean, allowing selective customization.
+- **Audit columns**: `updated_at` and `updated_by` track when and by which admin the settings were last modified.
+
 ### audit_logs
 
 Security and compliance audit trail

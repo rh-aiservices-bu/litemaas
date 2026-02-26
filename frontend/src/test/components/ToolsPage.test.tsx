@@ -49,6 +49,38 @@ vi.mock('../../contexts/BannerContext', () => ({
   }),
 }));
 
+// Mock BrandingContext
+vi.mock('../../contexts/BrandingContext', () => ({
+  useBranding: () => ({
+    brandingSettings: {
+      loginLogoEnabled: false,
+      hasLoginLogo: false,
+      loginTitleEnabled: false,
+      loginTitle: null,
+      loginSubtitleEnabled: false,
+      loginSubtitle: null,
+      headerBrandEnabled: false,
+      hasHeaderBrandLight: false,
+      hasHeaderBrandDark: false,
+      updatedAt: null,
+    },
+    isLoading: false,
+    refetch: vi.fn(),
+  }),
+  BrandingProvider: ({ children }: any) => children,
+}));
+
+// Mock branding service
+vi.mock('../../services/branding.service', () => ({
+  brandingService: {
+    getSettings: vi.fn(),
+    updateSettings: vi.fn(),
+    uploadImage: vi.fn(),
+    deleteImage: vi.fn(),
+    getImageUrl: vi.fn((type: string) => `/api/v1/branding/images/${type}`),
+  },
+}));
+
 // Mock React Query
 vi.mock('react-query', async () => {
   const actual = await vi.importActual('react-query');

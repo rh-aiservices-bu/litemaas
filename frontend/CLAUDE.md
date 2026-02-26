@@ -101,6 +101,7 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 
 - **AuthContext** - Authentication state (user, roles, isAuthenticated)
 - **NotificationContext** - App-wide notification system
+- **BrandingContext** - Branding settings from `/api/v1/branding` endpoint (5-min stale time, fallback to defaults)
 - **ConfigContext** - Application configuration from `/api/v1/config` endpoint
   - **Base Config**: `usageCacheTtlMinutes`, `version`, `environment`
   - **Admin Analytics Config**: All UI-relevant admin analytics settings (pagination, limits, thresholds)
@@ -147,6 +148,7 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 - `usage.service.ts` - **User usage analytics** (individual user data)
 - `adminUsage.service.ts` - **Admin usage analytics** (system-wide data, all endpoints)
 - `users.service.ts` - **Admin user management** (user details, budget/limits, API keys, subscriptions)
+- `branding.service.ts` - **Branding customization** (settings, image upload/delete)
 - `chat.service.ts` - Chatbot integration
 - `config.service.ts` - Application configuration
 
@@ -163,7 +165,7 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
   - API key creation with auto-subscription and revocation
   - RBAC: admin (full access) vs adminReadonly (view only)
 - `/admin/models` - Model configuration testing (AdminModelsPage.tsx)
-- `/admin/tools` - Administrative tools (ToolsPage.tsx)
+- `/admin/tools` - Administrative tools with Branding tab (ToolsPage.tsx)
 - `/admin/subscriptions` - **Subscription approval management (AdminSubscriptionsPage.tsx)** - Approve/deny restricted model access:
   - Multi-dimensional filtering (status, model, user, date range)
   - Bulk approve/deny operations with result modals

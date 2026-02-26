@@ -13,16 +13,35 @@ import {
   MenuToggle,
 } from '@patternfly/react-core';
 import { ExternalLinkAltIcon, UserIcon, GlobeIcon } from '@patternfly/react-icons';
-import { LogoTitle } from '../assets';
+import { Octobean } from '../assets';
 import { useAuth } from '../contexts/AuthContext';
+import { useBranding } from '../contexts/BrandingContext';
+import { brandingService } from '../services/branding.service';
 import { configService } from '../services/config.service';
 
 const LoginPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { login, loginAsAdmin } = useAuth();
+  const { brandingSettings } = useBranding();
   const [authMode, setAuthMode] = useState<'oauth' | 'mock' | null>(null);
   const [configLoading, setConfigLoading] = useState(true);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+
+  // Compute branding overrides
+  const brandImgSrc =
+    brandingSettings?.loginLogoEnabled && brandingSettings?.hasLoginLogo
+      ? brandingService.getImageUrl('login-logo')
+      : Octobean;
+
+  const loginPageTitle =
+    brandingSettings?.loginTitleEnabled && brandingSettings?.loginTitle
+      ? brandingSettings.loginTitle
+      : t('pages.login.title');
+
+  const loginPageSubtitle =
+    brandingSettings?.loginSubtitleEnabled && brandingSettings?.loginSubtitle
+      ? brandingSettings.loginSubtitle
+      : t('pages.login.subtitle');
 
   const handleLogin = () => {
     login();
@@ -84,11 +103,11 @@ const LoginPage: React.FC = () => {
 
   return (
     <PFLoginPage
-      brandImgSrc={LogoTitle}
+      brandImgSrc={brandImgSrc}
       brandImgAlt={t('pages.login.brandAlt')}
       backgroundImgSrc="/bg.jpg"
-      loginTitle={t('pages.login.title')}
-      loginSubtitle={t('pages.login.subtitle')}
+      loginTitle={loginPageTitle}
+      loginSubtitle={loginPageSubtitle}
     >
       <Stack hasGutter>
         <StackItem>

@@ -740,6 +740,28 @@ COMMENT ON COLUMN daily_usage_cache.is_complete IS 'False for current day (needs
 CREATE INDEX IF NOT EXISTS idx_api_keys_lite_llm_key ON api_keys(lite_llm_key_value);
 `;
 
+// Branding settings table (singleton row)
+export const brandingSettingsTable = `
+CREATE TABLE IF NOT EXISTS branding_settings (
+  id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  login_logo_enabled BOOLEAN DEFAULT false,
+  login_logo_data TEXT,
+  login_logo_mime_type VARCHAR(50),
+  login_title_enabled BOOLEAN DEFAULT false,
+  login_title TEXT,
+  login_subtitle_enabled BOOLEAN DEFAULT false,
+  login_subtitle TEXT,
+  header_brand_enabled BOOLEAN DEFAULT false,
+  header_brand_light_data TEXT,
+  header_brand_light_mime_type VARCHAR(50),
+  header_brand_dark_data TEXT,
+  header_brand_dark_mime_type VARCHAR(50),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_by UUID REFERENCES users(id)
+);
+INSERT INTO branding_settings (id) VALUES (1) ON CONFLICT DO NOTHING;
+`;
+
 // Main migration function
 export const applyMigrations = async (dbUtils: DatabaseUtils) => {
   console.log('🚀 Starting database migrations...');
@@ -811,6 +833,9 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
 
     console.log('🔄 Migrating existing subscriptions for approval workflow...');
     await dbUtils.query(migrateExistingSubscriptions);
+
+    console.log('🎨 Creating branding_settings table...');
+    await dbUtils.query(brandingSettingsTable);
 
     console.log('✅ Database migrations completed successfully!');
   } catch (error) {

@@ -94,6 +94,34 @@ vi.mock('../../contexts/ConfigContext', () => ({
   ConfigProvider: ({ children }: any) => children,
 }));
 
+// Mock BrandingContext
+vi.mock('../../contexts/BrandingContext', () => ({
+  useBranding: () => ({
+    brandingSettings: {
+      loginLogoEnabled: false,
+      hasLoginLogo: false,
+      loginTitleEnabled: false,
+      loginTitle: null,
+      loginSubtitleEnabled: false,
+      loginSubtitle: null,
+      headerBrandEnabled: false,
+      hasHeaderBrandLight: false,
+      hasHeaderBrandDark: false,
+      updatedAt: null,
+    },
+    isLoading: false,
+    refetch: vi.fn(),
+  }),
+  BrandingProvider: ({ children }: any) => children,
+}));
+
+// Mock branding service
+vi.mock('../../services/branding.service', () => ({
+  brandingService: {
+    getImageUrl: vi.fn((type: string) => `/api/v1/branding/images/${type}`),
+  },
+}));
+
 // Mock assets
 vi.mock('../../assets', () => ({
   AvatarPlaceholder: 'data:image/svg+xml;base64,avatar',
