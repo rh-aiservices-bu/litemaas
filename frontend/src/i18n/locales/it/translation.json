@@ -892,9 +892,9 @@
       "bypassAuthentication": "Bypassa autenticazione per scopi di sviluppo e test",
       "developmentMode": "Modalità Sviluppo",
       "loginAsAdmin": "Accedi come Amministratore (Test)",
-      "loginWithOpenShift": "Accedi con OpenShift",
+      "loginWithOpenShift": "Accedi con SSO",
       "signInText": "Accedi al tuo account",
-      "subtitle": "Usa le tue credenziali OpenShift",
+      "subtitle": "LiteMaaS gestisce l'accesso, le chiavi e il consumo dei tuoi modelli di IA.",
       "title": "Accedi a LiteMaaS"
     },
     "models": {
@@ -1153,7 +1153,36 @@
       "variantSuccess": "Successo (Verde)",
       "variantWarning": "Avvertimento (Arancione)",
       "visibility": "Visibilità",
-      "visible": "Visibile"
+      "visible": "Visibile",
+      "branding": {
+        "deleteError": "Impossibile rimuovere l'immagine",
+        "deleteSuccess": "Immagine rimossa con successo",
+        "description": "Personalizza l'aspetto della pagina di accesso e il branding dell'intestazione. Carica loghi personalizzati, modifica il titolo e il sottotitolo di accesso e attiva/disattiva il branding personalizzato e predefinito.",
+        "fileTooLarge": "La dimensione del file supera il limite di 2 MB",
+        "headerBrand": "Marchio dell'intestazione",
+        "headerBrandDark": "Marchio intestazione (Tema scuro)",
+        "headerBrandDescription": "Sostituisci il logo predefinito dell'intestazione dell'applicazione. Fornisci immagini separate per i temi chiaro e scuro.",
+        "headerBrandLight": "Marchio intestazione (Tema chiaro)",
+        "invalidFormat": "Formato file non valido",
+        "loginLogo": "Logo di accesso",
+        "loginLogoDescription": "Sostituisci il logo predefinito della pagina di accesso con un'immagine personalizzata.",
+        "loginSubtitle": "Sottotitolo di accesso",
+        "loginSubtitleDescription": "Sovrascrivi il testo predefinito del sottotitolo della pagina di accesso.",
+        "loginTitle": "Titolo di accesso",
+        "loginTitleDescription": "Sovrascrivi il testo predefinito del titolo della pagina di accesso.",
+        "maxSize": "La dimensione massima del file è 2 MB. Formati supportati: JPG, PNG, SVG, GIF, WebP.",
+        "removeImage": "Rimuovi immagine",
+        "save": "Salva impostazioni",
+        "saveError": "Impossibile salvare le impostazioni di branding",
+        "saveSuccess": "Impostazioni di branding salvate con successo",
+        "saving": "Salvataggio...",
+        "tabTitle": "Branding",
+        "uploadError": "Impossibile caricare l'immagine",
+        "uploadImage": "Carica immagine",
+        "uploadSuccess": "Immagine caricata con successo",
+        "useCustom": "Usa personalizzato",
+        "useDefault": "Usa predefinito"
+      }
     },
     "usage": {
       "ariaLabels": {

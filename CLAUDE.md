@@ -55,7 +55,17 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 - **Full Audit Trail**: All admin actions logged with metadata
 - **RBAC**: `users:read` (admin, adminReadonly) for viewing, `users:write` (admin only) for modifications
 
-**State Management**: React Context for auth/notifications/config, React Query for server state with dynamic cache TTL from backend configuration.
+**Branding Customization**: Admin-controlled login page and header branding with per-element toggle switches:
+
+- **Login Page**: Custom logo, title (200 char max), and subtitle (500 char max)
+- **Header Brand**: Separate light and dark theme logos
+- **Image Constraints**: 2 MB max, JPEG/PNG/SVG/GIF/WebP formats
+- **Singleton Storage**: Single `branding_settings` database row with base64 image data
+- **Public Endpoints**: Settings metadata and image serving accessible without authentication
+- **BrandingContext**: React Context with React Query (5-min stale time, fallback defaults)
+- **RBAC**: `admin:banners:write` for modifications, public for reading
+
+**State Management**: React Context for auth/notifications/config/branding, React Query for server state with dynamic cache TTL from backend configuration.
 
 **Shared Chart Utilities**: Consistent formatting, accessibility, and styling across all chart components via shared utility modules.
 
@@ -66,6 +76,7 @@ For detailed features, see:
 - [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md) - Complete RBAC guide
 - [`docs/features/subscription-approval-workflow.md`](docs/features/subscription-approval-workflow.md) - Complete approval workflow guide
 - [`docs/features/users-management.md`](docs/features/users-management.md) - Admin user management guide
+- [`docs/features/branding-customization.md`](docs/features/branding-customization.md) - Branding customization guide
 - [`docs/archive/features/admin-usage-analytics-implementation-plan.md`](docs/archive/features/admin-usage-analytics-implementation-plan.md) - Comprehensive admin analytics implementation (2000 lines)
 - [`docs/development/chart-components-guide.md`](docs/development/chart-components-guide.md) - Chart component patterns and utilities
 - [`docs/development/pattern-reference.md`](docs/development/pattern-reference.md) - Authoritative code patterns and anti-patterns

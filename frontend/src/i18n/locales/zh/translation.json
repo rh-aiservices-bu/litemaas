@@ -892,9 +892,9 @@
       "bypassAuthentication": "为开发和测试目的绕过身份验证",
       "developmentMode": "开发模式",
       "loginAsAdmin": "以管理员身份登录（测试）",
-      "loginWithOpenShift": "使用OpenShift登录",
+      "loginWithOpenShift": "使用SSO登录",
       "signInText": "登录到您的账户",
-      "subtitle": "使用您的OpenShift凭据",
+      "subtitle": "LiteMaaS管理您的AI模型的访问、密钥和消耗。",
       "title": "登录LiteMaaS"
     },
     "models": {
@@ -1153,7 +1153,36 @@
       "variantSuccess": "成功（绿色）",
       "variantWarning": "警告（橙色）",
       "visibility": "可见性",
-      "visible": "可见"
+      "visible": "可见",
+      "branding": {
+        "deleteError": "图片删除失败",
+        "deleteSuccess": "图片删除成功",
+        "description": "自定义登录页面外观和页头品牌。上传自定义 Logo，修改登录标题和副标题，并在自定义和默认品牌之间切换。",
+        "fileTooLarge": "文件大小超过 2 MB 限制",
+        "headerBrand": "页头品牌",
+        "headerBrandDark": "页头品牌（深色主题）",
+        "headerBrandDescription": "替换默认的应用程序页头 Logo。请为浅色和深色主题分别提供图片。",
+        "headerBrandLight": "页头品牌（浅色主题）",
+        "invalidFormat": "无效的文件格式",
+        "loginLogo": "登录 Logo",
+        "loginLogoDescription": "将默认登录页面 Logo 替换为自定义图片。",
+        "loginSubtitle": "登录副标题",
+        "loginSubtitleDescription": "覆盖默认的登录页面副标题文本。",
+        "loginTitle": "登录标题",
+        "loginTitleDescription": "覆盖默认的登录页面标题文本。",
+        "maxSize": "最大文件大小为 2 MB。支持的格式：JPG、PNG、SVG、GIF、WebP。",
+        "removeImage": "删除图片",
+        "save": "保存设置",
+        "saveError": "品牌设置保存失败",
+        "saveSuccess": "品牌设置保存成功",
+        "saving": "保存中...",
+        "tabTitle": "品牌定制",
+        "uploadError": "图片上传失败",
+        "uploadImage": "上传图片",
+        "uploadSuccess": "图片上传成功",
+        "useCustom": "使用自定义",
+        "useDefault": "使用默认"
+      }
     },
     "usage": {
       "ariaLabels": {

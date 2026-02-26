@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { AuthProvider } from '../contexts/AuthContext';
 import { NotificationProvider } from '../contexts/NotificationContext';
 import { ConfigProvider } from '../contexts/ConfigContext';
+import { BrandingProvider } from '../contexts/BrandingContext';
 import { ProtectedRoute } from '../components/ProtectedRoute';
 import Layout from '../components/Layout';
 import HomePage from '../pages/HomePage';
@@ -62,11 +63,13 @@ const queryClient = new QueryClient({
 const Root = () => (
   <QueryClientProvider client={queryClient}>
     <ConfigProvider>
-      <AuthProvider>
-        <NotificationProvider>
-          <Outlet />
-        </NotificationProvider>
-      </AuthProvider>
+      <BrandingProvider>
+        <AuthProvider>
+          <NotificationProvider>
+            <Outlet />
+          </NotificationProvider>
+        </AuthProvider>
+      </BrandingProvider>
     </ConfigProvider>
   </QueryClientProvider>
 );

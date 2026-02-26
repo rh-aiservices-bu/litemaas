@@ -892,9 +892,9 @@
       "bypassAuthentication": "開発とテスト目的で認証をバイパス",
       "developmentMode": "開発モード",
       "loginAsAdmin": "管理者としてログイン（テスト）",
-      "loginWithOpenShift": "OpenShiftでログイン",
+      "loginWithOpenShift": "SSOでログイン",
       "signInText": "アカウントにサインイン",
-      "subtitle": "OpenShift認証情報を使用してください",
+      "subtitle": "LiteMaaSはAIモデルのアクセス、キー、消費を管理します。",
       "title": "LiteMaaSにログイン"
     },
     "models": {
@@ -1153,7 +1153,36 @@
       "variantSuccess": "成功（緑）",
       "variantWarning": "警告（オレンジ）",
       "visibility": "表示",
-      "visible": "表示"
+      "visible": "表示",
+      "branding": {
+        "deleteError": "画像の削除に失敗しました",
+        "deleteSuccess": "画像が正常に削除されました",
+        "description": "ログインページの外観とヘッダーブランドをカスタマイズします。カスタムロゴのアップロード、ログインタイトルとサブタイトルの変更、カスタムとデフォルトのブランディングの切り替えが可能です。",
+        "fileTooLarge": "ファイルサイズが2 MBの制限を超えています",
+        "headerBrand": "ヘッダーブランド",
+        "headerBrandDark": "ヘッダーブランド（ダークテーマ）",
+        "headerBrandDescription": "デフォルトのアプリケーションヘッダーロゴを置き換えます。ライトテーマとダークテーマ用に別々の画像を提供してください。",
+        "headerBrandLight": "ヘッダーブランド（ライトテーマ）",
+        "invalidFormat": "無効なファイル形式",
+        "loginLogo": "ログインロゴ",
+        "loginLogoDescription": "デフォルトのログインページロゴをカスタム画像に置き換えます。",
+        "loginSubtitle": "ログインサブタイトル",
+        "loginSubtitleDescription": "デフォルトのログインページサブタイトルを上書きします。",
+        "loginTitle": "ログインタイトル",
+        "loginTitleDescription": "デフォルトのログインページタイトルを上書きします。",
+        "maxSize": "最大ファイルサイズは2 MBです。対応形式: JPG、PNG、SVG、GIF、WebP。",
+        "removeImage": "画像を削除",
+        "save": "設定を保存",
+        "saveError": "ブランディング設定の保存に失敗しました",
+        "saveSuccess": "ブランディング設定が正常に保存されました",
+        "saving": "保存中...",
+        "tabTitle": "ブランディング",
+        "uploadError": "画像のアップロードに失敗しました",
+        "uploadImage": "画像をアップロード",
+        "uploadSuccess": "画像が正常にアップロードされました",
+        "useCustom": "カスタムを使用",
+        "useDefault": "デフォルトを使用"
+      }
     },
     "usage": {
       "ariaLabels": {

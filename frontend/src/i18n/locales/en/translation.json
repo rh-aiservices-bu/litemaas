@@ -892,9 +892,9 @@
       "bypassAuthentication": "Bypass authentication for development and testing purposes",
       "developmentMode": "Development Mode",
       "loginAsAdmin": "Login as Admin (Test)",
-      "loginWithOpenShift": "Login with OpenShift",
+      "loginWithOpenShift": "Log in with SSO",
       "signInText": "Sign in to your account",
-      "subtitle": "Use your OpenShift credentials",
+      "subtitle": "LiteMaaS manages access, keys and consumption of your AI models.",
       "title": "Log in to LiteMaaS"
     },
     "models": {
@@ -1153,7 +1153,36 @@
       "variantSuccess": "Success (Green)",
       "variantWarning": "Warning (Orange)",
       "visibility": "Visibility",
-      "visible": "Visible"
+      "visible": "Visible",
+      "branding": {
+        "deleteError": "Failed to remove image",
+        "deleteSuccess": "Image removed successfully",
+        "description": "Customize the login page appearance and header branding. Upload custom logos, modify the login title and subtitle, and toggle between custom and default branding.",
+        "fileTooLarge": "File size exceeds the 2 MB limit",
+        "headerBrand": "Header Brand",
+        "headerBrandDark": "Header Brand (Dark Theme)",
+        "headerBrandDescription": "Replace the default application header logo. Provide separate images for light and dark themes.",
+        "headerBrandLight": "Header Brand (Light Theme)",
+        "invalidFormat": "Invalid file format",
+        "loginLogo": "Login Logo",
+        "loginLogoDescription": "Replace the default login page logo with a custom image.",
+        "loginSubtitle": "Login Subtitle",
+        "loginSubtitleDescription": "Override the default login page subtitle text.",
+        "loginTitle": "Login Title",
+        "loginTitleDescription": "Override the default login page title text.",
+        "maxSize": "Maximum file size is 2 MB. Supported formats: JPG, PNG, SVG, GIF, WebP.",
+        "removeImage": "Remove image",
+        "save": "Save Settings",
+        "saveError": "Failed to save branding settings",
+        "saveSuccess": "Branding settings saved successfully",
+        "saving": "Saving...",
+        "tabTitle": "Branding",
+        "uploadError": "Failed to upload image",
+        "uploadImage": "Upload image",
+        "uploadSuccess": "Image uploaded successfully",
+        "useCustom": "Use custom",
+        "useDefault": "Use default"
+      }
     },
     "usage": {
       "ariaLabels": {

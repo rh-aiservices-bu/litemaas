@@ -48,6 +48,7 @@ litemaas/
 │   │   │   ├── config.ts     # Configuration endpoints (/api/v1/config)
 │   │   │   ├── health.ts     # Health check (/api/v1/health)
 │   │   │   ├── banners.ts    # Banner announcements (/api/v1/banners)
+│   │   │   ├── branding.ts   # Branding customization (/api/v1/branding)
 │   │   │   └── index.ts      # Route registration
 │   │   ├── schemas/           # TypeBox validation schemas
 │   │   │   ├── common.ts     # Common schemas (UUID, pagination)
@@ -59,11 +60,13 @@ litemaas/
 │   │   │   ├── usage.ts      # Usage schemas
 │   │   │   ├── admin-users.ts # Admin user management schemas
 │   │   │   ├── admin-usage.ts # Admin usage analytics schemas
+│   │   │   ├── branding.ts   # Branding schemas
 │   │   │   ├── health.ts     # Health check schemas
 │   │   │   └── index.ts      # Schema exports
 │   │   ├── services/          # Business logic layer
 │   │   │   ├── base.service.ts # Base service class (inheritance pattern)
 │   │   │   ├── api-key.service.ts # API key operations
+│   │   │   ├── branding.service.ts # Branding customization
 │   │   │   ├── default-team.service.ts # Default team management
 │   │   │   ├── litellm.service.ts # LiteLLM API client
 │   │   │   ├── litellm-integration.service.ts # LiteLLM integration layer
@@ -89,6 +92,7 @@ litemaas/
 │   │   │   ├── user.types.ts # User types
 │   │   │   └── index.ts      # Type exports
 │   │   ├── utils/             # Utility functions
+│   │   │   ├── encryption.ts # AES-256-GCM encryption utilities
 │   │   │   ├── validation.utils.ts # Input validation helpers
 │   │   │   └── litellm-sync.utils.ts # LiteLLM sync utilities
 │   │   ├── validators/        # Input validators
@@ -125,6 +129,8 @@ litemaas/
 │   │   │   │   ├── UserSubscriptionsTab.tsx # User subscriptions list
 │   │   │   │   └── index.ts  # Admin component exports
 │   │   │   ├── charts/       # Chart components (AccessibleChart, etc.)
+│   │   │   ├── branding/      # Branding customization components
+│   │   │   │   └── BrandingTab.tsx # Branding settings tab
 │   │   │   ├── AlertToastGroup.tsx # Toast notifications
 │   │   │   ├── ComponentErrorBoundary.tsx # Component-level error handling
 │   │   │   ├── ErrorBoundary.tsx # Global error handling
@@ -137,6 +143,7 @@ litemaas/
 │   │   │   └── navigation.ts # Navigation structure
 │   │   ├── contexts/          # React Context providers
 │   │   │   ├── AuthContext.tsx # Authentication state
+│   │   │   ├── BrandingContext.tsx # Branding settings
 │   │   │   └── NotificationContext.tsx # Notifications
 │   │   ├── hooks/             # Custom React hooks
 │   │   │   └── useAsyncError.ts # Async error handling hook
@@ -173,6 +180,7 @@ litemaas/
 │   │   │   ├── models.service.ts # Models API
 │   │   │   ├── subscriptions.service.ts # Subscriptions API
 │   │   │   ├── apiKeys.service.ts # API keys API
+│   │   │   ├── branding.service.ts # Branding customization API
 │   │   │   ├── usage.service.ts # User usage analytics API
 │   │   │   ├── adminUsage.service.ts # Admin usage analytics API
 │   │   │   ├── users.service.ts # Admin user management API

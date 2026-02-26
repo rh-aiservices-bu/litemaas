@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Branding Customization**: Admin-controlled login page and application header branding with per-element toggle switches
+  - Login page customization: custom logo, title (200 char max), and subtitle (500 char max)
+  - Header brand: separate light and dark theme logos for automatic theme-aware display
+  - New `branding_settings` singleton database table with `CHECK (id = 1)` constraint
+  - New `BrandingService` extending `BaseService` with image validation (2 MB max, JPEG/PNG/SVG/GIF/WebP)
+  - Five API endpoints under `/api/v1/branding` (public GET for settings/images, admin PATCH/PUT/DELETE for modifications)
+  - New `BrandingContext` with React Query (5-min stale time, graceful fallback to defaults)
+  - New `BrandingTab` component with card-based layout in Admin Tools page
+  - Image storage as base64 in database with binary serving via proper Content-Type headers
+  - Cache-busting via `updatedAt` query parameter on image URLs
+  - RBAC: public read access for login page, `admin:banners:write` for modifications, adminReadonly for viewing admin UI
+
+- **Per-Key Budget and Rate Limits**: Granular per-API-key budget and rate limit management exposed through the admin user management interface
+  - Budget controls: `max_budget`, `budget_duration` (30s, 1h, 1d, 7d, 30d, 1mo), `soft_budget`, and real-time `budget_utilization` tracking
+  - Rate limits: per-key `tpm_limit` and `rpm_limit` with display in admin key table
+  - Advanced limits: `max_parallel_requests` for concurrent request caps
+  - Per-model granularity: `model_max_budget`, `model_rpm_limit`, and `model_tpm_limit` with BudgetConfig format
+  - New database columns on `api_keys` table: `budget_duration`, `soft_budget`, `budget_reset_at`, `max_parallel_requests`, `model_max_budget`, `model_rpm_limit`, `model_tpm_limit`
+  - Admin UI: budget/rate limit fields in key creation form, utilization progress bars and limit labels in key table
+  - Full LiteLLM synchronization: fields passed on key create/update and synced back on read
+  - i18n support across all 9 locales
+
 - **Encrypted API Key Storage & Edit-Mode Testing**: Provider API keys are now stored encrypted (AES-256-GCM) in the LiteMaaS database, enabling admins to test model configuration during editing without re-entering the API key
   - New `encrypted_api_key` column on `models` table stores keys encrypted with `LITELLM_MASTER_KEY` (falls back to `LITELLM_API_KEY`)
   - New `LITELLM_MASTER_KEY` environment variable for encryption key derivation (optional, recommended for production)
@@ -17,6 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `encryption.ts` utility with `encryptApiKey` / `decryptApiKey` using AES-256-GCM (random IV, auth tag, base64-encoded)
   - New `missing_stored_key` result type for the test configuration endpoint
 
+### Changed
+
+- **Login Page Default Logo**: Replaced `LogoTitle` with new `Octobean` SVG as the default login page brand image
+- **Fastify `trustProxy` Enabled**: Added `trustProxy: true` to Fastify configuration for correct protocol detection behind edge TLS termination proxies
+
 ### Fixed
 
 - **Model Configuration Testing Security**: Moved model endpoint connectivity testing from browser-side to backend
@@ -24,6 +51,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - API keys are no longer exposed in browser network requests during configuration tests
   - Backend-side 10-second timeout with AbortController for reliable connection handling
   - Structured result types: `model_found`, `model_not_found`, `auth_error`, `connection_error`, `timeout`
+
+- **Health Check Compatibility with LiteLLM v1.81.0**: Fixed health check to handle both JSON and plain text responses from `/health/liveness`
+  - LiteLLM v1.81.0 returns plain text `I'm alive!` instead of JSON
+  - `makeRequest()` now detects content-type and parses accordingly, preserving circuit breaker, retry, and logging infrastructure
+
+- **Per-Key Quota Bug Fixes**: Multiple fixes for per-key budget and rate limit handling
+  - Fixed falsy value coercion: `|| null` → `?? null` for `softBudget`, `maxParallelRequests`, and `budgetDuration` to prevent `0` being treated as empty
+  - Fixed `budgetUtilization` returning `undefined` when `current_spend` is `0` and division by zero when `max_budget` is `0`
+  - Fixed missing per-key quota fields in admin `GET /:id/api-keys` response mapping
+  - Replaced `Type.Any()` with properly typed `Record` schemas in admin-users response
+  - Extracted shared `ApiKeyDbRow` type to propagate new columns through all call sites
+  - Conditional UI: budget duration and soft budget fields only shown when max budget > 0
+
+### Documentation
+
+- New: `docs/features/branding-customization.md` — Branding customization feature guide
+- Updated: `docs/features/model-configuration-testing.md` — Server-side testing and encrypted key storage
+- Updated: `docs/api/rest-api.md` — Branding and model test endpoints
+- Updated: `docs/architecture/database-schema.md` — New branding_settings and api_keys columns
+
+### Infrastructure
+
+- **Testing**: New backend unit tests for API key service quota fields, budget utilization edge cases, and sync transforms
+- **Testing**: New frontend tests for budget/rate limit columns and conditional form fields in UserApiKeysTab
 
 ---
 

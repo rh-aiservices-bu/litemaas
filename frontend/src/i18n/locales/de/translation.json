@@ -892,9 +892,9 @@
       "bypassAuthentication": "Authentifizierung für Entwicklungs- und Testzwecke umgehen",
       "developmentMode": "Entwicklungsmodus",
       "loginAsAdmin": "Als Administrator anmelden (Test)",
-      "loginWithOpenShift": "Mit OpenShift anmelden",
+      "loginWithOpenShift": "Mit SSO anmelden",
       "signInText": "Melden Sie sich bei Ihrem Konto an",
-      "subtitle": "Verwenden Sie Ihre OpenShift-Anmeldedaten",
+      "subtitle": "LiteMaaS verwaltet den Zugang, die Schlüssel und den Verbrauch Ihrer KI-Modelle.",
       "title": "Bei LiteMaaS anmelden"
     },
     "models": {
@@ -1153,7 +1153,36 @@
       "variantSuccess": "Erfolg (Grün)",
       "variantWarning": "Warnung (Orange)",
       "visibility": "Sichtbarkeit",
-      "visible": "Sichtbar"
+      "visible": "Sichtbar",
+      "branding": {
+        "deleteError": "Fehler beim Entfernen des Bildes",
+        "deleteSuccess": "Bild erfolgreich entfernt",
+        "description": "Passen Sie das Erscheinungsbild der Anmeldeseite und die Header-Markierung an. Laden Sie benutzerdefinierte Logos hoch, ändern Sie den Anmeldetitel und Untertitel, und wechseln Sie zwischen benutzerdefinierten und Standard-Markierungen.",
+        "fileTooLarge": "Die Dateigröße überschreitet das Limit von 2 MB",
+        "headerBrand": "Header-Marke",
+        "headerBrandDark": "Header-Marke (Dunkles Design)",
+        "headerBrandDescription": "Ersetzen Sie das Standard-Logo der Anwendungs-Header. Geben Sie separate Bilder für helle und dunkle Designs bereit.",
+        "headerBrandLight": "Header-Marke (Helles Design)",
+        "invalidFormat": "Ungültiges Dateiformat",
+        "loginLogo": "Anmelde-Logo",
+        "loginLogoDescription": "Ersetzen Sie das Standard-Logo der Anmeldeseite durch ein benutzerdefiniertes Bild.",
+        "loginSubtitle": "Anmelde-Untertitel",
+        "loginSubtitleDescription": "Überschreiben Sie den Standardtext des Anmelde-Untertitels.",
+        "loginTitle": "Anmeldetitel",
+        "loginTitleDescription": "Überschreiben Sie den Standardtext des Anmeldetitels.",
+        "maxSize": "Die maximale Dateigröße beträgt 2 MB. Unterstützte Formate: JPG, PNG, SVG, GIF, WebP.",
+        "removeImage": "Bild entfernen",
+        "save": "Einstellungen speichern",
+        "saveError": "Fehler beim Speichern der Branding-Einstellungen",
+        "saveSuccess": "Branding-Einstellungen erfolgreich gespeichert",
+        "saving": "Wird gespeichert...",
+        "tabTitle": "Branding",
+        "uploadError": "Fehler beim Hochladen des Bildes",
+        "uploadImage": "Bild hochladen",
+        "uploadSuccess": "Bild erfolgreich hochgeladen",
+        "useCustom": "Benutzerdefiniert verwenden",
+        "useDefault": "Standard verwenden"
+      }
     },
     "usage": {
       "ariaLabels": {

@@ -54,6 +54,8 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useConfig } from '../contexts/ConfigContext';
 import { BannerProvider } from '../contexts/BannerContext';
+import { useBranding } from '../contexts/BrandingContext';
+import { brandingService } from '../services/branding.service';
 import { NotificationDrawer, NotificationBadgeButton } from './NotificationDrawer';
 import { AlertToastGroup } from './AlertToastGroup';
 import { BannerAnnouncement } from './BannerAnnouncement';
@@ -72,6 +74,7 @@ const Layout: React.FC = () => {
   const { unreadCount, toastNotifications, removeToastNotification } = useNotifications();
   const { user, logout } = useAuth();
   const { config } = useConfig();
+  const { brandingSettings } = useBranding();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
@@ -532,7 +535,19 @@ const Layout: React.FC = () => {
             <BarsIcon />
           </Button>
           <img
-            src={isDarkTheme ? LogoTitleWhite : LogoTitle}
+            src={
+              brandingSettings?.headerBrandEnabled
+                ? isDarkTheme
+                  ? brandingSettings?.hasHeaderBrandDark
+                    ? brandingService.getImageUrl('header-brand-dark')
+                    : LogoTitleWhite
+                  : brandingSettings?.hasHeaderBrandLight
+                    ? brandingService.getImageUrl('header-brand-light')
+                    : LogoTitle
+                : isDarkTheme
+                  ? LogoTitleWhite
+                  : LogoTitle
+            }
             alt={appConfig.appTitle}
             style={{
               height: '40px',

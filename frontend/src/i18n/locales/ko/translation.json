@@ -892,9 +892,9 @@
       "bypassAuthentication": "개발 및 테스트 목적으로 인증 우회",
       "developmentMode": "개발 모드",
       "loginAsAdmin": "관리자로 로그인 (테스트)",
-      "loginWithOpenShift": "OpenShift로 로그인",
+      "loginWithOpenShift": "SSO로 로그인",
       "signInText": "계정에 로그인",
-      "subtitle": "OpenShift 자격 증명을 사용하세요",
+      "subtitle": "LiteMaaS는 AI 모델의 접근, 키 및 소비를 관리합니다.",
       "title": "LiteMaaS 로그인"
     },
     "models": {
@@ -1153,7 +1153,36 @@
       "variantSuccess": "성공 (녹색)",
       "variantWarning": "경고 (주황색)",
       "visibility": "표시",
-      "visible": "표시"
+      "visible": "표시",
+      "branding": {
+        "deleteError": "이미지 삭제에 실패했습니다",
+        "deleteSuccess": "이미지가 성공적으로 삭제되었습니다",
+        "description": "로그인 페이지 외관과 헤더 브랜드를 사용자 정의합니다. 커스텀 로고를 업로드하고, 로그인 제목과 부제목을 수정하며, 커스텀과 기본 브랜딩 간 전환할 수 있습니다.",
+        "fileTooLarge": "파일 크기가 2 MB 제한을 초과합니다",
+        "headerBrand": "헤더 브랜드",
+        "headerBrandDark": "헤더 브랜드 (다크 테마)",
+        "headerBrandDescription": "기본 애플리케이션 헤더 로고를 교체합니다. 라이트 테마와 다크 테마에 대해 별도의 이미지를 제공하세요.",
+        "headerBrandLight": "헤더 브랜드 (라이트 테마)",
+        "invalidFormat": "잘못된 파일 형식",
+        "loginLogo": "로그인 로고",
+        "loginLogoDescription": "기본 로그인 페이지 로고를 커스텀 이미지로 교체합니다.",
+        "loginSubtitle": "로그인 부제목",
+        "loginSubtitleDescription": "기본 로그인 페이지 부제목 텍스트를 재정의합니다.",
+        "loginTitle": "로그인 제목",
+        "loginTitleDescription": "기본 로그인 페이지 제목 텍스트를 재정의합니다.",
+        "maxSize": "최대 파일 크기는 2 MB입니다. 지원 형식: JPG, PNG, SVG, GIF, WebP.",
+        "removeImage": "이미지 삭제",
+        "save": "설정 저장",
+        "saveError": "브랜딩 설정 저장에 실패했습니다",
+        "saveSuccess": "브랜딩 설정이 성공적으로 저장되었습니다",
+        "saving": "저장 중...",
+        "tabTitle": "브랜딩",
+        "uploadError": "이미지 업로드에 실패했습니다",
+        "uploadImage": "이미지 업로드",
+        "uploadSuccess": "이미지가 성공적으로 업로드되었습니다",
+        "useCustom": "커스텀 사용",
+        "useDefault": "기본값 사용"
+      }
     },
     "usage": {
       "ariaLabels": {

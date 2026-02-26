@@ -892,9 +892,9 @@
       "bypassAuthentication": "Omitir autenticación para propósitos de desarrollo y prueba",
       "developmentMode": "Modo de Desarrollo",
       "loginAsAdmin": "Iniciar sesión como Administrador (Prueba)",
-      "loginWithOpenShift": "Iniciar sesión con OpenShift",
+      "loginWithOpenShift": "Iniciar sesión con SSO",
       "signInText": "Iniciar sesión en tu cuenta",
-      "subtitle": "Usa tus credenciales de OpenShift",
+      "subtitle": "LiteMaaS gestiona el acceso, las claves y el consumo de tus modelos de IA.",
       "title": "Iniciar sesión en LiteMaaS"
     },
     "models": {
@@ -1153,7 +1153,36 @@
       "variantSuccess": "Éxito (Verde)",
       "variantWarning": "Advertencia (Naranja)",
       "visibility": "Visibilidad",
-      "visible": "Visible"
+      "visible": "Visible",
+      "branding": {
+        "deleteError": "No se pudo eliminar la imagen",
+        "deleteSuccess": "Imagen eliminada correctamente",
+        "description": "Personaliza la apariencia de la página de inicio de sesión y la marca del encabezado. Carga logotipos personalizados, modifica el título y subtítulo de inicio de sesión, y alterna entre marcas personalizadas y predeterminadas.",
+        "fileTooLarge": "El tamaño del archivo supera el límite de 2 MB",
+        "headerBrand": "Marca del encabezado",
+        "headerBrandDark": "Marca del encabezado (Tema oscuro)",
+        "headerBrandDescription": "Reemplaza el logotipo predeterminado del encabezado de la aplicación. Proporciona imágenes separadas para temas claro y oscuro.",
+        "headerBrandLight": "Marca del encabezado (Tema claro)",
+        "invalidFormat": "Formato de archivo no válido",
+        "loginLogo": "Logo de inicio de sesión",
+        "loginLogoDescription": "Reemplaza el logotipo predeterminado de la página de inicio de sesión con una imagen personalizada.",
+        "loginSubtitle": "Subtítulo de inicio de sesión",
+        "loginSubtitleDescription": "Anula el texto predeterminado del subtítulo de la página de inicio de sesión.",
+        "loginTitle": "Título de inicio de sesión",
+        "loginTitleDescription": "Anula el texto predeterminado del título de la página de inicio de sesión.",
+        "maxSize": "El tamaño máximo de archivo es 2 MB. Formatos soportados: JPG, PNG, SVG, GIF, WebP.",
+        "removeImage": "Eliminar imagen",
+        "save": "Guardar configuración",
+        "saveError": "No se pudo guardar la configuración de personalización",
+        "saveSuccess": "Configuración de personalización guardada correctamente",
+        "saving": "Guardando...",
+        "tabTitle": "Personalización",
+        "uploadError": "No se pudo subir la imagen",
+        "uploadImage": "Subir imagen",
+        "uploadSuccess": "Imagen subida correctamente",
+        "useCustom": "Usar personalizado",
+        "useDefault": "Usar predeterminado"
+      }
     },
     "usage": {
       "ariaLabels": {

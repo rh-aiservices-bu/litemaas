@@ -1220,6 +1220,111 @@ Response:
 }
 ```
 
+### Branding (/api/v1/branding)
+
+Public and admin endpoints for managing application branding (login page and header customization).
+
+#### GET /api/v1/branding
+
+**Authorization**: Public endpoint (no authentication required)
+
+Get branding settings metadata (no image binary data)
+
+```json
+Response:
+{
+  "loginLogoEnabled": true,
+  "hasLoginLogo": true,
+  "loginTitleEnabled": true,
+  "loginTitle": "Welcome to Our Platform",
+  "loginSubtitleEnabled": false,
+  "loginSubtitle": null,
+  "headerBrandEnabled": true,
+  "hasHeaderBrandLight": true,
+  "hasHeaderBrandDark": false,
+  "updatedAt": "2024-01-20T10:00:00Z"
+}
+```
+
+#### PATCH /api/v1/branding
+
+**Authorization**: Requires `admin` role (`admin:banners:write` permission)
+
+Update branding toggles and text fields. All fields are optional — only provided fields are updated.
+
+```json
+Request:
+{
+  "loginLogoEnabled": true,
+  "loginTitleEnabled": true,
+  "loginTitle": "Welcome to Our Platform",
+  "loginSubtitleEnabled": true,
+  "loginSubtitle": "AI Model Management Made Simple",
+  "headerBrandEnabled": false
+}
+
+Response: Same as GET /api/v1/branding
+```
+
+**Constraints**:
+- `loginTitle`: max 200 characters
+- `loginSubtitle`: max 500 characters
+
+#### PUT /api/v1/branding/images/:type
+
+**Authorization**: Requires `admin` role (`admin:banners:write` permission)
+
+Upload a branding image. The image is sent as base64-encoded data.
+
+**Path parameters**:
+- `type`: `login-logo` | `header-brand-light` | `header-brand-dark`
+
+```json
+Request:
+{
+  "data": "<base64-encoded image data>",
+  "mimeType": "image/png"
+}
+
+Response:
+{
+  "message": "Image login-logo uploaded successfully"
+}
+```
+
+**Constraints**:
+- Maximum decoded image size: 2 MB
+- Supported MIME types: `image/jpeg`, `image/jpg`, `image/png`, `image/svg+xml`, `image/gif`, `image/webp`
+
+#### DELETE /api/v1/branding/images/:type
+
+**Authorization**: Requires `admin` role (`admin:banners:write` permission)
+
+Delete a branding image.
+
+**Path parameters**:
+- `type`: `login-logo` | `header-brand-light` | `header-brand-dark`
+
+```json
+Response:
+{
+  "message": "Image login-logo deleted successfully"
+}
+```
+
+#### GET /api/v1/branding/images/:type
+
+**Authorization**: Public endpoint (no authentication required)
+
+Serve a branding image as binary data with the appropriate `Content-Type` header.
+
+**Path parameters**:
+- `type`: `login-logo` | `header-brand-light` | `header-brand-dark`
+
+**Response**: Binary image data with `Content-Type` header matching the stored MIME type and `Cache-Control: public, max-age=3600`.
+
+Returns `404` if no image has been uploaded for the specified type.
+
 ### Health & Status
 
 #### GET /api/v1/health

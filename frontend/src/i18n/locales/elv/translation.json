@@ -892,9 +892,9 @@
       "bypassAuthentication": "Orthad authentication sui govad a prestannen",
       "developmentMode": "Govad-vuin",
       "loginAsAdmin": "Minno sui Aran (Prestannen)",
-      "loginWithOpenShift": "Minno dan OpenShift",
+      "loginWithOpenShift": "Minno dan SSO",
       "signInText": "Minno na uin-govannen",
-      "subtitle": "Aníra OpenShift-glaemscaul",
+      "subtitle": "LiteMaaS tíra i minna, i caimë ar i ·usië uin IA-echuin lín.",
       "title": "Minno na LiteMaaS"
     },
     "models": {
@@ -1153,7 +1153,36 @@
       "variantSuccess": "Orthad (Calen)",
       "variantWarning": "Balch (Galadh)",
       "visibility": "Tiruith",
-      "visible": "Tiria"
+      "visible": "Tiria",
+      "branding": {
+        "deleteError": "The banishment of the image hath failed",
+        "deleteSuccess": "The image hath been banished from the realm",
+        "description": "Adorn the gateway page and the crown of thy realm with bespoke heraldry. Bestow custom emblems, inscribe titles and subtitles, and choose between custom and ancestral markings.",
+        "fileTooLarge": "The scroll exceeds the burden of 2 MB",
+        "headerBrand": "Crown Heraldry",
+        "headerBrandDark": "Crown Heraldry (Shadow of Night)",
+        "headerBrandDescription": "Replace the crown emblem of thy realm. Provide separate sigils for the light and shadow themes.",
+        "headerBrandLight": "Crown Heraldry (Light of Day)",
+        "invalidFormat": "The scroll bears an unknown sigil",
+        "loginLogo": "Gateway Emblem",
+        "loginLogoDescription": "Replace the ancestral gateway emblem with a bespoke image of thy choosing.",
+        "loginSubtitle": "Gateway Subtitle",
+        "loginSubtitleDescription": "Inscribe a custom subtitle upon the gateway page.",
+        "loginTitle": "Gateway Title",
+        "loginTitleDescription": "Inscribe a custom title upon the gateway page.",
+        "maxSize": "The greatest burden a scroll may bear is 2 MB. Accepted sigils: JPG, PNG, SVG, GIF, WebP.",
+        "removeImage": "Banish image",
+        "save": "Seal thy decree",
+        "saveError": "The sealing of thy heraldry hath failed",
+        "saveSuccess": "Thy heraldry hath been sealed unto the realm",
+        "saving": "Sealing...",
+        "tabTitle": "Heraldry",
+        "uploadError": "The bestowing of thy image hath failed",
+        "uploadImage": "Bestow image",
+        "uploadSuccess": "Thy image hath been bestowed upon the realm",
+        "useCustom": "Bespoke heraldry",
+        "useDefault": "Ancestral heraldry"
+      }
     },
     "usage": {
       "ariaLabels": {
