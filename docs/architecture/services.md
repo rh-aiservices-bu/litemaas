@@ -49,7 +49,7 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 **Extended By**:
 
-- ApiKeyService, SubscriptionService, TeamService, UsageStatsService, LiteLLMService
+- ApiKeyService, SubscriptionService, TeamService, UsageStatsService, LiteLLMService, SettingsService
 
 ---
 
@@ -661,6 +661,36 @@ Uses `daily_usage_cache` table with columns:
 - All operations require `admin` or `adminReadonly` role
 - Write operations require `admin` role only
 - Read-only admins have view-only access
+
+---
+
+### SettingsService
+
+**Purpose**: System settings management for admin-configurable defaults and limits
+
+**Extends**: BaseService
+
+**Responsibilities**:
+
+- Manage admin-configurable API key quota defaults and maximums
+- Read/write settings from/to `system_settings` table (key-value JSONB store)
+- Validate that default values do not exceed maximum values
+- Log all settings changes to `audit_logs`
+
+**Dependencies**:
+
+- Database connection for `system_settings` table
+- Audit logging for change tracking
+
+**Key Methods**:
+
+- `getApiKeyDefaults()` — Fetch current defaults and maximums from `system_settings` table
+- `updateApiKeyDefaults(adminUserId, settings)` — Update defaults/maximums with validation and audit logging
+
+**Used By**:
+
+- `admin-settings.ts` route — Admin endpoints for managing API key defaults
+- `config.ts` route — Public endpoint for frontend pre-fill of Create Key modal
 
 ## Utility Classes ✅ **NEW 2025-08-06**
 

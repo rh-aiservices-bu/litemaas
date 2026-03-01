@@ -31,6 +31,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Full LiteLLM synchronization: fields passed on key create/update and synced back on read
   - i18n support across all 9 locales
 
+- **User Self-Service API Key Quotas**: Users can set their own resource limits when creating API keys, with admin-configurable defaults and maximums
+  - Self-service quota fields (max budget, TPM limit, RPM limit, budget duration, soft budget) in Create Key modal with pre-filled defaults
+  - Admin-configurable defaults and maximums via `system_settings` table (`api_key_defaults` key with JSONB value)
+  - New `SettingsService` extending `BaseService` for system settings management with audit logging
+  - Admin endpoints: `GET /api/v1/admin/settings/api-key-defaults` (admin, adminReadonly) and `PUT /api/v1/admin/settings/api-key-defaults` (admin only)
+  - Public endpoint: `GET /api/v1/config/api-key-defaults` for frontend pre-fill (no auth required)
+  - Backend validation enforces user values do not exceed admin-configured maximums; defaults auto-applied when user omits values
+  - New Limits tab in Admin Tools page with Bulk User Limits and API Key Quota Defaults sections
+  - Frontend helper text showing admin-configured maximums and pre-filled default values
+  - i18n support across all 9 locales
+
 - **Encrypted API Key Storage & Edit-Mode Testing**: Provider API keys are now stored encrypted (AES-256-GCM) in the LiteMaaS database, enabling admins to test model configuration during editing without re-entering the API key
   - New `encrypted_api_key` column on `models` table stores keys encrypted with `LITELLM_MASTER_KEY` (falls back to `LITELLM_API_KEY`)
   - New `LITELLM_MASTER_KEY` environment variable for encryption key derivation (optional, recommended for production)
@@ -42,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Login Page Default Logo**: Replaced `LogoTitle` with new `Octobean` SVG as the default login page brand image
+- **Budget Duration Schema**: Changed from fixed enum to Union type supporting both predefined periods (`daily`, `weekly`, `monthly`, `yearly`) and custom LiteLLM-compatible durations (e.g., `30d`, `1mo`, `1h`, `60s`) via pattern `^\d+[smhd]$|^\d+mo$`
 - **Fastify `trustProxy` Enabled**: Added `trustProxy: true` to Fastify configuration for correct protocol detection behind edge TLS termination proxies
 
 ### Fixed
@@ -64,17 +76,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Extracted shared `ApiKeyDbRow` type to propagate new columns through all call sites
   - Conditional UI: budget duration and soft budget fields only shown when max budget > 0
 
+- **Quota Schema Consistency**: Resolved schema inconsistencies and improved type safety for quota fields
+  - Removed invalid `lifetime` value from budget duration enum, replaced with Union type supporting custom durations
+  - Replaced `COALESCE`-based UPDATE with dynamic SQL for proper null-clearing of quota fields
+  - Added quota fields (`softBudget`, `budgetDuration`, `maxParallelRequests`, `budgetResetAt`, `modelMaxBudget`, `modelRpmLimit`, `modelTpmLimit`) to user-facing API key response schemas
+  - Removed `as any` type casts in favor of properly typed schemas
+
 ### Documentation
 
 - New: `docs/features/branding-customization.md` — Branding customization feature guide
 - Updated: `docs/features/model-configuration-testing.md` — Server-side testing and encrypted key storage
 - Updated: `docs/api/rest-api.md` — Branding and model test endpoints
-- Updated: `docs/architecture/database-schema.md` — New branding_settings and api_keys columns
+- Updated: `docs/architecture/database-schema.md` — New branding_settings, api_keys columns, and system_settings table
+- Updated: `docs/api/rest-api.md` — Admin settings and config API key defaults endpoints
+- Updated: `docs/features/admin-tools.md` — Limits Management section with API Key Quota Defaults
 
 ### Infrastructure
 
 - **Testing**: New backend unit tests for API key service quota fields, budget utilization edge cases, and sync transforms
 - **Testing**: New frontend tests for budget/rate limit columns and conditional form fields in UserApiKeysTab
+- **Database**: New `system_settings` table for admin-configurable key-value settings (JSONB storage with audit tracking)
 
 ---
 

@@ -2438,6 +2438,118 @@ Response (Error - Insufficient Permission):
 - API requests from adminReadonly users return 403 Forbidden
 - Follows the pattern of other destructive admin operations
 
+### Admin Settings (/api/v1/admin/settings)
+
+Admin-configurable system settings for managing defaults and limits.
+
+#### GET /api/v1/admin/settings/api-key-defaults
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:users` permission)
+
+Get admin-configured default and maximum values for user self-service API key creation.
+
+```json
+Response:
+{
+  "defaults": {
+    "maxBudget": 50.00,
+    "tpmLimit": 5000,
+    "rpmLimit": 100,
+    "budgetDuration": "monthly",
+    "softBudget": 40.00
+  },
+  "maximums": {
+    "maxBudget": 500.00,
+    "tpmLimit": 50000,
+    "rpmLimit": 1000
+  }
+}
+```
+
+**Notes**:
+- `null` values indicate "not configured" (no default or no limit)
+- An empty `{}` response means no defaults or maximums have been set
+
+#### PUT /api/v1/admin/settings/api-key-defaults
+
+**Authorization**: Requires `admin` role only (`admin:users` permission)
+
+Set default and maximum values for user API key quotas. All fields are optional and nullable.
+
+```json
+Request:
+{
+  "defaults": {
+    "maxBudget": 50.00,
+    "tpmLimit": 5000,
+    "rpmLimit": 100,
+    "budgetDuration": "monthly",
+    "softBudget": 40.00
+  },
+  "maximums": {
+    "maxBudget": 500.00,
+    "tpmLimit": 50000,
+    "rpmLimit": 1000
+  }
+}
+```
+
+```json
+Response:
+{
+  "defaults": {
+    "maxBudget": 50.00,
+    "tpmLimit": 5000,
+    "rpmLimit": 100,
+    "budgetDuration": "monthly",
+    "softBudget": 40.00
+  },
+  "maximums": {
+    "maxBudget": 500.00,
+    "tpmLimit": 50000,
+    "rpmLimit": 1000
+  }
+}
+```
+
+**Validation Rules**:
+- Default values must not exceed their corresponding maximum values
+- `budgetDuration` supports: `daily`, `weekly`, `monthly`, `yearly`, or custom LiteLLM durations (`30d`, `1mo`, `1h`, `60s`)
+- All numeric fields must be ≥ 0
+- Updates are logged to `audit_logs` with the admin user ID
+
+---
+
+### Configuration (/api/v1/config)
+
+#### GET /api/v1/config/api-key-defaults
+
+**Authorization**: None required (public endpoint)
+
+Get API key quota defaults and maximums for pre-filling the Create Key form. Returns the same data as the admin endpoint but is publicly accessible.
+
+```json
+Response:
+{
+  "defaults": {
+    "maxBudget": 50.00,
+    "tpmLimit": 5000,
+    "rpmLimit": 100,
+    "budgetDuration": "monthly",
+    "softBudget": 40.00
+  },
+  "maximums": {
+    "maxBudget": 500.00,
+    "tpmLimit": 50000,
+    "rpmLimit": 1000
+  }
+}
+```
+
+**Usage**: The frontend calls this endpoint when loading the Create API Key modal to pre-fill quota fields with admin-configured defaults and display maximum limits in helper text.
+
+---
+
 ## External API Integration Patterns
 
 The LiteMaaS system integrates with external AI model APIs for configuration validation and model discovery. This section documents the expected integration patterns and API structures.
