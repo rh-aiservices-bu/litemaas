@@ -78,6 +78,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.2.1] - 2026-02-20
+
+### Fixed
+
+- **New User Subscription Failure**: Fixed critical bug where new users could not subscribe to models with LiteLLM v1.81.0+
+  - LiteLLM v1.81.0+ returns HTTP 404 for non-existent users instead of an empty response
+  - `getUserInfo()` and `getUserInfoFull()` now gracefully return `null` on 404 instead of throwing an error
+  - New `isLiteLLM404Error()` helper method for consistent 404 detection via `ApplicationError` details
+  - Added unit tests for 404 handling in both `getUserInfo` and `getUserInfoFull`
+
+- **Helm: `NODE_TLS_REJECT_UNAUTHORIZED` not applied when set to `0`**: Fixed Go template condition that prevented the value `0` from being rendered
+  - Changed `{{- if .Values.backend.nodeTlsRejectUnauthorized }}` to `{{- if ne (.Values.backend.nodeTlsRejectUnauthorized | toString) "" }}` so falsy values like `0` are correctly included in the ConfigMap
+
+- **Helm Chart Metadata**: Corrected `home` URL in `Chart.yaml` from `pase52/litemaas` to `rh-aiservices-bu/litemaas`
+
+### Contributors
+
+- Guillaume Moutier
+- Cansu Kavili
+- Co-authored-by: Claude (AI pair programming assistant)
+
+---
+
 ## [0.2.0] - 2026-02-13
 
 ### Added
