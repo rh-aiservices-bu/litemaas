@@ -1,6 +1,5 @@
 import { FastifyPluginAsync } from 'fastify';
 import {
-  CreateApiKeyDto,
   CreateApiKeyResponse,
   RotateApiKeyResponse,
   ApiKeyDetails,
@@ -12,6 +11,7 @@ import {
   CreateApiKeyRequestSchema,
   ApiKeyResponseSchema,
   SingleApiKeyResponseSchema,
+  type CreateApiKeyRequest as CreateApiKeySchemaType,
 } from '../schemas/api-keys';
 import { ApiKeyService } from '../services/api-key.service';
 import { LiteLLMService } from '../services/litellm.service';
@@ -174,7 +174,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
 
   // Generate new API key
   fastify.post<{
-    Body: CreateApiKeyDto;
+    Body: CreateApiKeySchemaType;
     Reply: CreateApiKeyResponse;
   }>('/', {
     schema: {
@@ -213,39 +213,39 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Apply defaults for unset fields (use ?? to preserve 0)
         const mergedBody = { ...body };
-        if ((mergedBody as any).maxBudget == null && defaults.maxBudget != null) {
-          (mergedBody as any).maxBudget = defaults.maxBudget;
+        if (mergedBody.maxBudget == null && defaults.maxBudget != null) {
+          mergedBody.maxBudget = defaults.maxBudget;
         }
-        if ((mergedBody as any).tpmLimit == null && defaults.tpmLimit != null) {
-          (mergedBody as any).tpmLimit = defaults.tpmLimit;
+        if (mergedBody.tpmLimit == null && defaults.tpmLimit != null) {
+          mergedBody.tpmLimit = defaults.tpmLimit;
         }
-        if ((mergedBody as any).rpmLimit == null && defaults.rpmLimit != null) {
-          (mergedBody as any).rpmLimit = defaults.rpmLimit;
+        if (mergedBody.rpmLimit == null && defaults.rpmLimit != null) {
+          mergedBody.rpmLimit = defaults.rpmLimit;
         }
-        if ((mergedBody as any).budgetDuration == null && defaults.budgetDuration != null) {
-          (mergedBody as any).budgetDuration = defaults.budgetDuration;
+        if (mergedBody.budgetDuration == null && defaults.budgetDuration != null) {
+          mergedBody.budgetDuration = defaults.budgetDuration;
         }
-        if ((mergedBody as any).softBudget == null && defaults.softBudget != null) {
-          (mergedBody as any).softBudget = defaults.softBudget;
+        if (mergedBody.softBudget == null && defaults.softBudget != null) {
+          mergedBody.softBudget = defaults.softBudget;
         }
 
         // Enforce maximums
         const violations: string[] = [];
-        if (maximums.maxBudget != null && (mergedBody as any).maxBudget != null && (mergedBody as any).maxBudget > maximums.maxBudget) {
-          violations.push(`maxBudget: ${(mergedBody as any).maxBudget} exceeds maximum ${maximums.maxBudget}`);
+        if (maximums.maxBudget != null && mergedBody.maxBudget != null && mergedBody.maxBudget > maximums.maxBudget) {
+          violations.push(`maxBudget: ${mergedBody.maxBudget} exceeds maximum ${maximums.maxBudget}`);
         }
-        if (maximums.tpmLimit != null && (mergedBody as any).tpmLimit != null && (mergedBody as any).tpmLimit > maximums.tpmLimit) {
-          violations.push(`tpmLimit: ${(mergedBody as any).tpmLimit} exceeds maximum ${maximums.tpmLimit}`);
+        if (maximums.tpmLimit != null && mergedBody.tpmLimit != null && mergedBody.tpmLimit > maximums.tpmLimit) {
+          violations.push(`tpmLimit: ${mergedBody.tpmLimit} exceeds maximum ${maximums.tpmLimit}`);
         }
-        if (maximums.rpmLimit != null && (mergedBody as any).rpmLimit != null && (mergedBody as any).rpmLimit > maximums.rpmLimit) {
-          violations.push(`rpmLimit: ${(mergedBody as any).rpmLimit} exceeds maximum ${maximums.rpmLimit}`);
+        if (maximums.rpmLimit != null && mergedBody.rpmLimit != null && mergedBody.rpmLimit > maximums.rpmLimit) {
+          violations.push(`rpmLimit: ${mergedBody.rpmLimit} exceeds maximum ${maximums.rpmLimit}`);
         }
 
         if (violations.length > 0) {
           throw fastify.createError(400, `Quota limits exceeded: ${violations.join('; ')}`);
         }
 
-        const apiKey = await apiKeyService.createApiKey(user.userId, mergedBody);
+        const apiKey = await apiKeyService.createApiKey(user.userId, mergedBody as any);
 
         reply.status(201);
         return {

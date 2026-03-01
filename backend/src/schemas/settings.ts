@@ -6,9 +6,11 @@ export const ApiKeyQuotaDefaultsSchema = Type.Object({
     tpmLimit: Type.Optional(Type.Union([Type.Integer({ minimum: 0 }), Type.Null()])),
     rpmLimit: Type.Optional(Type.Union([Type.Integer({ minimum: 0 }), Type.Null()])),
     budgetDuration: Type.Optional(Type.Union([
-      Type.String({
-        enum: ['daily', 'weekly', 'monthly', 'yearly'],
-      }),
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+      Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$' }),
       Type.Null(),
     ])),
     softBudget: Type.Optional(Type.Union([Type.Number({ minimum: 0 }), Type.Null()])),

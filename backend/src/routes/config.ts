@@ -15,6 +15,8 @@ import { ApiKeyQuotaDefaultsSchema } from '../schemas/settings';
  * Exposes safe subset of configuration to frontend
  */
 export default async function configRoutes(fastify: FastifyInstance) {
+  const settingsService = new SettingsService(fastify);
+
   // Read version from root package.json once at startup
   let appVersion = '0.0.0';
   try {
@@ -152,7 +154,6 @@ export default async function configRoutes(fastify: FastifyInstance) {
       },
     },
     async (_request: FastifyRequest, reply: FastifyReply) => {
-      const settingsService = new SettingsService(fastify);
       const defaults = await settingsService.getApiKeyDefaults();
       return reply.send(defaults);
     },
