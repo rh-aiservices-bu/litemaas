@@ -40,6 +40,8 @@ import {
   Divider,
   HelperText,
   HelperTextItem,
+  FormSelect,
+  FormSelectOption,
 } from '@patternfly/react-core';
 import {
   KeyIcon,
@@ -59,6 +61,7 @@ import { apiKeysService, ApiKey, CreateApiKeyRequest } from '../services/apiKeys
 import { subscriptionsService } from '../services/subscriptions.service';
 import { modelsService, Model } from '../services/models.service';
 import { configService } from '../services/config.service';
+import type { ApiKeyQuotaDefaults } from '../types/users';
 
 const ApiKeysPage: React.FC = () => {
   const { t } = useTranslation();
@@ -103,6 +106,14 @@ const ApiKeysPage: React.FC = () => {
   const [loadingModels, setLoadingModels] = useState(false);
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
   const [isModelSelectOpen, setIsModelSelectOpen] = useState(false);
+
+  // Quota fields for create modal
+  const [newKeyMaxBudget, setNewKeyMaxBudget] = useState<number | undefined>(undefined);
+  const [newKeyTpmLimit, setNewKeyTpmLimit] = useState<number | undefined>(undefined);
+  const [newKeyRpmLimit, setNewKeyRpmLimit] = useState<number | undefined>(undefined);
+  const [newKeyBudgetDuration, setNewKeyBudgetDuration] = useState<string>('');
+  const [newKeySoftBudget, setNewKeySoftBudget] = useState<number | undefined>(undefined);
+  const [quotaDefaults, setQuotaDefaults] = useState<ApiKeyQuotaDefaults | null>(null);
 
   // Configuration state
   const [litellmApiUrl, setLitellmApiUrl] = useState<string>('https://api.litemaas.com');
@@ -174,6 +185,8 @@ const ApiKeysPage: React.FC = () => {
     loadApiKeys();
     loadModels(); // ✅ Load models on component mount
     loadConfig(); // Load configuration including LiteLLM API URL
+    // Load quota defaults for create key modal
+    configService.getApiKeyDefaults().then(setQuotaDefaults).catch(() => {});
   }, []);
 
   // Reload models when page gains focus (e.g., after subscribing to new models)
@@ -405,6 +418,12 @@ const ApiKeysPage: React.FC = () => {
     setNewKeyExpiration('never');
     setSelectedModelIds([]); // ✅ Reset model selection
     setFormErrors({}); // Clear any previous validation errors
+    // Pre-fill quota fields with admin-configured defaults
+    setNewKeyMaxBudget(quotaDefaults?.defaults?.maxBudget ?? undefined);
+    setNewKeyTpmLimit(quotaDefaults?.defaults?.tpmLimit ?? undefined);
+    setNewKeyRpmLimit(quotaDefaults?.defaults?.rpmLimit ?? undefined);
+    setNewKeyBudgetDuration(quotaDefaults?.defaults?.budgetDuration ?? '');
+    setNewKeySoftBudget(quotaDefaults?.defaults?.softBudget ?? undefined);
     // Store reference to the trigger element for focus restoration
     if (triggerElement) {
       createModalTriggerRef.current = triggerElement;
@@ -426,6 +445,20 @@ const ApiKeysPage: React.FC = () => {
     // ✅ Validate model selection
     if (selectedModelIds.length === 0) {
       errors.models = t('pages.apiKeys.notifications.modelsRequired');
+    }
+
+    // Validate quota fields against admin-set maximums
+    if (!isEditMode && quotaDefaults?.maximums) {
+      const max = quotaDefaults.maximums;
+      if (max.maxBudget != null && newKeyMaxBudget != null && newKeyMaxBudget > max.maxBudget) {
+        errors.maxBudget = t('pages.apiKeys.quotas.exceedsMaximum', { field: t('pages.apiKeys.quotas.maxBudget'), max: max.maxBudget });
+      }
+      if (max.tpmLimit != null && newKeyTpmLimit != null && newKeyTpmLimit > max.tpmLimit) {
+        errors.tpmLimit = t('pages.apiKeys.quotas.exceedsMaximum', { field: t('pages.apiKeys.quotas.tpmLimit'), max: max.tpmLimit });
+      }
+      if (max.rpmLimit != null && newKeyRpmLimit != null && newKeyRpmLimit > max.rpmLimit) {
+        errors.rpmLimit = t('pages.apiKeys.quotas.exceedsMaximum', { field: t('pages.apiKeys.quotas.rpmLimit'), max: max.rpmLimit });
+      }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -480,6 +513,12 @@ const ApiKeysPage: React.FC = () => {
                   Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000,
                 ).toISOString()
               : undefined,
+          // Quota fields
+          maxBudget: newKeyMaxBudget,
+          budgetDuration: newKeyBudgetDuration || undefined,
+          softBudget: newKeySoftBudget,
+          tpmLimit: newKeyTpmLimit,
+          rpmLimit: newKeyRpmLimit,
           // ✅ Put additional fields in metadata as backend expects
           metadata: {
             description: newKeyDescription || undefined,
@@ -1170,32 +1209,135 @@ const ApiKeysPage: React.FC = () => {
               </LabelGroup>
             )}
 
-            {/* TODO: Not selectable by user. Needed?
-            <FormGroup label={t('pages.apiKeys.labels.rateLimitLabel')} fieldId="key-rate-limit">
-              <FormSelect
-                value={newKeyRateLimit}
-                onChange={(_event, value) => setNewKeyRateLimit(value)}
-                id="key-rate-limit"
-              >
-                <FormSelectOption value="100" label={t('pages.apiKeys.rateLimits.basic')} />
-                <FormSelectOption value="500" label={t('pages.apiKeys.rateLimits.standard')} />
-                <FormSelectOption value="1000" label={t('pages.apiKeys.rateLimits.premium')} />
-                <FormSelectOption value="5000" label={t('pages.apiKeys.rateLimits.enterprise')} />
-              </FormSelect>
-            </FormGroup>
+            {/* Quota fields - only shown in create mode */}
+            {!isEditMode && (
+              <>
+                <Divider style={{ margin: '0.5rem 0' }} />
+                <Title headingLevel="h4" size="md" style={{ marginBottom: '0.25rem' }}>
+                  {t('pages.apiKeys.quotas.title')}
+                </Title>
+                <Content component={ContentVariants.small} style={{ marginBottom: '0.5rem' }}>
+                  {t('pages.apiKeys.quotas.description')}
+                </Content>
 
-            <FormGroup label={t('pages.apiKeys.forms.expiration')} fieldId="key-expiration">
-              <FormSelect
-                value={newKeyExpiration}
-                onChange={(_event, value) => setNewKeyExpiration(value)}
-                id="key-expiration"
-              >
-                <FormSelectOption value="never" label={t('pages.apiKeys.neverExpires')} />
-                <FormSelectOption value="30" label={t('pages.apiKeys.timeRanges.thirtyDays')} />
-                <FormSelectOption value="90" label={t('pages.apiKeys.timeRanges.ninetyDays')} />
-                <FormSelectOption value="365" label={t('pages.apiKeys.timeRanges.oneYear')} />
-              </FormSelect>
-            </FormGroup> */}
+                <FormGroup
+                  label={t('pages.apiKeys.quotas.maxBudget')}
+                  fieldId="key-max-budget"
+                >
+                  <TextInput
+                    id="key-max-budget"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={newKeyMaxBudget ?? ''}
+                    onChange={(_event, value) => setNewKeyMaxBudget(value ? parseFloat(value) : undefined)}
+                    placeholder={t('pages.apiKeys.quotas.optionalPlaceholder')}
+                    validated={formErrors.maxBudget ? 'error' : 'default'}
+                  />
+                  <HelperText>
+                    <HelperTextItem variant={formErrors.maxBudget ? 'error' : 'default'}>
+                      {formErrors.maxBudget ?? (
+                        quotaDefaults?.maximums?.maxBudget != null
+                          ? t('pages.apiKeys.quotas.maxAllowed', { max: quotaDefaults.maximums.maxBudget })
+                          : t('pages.apiKeys.quotas.maxBudgetHelper')
+                      )}
+                    </HelperTextItem>
+                  </HelperText>
+                </FormGroup>
+
+                {newKeyMaxBudget != null && newKeyMaxBudget > 0 && (
+                  <>
+                    <FormGroup
+                      label={t('pages.apiKeys.quotas.budgetDuration')}
+                      fieldId="key-budget-duration"
+                    >
+                      <FormSelect
+                        id="key-budget-duration"
+                        value={newKeyBudgetDuration}
+                        onChange={(_event, value) => setNewKeyBudgetDuration(value)}
+                      >
+                        <FormSelectOption value="" label={t('pages.apiKeys.quotas.noDuration')} />
+                        <FormSelectOption value="daily" label={t('pages.apiKeys.quotas.daily')} />
+                        <FormSelectOption value="weekly" label={t('pages.apiKeys.quotas.weekly')} />
+                        <FormSelectOption value="monthly" label={t('pages.apiKeys.quotas.monthly')} />
+                        <FormSelectOption value="yearly" label={t('pages.apiKeys.quotas.yearly')} />
+                      </FormSelect>
+                      <HelperText>
+                        <HelperTextItem>{t('pages.apiKeys.quotas.budgetDurationHelper')}</HelperTextItem>
+                      </HelperText>
+                    </FormGroup>
+
+                    <FormGroup
+                      label={t('pages.apiKeys.quotas.softBudget')}
+                      fieldId="key-soft-budget"
+                    >
+                      <TextInput
+                        id="key-soft-budget"
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={newKeySoftBudget ?? ''}
+                        onChange={(_event, value) => setNewKeySoftBudget(value ? parseFloat(value) : undefined)}
+                        placeholder={t('pages.apiKeys.quotas.optionalPlaceholder')}
+                      />
+                      <HelperText>
+                        <HelperTextItem>{t('pages.apiKeys.quotas.softBudgetHelper')}</HelperTextItem>
+                      </HelperText>
+                    </FormGroup>
+                  </>
+                )}
+
+                <FormGroup
+                  label={t('pages.apiKeys.quotas.tpmLimit')}
+                  fieldId="key-tpm-limit"
+                >
+                  <TextInput
+                    id="key-tpm-limit"
+                    type="number"
+                    min="0"
+                    step="1000"
+                    value={newKeyTpmLimit ?? ''}
+                    onChange={(_event, value) => setNewKeyTpmLimit(value ? parseInt(value) : undefined)}
+                    placeholder={t('pages.apiKeys.quotas.optionalPlaceholder')}
+                    validated={formErrors.tpmLimit ? 'error' : 'default'}
+                  />
+                  <HelperText>
+                    <HelperTextItem variant={formErrors.tpmLimit ? 'error' : 'default'}>
+                      {formErrors.tpmLimit ?? (
+                        quotaDefaults?.maximums?.tpmLimit != null
+                          ? t('pages.apiKeys.quotas.maxAllowed', { max: quotaDefaults.maximums.tpmLimit })
+                          : t('pages.apiKeys.quotas.tpmLimitHelper')
+                      )}
+                    </HelperTextItem>
+                  </HelperText>
+                </FormGroup>
+
+                <FormGroup
+                  label={t('pages.apiKeys.quotas.rpmLimit')}
+                  fieldId="key-rpm-limit"
+                >
+                  <TextInput
+                    id="key-rpm-limit"
+                    type="number"
+                    min="0"
+                    step="10"
+                    value={newKeyRpmLimit ?? ''}
+                    onChange={(_event, value) => setNewKeyRpmLimit(value ? parseInt(value) : undefined)}
+                    placeholder={t('pages.apiKeys.quotas.optionalPlaceholder')}
+                    validated={formErrors.rpmLimit ? 'error' : 'default'}
+                  />
+                  <HelperText>
+                    <HelperTextItem variant={formErrors.rpmLimit ? 'error' : 'default'}>
+                      {formErrors.rpmLimit ?? (
+                        quotaDefaults?.maximums?.rpmLimit != null
+                          ? t('pages.apiKeys.quotas.maxAllowed', { max: quotaDefaults.maximums.rpmLimit })
+                          : t('pages.apiKeys.quotas.rpmLimitHelper')
+                      )}
+                    </HelperTextItem>
+                  </HelperText>
+                </FormGroup>
+              </>
+            )}
           </Form>
 
           <div

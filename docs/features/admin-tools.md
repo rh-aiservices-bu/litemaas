@@ -317,6 +317,65 @@ The Branding Customization feature allows administrators to personalize the logi
 
 For complete details, see the [Branding Customization](branding-customization.md) feature documentation.
 
+## Limits Management
+
+The Limits Management feature is accessible from the **Limits** tab on the Admin Tools page (`/admin/tools`). It provides two sections for managing resource limits across the system.
+
+### Bulk User Limits
+
+Allows administrators to update max budget, TPM limit, and RPM limit for all active users in a single operation. A confirmation modal previews the changes before they are applied.
+
+### API Key Quota Defaults
+
+Administrators can configure default and maximum quota values that apply when users create API keys through the self-service interface.
+
+#### Purpose
+
+- **Consistency**: Ensure all new API keys start with sensible resource limits
+- **Cost control**: Set hard maximums that users cannot exceed
+- **Simplified onboarding**: Users see pre-filled quota values based on admin configuration
+
+#### Configurable Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `maxBudget` | number (nullable) | Default/maximum budget in dollars |
+| `tpmLimit` | integer (nullable) | Default/maximum tokens per minute |
+| `rpmLimit` | integer (nullable) | Default/maximum requests per minute |
+| `budgetDuration` | string (nullable) | Budget reset period (`daily`, `weekly`, `monthly`, `yearly`, or custom like `30d`, `1mo`) |
+| `softBudget` | number (nullable) | Soft budget threshold for warnings (defaults only) |
+
+Each field has both a **default** value (auto-applied when users omit the field) and a **maximum** value (hard limit that rejects user requests if exceeded). Setting a value to `null` means "not configured" (no default or no limit).
+
+#### How It Works
+
+1. **Admin configures** defaults and maximums via the Limits tab or `PUT /api/v1/admin/settings/api-key-defaults`
+2. **User opens Create Key modal** — frontend fetches defaults from `GET /api/v1/config/api-key-defaults` (public, no auth)
+3. **Form pre-fills** quota fields with admin defaults; helper text shows configured maximums
+4. **User submits** — backend validates that user values do not exceed admin maximums, applies defaults for omitted fields
+
+#### Validation Behavior
+
+- Default values must be ≤ their corresponding maximum values (enforced on admin save)
+- User-provided values must be ≤ admin maximums (enforced on key creation)
+- `null` maximums mean no upper limit — users can set any value
+
+#### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access — view and modify defaults and maximums |
+| Admin-readonly | View-only access to current configuration |
+| Regular user | No direct access (but benefits from pre-filled defaults in Create Key modal) |
+
+#### API Endpoints
+
+- `GET /api/v1/admin/settings/api-key-defaults` — Get current configuration (admin, adminReadonly)
+- `PUT /api/v1/admin/settings/api-key-defaults` — Update configuration (admin only)
+- `GET /api/v1/config/api-key-defaults` — Public endpoint for frontend pre-fill (no auth)
+
+For API details, see the [REST API Reference](../api/rest-api.md#admin-settings-apiv1adminsettings).
+
 ## Usage Analytics
 
 The Admin Usage Analytics feature (`/admin/usage`) provides comprehensive system-wide visibility into AI model usage across all users, models, and providers.

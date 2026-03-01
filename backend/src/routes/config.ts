@@ -6,6 +6,8 @@ import { join } from 'path';
 import { getPublicConfig } from '../config/admin-analytics.config.js';
 import { litellmConfig } from '../config/litellm.js';
 import { ConfigResponseSchema, type ConfigResponse } from '../schemas/config';
+import { SettingsService } from '../services/settings.service';
+import { ApiKeyQuotaDefaultsSchema } from '../schemas/settings';
 
 /**
  * Configuration Routes
@@ -13,6 +15,8 @@ import { ConfigResponseSchema, type ConfigResponse } from '../schemas/config';
  * Exposes safe subset of configuration to frontend
  */
 export default async function configRoutes(fastify: FastifyInstance) {
+  const settingsService = new SettingsService(fastify);
+
   // Read version from root package.json once at startup
   let appVersion = '0.0.0';
   try {
@@ -129,6 +133,29 @@ export default async function configRoutes(fastify: FastifyInstance) {
       const publicConfig = getPublicConfig(config);
 
       return reply.send(publicConfig);
+    },
+  );
+
+  /**
+   * GET /api/v1/config/api-key-defaults
+   *
+   * Get API key quota defaults and maximums
+   * No authentication required - this is public configuration
+   */
+  fastify.get(
+    '/api-key-defaults',
+    {
+      schema: {
+        description: 'Get API key quota defaults and maximums for user key creation',
+        tags: ['configuration'],
+        response: {
+          200: ApiKeyQuotaDefaultsSchema,
+        },
+      },
+    },
+    async (_request: FastifyRequest, reply: FastifyReply) => {
+      const defaults = await settingsService.getApiKeyDefaults();
+      return reply.send(defaults);
     },
   );
 }

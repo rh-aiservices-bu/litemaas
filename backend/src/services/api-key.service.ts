@@ -1092,33 +1092,47 @@ export class ApiKeyService extends BaseService {
         });
       }
 
-      // Update local database
+      // Build dynamic UPDATE to properly handle clearing values (setting to null)
+      // Only include fields that are explicitly provided in the updates object
+      const setClauses: string[] = ['last_sync_at = CURRENT_TIMESTAMP'];
+      const params: (string | number | null)[] = [];
+      let paramIdx = 1;
+
+      type FieldDef = { key: keyof typeof updates; column: string; serialize?: boolean };
+      const fieldMap: FieldDef[] = [
+        { key: 'maxBudget', column: 'max_budget' },
+        { key: 'tpmLimit', column: 'tpm_limit' },
+        { key: 'rpmLimit', column: 'rpm_limit' },
+        { key: 'budgetDuration', column: 'budget_duration' },
+        { key: 'softBudget', column: 'soft_budget' },
+        { key: 'maxParallelRequests', column: 'max_parallel_requests' },
+        { key: 'modelMaxBudget', column: 'model_max_budget', serialize: true },
+        { key: 'modelRpmLimit', column: 'model_rpm_limit', serialize: true },
+        { key: 'modelTpmLimit', column: 'model_tpm_limit', serialize: true },
+      ];
+
+      for (const { key, column, serialize } of fieldMap) {
+        if (key in updates) {
+          setClauses.push(`${column} = $${paramIdx++}`);
+          const value = updates[key];
+          if (value == null) {
+            params.push(null);
+          } else if (serialize) {
+            params.push(JSON.stringify(value));
+          } else {
+            params.push(value as string | number);
+          }
+        }
+      }
+
+      params.push(keyId);
+
       const updatedApiKey = await this.fastify.dbUtils.queryOne<ApiKeyDbRow>(
         `UPDATE api_keys
-         SET max_budget = COALESCE($1, max_budget),
-             tpm_limit = COALESCE($2, tpm_limit),
-             rpm_limit = COALESCE($3, rpm_limit),
-             budget_duration = COALESCE($4, budget_duration),
-             soft_budget = COALESCE($5, soft_budget),
-             max_parallel_requests = COALESCE($6, max_parallel_requests),
-             model_max_budget = COALESCE($7, model_max_budget),
-             model_rpm_limit = COALESCE($8, model_rpm_limit),
-             model_tpm_limit = COALESCE($9, model_tpm_limit),
-             last_sync_at = CURRENT_TIMESTAMP
-         WHERE id = $10
+         SET ${setClauses.join(', ')}
+         WHERE id = $${paramIdx}
          RETURNING *`,
-        [
-          updates.maxBudget ?? null,
-          updates.tpmLimit ?? null,
-          updates.rpmLimit ?? null,
-          updates.budgetDuration ?? null,
-          updates.softBudget ?? null,
-          updates.maxParallelRequests ?? null,
-          updates.modelMaxBudget ? JSON.stringify(updates.modelMaxBudget) : null,
-          updates.modelRpmLimit ? JSON.stringify(updates.modelRpmLimit) : null,
-          updates.modelTpmLimit ? JSON.stringify(updates.modelTpmLimit) : null,
-          keyId,
-        ],
+        params,
       );
 
       // Create audit log

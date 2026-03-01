@@ -1,4 +1,5 @@
 import { apiClient } from './api';
+import type { ApiKeyQuotaDefaults } from '../types/users';
 
 export interface BulkUpdateUserLimitsRequest {
   maxBudget?: number;
@@ -45,6 +46,20 @@ class AdminService {
    */
   async getSystemStats(): Promise<SystemStats> {
     return await apiClient.get<SystemStats>('/admin/system/stats');
+  }
+
+  /**
+   * Get API key quota defaults and maximums
+   */
+  async getApiKeyDefaults(): Promise<ApiKeyQuotaDefaults> {
+    return await apiClient.get<ApiKeyQuotaDefaults>('/admin/settings/api-key-defaults');
+  }
+
+  /**
+   * Update API key quota defaults and maximums
+   */
+  async updateApiKeyDefaults(data: ApiKeyQuotaDefaults): Promise<ApiKeyQuotaDefaults> {
+    return await apiClient.put<ApiKeyQuotaDefaults>('/admin/settings/api-key-defaults', data);
   }
 }
 

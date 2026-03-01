@@ -1,6 +1,24 @@
 import { ApiKeyMetadata } from './common.types.js';
 
 /**
+ * Admin-configurable defaults and maximums for user-created API keys
+ */
+export interface ApiKeyQuotaDefaults {
+  defaults: {
+    maxBudget?: number | null;
+    tpmLimit?: number | null;
+    rpmLimit?: number | null;
+    budgetDuration?: string | null;
+    softBudget?: number | null;
+  };
+  maximums: {
+    maxBudget?: number | null;
+    tpmLimit?: number | null;
+    rpmLimit?: number | null;
+  };
+}
+
+/**
  * API key permissions interface
  */
 export interface ApiKeyPermissions {

@@ -63,6 +63,12 @@ export interface CreateApiKeyRequest {
   subscriptionId?: string;
   name?: string;
   expiresAt?: string;
+  // Quota fields
+  maxBudget?: number;
+  budgetDuration?: string;
+  tpmLimit?: number;
+  rpmLimit?: number;
+  softBudget?: number;
   metadata?: {
     description?: string;
     permissions?: string[];

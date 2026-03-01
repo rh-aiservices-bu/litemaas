@@ -55,6 +55,16 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 - **Full Audit Trail**: All admin actions logged with metadata
 - **RBAC**: `users:read` (admin, adminReadonly) for viewing, `users:write` (admin only) for modifications
 
+**User Self-Service API Key Quotas**: Users can set their own resource limits (max budget, TPM, RPM, budget duration, soft budget) when creating API keys, with admin-configurable defaults and maximums:
+
+- **Self-service fields**: Quota inputs in Create Key modal pre-filled with admin defaults
+- **Admin defaults & maximums**: Configurable via `system_settings` table (`api_key_defaults` JSONB row)
+- **Validation**: Backend enforces user values ≤ admin maximums; defaults auto-applied when omitted
+- **Admin endpoints**: `GET/PUT /api/v1/admin/settings/api-key-defaults` with RBAC
+- **Public endpoint**: `GET /api/v1/config/api-key-defaults` for frontend pre-fill (no auth)
+- **Budget duration flexibility**: Supports predefined periods (`daily`, `weekly`, `monthly`, `yearly`) and custom LiteLLM durations (`30d`, `1mo`, `1h`)
+- **Limits tab**: Admin Tools page includes Bulk User Limits and API Key Quota Defaults sections
+
 **Branding Customization**: Admin-controlled login page and header branding with per-element toggle switches:
 
 - **Login Page**: Custom logo, title (200 char max), and subtitle (500 char max)

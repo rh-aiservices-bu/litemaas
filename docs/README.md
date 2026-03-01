@@ -154,6 +154,7 @@ See our [Contributing Guide](../CONTRIBUTING.md) for information on:
 - **User Roles/RBAC**: `docs/features/user-roles-administration.md`
 - **PatternFly 6 Components**: `docs/development/pf6-guide/`
 - **Accessibility Testing**: `docs/development/accessibility/`
+- **API Key Quotas**: `docs/features/admin-tools.md#api-key-quota-defaults`
 - **API Documentation**: `docs/api/rest-api.md`
 - **Authentication Setup**: `docs/deployment/authentication.md`
 - **Chatbot Implementation**: `docs/development/chatbot-implementation.md`
