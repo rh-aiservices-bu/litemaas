@@ -6,7 +6,6 @@ import {
   Card,
   CardBody,
   Button,
-  Badge,
   Content,
   ContentVariants,
   Flex,
@@ -31,11 +30,7 @@ import {
   ClipboardCopyVariant,
   Bullseye,
   Tooltip,
-  Select,
-  SelectList,
-  SelectOption,
-  MenuToggle,
-  MenuToggleElement,
+  Skeleton,
   Label,
   LabelGroup,
   Divider,
@@ -107,7 +102,6 @@ const ApiKeysPage: React.FC = () => {
   const [models, setModels] = useState<Model[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
-  const [isModelSelectOpen, setIsModelSelectOpen] = useState(false);
 
   // Quota fields for create modal
   const [newKeyMaxBudget, setNewKeyMaxBudget] = useState<number | undefined>(undefined);
@@ -1070,121 +1064,74 @@ const ApiKeysPage: React.FC = () => {
 
             {/* ✅ Multi-model selection */}
             <FormGroup label={t('pages.apiKeys.forms.models')} isRequired fieldId="key-models">
-              <Select
-                role="listbox"
-                id="key-models"
-                isOpen={isModelSelectOpen}
-                onOpenChange={setIsModelSelectOpen}
-                aria-label={t('pages.apiKeys.forms.modelsAriaLabel')}
-                aria-required="true"
-                aria-invalid={formErrors.models ? 'true' : 'false'}
-                aria-describedby={formErrors.models ? 'key-models-error' : undefined}
-                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle
-                    ref={toggleRef}
-                    onClick={() => setIsModelSelectOpen(!isModelSelectOpen)}
-                    isExpanded={isModelSelectOpen}
-                    aria-expanded={isModelSelectOpen}
-                    aria-haspopup="listbox"
-                    aria-invalid={formErrors.models ? 'true' : 'false'}
-                    aria-describedby={formErrors.models ? 'key-models-error' : undefined}
+              {loadingModels ? (
+                <Skeleton height="40px" />
+              ) : models.length === 0 ? (
+                <Alert
+                  variant="warning"
+                  isInline
+                  isPlain
+                  title={t('pages.apiKeys.messages.noSubscribedModels')}
+                />
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <Label
+                    color="purple"
+                    onClick={() => {
+                      if (selectedModelIds.length === models.length) {
+                        setSelectedModelIds([]);
+                      } else {
+                        setSelectedModelIds(models.map((m) => m.id));
+                      }
+                      // Clear validation error if selecting all
+                      if (formErrors.models) {
+                        const newErrors = { ...formErrors };
+                        delete newErrors.models;
+                        setFormErrors(newErrors);
+                      }
+                    }}
+                    style={{ cursor: 'pointer' }}
                   >
-                    {selectedModelIds.length === 0
-                      ? t('pages.apiKeys.selectModels')
-                      : t('pages.apiKeys.modelsSelected', { count: selectedModelIds.length })}
-                    {selectedModelIds.length > 0 && <Badge isRead>{selectedModelIds.length}</Badge>}
-                  </MenuToggle>
-                )}
-                onSelect={(_event, selection) => {
-                  const selectionString = selection as string;
-                  if (selectedModelIds.includes(selectionString)) {
-                    setSelectedModelIds(selectedModelIds.filter((id) => id !== selectionString));
-                  } else {
-                    setSelectedModelIds([...selectedModelIds, selectionString]);
-                  }
-                  // Clear validation error when user makes a selection
-                  if (formErrors.models) {
-                    const newErrors = { ...formErrors };
-                    delete newErrors.models;
-                    setFormErrors(newErrors);
-                  }
-                }}
-                selected={selectedModelIds}
-              >
-                <SelectList>
-                  {loadingModels ? (
-                    <SelectOption isDisabled>
-                      {t('pages.apiKeys.messages.loadingModels')}
-                    </SelectOption>
-                  ) : models.length === 0 ? (
-                    <SelectOption isDisabled>
-                      {t('pages.apiKeys.messages.noSubscribedModels')}
-                    </SelectOption>
-                  ) : (
-                    <>
-                      <SelectOption
-                        key="select-all"
-                        value="select-all"
-                        hasCheckbox
-                        isSelected={selectedModelIds.length === models.length}
-                        onClick={() => {
-                          if (selectedModelIds.length === models.length) {
-                            setSelectedModelIds([]);
-                          } else {
-                            setSelectedModelIds(models.map((m) => m.id));
-                          }
-                        }}
-                        aria-label={t('pages.apiKeys.selectAllModelsAriaLabel')}
-                      >
-                        <strong>{t('pages.apiKeys.selectAll')}</strong>
-                      </SelectOption>
-                      <Divider />
-                      {models.map((model) => (
-                        <SelectOption
-                          key={model.id}
-                          value={model.id}
-                          hasCheckbox
-                          isSelected={selectedModelIds.includes(model.id)}
-                          aria-label={t('pages.apiKeys.selectModelAriaLabel', { name: model.name })}
-                        >
-                          {model.name}
-                        </SelectOption>
-                      ))}
-                    </>
-                  )}
-                </SelectList>
-              </Select>
+                    {selectedModelIds.length === models.length
+                      ? t('pages.apiKeys.deselectAll', 'Deselect All')
+                      : t('pages.apiKeys.selectAll', 'Select All')}
+                  </Label>
+                  {models.map((model) => (
+                    <Label
+                      key={model.id}
+                      color={selectedModelIds.includes(model.id) ? 'blue' : 'grey'}
+                      onClick={() => {
+                        const newSelection = selectedModelIds.includes(model.id)
+                          ? selectedModelIds.filter((id) => id !== model.id)
+                          : [...selectedModelIds, model.id];
+                        setSelectedModelIds(newSelection);
+                        if (formErrors.models && newSelection.length > 0) {
+                          const newErrors = { ...formErrors };
+                          delete newErrors.models;
+                          setFormErrors(newErrors);
+                        }
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {model.name}
+                    </Label>
+                  ))}
+                </div>
+              )}
               {formErrors.models && (
                 <HelperText id="key-models-error">
                   <HelperTextItem variant="error">{formErrors.models}</HelperTextItem>
                 </HelperText>
               )}
-              {models.length === 0 && !loadingModels && (
-                <HelperText id="key-models-no-subscriptions">
-                  <HelperTextItem variant="error">
-                    {t('pages.apiKeys.messages.noSubscribedModelsError')}
-                  </HelperTextItem>
-                </HelperText>
-              )}
+              <HelperText>
+                <HelperTextItem>
+                  {t(
+                    'pages.apiKeys.forms.modelsHelperText',
+                    'Select one or more models for this API key.',
+                  )}
+                </HelperTextItem>
+              </HelperText>
             </FormGroup>
-            {selectedModelIds.length > 0 && (
-              <LabelGroup>
-                {selectedModelIds.map((modelId) => {
-                  const model = models.find((m) => m.id === modelId);
-                  return model ? (
-                    <Label
-                      key={modelId}
-                      onClose={() =>
-                        setSelectedModelIds(selectedModelIds.filter((id) => id !== modelId))
-                      }
-                      isCompact
-                    >
-                      {model.name}
-                    </Label>
-                  ) : null;
-                })}
-              </LabelGroup>
-            )}
 
             {/* Quota fields - only shown in create mode */}
             {!isEditMode && (

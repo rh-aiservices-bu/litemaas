@@ -524,6 +524,22 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                 />
               ) : (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <Label
+                    color="purple"
+                    onClick={() => {
+                      if (selectedModelIds.length === availableModels.length) {
+                        setSelectedModelIds([]);
+                        setNewKeyModelLimits({});
+                      } else {
+                        setSelectedModelIds(availableModels.map((m) => m.id));
+                      }
+                    }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    {selectedModelIds.length === availableModels.length
+                      ? t('users.apiKeys.form.deselectAll', 'Deselect All')
+                      : t('users.apiKeys.form.selectAll', 'Select All')}
+                  </Label>
                   {availableModels.map((model) => (
                     <Label
                       key={model.id}
