@@ -87,11 +87,20 @@ export MODEL_ID="your-model-id"
 
 ### Find a target user for admin operations
 
-For Parts 3 and 5 you need a **different** user as the target of admin actions (budget limits, admin-created keys). Pick a user ID that is different from the one used for `USER_TOKEN`:
+For Parts 3 and 5 you need a **different** user as the target of admin actions (budget limits, admin-created keys). List users and pick one that is different from the one used for `USER_TOKEN`:
 
 ```bash
-export USER_ID="target-user-uuid"
+curl -s "$BASE_URL/api/v1/admin/users" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.users[] | {userId, username, email}'
 ```
+
+Export the **UUID** (the `userId` value) — not the email or username:
+
+```bash
+export USER_ID="paste-the-userId-uuid-here"
+```
+
+> **Important**: All admin user endpoints require a UUID for the `:id` path parameter. Using an email or username will return a `400` validation error.
 
 ---
 
@@ -389,6 +398,8 @@ export ADMIN_KEY_ID="returned-key-id"
 
 **Purpose**: Verify per-model budget and rate limit JSONB fields are accepted.
 
+> **Note**: `modelMaxBudget` (per-model budget limits) requires a **LiteLLM Enterprise** license. Without one, the backend automatically retries the request without `model_max_budget` and logs a warning. The key is still created successfully with the other per-model limits (`modelRpmLimit`, `modelTpmLimit`) and global quotas — only per-model _budget_ enforcement is skipped.
+
 ```bash
 curl -s -X POST "$BASE_URL/api/v1/admin/users/$USER_ID/api-keys" \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
@@ -413,7 +424,7 @@ curl -s -X POST "$BASE_URL/api/v1/admin/users/$USER_ID/api-keys" \
   }" | jq .
 ```
 
-**Expected**: `201`. Key created successfully. Save the `id`:
+**Expected**: `201`. Key created successfully. If running without a LiteLLM Enterprise license, check the backend logs for a warning about `model_max_budget` being skipped. Save the `id`:
 
 ```bash
 export ADMIN_KEY_2_ID="returned-key-id"
