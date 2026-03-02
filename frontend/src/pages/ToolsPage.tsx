@@ -47,6 +47,7 @@ import type { ApiKeyQuotaDefaults } from '../types/users';
 import { BannerEditModal, BannerTable } from '../components/banners';
 import BrandingTab from '../components/branding/BrandingTab';
 import { useQuery, useQueryClient } from 'react-query';
+import { extractErrorDetails } from '../utils/error.utils';
 
 interface SyncResult {
   success: boolean;
@@ -156,7 +157,7 @@ const ToolsPage: React.FC = () => {
       addNotification({
         variant: 'danger',
         title: t('pages.tools.syncError'),
-        description: error instanceof Error ? error.message : t('pages.tools.syncErrorGeneric'),
+        description: extractErrorDetails(error).message || t('pages.tools.syncErrorGeneric'),
       });
     } finally {
       setIsLoading(false);
@@ -249,7 +250,7 @@ const ToolsPage: React.FC = () => {
         variant: 'danger',
         title: t('pages.tools.bulkUpdateError'),
         description:
-          error instanceof Error ? error.message : t('pages.tools.bulkUpdateErrorGeneric'),
+          extractErrorDetails(error).message || t('pages.tools.bulkUpdateErrorGeneric'),
       });
     } finally {
       setIsLimitsLoading(false);
@@ -290,7 +291,7 @@ const ToolsPage: React.FC = () => {
         variant: 'danger',
         title: t('pages.tools.bannerDeleteError'),
         description:
-          error instanceof Error ? error.message : t('pages.tools.bannerDeleteErrorGeneric'),
+          extractErrorDetails(error).message || t('pages.tools.bannerDeleteErrorGeneric'),
       });
     } finally {
       setIsBannerLoading(false);
@@ -388,7 +389,7 @@ const ToolsPage: React.FC = () => {
         variant: 'danger',
         title: t('pages.tools.bannerSaveError'),
         description:
-          error instanceof Error ? error.message : t('pages.tools.bannerSaveErrorGeneric'),
+          extractErrorDetails(error).message || t('pages.tools.bannerSaveErrorGeneric'),
       });
       throw error; // Re-throw to prevent modal from closing
     } finally {
@@ -444,7 +445,7 @@ const ToolsPage: React.FC = () => {
         variant: 'danger',
         title: t('pages.tools.apiKeyDefaults.saveError'),
         description:
-          error instanceof Error ? error.message : t('pages.tools.apiKeyDefaults.saveErrorGeneric'),
+          extractErrorDetails(error).message || t('pages.tools.apiKeyDefaults.saveErrorGeneric'),
       });
     } finally {
       setIsDefaultsLoading(false);

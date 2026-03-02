@@ -62,6 +62,7 @@ import { subscriptionsService } from '../services/subscriptions.service';
 import { modelsService, Model } from '../services/models.service';
 import { configService } from '../services/config.service';
 import type { ApiKeyQuotaDefaults } from '../types/users';
+import { extractErrorDetails } from '../utils/error.utils';
 
 const ApiKeysPage: React.FC = () => {
   const { t } = useTranslation();
@@ -544,27 +545,15 @@ const ApiKeysPage: React.FC = () => {
       }
     } catch (err: any) {
       console.error(isEditMode ? 'Failed to update API key:' : 'Failed to create API key:', err);
-      let errorMessage = isEditMode
+      const fallbackMessage = isEditMode
         ? t('pages.apiKeys.notifications.updateErrorDesc')
         : t('pages.apiKeys.notifications.createErrorDesc');
-
-      // Extract error message from Axios error response
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.error) {
-        errorMessage =
-          typeof err.response.data.error === 'string'
-            ? err.response.data.error
-            : err.response.data.error.message || errorMessage;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
 
       addNotification({
         title: isEditMode
           ? t('pages.apiKeys.notifications.updateError')
           : t('pages.apiKeys.notifications.createError'),
-        description: errorMessage,
+        description: extractErrorDetails(err).message || fallbackMessage,
         variant: 'danger',
       });
     } finally {
@@ -630,23 +619,10 @@ const ApiKeysPage: React.FC = () => {
       });
     } catch (err: any) {
       console.error('Failed to delete API key:', err);
-      let errorMessage = t('pages.apiKeys.notifications.deleteErrorDesc');
-
-      // Extract error message from Axios error response
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.error) {
-        errorMessage =
-          typeof err.response.data.error === 'string'
-            ? err.response.data.error
-            : err.response.data.error.message || errorMessage;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
 
       addNotification({
         title: t('pages.apiKeys.notifications.deleteError'),
-        description: errorMessage,
+        description: extractErrorDetails(err).message || t('pages.apiKeys.notifications.deleteErrorDesc'),
         variant: 'danger',
       });
     } finally {
@@ -689,9 +665,7 @@ const ApiKeysPage: React.FC = () => {
         addNotification({
           title: t('pages.apiKeys.notifications.retrieveError'),
           description:
-            error instanceof Error
-              ? error.message
-              : t('pages.apiKeys.notifications.retrieveErrorDesc'),
+            extractErrorDetails(error).message || t('pages.apiKeys.notifications.retrieveErrorDesc'),
           variant: 'danger',
         });
       }

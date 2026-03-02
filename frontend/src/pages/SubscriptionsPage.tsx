@@ -45,6 +45,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { subscriptionsService, Subscription } from '../services/subscriptions.service';
 import { getModelFlairs } from '../utils/flairColors';
+import { extractErrorDetails } from '../utils/error.utils';
 
 const SubscriptionsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -224,11 +225,12 @@ const SubscriptionsPage: React.FC = () => {
       setIsDetailsModalOpen(false);
       await loadSubscriptions();
     } catch (error: any) {
+      const errorDetails = extractErrorDetails(error);
       // Handle API key validation error specifically
-      if (error.statusCode === 400 || error.status === 400) {
+      if (errorDetails.statusCode === 400) {
         addNotification({
           title: t('pages.subscriptions.notifications.cannotCancel'),
-          description: error.message || t('pages.subscriptions.notifications.cannotCancelDesc'),
+          description: errorDetails.message || t('pages.subscriptions.notifications.cannotCancelDesc'),
           variant: 'warning',
         });
       } else {
@@ -236,7 +238,7 @@ const SubscriptionsPage: React.FC = () => {
         console.error('Failed to cancel subscription:', error);
         addNotification({
           title: t('pages.subscriptions.notifications.cancelError'),
-          description: error.message || t('pages.subscriptions.notifications.cancelErrorDesc'),
+          description: errorDetails.message || t('pages.subscriptions.notifications.cancelErrorDesc'),
           variant: 'danger',
         });
       }

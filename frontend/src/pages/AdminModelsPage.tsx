@@ -52,6 +52,7 @@ import type {
   TestModelConfigRequest,
 } from '../types/admin';
 import { getModelFlairs } from '../utils/flairColors';
+import { extractErrorDetails } from '../utils/error.utils';
 
 const AdminModelsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -153,7 +154,7 @@ const AdminModelsPage: React.FC = () => {
       onError: (error: AdminModelError) => {
         addNotification({
           title: t('models.admin.createModelFailed'),
-          description: error.message,
+          description: extractErrorDetails(error).message,
           variant: 'danger',
         });
       },
@@ -187,7 +188,7 @@ const AdminModelsPage: React.FC = () => {
       onError: (error: AdminModelError) => {
         addNotification({
           title: t('models.admin.updateModelFailed'),
-          description: error.message,
+          description: extractErrorDetails(error).message,
           variant: 'danger',
         });
       },
@@ -220,7 +221,7 @@ const AdminModelsPage: React.FC = () => {
       onError: (error: AdminModelError) => {
         addNotification({
           title: t('models.admin.deleteModelFailed'),
-          description: error.message,
+          description: extractErrorDetails(error).message,
           variant: 'danger',
         });
       },
@@ -522,7 +523,7 @@ const AdminModelsPage: React.FC = () => {
     return (
       <PageSection>
         <Alert variant="danger" title={t('models.admin.errorLoadingModels')}>
-          {error instanceof Error ? error.message : t('common.anUnknownErrorOccurred')}
+          {extractErrorDetails(error).message || t('common.anUnknownErrorOccurred')}
         </Alert>
       </PageSection>
     );

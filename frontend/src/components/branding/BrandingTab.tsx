@@ -24,6 +24,7 @@ import {
   brandingService,
   type UpdateBrandingSettingsRequest,
 } from '../../services/branding.service';
+import { extractErrorDetails } from '../../utils/error.utils';
 
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2 MB
 
@@ -95,7 +96,7 @@ const BrandingTab: React.FC<BrandingTabProps> = ({ canManage }) => {
         addNotification({
           variant: 'danger',
           title: t('pages.tools.branding.uploadError'),
-          description: error instanceof Error ? error.message : undefined,
+          description: extractErrorDetails(error).message || undefined,
         });
       }
     },
@@ -115,7 +116,7 @@ const BrandingTab: React.FC<BrandingTabProps> = ({ canManage }) => {
         addNotification({
           variant: 'danger',
           title: t('pages.tools.branding.deleteError'),
-          description: error instanceof Error ? error.message : undefined,
+          description: extractErrorDetails(error).message || undefined,
         });
       }
     },
@@ -143,7 +144,7 @@ const BrandingTab: React.FC<BrandingTabProps> = ({ canManage }) => {
       addNotification({
         variant: 'danger',
         title: t('pages.tools.branding.saveError'),
-        description: error instanceof Error ? error.message : undefined,
+        description: extractErrorDetails(error).message || undefined,
       });
     } finally {
       setIsSaving(false);
