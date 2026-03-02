@@ -39,9 +39,9 @@ export LITELLM_URL="http://localhost:4000"
 
 ### Obtain JWT tokens via the dev-token endpoint
 
-In development mode the backend exposes `POST /api/auth/dev-token`. It generates a JWT with whatever username and roles you specify.
+In development mode the backend exposes `POST /api/auth/dev-token`. It generates a JWT with whatever username and roles you specify. If the username matches a real user in the database (by `username` or `email`), the token uses that user's **actual ID** — so subscriptions, API keys, and UI state all match.
 
-**Admin token** (roles: `admin`, `user`):
+**Admin token** — use a real admin user's email:
 
 ```bash
 export ADMIN_TOKEN=$(curl -s -X POST "$BASE_URL/api/auth/dev-token" \
@@ -52,7 +52,7 @@ export ADMIN_TOKEN=$(curl -s -X POST "$BASE_URL/api/auth/dev-token" \
 echo "ADMIN_TOKEN=$ADMIN_TOKEN"
 ```
 
-**Regular user token** (role: `user` only):
+**Regular user token** — use a real user's email (must have an active subscription for the model you'll test with):
 
 ```bash
 export USER_TOKEN=$(curl -s -X POST "$BASE_URL/api/auth/dev-token" \
@@ -63,12 +63,13 @@ export USER_TOKEN=$(curl -s -X POST "$BASE_URL/api/auth/dev-token" \
 echo "USER_TOKEN=$USER_TOKEN"
 ```
 
-> **Caveat**: The dev-token endpoint always embeds the same hardcoded user ID (`550e8400-e29b-41d4-a716-446655440001`) regardless of the username you pass. The two tokens above differ only in their **roles** claim — the admin token passes `requirePermission('admin:users')` checks while the user token gets `403` on admin endpoints. For the admin-users scenarios (Part 3/5) you need a *different* user ID as the target — see "Find user IDs" below.
+> **Tip**: The `roles` array in the request controls authorization — the admin token passes `requirePermission('admin:users')` checks while the user token gets `403` on admin endpoints. The user's actual database ID is used for data lookups (subscriptions, API keys, etc.), so everything you do via curl will be visible in the UI.
 
-You can also list the seeded mock users if you need to check who exists:
+You can list the users in the database to find valid usernames/emails:
 
 ```bash
-curl -s "$BASE_URL/api/auth/mock-users" | jq .
+curl -s "$BASE_URL/api/v1/admin/users" \
+  -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.users[:5]'
 ```
 
 ### Discover available models
@@ -84,14 +85,9 @@ Pick a model ID and export it:
 export MODEL_ID="your-model-id"
 ```
 
-### Find user IDs
+### Find a target user for admin operations
 
-```bash
-curl -s "$BASE_URL/api/v1/admin/users" \
-  -H "Authorization: Bearer $ADMIN_TOKEN" | jq '.users[:5]'
-```
-
-Pick a user ID that is **different** from the dev-token user (`550e8400-e29b-41d4-a716-446655440001`) — this is the user you will manage via the admin endpoints in Parts 3 and 5:
+For Parts 3 and 5 you need a **different** user as the target of admin actions (budget limits, admin-created keys). Pick a user ID that is different from the one used for `USER_TOKEN`:
 
 ```bash
 export USER_ID="target-user-uuid"
@@ -199,10 +195,12 @@ Verify defaults were applied via LiteLLM key info:
 
 ```bash
 curl -s "$LITELLM_URL/key/info" \
-  -H "Authorization: Bearer $TEST_KEY_1" | jq '.info | {max_budget, tpm_limit, rpm_limit, budget_duration, soft_budget}'
+  -H "Authorization: Bearer $TEST_KEY_1" | jq '.info | {max_budget, tpm_limit, rpm_limit, budget_duration, soft_budget: .litellm_budget_table.soft_budget}'
 ```
 
 **Expected**: `max_budget=50`, `tpm_limit=5000`, `rpm_limit=30`, `budget_duration="monthly"`, `soft_budget=40` (matching admin defaults from Scenario 3).
+
+> **Note**: LiteLLM stores `soft_budget` in a nested `litellm_budget_table` object, not at the top level of the key info response.
 
 ### Scenario 6: Create key with custom quotas under maximum
 

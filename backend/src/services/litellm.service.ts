@@ -276,12 +276,15 @@ export class LiteLLMService extends BaseService {
 
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...headers,
     };
 
+    // Set master key as default auth — caller-provided headers can override
     if (this.config.apiKey) {
       requestHeaders['x-litellm-api-key'] = this.config.apiKey;
     }
+
+    // Caller headers override defaults (e.g., getKeyInfo passes the specific key)
+    Object.assign(requestHeaders, headers);
 
     let lastError: Error;
 

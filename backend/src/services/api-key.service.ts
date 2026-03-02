@@ -916,14 +916,21 @@ export class ApiKeyService extends BaseService {
 
       // Update local database with LiteLLM data
       // Transform model_max_budget from LiteLLM snake_case to camelCase for consistency
-      const modelMaxBudget = liteLLMInfo.model_max_budget
+      const hasModelMaxBudget =
+        liteLLMInfo.model_max_budget && Object.keys(liteLLMInfo.model_max_budget).length > 0;
+      const modelMaxBudget = hasModelMaxBudget
         ? Object.fromEntries(
-            Object.entries(liteLLMInfo.model_max_budget).map(([model, config]) => [
+            Object.entries(liteLLMInfo.model_max_budget!).map(([model, config]) => [
               model,
               { budgetLimit: config.budget_limit, timePeriod: config.time_period },
             ]),
           )
         : null;
+
+      const hasModelRpmLimit =
+        liteLLMInfo.model_rpm_limit && Object.keys(liteLLMInfo.model_rpm_limit).length > 0;
+      const hasModelTpmLimit =
+        liteLLMInfo.model_tpm_limit && Object.keys(liteLLMInfo.model_tpm_limit).length > 0;
 
       const updatedApiKey = await this.fastify.dbUtils.queryOne<ApiKeyDbRow>(
         `UPDATE api_keys
@@ -937,9 +944,10 @@ export class ApiKeyService extends BaseService {
              model_max_budget = $8,
              model_rpm_limit = $9,
              model_tpm_limit = $10,
+             budget_reset_at = $11,
              last_sync_at = CURRENT_TIMESTAMP,
              sync_status = 'synced'
-         WHERE id = $11
+         WHERE id = $12
          RETURNING *`,
         [
           liteLLMInfo.spend ?? null,
@@ -947,11 +955,12 @@ export class ApiKeyService extends BaseService {
           liteLLMInfo.tpm_limit ?? null,
           liteLLMInfo.rpm_limit ?? null,
           liteLLMInfo.budget_duration ?? null,
-          liteLLMInfo.soft_budget ?? null,
+          liteLLMInfo.litellm_budget_table?.soft_budget ?? liteLLMInfo.soft_budget ?? null,
           liteLLMInfo.max_parallel_requests ?? null,
           modelMaxBudget ? JSON.stringify(modelMaxBudget) : null,
-          liteLLMInfo.model_rpm_limit ? JSON.stringify(liteLLMInfo.model_rpm_limit) : null,
-          liteLLMInfo.model_tpm_limit ? JSON.stringify(liteLLMInfo.model_tpm_limit) : null,
+          hasModelRpmLimit ? JSON.stringify(liteLLMInfo.model_rpm_limit) : null,
+          hasModelTpmLimit ? JSON.stringify(liteLLMInfo.model_tpm_limit) : null,
+          liteLLMInfo.budget_reset_at ?? null,
           keyId,
         ],
       );

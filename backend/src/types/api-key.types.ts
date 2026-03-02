@@ -173,8 +173,24 @@ export interface LiteLLMKeyGenerationResponse {
   [key: string]: any;
 }
 
+export interface LiteLLMBudgetTable {
+  budget_id?: string;
+  soft_budget?: number;
+  max_budget?: number;
+  tpm_limit?: number;
+  rpm_limit?: number;
+  max_parallel_requests?: number;
+  model_max_budget?: Record<string, unknown>;
+  budget_duration?: string;
+  budget_reset_at?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface LiteLLMKeyInfo {
   key_name?: string;
+  key_alias?: string;
+  soft_budget_cooldown?: boolean;
   spend: number;
   max_budget?: number;
   models?: string[];
@@ -182,17 +198,26 @@ export interface LiteLLMKeyInfo {
   rpm_limit?: number;
   max_parallel_requests?: number;
   budget_duration?: string;
+  budget_reset_at?: string;
   model_max_budget?: Record<string, { budget_limit: number; time_period: string }>;
   model_rpm_limit?: Record<string, number>;
   model_tpm_limit?: Record<string, number>;
+  model_spend?: Record<string, number>;
   user_id?: string;
   team_id?: string;
-  expires?: string;
-  budget_reset_at?: string;
+  expires?: string | null;
+  budget_id?: string;
+  organization_id?: string | null;
   soft_budget?: number;
-  blocked?: boolean;
+  blocked?: boolean | null;
   tags?: string[];
   metadata?: ApiKeyMetadata;
+  allowed_cache_controls?: string[];
+  allowed_routes?: string[];
+  permissions?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+  litellm_budget_table?: LiteLLMBudgetTable;
 }
 
 /**
