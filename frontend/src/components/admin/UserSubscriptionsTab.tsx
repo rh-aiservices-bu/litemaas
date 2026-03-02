@@ -13,6 +13,7 @@ import {
   Modal,
   ModalVariant,
   ModalBody,
+  ModalHeader,
   FormGroup,
   HelperText,
   HelperTextItem,
@@ -301,10 +302,10 @@ const UserSubscriptionsTab: React.FC<UserSubscriptionsTabProps> = ({ userId, can
       {/* Add Subscription Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={t('users.subscriptions.addSubscription', 'Add Subscription')}
         isOpen={addModalOpen}
         onClose={() => setAddModalOpen(false)}
       >
+        <ModalHeader title={t('users.subscriptions.addSubscription', 'Add Subscription')} />
         <ModalBody>
           <FormGroup
             label={t('users.subscriptions.selectModels', 'Select Models')}
@@ -377,10 +378,10 @@ const UserSubscriptionsTab: React.FC<UserSubscriptionsTabProps> = ({ userId, can
       {/* Remove Confirmation Modal */}
       <Modal
         variant={ModalVariant.small}
-        title={t('users.subscriptions.removeConfirmTitle', 'Remove Subscription')}
         isOpen={removeModalOpen}
         onClose={() => setRemoveModalOpen(false)}
       >
+        <ModalHeader title={t('users.subscriptions.removeConfirmTitle', 'Remove Subscription')} />
         <ModalBody>
           <p>
             {t(

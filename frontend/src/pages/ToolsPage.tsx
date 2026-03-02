@@ -20,6 +20,7 @@ import {
   Modal,
   ModalVariant,
   ModalBody,
+  ModalHeader,
   Tabs,
   Tab,
   TabTitleText,
@@ -950,10 +951,10 @@ const ToolsPage: React.FC = () => {
         {/* Confirmation Modal */}
         <Modal
           variant={ModalVariant.medium}
-          title={t('pages.tools.confirmBulkUpdate')}
           isOpen={showConfirmModal}
           onClose={() => setShowConfirmModal(false)}
         >
+          <ModalHeader title={t('pages.tools.confirmBulkUpdate')} />
           <ModalBody>
             <p style={{ marginBottom: '1rem' }}>{t('pages.tools.confirmBulkUpdateMessage')}</p>
             <div style={{ marginBottom: '1.5rem' }}>

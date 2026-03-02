@@ -724,13 +724,6 @@ const AdminModelsPage: React.FC = () => {
         {/* Create/Edit/View Model Modal */}
         <Modal
           variant={ModalVariant.medium}
-          title={
-            isCreateModalOpen
-              ? t('models.admin.createModel')
-              : isViewModalOpen
-                ? t('models.admin.viewModel')
-                : t('models.admin.editModel')
-          }
           isOpen={isCreateModalOpen || isEditModalOpen || isViewModalOpen}
           onClose={() => {
             setIsCreateModalOpen(false);
@@ -739,7 +732,15 @@ const AdminModelsPage: React.FC = () => {
             resetForm();
           }}
         >
-          <ModalHeader />
+          <ModalHeader
+            title={
+              isCreateModalOpen
+                ? t('models.admin.createModel')
+                : isViewModalOpen
+                  ? t('models.admin.viewModel')
+                  : t('models.admin.editModel')
+            }
+          />
           <ModalBody>
             <Form>
               <Grid hasGutter>
@@ -1132,14 +1133,13 @@ const AdminModelsPage: React.FC = () => {
         {/* Delete Confirmation Modal */}
         <Modal
           variant={ModalVariant.small}
-          title={t('models.admin.deleteModel')}
           isOpen={isDeleteModalOpen}
           onClose={() => {
             setIsDeleteModalOpen(false);
             setSelectedModel(null);
           }}
         >
-          <ModalHeader />
+          <ModalHeader title={t('models.admin.deleteModel')} />
           <ModalBody>
             {selectedModel && (
               <div>
@@ -1185,11 +1185,10 @@ const AdminModelsPage: React.FC = () => {
         {/* Restricted Access Warning Modal */}
         <Modal
           variant={ModalVariant.small}
-          title={t('models.admin.restrictedAccessWarning.title')}
           isOpen={isRestrictedAccessWarningOpen}
           onClose={() => setIsRestrictedAccessWarningOpen(false)}
         >
-          <ModalHeader />
+          <ModalHeader title={t('models.admin.restrictedAccessWarning.title')} />
           <ModalBody>
             <Alert
               variant="warning"

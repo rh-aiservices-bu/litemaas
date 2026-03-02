@@ -14,6 +14,8 @@ import {
   Modal,
   ModalVariant,
   ModalBody,
+  ModalFooter,
+  ModalHeader,
   Content,
   ContentVariants,
   Form,
@@ -442,10 +444,10 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
       {/* Revoke Confirmation Modal */}
       <Modal
         variant={ModalVariant.small}
-        title={t('users.apiKeys.revokeConfirmTitle', 'Revoke API Key')}
         isOpen={revokeModalOpen}
         onClose={() => setRevokeModalOpen(false)}
       >
+        <ModalHeader title={t('users.apiKeys.revokeConfirmTitle', 'Revoke API Key')} />
         <ModalBody>
           <p>
             {t(
@@ -458,40 +460,33 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
               <strong>{keyToRevoke.name}</strong> ({keyToRevoke.keyPrefix}...)
             </p>
           )}
-          <div
-            style={{
-              marginTop: '1rem',
-              display: 'flex',
-              gap: '0.5rem',
-              justifyContent: 'flex-end',
-            }}
-          >
-            <Button
-              variant="danger"
-              onClick={handleConfirmRevoke}
-              isLoading={revokeMutation.isLoading}
-              isDisabled={revokeMutation.isLoading}
-            >
-              {t('users.apiKeys.revoke', 'Revoke')}
-            </Button>
-            <Button
-              variant="link"
-              onClick={() => setRevokeModalOpen(false)}
-              isDisabled={revokeMutation.isLoading}
-            >
-              {t('common.cancel', 'Cancel')}
-            </Button>
-          </div>
         </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="danger"
+            onClick={handleConfirmRevoke}
+            isLoading={revokeMutation.isLoading}
+            isDisabled={revokeMutation.isLoading}
+          >
+            {t('users.apiKeys.revoke', 'Revoke')}
+          </Button>
+          <Button
+            variant="link"
+            onClick={() => setRevokeModalOpen(false)}
+            isDisabled={revokeMutation.isLoading}
+          >
+            {t('common.cancel', 'Cancel')}
+          </Button>
+        </ModalFooter>
       </Modal>
 
       {/* Create API Key Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={t('users.apiKeys.createNew', 'Create API Key')}
         isOpen={createModalOpen}
         onClose={() => setCreateModalOpen(false)}
       >
+        <ModalHeader title={t('users.apiKeys.createNew', 'Create API Key')} />
         <ModalBody>
           <Form>
             <FormGroup
@@ -831,42 +826,35 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
             )}
           </Form>
 
-          <div
-            style={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              gap: '0.5rem',
-              justifyContent: 'flex-end',
-            }}
-          >
-            <Button
-              variant="primary"
-              onClick={handleCreateSubmit}
-              isLoading={createMutation.isLoading}
-              isDisabled={
-                createMutation.isLoading || !newKeyName.trim() || selectedModelIds.length === 0
-              }
-            >
-              {t('users.apiKeys.form.create', 'Create')}
-            </Button>
-            <Button
-              variant="link"
-              onClick={() => setCreateModalOpen(false)}
-              isDisabled={createMutation.isLoading}
-            >
-              {t('common.cancel', 'Cancel')}
-            </Button>
-          </div>
         </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="primary"
+            onClick={handleCreateSubmit}
+            isLoading={createMutation.isLoading}
+            isDisabled={
+              createMutation.isLoading || !newKeyName.trim() || selectedModelIds.length === 0
+            }
+          >
+            {t('users.apiKeys.form.create', 'Create')}
+          </Button>
+          <Button
+            variant="link"
+            onClick={() => setCreateModalOpen(false)}
+            isDisabled={createMutation.isLoading}
+          >
+            {t('common.cancel', 'Cancel')}
+          </Button>
+        </ModalFooter>
       </Modal>
 
       {/* Generated Key Display Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={t('users.apiKeys.keyGenerated', 'API Key Generated')}
         isOpen={!!generatedKey}
         onClose={() => setGeneratedKey(null)}
       >
+        <ModalHeader title={t('users.apiKeys.keyGenerated', 'API Key Generated')} />
         <ModalBody>
           <Alert
             variant="warning"
@@ -901,12 +889,12 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
               </FormGroup>
             </>
           )}
-          <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
-            <Button variant="primary" onClick={() => setGeneratedKey(null)}>
-              {t('common.done', 'Done')}
-            </Button>
-          </div>
         </ModalBody>
+        <ModalFooter>
+          <Button variant="primary" onClick={() => setGeneratedKey(null)}>
+            {t('common.done', 'Done')}
+          </Button>
+        </ModalFooter>
       </Modal>
     </div>
   );

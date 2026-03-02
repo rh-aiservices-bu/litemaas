@@ -154,12 +154,11 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   return (
     <Modal
       variant={ModalVariant.medium}
-      title={t('adminUsage.exportModal.title', 'Export Usage Data')}
       isOpen={isOpen}
       onClose={handleClose}
       aria-describedby="export-modal-description"
     >
-      <ModalHeader />
+      <ModalHeader title={t('adminUsage.exportModal.title', 'Export Usage Data')} />
       <ModalBody id="export-modal-description">
         <Form>
           {/* Format Selection */}

@@ -5,6 +5,7 @@ import {
   Modal,
   ModalVariant,
   ModalBody,
+  ModalHeader,
   Button,
   Alert,
   Spinner,
@@ -145,15 +146,17 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
   return (
     <Modal
       variant={ModalVariant.large}
-      title={
-        canEdit
-          ? t('users.modal.edit.title', 'Edit User')
-          : t('users.modal.view.title', 'User Details')
-      }
       isOpen={true}
       onClose={handleClose}
       onEscapePress={handleClose}
     >
+      <ModalHeader
+        title={
+          canEdit
+            ? t('users.modal.edit.title', 'Edit User')
+            : t('users.modal.view.title', 'User Details')
+        }
+      />
       <ModalBody>
         {error && (
           <Alert

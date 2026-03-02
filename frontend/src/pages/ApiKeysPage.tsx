@@ -15,6 +15,7 @@ import {
   ModalVariant,
   ModalHeader,
   ModalBody,
+  ModalFooter,
   Form,
   FormGroup,
   TextInput,
@@ -998,9 +999,6 @@ const ApiKeysPage: React.FC = () => {
       {/* Create API Key Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={
-          isEditMode ? t('pages.apiKeys.modals.editTitle') : t('pages.apiKeys.modals.createTitle')
-        }
         isOpen={isCreateModalOpen}
         onClose={() => {
           setIsCreateModalOpen(false);
@@ -1023,6 +1021,11 @@ const ApiKeysPage: React.FC = () => {
           }, 100);
         }}
       >
+        <ModalHeader
+          title={
+            isEditMode ? t('pages.apiKeys.modals.editTitle') : t('pages.apiKeys.modals.createTitle')
+          }
+        />
         <ModalBody>
           <Form>
             <FormGroup label={t('pages.apiKeys.forms.name')} isRequired fieldId="key-name">
@@ -1314,50 +1317,42 @@ const ApiKeysPage: React.FC = () => {
             )}
           </Form>
 
-          <div
-            style={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'flex-end',
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            ref={createModalPrimaryButtonRef}
+            variant="primary"
+            onClick={handleSaveApiKey}
+            isLoading={creatingKey || updatingKey}
+          >
+            {isEditMode
+              ? updatingKey
+                ? t('pages.apiKeys.updating')
+                : t('pages.apiKeys.updateKey')
+              : creatingKey
+                ? t('pages.apiKeys.creating')
+                : t('pages.apiKeys.createKey')}
+          </Button>
+          <Button
+            variant="link"
+            onClick={() => {
+              setIsCreateModalOpen(false);
+              setIsEditMode(false);
+              setEditingKey(null);
+              // Restore focus to the trigger element
+              setTimeout(() => {
+                createModalTriggerRef.current?.focus();
+              }, 100);
             }}
           >
-            <Button
-              ref={createModalPrimaryButtonRef}
-              variant="primary"
-              onClick={handleSaveApiKey}
-              isLoading={creatingKey || updatingKey}
-            >
-              {isEditMode
-                ? updatingKey
-                  ? t('pages.apiKeys.updating')
-                  : t('pages.apiKeys.updateKey')
-                : creatingKey
-                  ? t('pages.apiKeys.creating')
-                  : t('pages.apiKeys.createKey')}
-            </Button>
-            <Button
-              variant="link"
-              onClick={() => {
-                setIsCreateModalOpen(false);
-                setIsEditMode(false);
-                setEditingKey(null);
-                // Restore focus to the trigger element
-                setTimeout(() => {
-                  createModalTriggerRef.current?.focus();
-                }, 100);
-              }}
-            >
-              {t('pages.apiKeys.labels.cancel')}
-            </Button>
-          </div>
-        </ModalBody>
+            {t('pages.apiKeys.labels.cancel')}
+          </Button>
+        </ModalFooter>
       </Modal>
 
       {/* View API Key Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={selectedApiKey?.name || ''}
         isOpen={isViewModalOpen}
         onClose={() => {
           setIsViewModalOpen(false);
@@ -1592,34 +1587,26 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
             </>
           )}
 
-          <div
-            style={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'flex-end',
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="link"
+            onClick={() => {
+              setIsViewModalOpen(false);
+              // Restore focus to the trigger element
+              setTimeout(() => {
+                viewModalTriggerRef.current?.focus();
+              }, 100);
             }}
           >
-            <Button
-              variant="link"
-              onClick={() => {
-                setIsViewModalOpen(false);
-                // Restore focus to the trigger element
-                setTimeout(() => {
-                  viewModalTriggerRef.current?.focus();
-                }, 100);
-              }}
-            >
-              {t('pages.apiKeys.labels.close')}
-            </Button>
-          </div>
-        </ModalBody>
+            {t('pages.apiKeys.labels.close')}
+          </Button>
+        </ModalFooter>
       </Modal>
 
       {/* Generated Key Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={t('pages.apiKeys.modals.createdTitle')}
         isOpen={showGeneratedKey}
         onClose={() => {
           setShowGeneratedKey(false);
@@ -1638,6 +1625,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
           }, 100);
         }}
       >
+        <ModalHeader title={t('pages.apiKeys.modals.createdTitle')} />
         <ModalBody>
           {generatedKey && (
             <>
@@ -1728,35 +1716,27 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
             </>
           )}
 
-          <div
-            style={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'flex-end',
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            ref={generatedModalPrimaryButtonRef}
+            variant="primary"
+            onClick={() => {
+              setShowGeneratedKey(false);
+              // Focus returns to the create modal trigger after key generation
+              setTimeout(() => {
+                createModalTriggerRef.current?.focus();
+              }, 100);
             }}
           >
-            <Button
-              ref={generatedModalPrimaryButtonRef}
-              variant="primary"
-              onClick={() => {
-                setShowGeneratedKey(false);
-                // Focus returns to the create modal trigger after key generation
-                setTimeout(() => {
-                  createModalTriggerRef.current?.focus();
-                }, 100);
-              }}
-            >
-              {t('pages.apiKeys.labels.close')}
-            </Button>
-          </div>
-        </ModalBody>
+            {t('pages.apiKeys.labels.close')}
+          </Button>
+        </ModalFooter>
       </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal
         variant={ModalVariant.small}
-        title={t('pages.apiKeys.modals.deleteTitle')}
         isOpen={isDeleteModalOpen}
         onClose={() => {
           setIsDeleteModalOpen(false);
@@ -1775,6 +1755,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
           }, 100);
         }}
       >
+        <ModalHeader title={t('pages.apiKeys.modals.deleteTitle')} />
         <ModalBody>
           {keyToDelete && (
             <>
@@ -1803,32 +1784,25 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
             </>
           )}
 
-          <div
-            style={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'flex-end',
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="danger" onClick={confirmDeleteKey}>
+            {t('pages.apiKeys.deleteKey')}
+          </Button>
+          <Button
+            ref={deleteModalCancelButtonRef}
+            variant="link"
+            onClick={() => {
+              setIsDeleteModalOpen(false);
+              // Restore focus to the trigger element
+              setTimeout(() => {
+                deleteModalTriggerRef.current?.focus();
+              }, 100);
             }}
           >
-            <Button variant="danger" onClick={confirmDeleteKey}>
-              {t('pages.apiKeys.deleteKey')}
-            </Button>
-            <Button
-              ref={deleteModalCancelButtonRef}
-              variant="link"
-              onClick={() => {
-                setIsDeleteModalOpen(false);
-                // Restore focus to the trigger element
-                setTimeout(() => {
-                  deleteModalTriggerRef.current?.focus();
-                }, 100);
-              }}
-            >
-              {t('pages.apiKeys.labels.cancel')}
-            </Button>
-          </div>
-        </ModalBody>
+            {t('pages.apiKeys.labels.cancel')}
+          </Button>
+        </ModalFooter>
       </Modal>
     </>
   );

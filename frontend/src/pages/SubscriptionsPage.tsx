@@ -469,7 +469,6 @@ const SubscriptionsPage: React.FC = () => {
       {/* Subscription Details Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={selectedSubscription?.modelName || ''}
         isOpen={isDetailsModalOpen}
         onClose={() => {
           setIsDetailsModalOpen(false);
