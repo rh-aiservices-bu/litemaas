@@ -560,9 +560,7 @@ const ApiKeysPage: React.FC = () => {
   const handleViewKey = (apiKey: ApiKey, triggerElement?: HTMLElement) => {
     setSelectedApiKey(apiKey);
     // Store reference to the trigger element for focus restoration
-    if (triggerElement) {
-      viewModalTriggerRef.current = triggerElement;
-    }
+    viewModalTriggerRef.current = triggerElement || null;
     setIsViewModalOpen(true);
   };
 
@@ -814,7 +812,7 @@ const ApiKeysPage: React.FC = () => {
                 </Thead>
                 <Tbody>
                   {apiKeys.map((apiKey) => (
-                    <Tr key={apiKey.id}>
+                    <Tr key={apiKey.id} isClickable onRowClick={() => handleViewKey(apiKey)}>
                       <Th scope="row">
                         <Flex direction={{ default: 'column' }}>
                           <FlexItem>
@@ -832,7 +830,7 @@ const ApiKeysPage: React.FC = () => {
                           )}
                         </Flex>
                       </Th>
-                      <Td>
+                      <Td onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                         <Flex
                           alignItems={{ default: 'alignItemsCenter' }}
                           spaceItems={{ default: 'spaceItemsSm' }}
@@ -937,7 +935,7 @@ const ApiKeysPage: React.FC = () => {
                         </Content>
                       </Td>
                        */}
-                      <Td>
+                      <Td onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                         <Flex spaceItems={{ default: 'spaceItemsSm' }}>
                           <FlexItem>
                             <Button
