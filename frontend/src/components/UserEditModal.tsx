@@ -204,7 +204,7 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
             eventKey="subscriptions"
             title={<TabTitleText>{t('users.tabs.subscriptions', 'Subscriptions')}</TabTitleText>}
           >
-            <UserSubscriptionsTab userId={user.id} />
+            <UserSubscriptionsTab userId={user.id} canEdit={canEdit} />
           </Tab>
         </Tabs>
 

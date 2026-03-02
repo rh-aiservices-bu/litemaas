@@ -14,6 +14,7 @@ import {
   CreateApiKeyForUserRequest,
   CreatedApiKeyResponse,
   UserSubscription,
+  CreateUserSubscriptionsResponse,
 } from '../types/users';
 
 export class UsersService {
@@ -261,6 +262,20 @@ export class UsersService {
     return apiClient.patch<{ id: string; name: string; models: string[]; updatedAt: string }>(
       `/admin/users/${userId}/api-keys/${keyId}`,
       data,
+    );
+  }
+
+  /**
+   * Create subscriptions for user (admin only)
+   * Creates active subscriptions, bypassing restricted model approval
+   */
+  async createUserSubscriptions(
+    userId: string,
+    modelIds: string[],
+  ): Promise<CreateUserSubscriptionsResponse> {
+    return apiClient.post<CreateUserSubscriptionsResponse>(
+      `/admin/users/${userId}/subscriptions`,
+      { modelIds },
     );
   }
 

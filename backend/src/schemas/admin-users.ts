@@ -197,3 +197,28 @@ export const UserBudgetUpdatedSchema = Type.Object({
 });
 
 export type UserBudgetUpdated = Static<typeof UserBudgetUpdatedSchema>;
+
+// Create subscriptions for user (admin action)
+export const CreateUserSubscriptionsSchema = Type.Object({
+  modelIds: Type.Array(Type.String(), { minItems: 1 }),
+});
+
+export type CreateUserSubscriptions = Static<typeof CreateUserSubscriptionsSchema>;
+
+// Response for subscription creation
+export const CreateUserSubscriptionsResponseSchema = Type.Object({
+  created: Type.Array(
+    Type.Object({
+      modelId: Type.String(),
+      subscriptionId: Type.String(),
+    }),
+  ),
+  activated: Type.Array(
+    Type.Object({
+      modelId: Type.String(),
+      subscriptionId: Type.String(),
+      previousStatus: Type.String(),
+    }),
+  ),
+  alreadyActive: Type.Array(Type.String()),
+});

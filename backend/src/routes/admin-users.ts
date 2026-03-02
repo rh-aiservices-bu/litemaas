@@ -15,6 +15,8 @@ import {
   UserBudgetUpdatedSchema,
   AdminUserApiKeysQuerySchema,
   AdminUserSubscriptionsQuerySchema,
+  CreateUserSubscriptionsSchema,
+  CreateUserSubscriptionsResponseSchema,
 } from '../schemas/admin-users';
 import { ErrorResponseSchema } from '../schemas/common';
 import { ApplicationError } from '../utils/errors';
@@ -808,6 +810,90 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
 
         const errorMessage = error instanceof Error ? error.message : String(error);
         throw fastify.createError(500, `Failed to get user subscriptions: ${errorMessage}`);
+      }
+    },
+  });
+
+  // POST /:id/subscriptions - Create subscriptions for user
+  fastify.post('/:id/subscriptions', {
+    schema: {
+      tags: ['Admin - Users'],
+      summary: 'Create subscriptions for user',
+      description:
+        'Create active subscriptions for a user. Bypasses restricted model approval. Reactivates existing non-active subscriptions.',
+      security: [{ bearerAuth: [] }],
+      params: UserIdParamSchema,
+      body: CreateUserSubscriptionsSchema,
+      response: {
+        201: CreateUserSubscriptionsResponseSchema,
+        400: ErrorResponseSchema,
+        403: ErrorResponseSchema,
+        404: ErrorResponseSchema,
+        500: ErrorResponseSchema,
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('users:write')],
+    handler: async (request, reply) => {
+      try {
+        const { id } = request.params as { id: string };
+        const { modelIds } = request.body as { modelIds: string[] };
+        const currentUser = (request as AuthenticatedRequest).user;
+
+        // Check if user exists
+        const user = await fastify.dbUtils.queryOne(
+          'SELECT id, username FROM users WHERE id = $1',
+          [id],
+        );
+
+        if (!user) {
+          throw fastify.createNotFoundError('User');
+        }
+
+        // Create/reactivate subscriptions
+        const result = await ensureActiveSubscriptions(id, modelIds, currentUser.userId);
+
+        // Audit log
+        await fastify.dbUtils.query(
+          `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            currentUser.userId,
+            'ADMIN_CREATE_SUBSCRIPTIONS',
+            'USER',
+            id,
+            JSON.stringify({
+              targetUserId: id,
+              targetUsername: user.username,
+              modelIds,
+              created: result.created.length,
+              activated: result.activated.length,
+              alreadyActive: result.alreadyActive.length,
+            }),
+          ],
+        );
+
+        fastify.log.info(
+          {
+            adminUserId: currentUser.userId,
+            targetUserId: id,
+            created: result.created.length,
+            activated: result.activated.length,
+            alreadyActive: result.alreadyActive.length,
+          },
+          'Admin created subscriptions for user',
+        );
+
+        reply.code(201);
+        return result;
+      } catch (error) {
+        fastify.log.error({ error }, 'Failed to create subscriptions for user');
+
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to create subscriptions: ${errorMessage}`);
       }
     },
   });

@@ -183,6 +183,13 @@ export interface ApiKeyQuotaDefaults {
   };
 }
 
+// Response for admin subscription creation
+export interface CreateUserSubscriptionsResponse {
+  created: Array<{ modelId: string; subscriptionId: string }>;
+  activated: Array<{ modelId: string; subscriptionId: string; previousStatus: string }>;
+  alreadyActive: string[];
+}
+
 // User's subscription for display
 export interface UserSubscription {
   id: string;
