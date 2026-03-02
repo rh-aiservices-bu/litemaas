@@ -448,7 +448,8 @@
       "title": "Model Management",
       "tpmMustBeAtLeast_1": "TPM must be at least 1",
       "tpmTokensPerMinute": "TPM (Tokens per Minute)",
-      "updateModelFailed": "Update Model Failed"
+      "updateModelFailed": "Update Model Failed",
+      "viewModel": "View Model"
     },
     "loading": {
       "description": "Retrieving model information from the server",

@@ -448,7 +448,8 @@
       "title": "模型管理",
       "tpmMustBeAtLeast_1": "TPM必须至少1",
       "tpmTokensPerMinute": "TPM（每分钟令牌数）",
-      "updateModelFailed": "模型更新失败"
+      "updateModelFailed": "模型更新失败",
+      "viewModel": "查看模型"
     },
     "loading": {
       "description": "从服务器获取模型信息",

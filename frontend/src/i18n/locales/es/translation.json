@@ -448,7 +448,8 @@
       "title": "Gestión de Modelos",
       "tpmMustBeAtLeast_1": "El TPM debe ser al menos 1",
       "tpmTokensPerMinute": "TPM (Tokens por Minuto)",
-      "updateModelFailed": "Error al Actualizar Modelo"
+      "updateModelFailed": "Error al Actualizar Modelo",
+      "viewModel": "Ver modelo"
     },
     "loading": {
       "description": "Obteniendo información del modelo desde el servidor",

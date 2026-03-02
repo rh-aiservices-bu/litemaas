@@ -448,7 +448,8 @@
       "title": "모델 관리",
       "tpmMustBeAtLeast_1": "TPM은 최소 1이어야 합니다",
       "tpmTokensPerMinute": "TPM (분당 토큰 수)",
-      "updateModelFailed": "모델 업데이트 실패"
+      "updateModelFailed": "모델 업데이트 실패",
+      "viewModel": "모델 보기"
     },
     "loading": {
       "description": "서버에서 모델 정보를 가져오는 중",

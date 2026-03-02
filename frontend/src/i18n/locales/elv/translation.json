@@ -448,7 +448,8 @@
       "title": "Vegil Vellyn",
       "tpmMustBeAtLeast_1": "TPM prestant min",
       "tpmTokensPerMinute": "TPM (Têw hen Vuin)",
-      "updateModelFailed": "Trenaro Vegil Vuin"
+      "updateModelFailed": "Trenaro Vegil Vuin",
+      "viewModel": "View Model"
     },
     "loading": {
       "description": "Dotha vegil-gwaed o thurin",

@@ -448,7 +448,8 @@
       "title": "Modellverwaltung",
       "tpmMustBeAtLeast_1": "TPM muss mindestens 1 sein",
       "tpmTokensPerMinute": "TPM (Token pro Minute)",
-      "updateModelFailed": "Modell-Aktualisierung fehlgeschlagen"
+      "updateModelFailed": "Modell-Aktualisierung fehlgeschlagen",
+      "viewModel": "Modell anzeigen"
     },
     "loading": {
       "description": "Modellinformationen vom Server abrufen",
