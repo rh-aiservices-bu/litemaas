@@ -78,6 +78,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Quota Schema Consistency**: Resolved schema inconsistencies and improved type safety for quota fields
   - Removed invalid `lifetime` value from budget duration enum, replaced with Union type supporting custom durations
+
+- **LiteLLM Interface Alignment**: Aligned LiteMaaS types, schemas, and sync code with actual LiteLLM `/key/info` response structure
+  - `soft_budget` now read from nested `litellm_budget_table` object (with top-level fallback)
+  - `budget_reset_at` now synced from LiteLLM response to local database
+  - Empty objects (`{}`) for `model_max_budget`, `model_rpm_limit`, `model_tpm_limit` stored as `null` instead of `"{}"`
+  - Fixed `makeRequest` header priority: caller-provided headers now correctly override the master API key (fixes `getKeyInfo` authenticating as admin instead of the queried key)
+  - Added `LiteLLMBudgetTable` interface and TypeBox schema for the nested budget structure
+  - Updated `LiteLLMKeyInfo` with all actual response fields: `key_alias`, `soft_budget_cooldown`, `budget_id`, `organization_id`, `model_spend`, `allowed_cache_controls`, `allowed_routes`, `permissions`, `created_at`, `updated_at`, `litellm_budget_table`
+  - Fixed nullable types: `expires`, `blocked`, `team_id` now accept `null` (not just `undefined`)
   - Replaced `COALESCE`-based UPDATE with dynamic SQL for proper null-clearing of quota fields
   - Added quota fields (`softBudget`, `budgetDuration`, `maxParallelRequests`, `budgetResetAt`, `modelMaxBudget`, `modelRpmLimit`, `modelTpmLimit`) to user-facing API key response schemas
   - Removed `as any` type casts in favor of properly typed schemas

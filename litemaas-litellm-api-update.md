@@ -1364,10 +1364,13 @@ interface ApiKeySyncMapping {
   subscriptionId: string;    // -> metadata.subscription_id
   expiresAt: Date;           // -> duration (calculated)
   maxBudget: number;         // -> max_budget
-  softBudget: number;        // -> soft_budget (NEW)
+  softBudget: number;        // -> .info.litellm_budget_table.soft_budget (preferred) or .info.soft_budget (fallback)
   currentSpend: number;      // -> tracked via key/info .info.spend (CHANGED: nested)
   tpmLimit: number;          // -> tpm_limit
   rpmLimit: number;          // -> rpm_limit
+  budgetDuration: string;    // -> budget_duration
+  budgetResetAt: Date;       // -> budget_reset_at (synced from LiteLLM)
+  maxParallelRequests: number; // -> max_parallel_requests
   teamId: string;            // -> team_id
   organizationId: string;    // -> organization_id (NEW)
   liteLLMKeyId: string;      // -> LiteLLM key mapping
@@ -1379,6 +1382,8 @@ interface ApiKeySyncMapping {
   lastSyncAt: Date;          // -> sync timestamp (LiteMaaS-side)
   syncStatus: string;        // -> sync status tracking (LiteMaaS-side)
 }
+// Note: Empty objects ({}) for model_max_budget, model_rpm_limit, model_tpm_limit
+// are stored as null in the LiteMaaS database.
 ```
 
 ### LiteMaaS Team to LiteLLM Team Mapping

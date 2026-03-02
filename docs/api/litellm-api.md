@@ -169,20 +169,54 @@ x-litellm-api-key: sk-litellm-1234567890abcdef
   "key": "sk-litellm-1234567890abcdef",
   "info": {
     "key_name": "user-john-production",
+    "key_alias": "production-key_a5f2b1c3",
+    "soft_budget_cooldown": false,
     "spend": 15.75,
     "max_budget": 100.0,
+    "soft_budget": 80.0,
     "models": ["gpt-4o", "gpt-3.5-turbo"],
     "tpm_limit": 1000,
     "rpm_limit": 60,
+    "max_parallel_requests": null,
+    "budget_duration": "monthly",
+    "budget_reset_at": "2024-08-01T00:00:00Z",
+    "model_max_budget": {},
+    "model_rpm_limit": {},
+    "model_tpm_limit": {},
+    "model_spend": {},
     "user_id": "user_12345",
     "team_id": "team_67890",
+    "organization_id": null,
     "expires": "2024-08-24T14:06:00Z",
-    "budget_reset_at": "2024-08-01T00:00:00Z"
+    "budget_id": "budget_xyz",
+    "blocked": false,
+    "tags": ["production"],
+    "metadata": {"subscription_id": "sub_abc123", "created_by": "litemaas"},
+    "allowed_cache_controls": [],
+    "allowed_routes": [],
+    "permissions": {},
+    "created_at": "2024-07-24T14:06:00Z",
+    "updated_at": "2024-07-24T14:06:00Z",
+    "litellm_budget_table": {
+      "budget_id": null,
+      "max_budget": 100.0,
+      "soft_budget": 80.0,
+      "tpm_limit": null,
+      "rpm_limit": null,
+      "max_parallel_requests": null,
+      "model_max_budget": {},
+      "budget_duration": "monthly",
+      "budget_reset_at": "2024-08-01T00:00:00Z",
+      "created_at": "2024-07-24T14:06:00Z",
+      "updated_at": "2024-07-24T14:06:00Z"
+    }
   }
 }
 ```
 
 > **Note**: In v1.74.x, the response was flat (without the `key`/`info` wrapper). LiteMaaS handles both formats.
+>
+> **Important**: `soft_budget` is stored in the nested `litellm_budget_table` object. While it may also appear at the top level of `.info`, the authoritative value is in `.info.litellm_budget_table.soft_budget`. LiteMaaS reads from both locations with the budget table taking precedence.
 
 ### Update Key Settings
 
@@ -532,9 +566,13 @@ interface ApiKeySyncMapping {
   expiresAt: Date; // → duration (calculate)
   // ✅ IMPLEMENTED in LiteMaaS:
   maxBudget: number; // → max_budget
-  currentSpend: number; // → tracked via spend sync
+  softBudget: number; // → soft_budget (in litellm_budget_table)
+  currentSpend: number; // → tracked via .info.spend
   tpmLimit: number; // → tpm_limit
   rpmLimit: number; // → rpm_limit
+  budgetDuration: string; // → budget_duration
+  budgetResetAt: Date; // → budget_reset_at (synced from LiteLLM)
+  maxParallelRequests: number; // → max_parallel_requests
   teamId: string; // → team_id
   liteLLMKeyId: string; // → LiteLLM key mapping
   liteLLMKeyAlias: string; // → key_alias
@@ -542,6 +580,8 @@ interface ApiKeySyncMapping {
   syncStatus: string; // → sync status tracking
 }
 ```
+
+> **Note**: During sync, `soft_budget` is read from `.info.litellm_budget_table.soft_budget` (preferred) or `.info.soft_budget` (fallback). Empty objects (`{}`) for `model_max_budget`, `model_rpm_limit`, and `model_tpm_limit` are stored as `null` in the LiteMaaS database.
 
 ### LiteMaaS Team → LiteLLM Team Mapping (IMPLEMENTED)
 
