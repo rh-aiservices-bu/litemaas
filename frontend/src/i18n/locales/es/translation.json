@@ -1604,6 +1604,7 @@
     "budget": {
       "budgetUtilization": "Utilización del presupuesto",
       "currentSpend": "Gasto Actual",
+      "currentSpendWithPeriod": "Gasto actual ({{period}})",
       "loadError": "Error al cargar información del presupuesto",
       "maxBudget": "Presupuesto Máximo",
       "maxBudgetHelp": "Límite máximo de gasto en USD. Dejar vacío para sin límite.",

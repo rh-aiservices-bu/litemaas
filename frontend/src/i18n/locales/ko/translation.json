@@ -1610,6 +1610,7 @@
     "budget": {
       "budgetUtilization": "예산 사용률",
       "currentSpend": "현재 지출",
+      "currentSpendWithPeriod": "현재 지출 ({{period}})",
       "loadError": "예산 정보를 불러오지 못했습니다",
       "maxBudget": "최대 예산",
       "maxBudgetHelp": "USD 기준 최대 지출 한도. 제한 없음은 비워두세요.",

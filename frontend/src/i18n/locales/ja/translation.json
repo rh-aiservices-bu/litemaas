@@ -1604,6 +1604,7 @@
     "budget": {
       "budgetUtilization": "予算使用率",
       "currentSpend": "現在の支出",
+      "currentSpendWithPeriod": "現在の支出 ({{period}})",
       "loadError": "予算情報の読み込みに失敗しました",
       "maxBudget": "最大予算",
       "maxBudgetHelp": "USD での最大支出制限。制限なしの場合は空欄にしてください。",

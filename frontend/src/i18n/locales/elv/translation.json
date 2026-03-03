@@ -1604,6 +1604,7 @@
     "budget": {
       "budgetUtilization": "Minad ûs",
       "currentSpend": "Sí Minad",
+      "currentSpendWithPeriod": "Current Spendeth ({{period}})",
       "loadError": "Minad ú-gwannad",
       "maxBudget": "Anor Minad",
       "maxBudgetHelp": "Anor minad in USD. Ego lost an pen-rim.",

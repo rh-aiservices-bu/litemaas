@@ -6,6 +6,7 @@ import {
   ModalVariant,
   ModalBody,
   ModalHeader,
+  ModalFooter,
   Button,
   Alert,
   Spinner,
@@ -210,28 +211,19 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
             <UserSubscriptionsTab userId={user.id} canEdit={canEdit} />
           </Tab>
         </Tabs>
-
-        {/* Action Buttons */}
-        <div
-          style={{
-            marginTop: '1.5rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
-          <Flex>
-            <FlexItem>
-              <Button
-                variant="link"
-                icon={<ExternalLinkAltIcon />}
-                iconPosition="right"
-                onClick={handleViewUsageAnalytics}
-              >
-                {t('users.actions.viewUsage', 'View Usage Analytics')}
-              </Button>
-            </FlexItem>
-          </Flex>
+      </ModalBody>
+      <ModalFooter>
+        <Flex style={{ width: '100%' }} justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+          <FlexItem>
+            <Button
+              variant="link"
+              icon={<ExternalLinkAltIcon />}
+              iconPosition="right"
+              onClick={handleViewUsageAnalytics}
+            >
+              {t('users.actions.viewUsage', 'View Usage Analytics')}
+            </Button>
+          </FlexItem>
 
           <Flex spaceItems={{ default: 'spaceItemsSm' }}>
             {canEdit && activeTabKey === 'profile' && (
@@ -263,8 +255,8 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
               </Button>
             </FlexItem>
           </Flex>
-        </div>
-      </ModalBody>
+        </Flex>
+      </ModalFooter>
     </Modal>
   );
 };

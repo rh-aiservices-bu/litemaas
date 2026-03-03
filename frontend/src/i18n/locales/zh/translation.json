@@ -1604,6 +1604,7 @@
     "budget": {
       "budgetUtilization": "预算使用率",
       "currentSpend": "当前支出",
+      "currentSpendWithPeriod": "当前支出 ({{period}})",
       "loadError": "加载预算信息失败",
       "maxBudget": "最大预算",
       "maxBudgetHelp": "以美元为单位的最大支出限额。留空表示无限制。",

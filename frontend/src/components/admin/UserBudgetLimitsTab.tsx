@@ -139,6 +139,20 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
       ? Math.min((userDetails.currentSpend / userDetails.maxBudget) * 100, 100)
       : 0;
 
+  // Build dynamic label for Current Spend including budget period
+  const budgetDurationLabels: Record<string, string> = {
+    daily: t('users.budget.budgetDurationDaily', 'Daily'),
+    weekly: t('users.budget.budgetDurationWeekly', 'Weekly'),
+    monthly: t('users.budget.budgetDurationMonthly', 'Monthly'),
+    yearly: t('users.budget.budgetDurationYearly', 'Yearly'),
+  };
+
+  const currentSpendLabel = userDetails?.budgetDuration && budgetDurationLabels[userDetails.budgetDuration]
+    ? t('users.budget.currentSpendWithPeriod', 'Current Spend ({{period}})', {
+        period: budgetDurationLabels[userDetails.budgetDuration],
+      })
+    : t('users.budget.currentSpend', 'Current Spend');
+
   const budgetDurationOptions = [
     {
       value: '',
@@ -171,10 +185,10 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
       <Form style={{ paddingTop: '1rem' }}>
         {/* Current Spend with Progress Bar and Reset Button */}
         <FormGroup
-          label={t('users.budget.currentSpend', 'Current Spend')}
+          label={currentSpendLabel}
           fieldId="current-spend"
         >
-          <Split hasGutter>
+          <Split hasGutter style={{ alignItems: 'center' }}>
             <SplitItem isFilled>
               <Progress
                 value={budgetUtilization}
@@ -188,12 +202,6 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
                     : undefined
                 }
               />
-              <HelperText>
-                <HelperTextItem>
-                  ${userDetails?.currentSpend?.toFixed(2) || '0.00'} / $
-                  {userDetails?.maxBudget?.toFixed(2) || t('users.budget.unlimited', 'Unlimited')}
-                </HelperTextItem>
-              </HelperText>
             </SplitItem>
             {canEdit && (userDetails?.currentSpend ?? 0) > 0 && (
               <SplitItem>
@@ -208,6 +216,21 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
               </SplitItem>
             )}
           </Split>
+          <HelperText>
+            <HelperTextItem>
+              ${userDetails?.currentSpend?.toFixed(2) || '0.00'} / $
+              {userDetails?.maxBudget?.toFixed(2) || t('users.budget.unlimited', 'Unlimited')}
+            </HelperTextItem>
+          </HelperText>
+          {userDetails?.budgetResetAt && userDetails?.budgetDuration && (
+            <HelperText>
+              <HelperTextItem>
+                {t('users.budget.budgetResetAt', 'Next reset: {{date}}', {
+                  date: new Date(userDetails.budgetResetAt).toLocaleString(),
+                })}
+              </HelperTextItem>
+            </HelperText>
+          )}
         </FormGroup>
 
         {/* Max Budget Input */}

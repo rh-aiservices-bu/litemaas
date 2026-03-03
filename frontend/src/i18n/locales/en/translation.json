@@ -1603,6 +1603,7 @@
     "budget": {
       "budgetUtilization": "Budget utilization",
       "currentSpend": "Current Spend",
+      "currentSpendWithPeriod": "Current Spend ({{period}})",
       "loadError": "Failed to load budget information",
       "maxBudget": "Max Budget",
       "maxBudgetHelp": "Maximum spending limit in USD. Leave empty for no limit.",

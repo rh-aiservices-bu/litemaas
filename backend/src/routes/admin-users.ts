@@ -235,10 +235,10 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
         let currentSpend = 0;
         let budgetResetAt: string | undefined;
         try {
-          const liteLLMUser = await liteLLMService.getUserInfo(String(user.id));
-          if (liteLLMUser) {
-            currentSpend = liteLLMUser.spend ?? 0;
-            budgetResetAt = liteLLMUser.budget_reset_at ?? undefined;
+          const liteLLMUser = await liteLLMService.getUserInfoFull(String(user.id));
+          if (liteLLMUser?.user_info) {
+            currentSpend = liteLLMUser.user_info.spend ?? 0;
+            budgetResetAt = liteLLMUser.user_info.budget_reset_at ?? undefined;
           }
         } catch (err) {
           fastify.log.warn(
