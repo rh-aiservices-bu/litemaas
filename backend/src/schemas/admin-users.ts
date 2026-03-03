@@ -28,6 +28,8 @@ export const AdminUserDetailsSchema = Type.Object({
   currentSpend: Type.Optional(Type.Number()),
   tpmLimit: Type.Optional(Type.Integer()),
   rpmLimit: Type.Optional(Type.Integer()),
+  budgetDuration: Type.Optional(Type.String()),
+  budgetResetAt: Type.Optional(Type.String()),
   syncStatus: Type.Optional(Type.String()),
   lastLoginAt: Type.Optional(Type.String({ format: 'date-time' })),
   createdAt: Type.String({ format: 'date-time' }),
@@ -44,6 +46,16 @@ export const UpdateUserBudgetLimitsSchema = Type.Object({
   maxBudget: Type.Optional(Type.Number({ minimum: 0 })),
   tpmLimit: Type.Optional(Type.Integer({ minimum: 0 })),
   rpmLimit: Type.Optional(Type.Integer({ minimum: 0 })),
+  budgetDuration: Type.Optional(
+    Type.Union([
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+      Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$' }),
+      Type.Null(),
+    ]),
+  ),
 });
 
 export type UpdateUserBudgetLimits = Static<typeof UpdateUserBudgetLimitsSchema>;
@@ -193,10 +205,20 @@ export const UserBudgetUpdatedSchema = Type.Object({
   maxBudget: Type.Optional(Type.Number()),
   tpmLimit: Type.Optional(Type.Integer()),
   rpmLimit: Type.Optional(Type.Integer()),
+  budgetDuration: Type.Optional(Type.Union([Type.String(), Type.Null()])),
   updatedAt: Type.String({ format: 'date-time' }),
 });
 
 export type UserBudgetUpdated = Static<typeof UserBudgetUpdatedSchema>;
+
+// Response for spend reset
+export const ResetUserSpendSchema = Type.Object({
+  id: Type.String(),
+  currentSpend: Type.Number(),
+  resetAt: Type.String({ format: 'date-time' }),
+});
+
+export type ResetUserSpend = Static<typeof ResetUserSpendSchema>;
 
 // Create subscriptions for user (admin action)
 export const CreateUserSubscriptionsSchema = Type.Object({

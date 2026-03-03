@@ -44,6 +44,9 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS sync_status VARCHAR(20) DEFAULT 'pend
 -- Drop lite_llm_user_id column if it exists (no longer needed as id is used directly)
 ALTER TABLE users DROP COLUMN IF EXISTS lite_llm_user_id;
 
+-- Add budget_duration column for auto-reset period
+ALTER TABLE users ADD COLUMN IF NOT EXISTS budget_duration VARCHAR(20);
+
 -- Add constraint after column exists
 DO $$ BEGIN
     IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'users_sync_status_check') THEN

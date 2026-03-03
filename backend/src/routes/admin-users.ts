@@ -13,6 +13,7 @@ import {
   UpdateApiKeyModelsSchema,
   UserSubscriptionsResponseSchema,
   UserBudgetUpdatedSchema,
+  ResetUserSpendSchema,
   AdminUserApiKeysQuerySchema,
   AdminUserSubscriptionsQuerySchema,
   CreateUserSubscriptionsSchema,
@@ -202,7 +203,7 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
         // Get user with budget info
         const user = await fastify.dbUtils.queryOne(
           `SELECT id, username, email, full_name, roles, is_active,
-                  max_budget, tpm_limit, rpm_limit, sync_status,
+                  max_budget, tpm_limit, rpm_limit, budget_duration, sync_status,
                   last_login_at, created_at
            FROM users WHERE id = $1`,
           [id],
@@ -230,9 +231,21 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           [id],
         );
 
-        // Get current spend from LiteLLM if available
-        // For now, we'll use local data - in production this would query LiteLLM
-        const currentSpend = user.current_spend || 0;
+        // Get current spend and budget reset info from LiteLLM
+        let currentSpend = 0;
+        let budgetResetAt: string | undefined;
+        try {
+          const liteLLMUser = await liteLLMService.getUserInfo(String(user.id));
+          if (liteLLMUser) {
+            currentSpend = liteLLMUser.spend ?? 0;
+            budgetResetAt = liteLLMUser.budget_reset_at ?? undefined;
+          }
+        } catch (err) {
+          fastify.log.warn(
+            { userId: id, error: err instanceof Error ? err.message : err },
+            'Failed to fetch user spend from LiteLLM, using fallback value 0',
+          );
+        }
 
         return {
           id: String(user.id),
@@ -242,9 +255,11 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           roles: user.roles as string[],
           isActive: Boolean(user.is_active),
           maxBudget: user.max_budget !== null ? Number(user.max_budget) : undefined,
-          currentSpend: currentSpend !== null ? Number(currentSpend) : undefined,
+          currentSpend: Number(currentSpend),
           tpmLimit: user.tpm_limit !== null ? Number(user.tpm_limit) : undefined,
           rpmLimit: user.rpm_limit !== null ? Number(user.rpm_limit) : undefined,
+          budgetDuration: user.budget_duration ? String(user.budget_duration) : undefined,
+          budgetResetAt,
           syncStatus: user.sync_status ? String(user.sync_status) : undefined,
           lastLoginAt: user.last_login_at ? String(user.last_login_at) : undefined,
           createdAt: String(user.created_at),
@@ -287,10 +302,11 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
     handler: async (request, _reply) => {
       try {
         const { id } = request.params as { id: string };
-        const { maxBudget, tpmLimit, rpmLimit } = request.body as {
+        const { maxBudget, tpmLimit, rpmLimit, budgetDuration } = request.body as {
           maxBudget?: number;
           tpmLimit?: number;
           rpmLimit?: number;
+          budgetDuration?: string | null;
         };
         const currentUser = (request as AuthenticatedRequest).user;
 
@@ -303,22 +319,45 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           throw fastify.createNotFoundError('User');
         }
 
-        // Update budget and limits
+        // Update budget and limits in local DB
         const updatedUser = await fastify.dbUtils.queryOne(
           `UPDATE users SET
            max_budget = COALESCE($1, max_budget),
            tpm_limit = COALESCE($2, tpm_limit),
            rpm_limit = COALESCE($3, rpm_limit),
+           budget_duration = CASE WHEN $4::boolean THEN $5 ELSE budget_duration END,
            updated_at = NOW()
-           WHERE id = $4
-           RETURNING id, max_budget, tpm_limit, rpm_limit, updated_at`,
+           WHERE id = $6
+           RETURNING id, max_budget, tpm_limit, rpm_limit, budget_duration, updated_at`,
           [
             maxBudget !== undefined ? maxBudget : null,
             tpmLimit !== undefined ? tpmLimit : null,
             rpmLimit !== undefined ? rpmLimit : null,
+            budgetDuration !== undefined, // flag: was budgetDuration provided?
+            budgetDuration ?? null, // actual value (null clears it)
             id,
           ],
         );
+
+        // Sync to LiteLLM
+        const liteLLMUpdates: Record<string, number | string | undefined> = {};
+        if (maxBudget !== undefined) liteLLMUpdates.max_budget = maxBudget;
+        if (tpmLimit !== undefined) liteLLMUpdates.tpm_limit = tpmLimit;
+        if (rpmLimit !== undefined) liteLLMUpdates.rpm_limit = rpmLimit;
+        if (budgetDuration !== undefined) {
+          liteLLMUpdates.budget_duration = budgetDuration ?? undefined;
+        }
+
+        if (Object.keys(liteLLMUpdates).length > 0) {
+          try {
+            await liteLLMService.updateUser(id, liteLLMUpdates);
+          } catch (err) {
+            fastify.log.warn(
+              { userId: id, error: err instanceof Error ? err.message : err, liteLLMUpdates },
+              'Failed to sync budget/limits to LiteLLM - local DB updated but LiteLLM may be out of sync',
+            );
+          }
+        }
 
         // Create audit log
         await fastify.dbUtils.query(
@@ -329,12 +368,19 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
             'USER_BUDGET_UPDATE',
             'USER',
             id,
-            JSON.stringify({ changes: { maxBudget, tpmLimit, rpmLimit } }),
+            JSON.stringify({ changes: { maxBudget, tpmLimit, rpmLimit, budgetDuration } }),
           ],
         );
 
         fastify.log.info(
-          { adminUserId: currentUser.userId, targetUserId: id, maxBudget, tpmLimit, rpmLimit },
+          {
+            adminUserId: currentUser.userId,
+            targetUserId: id,
+            maxBudget,
+            tpmLimit,
+            rpmLimit,
+            budgetDuration,
+          },
           'User budget and limits updated',
         );
 
@@ -343,6 +389,9 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           maxBudget: updatedUser?.max_budget !== null ? Number(updatedUser?.max_budget) : undefined,
           tpmLimit: updatedUser?.tpm_limit !== null ? Number(updatedUser?.tpm_limit) : undefined,
           rpmLimit: updatedUser?.rpm_limit !== null ? Number(updatedUser?.rpm_limit) : undefined,
+          budgetDuration: updatedUser?.budget_duration
+            ? String(updatedUser?.budget_duration)
+            : null,
           updatedAt: String(updatedUser?.updated_at),
         };
       } catch (error) {
@@ -354,6 +403,78 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
 
         const errorMessage = error instanceof Error ? error.message : String(error);
         throw fastify.createError(500, `Failed to update user budget: ${errorMessage}`);
+      }
+    },
+  });
+
+  // POST /:id/reset-spend - Reset user's current spend to zero
+  fastify.post('/:id/reset-spend', {
+    schema: {
+      tags: ['Admin - Users'],
+      summary: "Reset user's current spend",
+      description: "Reset the user's current spend to $0 in LiteLLM",
+      security: [{ bearerAuth: [] }],
+      params: UserIdParamSchema,
+      response: {
+        200: ResetUserSpendSchema,
+        403: ErrorResponseSchema,
+        404: ErrorResponseSchema,
+        500: ErrorResponseSchema,
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('users:write')],
+    handler: async (request, _reply) => {
+      try {
+        const { id } = request.params as { id: string };
+        const currentUser = (request as AuthenticatedRequest).user;
+
+        // Check if user exists
+        const user = await fastify.dbUtils.queryOne(
+          'SELECT id, username FROM users WHERE id = $1',
+          [id],
+        );
+
+        if (!user) {
+          throw fastify.createNotFoundError('User');
+        }
+
+        // Reset spend in LiteLLM
+        await liteLLMService.updateUser(id, { spend: 0 });
+
+        const resetAt = new Date().toISOString();
+
+        // Create audit log
+        await fastify.dbUtils.query(
+          `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            currentUser.userId,
+            'USER_SPEND_RESET',
+            'USER',
+            id,
+            JSON.stringify({ targetUsername: user.username, resetAt }),
+          ],
+        );
+
+        fastify.log.info(
+          { adminUserId: currentUser.userId, targetUserId: id, targetUsername: user.username },
+          'User spend reset to zero',
+        );
+
+        return {
+          id: String(user.id),
+          currentSpend: 0,
+          resetAt,
+        };
+      } catch (error) {
+        fastify.log.error({ error }, 'Failed to reset user spend');
+
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to reset user spend: ${errorMessage}`);
       }
     },
   });

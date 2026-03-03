@@ -85,6 +85,8 @@ export interface AdminUserDetails {
   currentSpend?: number;
   tpmLimit?: number;
   rpmLimit?: number;
+  budgetDuration?: string;
+  budgetResetAt?: string;
   syncStatus?: string;
   lastLoginAt?: string;
   createdAt: string;
@@ -99,6 +101,7 @@ export interface UserBudgetLimitsUpdate {
   maxBudget?: number;
   tpmLimit?: number;
   rpmLimit?: number;
+  budgetDuration?: string | null;
 }
 
 // Budget update response

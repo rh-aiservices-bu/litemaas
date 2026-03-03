@@ -206,6 +206,17 @@ export class UsersService {
   }
 
   /**
+   * Reset user's current spend to zero (admin only)
+   */
+  async resetUserSpend(
+    userId: string,
+  ): Promise<{ id: string; currentSpend: number; resetAt: string }> {
+    return apiClient.post<{ id: string; currentSpend: number; resetAt: string }>(
+      `/admin/users/${userId}/reset-spend`,
+    );
+  }
+
+  /**
    * Get user's API keys (admin only)
    */
   async getUserApiKeys(
