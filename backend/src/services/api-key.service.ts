@@ -846,6 +846,28 @@ export class ApiKeyService extends BaseService {
         }
       }
 
+      // Enrich with real-time spend from LiteLLM
+      if (!this.shouldUseMockData()) {
+        const spendPromises = apiKeys.map(async (key) => {
+          if (key.lite_llm_key_value) {
+            try {
+              const liteLLMInfo = await this.liteLLMService.getKeyInfo(
+                key.lite_llm_key_value as string,
+              );
+              key.current_spend = liteLLMInfo.spend ?? key.current_spend;
+              key.max_budget = liteLLMInfo.max_budget ?? key.max_budget;
+              key.budget_reset_at = liteLLMInfo.budget_reset_at ?? key.budget_reset_at;
+            } catch (error) {
+              this.fastify.log.warn(
+                { keyId: key.id, error },
+                'Failed to fetch real-time spend from LiteLLM for API key, using cached value',
+              );
+            }
+          }
+        });
+        await Promise.all(spendPromises);
+      }
+
       // Enhanced mapping to include masked LiteLLM keys
       return {
         data: apiKeys.map((key) => {
