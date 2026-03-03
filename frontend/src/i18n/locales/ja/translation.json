@@ -1075,6 +1075,24 @@
     "tools": {
       "actions": "操作",
       "adminRequired": "モデルを同期するには管理者アクセスが必要です",
+      "userDefaults": {
+        "title": "New User Defaults",
+        "description": "Default values applied when users first log in. Empty fields fall back to the environment variable default shown in the placeholder.",
+        "tpmLabel": "TPM",
+        "tpmTooltip": "Default tokens per minute limit for new users",
+        "rpmLabel": "RPM",
+        "rpmTooltip": "Default requests per minute limit for new users",
+        "maxBudgetLabel": "Max Budget ($)",
+        "maxBudgetTooltip": "Default spending limit for new users",
+        "envDefault": "Env default: {{value}}",
+        "notSet": "Not yet set",
+        "saveDefaults": "Save Defaults",
+        "saving": "Saving...",
+        "saveSuccess": "User defaults saved",
+        "saveSuccessDescription": "Default values for new users have been updated successfully.",
+        "saveError": "Failed to save user defaults",
+        "saveErrorGeneric": "An error occurred while saving user defaults. Please try again."
+      },
       "apiKeyDefaults": {
         "budgetDurationLabel": "Budget Duration",
         "budgetDurationTooltip": "Default budget reset period for new API keys",
@@ -1168,6 +1186,10 @@
       "leaveEmptyToKeep": "現在の値を保持するには空欄にしておいてください",
       "limitsDescription": "システム内のすべてのユーザーにリソース制限を設定します。変更はすべてのアクティブユーザーに適用されます。新しいユーザーのデフォルト値は変更されません。",
       "limitsManagement": "制限管理",
+      "bulkUpdate": {
+        "title": "Bulk Update All Users",
+        "description": "Override resource limits for every active user at once. This does not change defaults for future users."
+      },
       "maxBudgetHelper": "ユーザーあたりの最大支出制限（ドル）",
       "maxBudgetLabel": "最大予算 ($)",
       "models": "モデル管理",

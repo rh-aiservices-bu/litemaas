@@ -1075,6 +1075,24 @@
     "tools": {
       "actions": "Actions",
       "adminRequired": "Accès administrateur requis pour synchroniser les modèles",
+      "userDefaults": {
+        "title": "New User Defaults",
+        "description": "Default values applied when users first log in. Empty fields fall back to the environment variable default shown in the placeholder.",
+        "tpmLabel": "TPM",
+        "tpmTooltip": "Default tokens per minute limit for new users",
+        "rpmLabel": "RPM",
+        "rpmTooltip": "Default requests per minute limit for new users",
+        "maxBudgetLabel": "Max Budget ($)",
+        "maxBudgetTooltip": "Default spending limit for new users",
+        "envDefault": "Env default: {{value}}",
+        "notSet": "Not yet set",
+        "saveDefaults": "Save Defaults",
+        "saving": "Saving...",
+        "saveSuccess": "User defaults saved",
+        "saveSuccessDescription": "Default values for new users have been updated successfully.",
+        "saveError": "Failed to save user defaults",
+        "saveErrorGeneric": "An error occurred while saving user defaults. Please try again."
+      },
       "apiKeyDefaults": {
         "budgetDurationLabel": "Budget Duration",
         "budgetDurationTooltip": "Default budget reset period for new API keys",
@@ -1168,6 +1186,10 @@
       "leaveEmptyToKeep": "Laisser vide pour conserver la valeur actuelle",
       "limitsDescription": "Définir les limites de ressources pour tous les utilisateurs du système. Les modifications s'appliqueront à tous les utilisateurs actifs. Les valeurs par défaut pour les nouveaux utilisateurs ne changeront pas.",
       "limitsManagement": "Gestion des Limites",
+      "bulkUpdate": {
+        "title": "Bulk Update All Users",
+        "description": "Override resource limits for every active user at once. This does not change defaults for future users."
+      },
       "maxBudgetHelper": "Limite de dépenses maximale par utilisateur en dollars",
       "maxBudgetLabel": "Budget Maximum ($)",
       "models": "Gestion des Modèles",

@@ -307,6 +307,9 @@ const testTranslations = {
   'pages.tools.syncErrors': 'Errors',
   'pages.tools.limitsManagement': 'Limits Management',
   'pages.tools.limitsDescription': 'Bulk update user limits for all users',
+  'pages.tools.bulkUpdate.title': 'Bulk Update All Users',
+  'pages.tools.bulkUpdate.description':
+    'Override resource limits for every active user at once. This does not change defaults for future users.',
   'pages.tools.maxBudgetLabel': 'Max Budget ($)',
   'pages.tools.tpmLimitLabel': 'TPM Limit',
   'pages.tools.rpmLimitLabel': 'RPM Limit',

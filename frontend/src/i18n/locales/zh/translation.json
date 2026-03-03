@@ -1075,6 +1075,24 @@
     "tools": {
       "actions": "操作",
       "adminRequired": "同步模型需要管理员权限",
+      "userDefaults": {
+        "title": "New User Defaults",
+        "description": "Default values applied when users first log in. Empty fields fall back to the environment variable default shown in the placeholder.",
+        "tpmLabel": "TPM",
+        "tpmTooltip": "Default tokens per minute limit for new users",
+        "rpmLabel": "RPM",
+        "rpmTooltip": "Default requests per minute limit for new users",
+        "maxBudgetLabel": "Max Budget ($)",
+        "maxBudgetTooltip": "Default spending limit for new users",
+        "envDefault": "Env default: {{value}}",
+        "notSet": "Not yet set",
+        "saveDefaults": "Save Defaults",
+        "saving": "Saving...",
+        "saveSuccess": "User defaults saved",
+        "saveSuccessDescription": "Default values for new users have been updated successfully.",
+        "saveError": "Failed to save user defaults",
+        "saveErrorGeneric": "An error occurred while saving user defaults. Please try again."
+      },
       "apiKeyDefaults": {
         "budgetDurationLabel": "Budget Duration",
         "budgetDurationTooltip": "Default budget reset period for new API keys",
@@ -1168,6 +1186,10 @@
       "leaveEmptyToKeep": "留空以保持当前值",
       "limitsDescription": "为系统中的所有用户设置资源限制。更改将应用于所有活跃用户。新用户的默认值不会更改。",
       "limitsManagement": "限制管理",
+      "bulkUpdate": {
+        "title": "Bulk Update All Users",
+        "description": "Override resource limits for every active user at once. This does not change defaults for future users."
+      },
       "maxBudgetHelper": "每个用户的最大支出限制（美元）",
       "maxBudgetLabel": "最大预算 ($)",
       "models": "模型管理",

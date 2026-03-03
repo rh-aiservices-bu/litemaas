@@ -194,6 +194,22 @@ export interface ApiKeyQuotaDefaults {
   };
 }
 
+// Admin-configurable defaults for new user creation
+export interface UserDefaults {
+  maxBudget?: number | null;
+  tpmLimit?: number | null;
+  rpmLimit?: number | null;
+}
+
+// GET response includes env var fallbacks for UI placeholders
+export interface UserDefaultsResponse extends UserDefaults {
+  envDefaults: {
+    maxBudget: number | null;
+    tpmLimit: number | null;
+    rpmLimit: number | null;
+  };
+}
+
 // Response for admin subscription creation
 export interface CreateUserSubscriptionsResponse {
   created: Array<{ modelId: string; subscriptionId: string }>;

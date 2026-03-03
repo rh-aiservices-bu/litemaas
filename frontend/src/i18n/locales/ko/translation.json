@@ -1075,6 +1075,24 @@
     "tools": {
       "actions": "작업",
       "adminRequired": "모델을 동기화하려면 관리자 액세스가 필요합니다",
+      "userDefaults": {
+        "title": "New User Defaults",
+        "description": "Default values applied when users first log in. Empty fields fall back to the environment variable default shown in the placeholder.",
+        "tpmLabel": "TPM",
+        "tpmTooltip": "Default tokens per minute limit for new users",
+        "rpmLabel": "RPM",
+        "rpmTooltip": "Default requests per minute limit for new users",
+        "maxBudgetLabel": "Max Budget ($)",
+        "maxBudgetTooltip": "Default spending limit for new users",
+        "envDefault": "Env default: {{value}}",
+        "notSet": "Not yet set",
+        "saveDefaults": "Save Defaults",
+        "saving": "Saving...",
+        "saveSuccess": "User defaults saved",
+        "saveSuccessDescription": "Default values for new users have been updated successfully.",
+        "saveError": "Failed to save user defaults",
+        "saveErrorGeneric": "An error occurred while saving user defaults. Please try again."
+      },
       "apiKeyDefaults": {
         "budgetDurationLabel": "Budget Duration",
         "budgetDurationTooltip": "Default budget reset period for new API keys",
@@ -1168,6 +1186,10 @@
       "leaveEmptyToKeep": "현재 값을 유지하려면 비워두세요",
       "limitsDescription": "시스템의 모든 사용자에게 리소스 제한을 설정합니다. 변경 사항은 모든 활성 사용자에게 적용됩니다. 새 사용자의 기본값은 변경되지 않습니다.",
       "limitsManagement": "제한 관리",
+      "bulkUpdate": {
+        "title": "Bulk Update All Users",
+        "description": "Override resource limits for every active user at once. This does not change defaults for future users."
+      },
       "maxBudgetHelper": "사용자별 최대 지출 제한(달러)",
       "maxBudgetLabel": "최대 예산 ($)",
       "models": "모델 관리",

@@ -1,5 +1,6 @@
 // Export all admin components for easy importing
 export { default as ApiKeyQuotaDefaultsSection } from './ApiKeyQuotaDefaultsSection';
+export { default as UserDefaultsSection } from './UserDefaultsSection';
 export { default as MetricsOverview } from './MetricsOverview';
 export { default as ProviderBreakdownTable } from './ProviderBreakdownTable';
 export { TopUsersTable } from './TopUsersTable';

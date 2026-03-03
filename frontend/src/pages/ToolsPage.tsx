@@ -26,6 +26,9 @@ import {
   TabTitleText,
   TabContent,
   TabContentBody,
+  Divider,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { SyncAltIcon, UsersIcon, PlusIcon } from '@patternfly/react-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,7 +43,7 @@ import {
 } from '../services/admin.service';
 import type { SimpleBannerUpdateRequest, CreateBannerRequest, Banner } from '../types/banners';
 import { BannerEditModal, BannerTable } from '../components/banners';
-import { ApiKeyQuotaDefaultsSection } from '../components/admin';
+import { ApiKeyQuotaDefaultsSection, UserDefaultsSection } from '../components/admin';
 import BrandingTab from '../components/branding/BrandingTab';
 import { useQuery, useQueryClient } from 'react-query';
 import { extractErrorDetails } from '../utils/error.utils';
@@ -485,8 +488,31 @@ const ToolsPage: React.FC = () => {
               <TabContent id="limits-tab-content" style={{ paddingTop: '10px' }}>
                 <TabContentBody>
                   <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
+                    {/* New User Defaults Section */}
                     <FlexItem>
-                      <p>{t('pages.tools.limitsDescription')}</p>
+                      <UserDefaultsSection
+                        canEdit={canUpdateLimits}
+                        isVisible={activeTabKey === 'limits'}
+                      />
+                    </FlexItem>
+
+                    {/* API Key Quota Defaults Section */}
+                    <FlexItem>
+                      <ApiKeyQuotaDefaultsSection
+                        canEdit={canUpdateLimits}
+                        isVisible={activeTabKey === 'limits'}
+                      />
+                    </FlexItem>
+
+                    {/* Bulk Update All Users Section */}
+                    <FlexItem>
+                      <Divider style={{ margin: '1.5rem 0' }} />
+                      <Title headingLevel="h3" size="lg" style={{ marginBottom: '0.5rem' }}>
+                        {t('pages.tools.bulkUpdate.title')}
+                      </Title>
+                      <Content component={ContentVariants.p} style={{ marginBottom: '1rem' }}>
+                        {t('pages.tools.bulkUpdate.description')}
+                      </Content>
                     </FlexItem>
 
                     {lastLimitsUpdate && (
@@ -606,14 +632,6 @@ const ToolsPage: React.FC = () => {
                           </Button>
                         </ActionGroup>
                       </Form>
-                    </FlexItem>
-
-                    {/* API Key Quota Defaults Section */}
-                    <FlexItem>
-                      <ApiKeyQuotaDefaultsSection
-                        canEdit={canUpdateLimits}
-                        isVisible={activeTabKey === 'limits'}
-                      />
                     </FlexItem>
                   </Flex>
                 </TabContentBody>

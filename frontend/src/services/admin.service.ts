@@ -1,5 +1,5 @@
 import { apiClient } from './api';
-import type { ApiKeyQuotaDefaults } from '../types/users';
+import type { ApiKeyQuotaDefaults, UserDefaults, UserDefaultsResponse } from '../types/users';
 
 export interface BulkUpdateUserLimitsRequest {
   maxBudget?: number;
@@ -60,6 +60,20 @@ class AdminService {
    */
   async updateApiKeyDefaults(data: ApiKeyQuotaDefaults): Promise<ApiKeyQuotaDefaults> {
     return await apiClient.put<ApiKeyQuotaDefaults>('/admin/settings/api-key-defaults', data);
+  }
+
+  /**
+   * Get new user defaults (includes env var fallbacks)
+   */
+  async getUserDefaults(): Promise<UserDefaultsResponse> {
+    return await apiClient.get<UserDefaultsResponse>('/admin/settings/user-defaults');
+  }
+
+  /**
+   * Update new user defaults
+   */
+  async updateUserDefaults(data: UserDefaults): Promise<UserDefaults> {
+    return await apiClient.put<UserDefaults>('/admin/settings/user-defaults', data);
   }
 }
 

@@ -19,6 +19,15 @@ export interface ApiKeyQuotaDefaults {
 }
 
 /**
+ * Admin-configurable defaults for new user creation
+ */
+export interface UserDefaults {
+  maxBudget?: number | null;
+  tpmLimit?: number | null;
+  rpmLimit?: number | null;
+}
+
+/**
  * API key permissions interface
  */
 export interface ApiKeyPermissions {

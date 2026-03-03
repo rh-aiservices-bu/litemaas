@@ -3,6 +3,7 @@ import * as https from 'https';
 import { OAuthUserInfo, OAuthTokenResponse } from '../types';
 import { LiteLLMService } from './litellm.service';
 import { DefaultTeamService } from './default-team.service';
+import { SettingsService } from './settings.service';
 import { BaseService } from './base.service';
 
 export interface MockUser {
@@ -445,14 +446,18 @@ export class OAuthService extends BaseService {
       // Ensure user is assigned to default team in database
       await this.ensureUserTeamMembership(user.id, DefaultTeamService.DEFAULT_TEAM_ID);
 
+      // Get effective user defaults (DB-persisted overrides → env var fallbacks)
+      const settingsService = new SettingsService(this.fastify);
+      const userDefaults = await settingsService.getEffectiveUserDefaults();
+
       await this.liteLLMService.createUser({
         user_id: user.id,
         user_email: user.email,
         user_alias: user.username,
         user_role: user.roles.includes('admin') ? 'proxy_admin' : 'internal_user',
-        max_budget: Number(this.fastify.config.DEFAULT_USER_MAX_BUDGET), // Configurable via DEFAULT_USER_MAX_BUDGET env var
-        tpm_limit: Number(this.fastify.config.DEFAULT_USER_TPM_LIMIT), // Configurable via DEFAULT_USER_TPM_LIMIT env var
-        rpm_limit: Number(this.fastify.config.DEFAULT_USER_RPM_LIMIT), // Configurable via DEFAULT_USER_RPM_LIMIT env var
+        max_budget: userDefaults.maxBudget,
+        tpm_limit: userDefaults.tpmLimit,
+        rpm_limit: userDefaults.rpmLimit,
         auto_create_key: false, // Don't auto-create key during user creation
         teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
       });

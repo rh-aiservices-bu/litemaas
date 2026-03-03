@@ -1,7 +1,13 @@
 import { FastifyPluginAsync } from 'fastify';
 import { AuthenticatedRequest } from '../types';
 import { SettingsService } from '../services/settings.service';
-import { ApiKeyQuotaDefaultsSchema, type ApiKeyQuotaDefaultsInput } from '../schemas/settings';
+import {
+  ApiKeyQuotaDefaultsSchema,
+  type ApiKeyQuotaDefaultsInput,
+  UserDefaultsSchema,
+  UserDefaultsResponseSchema,
+  type UserDefaultsInput,
+} from '../schemas/settings';
 
 const adminSettingsRoutes: FastifyPluginAsync = async (fastify) => {
   const settingsService = new SettingsService(fastify);
@@ -95,6 +101,94 @@ const adminSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         throw fastify.createError(500, 'Failed to update API key defaults');
+      }
+    },
+  });
+  // GET /admin/settings/user-defaults
+  fastify.get('/user-defaults', {
+    schema: {
+      tags: ['Admin Settings'],
+      summary: 'Get new user defaults',
+      description:
+        'Get admin-configured default values applied when users first log in, plus env var fallbacks.',
+      security: [{ bearerAuth: [] }],
+      response: {
+        200: UserDefaultsResponseSchema,
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:users')],
+    handler: async (request, _reply) => {
+      const authRequest = request as AuthenticatedRequest;
+
+      try {
+        const defaults = await settingsService.getUserDefaults();
+        const envDefaults = settingsService.getEnvUserDefaults();
+
+        fastify.log.debug({ adminUser: authRequest.user?.userId }, 'Admin retrieved user defaults');
+
+        return { ...defaults, envDefaults };
+      } catch (error) {
+        fastify.log.error(
+          { error, adminUser: authRequest.user?.userId },
+          'Failed to get user defaults',
+        );
+        throw fastify.createError(500, 'Failed to retrieve user defaults');
+      }
+    },
+  });
+
+  // PUT /admin/settings/user-defaults
+  fastify.put<{
+    Body: UserDefaultsInput;
+  }>('/user-defaults', {
+    schema: {
+      tags: ['Admin Settings'],
+      summary: 'Update new user defaults',
+      description: 'Set default values applied when users first log in. Admin role required.',
+      security: [{ bearerAuth: [] }],
+      body: UserDefaultsSchema,
+      response: {
+        200: UserDefaultsSchema,
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:users')],
+    handler: async (request, _reply) => {
+      const authRequest = request as AuthenticatedRequest;
+      const settings = request.body;
+
+      try {
+        fastify.log.info(
+          {
+            adminUser: authRequest.user?.userId,
+            adminUsername: authRequest.user?.username,
+            settings,
+            action: 'update_user_defaults',
+          },
+          'Admin updating user defaults',
+        );
+
+        const updated = await settingsService.updateUserDefaults(authRequest.user.userId, settings);
+
+        fastify.log.info(
+          {
+            adminUser: authRequest.user?.userId,
+            settings: updated,
+          },
+          'User defaults updated successfully',
+        );
+
+        return updated;
+      } catch (error) {
+        fastify.log.error(
+          { error, adminUser: authRequest.user?.userId, settings },
+          'Failed to update user defaults',
+        );
+
+        if (error instanceof Error && (error as any).statusCode === 400) {
+          throw error;
+        }
+
+        throw fastify.createError(500, 'Failed to update user defaults');
       }
     },
   });

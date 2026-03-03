@@ -780,6 +780,11 @@ COMMENT ON TABLE system_settings IS 'Key-value store for admin-configurable syst
 INSERT INTO system_settings (key, value)
 VALUES ('api_key_defaults', '{}')
 ON CONFLICT (key) DO NOTHING;
+
+-- Seed default user_defaults row
+INSERT INTO system_settings (key, value)
+VALUES ('user_defaults', '{}')
+ON CONFLICT (key) DO NOTHING;
 `;
 
 // Main migration function
