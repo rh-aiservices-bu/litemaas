@@ -102,6 +102,11 @@
       "usageTrends": "使用トレンド",
       "usageTrendsDescription": "時間経過に伴う使用トレンド"
     },
+    "budgetSummary": {
+      "period": "期間: {{period}}",
+      "title": "予算",
+      "titleForUser": "予算 — {{username}}"
+    },
     "completionTokens": "補完トークン",
     "datePresets": {
       "1d": "過去1日間",

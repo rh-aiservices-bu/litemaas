@@ -102,6 +102,11 @@
       "usageTrends": "Aerlinn-Mith",
       "usageTrendsDescription": "Aerlinn-mith hen lû"
     },
+    "budgetSummary": {
+      "period": "Lû: {{period}}",
+      "title": "Mîr",
+      "titleForUser": "Mîr — {{username}}"
+    },
     "completionTokens": "Têw Echannen",
     "datePresets": {
       "1d": "Aur fîr",

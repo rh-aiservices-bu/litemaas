@@ -102,6 +102,11 @@
       "usageTrends": "使用趋势",
       "usageTrendsDescription": "使用趋势随时间变化"
     },
+    "budgetSummary": {
+      "period": "周期：{{period}}",
+      "title": "预算",
+      "titleForUser": "预算 — {{username}}"
+    },
     "completionTokens": "完成令牌",
     "datePresets": {
       "1d": "最近 1 天",

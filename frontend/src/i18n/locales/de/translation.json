@@ -102,6 +102,11 @@
       "usageTrends": "Nutzungstrends",
       "usageTrendsDescription": "Nutzungstrends über die Zeit"
     },
+    "budgetSummary": {
+      "period": "Zeitraum: {{period}}",
+      "title": "Budget",
+      "titleForUser": "Budget — {{username}}"
+    },
     "completionTokens": "Vervollständigungs-Token",
     "datePresets": {
       "1d": "Letzter Tag",

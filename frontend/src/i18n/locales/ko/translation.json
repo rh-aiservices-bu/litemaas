@@ -102,6 +102,11 @@
       "usageTrends": "사용량 추세",
       "usageTrendsDescription": "시간 경과에 따른 사용량 추세"
     },
+    "budgetSummary": {
+      "period": "기간: {{period}}",
+      "title": "예산",
+      "titleForUser": "예산 — {{username}}"
+    },
     "completionTokens": "완성 토큰",
     "datePresets": {
       "1d": "지난 1일",

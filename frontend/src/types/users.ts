@@ -96,6 +96,14 @@ export interface AdminUserDetails {
   activeApiKeysCount: number;
 }
 
+// User budget info (for usage dashboard summary)
+export interface UserBudgetInfo {
+  maxBudget?: number;
+  currentSpend: number;
+  budgetDuration?: string;
+  budgetResetAt?: string;
+}
+
 // Budget and limits update request
 export interface UserBudgetLimitsUpdate {
   maxBudget?: number | null;
