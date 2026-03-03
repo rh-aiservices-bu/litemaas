@@ -98,9 +98,9 @@ export interface AdminUserDetails {
 
 // Budget and limits update request
 export interface UserBudgetLimitsUpdate {
-  maxBudget?: number;
-  tpmLimit?: number;
-  rpmLimit?: number;
+  maxBudget?: number | null;
+  tpmLimit?: number | null;
+  rpmLimit?: number | null;
   budgetDuration?: string | null;
 }
 

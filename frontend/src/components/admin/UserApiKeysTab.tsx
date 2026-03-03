@@ -643,24 +643,20 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
               label={t('users.apiKeys.form.tpmLimit', 'Tokens per Minute (TPM)')}
               fieldId="create-key-tpm"
             >
-              <NumberInput
+              <TextInput
                 id="create-key-tpm"
-                value={newKeyTpmLimit ?? 0}
-                min={0}
-                onMinus={() => setNewKeyTpmLimit((prev) => Math.max(0, (prev || 0) - 1000))}
-                onPlus={() => setNewKeyTpmLimit((prev) => (prev || 0) + 1000)}
-                onChange={(event) => {
-                  const target = event.target as HTMLInputElement;
-                  const value = parseInt(target.value);
-                  setNewKeyTpmLimit(isNaN(value) ? undefined : value);
+                type="number"
+                value={newKeyTpmLimit ?? ''}
+                onChange={(_event, value) => {
+                  const parsed = parseInt(value, 10);
+                  setNewKeyTpmLimit(value === '' || isNaN(parsed) ? undefined : parsed);
                 }}
                 isDisabled={createMutation.isLoading}
                 aria-label={t('users.apiKeys.form.tpmLimit', 'Tokens per Minute (TPM)')}
-                widthChars={10}
               />
               <HelperText>
                 <HelperTextItem>
-                  {t('users.apiKeys.form.tpmLimitHelp', 'Leave at 0 for no limit. Superseded by user-level limit.')}
+                  {t('users.apiKeys.form.tpmLimitHelp', 'Leave empty for no limit. Superseded by user-level limit.')}
                 </HelperTextItem>
               </HelperText>
             </FormGroup>
@@ -669,24 +665,20 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
               label={t('users.apiKeys.form.rpmLimit', 'Requests per Minute (RPM)')}
               fieldId="create-key-rpm"
             >
-              <NumberInput
+              <TextInput
                 id="create-key-rpm"
-                value={newKeyRpmLimit ?? 0}
-                min={0}
-                onMinus={() => setNewKeyRpmLimit((prev) => Math.max(0, (prev || 0) - 10))}
-                onPlus={() => setNewKeyRpmLimit((prev) => (prev || 0) + 10)}
-                onChange={(event) => {
-                  const target = event.target as HTMLInputElement;
-                  const value = parseInt(target.value);
-                  setNewKeyRpmLimit(isNaN(value) ? undefined : value);
+                type="number"
+                value={newKeyRpmLimit ?? ''}
+                onChange={(_event, value) => {
+                  const parsed = parseInt(value, 10);
+                  setNewKeyRpmLimit(value === '' || isNaN(parsed) ? undefined : parsed);
                 }}
                 isDisabled={createMutation.isLoading}
                 aria-label={t('users.apiKeys.form.rpmLimit', 'Requests per Minute (RPM)')}
-                widthChars={10}
               />
               <HelperText>
                 <HelperTextItem>
-                  {t('users.apiKeys.form.rpmLimitHelp', 'Leave at 0 for no limit. Superseded by user-level limit.')}
+                  {t('users.apiKeys.form.rpmLimitHelp', 'Leave empty for no limit. Superseded by user-level limit.')}
                 </HelperTextItem>
               </HelperText>
             </FormGroup>
@@ -801,37 +793,29 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                           </FormSelect>
                         </FormGroup>
                         <FormGroup label={t('users.apiKeys.form.modelRpm', 'RPM')} fieldId={`model-rpm-${modelId}`}>
-                          <NumberInput
+                          <TextInput
                             id={`model-rpm-${modelId}`}
-                            value={limits.rpm ?? 0}
-                            min={0}
-                            onMinus={() => updateModelLimit('rpm', Math.max(0, (limits.rpm || 0) - 10))}
-                            onPlus={() => updateModelLimit('rpm', (limits.rpm || 0) + 10)}
-                            onChange={(event) => {
-                              const target = event.target as HTMLInputElement;
-                              const val = parseInt(target.value);
-                              updateModelLimit('rpm', isNaN(val) ? undefined : val);
+                            type="number"
+                            value={limits.rpm ?? ''}
+                            onChange={(_event, value) => {
+                              const parsed = parseInt(value, 10);
+                              updateModelLimit('rpm', value === '' || isNaN(parsed) ? undefined : parsed);
                             }}
                             isDisabled={createMutation.isLoading}
                             aria-label={`${modelName} RPM`}
-                            widthChars={8}
                           />
                         </FormGroup>
                         <FormGroup label={t('users.apiKeys.form.modelTpm', 'TPM')} fieldId={`model-tpm-${modelId}`}>
-                          <NumberInput
+                          <TextInput
                             id={`model-tpm-${modelId}`}
-                            value={limits.tpm ?? 0}
-                            min={0}
-                            onMinus={() => updateModelLimit('tpm', Math.max(0, (limits.tpm || 0) - 1000))}
-                            onPlus={() => updateModelLimit('tpm', (limits.tpm || 0) + 1000)}
-                            onChange={(event) => {
-                              const target = event.target as HTMLInputElement;
-                              const val = parseInt(target.value);
-                              updateModelLimit('tpm', isNaN(val) ? undefined : val);
+                            type="number"
+                            value={limits.tpm ?? ''}
+                            onChange={(_event, value) => {
+                              const parsed = parseInt(value, 10);
+                              updateModelLimit('tpm', value === '' || isNaN(parsed) ? undefined : parsed);
                             }}
                             isDisabled={createMutation.isLoading}
                             aria-label={`${modelName} TPM`}
-                            widthChars={8}
                           />
                         </FormGroup>
                       </div>

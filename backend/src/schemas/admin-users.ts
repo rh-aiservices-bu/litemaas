@@ -43,9 +43,9 @@ export type AdminUserDetails = Static<typeof AdminUserDetailsSchema>;
 
 // Update Budget and Limits
 export const UpdateUserBudgetLimitsSchema = Type.Object({
-  maxBudget: Type.Optional(Type.Number({ minimum: 0 })),
-  tpmLimit: Type.Optional(Type.Integer({ minimum: 0 })),
-  rpmLimit: Type.Optional(Type.Integer({ minimum: 0 })),
+  maxBudget: Type.Optional(Type.Union([Type.Null(), Type.Number({ minimum: 0 })])),
+  tpmLimit: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 0 })])),
+  rpmLimit: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 0 })])),
   budgetDuration: Type.Optional(
     Type.Union([
       Type.Literal('daily'),

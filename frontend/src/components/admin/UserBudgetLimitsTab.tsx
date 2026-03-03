@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import {
   Form,
   FormGroup,
-  NumberInput,
+  TextInput,
   FormSelect,
   FormSelectOption,
   Progress,
@@ -126,9 +126,9 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
 
   const handleSave = () => {
     updateMutation.mutate({
-      maxBudget,
-      tpmLimit,
-      rpmLimit,
+      maxBudget: maxBudget ?? null,
+      tpmLimit: tpmLimit ?? null,
+      rpmLimit: rpmLimit ?? null,
       budgetDuration: budgetDuration || null,
     });
   };
@@ -212,26 +212,22 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
 
         {/* Max Budget Input */}
         <FormGroup label={t('users.budget.maxBudget', 'Max Budget')} fieldId="max-budget">
-          <NumberInput
+          <TextInput
             id="max-budget"
-            value={maxBudget ?? 0}
-            min={0}
-            onMinus={() => setMaxBudget((prev) => Math.max(0, (prev || 0) - 10))}
-            onPlus={() => setMaxBudget((prev) => (prev || 0) + 10)}
-            onChange={(event) => {
-              const target = event.target as HTMLInputElement;
-              const value = parseFloat(target.value);
-              setMaxBudget(isNaN(value) ? undefined : value);
+            type="number"
+            value={maxBudget ?? ''}
+            onChange={(_event, value) => {
+              const parsed = parseFloat(value);
+              setMaxBudget(value === '' || isNaN(parsed) ? undefined : parsed);
             }}
             isDisabled={!canEdit || updateMutation.isLoading}
             aria-label={t('users.budget.maxBudget', 'Max Budget')}
-            widthChars={10}
           />
           <HelperText>
             <HelperTextItem>
               {t(
                 'users.budget.maxBudgetHelp',
-                'Maximum spending limit in USD. Set to 0 for unlimited.',
+                'Maximum spending limit in USD. Leave empty for no limit.',
               )}
             </HelperTextItem>
           </HelperText>
@@ -274,48 +270,40 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
 
         {/* TPM Limit */}
         <FormGroup label={t('users.budget.tpmLimit', 'TPM Limit')} fieldId="tpm-limit">
-          <NumberInput
+          <TextInput
             id="tpm-limit"
-            value={tpmLimit ?? 0}
-            min={0}
-            onMinus={() => setTpmLimit((prev) => Math.max(0, (prev || 0) - 1000))}
-            onPlus={() => setTpmLimit((prev) => (prev || 0) + 1000)}
-            onChange={(event) => {
-              const target = event.target as HTMLInputElement;
-              const value = parseInt(target.value, 10);
-              setTpmLimit(isNaN(value) ? undefined : value);
+            type="number"
+            value={tpmLimit ?? ''}
+            onChange={(_event, value) => {
+              const parsed = parseInt(value, 10);
+              setTpmLimit(value === '' || isNaN(parsed) ? undefined : parsed);
             }}
             isDisabled={!canEdit || updateMutation.isLoading}
             aria-label={t('users.budget.tpmLimit', 'TPM Limit')}
-            widthChars={12}
           />
           <HelperText>
             <HelperTextItem>
-              {t('users.budget.tpmLimitHelp', 'Tokens per minute. Set to 0 for unlimited.')}
+              {t('users.budget.tpmLimitHelp', 'Tokens per minute. Leave empty for no limit.')}
             </HelperTextItem>
           </HelperText>
         </FormGroup>
 
         {/* RPM Limit */}
         <FormGroup label={t('users.budget.rpmLimit', 'RPM Limit')} fieldId="rpm-limit">
-          <NumberInput
+          <TextInput
             id="rpm-limit"
-            value={rpmLimit ?? 0}
-            min={0}
-            onMinus={() => setRpmLimit((prev) => Math.max(0, (prev || 0) - 10))}
-            onPlus={() => setRpmLimit((prev) => (prev || 0) + 10)}
-            onChange={(event) => {
-              const target = event.target as HTMLInputElement;
-              const value = parseInt(target.value, 10);
-              setRpmLimit(isNaN(value) ? undefined : value);
+            type="number"
+            value={rpmLimit ?? ''}
+            onChange={(_event, value) => {
+              const parsed = parseInt(value, 10);
+              setRpmLimit(value === '' || isNaN(parsed) ? undefined : parsed);
             }}
             isDisabled={!canEdit || updateMutation.isLoading}
             aria-label={t('users.budget.rpmLimit', 'RPM Limit')}
-            widthChars={10}
           />
           <HelperText>
             <HelperTextItem>
-              {t('users.budget.rpmLimitHelp', 'Requests per minute. Set to 0 for unlimited.')}
+              {t('users.budget.rpmLimitHelp', 'Requests per minute. Leave empty for no limit.')}
             </HelperTextItem>
           </HelperText>
         </FormGroup>

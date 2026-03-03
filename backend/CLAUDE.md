@@ -167,6 +167,10 @@ See [`docs/architecture/services.md`](../docs/architecture/services.md) for comp
 
 **API Key Flow**: Database creation → LiteLLM key generation → One-time user display.
 
+**⚠️ LiteLLM Null Value Gotcha**: LiteLLM's `/user/update` silently ignores `null` values for `tpm_limit`, `rpm_limit`, and `budget_duration` (the `v is not None` check in `_update_internal_user_params` filters them out). Only `max_budget` supports `null` (special-cased via `fields_set`). To "clear" TPM/RPM limits, send `2147483647` (max int32, defined as `LITELLM_UNLIMITED`) as a sentinel for "unlimited". See [`docs/architecture/litellm-integration.md`](../docs/architecture/litellm-integration.md) for full details.
+
+**⚠️ Fastify/Ajv Null Coercion Gotcha**: Fastify uses Ajv with `coerceTypes: true`. In TypeBox `Type.Union([Type.Integer(), Type.Null()])`, Ajv evaluates `anyOf` schemas in order and coerces `null → 0` for the integer branch before reaching the null branch. **Always put `Type.Null()` first**: `Type.Union([Type.Null(), Type.Integer()])`. See [`docs/development/pattern-reference.md`](../docs/development/pattern-reference.md) for the pattern.
+
 For details, see [`docs/architecture/litellm-integration.md`](../docs/architecture/litellm-integration.md).
 
 ## 🚀 Development Commands

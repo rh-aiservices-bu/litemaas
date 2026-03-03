@@ -194,6 +194,34 @@ The following table lists all LiteLLM endpoints currently used by LiteMaaS:
 }
 ```
 
+**⚠️ Critical: Null Value Handling**
+
+LiteLLM's `/user/update` endpoint filters out `null`/`None` values for most fields before writing to the database. From LiteLLM's `internal_user_endpoints.py` (`_update_internal_user_params`):
+
+```python
+for k, v in data_json.items():
+    if k == "max_budget":
+        if "max_budget" in fields_set:
+            non_default_values[k] = v        # ← max_budget: null WORKS (special-cased)
+    elif (
+        v is not None                         # ← all other null values REJECTED
+        and v not in ([], {})
+        ...
+    ):
+        non_default_values[k] = v
+```
+
+This means:
+
+| Field            | Send `null`          | Effect                                      |
+| ---------------- | -------------------- | ------------------------------------------- |
+| `max_budget`     | ✅ Works             | Clears budget (special-cased via `fields_set`) |
+| `tpm_limit`      | ❌ Silently ignored  | Old value persists                          |
+| `rpm_limit`      | ❌ Silently ignored  | Old value persists                          |
+| `budget_duration`| ❌ Silently ignored  | Old value persists                          |
+
+**Workaround**: To "clear" `tpm_limit` or `rpm_limit`, send `2147483647` (max int32) as a sentinel value meaning "effectively unlimited". LiteMaaS defines this as `LITELLM_UNLIMITED` in `admin-users.ts`.
+
 ### API Key Management
 
 #### `POST /key/generate`

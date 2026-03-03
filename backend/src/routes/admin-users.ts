@@ -303,9 +303,9 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const { id } = request.params as { id: string };
         const { maxBudget, tpmLimit, rpmLimit, budgetDuration } = request.body as {
-          maxBudget?: number;
-          tpmLimit?: number;
-          rpmLimit?: number;
+          maxBudget?: number | null;
+          tpmLimit?: number | null;
+          rpmLimit?: number | null;
           budgetDuration?: string | null;
         };
         const currentUser = (request as AuthenticatedRequest).user;
@@ -320,19 +320,23 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         // Update budget and limits in local DB
+        // Use flag-based pattern for all fields so null can clear values
         const updatedUser = await fastify.dbUtils.queryOne(
           `UPDATE users SET
-           max_budget = COALESCE($1, max_budget),
-           tpm_limit = COALESCE($2, tpm_limit),
-           rpm_limit = COALESCE($3, rpm_limit),
-           budget_duration = CASE WHEN $4::boolean THEN $5 ELSE budget_duration END,
+           max_budget = CASE WHEN $1::boolean THEN $2 ELSE max_budget END,
+           tpm_limit = CASE WHEN $3::boolean THEN $4 ELSE tpm_limit END,
+           rpm_limit = CASE WHEN $5::boolean THEN $6 ELSE rpm_limit END,
+           budget_duration = CASE WHEN $7::boolean THEN $8 ELSE budget_duration END,
            updated_at = NOW()
-           WHERE id = $6
+           WHERE id = $9
            RETURNING id, max_budget, tpm_limit, rpm_limit, budget_duration, updated_at`,
           [
-            maxBudget !== undefined ? maxBudget : null,
-            tpmLimit !== undefined ? tpmLimit : null,
-            rpmLimit !== undefined ? rpmLimit : null,
+            maxBudget !== undefined, // flag: was maxBudget provided?
+            maxBudget ?? null, // actual value (null clears it)
+            tpmLimit !== undefined, // flag: was tpmLimit provided?
+            tpmLimit ?? null, // actual value (null clears it)
+            rpmLimit !== undefined, // flag: was rpmLimit provided?
+            rpmLimit ?? null, // actual value (null clears it)
             budgetDuration !== undefined, // flag: was budgetDuration provided?
             budgetDuration ?? null, // actual value (null clears it)
             id,
@@ -340,16 +344,22 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
         );
 
         // Sync to LiteLLM
-        const liteLLMUpdates: Record<string, number | string | undefined> = {};
-        if (maxBudget !== undefined) liteLLMUpdates.max_budget = maxBudget;
-        if (tpmLimit !== undefined) liteLLMUpdates.tpm_limit = tpmLimit;
-        if (rpmLimit !== undefined) liteLLMUpdates.rpm_limit = rpmLimit;
-        if (budgetDuration !== undefined) {
-          liteLLMUpdates.budget_duration = budgetDuration ?? undefined;
-        }
+        // Note: LiteLLM's Pydantic uses exclude_none=True, so null values are ignored
+        // on update (old value persists). To "clear" tpm/rpm limits, we send a large
+        // number (max int32) since LiteLLM ignores null. max_budget handles null natively.
+        const LITELLM_UNLIMITED = 2147483647; // Max int32 — effectively unlimited
+        const liteLLMUpdates: Record<string, number | string | null | undefined> = {};
+        if (maxBudget !== undefined) liteLLMUpdates.max_budget = maxBudget ?? null;
+        if (tpmLimit !== undefined) liteLLMUpdates.tpm_limit = tpmLimit === null ? LITELLM_UNLIMITED : tpmLimit;
+        if (rpmLimit !== undefined) liteLLMUpdates.rpm_limit = rpmLimit === null ? LITELLM_UNLIMITED : rpmLimit;
+        if (budgetDuration !== undefined) liteLLMUpdates.budget_duration = budgetDuration ?? null;
 
         if (Object.keys(liteLLMUpdates).length > 0) {
           try {
+            fastify.log.info(
+              { userId: id, liteLLMUpdates },
+              'Syncing budget/limits to LiteLLM',
+            );
             await liteLLMService.updateUser(id, liteLLMUpdates);
           } catch (err) {
             fastify.log.warn(
