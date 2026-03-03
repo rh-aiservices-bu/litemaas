@@ -699,7 +699,13 @@
         "tpmLimit": "TPM Limit",
         "tpmLimitHelper": "Maximum tokens per minute",
         "weekly": "Weekly",
-        "yearly": "Yearly"
+        "yearly": "Yearly",
+        "perModelLimits": "Límites por Modelo",
+        "perModelLimitsHelp": "Establezca límites de presupuesto y tasa por modelo. Se aplican independientemente de los límites globales de la clave.",
+        "modelBudget": "Presupuesto ($)",
+        "modelTimePeriod": "Período de Tiempo",
+        "modelRpm": "RPM",
+        "modelTpm": "TPM"
       },
       "rateLimits": {
         "basic": "100 req/min (Básico)",

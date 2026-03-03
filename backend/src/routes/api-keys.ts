@@ -97,6 +97,10 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             currentSpend: apiKey.currentSpend,
             tpmLimit: apiKey.tpmLimit,
             rpmLimit: apiKey.rpmLimit,
+            budgetDuration: apiKey.budgetDuration,
+            modelMaxBudget: apiKey.modelMaxBudget,
+            modelRpmLimit: apiKey.modelRpmLimit,
+            modelTpmLimit: apiKey.modelTpmLimit,
             metadata: apiKey.metadata,
           })),
           pagination: {
@@ -390,6 +394,13 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
     Body: {
       name?: string;
       modelIds?: string[];
+      maxBudget?: number;
+      budgetDuration?: string;
+      tpmLimit?: number;
+      rpmLimit?: number;
+      modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+      modelRpmLimit?: Record<string, number>;
+      modelTpmLimit?: Record<string, number>;
       metadata?: {
         description?: string;
         permissions?: string[];
@@ -400,7 +411,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
   }>('/:id', {
     schema: {
       tags: ['API Keys'],
-      description: 'Update API key name, description, and models',
+      description: 'Update API key name, description, models, and quotas',
       security: [{ bearerAuth: [] }],
       params: {
         type: 'object',
@@ -417,6 +428,29 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             type: 'array',
             items: { type: 'string' },
             description: 'Array of model IDs this API key can access',
+          },
+          maxBudget: { type: 'number', minimum: 0 },
+          budgetDuration: { type: 'string' },
+          tpmLimit: { type: 'integer', minimum: 0 },
+          rpmLimit: { type: 'integer', minimum: 0 },
+          modelMaxBudget: {
+            type: 'object',
+            additionalProperties: {
+              type: 'object',
+              properties: {
+                budgetLimit: { type: 'number' },
+                timePeriod: { type: 'string' },
+              },
+              required: ['budgetLimit', 'timePeriod'],
+            },
+          },
+          modelRpmLimit: {
+            type: 'object',
+            additionalProperties: { type: 'integer' },
+          },
+          modelTpmLimit: {
+            type: 'object',
+            additionalProperties: { type: 'integer' },
           },
           metadata: {
             type: 'object',
@@ -453,10 +487,46 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
-      const body = request.body;
+      const { maxBudget, budgetDuration, tpmLimit, rpmLimit, modelMaxBudget, modelRpmLimit, modelTpmLimit, ...rest } = request.body;
 
       try {
-        const updatedApiKey = await apiKeyService.updateApiKey(id, user.userId, body);
+        // Validate quota fields against admin-configured maximums
+        const hasQuotaUpdates = maxBudget !== undefined || budgetDuration !== undefined || tpmLimit !== undefined || rpmLimit !== undefined || modelMaxBudget !== undefined || modelRpmLimit !== undefined || modelTpmLimit !== undefined;
+        if (hasQuotaUpdates) {
+          const quotaConfig = await settingsService.getApiKeyDefaults();
+          const { maximums } = quotaConfig;
+
+          const violations: string[] = [];
+          if (maximums.maxBudget != null && maxBudget != null && maxBudget > maximums.maxBudget) {
+            violations.push(`maxBudget: ${maxBudget} exceeds maximum ${maximums.maxBudget}`);
+          }
+          if (maximums.tpmLimit != null && tpmLimit != null && tpmLimit > maximums.tpmLimit) {
+            violations.push(`tpmLimit: ${tpmLimit} exceeds maximum ${maximums.tpmLimit}`);
+          }
+          if (maximums.rpmLimit != null && rpmLimit != null && rpmLimit > maximums.rpmLimit) {
+            violations.push(`rpmLimit: ${rpmLimit} exceeds maximum ${maximums.rpmLimit}`);
+          }
+
+          if (violations.length > 0) {
+            throw fastify.createError(400, `Quota limits exceeded: ${violations.join('; ')}`);
+          }
+        }
+
+        // Update name/models/metadata
+        let updatedApiKey = await apiKeyService.updateApiKey(id, user.userId, rest);
+
+        // Update quota fields via LiteLLM-syncing method
+        if (hasQuotaUpdates) {
+          updatedApiKey = await apiKeyService.updateApiKeyLimits(id, user.userId, {
+            maxBudget,
+            tpmLimit,
+            rpmLimit,
+            budgetDuration,
+            modelMaxBudget,
+            modelRpmLimit,
+            modelTpmLimit,
+          });
+        }
 
         return {
           id: updatedApiKey.id,
@@ -479,6 +549,10 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           currentSpend: updatedApiKey.currentSpend,
           tpmLimit: updatedApiKey.tpmLimit,
           rpmLimit: updatedApiKey.rpmLimit,
+          budgetDuration: updatedApiKey.budgetDuration,
+          modelMaxBudget: updatedApiKey.modelMaxBudget,
+          modelRpmLimit: updatedApiKey.modelRpmLimit,
+          modelTpmLimit: updatedApiKey.modelTpmLimit,
           metadata: updatedApiKey.metadata,
         };
       } catch (error) {

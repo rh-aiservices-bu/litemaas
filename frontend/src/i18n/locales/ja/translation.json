@@ -699,7 +699,13 @@
         "tpmLimit": "TPM Limit",
         "tpmLimitHelper": "Maximum tokens per minute",
         "weekly": "Weekly",
-        "yearly": "Yearly"
+        "yearly": "Yearly",
+        "perModelLimits": "モデル別制限",
+        "perModelLimitsHelp": "モデルごとの予算とレート制限を設定します。グローバルキー制限とは独立して適用されます。",
+        "modelBudget": "予算 ($)",
+        "modelTimePeriod": "期間",
+        "modelRpm": "RPM",
+        "modelTpm": "TPM"
       },
       "rateLimits": {
         "basic": "100リクエスト/分（ベーシック）",

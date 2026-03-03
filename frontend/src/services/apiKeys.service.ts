@@ -21,6 +21,16 @@ export interface ApiKey {
     provider: string;
     contextLength?: number;
   }[];
+  // Quota fields
+  maxBudget?: number;
+  currentSpend?: number;
+  tpmLimit?: number;
+  rpmLimit?: number;
+  budgetDuration?: string;
+  // Per-model limits
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  modelRpmLimit?: Record<string, number>;
+  modelTpmLimit?: Record<string, number>;
 }
 
 // Backend response interface
@@ -44,6 +54,14 @@ interface BackendApiKeyDetails {
   isActive: boolean;
   createdAt: string;
   revokedAt?: string;
+  maxBudget?: number;
+  currentSpend?: number;
+  tpmLimit?: number;
+  rpmLimit?: number;
+  budgetDuration?: string;
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  modelRpmLimit?: Record<string, number>;
+  modelTpmLimit?: Record<string, number>;
   metadata?: {
     permissions?: string[];
     ratelimit?: number;
@@ -68,7 +86,10 @@ export interface CreateApiKeyRequest {
   budgetDuration?: string;
   tpmLimit?: number;
   rpmLimit?: number;
-  softBudget?: number;
+  // Per-model limits
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  modelRpmLimit?: Record<string, number>;
+  modelTpmLimit?: Record<string, number>;
   metadata?: {
     description?: string;
     permissions?: string[];
@@ -117,6 +138,14 @@ class ApiKeysService {
       description: backend.metadata?.description ? `${backend.metadata.description}` : undefined,
       models: backend.models,
       modelDetails: backend.modelDetails,
+      maxBudget: backend.maxBudget,
+      currentSpend: backend.currentSpend,
+      tpmLimit: backend.tpmLimit,
+      rpmLimit: backend.rpmLimit,
+      budgetDuration: backend.budgetDuration,
+      modelMaxBudget: backend.modelMaxBudget,
+      modelRpmLimit: backend.modelRpmLimit,
+      modelTpmLimit: backend.modelTpmLimit,
     };
   }
 

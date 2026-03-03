@@ -699,7 +699,13 @@
         "tpmLimit": "TPM Limit",
         "tpmLimitHelper": "Maximum tokens per minute",
         "weekly": "Weekly",
-        "yearly": "Yearly"
+        "yearly": "Yearly",
+        "perModelLimits": "모델별 제한",
+        "perModelLimitsHelp": "모델별 예산 및 속도 제한을 설정합니다. 글로벌 키 제한과 독립적으로 적용됩니다.",
+        "modelBudget": "예산 ($)",
+        "modelTimePeriod": "기간",
+        "modelRpm": "RPM",
+        "modelTpm": "TPM"
       },
       "rateLimits": {
         "basic": "100 요청/분 (기본)",

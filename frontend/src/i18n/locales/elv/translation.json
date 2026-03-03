@@ -699,7 +699,13 @@
         "tpmLimit": "TPM Limit",
         "tpmLimitHelper": "Maximum tokens per minute",
         "weekly": "Weekly",
-        "yearly": "Yearly"
+        "yearly": "Yearly",
+        "perModelLimits": "Edraith mi Gwaith",
+        "perModelLimitsHelp": "Panna edraith hen têw ar lim mi gwaith. Si echui edregol o lim glawar hen cîr.",
+        "modelBudget": "Têw ($)",
+        "modelTimePeriod": "Lû Gwaith",
+        "modelRpm": "RPM",
+        "modelTpm": "TPM"
       },
       "rateLimits": {
         "basic": "100 pedi/vuilin (Orthad)",

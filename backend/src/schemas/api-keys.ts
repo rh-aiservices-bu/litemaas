@@ -82,6 +82,17 @@ export const CreateApiKeySchema = Type.Object({
   softBudget: Type.Optional(Type.Number()),
   guardrails: Type.Optional(Type.Array(Type.String())),
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
+  modelMaxBudget: Type.Optional(
+    Type.Record(
+      Type.String(),
+      Type.Object({
+        budgetLimit: Type.Number(),
+        timePeriod: Type.String(),
+      }),
+    ),
+  ),
+  modelRpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+  modelTpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
 });
 
 // Legacy schema for backward compatibility
@@ -214,6 +225,17 @@ export const CreateApiKeyRequestSchema = Type.Object({
   softBudget: Type.Optional(Type.Number()),
   guardrails: Type.Optional(Type.Array(Type.String())),
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
+  modelMaxBudget: Type.Optional(
+    Type.Record(
+      Type.String(),
+      Type.Object({
+        budgetLimit: Type.Number(),
+        timePeriod: Type.String(),
+      }),
+    ),
+  ),
+  modelRpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+  modelTpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
 });
 
 // Response schema for list endpoint with pagination

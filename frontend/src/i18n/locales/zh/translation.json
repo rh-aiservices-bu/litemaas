@@ -699,7 +699,13 @@
         "tpmLimit": "TPM Limit",
         "tpmLimitHelper": "Maximum tokens per minute",
         "weekly": "Weekly",
-        "yearly": "Yearly"
+        "yearly": "Yearly",
+        "perModelLimits": "按模型限制",
+        "perModelLimitsHelp": "设置每个模型的预算和速率限制。这些限制独立于全局密钥限制。",
+        "modelBudget": "预算 ($)",
+        "modelTimePeriod": "时间周期",
+        "modelRpm": "RPM",
+        "modelTpm": "TPM"
       },
       "rateLimits": {
         "basic": "100请求/分钟（基础）",
