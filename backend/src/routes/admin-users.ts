@@ -231,19 +231,48 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           [id],
         );
 
-        // Get current spend and budget reset info from LiteLLM
+        // Get current spend, budget reset, and authoritative budget/limits from LiteLLM
         let currentSpend = 0;
         let budgetResetAt: string | undefined;
+        // Use LiteLLM as source of truth for budget/limits; fall back to local DB
+        let maxBudget: number | undefined = user.max_budget !== null ? Number(user.max_budget) : undefined;
+        let tpmLimit: number | undefined = user.tpm_limit !== null ? Number(user.tpm_limit) : undefined;
+        let rpmLimit: number | undefined = user.rpm_limit !== null ? Number(user.rpm_limit) : undefined;
         try {
           const liteLLMUser = await liteLLMService.getUserInfoFull(String(user.id));
           if (liteLLMUser?.user_info) {
             currentSpend = liteLLMUser.user_info.spend ?? 0;
             budgetResetAt = liteLLMUser.user_info.budget_reset_at ?? undefined;
+
+            // Reconcile budget/limits from LiteLLM (source of truth)
+            const llmInfo = liteLLMUser.user_info;
+            maxBudget = llmInfo.max_budget != null ? Number(llmInfo.max_budget) : undefined;
+            tpmLimit = llmInfo.tpm_limit != null ? Number(llmInfo.tpm_limit) : undefined;
+            rpmLimit = llmInfo.rpm_limit != null ? Number(llmInfo.rpm_limit) : undefined;
+
+            // Update local DB if values differ (side-effect reconciliation)
+            const dbMaxBudget = user.max_budget !== null ? Number(user.max_budget) : null;
+            const dbTpmLimit = user.tpm_limit !== null ? Number(user.tpm_limit) : null;
+            const dbRpmLimit = user.rpm_limit !== null ? Number(user.rpm_limit) : null;
+            const llmMaxBudget = llmInfo.max_budget ?? null;
+            const llmTpmLimit = llmInfo.tpm_limit ?? null;
+            const llmRpmLimit = llmInfo.rpm_limit ?? null;
+
+            if (dbMaxBudget !== llmMaxBudget || dbTpmLimit !== llmTpmLimit || dbRpmLimit !== llmRpmLimit) {
+              await fastify.dbUtils.query(
+                `UPDATE users SET max_budget = $1, tpm_limit = $2, rpm_limit = $3, updated_at = NOW() WHERE id = $4`,
+                [llmMaxBudget, llmTpmLimit, llmRpmLimit, id],
+              );
+              fastify.log.info(
+                { userId: id, dbValues: { maxBudget: dbMaxBudget, tpmLimit: dbTpmLimit, rpmLimit: dbRpmLimit }, llmValues: { maxBudget: llmMaxBudget, tpmLimit: llmTpmLimit, rpmLimit: llmRpmLimit } },
+                'Reconciled user budget/limits from LiteLLM to local DB',
+              );
+            }
           }
         } catch (err) {
           fastify.log.warn(
             { userId: id, error: err instanceof Error ? err.message : err },
-            'Failed to fetch user spend from LiteLLM, using fallback value 0',
+            'Failed to fetch user info from LiteLLM, using local DB values',
           );
         }
 
@@ -254,10 +283,10 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           fullName: user.full_name ? String(user.full_name) : undefined,
           roles: user.roles as string[],
           isActive: Boolean(user.is_active),
-          maxBudget: user.max_budget !== null ? Number(user.max_budget) : undefined,
+          maxBudget,
           currentSpend: Number(currentSpend),
-          tpmLimit: user.tpm_limit !== null ? Number(user.tpm_limit) : undefined,
-          rpmLimit: user.rpm_limit !== null ? Number(user.rpm_limit) : undefined,
+          tpmLimit,
+          rpmLimit,
           budgetDuration: user.budget_duration ? String(user.budget_duration) : undefined,
           budgetResetAt,
           syncStatus: user.sync_status ? String(user.sync_status) : undefined,
