@@ -30,6 +30,8 @@ vi.mock('../../services/models.service', () => ({
 vi.mock('../../services/admin.service', () => ({
   adminService: {
     bulkUpdateUserLimits: vi.fn(),
+    getApiKeyDefaults: vi.fn().mockResolvedValue({ defaults: {}, maximums: {} }),
+    updateApiKeyDefaults: vi.fn().mockResolvedValue({ defaults: {}, maximums: {} }),
   },
 }));
 
