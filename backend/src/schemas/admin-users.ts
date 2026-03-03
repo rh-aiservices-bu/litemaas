@@ -153,13 +153,57 @@ export const CreatedApiKeySchema = Type.Object({
 
 export type CreatedApiKey = Static<typeof CreatedApiKeySchema>;
 
-// Update API Key Models
-export const UpdateApiKeyModelsSchema = Type.Object({
-  modelIds: Type.Array(Type.String()),
+// Update API Key (models, name, and quota fields)
+export const UpdateApiKeySchema = Type.Object({
+  modelIds: Type.Optional(Type.Array(Type.String())),
   name: Type.Optional(Type.String({ minLength: 1, maxLength: 255 })),
+  maxBudget: Type.Optional(Type.Union([Type.Null(), Type.Number({ minimum: 0 })])),
+  tpmLimit: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 0 })])),
+  rpmLimit: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 0 })])),
+  maxParallelRequests: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 1 })])),
+  budgetDuration: Type.Optional(
+    Type.Union([
+      Type.Null(),
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+      Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$' }),
+    ]),
+  ),
+  softBudget: Type.Optional(Type.Union([Type.Null(), Type.Number({ minimum: 0 })])),
+  modelMaxBudget: Type.Optional(
+    Type.Union([
+      Type.Null(),
+      Type.Record(
+        Type.String(),
+        Type.Object({
+          budgetLimit: Type.Number({ minimum: 0 }),
+          timePeriod: Type.String(),
+        }),
+      ),
+    ]),
+  ),
+  modelRpmLimit: Type.Optional(
+    Type.Union([Type.Null(), Type.Record(Type.String(), Type.Integer({ minimum: 0 }))]),
+  ),
+  modelTpmLimit: Type.Optional(
+    Type.Union([Type.Null(), Type.Record(Type.String(), Type.Integer({ minimum: 0 }))]),
+  ),
 });
 
-export type UpdateApiKeyModels = Static<typeof UpdateApiKeyModelsSchema>;
+export type UpdateApiKey = Static<typeof UpdateApiKeySchema>;
+
+// Keep backward-compatible alias
+export const UpdateApiKeyModelsSchema = UpdateApiKeySchema;
+export type UpdateApiKeyModels = UpdateApiKey;
+
+// Delete API Key query schema
+export const DeleteApiKeyQuerySchema = Type.Object({
+  permanent: Type.Optional(Type.Boolean()),
+});
+
+export type DeleteApiKeyQuery = Static<typeof DeleteApiKeyQuerySchema>;
 
 // Revoke API Key (optional reason)
 export const RevokeApiKeySchema = Type.Object({

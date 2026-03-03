@@ -166,6 +166,21 @@ export interface CreateApiKeyForUserRequest {
   modelTpmLimit?: Record<string, number>;
 }
 
+// Update API key for user request (edit existing key)
+export interface UpdateApiKeyForUserRequest {
+  modelIds?: string[];
+  name?: string;
+  maxBudget?: number | null;
+  tpmLimit?: number | null;
+  rpmLimit?: number | null;
+  maxParallelRequests?: number | null;
+  budgetDuration?: string | null;
+  softBudget?: number | null;
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }> | null;
+  modelRpmLimit?: Record<string, number> | null;
+  modelTpmLimit?: Record<string, number> | null;
+}
+
 // Created API key response (includes full key shown once)
 export interface CreatedApiKeyResponse {
   id: string;

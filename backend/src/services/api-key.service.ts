@@ -1461,6 +1461,77 @@ export class ApiKeyService extends BaseService {
     }
   }
 
+  async revokeApiKey(keyId: string, userId: string, reason?: string): Promise<void> {
+    try {
+      const apiKey = await this.getApiKey(keyId, userId);
+      if (!apiKey) {
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'API key not found or you do not have permission to access it',
+        );
+      }
+
+      if (!apiKey.isActive) {
+        throw this.createValidationError(
+          'API key is already inactive',
+          'isActive',
+          false,
+          'This API key has already been revoked or deactivated',
+        );
+      }
+
+      // Delete from LiteLLM first (security priority — key stops working immediately)
+      if (apiKey.liteLLMKeyId && !this.shouldUseMockData()) {
+        try {
+          await this.liteLLMService.deleteKey(apiKey.liteLLMKeyId);
+        } catch (error) {
+          this.fastify.log.warn(
+            error,
+            'Failed to delete key from LiteLLM during revocation, proceeding with local deactivation',
+          );
+        }
+      }
+
+      // Soft-deactivate in local database
+      await this.fastify.dbUtils.query(
+        `UPDATE api_keys SET is_active = false, revoked_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+        [keyId],
+      );
+
+      // Create audit log
+      await this.fastify.dbUtils.query(
+        `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          userId,
+          'API_KEY_REVOKE',
+          'API_KEY',
+          keyId,
+          JSON.stringify({
+            models: apiKey.models,
+            keyName: apiKey.name,
+            keyPrefix: apiKey.keyPrefix,
+            reason: reason || 'Revoked',
+          }),
+        ],
+      );
+
+      this.fastify.log.info(
+        {
+          userId,
+          apiKeyId: keyId,
+          models: apiKey.models,
+          reason,
+        },
+        'API key revoked (soft-deactivated)',
+      );
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to revoke API key');
+      throw error;
+    }
+  }
+
   async deleteApiKey(keyId: string, userId: string): Promise<void> {
     try {
       const apiKey = await this.getApiKey(keyId, userId);
