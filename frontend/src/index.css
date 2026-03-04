@@ -94,6 +94,12 @@ code {
   border: 0 !important;
 }
 
+/* Fix: collapsed ExpandableSection content still contributes to scrollHeight because PF6 uses
+   max-height:0 + visibility:hidden without overflow:hidden, causing phantom whitespace and scrollbar */
+.pf-v6-c-expandable-section:not(.pf-m-expanded) .pf-v6-c-expandable-section__content {
+  overflow: hidden;
+}
+
 /* High contrast mode improvements */
 @media (prefers-contrast: high) {
   .pf-v6-c-badge {
