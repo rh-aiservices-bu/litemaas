@@ -15,6 +15,7 @@ import {
   ApiKeyValidation,
 } from '../types/api-key.types.js';
 import { QueryParameter } from '../types/common.types.js';
+import { LITELLM_UNLIMITED } from '../config/litellm.js';
 
 // Types moved to types/api-key.types.ts for consistency
 // Keeping legacy interface for backward compatibility in service
@@ -855,7 +856,8 @@ export class ApiKeyService extends BaseService {
                 key.lite_llm_key_value as string,
               );
               key.current_spend = liteLLMInfo.spend ?? key.current_spend;
-              key.max_budget = liteLLMInfo.max_budget ?? key.max_budget;
+              key.max_budget = liteLLMInfo.max_budget != null && Number(liteLLMInfo.max_budget) !== LITELLM_UNLIMITED
+                ? liteLLMInfo.max_budget : key.max_budget;
               key.budget_reset_at = liteLLMInfo.budget_reset_at ?? key.budget_reset_at;
             } catch (error) {
               this.fastify.log.warn(
@@ -973,9 +975,12 @@ export class ApiKeyService extends BaseService {
          RETURNING *`,
         [
           liteLLMInfo.spend ?? null,
-          liteLLMInfo.max_budget ?? null,
-          liteLLMInfo.tpm_limit ?? null,
-          liteLLMInfo.rpm_limit ?? null,
+          liteLLMInfo.max_budget != null && Number(liteLLMInfo.max_budget) !== LITELLM_UNLIMITED
+            ? liteLLMInfo.max_budget : null,
+          liteLLMInfo.tpm_limit != null && Number(liteLLMInfo.tpm_limit) !== LITELLM_UNLIMITED
+            ? liteLLMInfo.tpm_limit : null,
+          liteLLMInfo.rpm_limit != null && Number(liteLLMInfo.rpm_limit) !== LITELLM_UNLIMITED
+            ? liteLLMInfo.rpm_limit : null,
           liteLLMInfo.budget_duration ?? null,
           liteLLMInfo.litellm_budget_table?.soft_budget ?? liteLLMInfo.soft_budget ?? null,
           liteLLMInfo.max_parallel_requests ?? null,
@@ -1069,15 +1074,15 @@ export class ApiKeyService extends BaseService {
     keyId: string,
     userId: string,
     updates: {
-      maxBudget?: number;
-      tpmLimit?: number;
-      rpmLimit?: number;
-      budgetDuration?: string;
-      softBudget?: number;
-      maxParallelRequests?: number;
-      modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
-      modelRpmLimit?: Record<string, number>;
-      modelTpmLimit?: Record<string, number>;
+      maxBudget?: number | null;
+      tpmLimit?: number | null;
+      rpmLimit?: number | null;
+      budgetDuration?: string | null;
+      softBudget?: number | null;
+      maxParallelRequests?: number | null;
+      modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }> | null;
+      modelRpmLimit?: Record<string, number> | null;
+      modelTpmLimit?: Record<string, number> | null;
       allowedModels?: string[];
     },
   ): Promise<EnhancedApiKey> {
@@ -1103,12 +1108,12 @@ export class ApiKeyService extends BaseService {
       // Update in LiteLLM if integrated
       if (apiKey.liteLLMKeyId && !this.shouldUseMockData()) {
         await this.liteLLMService.updateKey(apiKey.liteLLMKeyId, {
-          max_budget: updates.maxBudget,
-          tpm_limit: updates.tpmLimit,
-          rpm_limit: updates.rpmLimit,
-          budget_duration: updates.budgetDuration,
-          soft_budget: updates.softBudget,
-          max_parallel_requests: updates.maxParallelRequests,
+          max_budget: updates.maxBudget === null ? LITELLM_UNLIMITED : updates.maxBudget,
+          tpm_limit: updates.tpmLimit === null ? LITELLM_UNLIMITED : updates.tpmLimit,
+          rpm_limit: updates.rpmLimit === null ? LITELLM_UNLIMITED : updates.rpmLimit,
+          budget_duration: updates.budgetDuration ?? undefined,
+          soft_budget: updates.softBudget ?? undefined,
+          max_parallel_requests: updates.maxParallelRequests ?? undefined,
           model_max_budget: updates.modelMaxBudget
             ? Object.fromEntries(
                 Object.entries(updates.modelMaxBudget).map(([model, config]) => [
@@ -1117,8 +1122,8 @@ export class ApiKeyService extends BaseService {
                 ]),
               )
             : undefined,
-          model_rpm_limit: updates.modelRpmLimit,
-          model_tpm_limit: updates.modelTpmLimit,
+          model_rpm_limit: updates.modelRpmLimit ?? undefined,
+          model_tpm_limit: updates.modelTpmLimit ?? undefined,
           models: updates.allowedModels,
         });
       }
@@ -1967,10 +1972,13 @@ export class ApiKeyService extends BaseService {
       lastSyncAt: apiKey.last_sync_at ? new Date(apiKey.last_sync_at) : undefined,
       syncStatus: (apiKey.sync_status || 'pending') as 'pending' | 'synced' | 'error',
       syncError: apiKey.sync_error,
-      maxBudget: apiKey.max_budget,
+      maxBudget: apiKey.max_budget != null && Number(apiKey.max_budget) !== LITELLM_UNLIMITED
+        ? apiKey.max_budget : undefined,
       currentSpend: apiKey.current_spend,
-      tpmLimit: apiKey.tpm_limit,
-      rpmLimit: apiKey.rpm_limit,
+      tpmLimit: apiKey.tpm_limit != null && Number(apiKey.tpm_limit) !== LITELLM_UNLIMITED
+        ? apiKey.tpm_limit : undefined,
+      rpmLimit: apiKey.rpm_limit != null && Number(apiKey.rpm_limit) !== LITELLM_UNLIMITED
+        ? apiKey.rpm_limit : undefined,
       budgetDuration: apiKey.budget_duration,
       softBudget: apiKey.soft_budget,
       budgetResetAt: apiKey.budget_reset_at ? new Date(apiKey.budget_reset_at) : undefined,

@@ -297,6 +297,24 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
   const handleEditSubmit = () => {
     if (!keyToEdit || editSelectedModelIds.length === 0) return;
 
+    // Validate per-model limits against key-level limits
+    for (const [modelId, limits] of Object.entries(editModelLimits)) {
+      if (!editSelectedModelIds.includes(modelId)) continue;
+      const modelName = availableModels.find((m) => m.id === modelId)?.name || modelId;
+      if (limits.budget != null && limits.budget > 0 && editMaxBudget != null && limits.budget > editMaxBudget) {
+        addNotification({ title: t('users.apiKeys.form.validationError', 'Validation Error'), description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('users.apiKeys.form.modelBudget', 'Budget'), max: editMaxBudget }), variant: 'danger' });
+        return;
+      }
+      if (limits.rpm != null && limits.rpm > 0 && editRpmLimit != null && limits.rpm > editRpmLimit) {
+        addNotification({ title: t('users.apiKeys.form.validationError', 'Validation Error'), description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('users.apiKeys.form.rpmLimit', 'RPM'), max: editRpmLimit }), variant: 'danger' });
+        return;
+      }
+      if (limits.tpm != null && limits.tpm > 0 && editTpmLimit != null && limits.tpm > editTpmLimit) {
+        addNotification({ title: t('users.apiKeys.form.validationError', 'Validation Error'), description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('users.apiKeys.form.tpmLimit', 'TPM'), max: editTpmLimit }), variant: 'danger' });
+        return;
+      }
+    }
+
     // Build per-model limits
     const modelMaxBudget: Record<string, { budgetLimit: number; timePeriod: string }> = {};
     const modelRpmLimit: Record<string, number> = {};
@@ -318,6 +336,12 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
       }
     }
 
+    // Only include per-model properties when non-empty to avoid wiping DB values
+    const perModelPayload: Record<string, unknown> = {};
+    if (Object.keys(modelMaxBudget).length > 0) perModelPayload.modelMaxBudget = modelMaxBudget;
+    if (Object.keys(modelRpmLimit).length > 0) perModelPayload.modelRpmLimit = modelRpmLimit;
+    if (Object.keys(modelTpmLimit).length > 0) perModelPayload.modelTpmLimit = modelTpmLimit;
+
     updateMutation.mutate({
       keyId: keyToEdit.id,
       modelIds: editSelectedModelIds,
@@ -327,9 +351,7 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
       budgetDuration: editMaxBudget ? editBudgetDuration : null,
       softBudget: editSoftBudget ?? null,
       maxParallelRequests: editMaxParallelRequests ?? null,
-      modelMaxBudget: Object.keys(modelMaxBudget).length > 0 ? modelMaxBudget : null,
-      modelRpmLimit: Object.keys(modelRpmLimit).length > 0 ? modelRpmLimit : null,
-      modelTpmLimit: Object.keys(modelTpmLimit).length > 0 ? modelTpmLimit : null,
+      ...perModelPayload,
     });
   };
 
@@ -367,6 +389,24 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
   const handleCreateSubmit = () => {
     if (!newKeyName.trim() || selectedModelIds.length === 0) {
       return;
+    }
+
+    // Validate per-model limits against key-level limits
+    for (const [modelId, limits] of Object.entries(newKeyModelLimits)) {
+      if (!selectedModelIds.includes(modelId)) continue;
+      const modelName = availableModels.find((m) => m.id === modelId)?.name || modelId;
+      if (limits.budget != null && limits.budget > 0 && newKeyMaxBudget != null && limits.budget > newKeyMaxBudget) {
+        addNotification({ title: t('users.apiKeys.form.validationError', 'Validation Error'), description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('users.apiKeys.form.modelBudget', 'Budget'), max: newKeyMaxBudget }), variant: 'danger' });
+        return;
+      }
+      if (limits.rpm != null && limits.rpm > 0 && newKeyRpmLimit != null && limits.rpm > newKeyRpmLimit) {
+        addNotification({ title: t('users.apiKeys.form.validationError', 'Validation Error'), description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('users.apiKeys.form.rpmLimit', 'RPM'), max: newKeyRpmLimit }), variant: 'danger' });
+        return;
+      }
+      if (limits.tpm != null && limits.tpm > 0 && newKeyTpmLimit != null && limits.tpm > newKeyTpmLimit) {
+        addNotification({ title: t('users.apiKeys.form.validationError', 'Validation Error'), description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('users.apiKeys.form.tpmLimit', 'TPM'), max: newKeyTpmLimit }), variant: 'danger' });
+        return;
+      }
     }
 
     let expiresAt: string | undefined;
@@ -539,10 +579,11 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
         <TextInput
           id={`${prefix}-key-tpm`}
           type="number"
+          min="0"
           value={tpmLimit ?? ''}
           onChange={(_event, value) => {
             const parsed = parseInt(value, 10);
-            setTpmLimit(value === '' || isNaN(parsed) ? undefined : parsed);
+            setTpmLimit(value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed);
           }}
           isDisabled={isLoading}
           aria-label={t('users.apiKeys.form.tpmLimit', 'Tokens per Minute (TPM)')}
@@ -564,10 +605,11 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
         <TextInput
           id={`${prefix}-key-rpm`}
           type="number"
+          min="0"
           value={rpmLimit ?? ''}
           onChange={(_event, value) => {
             const parsed = parseInt(value, 10);
-            setRpmLimit(value === '' || isNaN(parsed) ? undefined : parsed);
+            setRpmLimit(value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed);
           }}
           isDisabled={isLoading}
           aria-label={t('users.apiKeys.form.rpmLimit', 'Requests per Minute (RPM)')}
@@ -681,47 +723,7 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                   {modelName}
                 </Content>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                  <FormGroup
-                    label={t('users.apiKeys.form.modelBudget', 'Budget ($)')}
-                    fieldId={`${prefix}-model-budget-${modelId}`}
-                  >
-                    <NumberInput
-                      id={`${prefix}-model-budget-${modelId}`}
-                      value={limits.budget ?? 0}
-                      min={0}
-                      onMinus={() =>
-                        updateModelLimit('budget', Math.max(0, (limits.budget || 0) - 10))
-                      }
-                      onPlus={() => updateModelLimit('budget', (limits.budget || 0) + 10)}
-                      onChange={(event) => {
-                        const target = event.target as HTMLInputElement;
-                        const val = parseFloat(target.value);
-                        updateModelLimit('budget', isNaN(val) ? undefined : val);
-                      }}
-                      isDisabled={isLoading}
-                      aria-label={`${modelName} budget`}
-                      widthChars={8}
-                    />
-                  </FormGroup>
-                  <FormGroup
-                    label={t('users.apiKeys.form.modelTimePeriod', 'Time Period')}
-                    fieldId={`${prefix}-model-period-${modelId}`}
-                  >
-                    <FormSelect
-                      id={`${prefix}-model-period-${modelId}`}
-                      value={limits.timePeriod || 'monthly'}
-                      onChange={(_event, value) => updateModelLimit('timePeriod', value)}
-                      isDisabled={isLoading}
-                    >
-                      <FormSelectOption value="daily" label={t('common.daily', 'Daily')} />
-                      <FormSelectOption value="monthly" label={t('common.monthly', 'Monthly')} />
-                      <FormSelectOption value="30d" label={t('common.thirtyDays', '30 Days')} />
-                      <FormSelectOption
-                        value="1mo"
-                        label={t('common.oneMonth', '1 Month (calendar)')}
-                      />
-                    </FormSelect>
-                  </FormGroup>
+                  {/* Per-model budget hidden: requires LiteLLM Enterprise license */}
                   <FormGroup
                     label={t('users.apiKeys.form.modelRpm', 'RPM')}
                     fieldId={`${prefix}-model-rpm-${modelId}`}
@@ -729,10 +731,11 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                     <TextInput
                       id={`${prefix}-model-rpm-${modelId}`}
                       type="number"
+                      min="0"
                       value={limits.rpm ?? ''}
                       onChange={(_event, value) => {
                         const parsed = parseInt(value, 10);
-                        updateModelLimit('rpm', value === '' || isNaN(parsed) ? undefined : parsed);
+                        updateModelLimit('rpm', value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed);
                       }}
                       isDisabled={isLoading}
                       aria-label={`${modelName} RPM`}
@@ -745,10 +748,11 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                     <TextInput
                       id={`${prefix}-model-tpm-${modelId}`}
                       type="number"
+                      min="0"
                       value={limits.tpm ?? ''}
                       onChange={(_event, value) => {
                         const parsed = parseInt(value, 10);
-                        updateModelLimit('tpm', value === '' || isNaN(parsed) ? undefined : parsed);
+                        updateModelLimit('tpm', value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed);
                       }}
                       isDisabled={isLoading}
                       aria-label={`${modelName} TPM`}

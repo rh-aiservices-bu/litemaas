@@ -39,7 +39,6 @@ import {
   FormSelect,
   FormSelectOption,
   ExpandableSection,
-  NumberInput,
 } from '@patternfly/react-core';
 import {
   KeyIcon,
@@ -466,6 +465,33 @@ const ApiKeysPage: React.FC = () => {
       }
     }
 
+    // Validate per-model limits against key-level limits and admin maximums
+    for (const [modelId, limits] of Object.entries(newKeyModelLimits)) {
+      if (!selectedModelIds.includes(modelId)) continue;
+      const modelName = models.find((m) => m.id === modelId)?.name || modelId;
+      if (limits.budget != null && limits.budget > 0) {
+        if (newKeyMaxBudget != null && limits.budget > newKeyMaxBudget) {
+          errors[`model-budget-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('pages.apiKeys.quotas.maxBudget'), max: newKeyMaxBudget });
+        } else if (quotaDefaults?.maximums?.maxBudget != null && limits.budget > quotaDefaults.maximums.maxBudget) {
+          errors[`model-budget-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', { model: modelName, field: t('pages.apiKeys.quotas.maxBudget'), max: quotaDefaults.maximums.maxBudget });
+        }
+      }
+      if (limits.rpm != null && limits.rpm > 0) {
+        if (newKeyRpmLimit != null && limits.rpm > newKeyRpmLimit) {
+          errors[`model-rpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('pages.apiKeys.quotas.rpmLimit'), max: newKeyRpmLimit });
+        } else if (quotaDefaults?.maximums?.rpmLimit != null && limits.rpm > quotaDefaults.maximums.rpmLimit) {
+          errors[`model-rpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', { model: modelName, field: t('pages.apiKeys.quotas.rpmLimit'), max: quotaDefaults.maximums.rpmLimit });
+        }
+      }
+      if (limits.tpm != null && limits.tpm > 0) {
+        if (newKeyTpmLimit != null && limits.tpm > newKeyTpmLimit) {
+          errors[`model-tpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('pages.apiKeys.quotas.tpmLimit'), max: newKeyTpmLimit });
+        } else if (quotaDefaults?.maximums?.tpmLimit != null && limits.tpm > quotaDefaults.maximums.tpmLimit) {
+          errors[`model-tpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', { model: modelName, field: t('pages.apiKeys.quotas.tpmLimit'), max: quotaDefaults.maximums.tpmLimit });
+        }
+      }
+    }
+
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       addNotification({
@@ -500,11 +526,11 @@ const ApiKeysPage: React.FC = () => {
       }
     }
 
-    const perModelPayload = {
-      modelMaxBudget: Object.keys(modelMaxBudget).length > 0 ? modelMaxBudget : undefined,
-      modelRpmLimit: Object.keys(modelRpmLimit).length > 0 ? modelRpmLimit : undefined,
-      modelTpmLimit: Object.keys(modelTpmLimit).length > 0 ? modelTpmLimit : undefined,
-    };
+    // Only include per-model properties when non-empty to avoid wiping DB values
+    const perModelPayload: Record<string, unknown> = {};
+    if (Object.keys(modelMaxBudget).length > 0) perModelPayload.modelMaxBudget = modelMaxBudget;
+    if (Object.keys(modelRpmLimit).length > 0) perModelPayload.modelRpmLimit = modelRpmLimit;
+    if (Object.keys(modelTpmLimit).length > 0) perModelPayload.modelTpmLimit = modelTpmLimit;
 
     try {
       if (isEditMode && editingKey) {
@@ -512,10 +538,10 @@ const ApiKeysPage: React.FC = () => {
         const updateRequest = {
           name: newKeyName,
           modelIds: selectedModelIds,
-          maxBudget: newKeyMaxBudget,
-          budgetDuration: newKeyBudgetDuration || undefined,
-          tpmLimit: newKeyTpmLimit,
-          rpmLimit: newKeyRpmLimit,
+          maxBudget: newKeyMaxBudget ?? null,
+          budgetDuration: newKeyBudgetDuration || null,
+          tpmLimit: newKeyTpmLimit ?? null,
+          rpmLimit: newKeyRpmLimit ?? null,
           ...perModelPayload,
           metadata: {
             description: newKeyDescription || undefined,
@@ -1356,47 +1382,7 @@ const ApiKeysPage: React.FC = () => {
                         {modelName}
                       </Content>
                       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-                        <FormGroup
-                          label={t('pages.apiKeys.quotas.modelBudget', 'Budget ($)')}
-                          fieldId={`model-budget-${modelId}`}
-                        >
-                          <NumberInput
-                            id={`model-budget-${modelId}`}
-                            value={limits.budget ?? 0}
-                            min={0}
-                            onMinus={() =>
-                              updateModelLimit('budget', Math.max(0, (limits.budget || 0) - 10))
-                            }
-                            onPlus={() => updateModelLimit('budget', (limits.budget || 0) + 10)}
-                            onChange={(event) => {
-                              const target = event.target as HTMLInputElement;
-                              const val = parseFloat(target.value);
-                              updateModelLimit('budget', isNaN(val) ? undefined : val);
-                            }}
-                            isDisabled={creatingKey || updatingKey}
-                            aria-label={`${modelName} budget`}
-                            widthChars={8}
-                          />
-                        </FormGroup>
-                        <FormGroup
-                          label={t('pages.apiKeys.quotas.modelTimePeriod', 'Time Period')}
-                          fieldId={`model-period-${modelId}`}
-                        >
-                          <FormSelect
-                            id={`model-period-${modelId}`}
-                            value={limits.timePeriod || 'monthly'}
-                            onChange={(_event, value) => updateModelLimit('timePeriod', value)}
-                            isDisabled={creatingKey || updatingKey}
-                          >
-                            <FormSelectOption value="daily" label={t('pages.apiKeys.quotas.daily')} />
-                            <FormSelectOption value="monthly" label={t('pages.apiKeys.quotas.monthly')} />
-                            <FormSelectOption value="30d" label={t('common.thirtyDays', '30 Days')} />
-                            <FormSelectOption
-                              value="1mo"
-                              label={t('common.oneMonth', '1 Month (calendar)')}
-                            />
-                          </FormSelect>
-                        </FormGroup>
+                        {/* Per-model budget hidden: requires LiteLLM Enterprise license */}
                         <FormGroup
                           label={t('pages.apiKeys.quotas.modelRpm', 'RPM')}
                           fieldId={`model-rpm-${modelId}`}
@@ -1404,14 +1390,21 @@ const ApiKeysPage: React.FC = () => {
                           <TextInput
                             id={`model-rpm-${modelId}`}
                             type="number"
+                            min="0"
                             value={limits.rpm ?? ''}
                             onChange={(_event, value) => {
                               const parsed = parseInt(value, 10);
-                              updateModelLimit('rpm', value === '' || isNaN(parsed) ? undefined : parsed);
+                              updateModelLimit('rpm', value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed);
                             }}
                             isDisabled={creatingKey || updatingKey}
                             aria-label={`${modelName} RPM`}
+                            validated={formErrors[`model-rpm-${modelId}`] ? 'error' : 'default'}
                           />
+                          {formErrors[`model-rpm-${modelId}`] && (
+                            <HelperText>
+                              <HelperTextItem variant="error">{formErrors[`model-rpm-${modelId}`]}</HelperTextItem>
+                            </HelperText>
+                          )}
                         </FormGroup>
                         <FormGroup
                           label={t('pages.apiKeys.quotas.modelTpm', 'TPM')}
@@ -1420,14 +1413,21 @@ const ApiKeysPage: React.FC = () => {
                           <TextInput
                             id={`model-tpm-${modelId}`}
                             type="number"
+                            min="0"
                             value={limits.tpm ?? ''}
                             onChange={(_event, value) => {
                               const parsed = parseInt(value, 10);
-                              updateModelLimit('tpm', value === '' || isNaN(parsed) ? undefined : parsed);
+                              updateModelLimit('tpm', value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed);
                             }}
                             isDisabled={creatingKey || updatingKey}
                             aria-label={`${modelName} TPM`}
+                            validated={formErrors[`model-tpm-${modelId}`] ? 'error' : 'default'}
                           />
+                          {formErrors[`model-tpm-${modelId}`] && (
+                            <HelperText>
+                              <HelperTextItem variant="error">{formErrors[`model-tpm-${modelId}`]}</HelperTextItem>
+                            </HelperText>
+                          )}
                         </FormGroup>
                       </div>
                     </div>

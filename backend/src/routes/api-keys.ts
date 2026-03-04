@@ -394,13 +394,13 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
     Body: {
       name?: string;
       modelIds?: string[];
-      maxBudget?: number;
-      budgetDuration?: string;
-      tpmLimit?: number;
-      rpmLimit?: number;
-      modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
-      modelRpmLimit?: Record<string, number>;
-      modelTpmLimit?: Record<string, number>;
+      maxBudget?: number | null;
+      budgetDuration?: string | null;
+      tpmLimit?: number | null;
+      rpmLimit?: number | null;
+      modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }> | null;
+      modelRpmLimit?: Record<string, number> | null;
+      modelTpmLimit?: Record<string, number> | null;
       metadata?: {
         description?: string;
         permissions?: string[];
@@ -429,28 +429,31 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             items: { type: 'string' },
             description: 'Array of model IDs this API key can access',
           },
-          maxBudget: { type: 'number', minimum: 0 },
-          budgetDuration: { type: 'string' },
-          tpmLimit: { type: 'integer', minimum: 0 },
-          rpmLimit: { type: 'integer', minimum: 0 },
+          maxBudget: { anyOf: [{ type: 'null' }, { type: 'number', minimum: 0 }] },
+          budgetDuration: { anyOf: [{ type: 'null' }, { type: 'string' }] },
+          tpmLimit: { anyOf: [{ type: 'null' }, { type: 'integer', minimum: 0 }] },
+          rpmLimit: { anyOf: [{ type: 'null' }, { type: 'integer', minimum: 0 }] },
           modelMaxBudget: {
-            type: 'object',
-            additionalProperties: {
-              type: 'object',
-              properties: {
-                budgetLimit: { type: 'number' },
-                timePeriod: { type: 'string' },
+            anyOf: [
+              { type: 'null' },
+              {
+                type: 'object',
+                additionalProperties: {
+                  type: 'object',
+                  properties: {
+                    budgetLimit: { type: 'number' },
+                    timePeriod: { type: 'string' },
+                  },
+                  required: ['budgetLimit', 'timePeriod'],
+                },
               },
-              required: ['budgetLimit', 'timePeriod'],
-            },
+            ],
           },
           modelRpmLimit: {
-            type: 'object',
-            additionalProperties: { type: 'integer' },
+            anyOf: [{ type: 'null' }, { type: 'object', additionalProperties: { type: 'integer' } }],
           },
           modelTpmLimit: {
-            type: 'object',
-            additionalProperties: { type: 'integer' },
+            anyOf: [{ type: 'null' }, { type: 'object', additionalProperties: { type: 'integer' } }],
           },
           metadata: {
             type: 'object',

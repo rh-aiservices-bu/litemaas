@@ -705,7 +705,9 @@
         "modelBudget": "Budget ($)",
         "modelTimePeriod": "Time Period",
         "modelRpm": "RPM",
-        "modelTpm": "TPM"
+        "modelTpm": "TPM",
+        "modelExceedsKeyLimit": "{{model}}: {{field}} exceeds the key-level limit of {{max}}",
+        "modelExceedsMaximum": "{{model}}: {{field}} exceeds the maximum allowed value of {{max}}"
       },
       "rateLimits": {
         "basic": "100 req/min (Basic)",

@@ -22,6 +22,7 @@ import {
 } from '../schemas/admin-users';
 import { ErrorResponseSchema } from '../schemas/common';
 import { ApplicationError } from '../utils/errors';
+import { LITELLM_UNLIMITED } from '../config/litellm';
 
 interface AdminUserApiKeysQuery {
   page?: number;
@@ -251,16 +252,20 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
             // Reconcile budget/limits from LiteLLM (source of truth)
             const llmInfo = liteLLMUser.user_info;
             maxBudget = llmInfo.max_budget != null ? Number(llmInfo.max_budget) : undefined;
-            tpmLimit = llmInfo.tpm_limit != null ? Number(llmInfo.tpm_limit) : undefined;
-            rpmLimit = llmInfo.rpm_limit != null ? Number(llmInfo.rpm_limit) : undefined;
+            tpmLimit = llmInfo.tpm_limit != null && Number(llmInfo.tpm_limit) !== LITELLM_UNLIMITED
+              ? Number(llmInfo.tpm_limit) : undefined;
+            rpmLimit = llmInfo.rpm_limit != null && Number(llmInfo.rpm_limit) !== LITELLM_UNLIMITED
+              ? Number(llmInfo.rpm_limit) : undefined;
 
             // Update local DB if values differ (side-effect reconciliation)
             const dbMaxBudget = user.max_budget !== null ? Number(user.max_budget) : null;
             const dbTpmLimit = user.tpm_limit !== null ? Number(user.tpm_limit) : null;
             const dbRpmLimit = user.rpm_limit !== null ? Number(user.rpm_limit) : null;
             const llmMaxBudget = llmInfo.max_budget ?? null;
-            const llmTpmLimit = llmInfo.tpm_limit ?? null;
-            const llmRpmLimit = llmInfo.rpm_limit ?? null;
+            const llmTpmLimit = llmInfo.tpm_limit != null && Number(llmInfo.tpm_limit) !== LITELLM_UNLIMITED
+              ? llmInfo.tpm_limit : null;
+            const llmRpmLimit = llmInfo.rpm_limit != null && Number(llmInfo.rpm_limit) !== LITELLM_UNLIMITED
+              ? llmInfo.rpm_limit : null;
 
             if (
               dbMaxBudget !== llmMaxBudget ||
@@ -392,7 +397,6 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
         // Note: LiteLLM's Pydantic uses exclude_none=True, so null values are ignored
         // on update (old value persists). To "clear" tpm/rpm limits, we send a large
         // number (max int32) since LiteLLM ignores null. max_budget handles null natively.
-        const LITELLM_UNLIMITED = 2147483647; // Max int32 — effectively unlimited
         const liteLLMUpdates: Record<string, number | string | null | undefined> = {};
         if (maxBudget !== undefined) liteLLMUpdates.max_budget = maxBudget ?? null;
         if (tpmLimit !== undefined)
@@ -441,8 +445,10 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
         return {
           id: String(updatedUser?.id),
           maxBudget: updatedUser?.max_budget !== null ? Number(updatedUser?.max_budget) : undefined,
-          tpmLimit: updatedUser?.tpm_limit !== null ? Number(updatedUser?.tpm_limit) : undefined,
-          rpmLimit: updatedUser?.rpm_limit !== null ? Number(updatedUser?.rpm_limit) : undefined,
+          tpmLimit: updatedUser?.tpm_limit !== null && Number(updatedUser?.tpm_limit) !== LITELLM_UNLIMITED
+            ? Number(updatedUser?.tpm_limit) : undefined,
+          rpmLimit: updatedUser?.rpm_limit !== null && Number(updatedUser?.rpm_limit) !== LITELLM_UNLIMITED
+            ? Number(updatedUser?.rpm_limit) : undefined,
           budgetDuration: updatedUser?.budget_duration
             ? String(updatedUser?.budget_duration)
             : null,

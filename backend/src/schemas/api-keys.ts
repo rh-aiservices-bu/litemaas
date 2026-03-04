@@ -269,6 +269,17 @@ export const ApiKeyResponseSchema = Type.Object({
       softBudget: Type.Optional(Type.Number()),
       budgetUtilization: Type.Optional(Type.Number()),
       maxParallelRequests: Type.Optional(Type.Integer()),
+      modelMaxBudget: Type.Optional(
+        Type.Record(
+          Type.String(),
+          Type.Object({
+            budgetLimit: Type.Number(),
+            timePeriod: Type.String(),
+          }),
+        ),
+      ),
+      modelRpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+      modelTpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
       metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
     }),
   ),
@@ -312,6 +323,17 @@ export const SingleApiKeyResponseSchema = Type.Object({
   softBudget: Type.Optional(Type.Number()),
   budgetUtilization: Type.Optional(Type.Number()),
   maxParallelRequests: Type.Optional(Type.Integer()),
+  modelMaxBudget: Type.Optional(
+    Type.Record(
+      Type.String(),
+      Type.Object({
+        budgetLimit: Type.Number(),
+        timePeriod: Type.String(),
+      }),
+    ),
+  ),
+  modelRpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+  modelTpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
   // LiteLLM fields
   liteLLMKeyId: Type.Optional(Type.String()),
   liteLLMInfo: Type.Optional(
