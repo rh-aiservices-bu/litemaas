@@ -30,6 +30,12 @@ vi.mock('../../services/models.service', () => ({
 vi.mock('../../services/admin.service', () => ({
   adminService: {
     bulkUpdateUserLimits: vi.fn(),
+    getApiKeyDefaults: vi.fn().mockResolvedValue({ defaults: {}, maximums: {} }),
+    updateApiKeyDefaults: vi.fn().mockResolvedValue({ defaults: {}, maximums: {} }),
+    getUserDefaults: vi
+      .fn()
+      .mockResolvedValue({ envDefaults: { maxBudget: 100, tpmLimit: 100000, rpmLimit: 120 } }),
+    updateUserDefaults: vi.fn().mockResolvedValue({}),
   },
 }));
 
@@ -392,7 +398,7 @@ describe('ToolsPage', () => {
       const limitsTab = screen.getByRole('tab', { name: /limits/i });
       await user.click(limitsTab);
 
-      expect(screen.getByText(/bulk update user limits/i)).toBeInTheDocument();
+      expect(screen.getByText(/bulk update all users/i)).toBeInTheDocument();
     });
 
     it('should display form with maxBudget, tpmLimit, rpmLimit fields', async () => {

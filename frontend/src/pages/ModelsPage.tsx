@@ -620,7 +620,6 @@ const ModelsPage: React.FC = () => {
       {/* Model Details Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={selectedModel?.name || ''}
         isOpen={isModalOpen}
         onClose={() => {
           setIsModalOpen(false);

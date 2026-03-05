@@ -28,6 +28,8 @@ export const AdminUserDetailsSchema = Type.Object({
   currentSpend: Type.Optional(Type.Number()),
   tpmLimit: Type.Optional(Type.Integer()),
   rpmLimit: Type.Optional(Type.Integer()),
+  budgetDuration: Type.Optional(Type.String()),
+  budgetResetAt: Type.Optional(Type.String()),
   syncStatus: Type.Optional(Type.String()),
   lastLoginAt: Type.Optional(Type.String({ format: 'date-time' })),
   createdAt: Type.String({ format: 'date-time' }),
@@ -41,9 +43,19 @@ export type AdminUserDetails = Static<typeof AdminUserDetailsSchema>;
 
 // Update Budget and Limits
 export const UpdateUserBudgetLimitsSchema = Type.Object({
-  maxBudget: Type.Optional(Type.Number({ minimum: 0 })),
-  tpmLimit: Type.Optional(Type.Integer({ minimum: 0 })),
-  rpmLimit: Type.Optional(Type.Integer({ minimum: 0 })),
+  maxBudget: Type.Optional(Type.Union([Type.Null(), Type.Number({ minimum: 0 })])),
+  tpmLimit: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 0 })])),
+  rpmLimit: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 0 })])),
+  budgetDuration: Type.Optional(
+    Type.Union([
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+      Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$' }),
+      Type.Null(),
+    ]),
+  ),
 });
 
 export type UpdateUserBudgetLimits = Static<typeof UpdateUserBudgetLimitsSchema>;
@@ -141,13 +153,57 @@ export const CreatedApiKeySchema = Type.Object({
 
 export type CreatedApiKey = Static<typeof CreatedApiKeySchema>;
 
-// Update API Key Models
-export const UpdateApiKeyModelsSchema = Type.Object({
-  modelIds: Type.Array(Type.String()),
+// Update API Key (models, name, and quota fields)
+export const UpdateApiKeySchema = Type.Object({
+  modelIds: Type.Optional(Type.Array(Type.String())),
   name: Type.Optional(Type.String({ minLength: 1, maxLength: 255 })),
+  maxBudget: Type.Optional(Type.Union([Type.Null(), Type.Number({ minimum: 0 })])),
+  tpmLimit: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 0 })])),
+  rpmLimit: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 0 })])),
+  maxParallelRequests: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 1 })])),
+  budgetDuration: Type.Optional(
+    Type.Union([
+      Type.Null(),
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+      Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$' }),
+    ]),
+  ),
+  softBudget: Type.Optional(Type.Union([Type.Null(), Type.Number({ minimum: 0 })])),
+  modelMaxBudget: Type.Optional(
+    Type.Union([
+      Type.Null(),
+      Type.Record(
+        Type.String(),
+        Type.Object({
+          budgetLimit: Type.Number({ minimum: 0 }),
+          timePeriod: Type.String(),
+        }),
+      ),
+    ]),
+  ),
+  modelRpmLimit: Type.Optional(
+    Type.Union([Type.Null(), Type.Record(Type.String(), Type.Integer({ minimum: 0 }))]),
+  ),
+  modelTpmLimit: Type.Optional(
+    Type.Union([Type.Null(), Type.Record(Type.String(), Type.Integer({ minimum: 0 }))]),
+  ),
 });
 
-export type UpdateApiKeyModels = Static<typeof UpdateApiKeyModelsSchema>;
+export type UpdateApiKey = Static<typeof UpdateApiKeySchema>;
+
+// Keep backward-compatible alias
+export const UpdateApiKeyModelsSchema = UpdateApiKeySchema;
+export type UpdateApiKeyModels = UpdateApiKey;
+
+// Delete API Key query schema
+export const DeleteApiKeyQuerySchema = Type.Object({
+  permanent: Type.Optional(Type.Boolean()),
+});
+
+export type DeleteApiKeyQuery = Static<typeof DeleteApiKeyQuerySchema>;
 
 // Revoke API Key (optional reason)
 export const RevokeApiKeySchema = Type.Object({
@@ -193,7 +249,51 @@ export const UserBudgetUpdatedSchema = Type.Object({
   maxBudget: Type.Optional(Type.Number()),
   tpmLimit: Type.Optional(Type.Integer()),
   rpmLimit: Type.Optional(Type.Integer()),
+  budgetDuration: Type.Optional(Type.Union([Type.String(), Type.Null()])),
   updatedAt: Type.String({ format: 'date-time' }),
 });
 
 export type UserBudgetUpdated = Static<typeof UserBudgetUpdatedSchema>;
+
+// Response for spend reset
+export const ResetUserSpendSchema = Type.Object({
+  id: Type.String(),
+  currentSpend: Type.Number(),
+  resetAt: Type.String({ format: 'date-time' }),
+});
+
+export type ResetUserSpend = Static<typeof ResetUserSpendSchema>;
+
+// Response for API key spend reset (reuses same shape)
+export const ResetApiKeySpendSchema = Type.Object({
+  id: Type.String(),
+  currentSpend: Type.Number(),
+  resetAt: Type.String({ format: 'date-time' }),
+});
+
+export type ResetApiKeySpend = Static<typeof ResetApiKeySpendSchema>;
+
+// Create subscriptions for user (admin action)
+export const CreateUserSubscriptionsSchema = Type.Object({
+  modelIds: Type.Array(Type.String(), { minItems: 1 }),
+});
+
+export type CreateUserSubscriptions = Static<typeof CreateUserSubscriptionsSchema>;
+
+// Response for subscription creation
+export const CreateUserSubscriptionsResponseSchema = Type.Object({
+  created: Type.Array(
+    Type.Object({
+      modelId: Type.String(),
+      subscriptionId: Type.String(),
+    }),
+  ),
+  activated: Type.Array(
+    Type.Object({
+      modelId: Type.String(),
+      subscriptionId: Type.String(),
+      previousStatus: Type.String(),
+    }),
+  ),
+  alreadyActive: Type.Array(Type.String()),
+});

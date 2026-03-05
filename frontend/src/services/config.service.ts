@@ -1,6 +1,7 @@
 // frontend/src/services/config.service.ts
 
 import { apiClient } from './api';
+import type { ApiKeyQuotaDefaults } from '../types/users';
 
 /**
  * Admin analytics public configuration from backend
@@ -68,6 +69,14 @@ class ConfigService {
    */
   async getAdminAnalyticsConfig(): Promise<AdminAnalyticsPublicConfig> {
     return apiClient.get<AdminAnalyticsPublicConfig>('/config/admin-analytics');
+  }
+
+  /**
+   * Fetch API key quota defaults and maximums
+   * No authentication required
+   */
+  async getApiKeyDefaults(): Promise<ApiKeyQuotaDefaults> {
+    return apiClient.get<ApiKeyQuotaDefaults>('/config/api-key-defaults');
   }
 }
 

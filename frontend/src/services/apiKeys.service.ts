@@ -21,6 +21,16 @@ export interface ApiKey {
     provider: string;
     contextLength?: number;
   }[];
+  // Quota fields
+  maxBudget?: number;
+  currentSpend?: number;
+  tpmLimit?: number;
+  rpmLimit?: number;
+  budgetDuration?: string;
+  // Per-model limits
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  modelRpmLimit?: Record<string, number>;
+  modelTpmLimit?: Record<string, number>;
 }
 
 // Backend response interface
@@ -44,6 +54,14 @@ interface BackendApiKeyDetails {
   isActive: boolean;
   createdAt: string;
   revokedAt?: string;
+  maxBudget?: number;
+  currentSpend?: number;
+  tpmLimit?: number;
+  rpmLimit?: number;
+  budgetDuration?: string;
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  modelRpmLimit?: Record<string, number>;
+  modelTpmLimit?: Record<string, number>;
   metadata?: {
     permissions?: string[];
     ratelimit?: number;
@@ -63,6 +81,15 @@ export interface CreateApiKeyRequest {
   subscriptionId?: string;
   name?: string;
   expiresAt?: string;
+  // Quota fields
+  maxBudget?: number;
+  budgetDuration?: string;
+  tpmLimit?: number;
+  rpmLimit?: number;
+  // Per-model limits
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  modelRpmLimit?: Record<string, number>;
+  modelTpmLimit?: Record<string, number>;
   metadata?: {
     description?: string;
     permissions?: string[];
@@ -111,6 +138,14 @@ class ApiKeysService {
       description: backend.metadata?.description ? `${backend.metadata.description}` : undefined,
       models: backend.models,
       modelDetails: backend.modelDetails,
+      maxBudget: backend.maxBudget,
+      currentSpend: backend.currentSpend,
+      tpmLimit: backend.tpmLimit,
+      rpmLimit: backend.rpmLimit,
+      budgetDuration: backend.budgetDuration,
+      modelMaxBudget: backend.modelMaxBudget,
+      modelRpmLimit: backend.modelRpmLimit,
+      modelTpmLimit: backend.modelTpmLimit,
     };
   }
 
@@ -153,6 +188,10 @@ class ApiKeysService {
 
   async deleteApiKey(keyId: string): Promise<void> {
     return apiClient.delete(`/api-keys/${keyId}`);
+  }
+
+  async resetApiKeySpend(keyId: string): Promise<{ id: string; currentSpend: number; resetAt: string }> {
+    return apiClient.post<{ id: string; currentSpend: number; resetAt: string }>(`/api-keys/${keyId}/reset-spend`);
   }
 
   async updateApiKey(keyId: string, updates: Partial<CreateApiKeyRequest>): Promise<ApiKey> {

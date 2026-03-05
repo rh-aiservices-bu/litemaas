@@ -611,7 +611,6 @@ const AdminSubscriptionsPage: React.FC = () => {
       {/* Approve Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={t('pages.adminSubscriptions.approvalModalTitle')}
         isOpen={isApproveModalOpen}
         onClose={() => {
           setIsApproveModalOpen(false);
@@ -619,7 +618,7 @@ const AdminSubscriptionsPage: React.FC = () => {
           setSelectedSubscription(null);
         }}
       >
-        <ModalHeader />
+        <ModalHeader title={t('pages.adminSubscriptions.approvalModalTitle')} />
         <ModalBody>
           <p>
             {selectedSubscription
@@ -690,7 +689,6 @@ const AdminSubscriptionsPage: React.FC = () => {
       {/* Deny Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={t('pages.adminSubscriptions.denialModalTitle')}
         isOpen={isDenyModalOpen}
         onClose={() => {
           setIsDenyModalOpen(false);
@@ -698,7 +696,7 @@ const AdminSubscriptionsPage: React.FC = () => {
           setSelectedSubscription(null);
         }}
       >
-        <ModalHeader />
+        <ModalHeader title={t('pages.adminSubscriptions.denialModalTitle')} />
         <ModalBody>
           <Alert variant="warning" title={t('pages.adminSubscriptions.confirmDenial')} isInline>
             <p>
@@ -784,14 +782,13 @@ const AdminSubscriptionsPage: React.FC = () => {
       {/* Results Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={t('pages.adminSubscriptions.resultModalTitle')}
         isOpen={isResultModalOpen}
         onClose={() => {
           setIsResultModalOpen(false);
           setBulkResults(null);
         }}
       >
-        <ModalHeader />
+        <ModalHeader title={t('pages.adminSubscriptions.resultModalTitle')} />
         <ModalBody>
           {bulkResults && (
             <>
@@ -845,7 +842,6 @@ const AdminSubscriptionsPage: React.FC = () => {
       {/* Revert Status Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={t('pages.adminSubscriptions.revertModalTitle')}
         isOpen={isRevertModalOpen}
         onClose={() => {
           setIsRevertModalOpen(false);
@@ -854,7 +850,7 @@ const AdminSubscriptionsPage: React.FC = () => {
           setSelectedSubscription(null);
         }}
       >
-        <ModalHeader />
+        <ModalHeader title={t('pages.adminSubscriptions.revertModalTitle')} />
         <ModalBody>
           {selectedSubscription && (
             <>
@@ -941,7 +937,6 @@ const AdminSubscriptionsPage: React.FC = () => {
       {/* Delete Subscription Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={t('pages.adminSubscriptions.deleteModalTitle')}
         isOpen={isDeleteModalOpen}
         onClose={() => {
           setIsDeleteModalOpen(false);
@@ -949,7 +944,7 @@ const AdminSubscriptionsPage: React.FC = () => {
           setSelectedSubscription(null);
         }}
       >
-        <ModalHeader />
+        <ModalHeader title={t('pages.adminSubscriptions.deleteModalTitle')} />
         <ModalBody>
           {selectedSubscription && (
             <>

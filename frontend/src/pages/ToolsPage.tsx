@@ -20,11 +20,15 @@ import {
   Modal,
   ModalVariant,
   ModalBody,
+  ModalHeader,
   Tabs,
   Tab,
   TabTitleText,
   TabContent,
   TabContentBody,
+  Divider,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { SyncAltIcon, UsersIcon, PlusIcon } from '@patternfly/react-icons';
 import { useAuth } from '../contexts/AuthContext';
@@ -39,8 +43,10 @@ import {
 } from '../services/admin.service';
 import type { SimpleBannerUpdateRequest, CreateBannerRequest, Banner } from '../types/banners';
 import { BannerEditModal, BannerTable } from '../components/banners';
+import { ApiKeyQuotaDefaultsSection, UserDefaultsSection } from '../components/admin';
 import BrandingTab from '../components/branding/BrandingTab';
 import { useQuery, useQueryClient } from 'react-query';
+import { extractErrorDetails } from '../utils/error.utils';
 
 interface SyncResult {
   success: boolean;
@@ -142,7 +148,7 @@ const ToolsPage: React.FC = () => {
       addNotification({
         variant: 'danger',
         title: t('pages.tools.syncError'),
-        description: error instanceof Error ? error.message : t('pages.tools.syncErrorGeneric'),
+        description: extractErrorDetails(error).message || t('pages.tools.syncErrorGeneric'),
       });
     } finally {
       setIsLoading(false);
@@ -234,8 +240,7 @@ const ToolsPage: React.FC = () => {
       addNotification({
         variant: 'danger',
         title: t('pages.tools.bulkUpdateError'),
-        description:
-          error instanceof Error ? error.message : t('pages.tools.bulkUpdateErrorGeneric'),
+        description: extractErrorDetails(error).message || t('pages.tools.bulkUpdateErrorGeneric'),
       });
     } finally {
       setIsLimitsLoading(false);
@@ -276,7 +281,7 @@ const ToolsPage: React.FC = () => {
         variant: 'danger',
         title: t('pages.tools.bannerDeleteError'),
         description:
-          error instanceof Error ? error.message : t('pages.tools.bannerDeleteErrorGeneric'),
+          extractErrorDetails(error).message || t('pages.tools.bannerDeleteErrorGeneric'),
       });
     } finally {
       setIsBannerLoading(false);
@@ -373,8 +378,7 @@ const ToolsPage: React.FC = () => {
       addNotification({
         variant: 'danger',
         title: t('pages.tools.bannerSaveError'),
-        description:
-          error instanceof Error ? error.message : t('pages.tools.bannerSaveErrorGeneric'),
+        description: extractErrorDetails(error).message || t('pages.tools.bannerSaveErrorGeneric'),
       });
       throw error; // Re-throw to prevent modal from closing
     } finally {
@@ -484,8 +488,31 @@ const ToolsPage: React.FC = () => {
               <TabContent id="limits-tab-content" style={{ paddingTop: '10px' }}>
                 <TabContentBody>
                   <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
+                    {/* New User Defaults Section */}
                     <FlexItem>
-                      <p>{t('pages.tools.limitsDescription')}</p>
+                      <UserDefaultsSection
+                        canEdit={canUpdateLimits}
+                        isVisible={activeTabKey === 'limits'}
+                      />
+                    </FlexItem>
+
+                    {/* API Key Quota Defaults Section */}
+                    <FlexItem>
+                      <ApiKeyQuotaDefaultsSection
+                        canEdit={canUpdateLimits}
+                        isVisible={activeTabKey === 'limits'}
+                      />
+                    </FlexItem>
+
+                    {/* Bulk Update All Users Section */}
+                    <FlexItem>
+                      <Divider style={{ margin: '1.5rem 0' }} />
+                      <Title headingLevel="h3" size="lg" style={{ marginBottom: '0.5rem' }}>
+                        {t('pages.tools.bulkUpdate.title')}
+                      </Title>
+                      <Content component={ContentVariants.p} style={{ marginBottom: '1rem' }}>
+                        {t('pages.tools.bulkUpdate.description')}
+                      </Content>
                     </FlexItem>
 
                     {lastLimitsUpdate && (
@@ -692,10 +719,10 @@ const ToolsPage: React.FC = () => {
         {/* Confirmation Modal */}
         <Modal
           variant={ModalVariant.medium}
-          title={t('pages.tools.confirmBulkUpdate')}
           isOpen={showConfirmModal}
           onClose={() => setShowConfirmModal(false)}
         >
+          <ModalHeader title={t('pages.tools.confirmBulkUpdate')} />
           <ModalBody>
             <p style={{ marginBottom: '1rem' }}>{t('pages.tools.confirmBulkUpdateMessage')}</p>
             <div style={{ marginBottom: '1.5rem' }}>

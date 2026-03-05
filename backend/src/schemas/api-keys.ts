@@ -50,10 +50,13 @@ export const CreateApiKeySchema = Type.Object({
     }),
   ),
   budgetDuration: Type.Optional(
-    Type.String({
-      enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
-      description: 'Budget duration period, defaults to monthly',
-    }),
+    Type.Union([
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+      Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$', description: 'Custom duration like 30d, 1mo, 1h' }),
+    ], { description: 'Budget duration period' }),
   ),
   tpmLimit: Type.Optional(
     Type.Integer({
@@ -79,6 +82,17 @@ export const CreateApiKeySchema = Type.Object({
   softBudget: Type.Optional(Type.Number()),
   guardrails: Type.Optional(Type.Array(Type.String())),
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
+  modelMaxBudget: Type.Optional(
+    Type.Record(
+      Type.String(),
+      Type.Object({
+        budgetLimit: Type.Number(),
+        timePeriod: Type.String(),
+      }),
+    ),
+  ),
+  modelRpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+  modelTpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
 });
 
 // Legacy schema for backward compatibility
@@ -107,10 +121,13 @@ export const LegacyCreateApiKeySchema = Type.Object({
     }),
   ),
   budgetDuration: Type.Optional(
-    Type.String({
-      enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
-      description: 'Budget duration period, defaults to monthly',
-    }),
+    Type.Union([
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+      Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$', description: 'Custom duration like 30d, 1mo, 1h' }),
+    ], { description: 'Budget duration period' }),
   ),
   tpmLimit: Type.Optional(
     Type.Integer({
@@ -176,10 +193,13 @@ export const CreateApiKeyRequestSchema = Type.Object({
     }),
   ),
   budgetDuration: Type.Optional(
-    Type.String({
-      enum: ['daily', 'weekly', 'monthly', 'yearly', 'lifetime'],
-      description: 'Budget duration period, defaults to monthly',
-    }),
+    Type.Union([
+      Type.Literal('daily'),
+      Type.Literal('weekly'),
+      Type.Literal('monthly'),
+      Type.Literal('yearly'),
+      Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$', description: 'Custom duration like 30d, 1mo, 1h' }),
+    ], { description: 'Budget duration period' }),
   ),
   tpmLimit: Type.Optional(
     Type.Integer({
@@ -205,6 +225,17 @@ export const CreateApiKeyRequestSchema = Type.Object({
   softBudget: Type.Optional(Type.Number()),
   guardrails: Type.Optional(Type.Array(Type.String())),
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
+  modelMaxBudget: Type.Optional(
+    Type.Record(
+      Type.String(),
+      Type.Object({
+        budgetLimit: Type.Number(),
+        timePeriod: Type.String(),
+      }),
+    ),
+  ),
+  modelRpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+  modelTpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
 });
 
 // Response schema for list endpoint with pagination
@@ -230,6 +261,25 @@ export const ApiKeyResponseSchema = Type.Object({
       createdAt: Type.String({ format: 'date-time' }),
       expiresAt: Type.Optional(Type.String({ format: 'date-time' })),
       isActive: Type.Boolean(),
+      maxBudget: Type.Optional(Type.Number()),
+      currentSpend: Type.Optional(Type.Number()),
+      tpmLimit: Type.Optional(Type.Integer()),
+      rpmLimit: Type.Optional(Type.Integer()),
+      budgetDuration: Type.Optional(Type.String()),
+      softBudget: Type.Optional(Type.Number()),
+      budgetUtilization: Type.Optional(Type.Number()),
+      maxParallelRequests: Type.Optional(Type.Integer()),
+      modelMaxBudget: Type.Optional(
+        Type.Record(
+          Type.String(),
+          Type.Object({
+            budgetLimit: Type.Number(),
+            timePeriod: Type.String(),
+          }),
+        ),
+      ),
+      modelRpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+      modelTpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
       metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
     }),
   ),
@@ -264,6 +314,26 @@ export const SingleApiKeyResponseSchema = Type.Object({
   lastUsedAt: Type.Optional(Type.String({ format: 'date-time' })),
   // Legacy field for backward compatibility
   subscriptionId: Type.Optional(Type.String()),
+  // Quota fields
+  maxBudget: Type.Optional(Type.Number()),
+  currentSpend: Type.Optional(Type.Number()),
+  tpmLimit: Type.Optional(Type.Integer()),
+  rpmLimit: Type.Optional(Type.Integer()),
+  budgetDuration: Type.Optional(Type.String()),
+  softBudget: Type.Optional(Type.Number()),
+  budgetUtilization: Type.Optional(Type.Number()),
+  maxParallelRequests: Type.Optional(Type.Integer()),
+  modelMaxBudget: Type.Optional(
+    Type.Record(
+      Type.String(),
+      Type.Object({
+        budgetLimit: Type.Number(),
+        timePeriod: Type.String(),
+      }),
+    ),
+  ),
+  modelRpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+  modelTpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
   // LiteLLM fields
   liteLLMKeyId: Type.Optional(Type.String()),
   liteLLMInfo: Type.Optional(
@@ -307,7 +377,19 @@ export const LiteLLMKeyGenerationRequestSchema = Type.Object({
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
   tpm_limit: Type.Optional(Type.Number()),
   rpm_limit: Type.Optional(Type.Number()),
+  max_parallel_requests: Type.Optional(Type.Integer()),
   budget_duration: Type.Optional(Type.String()),
+  model_max_budget: Type.Optional(
+    Type.Record(
+      Type.String(),
+      Type.Object({
+        budget_limit: Type.Number(),
+        time_period: Type.String(),
+      }),
+    ),
+  ),
+  model_rpm_limit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+  model_tpm_limit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
   permissions: Type.Optional(
     Type.Object({
       allow_chat_completions: Type.Optional(Type.Boolean()),
@@ -335,21 +417,51 @@ export const LiteLLMKeyGenerationResponseSchema = Type.Object({
   created_at: Type.Optional(Type.String()),
 });
 
+export const LiteLLMBudgetTableSchema = Type.Object({
+  budget_id: Type.Optional(Type.String()),
+  soft_budget: Type.Optional(Type.Union([Type.Number(), Type.Null()])),
+  max_budget: Type.Optional(Type.Union([Type.Number(), Type.Null()])),
+  tpm_limit: Type.Optional(Type.Union([Type.Number(), Type.Null()])),
+  rpm_limit: Type.Optional(Type.Union([Type.Number(), Type.Null()])),
+  max_parallel_requests: Type.Optional(Type.Union([Type.Integer(), Type.Null()])),
+  model_max_budget: Type.Optional(Type.Record(Type.String(), Type.Any())),
+  budget_duration: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  budget_reset_at: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  created_at: Type.Optional(Type.String()),
+  updated_at: Type.Optional(Type.String()),
+});
+
 export const LiteLLMKeyInfoSchema = Type.Object({
   key_name: Type.Optional(Type.String()),
+  key_alias: Type.Optional(Type.String()),
+  soft_budget_cooldown: Type.Optional(Type.Boolean()),
   spend: Type.Number(),
-  max_budget: Type.Optional(Type.Number()),
+  max_budget: Type.Optional(Type.Union([Type.Number(), Type.Null()])),
   models: Type.Optional(Type.Array(Type.String())),
-  tpm_limit: Type.Optional(Type.Number()),
-  rpm_limit: Type.Optional(Type.Number()),
+  tpm_limit: Type.Optional(Type.Union([Type.Number(), Type.Null()])),
+  rpm_limit: Type.Optional(Type.Union([Type.Number(), Type.Null()])),
+  max_parallel_requests: Type.Optional(Type.Union([Type.Integer(), Type.Null()])),
+  budget_duration: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  budget_reset_at: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  model_max_budget: Type.Optional(Type.Record(Type.String(), Type.Any())),
+  model_rpm_limit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+  model_tpm_limit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+  model_spend: Type.Optional(Type.Record(Type.String(), Type.Number())),
   user_id: Type.Optional(Type.String()),
-  team_id: Type.Optional(Type.String()),
-  expires: Type.Optional(Type.String()),
-  budget_reset_at: Type.Optional(Type.String()),
-  soft_budget: Type.Optional(Type.Number()),
-  blocked: Type.Optional(Type.Boolean()),
+  team_id: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  expires: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  budget_id: Type.Optional(Type.String()),
+  organization_id: Type.Optional(Type.Union([Type.String(), Type.Null()])),
+  soft_budget: Type.Optional(Type.Union([Type.Number(), Type.Null()])),
+  blocked: Type.Optional(Type.Union([Type.Boolean(), Type.Null()])),
   tags: Type.Optional(Type.Array(Type.String())),
   metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
+  allowed_cache_controls: Type.Optional(Type.Array(Type.String())),
+  allowed_routes: Type.Optional(Type.Array(Type.String())),
+  permissions: Type.Optional(Type.Record(Type.String(), Type.Any())),
+  created_at: Type.Optional(Type.String()),
+  updated_at: Type.Optional(Type.String()),
+  litellm_budget_table: Type.Optional(LiteLLMBudgetTableSchema),
 });
 
 export const EnhancedApiKeySchema = Type.Intersect([
@@ -395,6 +507,7 @@ export const EnhancedCreateApiKeySchema = Type.Intersect([
         Type.Literal('weekly'),
         Type.Literal('monthly'),
         Type.Literal('yearly'),
+        Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$' }),
       ]),
     ),
     tpmLimit: Type.Optional(Type.Number()),

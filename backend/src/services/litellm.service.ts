@@ -252,6 +252,17 @@ export class LiteLLMService extends BaseService {
     return false;
   }
 
+  /**
+   * Checks whether an error indicates a LiteLLM Enterprise license is required
+   * (e.g. model_max_budget). Used to retry requests without enterprise-only fields.
+   */
+  private isEnterpriseLicenseError(error: unknown): boolean {
+    if (error instanceof Error) {
+      return error.message.includes('enterprise license') || error.message.includes('LiteLLM Enterprise');
+    }
+    return false;
+  }
+
   private async makeRequest<T>(
     endpoint: string,
     options: {
@@ -276,12 +287,15 @@ export class LiteLLMService extends BaseService {
 
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...headers,
     };
 
+    // Set master key as default auth — caller-provided headers can override
     if (this.config.apiKey) {
       requestHeaders['x-litellm-api-key'] = this.config.apiKey;
     }
+
+    // Caller headers override defaults (e.g., getKeyInfo passes the specific key)
+    Object.assign(requestHeaders, headers);
 
     let lastError: Error;
 
@@ -518,6 +532,25 @@ export class LiteLLMService extends BaseService {
         body: request,
       });
     } catch (error) {
+      // Handle LiteLLM Enterprise-only features gracefully
+      if (request.model_max_budget && this.isEnterpriseLicenseError(error)) {
+        this.fastify.log.warn(
+          'model_max_budget requires a LiteLLM Enterprise license — retrying without per-model budget limits. ' +
+            'The key will be created without per-model budget enforcement. ' +
+            'See: https://docs.litellm.ai/docs/proxy/enterprise',
+        );
+        const { model_max_budget: _removed, ...requestWithoutModelBudget } = request;
+        try {
+          return await this.makeRequest<LiteLLMKeyGenerationResponse>('/key/generate', {
+            method: 'POST',
+            body: requestWithoutModelBudget,
+          });
+        } catch (retryError) {
+          this.fastify.log.error(retryError, 'Failed to generate API key on retry without model_max_budget');
+          throw retryError;
+        }
+      }
+
       this.fastify.log.error(error, 'Failed to generate API key');
       throw error;
     }
@@ -617,6 +650,24 @@ export class LiteLLMService extends BaseService {
         body: { key: apiKey, ...updates },
       });
     } catch (error) {
+      // Handle LiteLLM Enterprise-only features gracefully
+      if (updates.model_max_budget && this.isEnterpriseLicenseError(error)) {
+        this.fastify.log.warn(
+          'model_max_budget requires a LiteLLM Enterprise license — retrying key update without per-model budget limits.',
+        );
+        const { model_max_budget: _removed, ...updatesWithoutModelBudget } = updates;
+        try {
+          await this.makeRequest('/key/update', {
+            method: 'POST',
+            body: { key: apiKey, ...updatesWithoutModelBudget },
+          });
+          return;
+        } catch (retryError) {
+          this.fastify.log.error(retryError, 'Failed to update key on retry without model_max_budget');
+          throw retryError;
+        }
+      }
+
       this.fastify.log.error(error, 'Failed to update key');
       throw error;
     }

@@ -194,6 +194,34 @@ The following table lists all LiteLLM endpoints currently used by LiteMaaS:
 }
 ```
 
+**⚠️ Critical: Null Value Handling**
+
+LiteLLM's `/user/update` endpoint filters out `null`/`None` values for most fields before writing to the database. From LiteLLM's `internal_user_endpoints.py` (`_update_internal_user_params`):
+
+```python
+for k, v in data_json.items():
+    if k == "max_budget":
+        if "max_budget" in fields_set:
+            non_default_values[k] = v        # ← max_budget: null WORKS (special-cased)
+    elif (
+        v is not None                         # ← all other null values REJECTED
+        and v not in ([], {})
+        ...
+    ):
+        non_default_values[k] = v
+```
+
+This means:
+
+| Field            | Send `null`          | Effect                                      |
+| ---------------- | -------------------- | ------------------------------------------- |
+| `max_budget`     | ✅ Works             | Clears budget (special-cased via `fields_set`) |
+| `tpm_limit`      | ❌ Silently ignored  | Old value persists                          |
+| `rpm_limit`      | ❌ Silently ignored  | Old value persists                          |
+| `budget_duration`| ❌ Silently ignored  | Old value persists                          |
+
+**Workaround**: To "clear" `tpm_limit` or `rpm_limit`, send `2147483647` (max int32) as a sentinel value meaning "effectively unlimited". LiteMaaS defines this as `LITELLM_UNLIMITED` in `admin-users.ts`.
+
 ### API Key Management
 
 #### `POST /key/generate`
@@ -265,16 +293,51 @@ The following table lists all LiteLLM endpoints currently used by LiteMaaS:
   "key": "sk-litellm-abc123def456...",
   "info": {
     "key_name": "production-key",
+    "key_alias": "production-key_a5f2b1c3",
+    "soft_budget_cooldown": false,
     "spend": 25.5,
     "max_budget": 50.0,
+    "soft_budget": 40.0,
     "models": ["gpt-4", "claude-3"],
     "tpm_limit": 1000,
     "rpm_limit": 60,
+    "max_parallel_requests": null,
+    "budget_duration": "monthly",
+    "budget_reset_at": "2025-02-01T00:00:00Z",
+    "model_max_budget": {},
+    "model_rpm_limit": {},
+    "model_tpm_limit": {},
+    "model_spend": {},
     "user_id": "uuid-string",
+    "team_id": "a0000000-0000-4000-8000-000000000001",
+    "organization_id": null,
     "expires": "2025-02-01T00:00:00Z",
-    "budget_reset_at": "2025-02-01T00:00:00Z"
+    "budget_id": "budget_xyz",
+    "blocked": false,
+    "tags": [],
+    "metadata": {"created_by": "litemaas"},
+    "allowed_cache_controls": [],
+    "allowed_routes": [],
+    "permissions": {},
+    "created_at": "2025-01-01T00:00:00Z",
+    "updated_at": "2025-01-01T00:00:00Z",
+    "litellm_budget_table": {
+      "budget_id": null,
+      "max_budget": 50.0,
+      "soft_budget": 40.0,
+      "tpm_limit": null,
+      "rpm_limit": null,
+      "max_parallel_requests": null,
+      "model_max_budget": {},
+      "budget_duration": "monthly",
+      "budget_reset_at": "2025-02-01T00:00:00Z",
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    }
   }
 }
+
+> **Important**: `soft_budget` is stored in the nested `litellm_budget_table` object. LiteMaaS reads from `.info.litellm_budget_table.soft_budget` (preferred) or `.info.soft_budget` (fallback).
 ```
 
 #### `POST /key/update`
@@ -642,7 +705,7 @@ All LiteLLM API requests require authentication via the `x-litellm-api-key` head
 x-litellm-api-key: sk-1104
 ```
 
-**Exception**: The `/key/info` endpoint uses the actual API key being queried as the authentication header value.
+**Exception**: The `/key/info` endpoint uses the actual API key being queried as the authentication header value. LiteMaaS's `makeRequest()` method sets the master key as the default `x-litellm-api-key` header, but callers can override this by passing their own headers (e.g., `getKeyInfo` passes the specific API key for self-lookup).
 
 ## Error Handling Patterns
 
@@ -737,16 +800,46 @@ interface ApiKey {
   token: string; // Internal token for usage tracking
   key_name: string; // Public key (last 4 chars visible)
   key_alias: string; // User-provided alias
+  soft_budget_cooldown?: boolean;
   spend: number;
   max_budget?: number;
+  soft_budget?: number;
   models: string[];
   user_id: string;
-  team_id?: string;
+  team_id?: string | null;
+  organization_id?: string | null;
   tpm_limit?: number;
   rpm_limit?: number;
-  expires?: string;
-  created_at: string;
+  max_parallel_requests?: number;
+  budget_duration?: string;
+  budget_reset_at?: string;
+  budget_id?: string;
+  model_max_budget?: Record<string, unknown>;
+  model_rpm_limit?: Record<string, number>;
+  model_tpm_limit?: Record<string, number>;
+  model_spend?: Record<string, number>;
+  expires?: string | null;
+  blocked?: boolean | null;
+  tags?: string[];
   metadata?: object;
+  allowed_cache_controls?: string[];
+  allowed_routes?: string[];
+  permissions?: Record<string, unknown>;
+  created_at: string;
+  updated_at?: string;
+  litellm_budget_table?: {
+    budget_id?: string;
+    max_budget?: number;
+    soft_budget?: number;
+    tpm_limit?: number;
+    rpm_limit?: number;
+    max_parallel_requests?: number;
+    model_max_budget?: Record<string, unknown>;
+    budget_duration?: string;
+    budget_reset_at?: string;
+    created_at?: string;
+    updated_at?: string;
+  };
 }
 ```
 

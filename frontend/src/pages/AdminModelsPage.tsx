@@ -52,6 +52,7 @@ import type {
   TestModelConfigRequest,
 } from '../types/admin';
 import { getModelFlairs } from '../utils/flairColors';
+import { extractErrorDetails } from '../utils/error.utils';
 
 const AdminModelsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -63,6 +64,7 @@ const AdminModelsPage: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Form state
@@ -153,7 +155,7 @@ const AdminModelsPage: React.FC = () => {
       onError: (error: AdminModelError) => {
         addNotification({
           title: t('models.admin.createModelFailed'),
-          description: error.message,
+          description: extractErrorDetails(error).message,
           variant: 'danger',
         });
       },
@@ -187,7 +189,7 @@ const AdminModelsPage: React.FC = () => {
       onError: (error: AdminModelError) => {
         addNotification({
           title: t('models.admin.updateModelFailed'),
-          description: error.message,
+          description: extractErrorDetails(error).message,
           variant: 'danger',
         });
       },
@@ -220,7 +222,7 @@ const AdminModelsPage: React.FC = () => {
       onError: (error: AdminModelError) => {
         addNotification({
           title: t('models.admin.deleteModelFailed'),
-          description: error.message,
+          description: extractErrorDetails(error).message,
           variant: 'danger',
         });
       },
@@ -347,7 +349,11 @@ const AdminModelsPage: React.FC = () => {
     setDisplayOutputCost(outputCostPerMillion);
 
     setFormErrors({});
-    setIsEditModalOpen(true);
+    if (canModifyModels) {
+      setIsEditModalOpen(true);
+    } else {
+      setIsViewModalOpen(true);
+    }
   };
 
   const handleDeleteModel = (model: any) => {
@@ -522,7 +528,7 @@ const AdminModelsPage: React.FC = () => {
     return (
       <PageSection>
         <Alert variant="danger" title={t('models.admin.errorLoadingModels')}>
-          {error instanceof Error ? error.message : t('common.anUnknownErrorOccurred')}
+          {extractErrorDetails(error).message || t('common.anUnknownErrorOccurred')}
         </Alert>
       </PageSection>
     );
@@ -624,9 +630,9 @@ const AdminModelsPage: React.FC = () => {
             </Thead>
             <Tbody>
               {models.map((model) => (
-                <Tr key={model.id}>
+                <Tr key={model.id} isClickable onRowClick={() => handleEditModel(model)}>
                   <Td>{model.name}</Td>
-                  <Td>
+                  <Td onClick={(e) => e.stopPropagation()}>
                     {model.apiBase ? (
                       expandedRows.has(model.id) ? (
                         <div>
@@ -692,7 +698,7 @@ const AdminModelsPage: React.FC = () => {
                     </Flex>
                   </Td>
                   {canModifyModels && (
-                    <Td>
+                    <Td onClick={(e) => e.stopPropagation()}>
                       <ActionsColumn
                         items={[
                           {
@@ -715,18 +721,26 @@ const AdminModelsPage: React.FC = () => {
           </Table>
         )}
 
-        {/* Create/Edit Model Modal */}
+        {/* Create/Edit/View Model Modal */}
         <Modal
           variant={ModalVariant.medium}
-          title={isCreateModalOpen ? t('models.admin.createModel') : t('models.admin.editModel')}
-          isOpen={isCreateModalOpen || isEditModalOpen}
+          isOpen={isCreateModalOpen || isEditModalOpen || isViewModalOpen}
           onClose={() => {
             setIsCreateModalOpen(false);
             setIsEditModalOpen(false);
+            setIsViewModalOpen(false);
             resetForm();
           }}
         >
-          <ModalHeader />
+          <ModalHeader
+            title={
+              isCreateModalOpen
+                ? t('models.admin.createModel')
+                : isViewModalOpen
+                  ? t('models.admin.viewModel')
+                  : t('models.admin.editModel')
+            }
+          />
           <ModalBody>
             <Form>
               <Grid hasGutter>
@@ -737,6 +751,7 @@ const AdminModelsPage: React.FC = () => {
                       value={formData.model_name}
                       onChange={(_event, value) => setFormData({ ...formData, model_name: value })}
                       validated={formErrors.model_name ? 'error' : 'default'}
+                      isDisabled={isViewModalOpen}
                     />
                     {formErrors.model_name && (
                       <HelperText>
@@ -753,6 +768,7 @@ const AdminModelsPage: React.FC = () => {
                       onChange={(_event, value) => setFormData({ ...formData, description: value })}
                       validated={formErrors.description ? 'error' : 'default'}
                       placeholder={t('models.admin.enterADescriptionForThisModel')}
+                      isDisabled={isViewModalOpen}
                     />
                   </FormGroup>
                 </GridItem>
@@ -764,6 +780,7 @@ const AdminModelsPage: React.FC = () => {
                       onChange={(_event, value) => setFormData({ ...formData, api_base: value })}
                       validated={formErrors.api_base ? 'error' : 'default'}
                       placeholder={t('models.admin.httpsApiExampleComV1')}
+                      isDisabled={isViewModalOpen}
                     />
                     {formErrors.api_base && (
                       <HelperText>
@@ -786,6 +803,7 @@ const AdminModelsPage: React.FC = () => {
                       }
                       validated={formErrors.backend_model_name ? 'error' : 'default'}
                       placeholder={t('models.admin.enterBackendModelName')}
+                      isDisabled={isViewModalOpen}
                     />
                     {formErrors.backend_model_name && (
                       <HelperText>
@@ -813,6 +831,7 @@ const AdminModelsPage: React.FC = () => {
                           ? t('models.admin.enterApiKey')
                           : t('models.admin.editApiKeyPlaceholder')
                       }
+                      isDisabled={isViewModalOpen}
                     />
                     {formErrors.api_key && (
                       <HelperText>
@@ -848,6 +867,7 @@ const AdminModelsPage: React.FC = () => {
                       min={0}
                       step={0.01}
                       validated={formErrors.input_cost_per_token ? 'error' : 'default'}
+                      isDisabled={isViewModalOpen}
                     />
                     {formErrors.input_cost_per_token && (
                       <HelperText>
@@ -885,6 +905,7 @@ const AdminModelsPage: React.FC = () => {
                       min={0}
                       step={0.01}
                       validated={formErrors.output_cost_per_token ? 'error' : 'default'}
+                      isDisabled={isViewModalOpen}
                     />
                     {formErrors.output_cost_per_token && (
                       <HelperText>
@@ -912,6 +933,7 @@ const AdminModelsPage: React.FC = () => {
                       }}
                       min={1}
                       validated={formErrors.tpm ? 'error' : 'default'}
+                      isDisabled={isViewModalOpen}
                     />
                     {formErrors.tpm && (
                       <HelperText>
@@ -937,6 +959,7 @@ const AdminModelsPage: React.FC = () => {
                       }}
                       min={1}
                       validated={formErrors.rpm ? 'error' : 'default'}
+                      isDisabled={isViewModalOpen}
                     />
                     {formErrors.rpm && (
                       <HelperText>
@@ -965,6 +988,7 @@ const AdminModelsPage: React.FC = () => {
                       }}
                       min={1}
                       validated={formErrors.max_tokens ? 'error' : 'default'}
+                      isDisabled={isViewModalOpen}
                     />
                     {formErrors.max_tokens && (
                       <HelperText>
@@ -983,6 +1007,7 @@ const AdminModelsPage: React.FC = () => {
                         onChange={(_event, checked) =>
                           setFormData({ ...formData, supports_vision: checked })
                         }
+                        isDisabled={isViewModalOpen}
                       />
                       <Checkbox
                         id="supports-function-calling"
@@ -991,6 +1016,7 @@ const AdminModelsPage: React.FC = () => {
                         onChange={(_event, checked) =>
                           setFormData({ ...formData, supports_function_calling: checked })
                         }
+                        isDisabled={isViewModalOpen}
                       />
                       <Checkbox
                         id="supports-parallel-function-calling"
@@ -999,6 +1025,7 @@ const AdminModelsPage: React.FC = () => {
                         onChange={(_event, checked) =>
                           setFormData({ ...formData, supports_parallel_function_calling: checked })
                         }
+                        isDisabled={isViewModalOpen}
                       />
                       <Checkbox
                         id="supports-tool-choice"
@@ -1007,6 +1034,7 @@ const AdminModelsPage: React.FC = () => {
                         onChange={(_event, checked) =>
                           setFormData({ ...formData, supports_tool_choice: checked })
                         }
+                        isDisabled={isViewModalOpen}
                       />
                       <Checkbox
                         id="restricted-access"
@@ -1021,6 +1049,7 @@ const AdminModelsPage: React.FC = () => {
                             setFormData({ ...formData, restrictedAccess: checked });
                           }
                         }}
+                        isDisabled={isViewModalOpen}
                       />
                     </Stack>
                   </FormGroup>
@@ -1029,77 +1058,88 @@ const AdminModelsPage: React.FC = () => {
             </Form>
           </ModalBody>
           <ModalFooter>
-            <Flex direction={{ default: 'column' }}>
-              <FlexItem>
-                {/* Test result alert */}
-                {testResult.type && (
-                  <Alert
-                    variant={testResult.type}
-                    title={testResult.message}
-                    isInline
-                    className="pf-v6-u-mb-md"
-                  >
-                    {testResult.availableModels && testResult.availableModels.length > 0 && (
-                      <div>
-                        <p>{t('models.admin.availableModels')}</p>
-                        <ul>
-                          {testResult.availableModels.map((model) => (
-                            <li key={model}>{model}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </Alert>
-                )}
-              </FlexItem>
-              <FlexItem>
-                <Flex columnGap={{ default: 'columnGapSm' }}>
-                  <Button
-                    variant="secondary"
-                    onClick={handleTestConfiguration}
-                    isLoading={isTestingConfig}
-                    isDisabled={
-                      !formData.api_base ||
-                      !formData.backend_model_name ||
-                      (isCreateModalOpen && !formData.api_key)
-                    }
-                  >
-                    {t('models.admin.testConfiguration')}
-                  </Button>
-                  <Button
-                    variant="primary"
-                    onClick={handleSubmit}
-                    isLoading={createModelMutation.isLoading || updateModelMutation.isLoading}
-                  >
-                    {isCreateModalOpen ? t('common.create') : t('common.update')}
-                  </Button>
-                  <Button
-                    variant="link"
-                    onClick={() => {
-                      setIsCreateModalOpen(false);
-                      setIsEditModalOpen(false);
-                      resetForm();
-                    }}
-                  >
-                    {t('common.cancel')}
-                  </Button>
-                </Flex>
-              </FlexItem>
-            </Flex>
+            {isViewModalOpen ? (
+              <Button
+                variant="primary"
+                onClick={() => {
+                  setIsViewModalOpen(false);
+                  resetForm();
+                }}
+              >
+                {t('common.close')}
+              </Button>
+            ) : (
+              <Flex direction={{ default: 'column' }}>
+                <FlexItem>
+                  {/* Test result alert */}
+                  {testResult.type && (
+                    <Alert
+                      variant={testResult.type}
+                      title={testResult.message}
+                      isInline
+                      className="pf-v6-u-mb-md"
+                    >
+                      {testResult.availableModels && testResult.availableModels.length > 0 && (
+                        <div>
+                          <p>{t('models.admin.availableModels')}</p>
+                          <ul>
+                            {testResult.availableModels.map((model) => (
+                              <li key={model}>{model}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </Alert>
+                  )}
+                </FlexItem>
+                <FlexItem>
+                  <Flex columnGap={{ default: 'columnGapSm' }}>
+                    <Button
+                      variant="secondary"
+                      onClick={handleTestConfiguration}
+                      isLoading={isTestingConfig}
+                      isDisabled={
+                        !formData.api_base ||
+                        !formData.backend_model_name ||
+                        (isCreateModalOpen && !formData.api_key)
+                      }
+                    >
+                      {t('models.admin.testConfiguration')}
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onClick={handleSubmit}
+                      isLoading={createModelMutation.isLoading || updateModelMutation.isLoading}
+                    >
+                      {isCreateModalOpen ? t('common.create') : t('common.update')}
+                    </Button>
+                    <Button
+                      variant="link"
+                      onClick={() => {
+                        setIsCreateModalOpen(false);
+                        setIsEditModalOpen(false);
+                        resetForm();
+                      }}
+                    >
+                      {t('common.cancel')}
+                    </Button>
+                  </Flex>
+                </FlexItem>
+              </Flex>
+            )}
           </ModalFooter>
         </Modal>
 
         {/* Delete Confirmation Modal */}
         <Modal
           variant={ModalVariant.small}
-          title={t('models.admin.deleteModel')}
           isOpen={isDeleteModalOpen}
           onClose={() => {
             setIsDeleteModalOpen(false);
             setSelectedModel(null);
           }}
         >
-          <ModalHeader />
+          <ModalHeader title={t('models.admin.deleteModel')} />
           <ModalBody>
             {selectedModel && (
               <div>
@@ -1145,11 +1185,10 @@ const AdminModelsPage: React.FC = () => {
         {/* Restricted Access Warning Modal */}
         <Modal
           variant={ModalVariant.small}
-          title={t('models.admin.restrictedAccessWarning.title')}
           isOpen={isRestrictedAccessWarningOpen}
           onClose={() => setIsRestrictedAccessWarningOpen(false)}
         >
-          <ModalHeader />
+          <ModalHeader title={t('models.admin.restrictedAccessWarning.title')} />
           <ModalBody>
             <Alert
               variant="warning"

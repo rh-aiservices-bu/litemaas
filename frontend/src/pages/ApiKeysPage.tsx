@@ -6,7 +6,6 @@ import {
   Card,
   CardBody,
   Button,
-  Badge,
   Content,
   ContentVariants,
   Flex,
@@ -15,6 +14,7 @@ import {
   ModalVariant,
   ModalHeader,
   ModalBody,
+  ModalFooter,
   Form,
   FormGroup,
   TextInput,
@@ -30,16 +30,20 @@ import {
   ClipboardCopyVariant,
   Bullseye,
   Tooltip,
-  Select,
-  SelectList,
-  SelectOption,
-  MenuToggle,
-  MenuToggleElement,
+  Skeleton,
   Label,
   LabelGroup,
   Divider,
   HelperText,
   HelperTextItem,
+  FormSelect,
+  FormSelectOption,
+  ExpandableSection,
+  Split,
+  SplitItem,
+  Progress,
+  ProgressMeasureLocation,
+  ProgressVariant,
 } from '@patternfly/react-core';
 import {
   KeyIcon,
@@ -59,6 +63,15 @@ import { apiKeysService, ApiKey, CreateApiKeyRequest } from '../services/apiKeys
 import { subscriptionsService } from '../services/subscriptions.service';
 import { modelsService, Model } from '../services/models.service';
 import { configService } from '../services/config.service';
+import type { ApiKeyQuotaDefaults } from '../types/users';
+import { extractErrorDetails } from '../utils/error.utils';
+
+interface ModelLimits {
+  budget?: number;
+  timePeriod?: string;
+  rpm?: number;
+  tpm?: number;
+}
 
 const ApiKeysPage: React.FC = () => {
   const { t } = useTranslation();
@@ -89,6 +102,8 @@ const ApiKeysPage: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null);
   const [updatingKey, setUpdatingKey] = useState(false);
+  const [isResetSpendModalOpen, setIsResetSpendModalOpen] = useState(false);
+  const [resettingSpend, setResettingSpend] = useState(false);
 
   // Modal focus management refs
   const createModalTriggerRef = useRef<HTMLElement | null>(null);
@@ -102,7 +117,14 @@ const ApiKeysPage: React.FC = () => {
   const [models, setModels] = useState<Model[]>([]);
   const [loadingModels, setLoadingModels] = useState(false);
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
-  const [isModelSelectOpen, setIsModelSelectOpen] = useState(false);
+
+  // Quota fields for create modal
+  const [newKeyMaxBudget, setNewKeyMaxBudget] = useState<number | undefined>(undefined);
+  const [newKeyTpmLimit, setNewKeyTpmLimit] = useState<number | undefined>(undefined);
+  const [newKeyRpmLimit, setNewKeyRpmLimit] = useState<number | undefined>(undefined);
+  const [newKeyBudgetDuration, setNewKeyBudgetDuration] = useState<string>('');
+  const [quotaDefaults, setQuotaDefaults] = useState<ApiKeyQuotaDefaults | null>(null);
+  const [newKeyModelLimits, setNewKeyModelLimits] = useState<Record<string, ModelLimits>>({});
 
   // Configuration state
   const [litellmApiUrl, setLitellmApiUrl] = useState<string>('https://api.litemaas.com');
@@ -174,6 +196,8 @@ const ApiKeysPage: React.FC = () => {
     loadApiKeys();
     loadModels(); // ✅ Load models on component mount
     loadConfig(); // Load configuration including LiteLLM API URL
+    // Load quota defaults for create key modal
+    configService.getApiKeyDefaults().then(setQuotaDefaults).catch(() => {});
   }, []);
 
   // Reload models when page gains focus (e.g., after subscribing to new models)
@@ -404,7 +428,13 @@ const ApiKeysPage: React.FC = () => {
     setNewKeyRateLimit('1000');
     setNewKeyExpiration('never');
     setSelectedModelIds([]); // ✅ Reset model selection
+    setNewKeyModelLimits({}); // Reset per-model limits
     setFormErrors({}); // Clear any previous validation errors
+    // Pre-fill quota fields with admin-configured defaults
+    setNewKeyMaxBudget(quotaDefaults?.defaults?.maxBudget ?? undefined);
+    setNewKeyTpmLimit(quotaDefaults?.defaults?.tpmLimit ?? undefined);
+    setNewKeyRpmLimit(quotaDefaults?.defaults?.rpmLimit ?? undefined);
+    setNewKeyBudgetDuration(quotaDefaults?.defaults?.budgetDuration ?? '');
     // Store reference to the trigger element for focus restoration
     if (triggerElement) {
       createModalTriggerRef.current = triggerElement;
@@ -428,6 +458,47 @@ const ApiKeysPage: React.FC = () => {
       errors.models = t('pages.apiKeys.notifications.modelsRequired');
     }
 
+    // Validate quota fields against admin-set maximums
+    if (quotaDefaults?.maximums) {
+      const max = quotaDefaults.maximums;
+      if (max.maxBudget != null && newKeyMaxBudget != null && newKeyMaxBudget > max.maxBudget) {
+        errors.maxBudget = t('pages.apiKeys.quotas.exceedsMaximum', { field: t('pages.apiKeys.quotas.maxBudget'), max: max.maxBudget });
+      }
+      if (max.tpmLimit != null && newKeyTpmLimit != null && newKeyTpmLimit > max.tpmLimit) {
+        errors.tpmLimit = t('pages.apiKeys.quotas.exceedsMaximum', { field: t('pages.apiKeys.quotas.tpmLimit'), max: max.tpmLimit });
+      }
+      if (max.rpmLimit != null && newKeyRpmLimit != null && newKeyRpmLimit > max.rpmLimit) {
+        errors.rpmLimit = t('pages.apiKeys.quotas.exceedsMaximum', { field: t('pages.apiKeys.quotas.rpmLimit'), max: max.rpmLimit });
+      }
+    }
+
+    // Validate per-model limits against key-level limits and admin maximums
+    for (const [modelId, limits] of Object.entries(newKeyModelLimits)) {
+      if (!selectedModelIds.includes(modelId)) continue;
+      const modelName = models.find((m) => m.id === modelId)?.name || modelId;
+      if (limits.budget != null && limits.budget > 0) {
+        if (newKeyMaxBudget != null && limits.budget > newKeyMaxBudget) {
+          errors[`model-budget-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('pages.apiKeys.quotas.maxBudget'), max: newKeyMaxBudget });
+        } else if (quotaDefaults?.maximums?.maxBudget != null && limits.budget > quotaDefaults.maximums.maxBudget) {
+          errors[`model-budget-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', { model: modelName, field: t('pages.apiKeys.quotas.maxBudget'), max: quotaDefaults.maximums.maxBudget });
+        }
+      }
+      if (limits.rpm != null && limits.rpm > 0) {
+        if (newKeyRpmLimit != null && limits.rpm > newKeyRpmLimit) {
+          errors[`model-rpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('pages.apiKeys.quotas.rpmLimit'), max: newKeyRpmLimit });
+        } else if (quotaDefaults?.maximums?.rpmLimit != null && limits.rpm > quotaDefaults.maximums.rpmLimit) {
+          errors[`model-rpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', { model: modelName, field: t('pages.apiKeys.quotas.rpmLimit'), max: quotaDefaults.maximums.rpmLimit });
+        }
+      }
+      if (limits.tpm != null && limits.tpm > 0) {
+        if (newKeyTpmLimit != null && limits.tpm > newKeyTpmLimit) {
+          errors[`model-tpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('pages.apiKeys.quotas.tpmLimit'), max: newKeyTpmLimit });
+        } else if (quotaDefaults?.maximums?.tpmLimit != null && limits.tpm > quotaDefaults.maximums.tpmLimit) {
+          errors[`model-tpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', { model: modelName, field: t('pages.apiKeys.quotas.tpmLimit'), max: quotaDefaults.maximums.tpmLimit });
+        }
+      }
+    }
+
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       addNotification({
@@ -441,12 +512,44 @@ const ApiKeysPage: React.FC = () => {
     setCreatingKey(true);
     setUpdatingKey(true);
 
+    // Build per-model limits from state (only include non-zero values for selected models)
+    const modelMaxBudget: Record<string, { budgetLimit: number; timePeriod: string }> = {};
+    const modelRpmLimit: Record<string, number> = {};
+    const modelTpmLimit: Record<string, number> = {};
+
+    for (const [modelId, limits] of Object.entries(newKeyModelLimits)) {
+      if (!selectedModelIds.includes(modelId)) continue;
+      if (limits.budget && limits.budget > 0) {
+        modelMaxBudget[modelId] = {
+          budgetLimit: limits.budget,
+          timePeriod: limits.timePeriod || 'monthly',
+        };
+      }
+      if (limits.rpm && limits.rpm > 0) {
+        modelRpmLimit[modelId] = limits.rpm;
+      }
+      if (limits.tpm && limits.tpm > 0) {
+        modelTpmLimit[modelId] = limits.tpm;
+      }
+    }
+
+    // Only include per-model properties when non-empty to avoid wiping DB values
+    const perModelPayload: Record<string, unknown> = {};
+    if (Object.keys(modelMaxBudget).length > 0) perModelPayload.modelMaxBudget = modelMaxBudget;
+    if (Object.keys(modelRpmLimit).length > 0) perModelPayload.modelRpmLimit = modelRpmLimit;
+    if (Object.keys(modelTpmLimit).length > 0) perModelPayload.modelTpmLimit = modelTpmLimit;
+
     try {
       if (isEditMode && editingKey) {
         // Update existing API key
         const updateRequest = {
           name: newKeyName,
           modelIds: selectedModelIds,
+          maxBudget: newKeyMaxBudget ?? null,
+          budgetDuration: newKeyBudgetDuration || null,
+          tpmLimit: newKeyTpmLimit ?? null,
+          rpmLimit: newKeyRpmLimit ?? null,
+          ...perModelPayload,
           metadata: {
             description: newKeyDescription || undefined,
             permissions: newKeyPermissions,
@@ -480,6 +583,13 @@ const ApiKeysPage: React.FC = () => {
                   Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000,
                 ).toISOString()
               : undefined,
+          // Quota fields
+          maxBudget: newKeyMaxBudget,
+          budgetDuration: newKeyBudgetDuration || undefined,
+          tpmLimit: newKeyTpmLimit,
+          rpmLimit: newKeyRpmLimit,
+          // Per-model limits
+          ...perModelPayload,
           // ✅ Put additional fields in metadata as backend expects
           metadata: {
             description: newKeyDescription || undefined,
@@ -505,27 +615,15 @@ const ApiKeysPage: React.FC = () => {
       }
     } catch (err: any) {
       console.error(isEditMode ? 'Failed to update API key:' : 'Failed to create API key:', err);
-      let errorMessage = isEditMode
+      const fallbackMessage = isEditMode
         ? t('pages.apiKeys.notifications.updateErrorDesc')
         : t('pages.apiKeys.notifications.createErrorDesc');
-
-      // Extract error message from Axios error response
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.error) {
-        errorMessage =
-          typeof err.response.data.error === 'string'
-            ? err.response.data.error
-            : err.response.data.error.message || errorMessage;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
 
       addNotification({
         title: isEditMode
           ? t('pages.apiKeys.notifications.updateError')
           : t('pages.apiKeys.notifications.createError'),
-        description: errorMessage,
+        description: extractErrorDetails(err).message || fallbackMessage,
         variant: 'danger',
       });
     } finally {
@@ -537,9 +635,7 @@ const ApiKeysPage: React.FC = () => {
   const handleViewKey = (apiKey: ApiKey, triggerElement?: HTMLElement) => {
     setSelectedApiKey(apiKey);
     // Store reference to the trigger element for focus restoration
-    if (triggerElement) {
-      viewModalTriggerRef.current = triggerElement;
-    }
+    viewModalTriggerRef.current = triggerElement || null;
     setIsViewModalOpen(true);
   };
 
@@ -553,6 +649,33 @@ const ApiKeysPage: React.FC = () => {
     setNewKeyPermissions([]); // Reset permissions for edit
     setNewKeyRateLimit('1000'); // Reset rate limit for edit
     setNewKeyExpiration('never'); // Reset expiration for edit
+    // Pre-fill quota fields from existing key
+    setNewKeyMaxBudget(apiKey.maxBudget ?? undefined);
+    setNewKeyBudgetDuration(apiKey.budgetDuration ?? '');
+    setNewKeyTpmLimit(apiKey.tpmLimit ?? undefined);
+    setNewKeyRpmLimit(apiKey.rpmLimit ?? undefined);
+    // Pre-fill per-model limits from existing key
+    const modelLimits: Record<string, ModelLimits> = {};
+    if (apiKey.modelMaxBudget) {
+      for (const [modelId, config] of Object.entries(apiKey.modelMaxBudget)) {
+        modelLimits[modelId] = {
+          ...modelLimits[modelId],
+          budget: config.budgetLimit,
+          timePeriod: config.timePeriod,
+        };
+      }
+    }
+    if (apiKey.modelRpmLimit) {
+      for (const [modelId, rpm] of Object.entries(apiKey.modelRpmLimit)) {
+        modelLimits[modelId] = { ...modelLimits[modelId], rpm };
+      }
+    }
+    if (apiKey.modelTpmLimit) {
+      for (const [modelId, tpm] of Object.entries(apiKey.modelTpmLimit)) {
+        modelLimits[modelId] = { ...modelLimits[modelId], tpm };
+      }
+    }
+    setNewKeyModelLimits(modelLimits);
     setFormErrors({}); // Clear any previous validation errors
 
     // Store reference to the trigger element for focus restoration
@@ -591,28 +714,45 @@ const ApiKeysPage: React.FC = () => {
       });
     } catch (err: any) {
       console.error('Failed to delete API key:', err);
-      let errorMessage = t('pages.apiKeys.notifications.deleteErrorDesc');
-
-      // Extract error message from Axios error response
-      if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
-      } else if (err.response?.data?.error) {
-        errorMessage =
-          typeof err.response.data.error === 'string'
-            ? err.response.data.error
-            : err.response.data.error.message || errorMessage;
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
 
       addNotification({
         title: t('pages.apiKeys.notifications.deleteError'),
-        description: errorMessage,
+        description: extractErrorDetails(err).message || t('pages.apiKeys.notifications.deleteErrorDesc'),
         variant: 'danger',
       });
     } finally {
       setIsDeleteModalOpen(false);
       setKeyToDelete(null);
+    }
+  };
+
+  const confirmResetSpend = async () => {
+    if (!editingKey) return;
+
+    try {
+      setResettingSpend(true);
+      await apiKeysService.resetApiKeySpend(editingKey.id);
+
+      // Refresh the API keys list
+      await loadApiKeys();
+
+      // Update editingKey in-place so the progress bar reflects the reset
+      setEditingKey({ ...editingKey, currentSpend: 0 });
+
+      addNotification({
+        title: t('users.apiKeys.resetSpendSuccess', 'Spend Reset'),
+        description: t('users.apiKeys.resetSpendSuccessDesc', 'The API key spend has been reset to $0.'),
+        variant: 'success',
+      });
+    } catch (err: any) {
+      addNotification({
+        title: t('users.apiKeys.resetSpendError', 'Reset Spend Failed'),
+        description: extractErrorDetails(err).message || 'Failed to reset API key spend',
+        variant: 'danger',
+      });
+    } finally {
+      setResettingSpend(false);
+      setIsResetSpendModalOpen(false);
     }
   };
 
@@ -650,9 +790,7 @@ const ApiKeysPage: React.FC = () => {
         addNotification({
           title: t('pages.apiKeys.notifications.retrieveError'),
           description:
-            error instanceof Error
-              ? error.message
-              : t('pages.apiKeys.notifications.retrieveErrorDesc'),
+            extractErrorDetails(error).message || t('pages.apiKeys.notifications.retrieveErrorDesc'),
           variant: 'danger',
         });
       }
@@ -806,7 +944,7 @@ const ApiKeysPage: React.FC = () => {
                 </Thead>
                 <Tbody>
                   {apiKeys.map((apiKey) => (
-                    <Tr key={apiKey.id}>
+                    <Tr key={apiKey.id} isClickable onRowClick={() => handleViewKey(apiKey)}>
                       <Th scope="row">
                         <Flex direction={{ default: 'column' }}>
                           <FlexItem>
@@ -824,7 +962,7 @@ const ApiKeysPage: React.FC = () => {
                           )}
                         </Flex>
                       </Th>
-                      <Td>
+                      <Td onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                         <Flex
                           alignItems={{ default: 'alignItemsCenter' }}
                           spaceItems={{ default: 'spaceItemsSm' }}
@@ -929,7 +1067,7 @@ const ApiKeysPage: React.FC = () => {
                         </Content>
                       </Td>
                        */}
-                      <Td>
+                      <Td onClick={(e: React.MouseEvent) => e.stopPropagation()}>
                         <Flex spaceItems={{ default: 'spaceItemsSm' }}>
                           <FlexItem>
                             <Button
@@ -985,9 +1123,6 @@ const ApiKeysPage: React.FC = () => {
       {/* Create API Key Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={
-          isEditMode ? t('pages.apiKeys.modals.editTitle') : t('pages.apiKeys.modals.createTitle')
-        }
         isOpen={isCreateModalOpen}
         onClose={() => {
           setIsCreateModalOpen(false);
@@ -1010,6 +1145,11 @@ const ApiKeysPage: React.FC = () => {
           }, 100);
         }}
       >
+        <ModalHeader
+          title={
+            isEditMode ? t('pages.apiKeys.modals.editTitle') : t('pages.apiKeys.modals.createTitle')
+          }
+        />
         <ModalBody>
           <Form>
             <FormGroup label={t('pages.apiKeys.forms.name')} isRequired fieldId="key-name">
@@ -1054,194 +1194,371 @@ const ApiKeysPage: React.FC = () => {
 
             {/* ✅ Multi-model selection */}
             <FormGroup label={t('pages.apiKeys.forms.models')} isRequired fieldId="key-models">
-              <Select
-                role="listbox"
-                id="key-models"
-                isOpen={isModelSelectOpen}
-                onOpenChange={setIsModelSelectOpen}
-                aria-label={t('pages.apiKeys.forms.modelsAriaLabel')}
-                aria-required="true"
-                aria-invalid={formErrors.models ? 'true' : 'false'}
-                aria-describedby={formErrors.models ? 'key-models-error' : undefined}
-                toggle={(toggleRef: React.Ref<MenuToggleElement>) => (
-                  <MenuToggle
-                    ref={toggleRef}
-                    onClick={() => setIsModelSelectOpen(!isModelSelectOpen)}
-                    isExpanded={isModelSelectOpen}
-                    aria-expanded={isModelSelectOpen}
-                    aria-haspopup="listbox"
-                    aria-invalid={formErrors.models ? 'true' : 'false'}
-                    aria-describedby={formErrors.models ? 'key-models-error' : undefined}
+              {loadingModels ? (
+                <Skeleton height="40px" />
+              ) : models.length === 0 ? (
+                <Alert
+                  variant="warning"
+                  isInline
+                  isPlain
+                  title={t('pages.apiKeys.messages.noSubscribedModels')}
+                />
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <Label
+                    color="purple"
+                    onClick={() => {
+                      if (selectedModelIds.length === models.length) {
+                        setSelectedModelIds([]);
+                        setNewKeyModelLimits({});
+                      } else {
+                        setSelectedModelIds(models.map((m) => m.id));
+                      }
+                      // Clear validation error if selecting all
+                      if (formErrors.models) {
+                        const newErrors = { ...formErrors };
+                        delete newErrors.models;
+                        setFormErrors(newErrors);
+                      }
+                    }}
+                    style={{ cursor: 'pointer' }}
                   >
-                    {selectedModelIds.length === 0
-                      ? t('pages.apiKeys.selectModels')
-                      : t('pages.apiKeys.modelsSelected', { count: selectedModelIds.length })}
-                    {selectedModelIds.length > 0 && <Badge isRead>{selectedModelIds.length}</Badge>}
-                  </MenuToggle>
-                )}
-                onSelect={(_event, selection) => {
-                  const selectionString = selection as string;
-                  if (selectedModelIds.includes(selectionString)) {
-                    setSelectedModelIds(selectedModelIds.filter((id) => id !== selectionString));
-                  } else {
-                    setSelectedModelIds([...selectedModelIds, selectionString]);
-                  }
-                  // Clear validation error when user makes a selection
-                  if (formErrors.models) {
-                    const newErrors = { ...formErrors };
-                    delete newErrors.models;
-                    setFormErrors(newErrors);
-                  }
-                }}
-                selected={selectedModelIds}
-              >
-                <SelectList>
-                  {loadingModels ? (
-                    <SelectOption isDisabled>
-                      {t('pages.apiKeys.messages.loadingModels')}
-                    </SelectOption>
-                  ) : models.length === 0 ? (
-                    <SelectOption isDisabled>
-                      {t('pages.apiKeys.messages.noSubscribedModels')}
-                    </SelectOption>
-                  ) : (
-                    <>
-                      <SelectOption
-                        key="select-all"
-                        value="select-all"
-                        hasCheckbox
-                        isSelected={selectedModelIds.length === models.length}
-                        onClick={() => {
-                          if (selectedModelIds.length === models.length) {
-                            setSelectedModelIds([]);
-                          } else {
-                            setSelectedModelIds(models.map((m) => m.id));
-                          }
-                        }}
-                        aria-label={t('pages.apiKeys.selectAllModelsAriaLabel')}
-                      >
-                        <strong>{t('pages.apiKeys.selectAll')}</strong>
-                      </SelectOption>
-                      <Divider />
-                      {models.map((model) => (
-                        <SelectOption
-                          key={model.id}
-                          value={model.id}
-                          hasCheckbox
-                          isSelected={selectedModelIds.includes(model.id)}
-                          aria-label={t('pages.apiKeys.selectModelAriaLabel', { name: model.name })}
-                        >
-                          {model.name}
-                        </SelectOption>
-                      ))}
-                    </>
-                  )}
-                </SelectList>
-              </Select>
+                    {selectedModelIds.length === models.length
+                      ? t('pages.apiKeys.deselectAll', 'Deselect All')
+                      : t('pages.apiKeys.selectAll', 'Select All')}
+                  </Label>
+                  {models.map((model) => (
+                    <Label
+                      key={model.id}
+                      color={selectedModelIds.includes(model.id) ? 'blue' : 'grey'}
+                      onClick={() => {
+                        const isDeselecting = selectedModelIds.includes(model.id);
+                        const newSelection = isDeselecting
+                          ? selectedModelIds.filter((id) => id !== model.id)
+                          : [...selectedModelIds, model.id];
+                        setSelectedModelIds(newSelection);
+                        // Clean up per-model limits when deselecting
+                        if (isDeselecting) {
+                          setNewKeyModelLimits((prev) => {
+                            const updated = { ...prev };
+                            delete updated[model.id];
+                            return updated;
+                          });
+                        }
+                        if (formErrors.models && newSelection.length > 0) {
+                          const newErrors = { ...formErrors };
+                          delete newErrors.models;
+                          setFormErrors(newErrors);
+                        }
+                      }}
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {model.name}
+                    </Label>
+                  ))}
+                </div>
+              )}
               {formErrors.models && (
                 <HelperText id="key-models-error">
                   <HelperTextItem variant="error">{formErrors.models}</HelperTextItem>
                 </HelperText>
               )}
-              {models.length === 0 && !loadingModels && (
-                <HelperText id="key-models-no-subscriptions">
-                  <HelperTextItem variant="error">
-                    {t('pages.apiKeys.messages.noSubscribedModelsError')}
+              <HelperText>
+                <HelperTextItem>
+                  {t(
+                    'pages.apiKeys.forms.modelsHelperText',
+                    'Select one or more models for this API key.',
+                  )}
+                </HelperTextItem>
+              </HelperText>
+            </FormGroup>
+
+            {/* Quota fields - shown in both create and edit modes */}
+            <Divider style={{ margin: '0.25rem 0 0.125rem' }} />
+            <Title headingLevel="h4" size="md" style={{ marginBottom: '0.125rem' }}>
+              {t('pages.apiKeys.quotas.title')}
+            </Title>
+            <Content component={ContentVariants.small} style={{ marginBottom: '0.125rem' }}>
+              {t('pages.apiKeys.quotas.description')}
+            </Content>
+
+            {/* Current Spend with Progress Bar and Reset Button - edit mode only, when budget is set */}
+            {isEditMode && editingKey && editingKey.maxBudget != null && editingKey.maxBudget > 0 && (
+              <FormGroup
+                label={t('users.apiKeys.currentSpend', 'Current Spend')}
+                fieldId="key-current-spend"
+              >
+                <Split hasGutter style={{ alignItems: 'center' }}>
+                  <SplitItem isFilled>
+                    <Progress
+                      value={
+                        editingKey.currentSpend != null
+                          ? Math.min((editingKey.currentSpend / editingKey.maxBudget) * 100, 100)
+                          : 0
+                      }
+                      measureLocation={ProgressMeasureLocation.outside}
+                      aria-label={t('users.budget.budgetUtilization', 'Budget utilization')}
+                      variant={
+                        editingKey.currentSpend != null
+                          ? (editingKey.currentSpend / editingKey.maxBudget) * 100 > 95
+                            ? ProgressVariant.danger
+                            : (editingKey.currentSpend / editingKey.maxBudget) * 100 > 80
+                              ? ProgressVariant.warning
+                              : undefined
+                          : undefined
+                      }
+                    />
+                  </SplitItem>
+                  {(editingKey.currentSpend ?? 0) > 0 && (
+                    <SplitItem>
+                      <Button
+                        variant="secondary"
+                        isDanger
+                        onClick={() => setIsResetSpendModalOpen(true)}
+                        isDisabled={resettingSpend}
+                      >
+                        {t('users.apiKeys.resetSpend', 'Reset Spend')}
+                      </Button>
+                    </SplitItem>
+                  )}
+                </Split>
+                <HelperText>
+                  <HelperTextItem>
+                    ${editingKey.currentSpend?.toFixed(2) || '0.00'} / $
+                    {editingKey.maxBudget.toFixed(2)}
                   </HelperTextItem>
                 </HelperText>
-              )}
-            </FormGroup>
-            {selectedModelIds.length > 0 && (
-              <LabelGroup>
-                {selectedModelIds.map((modelId) => {
-                  const model = models.find((m) => m.id === modelId);
-                  return model ? (
-                    <Label
-                      key={modelId}
-                      onClose={() =>
-                        setSelectedModelIds(selectedModelIds.filter((id) => id !== modelId))
-                      }
-                      isCompact
-                    >
-                      {model.name}
-                    </Label>
-                  ) : null;
-                })}
-              </LabelGroup>
+              </FormGroup>
             )}
 
-            {/* TODO: Not selectable by user. Needed?
-            <FormGroup label={t('pages.apiKeys.labels.rateLimitLabel')} fieldId="key-rate-limit">
-              <FormSelect
-                value={newKeyRateLimit}
-                onChange={(_event, value) => setNewKeyRateLimit(value)}
-                id="key-rate-limit"
-              >
-                <FormSelectOption value="100" label={t('pages.apiKeys.rateLimits.basic')} />
-                <FormSelectOption value="500" label={t('pages.apiKeys.rateLimits.standard')} />
-                <FormSelectOption value="1000" label={t('pages.apiKeys.rateLimits.premium')} />
-                <FormSelectOption value="5000" label={t('pages.apiKeys.rateLimits.enterprise')} />
-              </FormSelect>
+            <FormGroup
+              label={t('pages.apiKeys.quotas.maxBudget')}
+              fieldId="key-max-budget"
+            >
+              <TextInput
+                id="key-max-budget"
+                type="number"
+                min="0"
+                step="1"
+                value={newKeyMaxBudget ?? ''}
+                onChange={(_event, value) => setNewKeyMaxBudget(value ? parseFloat(value) : undefined)}
+                placeholder={t('pages.apiKeys.quotas.optionalPlaceholder')}
+                validated={formErrors.maxBudget ? 'error' : 'default'}
+              />
+              <HelperText>
+                <HelperTextItem variant={formErrors.maxBudget ? 'error' : 'default'}>
+                  {formErrors.maxBudget ?? (
+                    quotaDefaults?.maximums?.maxBudget != null
+                      ? t('pages.apiKeys.quotas.maxAllowed', { max: quotaDefaults.maximums.maxBudget })
+                      : t('pages.apiKeys.quotas.maxBudgetHelper')
+                  )}
+                </HelperTextItem>
+              </HelperText>
             </FormGroup>
 
-            <FormGroup label={t('pages.apiKeys.forms.expiration')} fieldId="key-expiration">
-              <FormSelect
-                value={newKeyExpiration}
-                onChange={(_event, value) => setNewKeyExpiration(value)}
-                id="key-expiration"
+            {newKeyMaxBudget != null && newKeyMaxBudget > 0 && (
+              <FormGroup
+                label={t('pages.apiKeys.quotas.budgetDuration')}
+                fieldId="key-budget-duration"
               >
-                <FormSelectOption value="never" label={t('pages.apiKeys.neverExpires')} />
-                <FormSelectOption value="30" label={t('pages.apiKeys.timeRanges.thirtyDays')} />
-                <FormSelectOption value="90" label={t('pages.apiKeys.timeRanges.ninetyDays')} />
-                <FormSelectOption value="365" label={t('pages.apiKeys.timeRanges.oneYear')} />
-              </FormSelect>
-            </FormGroup> */}
+                <FormSelect
+                  id="key-budget-duration"
+                  value={newKeyBudgetDuration}
+                  onChange={(_event, value) => setNewKeyBudgetDuration(value)}
+                >
+                  <FormSelectOption value="" label={t('pages.apiKeys.quotas.noDuration')} />
+                  <FormSelectOption value="daily" label={t('pages.apiKeys.quotas.daily')} />
+                  <FormSelectOption value="weekly" label={t('pages.apiKeys.quotas.weekly')} />
+                  <FormSelectOption value="monthly" label={t('pages.apiKeys.quotas.monthly')} />
+                  <FormSelectOption value="yearly" label={t('pages.apiKeys.quotas.yearly')} />
+                </FormSelect>
+                <HelperText>
+                  <HelperTextItem>{t('pages.apiKeys.quotas.budgetDurationHelper')}</HelperTextItem>
+                </HelperText>
+              </FormGroup>
+            )}
+
+            <FormGroup
+              label={t('pages.apiKeys.quotas.tpmLimit')}
+              fieldId="key-tpm-limit"
+            >
+              <TextInput
+                id="key-tpm-limit"
+                type="number"
+                min="0"
+                step="1000"
+                value={newKeyTpmLimit ?? ''}
+                onChange={(_event, value) => setNewKeyTpmLimit(value ? parseInt(value) : undefined)}
+                placeholder={t('pages.apiKeys.quotas.optionalPlaceholder')}
+                validated={formErrors.tpmLimit ? 'error' : 'default'}
+              />
+              <HelperText>
+                <HelperTextItem variant={formErrors.tpmLimit ? 'error' : 'default'}>
+                  {formErrors.tpmLimit ?? (
+                    quotaDefaults?.maximums?.tpmLimit != null
+                      ? t('pages.apiKeys.quotas.maxAllowed', { max: quotaDefaults.maximums.tpmLimit })
+                      : t('pages.apiKeys.quotas.tpmLimitHelper')
+                  )}
+                </HelperTextItem>
+              </HelperText>
+            </FormGroup>
+
+            <FormGroup
+              label={t('pages.apiKeys.quotas.rpmLimit')}
+              fieldId="key-rpm-limit"
+            >
+              <TextInput
+                id="key-rpm-limit"
+                type="number"
+                min="0"
+                step="10"
+                value={newKeyRpmLimit ?? ''}
+                onChange={(_event, value) => setNewKeyRpmLimit(value ? parseInt(value) : undefined)}
+                placeholder={t('pages.apiKeys.quotas.optionalPlaceholder')}
+                validated={formErrors.rpmLimit ? 'error' : 'default'}
+              />
+              <HelperText>
+                <HelperTextItem variant={formErrors.rpmLimit ? 'error' : 'default'}>
+                  {formErrors.rpmLimit ?? (
+                    quotaDefaults?.maximums?.rpmLimit != null
+                      ? t('pages.apiKeys.quotas.maxAllowed', { max: quotaDefaults.maximums.rpmLimit })
+                      : t('pages.apiKeys.quotas.rpmLimitHelper')
+                  )}
+                </HelperTextItem>
+              </HelperText>
+            </FormGroup>
+
+            {/* Per-model limits */}
+            {selectedModelIds.length > 0 && (
+              <ExpandableSection
+                toggleText={t('pages.apiKeys.quotas.perModelLimits', 'Per-Model Limits')}
+                isIndented
+              >
+                <HelperText style={{ marginBottom: '0.75rem' }}>
+                  <HelperTextItem>
+                    {t(
+                      'pages.apiKeys.quotas.perModelLimitsHelp',
+                      'Set per-model budget and rate limits. These apply independently of global key limits.',
+                    )}
+                  </HelperTextItem>
+                </HelperText>
+                {selectedModelIds.map((modelId) => {
+                  const modelName = models.find((m) => m.id === modelId)?.name || modelId;
+                  const limits = newKeyModelLimits[modelId] || {};
+                  const updateModelLimit = (field: string, value: number | string | undefined) => {
+                    setNewKeyModelLimits((prev) => ({
+                      ...prev,
+                      [modelId]: { ...prev[modelId], [field]: value },
+                    }));
+                  };
+                  return (
+                    <div
+                      key={modelId}
+                      style={{
+                        marginBottom: '1rem',
+                        padding: '0.75rem',
+                        border: '1px solid var(--pf-t--global--border--color--default)',
+                        borderRadius: 'var(--pf-t--global--border--radius--small)',
+                      }}
+                    >
+                      <Content
+                        component={ContentVariants.small}
+                        style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}
+                      >
+                        {modelName}
+                      </Content>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                        {/* Per-model budget hidden: requires LiteLLM Enterprise license */}
+                        <FormGroup
+                          label={t('pages.apiKeys.quotas.modelRpm', 'RPM')}
+                          fieldId={`model-rpm-${modelId}`}
+                        >
+                          <TextInput
+                            id={`model-rpm-${modelId}`}
+                            type="number"
+                            min="0"
+                            value={limits.rpm ?? ''}
+                            onChange={(_event, value) => {
+                              const parsed = parseInt(value, 10);
+                              updateModelLimit('rpm', value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed);
+                            }}
+                            isDisabled={creatingKey || updatingKey}
+                            aria-label={`${modelName} RPM`}
+                            validated={formErrors[`model-rpm-${modelId}`] ? 'error' : 'default'}
+                          />
+                          {formErrors[`model-rpm-${modelId}`] && (
+                            <HelperText>
+                              <HelperTextItem variant="error">{formErrors[`model-rpm-${modelId}`]}</HelperTextItem>
+                            </HelperText>
+                          )}
+                        </FormGroup>
+                        <FormGroup
+                          label={t('pages.apiKeys.quotas.modelTpm', 'TPM')}
+                          fieldId={`model-tpm-${modelId}`}
+                        >
+                          <TextInput
+                            id={`model-tpm-${modelId}`}
+                            type="number"
+                            min="0"
+                            value={limits.tpm ?? ''}
+                            onChange={(_event, value) => {
+                              const parsed = parseInt(value, 10);
+                              updateModelLimit('tpm', value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed);
+                            }}
+                            isDisabled={creatingKey || updatingKey}
+                            aria-label={`${modelName} TPM`}
+                            validated={formErrors[`model-tpm-${modelId}`] ? 'error' : 'default'}
+                          />
+                          {formErrors[`model-tpm-${modelId}`] && (
+                            <HelperText>
+                              <HelperTextItem variant="error">{formErrors[`model-tpm-${modelId}`]}</HelperTextItem>
+                            </HelperText>
+                          )}
+                        </FormGroup>
+                      </div>
+                    </div>
+                  );
+                })}
+              </ExpandableSection>
+            )}
           </Form>
 
-          <div
-            style={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'flex-end',
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            ref={createModalPrimaryButtonRef}
+            variant="primary"
+            onClick={handleSaveApiKey}
+            isLoading={creatingKey || updatingKey}
+          >
+            {isEditMode
+              ? updatingKey
+                ? t('pages.apiKeys.updating')
+                : t('pages.apiKeys.updateKey')
+              : creatingKey
+                ? t('pages.apiKeys.creating')
+                : t('pages.apiKeys.createKey')}
+          </Button>
+          <Button
+            variant="link"
+            onClick={() => {
+              setIsCreateModalOpen(false);
+              setIsEditMode(false);
+              setEditingKey(null);
+              // Restore focus to the trigger element
+              setTimeout(() => {
+                createModalTriggerRef.current?.focus();
+              }, 100);
             }}
           >
-            <Button
-              ref={createModalPrimaryButtonRef}
-              variant="primary"
-              onClick={handleSaveApiKey}
-              isLoading={creatingKey || updatingKey}
-            >
-              {isEditMode
-                ? updatingKey
-                  ? t('pages.apiKeys.updating')
-                  : t('pages.apiKeys.updateKey')
-                : creatingKey
-                  ? t('pages.apiKeys.creating')
-                  : t('pages.apiKeys.createKey')}
-            </Button>
-            <Button
-              variant="link"
-              onClick={() => {
-                setIsCreateModalOpen(false);
-                setIsEditMode(false);
-                setEditingKey(null);
-                // Restore focus to the trigger element
-                setTimeout(() => {
-                  createModalTriggerRef.current?.focus();
-                }, 100);
-              }}
-            >
-              {t('pages.apiKeys.labels.cancel')}
-            </Button>
-          </div>
-        </ModalBody>
+            {t('pages.apiKeys.labels.cancel')}
+          </Button>
+        </ModalFooter>
       </Modal>
 
       {/* View API Key Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={selectedApiKey?.name || ''}
         isOpen={isViewModalOpen}
         onClose={() => {
           setIsViewModalOpen(false);
@@ -1392,22 +1709,50 @@ const ApiKeysPage: React.FC = () => {
                       </Td>
                     </Tr>
                     <Tr>
-                      <Th scope="row">
-                        <strong>{t('pages.apiKeys.labels.apiUrl')}</strong>
-                      </Th>
-                      <Td>{litellmApiUrl}/v1</Td>
-                    </Tr>
-                    <Tr>
-                      <Th scope="row">
-                        <strong>{t('pages.apiKeys.labels.created')}</strong>
-                      </Th>
-                      <Td>{new Date(selectedApiKey.createdAt).toLocaleDateString()}</Td>
-                    </Tr>
-                    <Tr>
-                      <Th scope="row">
-                        <strong>{t('pages.apiKeys.labels.totalRequests')}</strong>
-                      </Th>
-                      <Td>{selectedApiKey.usageCount.toLocaleString()}</Td>
+                      <Td colSpan={2} style={{ padding: 0 }}>
+                        <Split hasGutter>
+                          <SplitItem isFilled>
+                            <Table aria-label="Key details left" variant="compact" borders={false}>
+                              <Tbody>
+                                <Tr>
+                                  <Th scope="row"><strong>{t('pages.apiKeys.labels.apiUrl')}</strong></Th>
+                                  <Td>{litellmApiUrl}/v1</Td>
+                                </Tr>
+                                <Tr>
+                                  <Th scope="row"><strong>{t('pages.apiKeys.labels.created')}</strong></Th>
+                                  <Td>{new Date(selectedApiKey.createdAt).toLocaleDateString()}</Td>
+                                </Tr>
+                                <Tr>
+                                  <Th scope="row"><strong>{t('pages.apiKeys.labels.totalRequests')}</strong></Th>
+                                  <Td>{selectedApiKey.usageCount.toLocaleString()}</Td>
+                                </Tr>
+                              </Tbody>
+                            </Table>
+                          </SplitItem>
+                          <SplitItem isFilled>
+                            <Table aria-label="Key limits" variant="compact" borders={false}>
+                              <Tbody>
+                                <Tr>
+                                  <Th scope="row"><strong>{t('users.apiKeys.budget', 'Budget')}</strong></Th>
+                                  <Td>
+                                    {selectedApiKey.maxBudget != null
+                                      ? `$${(selectedApiKey.currentSpend ?? 0).toFixed(2)} / $${selectedApiKey.maxBudget.toFixed(2)}`
+                                      : '-'}
+                                  </Td>
+                                </Tr>
+                                <Tr>
+                                  <Th scope="row"><strong>{t('users.apiKeys.tpmLimit', 'TPM Limit')}</strong></Th>
+                                  <Td>{selectedApiKey.tpmLimit != null ? selectedApiKey.tpmLimit.toLocaleString() : '-'}</Td>
+                                </Tr>
+                                <Tr>
+                                  <Th scope="row"><strong>{t('users.apiKeys.rpmLimit', 'RPM Limit')}</strong></Th>
+                                  <Td>{selectedApiKey.rpmLimit != null ? selectedApiKey.rpmLimit.toLocaleString() : '-'}</Td>
+                                </Tr>
+                              </Tbody>
+                            </Table>
+                          </SplitItem>
+                        </Split>
+                      </Td>
                     </Tr>
 
                     {selectedApiKey.expiresAt && (
@@ -1476,34 +1821,26 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
             </>
           )}
 
-          <div
-            style={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'flex-end',
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="link"
+            onClick={() => {
+              setIsViewModalOpen(false);
+              // Restore focus to the trigger element
+              setTimeout(() => {
+                viewModalTriggerRef.current?.focus();
+              }, 100);
             }}
           >
-            <Button
-              variant="link"
-              onClick={() => {
-                setIsViewModalOpen(false);
-                // Restore focus to the trigger element
-                setTimeout(() => {
-                  viewModalTriggerRef.current?.focus();
-                }, 100);
-              }}
-            >
-              {t('pages.apiKeys.labels.close')}
-            </Button>
-          </div>
-        </ModalBody>
+            {t('pages.apiKeys.labels.close')}
+          </Button>
+        </ModalFooter>
       </Modal>
 
       {/* Generated Key Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={t('pages.apiKeys.modals.createdTitle')}
         isOpen={showGeneratedKey}
         onClose={() => {
           setShowGeneratedKey(false);
@@ -1522,6 +1859,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
           }, 100);
         }}
       >
+        <ModalHeader title={t('pages.apiKeys.modals.createdTitle')} />
         <ModalBody>
           {generatedKey && (
             <>
@@ -1612,35 +1950,27 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
             </>
           )}
 
-          <div
-            style={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'flex-end',
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            ref={generatedModalPrimaryButtonRef}
+            variant="primary"
+            onClick={() => {
+              setShowGeneratedKey(false);
+              // Focus returns to the create modal trigger after key generation
+              setTimeout(() => {
+                createModalTriggerRef.current?.focus();
+              }, 100);
             }}
           >
-            <Button
-              ref={generatedModalPrimaryButtonRef}
-              variant="primary"
-              onClick={() => {
-                setShowGeneratedKey(false);
-                // Focus returns to the create modal trigger after key generation
-                setTimeout(() => {
-                  createModalTriggerRef.current?.focus();
-                }, 100);
-              }}
-            >
-              {t('pages.apiKeys.labels.close')}
-            </Button>
-          </div>
-        </ModalBody>
+            {t('pages.apiKeys.labels.close')}
+          </Button>
+        </ModalFooter>
       </Modal>
 
       {/* Delete Confirmation Modal */}
       <Modal
         variant={ModalVariant.small}
-        title={t('pages.apiKeys.modals.deleteTitle')}
         isOpen={isDeleteModalOpen}
         onClose={() => {
           setIsDeleteModalOpen(false);
@@ -1659,6 +1989,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
           }, 100);
         }}
       >
+        <ModalHeader title={t('pages.apiKeys.modals.deleteTitle')} />
         <ModalBody>
           {keyToDelete && (
             <>
@@ -1687,32 +2018,64 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
             </>
           )}
 
-          <div
-            style={{
-              marginTop: '1.5rem',
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'flex-end',
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="danger" onClick={confirmDeleteKey}>
+            {t('pages.apiKeys.deleteKey')}
+          </Button>
+          <Button
+            ref={deleteModalCancelButtonRef}
+            variant="link"
+            onClick={() => {
+              setIsDeleteModalOpen(false);
+              // Restore focus to the trigger element
+              setTimeout(() => {
+                deleteModalTriggerRef.current?.focus();
+              }, 100);
             }}
           >
-            <Button variant="danger" onClick={confirmDeleteKey}>
-              {t('pages.apiKeys.deleteKey')}
-            </Button>
-            <Button
-              ref={deleteModalCancelButtonRef}
-              variant="link"
-              onClick={() => {
-                setIsDeleteModalOpen(false);
-                // Restore focus to the trigger element
-                setTimeout(() => {
-                  deleteModalTriggerRef.current?.focus();
-                }, 100);
-              }}
-            >
-              {t('pages.apiKeys.labels.cancel')}
-            </Button>
-          </div>
+            {t('pages.apiKeys.labels.cancel')}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Reset Spend Confirmation Modal */}
+      <Modal
+        variant={ModalVariant.small}
+        isOpen={isResetSpendModalOpen}
+        onClose={() => setIsResetSpendModalOpen(false)}
+      >
+        <ModalHeader title={t('users.apiKeys.resetSpendConfirmTitle', 'Reset API Key Spend')} />
+        <ModalBody>
+          <p>
+            {t(
+              'users.apiKeys.resetSpendConfirmBody',
+              'Are you sure you want to reset the current spend for this API key to $0? This action cannot be undone.',
+            )}
+          </p>
+          {editingKey && (
+            <p style={{ marginTop: '0.5rem' }}>
+              <strong>{editingKey.name}</strong>
+            </p>
+          )}
         </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="danger"
+            onClick={confirmResetSpend}
+            isLoading={resettingSpend}
+            isDisabled={resettingSpend}
+          >
+            {t('users.apiKeys.resetSpend', 'Reset Spend')}
+          </Button>
+          <Button
+            variant="link"
+            onClick={() => setIsResetSpendModalOpen(false)}
+            isDisabled={resettingSpend}
+          >
+            {t('common.cancel', 'Cancel')}
+          </Button>
+        </ModalFooter>
       </Modal>
     </>
   );

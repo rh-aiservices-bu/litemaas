@@ -4,6 +4,7 @@ import {
   Modal,
   ModalVariant,
   ModalBody,
+  ModalHeader,
   Form,
   FormGroup,
   TextInput,
@@ -176,16 +177,18 @@ const BannerEditModal: React.FC<BannerEditModalProps> = ({
   return (
     <Modal
       variant={ModalVariant.large}
-      title={
-        !canEdit && mode === 'edit'
-          ? t('pages.tools.viewBanner')
-          : mode === 'create'
-            ? t('pages.tools.createNewBanner')
-            : t('pages.tools.editBanner')
-      }
       isOpen={isOpen}
       onClose={onClose}
     >
+      <ModalHeader
+        title={
+          !canEdit && mode === 'edit'
+            ? t('pages.tools.viewBanner')
+            : mode === 'create'
+              ? t('pages.tools.createNewBanner')
+              : t('pages.tools.editBanner')
+        }
+      />
       <ModalBody>
         <Form id="banner-form" onSubmit={handleSubmit}>
           {/* Banner Name */}

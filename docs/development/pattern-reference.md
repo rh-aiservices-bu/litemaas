@@ -1080,6 +1080,22 @@ await db.query('UPDATE users...', [userId]); // Could fail!
 catch (error) {
   throw error; // Raw database error exposed to client!
 }
+
+// ❌ WRONG - Nullable numeric TypeBox schema with Number/Integer first
+Type.Optional(Type.Union([Type.Integer({ minimum: 0 }), Type.Null()]))
+// Fastify's Ajv (coerceTypes: true) evaluates anyOf in order and coerces null → 0
+// for integer/number types BEFORE reaching the Null branch.
+
+// ✅ CORRECT - Put Type.Null() FIRST to prevent Ajv null-to-zero coercion
+Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 0 })]))
+
+// ❌ WRONG - Sending null to LiteLLM /user/update for tpm_limit or rpm_limit
+liteLLMUpdates.tpm_limit = tpmLimit ?? null;
+// LiteLLM filters out null values (v is not None check), old value persists silently.
+
+// ✅ CORRECT - Use max int32 sentinel for "unlimited" since LiteLLM ignores null
+const LITELLM_UNLIMITED = 2147483647;
+liteLLMUpdates.tpm_limit = tpmLimit === null ? LITELLM_UNLIMITED : tpmLimit;
 ```
 
 ### ❌ Frontend Anti-Patterns to Avoid

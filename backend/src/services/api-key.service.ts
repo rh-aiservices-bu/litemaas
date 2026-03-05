@@ -15,6 +15,7 @@ import {
   ApiKeyValidation,
 } from '../types/api-key.types.js';
 import { QueryParameter } from '../types/common.types.js';
+import { LITELLM_UNLIMITED } from '../config/litellm.js';
 
 // Types moved to types/api-key.types.ts for consistency
 // Keeping legacy interface for backward compatibility in service
@@ -846,6 +847,29 @@ export class ApiKeyService extends BaseService {
         }
       }
 
+      // Enrich with real-time spend from LiteLLM
+      if (!this.shouldUseMockData()) {
+        const spendPromises = apiKeys.map(async (key) => {
+          if (key.lite_llm_key_value) {
+            try {
+              const liteLLMInfo = await this.liteLLMService.getKeyInfo(
+                key.lite_llm_key_value as string,
+              );
+              key.current_spend = liteLLMInfo.spend ?? key.current_spend;
+              key.max_budget = liteLLMInfo.max_budget != null && Number(liteLLMInfo.max_budget) !== LITELLM_UNLIMITED
+                ? liteLLMInfo.max_budget : key.max_budget;
+              key.budget_reset_at = liteLLMInfo.budget_reset_at ?? key.budget_reset_at;
+            } catch (error) {
+              this.fastify.log.warn(
+                { keyId: key.id, error },
+                'Failed to fetch real-time spend from LiteLLM for API key, using cached value',
+              );
+            }
+          }
+        });
+        await Promise.all(spendPromises);
+      }
+
       // Enhanced mapping to include masked LiteLLM keys
       return {
         data: apiKeys.map((key) => {
@@ -916,14 +940,21 @@ export class ApiKeyService extends BaseService {
 
       // Update local database with LiteLLM data
       // Transform model_max_budget from LiteLLM snake_case to camelCase for consistency
-      const modelMaxBudget = liteLLMInfo.model_max_budget
+      const hasModelMaxBudget =
+        liteLLMInfo.model_max_budget && Object.keys(liteLLMInfo.model_max_budget).length > 0;
+      const modelMaxBudget = hasModelMaxBudget
         ? Object.fromEntries(
-            Object.entries(liteLLMInfo.model_max_budget).map(([model, config]) => [
+            Object.entries(liteLLMInfo.model_max_budget!).map(([model, config]) => [
               model,
               { budgetLimit: config.budget_limit, timePeriod: config.time_period },
             ]),
           )
         : null;
+
+      const hasModelRpmLimit =
+        liteLLMInfo.model_rpm_limit && Object.keys(liteLLMInfo.model_rpm_limit).length > 0;
+      const hasModelTpmLimit =
+        liteLLMInfo.model_tpm_limit && Object.keys(liteLLMInfo.model_tpm_limit).length > 0;
 
       const updatedApiKey = await this.fastify.dbUtils.queryOne<ApiKeyDbRow>(
         `UPDATE api_keys
@@ -937,21 +968,26 @@ export class ApiKeyService extends BaseService {
              model_max_budget = $8,
              model_rpm_limit = $9,
              model_tpm_limit = $10,
+             budget_reset_at = $11,
              last_sync_at = CURRENT_TIMESTAMP,
              sync_status = 'synced'
-         WHERE id = $11
+         WHERE id = $12
          RETURNING *`,
         [
           liteLLMInfo.spend ?? null,
-          liteLLMInfo.max_budget ?? null,
-          liteLLMInfo.tpm_limit ?? null,
-          liteLLMInfo.rpm_limit ?? null,
+          liteLLMInfo.max_budget != null && Number(liteLLMInfo.max_budget) !== LITELLM_UNLIMITED
+            ? liteLLMInfo.max_budget : null,
+          liteLLMInfo.tpm_limit != null && Number(liteLLMInfo.tpm_limit) !== LITELLM_UNLIMITED
+            ? liteLLMInfo.tpm_limit : null,
+          liteLLMInfo.rpm_limit != null && Number(liteLLMInfo.rpm_limit) !== LITELLM_UNLIMITED
+            ? liteLLMInfo.rpm_limit : null,
           liteLLMInfo.budget_duration ?? null,
-          liteLLMInfo.soft_budget ?? null,
+          liteLLMInfo.litellm_budget_table?.soft_budget ?? liteLLMInfo.soft_budget ?? null,
           liteLLMInfo.max_parallel_requests ?? null,
           modelMaxBudget ? JSON.stringify(modelMaxBudget) : null,
-          liteLLMInfo.model_rpm_limit ? JSON.stringify(liteLLMInfo.model_rpm_limit) : null,
-          liteLLMInfo.model_tpm_limit ? JSON.stringify(liteLLMInfo.model_tpm_limit) : null,
+          hasModelRpmLimit ? JSON.stringify(liteLLMInfo.model_rpm_limit) : null,
+          hasModelTpmLimit ? JSON.stringify(liteLLMInfo.model_tpm_limit) : null,
+          liteLLMInfo.budget_reset_at ?? null,
           keyId,
         ],
       );
@@ -1038,15 +1074,15 @@ export class ApiKeyService extends BaseService {
     keyId: string,
     userId: string,
     updates: {
-      maxBudget?: number;
-      tpmLimit?: number;
-      rpmLimit?: number;
-      budgetDuration?: string;
-      softBudget?: number;
-      maxParallelRequests?: number;
-      modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
-      modelRpmLimit?: Record<string, number>;
-      modelTpmLimit?: Record<string, number>;
+      maxBudget?: number | null;
+      tpmLimit?: number | null;
+      rpmLimit?: number | null;
+      budgetDuration?: string | null;
+      softBudget?: number | null;
+      maxParallelRequests?: number | null;
+      modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }> | null;
+      modelRpmLimit?: Record<string, number> | null;
+      modelTpmLimit?: Record<string, number> | null;
       allowedModels?: string[];
     },
   ): Promise<EnhancedApiKey> {
@@ -1072,12 +1108,12 @@ export class ApiKeyService extends BaseService {
       // Update in LiteLLM if integrated
       if (apiKey.liteLLMKeyId && !this.shouldUseMockData()) {
         await this.liteLLMService.updateKey(apiKey.liteLLMKeyId, {
-          max_budget: updates.maxBudget,
-          tpm_limit: updates.tpmLimit,
-          rpm_limit: updates.rpmLimit,
-          budget_duration: updates.budgetDuration,
-          soft_budget: updates.softBudget,
-          max_parallel_requests: updates.maxParallelRequests,
+          max_budget: updates.maxBudget === null ? LITELLM_UNLIMITED : updates.maxBudget,
+          tpm_limit: updates.tpmLimit === null ? LITELLM_UNLIMITED : updates.tpmLimit,
+          rpm_limit: updates.rpmLimit === null ? LITELLM_UNLIMITED : updates.rpmLimit,
+          budget_duration: updates.budgetDuration ?? undefined,
+          soft_budget: updates.softBudget ?? undefined,
+          max_parallel_requests: updates.maxParallelRequests ?? undefined,
           model_max_budget: updates.modelMaxBudget
             ? Object.fromEntries(
                 Object.entries(updates.modelMaxBudget).map(([model, config]) => [
@@ -1086,39 +1122,53 @@ export class ApiKeyService extends BaseService {
                 ]),
               )
             : undefined,
-          model_rpm_limit: updates.modelRpmLimit,
-          model_tpm_limit: updates.modelTpmLimit,
+          model_rpm_limit: updates.modelRpmLimit ?? undefined,
+          model_tpm_limit: updates.modelTpmLimit ?? undefined,
           models: updates.allowedModels,
         });
       }
 
-      // Update local database
+      // Build dynamic UPDATE to properly handle clearing values (setting to null)
+      // Only include fields that are explicitly provided in the updates object
+      const setClauses: string[] = ['last_sync_at = CURRENT_TIMESTAMP'];
+      const params: (string | number | null)[] = [];
+      let paramIdx = 1;
+
+      type FieldDef = { key: keyof typeof updates; column: string; serialize?: boolean };
+      const fieldMap: FieldDef[] = [
+        { key: 'maxBudget', column: 'max_budget' },
+        { key: 'tpmLimit', column: 'tpm_limit' },
+        { key: 'rpmLimit', column: 'rpm_limit' },
+        { key: 'budgetDuration', column: 'budget_duration' },
+        { key: 'softBudget', column: 'soft_budget' },
+        { key: 'maxParallelRequests', column: 'max_parallel_requests' },
+        { key: 'modelMaxBudget', column: 'model_max_budget', serialize: true },
+        { key: 'modelRpmLimit', column: 'model_rpm_limit', serialize: true },
+        { key: 'modelTpmLimit', column: 'model_tpm_limit', serialize: true },
+      ];
+
+      for (const { key, column, serialize } of fieldMap) {
+        if (key in updates) {
+          setClauses.push(`${column} = $${paramIdx++}`);
+          const value = updates[key];
+          if (value == null) {
+            params.push(null);
+          } else if (serialize) {
+            params.push(JSON.stringify(value));
+          } else {
+            params.push(value as string | number);
+          }
+        }
+      }
+
+      params.push(keyId);
+
       const updatedApiKey = await this.fastify.dbUtils.queryOne<ApiKeyDbRow>(
         `UPDATE api_keys
-         SET max_budget = COALESCE($1, max_budget),
-             tpm_limit = COALESCE($2, tpm_limit),
-             rpm_limit = COALESCE($3, rpm_limit),
-             budget_duration = COALESCE($4, budget_duration),
-             soft_budget = COALESCE($5, soft_budget),
-             max_parallel_requests = COALESCE($6, max_parallel_requests),
-             model_max_budget = COALESCE($7, model_max_budget),
-             model_rpm_limit = COALESCE($8, model_rpm_limit),
-             model_tpm_limit = COALESCE($9, model_tpm_limit),
-             last_sync_at = CURRENT_TIMESTAMP
-         WHERE id = $10
+         SET ${setClauses.join(', ')}
+         WHERE id = $${paramIdx}
          RETURNING *`,
-        [
-          updates.maxBudget ?? null,
-          updates.tpmLimit ?? null,
-          updates.rpmLimit ?? null,
-          updates.budgetDuration ?? null,
-          updates.softBudget ?? null,
-          updates.maxParallelRequests ?? null,
-          updates.modelMaxBudget ? JSON.stringify(updates.modelMaxBudget) : null,
-          updates.modelRpmLimit ? JSON.stringify(updates.modelRpmLimit) : null,
-          updates.modelTpmLimit ? JSON.stringify(updates.modelTpmLimit) : null,
-          keyId,
-        ],
+        params,
       );
 
       // Create audit log
@@ -1148,6 +1198,49 @@ export class ApiKeyService extends BaseService {
       return this.mapToEnhancedApiKey(updatedApiKey);
     } catch (error) {
       this.fastify.log.error(error, 'Failed to update API key limits');
+      throw error;
+    }
+  }
+
+  async resetApiKeySpend(
+    keyId: string,
+    userId: string,
+  ): Promise<{ id: string; currentSpend: number; resetAt: string }> {
+    try {
+      const apiKey = await this.getApiKey(keyId, userId);
+      if (!apiKey) {
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'API key not found or you do not have permission to access it',
+        );
+      }
+
+      if (!apiKey.isActive) {
+        throw this.createValidationError(
+          'Cannot reset spend for inactive API key',
+          'isActive',
+          false,
+          'Reactivate the API key before resetting spend',
+        );
+      }
+
+      // Reset spend in LiteLLM
+      if (apiKey.liteLLMKeyId && !this.shouldUseMockData()) {
+        await this.liteLLMService.updateKey(apiKey.liteLLMKeyId, { spend: 0 });
+      }
+
+      const resetAt = new Date().toISOString();
+
+      // Update local database
+      await this.fastify.dbUtils.query(
+        `UPDATE api_keys SET current_spend = 0, last_sync_at = CURRENT_TIMESTAMP WHERE id = $1`,
+        [keyId],
+      );
+
+      return { id: keyId, currentSpend: 0, resetAt };
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to reset API key spend');
       throw error;
     }
   }
@@ -1413,6 +1506,77 @@ export class ApiKeyService extends BaseService {
     } catch (error) {
       this.fastify.log.error(error, 'Failed to validate API key');
       return { isValid: false, error: 'Validation failed' };
+    }
+  }
+
+  async revokeApiKey(keyId: string, userId: string, reason?: string): Promise<void> {
+    try {
+      const apiKey = await this.getApiKey(keyId, userId);
+      if (!apiKey) {
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'API key not found or you do not have permission to access it',
+        );
+      }
+
+      if (!apiKey.isActive) {
+        throw this.createValidationError(
+          'API key is already inactive',
+          'isActive',
+          false,
+          'This API key has already been revoked or deactivated',
+        );
+      }
+
+      // Delete from LiteLLM first (security priority — key stops working immediately)
+      if (apiKey.liteLLMKeyId && !this.shouldUseMockData()) {
+        try {
+          await this.liteLLMService.deleteKey(apiKey.liteLLMKeyId);
+        } catch (error) {
+          this.fastify.log.warn(
+            error,
+            'Failed to delete key from LiteLLM during revocation, proceeding with local deactivation',
+          );
+        }
+      }
+
+      // Soft-deactivate in local database
+      await this.fastify.dbUtils.query(
+        `UPDATE api_keys SET is_active = false, revoked_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+        [keyId],
+      );
+
+      // Create audit log
+      await this.fastify.dbUtils.query(
+        `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [
+          userId,
+          'API_KEY_REVOKE',
+          'API_KEY',
+          keyId,
+          JSON.stringify({
+            models: apiKey.models,
+            keyName: apiKey.name,
+            keyPrefix: apiKey.keyPrefix,
+            reason: reason || 'Revoked',
+          }),
+        ],
+      );
+
+      this.fastify.log.info(
+        {
+          userId,
+          apiKeyId: keyId,
+          models: apiKey.models,
+          reason,
+        },
+        'API key revoked (soft-deactivated)',
+      );
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to revoke API key');
+      throw error;
     }
   }
 
@@ -1851,10 +2015,13 @@ export class ApiKeyService extends BaseService {
       lastSyncAt: apiKey.last_sync_at ? new Date(apiKey.last_sync_at) : undefined,
       syncStatus: (apiKey.sync_status || 'pending') as 'pending' | 'synced' | 'error',
       syncError: apiKey.sync_error,
-      maxBudget: apiKey.max_budget,
+      maxBudget: apiKey.max_budget != null && Number(apiKey.max_budget) !== LITELLM_UNLIMITED
+        ? apiKey.max_budget : undefined,
       currentSpend: apiKey.current_spend,
-      tpmLimit: apiKey.tpm_limit,
-      rpmLimit: apiKey.rpm_limit,
+      tpmLimit: apiKey.tpm_limit != null && Number(apiKey.tpm_limit) !== LITELLM_UNLIMITED
+        ? apiKey.tpm_limit : undefined,
+      rpmLimit: apiKey.rpm_limit != null && Number(apiKey.rpm_limit) !== LITELLM_UNLIMITED
+        ? apiKey.rpm_limit : undefined,
       budgetDuration: apiKey.budget_duration,
       softBudget: apiKey.soft_budget,
       budgetResetAt: apiKey.budget_reset_at ? new Date(apiKey.budget_reset_at) : undefined,

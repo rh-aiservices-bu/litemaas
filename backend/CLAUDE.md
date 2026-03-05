@@ -72,7 +72,7 @@ Fastify plugins are registered in specific order:
 
 ## 🗄️ Database Schema
 
-**Core Tables**: users, teams, models, subscriptions, api_keys, audit_logs, daily_usage_cache, subscription_status_history, branding_settings
+**Core Tables**: users, teams, models, subscriptions, api_keys, audit_logs, daily_usage_cache, subscription_status_history, branding_settings, system_settings
 
 **Subscription Approval Workflow**: `subscription_status_history` table tracks all status changes with full audit trail. Models table includes `restricted_access` boolean. Subscriptions enhanced with `status_reason`, `status_changed_at`, `status_changed_by` fields and unique constraint `(user_id, model_id)`.
 
@@ -80,6 +80,7 @@ Fastify plugins are registered in specific order:
 
 **Branding Customization**: `branding_settings` singleton table (enforced via `CHECK (id = 1)`) stores login page and header branding — custom logos (base64), title, subtitle, and per-element enable/disable toggles. Public `GET` endpoints serve settings metadata and images; admin `PATCH`/`PUT`/`DELETE` endpoints require `admin:banners:write` permission. See `src/services/branding.service.ts` and `src/routes/branding.ts`.
 
+**System Settings**: `system_settings` table is a key-value store with JSONB values for admin-configurable settings. The `api_key_defaults` row stores default and maximum quota values (max budget, TPM, RPM, budget duration, soft budget) for user self-service API key creation. Updates are audit-logged. See `src/services/settings.service.ts` and `src/routes/admin-settings.ts`.
 
 **System User**: Fixed UUID `00000000-0000-0000-0000-000000000001` for audit trail of automated actions (e.g., model restriction cascades).
 
@@ -125,6 +126,7 @@ For details, see [`docs/features/user-roles-administration.md`](../docs/features
   - `DailyUsageCacheManager` - **Day-by-day incremental caching** (permanent historical cache, 5-min TTL for current day)
 - **Integration**: LiteLLMService, LiteLLMIntegrationService
 - **Admin**: AdminService, admin-users route (user details, budget/limits, API keys, subscriptions)
+- **Settings**: SettingsService (API key quota defaults and maximums via `system_settings` table)
 - **Branding**: BrandingService (login page and header customization)
 
 **Admin Analytics Architecture**: Uses specialized service architecture with orchestrator pattern:
@@ -164,6 +166,10 @@ See [`docs/architecture/services.md`](../docs/architecture/services.md) for comp
 **Model Sync**: Auto-sync on startup from `/model/info` endpoint with graceful fallback to mock data.
 
 **API Key Flow**: Database creation → LiteLLM key generation → One-time user display.
+
+**⚠️ LiteLLM Null Value Gotcha**: LiteLLM's `/user/update` silently ignores `null` values for `tpm_limit`, `rpm_limit`, and `budget_duration` (the `v is not None` check in `_update_internal_user_params` filters them out). Only `max_budget` supports `null` (special-cased via `fields_set`). To "clear" TPM/RPM limits, send `2147483647` (max int32, defined as `LITELLM_UNLIMITED`) as a sentinel for "unlimited". See [`docs/architecture/litellm-integration.md`](../docs/architecture/litellm-integration.md) for full details.
+
+**⚠️ Fastify/Ajv Null Coercion Gotcha**: Fastify uses Ajv with `coerceTypes: true`. In TypeBox `Type.Union([Type.Integer(), Type.Null()])`, Ajv evaluates `anyOf` schemas in order and coerces `null → 0` for the integer branch before reaching the null branch. **Always put `Type.Null()` first**: `Type.Union([Type.Null(), Type.Integer()])`. See [`docs/development/pattern-reference.md`](../docs/development/pattern-reference.md) for the pattern.
 
 For details, see [`docs/architecture/litellm-integration.md`](../docs/architecture/litellm-integration.md).
 

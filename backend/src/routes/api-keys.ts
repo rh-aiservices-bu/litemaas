@@ -1,6 +1,5 @@
 import { FastifyPluginAsync } from 'fastify';
 import {
-  CreateApiKeyDto,
   CreateApiKeyResponse,
   RotateApiKeyResponse,
   ApiKeyDetails,
@@ -12,9 +11,11 @@ import {
   CreateApiKeyRequestSchema,
   ApiKeyResponseSchema,
   SingleApiKeyResponseSchema,
+  type CreateApiKeyRequest as CreateApiKeySchemaType,
 } from '../schemas/api-keys';
 import { ApiKeyService } from '../services/api-key.service';
 import { LiteLLMService } from '../services/litellm.service';
+import { SettingsService } from '../services/settings.service';
 import { ApplicationError } from '../utils/errors';
 
 // Error type for proper error handling
@@ -27,6 +28,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
   // Initialize services
   const liteLLMService = new LiteLLMService(fastify);
   const apiKeyService = new ApiKeyService(fastify, liteLLMService);
+  const settingsService = new SettingsService(fastify);
 
   // List API keys
   fastify.get<{
@@ -95,6 +97,10 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             currentSpend: apiKey.currentSpend,
             tpmLimit: apiKey.tpmLimit,
             rpmLimit: apiKey.rpmLimit,
+            budgetDuration: apiKey.budgetDuration,
+            modelMaxBudget: apiKey.modelMaxBudget,
+            modelRpmLimit: apiKey.modelRpmLimit,
+            modelTpmLimit: apiKey.modelTpmLimit,
             metadata: apiKey.metadata,
           })),
           pagination: {
@@ -172,7 +178,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
 
   // Generate new API key
   fastify.post<{
-    Body: CreateApiKeyDto;
+    Body: CreateApiKeySchemaType;
     Reply: CreateApiKeyResponse;
   }>('/', {
     schema: {
@@ -205,7 +211,45 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const apiKey = await apiKeyService.createApiKey(user.userId, body);
+        // Load admin-configured defaults and maximums
+        const quotaConfig = await settingsService.getApiKeyDefaults();
+        const { defaults, maximums } = quotaConfig;
+
+        // Apply defaults for unset fields (use ?? to preserve 0)
+        const mergedBody = { ...body };
+        if (mergedBody.maxBudget == null && defaults.maxBudget != null) {
+          mergedBody.maxBudget = defaults.maxBudget;
+        }
+        if (mergedBody.tpmLimit == null && defaults.tpmLimit != null) {
+          mergedBody.tpmLimit = defaults.tpmLimit;
+        }
+        if (mergedBody.rpmLimit == null && defaults.rpmLimit != null) {
+          mergedBody.rpmLimit = defaults.rpmLimit;
+        }
+        if (mergedBody.budgetDuration == null && defaults.budgetDuration != null) {
+          mergedBody.budgetDuration = defaults.budgetDuration;
+        }
+        if (mergedBody.softBudget == null && defaults.softBudget != null) {
+          mergedBody.softBudget = defaults.softBudget;
+        }
+
+        // Enforce maximums
+        const violations: string[] = [];
+        if (maximums.maxBudget != null && mergedBody.maxBudget != null && mergedBody.maxBudget > maximums.maxBudget) {
+          violations.push(`maxBudget: ${mergedBody.maxBudget} exceeds maximum ${maximums.maxBudget}`);
+        }
+        if (maximums.tpmLimit != null && mergedBody.tpmLimit != null && mergedBody.tpmLimit > maximums.tpmLimit) {
+          violations.push(`tpmLimit: ${mergedBody.tpmLimit} exceeds maximum ${maximums.tpmLimit}`);
+        }
+        if (maximums.rpmLimit != null && mergedBody.rpmLimit != null && mergedBody.rpmLimit > maximums.rpmLimit) {
+          violations.push(`rpmLimit: ${mergedBody.rpmLimit} exceeds maximum ${maximums.rpmLimit}`);
+        }
+
+        if (violations.length > 0) {
+          throw fastify.createError(400, `Quota limits exceeded: ${violations.join('; ')}`);
+        }
+
+        const apiKey = await apiKeyService.createApiKey(user.userId, mergedBody as any);
 
         reply.status(201);
         return {
@@ -350,6 +394,13 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
     Body: {
       name?: string;
       modelIds?: string[];
+      maxBudget?: number | null;
+      budgetDuration?: string | null;
+      tpmLimit?: number | null;
+      rpmLimit?: number | null;
+      modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }> | null;
+      modelRpmLimit?: Record<string, number> | null;
+      modelTpmLimit?: Record<string, number> | null;
       metadata?: {
         description?: string;
         permissions?: string[];
@@ -360,7 +411,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
   }>('/:id', {
     schema: {
       tags: ['API Keys'],
-      description: 'Update API key name, description, and models',
+      description: 'Update API key name, description, models, and quotas',
       security: [{ bearerAuth: [] }],
       params: {
         type: 'object',
@@ -377,6 +428,32 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             type: 'array',
             items: { type: 'string' },
             description: 'Array of model IDs this API key can access',
+          },
+          maxBudget: { anyOf: [{ type: 'null' }, { type: 'number', minimum: 0 }] },
+          budgetDuration: { anyOf: [{ type: 'null' }, { type: 'string' }] },
+          tpmLimit: { anyOf: [{ type: 'null' }, { type: 'integer', minimum: 0 }] },
+          rpmLimit: { anyOf: [{ type: 'null' }, { type: 'integer', minimum: 0 }] },
+          modelMaxBudget: {
+            anyOf: [
+              { type: 'null' },
+              {
+                type: 'object',
+                additionalProperties: {
+                  type: 'object',
+                  properties: {
+                    budgetLimit: { type: 'number' },
+                    timePeriod: { type: 'string' },
+                  },
+                  required: ['budgetLimit', 'timePeriod'],
+                },
+              },
+            ],
+          },
+          modelRpmLimit: {
+            anyOf: [{ type: 'null' }, { type: 'object', additionalProperties: { type: 'integer' } }],
+          },
+          modelTpmLimit: {
+            anyOf: [{ type: 'null' }, { type: 'object', additionalProperties: { type: 'integer' } }],
           },
           metadata: {
             type: 'object',
@@ -413,10 +490,46 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
-      const body = request.body;
+      const { maxBudget, budgetDuration, tpmLimit, rpmLimit, modelMaxBudget, modelRpmLimit, modelTpmLimit, ...rest } = request.body;
 
       try {
-        const updatedApiKey = await apiKeyService.updateApiKey(id, user.userId, body);
+        // Validate quota fields against admin-configured maximums
+        const hasQuotaUpdates = maxBudget !== undefined || budgetDuration !== undefined || tpmLimit !== undefined || rpmLimit !== undefined || modelMaxBudget !== undefined || modelRpmLimit !== undefined || modelTpmLimit !== undefined;
+        if (hasQuotaUpdates) {
+          const quotaConfig = await settingsService.getApiKeyDefaults();
+          const { maximums } = quotaConfig;
+
+          const violations: string[] = [];
+          if (maximums.maxBudget != null && maxBudget != null && maxBudget > maximums.maxBudget) {
+            violations.push(`maxBudget: ${maxBudget} exceeds maximum ${maximums.maxBudget}`);
+          }
+          if (maximums.tpmLimit != null && tpmLimit != null && tpmLimit > maximums.tpmLimit) {
+            violations.push(`tpmLimit: ${tpmLimit} exceeds maximum ${maximums.tpmLimit}`);
+          }
+          if (maximums.rpmLimit != null && rpmLimit != null && rpmLimit > maximums.rpmLimit) {
+            violations.push(`rpmLimit: ${rpmLimit} exceeds maximum ${maximums.rpmLimit}`);
+          }
+
+          if (violations.length > 0) {
+            throw fastify.createError(400, `Quota limits exceeded: ${violations.join('; ')}`);
+          }
+        }
+
+        // Update name/models/metadata
+        let updatedApiKey = await apiKeyService.updateApiKey(id, user.userId, rest);
+
+        // Update quota fields via LiteLLM-syncing method
+        if (hasQuotaUpdates) {
+          updatedApiKey = await apiKeyService.updateApiKeyLimits(id, user.userId, {
+            maxBudget,
+            tpmLimit,
+            rpmLimit,
+            budgetDuration,
+            modelMaxBudget,
+            modelRpmLimit,
+            modelTpmLimit,
+          });
+        }
 
         return {
           id: updatedApiKey.id,
@@ -439,6 +552,10 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           currentSpend: updatedApiKey.currentSpend,
           tpmLimit: updatedApiKey.tpmLimit,
           rpmLimit: updatedApiKey.rpmLimit,
+          budgetDuration: updatedApiKey.budgetDuration,
+          modelMaxBudget: updatedApiKey.modelMaxBudget,
+          modelRpmLimit: updatedApiKey.modelRpmLimit,
+          modelTpmLimit: updatedApiKey.modelTpmLimit,
           metadata: updatedApiKey.metadata,
         };
       } catch (error) {
@@ -449,6 +566,52 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         throw fastify.createError(500, 'Failed to update API key');
+      }
+    },
+  });
+
+  // Reset API key spend
+  fastify.post<{
+    Params: { id: string };
+    Reply: { id: string; currentSpend: number; resetAt: string };
+  }>('/:id/reset-spend', {
+    schema: {
+      tags: ['API Keys'],
+      description: "Reset the API key's current spend to $0",
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+        },
+        required: ['id'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            currentSpend: { type: 'number' },
+            resetAt: { type: 'string', format: 'date-time' },
+          },
+        },
+      },
+    },
+    preHandler: fastify.authenticateWithDevBypass,
+    handler: async (request, _reply) => {
+      const user = (request as AuthenticatedRequest).user;
+      const { id } = request.params;
+
+      try {
+        return await apiKeyService.resetApiKeySpend(id, user.userId);
+      } catch (error) {
+        fastify.log.error(error, 'Failed to reset API key spend');
+
+        if ((error as ErrorWithStatusCode).statusCode) {
+          throw error;
+        }
+
+        throw fastify.createError(500, 'Failed to reset API key spend');
       }
     },
   });

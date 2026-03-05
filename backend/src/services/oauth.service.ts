@@ -3,6 +3,7 @@ import * as https from 'https';
 import { OAuthUserInfo, OAuthTokenResponse } from '../types';
 import { LiteLLMService } from './litellm.service';
 import { DefaultTeamService } from './default-team.service';
+import { SettingsService } from './settings.service';
 import { BaseService } from './base.service';
 
 export interface MockUser {
@@ -418,13 +419,16 @@ export class OAuthService extends BaseService {
   /**
    * Ensures user exists in LiteLLM backend, creating them if necessary
    */
-  private async ensureLiteLLMUser(user: {
-    id: string;
-    username: string;
-    email: string;
-    fullName?: string;
-    roles: string[];
-  }): Promise<void> {
+  private async ensureLiteLLMUser(
+    user: {
+      id: string;
+      username: string;
+      email: string;
+      fullName?: string;
+      roles: string[];
+    },
+    preFetchedDefaults?: { maxBudget: number; tpmLimit: number; rpmLimit: number },
+  ): Promise<void> {
     try {
       // Check if user exists in LiteLLM (using fixed team-based detection)
       const existingUser = await this.liteLLMService.getUserInfo(user.id);
@@ -445,14 +449,23 @@ export class OAuthService extends BaseService {
       // Ensure user is assigned to default team in database
       await this.ensureUserTeamMembership(user.id, DefaultTeamService.DEFAULT_TEAM_ID);
 
+      // Use pre-fetched defaults if available, otherwise fetch from DB/env
+      let userDefaults: { maxBudget: number; tpmLimit: number; rpmLimit: number };
+      if (preFetchedDefaults) {
+        userDefaults = preFetchedDefaults;
+      } else {
+        const settingsService = new SettingsService(this.fastify);
+        userDefaults = await settingsService.getEffectiveUserDefaults();
+      }
+
       await this.liteLLMService.createUser({
         user_id: user.id,
         user_email: user.email,
         user_alias: user.username,
         user_role: user.roles.includes('admin') ? 'proxy_admin' : 'internal_user',
-        max_budget: Number(this.fastify.config.DEFAULT_USER_MAX_BUDGET), // Configurable via DEFAULT_USER_MAX_BUDGET env var
-        tpm_limit: Number(this.fastify.config.DEFAULT_USER_TPM_LIMIT), // Configurable via DEFAULT_USER_TPM_LIMIT env var
-        rpm_limit: Number(this.fastify.config.DEFAULT_USER_RPM_LIMIT), // Configurable via DEFAULT_USER_RPM_LIMIT env var
+        max_budget: userDefaults.maxBudget,
+        tpm_limit: userDefaults.tpmLimit,
+        rpm_limit: userDefaults.rpmLimit,
         auto_create_key: false, // Don't auto-create key during user creation
         teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
       });
@@ -509,6 +522,7 @@ export class OAuthService extends BaseService {
       fullName?: string;
       roles: string[];
     };
+    let userDefaults: { maxBudget: number; tpmLimit: number; rpmLimit: number } | undefined;
 
     if (existingUser) {
       // Merge existing roles with OpenShift group roles
@@ -538,9 +552,13 @@ export class OAuthService extends BaseService {
       };
     } else {
       // Create new user - for new users, OpenShift roles become their initial roles
+      // Fetch effective user defaults so local DB matches LiteLLM values
+      const settingsService = new SettingsService(this.fastify);
+      userDefaults = await settingsService.getEffectiveUserDefaults();
+
       const newUser = await this.fastify.dbUtils.queryOne<DatabaseUser>(
-        `INSERT INTO users (username, email, full_name, oauth_provider, oauth_id, roles, last_login_at)
-         VALUES ($1, $2, $3, $4, $5, $6, NOW())
+        `INSERT INTO users (username, email, full_name, oauth_provider, oauth_id, roles, max_budget, tpm_limit, rpm_limit, last_login_at)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
          RETURNING id, username, email, full_name`,
         [
           userInfo.preferred_username,
@@ -549,6 +567,9 @@ export class OAuthService extends BaseService {
           'openshift',
           userInfo.sub,
           derivedRoles, // Pass array directly, PostgreSQL will handle the formatting
+          userDefaults.maxBudget,
+          userDefaults.tpmLimit,
+          userDefaults.rpmLimit,
         ],
       );
 
@@ -571,7 +592,7 @@ export class OAuthService extends BaseService {
 
     // NEW: Ensure user exists in LiteLLM
     try {
-      await this.ensureLiteLLMUser(user);
+      await this.ensureLiteLLMUser(user, userDefaults);
 
       // Update sync status to 'synced' if successful
       await this.fastify.dbUtils.query(

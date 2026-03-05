@@ -13,6 +13,7 @@ import {
   ModalVariant,
   ModalBody,
   ModalFooter,
+  ModalHeader,
 } from '@patternfly/react-core';
 import { PencilAltIcon, TrashIcon } from '@patternfly/react-icons';
 import type { Banner } from '../../types/banners';
@@ -240,10 +241,10 @@ const BannerTable: React.FC<BannerTableProps> = ({
       {/* Delete Confirmation Modal */}
       <Modal
         variant={ModalVariant.small}
-        title={t('pages.tools.confirmDeleteBanner')}
         isOpen={deleteConfirmModal.isOpen}
         onClose={handleDeleteCancel}
       >
+        <ModalHeader title={t('pages.tools.confirmDeleteBanner')} />
         <ModalBody>
           <Content>
             {t('pages.tools.confirmDeleteBannerMessage', { name: deleteConfirmModal.banner?.name })}

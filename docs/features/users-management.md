@@ -8,10 +8,10 @@ The admin users management feature provides a consolidated interface for adminis
 
 - **Consolidated Management Modal**: Single modal with four tabs for complete user management
 - **Role Management**: Toggle user/admin/adminReadonly roles with conflict detection
-- **Budget & Rate Limits**: Configure max budget, TPM, and RPM limits with utilization tracking
-- **API Key Lifecycle**: Create, view, and revoke API keys for users
+- **Budget & Rate Limits**: Configure max budget, budget duration, TPM, and RPM limits with real-time spend from LiteLLM and spend reset
+- **API Key Lifecycle**: Create, view, edit quotas (including per-model limits), soft revoke, permanent delete, and spend reset
 - **Auto-Subscription**: API key creation automatically creates or reactivates model subscriptions
-- **Subscription Visibility**: View all user subscriptions with status and reason tracking
+- **Subscription Management**: Add and remove model subscriptions directly from the user modal
 - **Full Audit Trail**: All admin actions logged with admin user ID, target user, and metadata
 - **RBAC**: Two permission levels control view-only vs. full management access
 
@@ -59,18 +59,26 @@ Displays user profile information and role management.
 
 #### 2. Budget & Limits Tab (`UserBudgetLimitsTab`)
 
-Configure budget and rate limits with real-time utilization display.
+Configure budget and rate limits with real-time utilization display and spend management.
 
 **Fields**:
 
 - **Max Budget**: Dollar amount with $10 increment (shows current spend progress bar)
+- **Budget Duration**: Budget reset period — daily, weekly, monthly, or yearly (shows next reset date when set)
 - **TPM Limit**: Tokens per minute with 1,000 increment
 - **RPM Limit**: Requests per minute with 10 increment
 
 **Utilization Display**:
 
 - Progress bar with color coding: green (< 80%), warning (80-95%), danger (> 95%)
-- Current spend / max budget ratio
+- Current spend / max budget ratio with period label (e.g., "Current Spend (Monthly)")
+- Budget reset date displayed when a duration is configured
+
+**Spend Reset**:
+
+- Reset button appears when current spend > $0
+- Confirmation modal before resetting
+- Resets spend to $0 in both local database and LiteLLM
 
 #### 3. API Keys Tab (`UserApiKeysTab`)
 
@@ -80,19 +88,26 @@ Full API key lifecycle management.
 
 **Actions** (admin only):
 
-- **Create API Key**: Modal with name, model multi-select, expiration preset (never/30/60/90 days), max budget
-- **Revoke**: Confirmation modal before deactivation
-- **View Usage**: Link to admin usage analytics filtered by key
+- **Create API Key**: Modal with name, model multi-select, expiration preset (never/30/60/90 days), global quotas (max budget, TPM, RPM, budget duration, soft budget, max parallel requests), and optional per-model limits (budget, TPM, RPM)
+- **Edit Quotas**: Full quota editing on existing keys including per-model limits
+- **Spend Reset**: Reset a key's accumulated spend to $0 with confirmation modal
+- **Soft Revoke**: Deactivate the key (remains in database for audit purposes)
+- **Permanent Delete**: Irreversibly delete the key from both database and LiteLLM (confirmation required)
 
 **Generated Key Display**: One-time display modal with copy-to-clipboard and security warning
 
 #### 4. Subscriptions Tab (`UserSubscriptionsTab`)
 
-Read-only view of all user subscriptions.
+Manage user model subscriptions with add and remove capabilities.
 
-**Table Columns**: Model Name, Provider, Status (color-coded), Created Date
+**Table Columns**: Model Name, Provider, Status (color-coded), Created Date, Actions
 
 **Status Colors**: green = active, orange = pending, red = denied/revoked/suspended
+
+**Actions** (admin only):
+
+- **Add Subscription**: Multi-select model picker that filters out already-subscribed models. Creates active subscriptions, bypassing the restricted model approval workflow. Reactivates existing non-active subscriptions.
+- **Remove Subscription**: Remove with optional reason field for audit trail. Cascades to LiteLLM key updates.
 
 ---
 
@@ -100,15 +115,18 @@ Read-only view of all user subscriptions.
 
 All endpoints are under `/api/v1/admin/users`.
 
-| Method | Path                       | Permission    | Description                          |
-| ------ | -------------------------- | ------------- | ------------------------------------ |
-| GET    | `/:id`                     | `users:read`  | Get detailed user info               |
-| PATCH  | `/:id/budget-limits`       | `users:write` | Update budget and rate limits        |
-| GET    | `/:id/api-keys`            | `users:read`  | List user's API keys                 |
-| POST   | `/:id/api-keys`            | `users:write` | Create API key (auto-subscription)   |
-| DELETE | `/:id/api-keys/:keyId`     | `users:write` | Revoke an API key                    |
-| PATCH  | `/:id/api-keys/:keyId`     | `users:write` | Update API key models/name           |
-| GET    | `/:id/subscriptions`       | `users:read`  | List user's subscriptions            |
+| Method | Path                                | Permission    | Description                              |
+| ------ | ----------------------------------- | ------------- | ---------------------------------------- |
+| GET    | `/:id`                              | `users:read`  | Get detailed user info                   |
+| PATCH  | `/:id/budget-limits`                | `users:write` | Update budget, duration, and rate limits |
+| POST   | `/:id/reset-spend`                  | `users:write` | Reset user spend to $0                   |
+| GET    | `/:id/api-keys`                     | `users:read`  | List user's API keys                     |
+| POST   | `/:id/api-keys`                     | `users:write` | Create API key (auto-subscription)       |
+| PATCH  | `/:id/api-keys/:keyId`              | `users:write` | Update API key quotas/models/name        |
+| DELETE | `/:id/api-keys/:keyId`              | `users:write` | Revoke or permanently delete a key       |
+| POST   | `/:id/api-keys/:keyId/reset-spend`  | `users:write` | Reset API key spend to $0                |
+| GET    | `/:id/subscriptions`                | `users:read`  | List user's subscriptions                |
+| POST   | `/:id/subscriptions`                | `users:write` | Add subscriptions for user               |
 
 For complete request/response schemas, see [REST API Reference](../api/rest-api.md#user-management-apiv1adminusers).
 
@@ -137,9 +155,14 @@ All admin user management actions are logged to the `audit_logs` table.
 | Action                    | Details Logged                                     |
 | ------------------------- | -------------------------------------------------- |
 | Budget/limits update      | Admin ID, target user ID, old values, new values   |
+| User spend reset          | Admin ID, target user ID                           |
 | API key creation          | Admin ID, target user ID, key ID, models           |
+| API key quota update      | Admin ID, target user ID, key ID, changed fields   |
 | API key revocation        | Admin ID, target user ID, key ID, reason           |
-| API key model update      | Admin ID, target user ID, key ID, model changes    |
+| API key permanent delete  | Admin ID, target user ID, key ID                   |
+| API key spend reset       | Admin ID, target user ID, key ID                   |
+| Subscription creation     | Admin ID, target user ID, model IDs                |
+| Subscription removal      | Admin ID, target user ID, subscription ID, reason  |
 | Auto-subscription create  | Admin ID, target user ID, model ID, subscription ID |
 
 ---

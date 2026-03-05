@@ -11,6 +11,7 @@ This directory contains documentation for key features and functionality in Lite
 - **[Restricted Model Subscription Approval](subscription-approval-workflow.md)** - Admin approval workflow for restricted model access with audit trail
 - **[Admin Usage API Key Filter](admin-usage-api-key-filter.md)** - Filtering usage data by API keys
 - **[Model Configuration Testing](model-configuration-testing.md)** - Configuration validation and testing features
+- **[Admin Tools — API Key Quota Defaults](admin-tools.md#api-key-quota-defaults)** - Admin-configurable defaults and maximums for user self-service API key quotas
 - **[Test Chatbot](test-chatbot.md)** - Chatbot testing guide and features
 
 ## Feature Categories
@@ -27,6 +28,7 @@ This directory contains documentation for key features and functionality in Lite
 - Model synchronization with LiteLLM
 - Model configuration and testing
 - API key management (multi-model support)
+- Self-service API key quotas with admin-controlled defaults and maximums
 
 ### AI Integration
 

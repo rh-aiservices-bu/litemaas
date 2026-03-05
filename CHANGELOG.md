@@ -21,15 +21,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Cache-busting via `updatedAt` query parameter on image URLs
   - RBAC: public read access for login page, `admin:banners:write` for modifications, adminReadonly for viewing admin UI
 
-- **Per-Key Budget and Rate Limits**: Granular per-API-key budget and rate limit management exposed through the admin user management interface
-  - Budget controls: `max_budget`, `budget_duration` (30s, 1h, 1d, 7d, 30d, 1mo), `soft_budget`, and real-time `budget_utilization` tracking
-  - Rate limits: per-key `tpm_limit` and `rpm_limit` with display in admin key table
-  - Advanced limits: `max_parallel_requests` for concurrent request caps
-  - Per-model granularity: `model_max_budget`, `model_rpm_limit`, and `model_tpm_limit` with BudgetConfig format
+- **Comprehensive API Key Quota Management**: Full budget and rate limit management for API keys across both user self-service and admin interfaces
+  - **Global quotas**: `max_budget`, `budget_duration`, `tpm_limit`, `rpm_limit`, `soft_budget`, `max_parallel_requests` on every API key
+  - **Per-model granularity**: `model_max_budget`, `model_rpm_limit`, and `model_tpm_limit` configurable per subscribed model in both user and admin key creation
+  - **User self-service**: Quota fields in Create Key modal pre-filled with admin-configured defaults; backend enforces values ≤ admin-configured maximums
+  - **Admin key editing**: Full quota editing on existing keys, including per-model limits, via admin User Management Modal
+  - **Admin soft revoke**: Block/unblock keys via LiteLLM without deleting them; permanent delete with confirmation for hard removal
+  - **Spend tracking**: Real-time spend fetched from LiteLLM on page load with color-coded budget utilization progress bars (green < 70%, warning 70–90%, danger > 90%)
+  - **Spend reset**: Reset accumulated spend to $0 on individual keys (both user and admin) with confirmation modal
+  - Budget duration supports predefined periods (`daily`, `weekly`, `monthly`, `yearly`) and custom LiteLLM durations (e.g., `30d`, `1mo`, `1h`) via Union type with pattern `^\d+[smhd]$|^\d+mo$`
   - New database columns on `api_keys` table: `budget_duration`, `soft_budget`, `budget_reset_at`, `max_parallel_requests`, `model_max_budget`, `model_rpm_limit`, `model_tpm_limit`
-  - Admin UI: budget/rate limit fields in key creation form, utilization progress bars and limit labels in key table
-  - Full LiteLLM synchronization: fields passed on key create/update and synced back on read
+  - Full LiteLLM bidirectional synchronization: fields passed on key create/update, spend and reset dates synced back on read
   - i18n support across all 9 locales
+
+- **Admin Limits Management** (Admin Tools → Limits tab): Three-section admin interface for system-wide quota configuration
+  - **New User Defaults**: Default TPM, RPM, and max budget applied to newly registered users; stored in `system_settings` table (`user_defaults` key)
+  - **API Key Quota Defaults**: Side-by-side grid layout for configuring default and maximum values (max budget, budget duration, soft budget, TPM, RPM) for user self-service key creation; stored in `system_settings` table (`api_key_defaults` key); public endpoint `GET /api/v1/config/api-key-defaults` for frontend pre-fill
+  - **Bulk User Limits**: Apply TPM, RPM, and max budget to all existing users at once with confirmation and result summary
+  - New `SettingsService` extending `BaseService` for system settings management with audit logging
+  - Admin endpoints: `GET/PUT /api/v1/admin/settings/api-key-defaults` and `GET/PUT /api/v1/admin/settings/user-defaults` with RBAC
+
+- **Enhanced Admin User Management**: Expanded the User Management Modal with budget/spend sync, subscription management, and spend reset capabilities
+  - **Budget & Limits tab**: Budget duration field (daily/weekly/monthly/yearly), real-time spend from LiteLLM, spend reset button, budget reset date display, color-coded utilization progress bar with period labels
+  - **Subscriptions tab**: Add subscriptions via multi-select model picker (filters out already-subscribed models), remove subscriptions with optional reason for audit trail, status display (Active/Pending/Denied/Revoked)
+  - **API Keys tab**: Full quota editing, spend reset, soft revoke, and permanent delete for any user's keys
+  - Backend endpoints: `POST /api/v1/admin/users/:id/reset-spend`, `POST /api/v1/admin/users/:id/api-keys/:keyId/reset-spend`, `POST /api/v1/admin/users/:id/subscriptions`
+  - LiteLLM spend sync: actual spend fetched on modal open; TPM/RPM clearing sends `LITELLM_UNLIMITED` sentinel (2147483647) due to LiteLLM null-ignore behavior
+
+- **User Budget Consumption on Usage Dashboard**: Budget summary component on the usage page showing current spend, max budget, budget period, and next reset date with color-coded progress bar
 
 - **Encrypted API Key Storage & Edit-Mode Testing**: Provider API keys are now stored encrypted (AES-256-GCM) in the LiteMaaS database, enabling admins to test model configuration during editing without re-entering the API key
   - New `encrypted_api_key` column on `models` table stores keys encrypted with `LITELLM_MASTER_KEY` (falls back to `LITELLM_API_KEY`)
@@ -39,10 +58,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `encryption.ts` utility with `encryptApiKey` / `decryptApiKey` using AES-256-GCM (random IV, auth tag, base64-encoded)
   - New `missing_stored_key` result type for the test configuration endpoint
 
+- **Clickable Table Rows**: API Keys page rows open a View modal with full key details on click; Admin Models page rows open in edit mode on click
+
+- **Model Selection UX**: Replaced model Select dropdown with clickable Label chips and a Select All / Deselect All toggle for better visibility of selected models during API key creation
+
 ### Changed
 
 - **Login Page Default Logo**: Replaced `LogoTitle` with new `Octobean` SVG as the default login page brand image
 - **Fastify `trustProxy` Enabled**: Added `trustProxy: true` to Fastify configuration for correct protocol detection behind edge TLS termination proxies
+- **React Query Global staleTime**: Set to `0` (always refetch on mount) to ensure fresh data on every page navigation; individual queries can still override with their own staleTime
+- **Modal Structure**: All modals now use PatternFly `ModalHeader` for titles and `ModalFooter` for action buttons, replacing inline header/footer patterns
 
 ### Fixed
 
@@ -56,25 +81,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - LiteLLM v1.81.0 returns plain text `I'm alive!` instead of JSON
   - `makeRequest()` now detects content-type and parses accordingly, preserving circuit breaker, retry, and logging infrastructure
 
-- **Per-Key Quota Bug Fixes**: Multiple fixes for per-key budget and rate limit handling
-  - Fixed falsy value coercion: `|| null` → `?? null` for `softBudget`, `maxParallelRequests`, and `budgetDuration` to prevent `0` being treated as empty
-  - Fixed `budgetUtilization` returning `undefined` when `current_spend` is `0` and division by zero when `max_budget` is `0`
-  - Fixed missing per-key quota fields in admin `GET /:id/api-keys` response mapping
-  - Replaced `Type.Any()` with properly typed `Record` schemas in admin-users response
-  - Extracted shared `ApiKeyDbRow` type to propagate new columns through all call sites
-  - Conditional UI: budget duration and soft budget fields only shown when max budget > 0
+- **LiteLLM Interface Alignment**: Aligned LiteMaaS types, schemas, and sync code with actual LiteLLM `/key/info` response structure
+  - `soft_budget` now read from nested `litellm_budget_table` object (with top-level fallback)
+  - `budget_reset_at` now synced from LiteLLM response to local database
+  - Empty objects (`{}`) for `model_max_budget`, `model_rpm_limit`, `model_tpm_limit` stored as `null` instead of `"{}"`
+  - Fixed `makeRequest` header priority: caller-provided headers now correctly override the master API key (fixes `getKeyInfo` authenticating as admin instead of the queried key)
+  - Added `LiteLLMBudgetTable` interface and TypeBox schema for the nested budget structure
+  - Updated `LiteLLMKeyInfo` with all actual response fields: `key_alias`, `soft_budget_cooldown`, `budget_id`, `organization_id`, `model_spend`, `allowed_cache_controls`, `allowed_routes`, `permissions`, `created_at`, `updated_at`, `litellm_budget_table`
+  - Fixed nullable types: `expires`, `blocked`, `team_id` now accept `null` (not just `undefined`)
+  - Removed `as any` type casts in favor of properly typed schemas
+
+- **LiteLLM Null Value Handling**: LiteLLM `/user/update` silently ignores `null` for `tpm_limit`, `rpm_limit`, and `budget_duration`; clearing these limits now sends `LITELLM_UNLIMITED` (2147483647) as a sentinel value
+
+- **Quota Field Persistence**: Replaced `COALESCE`-based UPDATE with dynamic SQL for proper null-clearing of quota fields; extracted shared `ApiKeyDbRow` type for consistent column propagation
+
+- **Per-Model Limits Consistency**: Fixed per-model budget and rate limit UI validation, persistence to database, and schema alignment between frontend forms and backend TypeBox schemas
+
+- **Error Message Display**: Consistent use of `extractErrorDetails()` utility to display backend error messages in frontend notification toasts
+
+- **ExpandableSection Phantom Whitespace**: Added CSS `overflow: hidden` on collapsed PatternFly 6 ExpandableSection content to prevent phantom whitespace and scrollbar caused by PF6's `max-height:0 + visibility:hidden` without `overflow:hidden`
+
+- **Enterprise-Only Field Handling**: Gracefully handle LiteLLM Enterprise-only `model_max_budget` field in `/key/info` responses to prevent errors on Community Edition
 
 ### Documentation
 
 - New: `docs/features/branding-customization.md` — Branding customization feature guide
+- New: `docs/development/quota-limits-test-guide.md` — Manual test guide for quotas & limits features
 - Updated: `docs/features/model-configuration-testing.md` — Server-side testing and encrypted key storage
-- Updated: `docs/api/rest-api.md` — Branding and model test endpoints
-- Updated: `docs/architecture/database-schema.md` — New branding_settings and api_keys columns
+- Updated: `docs/api/rest-api.md` — Branding, model test, admin settings, and config endpoints
+- Updated: `docs/architecture/database-schema.md` — New branding_settings, api_keys columns, and system_settings table
+- Updated: `docs/architecture/litellm-integration.md` — Actual `/key/info` response structure and null value gotchas
+- Updated: `docs/features/admin-tools.md` — Limits Management section with all three sub-sections
 
 ### Infrastructure
 
 - **Testing**: New backend unit tests for API key service quota fields, budget utilization edge cases, and sync transforms
-- **Testing**: New frontend tests for budget/rate limit columns and conditional form fields in UserApiKeysTab
+- **Testing**: New frontend tests for budget/rate limit columns, conditional form fields, and subscription management in UserApiKeysTab and UserSubscriptionsTab
+- **Database**: New `system_settings` table for admin-configurable key-value settings (JSONB storage with audit tracking)
 
 ---
 

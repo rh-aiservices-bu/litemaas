@@ -85,6 +85,8 @@ export interface AdminUserDetails {
   currentSpend?: number;
   tpmLimit?: number;
   rpmLimit?: number;
+  budgetDuration?: string;
+  budgetResetAt?: string;
   syncStatus?: string;
   lastLoginAt?: string;
   createdAt: string;
@@ -94,11 +96,20 @@ export interface AdminUserDetails {
   activeApiKeysCount: number;
 }
 
+// User budget info (for usage dashboard summary)
+export interface UserBudgetInfo {
+  maxBudget?: number;
+  currentSpend: number;
+  budgetDuration?: string;
+  budgetResetAt?: string;
+}
+
 // Budget and limits update request
 export interface UserBudgetLimitsUpdate {
-  maxBudget?: number;
-  tpmLimit?: number;
-  rpmLimit?: number;
+  maxBudget?: number | null;
+  tpmLimit?: number | null;
+  rpmLimit?: number | null;
+  budgetDuration?: string | null;
 }
 
 // Budget update response
@@ -155,6 +166,21 @@ export interface CreateApiKeyForUserRequest {
   modelTpmLimit?: Record<string, number>;
 }
 
+// Update API key for user request (edit existing key)
+export interface UpdateApiKeyForUserRequest {
+  modelIds?: string[];
+  name?: string;
+  maxBudget?: number | null;
+  tpmLimit?: number | null;
+  rpmLimit?: number | null;
+  maxParallelRequests?: number | null;
+  budgetDuration?: string | null;
+  softBudget?: number | null;
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }> | null;
+  modelRpmLimit?: Record<string, number> | null;
+  modelTpmLimit?: Record<string, number> | null;
+}
+
 // Created API key response (includes full key shown once)
 export interface CreatedApiKeyResponse {
   id: string;
@@ -165,6 +191,45 @@ export interface CreatedApiKeyResponse {
   isActive: boolean;
   createdAt: string;
   expiresAt?: string;
+}
+
+// Admin-configurable defaults and maximums for user-created API keys
+export interface ApiKeyQuotaDefaults {
+  defaults: {
+    maxBudget?: number | null;
+    tpmLimit?: number | null;
+    rpmLimit?: number | null;
+    budgetDuration?: string | null;
+    softBudget?: number | null;
+  };
+  maximums: {
+    maxBudget?: number | null;
+    tpmLimit?: number | null;
+    rpmLimit?: number | null;
+  };
+}
+
+// Admin-configurable defaults for new user creation
+export interface UserDefaults {
+  maxBudget?: number | null;
+  tpmLimit?: number | null;
+  rpmLimit?: number | null;
+}
+
+// GET response includes env var fallbacks for UI placeholders
+export interface UserDefaultsResponse extends UserDefaults {
+  envDefaults: {
+    maxBudget: number | null;
+    tpmLimit: number | null;
+    rpmLimit: number | null;
+  };
+}
+
+// Response for admin subscription creation
+export interface CreateUserSubscriptionsResponse {
+  created: Array<{ modelId: string; subscriptionId: string }>;
+  activated: Array<{ modelId: string; subscriptionId: string; previousStatus: string }>;
+  alreadyActive: string[];
 }
 
 // User's subscription for display

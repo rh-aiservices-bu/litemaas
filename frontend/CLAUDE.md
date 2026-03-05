@@ -150,7 +150,8 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 - `users.service.ts` - **Admin user management** (user details, budget/limits, API keys, subscriptions)
 - `branding.service.ts` - **Branding customization** (settings, image upload/delete)
 - `chat.service.ts` - Chatbot integration
-- `config.service.ts` - Application configuration
+- `config.service.ts` - Application configuration and API key quota defaults
+- `admin.service.ts` - Admin operations (API key quota defaults CRUD, bulk user limits, system stats)
 
 ## 🌍 Routing Structure
 
@@ -165,7 +166,8 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
   - API key creation with auto-subscription and revocation
   - RBAC: admin (full access) vs adminReadonly (view only)
 - `/admin/models` - Model configuration testing (AdminModelsPage.tsx)
-- `/admin/tools` - Administrative tools with Branding tab (ToolsPage.tsx)
+- `/admin/tools` - Administrative tools with Limits, Branding, and Banners tabs (ToolsPage.tsx)
+  - Limits tab: Bulk User Limits (max budget, TPM, RPM for all users) and API Key Quota Defaults (admin-configurable defaults and maximums)
 - `/admin/subscriptions` - **Subscription approval management (AdminSubscriptionsPage.tsx)** - Approve/deny restricted model access:
   - Multi-dimensional filtering (status, model, user, date range)
   - Bulk approve/deny operations with result modals
