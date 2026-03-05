@@ -42,6 +42,7 @@ export interface DailyUsageChartData {
  */
 export const transformDailyUsageToChartData = (
   dailyUsage: UsageMetrics['dailyUsage'] = [],
+  currencySymbol: string = '$',
 ): DailyUsageChartData => {
   // Sort by date to ensure chronological order
   const sortedData = [...dailyUsage].sort(
@@ -80,7 +81,7 @@ export const transformDailyUsageToChartData = (
     name: 'cost',
     x: index,
     y: item.cost || 0,
-    label: `${formatDate(item.date)}: $${(item.cost || 0).toFixed(2)}`,
+    label: `${formatDate(item.date)}: ${currencySymbol}${(item.cost || 0).toFixed(2)}`,
   }));
 
   const prompt_tokens: LineChartDataPoint[] = sortedData.map((item, index) => ({
@@ -430,6 +431,7 @@ function getDayName(dayOfWeek: number): string {
 function formatHeatmapValue(
   value: number | null,
   metricType: 'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion_tokens',
+  currencySymbol: string = '$',
 ): string {
   if (value === null || value === undefined) {
     return 'No data';
@@ -437,7 +439,7 @@ function formatHeatmapValue(
 
   switch (metricType) {
     case 'cost':
-      return `$${value.toFixed(2)}`;
+      return `${currencySymbol}${value.toFixed(2)}`;
     case 'requests':
       return `${value.toLocaleString()} requests`;
     case 'tokens':
@@ -477,6 +479,7 @@ export const transformDailyUsageToHeatmapData = (
   startDate: string,
   endDate: string,
   metricType: 'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion_tokens' = 'requests',
+  currencySymbol: string = '$',
 ): HeatmapWeekData[] => {
   if (!dailyUsage || dailyUsage.length === 0) {
     return [];
@@ -533,7 +536,7 @@ export const transformDailyUsageToHeatmapData = (
         value,
         isInRange,
         percentOfWeek: 0, // Will be calculated after week total is known
-        formattedValue: formatHeatmapValue(value, metricType),
+        formattedValue: formatHeatmapValue(value, metricType, currencySymbol),
       });
     }
 

@@ -38,7 +38,7 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency, currencyCode } = useCurrency();
 
   // Fetch user details
   const {
@@ -255,7 +255,7 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
             <HelperTextItem>
               {t(
                 'users.budget.maxBudgetHelp',
-                'Maximum spending limit in USD. Leave empty for no limit.',
+                { defaultValue: 'Maximum spending limit in {{currencyCode}}. Leave empty for no limit.', currencyCode },
               )}
             </HelperTextItem>
           </HelperText>

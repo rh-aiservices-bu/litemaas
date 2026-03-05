@@ -78,7 +78,7 @@ const ApiKeysPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
   const { handleError } = useErrorHandler();
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency, currencyCode } = useCurrency();
 
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -468,7 +468,7 @@ const ApiKeysPage: React.FC = () => {
       const max = quotaDefaults.maximums;
       if (max.maxBudget != null && newKeyMaxBudget != null && newKeyMaxBudget > max.maxBudget) {
         errors.maxBudget = t('pages.apiKeys.quotas.exceedsMaximum', {
-          field: t('pages.apiKeys.quotas.maxBudget'),
+          field: t('pages.apiKeys.quotas.maxBudget', { currencyCode }),
           max: max.maxBudget,
         });
       }
@@ -494,7 +494,7 @@ const ApiKeysPage: React.FC = () => {
         if (newKeyMaxBudget != null && limits.budget > newKeyMaxBudget) {
           errors[`model-budget-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', {
             model: modelName,
-            field: t('pages.apiKeys.quotas.maxBudget'),
+            field: t('pages.apiKeys.quotas.maxBudget', { currencyCode }),
             max: newKeyMaxBudget,
           });
         } else if (
@@ -503,7 +503,7 @@ const ApiKeysPage: React.FC = () => {
         ) {
           errors[`model-budget-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', {
             model: modelName,
-            field: t('pages.apiKeys.quotas.maxBudget'),
+            field: t('pages.apiKeys.quotas.maxBudget', { currencyCode }),
             max: quotaDefaults.maximums.maxBudget,
           });
         }
@@ -1386,7 +1386,7 @@ const ApiKeysPage: React.FC = () => {
                 </FormGroup>
               )}
 
-            <FormGroup label={t('pages.apiKeys.quotas.maxBudget')} fieldId="key-max-budget">
+            <FormGroup label={t('pages.apiKeys.quotas.maxBudget', { currencyCode })} fieldId="key-max-budget">
               <TextInput
                 id="key-max-budget"
                 type="number"
@@ -1406,7 +1406,7 @@ const ApiKeysPage: React.FC = () => {
                       ? t('pages.apiKeys.quotas.maxAllowed', {
                           max: quotaDefaults.maximums.maxBudget,
                         })
-                      : t('pages.apiKeys.quotas.maxBudgetHelper'))}
+                      : t('pages.apiKeys.quotas.maxBudgetHelper', { currencyCode }))}
                 </HelperTextItem>
               </HelperText>
             </FormGroup>

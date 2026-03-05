@@ -12,10 +12,11 @@
 export const formatYTickByMetric = (
   value: number,
   metricType: 'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion_tokens',
+  currencySymbol: string = '$',
 ): string => {
   switch (metricType) {
     case 'cost':
-      return `$${value >= 1000 ? (value / 1000).toFixed(1) + 'K' : value.toFixed(0)}`;
+      return `${currencySymbol}${value >= 1000 ? (value / 1000).toFixed(1) + 'K' : value.toFixed(0)}`;
     case 'tokens':
     case 'prompt_tokens':
     case 'completion_tokens':

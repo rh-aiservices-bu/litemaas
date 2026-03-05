@@ -100,6 +100,7 @@ export const generateLogarithmicColorScale = (
   values: number[],
   metricType: MetricType = 'requests',
   levels: number = 6,
+  currencySymbol: string = '$',
 ): LogarithmicColorScale => {
   // Filter out null, undefined, and zero values for scale calculation
   const nonZeroValues = values.filter((v) => v != null && v > 0);
@@ -145,7 +146,7 @@ export const generateLogarithmicColorScale = (
           min: minValue,
           max: minValue,
           color: colors[midLevel],
-          label: formatValueForLegend(minValue, metricType),
+          label: formatValueForLegend(minValue, metricType, currencySymbol),
         },
       ],
       getColorForValue: (value: number) => (value === minValue ? colors[midLevel] : colors[0]),
@@ -169,8 +170,8 @@ export const generateLogarithmicColorScale = (
       color: colors[i],
       label:
         i < levels - 1
-          ? `${formatValueForLegend(threshold, metricType)}-${formatValueForLegend(thresholds[i + 1], metricType)}`
-          : `${formatValueForLegend(threshold, metricType)}+`,
+          ? `${formatValueForLegend(threshold, metricType, currencySymbol)}-${formatValueForLegend(thresholds[i + 1], metricType, currencySymbol)}`
+          : `${formatValueForLegend(threshold, metricType, currencySymbol)}+`,
     }));
 
     return {
@@ -214,8 +215,8 @@ export const generateLogarithmicColorScale = (
     color: colors[i],
     label:
       i < levels - 1
-        ? `${formatValueForLegend(threshold, metricType)}-${formatValueForLegend(thresholds[i + 1], metricType)}`
-        : `${formatValueForLegend(threshold, metricType)}+`,
+        ? `${formatValueForLegend(threshold, metricType, currencySymbol)}-${formatValueForLegend(thresholds[i + 1], metricType, currencySymbol)}`
+        : `${formatValueForLegend(threshold, metricType, currencySymbol)}+`,
   }));
 
   // Helper function to get color for a value

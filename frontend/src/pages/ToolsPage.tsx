@@ -66,7 +66,7 @@ const ToolsPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { updateBanner, bulkUpdateVisibility } = useBanners();
   const queryClient = useQueryClient();
-  const { currencySymbol } = useCurrency();
+  const { currencySymbol, currencyCode } = useCurrency();
   const [isLoading, setIsLoading] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
   const [activeTabKey, setActiveTabKey] = useState<string | number>('models');
@@ -582,7 +582,7 @@ const ToolsPage: React.FC = () => {
 
                     <FlexItem>
                       <Form>
-                        <FormGroup label={t('pages.tools.maxBudgetLabel')} fieldId="max-budget">
+                        <FormGroup label={t('pages.tools.maxBudgetLabel', { currencyCode })} fieldId="max-budget">
                           <TextInput
                             id="max-budget"
                             type="number"
@@ -593,7 +593,7 @@ const ToolsPage: React.FC = () => {
                             placeholder={t('pages.tools.leaveEmptyToKeep')}
                             isDisabled={!canUpdateLimits}
                           />
-                          <FormHelperText>{t('pages.tools.maxBudgetHelper')}</FormHelperText>
+                          <FormHelperText>{t('pages.tools.maxBudgetHelper', { currencyCode })}</FormHelperText>
                         </FormGroup>
 
                         <FormGroup label={t('pages.tools.tpmLimitLabel')} fieldId="tpm-limit">
@@ -749,7 +749,7 @@ const ToolsPage: React.FC = () => {
               <ul style={{ marginTop: '0.5rem', marginLeft: '1rem' }}>
                 {limitsFormData.maxBudget && (
                   <li style={{ marginBottom: '0.25rem' }}>
-                    {t('pages.tools.maxBudgetLabel')}: {currencySymbol}
+                    {t('pages.tools.maxBudgetLabel', { currencyCode })}: {currencySymbol}
                     {limitsFormData.maxBudget}
                   </li>
                 )}

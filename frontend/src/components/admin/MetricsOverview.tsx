@@ -130,7 +130,7 @@ export interface MetricsOverviewProps {
  */
 const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
   const { t } = useTranslation();
-  const { currencyCode } = useCurrency();
+  const { currencyCode, currencySymbol } = useCurrency();
   const [selectedMetric, setSelectedMetric] = useState<
     'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion_tokens'
   >('requests');
@@ -178,7 +178,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
 
   // Prepare chart data
   const chartData = data?.dailyUsage
-    ? transformDailyUsageToChartData(data.dailyUsage)
+    ? transformDailyUsageToChartData(data.dailyUsage, currencySymbol)
     : { requests: [], tokens: [], prompt_tokens: [], completion_tokens: [], cost: [] };
 
   const modelChartData = data?.topModels
@@ -217,8 +217,9 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
       startDate,
       endDate,
       selectedHeatmapMetric,
+      currencySymbol,
     );
-  }, [data?.dailyUsage, data?.period, selectedHeatmapMetric]);
+  }, [data?.dailyUsage, data?.period, selectedHeatmapMetric, currencySymbol]);
 
   return (
     <Grid hasGutter>
@@ -425,6 +426,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
                 metricType={selectedMetric}
                 title={t('adminUsage.charts.usageTrends')}
                 description={t('adminUsage.charts.usageTrendsDescription')}
+                currencySymbol={currencySymbol}
               />
             )}
           </CardBody>
@@ -443,6 +445,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
             metricType={selectedMetric}
             title={t('adminUsage.charts.usageTrends')}
             description={t('adminUsage.charts.usageTrendsDescription')}
+            currencySymbol={currencySymbol}
           />
         </FullScreenChartModal>
       </GridItem>
@@ -539,6 +542,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
                   'adminUsage.charts.modelUsageTrendsDescription',
                   'Model usage breakdown over time',
                 )}
+                currencySymbol={currencySymbol}
               />
             )}
           </CardBody>
@@ -560,6 +564,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
               'adminUsage.charts.modelUsageTrendsDescription',
               'Model usage breakdown over time',
             )}
+            currencySymbol={currencySymbol}
           />
         </FullScreenChartModal>
       </GridItem>
@@ -661,6 +666,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
                   loading={false}
                   height={350}
                   metricType={selectedHeatmapMetric}
+                  currencySymbol={currencySymbol}
                 />
               )}
             </div>
@@ -678,6 +684,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
             loading={false}
             height={600}
             metricType={selectedHeatmapMetric}
+            currencySymbol={currencySymbol}
           />
         </FullScreenChartModal>
       </GridItem>
