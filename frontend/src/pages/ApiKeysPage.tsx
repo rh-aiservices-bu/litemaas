@@ -39,6 +39,11 @@ import {
   FormSelect,
   FormSelectOption,
   ExpandableSection,
+  Split,
+  SplitItem,
+  Progress,
+  ProgressMeasureLocation,
+  ProgressVariant,
 } from '@patternfly/react-core';
 import {
   KeyIcon,
@@ -97,6 +102,8 @@ const ApiKeysPage: React.FC = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [editingKey, setEditingKey] = useState<ApiKey | null>(null);
   const [updatingKey, setUpdatingKey] = useState(false);
+  const [isResetSpendModalOpen, setIsResetSpendModalOpen] = useState(false);
+  const [resettingSpend, setResettingSpend] = useState(false);
 
   // Modal focus management refs
   const createModalTriggerRef = useRef<HTMLElement | null>(null);
@@ -719,6 +726,36 @@ const ApiKeysPage: React.FC = () => {
     }
   };
 
+  const confirmResetSpend = async () => {
+    if (!editingKey) return;
+
+    try {
+      setResettingSpend(true);
+      await apiKeysService.resetApiKeySpend(editingKey.id);
+
+      // Refresh the API keys list
+      await loadApiKeys();
+
+      // Update editingKey in-place so the progress bar reflects the reset
+      setEditingKey({ ...editingKey, currentSpend: 0 });
+
+      addNotification({
+        title: t('users.apiKeys.resetSpendSuccess', 'Spend Reset'),
+        description: t('users.apiKeys.resetSpendSuccessDesc', 'The API key spend has been reset to $0.'),
+        variant: 'success',
+      });
+    } catch (err: any) {
+      addNotification({
+        title: t('users.apiKeys.resetSpendError', 'Reset Spend Failed'),
+        description: extractErrorDetails(err).message || 'Failed to reset API key spend',
+        variant: 'danger',
+      });
+    } finally {
+      setResettingSpend(false);
+      setIsResetSpendModalOpen(false);
+    }
+  };
+
   const toggleKeyVisibility = async (keyId: string) => {
     const newVisibleKeys = new Set(visibleKeys);
 
@@ -1237,13 +1274,62 @@ const ApiKeysPage: React.FC = () => {
             </FormGroup>
 
             {/* Quota fields - shown in both create and edit modes */}
-            <Divider style={{ margin: '0.5rem 0' }} />
-            <Title headingLevel="h4" size="md" style={{ marginBottom: '0.25rem' }}>
+            <Divider style={{ margin: '0.25rem 0 0.125rem' }} />
+            <Title headingLevel="h4" size="md" style={{ marginBottom: '0.125rem' }}>
               {t('pages.apiKeys.quotas.title')}
             </Title>
-            <Content component={ContentVariants.small} style={{ marginBottom: '0.5rem' }}>
+            <Content component={ContentVariants.small} style={{ marginBottom: '0.125rem' }}>
               {t('pages.apiKeys.quotas.description')}
             </Content>
+
+            {/* Current Spend with Progress Bar and Reset Button - edit mode only, when budget is set */}
+            {isEditMode && editingKey && editingKey.maxBudget != null && editingKey.maxBudget > 0 && (
+              <FormGroup
+                label={t('users.apiKeys.currentSpend', 'Current Spend')}
+                fieldId="key-current-spend"
+              >
+                <Split hasGutter style={{ alignItems: 'center' }}>
+                  <SplitItem isFilled>
+                    <Progress
+                      value={
+                        editingKey.currentSpend != null
+                          ? Math.min((editingKey.currentSpend / editingKey.maxBudget) * 100, 100)
+                          : 0
+                      }
+                      measureLocation={ProgressMeasureLocation.outside}
+                      aria-label={t('users.budget.budgetUtilization', 'Budget utilization')}
+                      variant={
+                        editingKey.currentSpend != null
+                          ? (editingKey.currentSpend / editingKey.maxBudget) * 100 > 95
+                            ? ProgressVariant.danger
+                            : (editingKey.currentSpend / editingKey.maxBudget) * 100 > 80
+                              ? ProgressVariant.warning
+                              : undefined
+                          : undefined
+                      }
+                    />
+                  </SplitItem>
+                  {(editingKey.currentSpend ?? 0) > 0 && (
+                    <SplitItem>
+                      <Button
+                        variant="secondary"
+                        isDanger
+                        onClick={() => setIsResetSpendModalOpen(true)}
+                        isDisabled={resettingSpend}
+                      >
+                        {t('users.apiKeys.resetSpend', 'Reset Spend')}
+                      </Button>
+                    </SplitItem>
+                  )}
+                </Split>
+                <HelperText>
+                  <HelperTextItem>
+                    ${editingKey.currentSpend?.toFixed(2) || '0.00'} / $
+                    {editingKey.maxBudget.toFixed(2)}
+                  </HelperTextItem>
+                </HelperText>
+              </FormGroup>
+            )}
 
             <FormGroup
               label={t('pages.apiKeys.quotas.maxBudget')}
@@ -1623,22 +1709,50 @@ const ApiKeysPage: React.FC = () => {
                       </Td>
                     </Tr>
                     <Tr>
-                      <Th scope="row">
-                        <strong>{t('pages.apiKeys.labels.apiUrl')}</strong>
-                      </Th>
-                      <Td>{litellmApiUrl}/v1</Td>
-                    </Tr>
-                    <Tr>
-                      <Th scope="row">
-                        <strong>{t('pages.apiKeys.labels.created')}</strong>
-                      </Th>
-                      <Td>{new Date(selectedApiKey.createdAt).toLocaleDateString()}</Td>
-                    </Tr>
-                    <Tr>
-                      <Th scope="row">
-                        <strong>{t('pages.apiKeys.labels.totalRequests')}</strong>
-                      </Th>
-                      <Td>{selectedApiKey.usageCount.toLocaleString()}</Td>
+                      <Td colSpan={2} style={{ padding: 0 }}>
+                        <Split hasGutter>
+                          <SplitItem isFilled>
+                            <Table aria-label="Key details left" variant="compact" borders={false}>
+                              <Tbody>
+                                <Tr>
+                                  <Th scope="row"><strong>{t('pages.apiKeys.labels.apiUrl')}</strong></Th>
+                                  <Td>{litellmApiUrl}/v1</Td>
+                                </Tr>
+                                <Tr>
+                                  <Th scope="row"><strong>{t('pages.apiKeys.labels.created')}</strong></Th>
+                                  <Td>{new Date(selectedApiKey.createdAt).toLocaleDateString()}</Td>
+                                </Tr>
+                                <Tr>
+                                  <Th scope="row"><strong>{t('pages.apiKeys.labels.totalRequests')}</strong></Th>
+                                  <Td>{selectedApiKey.usageCount.toLocaleString()}</Td>
+                                </Tr>
+                              </Tbody>
+                            </Table>
+                          </SplitItem>
+                          <SplitItem isFilled>
+                            <Table aria-label="Key limits" variant="compact" borders={false}>
+                              <Tbody>
+                                <Tr>
+                                  <Th scope="row"><strong>{t('users.apiKeys.budget', 'Budget')}</strong></Th>
+                                  <Td>
+                                    {selectedApiKey.maxBudget != null
+                                      ? `$${(selectedApiKey.currentSpend ?? 0).toFixed(2)} / $${selectedApiKey.maxBudget.toFixed(2)}`
+                                      : '-'}
+                                  </Td>
+                                </Tr>
+                                <Tr>
+                                  <Th scope="row"><strong>{t('users.apiKeys.tpmLimit', 'TPM Limit')}</strong></Th>
+                                  <Td>{selectedApiKey.tpmLimit != null ? selectedApiKey.tpmLimit.toLocaleString() : '-'}</Td>
+                                </Tr>
+                                <Tr>
+                                  <Th scope="row"><strong>{t('users.apiKeys.rpmLimit', 'RPM Limit')}</strong></Th>
+                                  <Td>{selectedApiKey.rpmLimit != null ? selectedApiKey.rpmLimit.toLocaleString() : '-'}</Td>
+                                </Tr>
+                              </Tbody>
+                            </Table>
+                          </SplitItem>
+                        </Split>
+                      </Td>
                     </Tr>
 
                     {selectedApiKey.expiresAt && (
@@ -1921,6 +2035,45 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
             }}
           >
             {t('pages.apiKeys.labels.cancel')}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Reset Spend Confirmation Modal */}
+      <Modal
+        variant={ModalVariant.small}
+        isOpen={isResetSpendModalOpen}
+        onClose={() => setIsResetSpendModalOpen(false)}
+      >
+        <ModalHeader title={t('users.apiKeys.resetSpendConfirmTitle', 'Reset API Key Spend')} />
+        <ModalBody>
+          <p>
+            {t(
+              'users.apiKeys.resetSpendConfirmBody',
+              'Are you sure you want to reset the current spend for this API key to $0? This action cannot be undone.',
+            )}
+          </p>
+          {editingKey && (
+            <p style={{ marginTop: '0.5rem' }}>
+              <strong>{editingKey.name}</strong>
+            </p>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="danger"
+            onClick={confirmResetSpend}
+            isLoading={resettingSpend}
+            isDisabled={resettingSpend}
+          >
+            {t('users.apiKeys.resetSpend', 'Reset Spend')}
+          </Button>
+          <Button
+            variant="link"
+            onClick={() => setIsResetSpendModalOpen(false)}
+            isDisabled={resettingSpend}
+          >
+            {t('common.cancel', 'Cancel')}
           </Button>
         </ModalFooter>
       </Modal>

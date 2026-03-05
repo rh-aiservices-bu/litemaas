@@ -165,6 +165,7 @@ export interface LiteLLMKeyGenerationRequest {
   tags?: string[];
   allowed_routes?: string[];
   soft_budget?: number;
+  spend?: number;
 }
 
 export interface LiteLLMKeyGenerationResponse {

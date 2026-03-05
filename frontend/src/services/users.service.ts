@@ -293,6 +293,18 @@ export class UsersService {
   }
 
   /**
+   * Reset API key's current spend to zero (admin only)
+   */
+  async resetApiKeySpend(
+    userId: string,
+    keyId: string,
+  ): Promise<{ id: string; currentSpend: number; resetAt: string }> {
+    return apiClient.post<{ id: string; currentSpend: number; resetAt: string }>(
+      `/admin/users/${userId}/api-keys/${keyId}/reset-spend`,
+    );
+  }
+
+  /**
    * Permanently delete user's API key (admin only)
    * Unlike revokeUserApiKey which soft-deactivates, this hard-deletes the key
    */

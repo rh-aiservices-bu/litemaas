@@ -104,8 +104,8 @@
     },
     "budgetSummary": {
       "period": "Period: {{period}}",
-      "title": "Budget",
-      "titleForUser": "Budget — {{username}}"
+      "title": "Budget (User)",
+      "titleForUser": "Budget (User) — {{username}}"
     },
     "completionTokens": "Completion Tokens",
     "datePresets": {
@@ -1628,6 +1628,13 @@
       "deleteSuccess": "API Key Deleted",
       "deleteSuccessDesc": "The API key has been permanently deleted.",
       "deleteError": "Delete Failed",
+      "currentSpend": "Current Spend",
+      "resetSpend": "Reset Spend",
+      "resetSpendConfirmTitle": "Reset API Key Spend",
+      "resetSpendConfirmBody": "Are you sure you want to reset the current spend for this API key to $0? This action cannot be undone.",
+      "resetSpendSuccess": "Spend Reset",
+      "resetSpendSuccessDesc": "The API key spend has been reset to $0.",
+      "resetSpendError": "Reset Spend Failed",
       "revoke": "Revoke",
       "revokeConfirmDesc": "Are you sure you want to revoke this API key? The key will be deactivated and can no longer be used.",
       "revokeConfirmTitle": "Revoke API Key",
@@ -1635,9 +1642,11 @@
       "revokeSuccess": "API Key Revoked",
       "revokeSuccessDesc": "The API key has been deactivated successfully.",
       "rpm": "RPM",
+      "rpmLimit": "RPM Limit",
       "status": "Status",
       "tableLabel": "User API Keys",
       "tpm": "TPM",
+      "tpmLimit": "TPM Limit",
       "lastUsed": "Last Used",
       "viewUsage": "View Usage"
     },

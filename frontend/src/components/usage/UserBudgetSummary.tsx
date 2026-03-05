@@ -127,8 +127,8 @@ export const UserBudgetSummary: React.FC<UserBudgetSummaryProps> = ({
   const spendText = `$${currentSpend.toFixed(2)} / ${maxBudget != null ? `$${maxBudget.toFixed(2)}` : t('users.budget.unlimited', 'Unlimited')}`;
 
   const cardTitle = displayName
-    ? t('usage.budgetSummary.titleForUser', 'Budget — {{username}}', { username: displayName })
-    : t('usage.budgetSummary.title', 'Budget');
+    ? t('usage.budgetSummary.titleForUser', 'Budget (User) — {{username}}', { username: displayName })
+    : t('usage.budgetSummary.title', 'Budget (User)');
 
   return (
     <Card isCompact style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>

@@ -15,6 +15,7 @@ import {
   UserSubscriptionsResponseSchema,
   UserBudgetUpdatedSchema,
   ResetUserSpendSchema,
+  ResetApiKeySpendSchema,
   AdminUserApiKeysQuerySchema,
   AdminUserSubscriptionsQuerySchema,
   CreateUserSubscriptionsSchema,
@@ -535,6 +536,71 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
 
         const errorMessage = error instanceof Error ? error.message : String(error);
         throw fastify.createError(500, `Failed to reset user spend: ${errorMessage}`);
+      }
+    },
+  });
+
+  // POST /:id/api-keys/:keyId/reset-spend - Reset API key's current spend to zero
+  fastify.post('/:id/api-keys/:keyId/reset-spend', {
+    schema: {
+      tags: ['Admin - Users'],
+      summary: "Reset API key's current spend",
+      description: "Reset the API key's current spend to $0 in LiteLLM",
+      security: [{ bearerAuth: [] }],
+      params: UserApiKeyIdParamSchema,
+      response: {
+        200: ResetApiKeySpendSchema,
+        403: ErrorResponseSchema,
+        404: ErrorResponseSchema,
+        500: ErrorResponseSchema,
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('users:write')],
+    handler: async (request, _reply) => {
+      try {
+        const { id, keyId } = request.params as { id: string; keyId: string };
+        const currentUser = (request as AuthenticatedRequest).user;
+
+        // Check if user exists
+        const user = await fastify.dbUtils.queryOne(
+          'SELECT id, username FROM users WHERE id = $1',
+          [id],
+        );
+
+        if (!user) {
+          throw fastify.createNotFoundError('User');
+        }
+
+        const result = await apiKeyService.resetApiKeySpend(keyId, id);
+
+        // Create audit log
+        await fastify.dbUtils.query(
+          `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            currentUser.userId,
+            'ADMIN_RESET_API_KEY_SPEND',
+            'API_KEY',
+            keyId,
+            JSON.stringify({ targetUserId: id, targetUsername: user.username, resetAt: result.resetAt }),
+          ],
+        );
+
+        fastify.log.info(
+          { adminUserId: currentUser.userId, targetUserId: id, keyId },
+          'API key spend reset to zero',
+        );
+
+        return result;
+      } catch (error) {
+        fastify.log.error({ error }, 'Failed to reset API key spend');
+
+        if (error instanceof ApplicationError) {
+          throw error;
+        }
+
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        throw fastify.createError(500, `Failed to reset API key spend: ${errorMessage}`);
       }
     },
   });

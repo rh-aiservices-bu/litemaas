@@ -264,6 +264,15 @@ export const ResetUserSpendSchema = Type.Object({
 
 export type ResetUserSpend = Static<typeof ResetUserSpendSchema>;
 
+// Response for API key spend reset (reuses same shape)
+export const ResetApiKeySpendSchema = Type.Object({
+  id: Type.String(),
+  currentSpend: Type.Number(),
+  resetAt: Type.String({ format: 'date-time' }),
+});
+
+export type ResetApiKeySpend = Static<typeof ResetApiKeySpendSchema>;
+
 // Create subscriptions for user (admin action)
 export const CreateUserSubscriptionsSchema = Type.Object({
   modelIds: Type.Array(Type.String(), { minItems: 1 }),

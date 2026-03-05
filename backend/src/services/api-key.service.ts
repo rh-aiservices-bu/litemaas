@@ -1202,6 +1202,49 @@ export class ApiKeyService extends BaseService {
     }
   }
 
+  async resetApiKeySpend(
+    keyId: string,
+    userId: string,
+  ): Promise<{ id: string; currentSpend: number; resetAt: string }> {
+    try {
+      const apiKey = await this.getApiKey(keyId, userId);
+      if (!apiKey) {
+        throw this.createNotFoundError(
+          'API key',
+          keyId,
+          'API key not found or you do not have permission to access it',
+        );
+      }
+
+      if (!apiKey.isActive) {
+        throw this.createValidationError(
+          'Cannot reset spend for inactive API key',
+          'isActive',
+          false,
+          'Reactivate the API key before resetting spend',
+        );
+      }
+
+      // Reset spend in LiteLLM
+      if (apiKey.liteLLMKeyId && !this.shouldUseMockData()) {
+        await this.liteLLMService.updateKey(apiKey.liteLLMKeyId, { spend: 0 });
+      }
+
+      const resetAt = new Date().toISOString();
+
+      // Update local database
+      await this.fastify.dbUtils.query(
+        `UPDATE api_keys SET current_spend = 0, last_sync_at = CURRENT_TIMESTAMP WHERE id = $1`,
+        [keyId],
+      );
+
+      return { id: keyId, currentSpend: 0, resetAt };
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to reset API key spend');
+      throw error;
+    }
+  }
+
   async updateApiKey(
     keyId: string,
     userId: string,

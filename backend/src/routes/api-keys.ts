@@ -570,6 +570,52 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
     },
   });
 
+  // Reset API key spend
+  fastify.post<{
+    Params: { id: string };
+    Reply: { id: string; currentSpend: number; resetAt: string };
+  }>('/:id/reset-spend', {
+    schema: {
+      tags: ['API Keys'],
+      description: "Reset the API key's current spend to $0",
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+        },
+        required: ['id'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            currentSpend: { type: 'number' },
+            resetAt: { type: 'string', format: 'date-time' },
+          },
+        },
+      },
+    },
+    preHandler: fastify.authenticateWithDevBypass,
+    handler: async (request, _reply) => {
+      const user = (request as AuthenticatedRequest).user;
+      const { id } = request.params;
+
+      try {
+        return await apiKeyService.resetApiKeySpend(id, user.userId);
+      } catch (error) {
+        fastify.log.error(error, 'Failed to reset API key spend');
+
+        if ((error as ErrorWithStatusCode).statusCode) {
+          throw error;
+        }
+
+        throw fastify.createError(500, 'Failed to reset API key spend');
+      }
+    },
+  });
+
   // Get API key statistics
   fastify.get('/stats', {
     schema: {

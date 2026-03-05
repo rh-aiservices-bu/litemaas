@@ -31,6 +31,8 @@ import {
   ProgressMeasureLocation,
   ProgressVariant,
   ExpandableSection,
+  Split,
+  SplitItem,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn } from '@patternfly/react-table';
 import { KeyIcon, ExternalLinkAltIcon, PlusCircleIcon } from '@patternfly/react-icons';
@@ -74,6 +76,9 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
   // Delete confirmation modal state
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [keyToDelete, setKeyToDelete] = useState<UserApiKey | null>(null);
+
+  // Reset spend confirmation modal state (shown within edit modal)
+  const [resetSpendModalOpen, setResetSpendModalOpen] = useState(false);
 
   // Edit modal state
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -173,6 +178,36 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
     },
   );
 
+  // Reset spend mutation
+  const resetSpendMutation = useMutation(
+    (keyId: string) => usersService.resetApiKeySpend(userId, keyId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin-user-api-keys', userId]);
+        addNotification({
+          title: t('users.apiKeys.resetSpendSuccess', 'Spend Reset'),
+          description: t(
+            'users.apiKeys.resetSpendSuccessDesc',
+            'The API key spend has been reset to $0.',
+          ),
+          variant: 'success',
+        });
+        setResetSpendModalOpen(false);
+        // Update keyToEdit in-place so the progress bar reflects the reset
+        if (keyToEdit) {
+          setKeyToEdit({ ...keyToEdit, currentSpend: 0 });
+        }
+      },
+      onError: (err: Error) => {
+        addNotification({
+          title: t('users.apiKeys.resetSpendError', 'Reset Spend Failed'),
+          description: err.message,
+          variant: 'danger',
+        });
+      },
+    },
+  );
+
   // Create mutation
   const createMutation = useMutation(
     (data: CreateApiKeyForUserRequest) => usersService.createApiKeyForUser(userId, data),
@@ -253,6 +288,12 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
   const handleConfirmDelete = () => {
     if (keyToDelete) {
       deleteMutation.mutate(keyToDelete.id);
+    }
+  };
+
+  const handleConfirmResetSpend = () => {
+    if (keyToEdit) {
+      resetSpendMutation.mutate(keyToEdit.id);
     }
   };
 
@@ -1133,6 +1174,55 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
               () => setEditModelLimits({}),
             )}
 
+            {/* Current Spend with Progress Bar and Reset Button */}
+            {keyToEdit && (
+              <FormGroup
+                label={t('users.apiKeys.currentSpend', 'Current Spend')}
+                fieldId="edit-current-spend"
+              >
+                <Split hasGutter style={{ alignItems: 'center' }}>
+                  <SplitItem isFilled>
+                    <Progress
+                      value={
+                        keyToEdit.currentSpend != null && keyToEdit.maxBudget
+                          ? Math.min((keyToEdit.currentSpend / keyToEdit.maxBudget) * 100, 100)
+                          : 0
+                      }
+                      measureLocation={ProgressMeasureLocation.outside}
+                      aria-label={t('users.budget.budgetUtilization', 'Budget utilization')}
+                      variant={
+                        keyToEdit.currentSpend != null && keyToEdit.maxBudget
+                          ? (keyToEdit.currentSpend / keyToEdit.maxBudget) * 100 > 95
+                            ? ProgressVariant.danger
+                            : (keyToEdit.currentSpend / keyToEdit.maxBudget) * 100 > 80
+                              ? ProgressVariant.warning
+                              : undefined
+                          : undefined
+                      }
+                    />
+                  </SplitItem>
+                  {canEdit && (keyToEdit.currentSpend ?? 0) > 0 && (
+                    <SplitItem>
+                      <Button
+                        variant="secondary"
+                        isDanger
+                        onClick={() => setResetSpendModalOpen(true)}
+                        isDisabled={resetSpendMutation.isLoading}
+                      >
+                        {t('users.apiKeys.resetSpend', 'Reset Spend')}
+                      </Button>
+                    </SplitItem>
+                  )}
+                </Split>
+                <HelperText>
+                  <HelperTextItem>
+                    ${keyToEdit.currentSpend?.toFixed(2) || '0.00'} / $
+                    {keyToEdit.maxBudget?.toFixed(2) || t('users.budget.unlimited', 'Unlimited')}
+                  </HelperTextItem>
+                </HelperText>
+              </FormGroup>
+            )}
+
             {renderQuotaFields(
               'edit',
               updateMutation.isLoading,
@@ -1168,6 +1258,45 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
             variant="link"
             onClick={() => setEditModalOpen(false)}
             isDisabled={updateMutation.isLoading}
+          >
+            {t('common.cancel', 'Cancel')}
+          </Button>
+        </ModalFooter>
+      </Modal>
+
+      {/* Reset Spend Confirmation Modal (triggered from Edit modal) */}
+      <Modal
+        variant={ModalVariant.small}
+        isOpen={resetSpendModalOpen}
+        onClose={() => setResetSpendModalOpen(false)}
+      >
+        <ModalHeader title={t('users.apiKeys.resetSpendConfirmTitle', 'Reset API Key Spend')} />
+        <ModalBody>
+          <p>
+            {t(
+              'users.apiKeys.resetSpendConfirmBody',
+              'Are you sure you want to reset the current spend for this API key to $0? This action cannot be undone.',
+            )}
+          </p>
+          {keyToEdit && (
+            <p style={{ marginTop: '0.5rem' }}>
+              <strong>{keyToEdit.name}</strong> ({keyToEdit.keyPrefix}...)
+            </p>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="danger"
+            onClick={handleConfirmResetSpend}
+            isLoading={resetSpendMutation.isLoading}
+            isDisabled={resetSpendMutation.isLoading}
+          >
+            {t('users.apiKeys.resetSpend', 'Reset Spend')}
+          </Button>
+          <Button
+            variant="link"
+            onClick={() => setResetSpendModalOpen(false)}
+            isDisabled={resetSpendMutation.isLoading}
           >
             {t('common.cancel', 'Cancel')}
           </Button>
