@@ -836,6 +836,28 @@ Response:
 }
 ```
 
+#### POST /api/v1/api-keys/:id/reset-spend
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only reset spend on their own API keys
+
+Reset an API key's accumulated spend to $0
+
+```json
+Response:
+{
+  "id": "key_456",
+  "currentSpend": 0,
+  "resetAt": "2024-01-20T10:00:00Z"
+}
+```
+
+**Notes**:
+
+- Resets spend in LiteLLM and updates local database
+- Only works on active keys
+- Action is audit logged
+
 #### DELETE /api/v1/api-keys/:id
 
 **Authorization**: Requires valid JWT token (any role)
@@ -1409,9 +1431,10 @@ Update user budget and rate limits
 ```json
 Request:
 {
-  "maxBudget": 200.00,    // Optional
-  "tpmLimit": 20000,      // Optional: tokens per minute
-  "rpmLimit": 120         // Optional: requests per minute
+  "maxBudget": 200.00,          // Optional: max budget in dollars (null to clear)
+  "tpmLimit": 20000,            // Optional: tokens per minute (null to clear)
+  "rpmLimit": 120,              // Optional: requests per minute (null to clear)
+  "budgetDuration": "monthly"   // Optional: budget reset period (daily, weekly, monthly, yearly)
 }
 
 Response:
@@ -1420,6 +1443,7 @@ Response:
   "maxBudget": 200.00,
   "tpmLimit": 20000,
   "rpmLimit": 120,
+  "budgetDuration": "monthly",
   "updatedAt": "2024-01-20T10:00:00Z"
 }
 ```
@@ -1511,36 +1535,76 @@ Response:
 - Subscriptions for each model are auto-created if they don't exist, or reactivated if previously cancelled
 - Action is logged in the audit trail with admin user ID and target user ID
 
-#### DELETE /api/v1/admin/users/:id/api-keys/:keyId
+#### POST /api/v1/admin/users/:id/reset-spend
 
 **Authorization**: Requires `users:write` permission (admin role only)
 
-Revoke (deactivate) a user's API key
+Reset a user's accumulated spend to $0 in LiteLLM
 
 ```json
 Response:
 {
-  "message": "API key revoked successfully"
+  "id": "uuid",
+  "currentSpend": 0,
+  "resetAt": "2024-01-20T10:00:00Z"
 }
 ```
 
 **Notes**:
 
-- Revokes the key in both LiteMaaS and LiteLLM
-- The key is deactivated, not deleted — it remains in the database for audit purposes
+- Resets spend in LiteLLM via `/user/update` with `spend: 0`
+- Updates local database `current_spend` to 0
+- Action is logged in the audit trail
+
+#### DELETE /api/v1/admin/users/:id/api-keys/:keyId
+
+**Authorization**: Requires `users:write` permission (admin role only)
+
+Revoke (deactivate) or permanently delete a user's API key
+
+```json
+Query Parameters:
+- permanent: boolean (optional, default: false) — If true, permanently deletes the key from database and LiteLLM
+
+Response (soft revoke):
+{
+  "message": "API key revoked successfully"
+}
+
+Response (permanent delete):
+{
+  "message": "API key permanently deleted"
+}
+```
+
+**Notes**:
+
+- **Default (no `permanent` param)**: Soft revoke — deactivates the key in both LiteMaaS and LiteLLM. The key remains in the database for audit purposes.
+- **With `?permanent=true`**: Hard delete — permanently removes the key from the database and LiteLLM. This action cannot be undone.
 - Action is logged in the audit trail
 
 #### PATCH /api/v1/admin/users/:id/api-keys/:keyId
 
 **Authorization**: Requires `users:write` permission (admin role only)
 
-Update models associated with an API key, and optionally update the key name
+Update an API key's models, name, and/or quota fields
 
 ```json
 Request:
 {
-  "modelIds": ["gpt-4", "claude-3", "gemini-pro"],  // Required: updated model list
-  "name": "Updated Key Name"                         // Optional
+  "modelIds": ["gpt-4", "claude-3", "gemini-pro"],  // Optional: updated model list
+  "name": "Updated Key Name",                        // Optional
+  "maxBudget": 200.00,                               // Optional: max budget in dollars (null to clear)
+  "tpmLimit": 10000,                                 // Optional: tokens per minute (null to clear)
+  "rpmLimit": 60,                                    // Optional: requests per minute (null to clear)
+  "budgetDuration": "monthly",                       // Optional: budget reset period (null to clear)
+  "softBudget": 150.00,                              // Optional: soft budget threshold (null to clear)
+  "maxParallelRequests": 5,                          // Optional: max concurrent requests (null to clear)
+  "modelMaxBudget": {                                // Optional: per-model budget limits (null to clear)
+    "gpt-4": { "budgetLimit": 100, "timePeriod": "monthly" }
+  },
+  "modelRpmLimit": { "gpt-4": 30 },                 // Optional: per-model RPM limits (null to clear)
+  "modelTpmLimit": { "gpt-4": 5000 }                // Optional: per-model TPM limits (null to clear)
 }
 
 Response:
@@ -1554,8 +1618,30 @@ Response:
 
 **Notes**:
 
+- All fields are optional — only provided fields are updated
 - Auto-creates subscriptions for any newly added models
 - Updates both local database and LiteLLM configuration
+- Quota fields are synced to LiteLLM via `/key/update`
+
+#### POST /api/v1/admin/users/:id/api-keys/:keyId/reset-spend
+
+**Authorization**: Requires `users:write` permission (admin role only)
+
+Reset an API key's accumulated spend to $0 in LiteLLM
+
+```json
+Response:
+{
+  "id": "key_123",
+  "currentSpend": 0,
+  "resetAt": "2024-01-20T10:00:00Z"
+}
+```
+
+**Notes**:
+
+- Resets spend in LiteLLM and updates local database
+- Action is logged in the audit trail
 
 #### GET /api/v1/admin/users/:id/subscriptions
 
@@ -1591,6 +1677,39 @@ Response:
   }
 }
 ```
+
+#### POST /api/v1/admin/users/:id/subscriptions
+
+**Authorization**: Requires `users:write` permission (admin role only)
+
+Create active subscriptions for a user. Bypasses restricted model approval workflow. Reactivates existing non-active subscriptions.
+
+```json
+Request:
+{
+  "modelIds": ["gpt-4", "claude-3"]  // Required: array of model IDs
+}
+
+Response:
+{
+  "created": [
+    { "id": "sub_123", "modelId": "gpt-4", "status": "active" }
+  ],
+  "activated": [
+    { "id": "sub_456", "modelId": "claude-3", "status": "active" }
+  ],
+  "alreadyActive": []
+}
+```
+
+**Notes**:
+
+- `created`: Newly created subscriptions
+- `activated`: Existing non-active subscriptions that were reactivated
+- `alreadyActive`: Models the user already has active subscriptions for (no action taken)
+- Action is logged in the audit trail
+
+---
 
 ### System Operations (/api/v1/admin/system)
 
@@ -2516,6 +2635,51 @@ Response:
 - Default values must not exceed their corresponding maximum values
 - `budgetDuration` supports: `daily`, `weekly`, `monthly`, `yearly`, or custom LiteLLM durations (`30d`, `1mo`, `1h`, `60s`)
 - All numeric fields must be ≥ 0
+- Updates are logged to `audit_logs` with the admin user ID
+
+#### GET /api/v1/admin/settings/user-defaults
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:users` permission)
+
+Get admin-configured default values applied when new users first log in.
+
+```json
+Response:
+{
+  "maxBudget": 100.00,
+  "tpmLimit": 10000,
+  "rpmLimit": 60
+}
+```
+
+**Notes**:
+- `null` values indicate "not configured" — environment variable defaults are used as fallback
+- An empty `{}` response means no custom defaults have been set
+
+#### PUT /api/v1/admin/settings/user-defaults
+
+**Authorization**: Requires `admin` role only (`admin:users` permission)
+
+Set default values applied when new users first log in. All fields are optional and nullable.
+
+```json
+Request:
+{
+  "maxBudget": 100.00,    // Optional: default max budget for new users
+  "tpmLimit": 10000,      // Optional: default TPM limit for new users
+  "rpmLimit": 60          // Optional: default RPM limit for new users
+}
+
+Response:
+{
+  "maxBudget": 100.00,
+  "tpmLimit": 10000,
+  "rpmLimit": 60
+}
+```
+
+**Notes**:
+- Setting a value to `null` clears that default (falls back to environment variable default)
 - Updates are logged to `audit_logs` with the admin user ID
 
 ---

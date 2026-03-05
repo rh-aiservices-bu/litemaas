@@ -319,11 +319,34 @@ For complete details, see the [Branding Customization](branding-customization.md
 
 ## Limits Management
 
-The Limits Management feature is accessible from the **Limits** tab on the Admin Tools page (`/admin/tools`). It provides two sections for managing resource limits across the system.
+The Limits Management feature is accessible from the **Limits** tab on the Admin Tools page (`/admin/tools`). It provides three sections for managing resource limits across the system.
 
-### Bulk User Limits
+### New User Defaults
 
-Allows administrators to update max budget, TPM limit, and RPM limit for all active users in a single operation. A confirmation modal previews the changes before they are applied.
+Administrators can configure default TPM, RPM, and max budget values that are applied to newly registered users on first login.
+
+#### Configurable Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `maxBudget` | number (nullable) | Default max budget for new users |
+| `tpmLimit` | integer (nullable) | Default TPM limit for new users |
+| `rpmLimit` | integer (nullable) | Default RPM limit for new users |
+
+Setting a value to `null` (or leaving it empty) means "not configured" — the system falls back to environment variable defaults (`DEFAULT_USER_TPM_LIMIT`, `DEFAULT_USER_RPM_LIMIT`, `DEFAULT_USER_MAX_BUDGET`), which are shown as placeholders in the form.
+
+#### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access — view and modify defaults |
+| Admin-readonly | View-only access to current configuration |
+| Regular user | No direct access |
+
+#### API Endpoints
+
+- `GET /api/v1/admin/settings/user-defaults` — Get current configuration (admin, adminReadonly)
+- `PUT /api/v1/admin/settings/user-defaults` — Update configuration (admin only)
 
 ### API Key Quota Defaults
 
@@ -375,6 +398,22 @@ Each field has both a **default** value (auto-applied when users omit the field)
 - `GET /api/v1/config/api-key-defaults` — Public endpoint for frontend pre-fill (no auth)
 
 For API details, see the [REST API Reference](../api/rest-api.md#admin-settings-apiv1adminsettings).
+
+### Bulk User Limits
+
+Allows administrators to update max budget, TPM limit, and RPM limit for **all active users** in a single operation. A confirmation modal previews the changes before they are applied, and results show the number of successfully updated and failed users.
+
+#### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access — execute bulk updates |
+| Admin-readonly | View-only (execute button disabled) |
+| Regular user | No access |
+
+#### API Endpoint
+
+- `POST /api/v1/admin/bulk-update-user-limits` — Apply limits to all active users (admin only)
 
 ## Usage Analytics
 

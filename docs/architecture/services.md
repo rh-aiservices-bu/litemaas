@@ -686,10 +686,12 @@ Uses `daily_usage_cache` table with columns:
 
 - `getApiKeyDefaults()` — Fetch current defaults and maximums from `system_settings` table
 - `updateApiKeyDefaults(adminUserId, settings)` — Update defaults/maximums with validation and audit logging
+- `getUserDefaults()` — Fetch default TPM, RPM, max budget for new users
+- `updateUserDefaults(adminUserId, settings)` — Update new user defaults with audit logging
 
 **Used By**:
 
-- `admin-settings.ts` route — Admin endpoints for managing API key defaults
+- `admin-settings.ts` route — Admin endpoints for managing API key defaults and user defaults
 - `config.ts` route — Public endpoint for frontend pre-fill of Create Key modal
 
 ## Utility Classes ✅ **NEW 2025-08-06**

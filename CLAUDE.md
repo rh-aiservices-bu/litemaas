@@ -50,20 +50,21 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 
 - **Unified Management Modal**: Profile, Budget & Limits, API Keys, and Subscriptions tabs
 - **Role Management**: Admin/adminReadonly/user role toggles with conflict detection
-- **Budget & Rate Limits**: Max budget, TPM, and RPM configuration with utilization tracking
-- **API Key Lifecycle**: Create, view, and revoke keys with auto-subscription creation
+- **Budget & Rate Limits**: Max budget, budget duration, TPM, and RPM with real-time spend from LiteLLM, spend reset, and color-coded utilization progress bars
+- **API Key Lifecycle**: Create, view, edit quotas (including per-model limits), soft revoke, permanent delete, and spend reset
+- **Subscription Management**: Add/remove model subscriptions directly from user modal with automatic LiteLLM key sync
 - **Full Audit Trail**: All admin actions logged with metadata
 - **RBAC**: `users:read` (admin, adminReadonly) for viewing, `users:write` (admin only) for modifications
 
-**User Self-Service API Key Quotas**: Users can set their own resource limits (max budget, TPM, RPM, budget duration, soft budget) when creating API keys, with admin-configurable defaults and maximums:
+**API Key Quota Management**: Comprehensive budget and rate limit management for API keys across user self-service and admin interfaces:
 
-- **Self-service fields**: Quota inputs in Create Key modal pre-filled with admin defaults
-- **Admin defaults & maximums**: Configurable via `system_settings` table (`api_key_defaults` JSONB row)
-- **Validation**: Backend enforces user values ≤ admin maximums; defaults auto-applied when omitted
-- **Admin endpoints**: `GET/PUT /api/v1/admin/settings/api-key-defaults` with RBAC
-- **Public endpoint**: `GET /api/v1/config/api-key-defaults` for frontend pre-fill (no auth)
+- **Global quotas**: Max budget, budget duration, TPM, RPM, soft budget, max parallel requests on every key
+- **Per-model limits**: Per-model budget, TPM, and RPM configurable during key creation
+- **User self-service**: Quota fields in Create Key modal pre-filled with admin-configured defaults; backend enforces values ≤ admin maximums
+- **Admin editing**: Full quota editing on existing keys via User Management Modal, plus soft revoke and permanent delete
+- **Spend tracking**: Real-time spend from LiteLLM with color-coded budget utilization progress bars and spend reset
+- **Admin Limits tab**: Three-section admin interface — New User Defaults, API Key Quota Defaults (side-by-side default/maximum grid), and Bulk User Limits
 - **Budget duration flexibility**: Supports predefined periods (`daily`, `weekly`, `monthly`, `yearly`) and custom LiteLLM durations (`30d`, `1mo`, `1h`)
-- **Limits tab**: Admin Tools page includes Bulk User Limits and API Key Quota Defaults sections
 
 **Branding Customization**: Admin-controlled login page and header branding with per-element toggle switches:
 
