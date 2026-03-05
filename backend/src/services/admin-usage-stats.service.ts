@@ -486,7 +486,11 @@ export class AdminUsageStatsService extends BaseService {
    * @param format - Export format ('csv' or 'json')
    * @returns Formatted export string
    */
-  async exportUsageData(filters: AdminUsageFilters, format: 'csv' | 'json'): Promise<string> {
+  async exportUsageData(
+    filters: AdminUsageFilters,
+    format: 'csv' | 'json',
+    currencyCode: string = 'USD',
+  ): Promise<string> {
     try {
       // For export, get ALL users without pagination
       const users = await this.getUserBreakdownInternal(filters);
@@ -494,7 +498,7 @@ export class AdminUsageStatsService extends BaseService {
       if (format === 'json') {
         return this.exportService.exportToJSON(users, filters, 'user');
       } else {
-        return this.exportService.exportUserBreakdownToCSV(users, filters);
+        return this.exportService.exportUserBreakdownToCSV(users, filters, currencyCode);
       }
     } catch (error) {
       this.fastify.log.error(error, 'Failed to export usage data');

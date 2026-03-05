@@ -18,6 +18,7 @@ import {
 import { WalletIcon } from '@patternfly/react-icons';
 import { usageService } from '../../services/usage.service';
 import { usersService } from '../../services/users.service';
+import { useCurrency } from '../../contexts/ConfigContext';
 import type { UserBudgetInfo } from '../../types/users';
 
 interface UserBudgetSummaryProps {
@@ -46,6 +47,7 @@ export const UserBudgetSummary: React.FC<UserBudgetSummaryProps> = ({
   username,
 }) => {
   const { t } = useTranslation();
+  const { formatCurrency } = useCurrency();
 
   // User view: fetch from /usage/budget
   const userBudgetQuery = useQuery<UserBudgetInfo>(
@@ -124,10 +126,12 @@ export const UserBudgetSummary: React.FC<UserBudgetSummaryProps> = ({
       ? t(budgetDurationKeyMap[budgetDuration], budgetDurationFallback[budgetDuration])
       : budgetDuration || undefined;
 
-  const spendText = `$${currentSpend.toFixed(2)} / ${maxBudget != null ? `$${maxBudget.toFixed(2)}` : t('users.budget.unlimited', 'Unlimited')}`;
+  const spendText = `${formatCurrency(currentSpend)} / ${maxBudget != null ? formatCurrency(maxBudget) : t('users.budget.unlimited', 'Unlimited')}`;
 
   const cardTitle = displayName
-    ? t('usage.budgetSummary.titleForUser', 'Budget (User) — {{username}}', { username: displayName })
+    ? t('usage.budgetSummary.titleForUser', 'Budget (User) — {{username}}', {
+        username: displayName,
+      })
     : t('usage.budgetSummary.title', 'Budget (User)');
 
   return (

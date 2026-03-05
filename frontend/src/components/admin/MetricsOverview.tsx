@@ -35,6 +35,7 @@ import {
   transformDailyUsageToHeatmapData,
 } from '../../utils/chartDataTransformers';
 import { formatNumber, formatCurrency } from '../../utils/formatters';
+import { useCurrency } from '../../contexts/ConfigContext';
 import { MetricCard, type TrendData } from '../usage/metrics';
 import { TopUsersTable, type UserSummary } from './TopUsersTable';
 import FullScreenChartModal from '../common/FullScreenChartModal';
@@ -129,6 +130,7 @@ export interface MetricsOverviewProps {
  */
 const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
   const { t } = useTranslation();
+  const { currencyCode } = useCurrency();
   const [selectedMetric, setSelectedMetric] = useState<
     'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion_tokens'
   >('requests');
@@ -290,7 +292,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
         <MetricCard
           size="compact"
           title={t('adminUsage.totalCost')}
-          value={loading ? '' : formatCurrency(data?.totalCost?.total || 0)}
+          value={loading ? '' : formatCurrency(data?.totalCost?.total || 0, currencyCode)}
           icon={<DollarSignIcon />}
           trend={!loading && data?.trends?.costTrend ? data.trends.costTrend : undefined}
           loading={loading}

@@ -25,16 +25,20 @@ type MetricType = 'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion
  * Format large numbers with compact notation (K, M, B)
  * Used for legend labels
  */
-export const formatValueForLegend = (value: number, metricType?: MetricType): string => {
+export const formatValueForLegend = (
+  value: number,
+  metricType?: MetricType,
+  currencySymbol: string = '$',
+): string => {
   // For cost, include currency symbol
   if (metricType === 'cost') {
     if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
+      return `${currencySymbol}${(value / 1000000).toFixed(1)}M`;
     }
     if (value >= 1000) {
-      return `$${(value / 1000).toFixed(1)}K`;
+      return `${currencySymbol}${(value / 1000).toFixed(1)}K`;
     }
-    return `$${value.toFixed(2)}`;
+    return `${currencySymbol}${value.toFixed(2)}`;
   }
 
   // For other metrics, use standard compact notation

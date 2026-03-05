@@ -58,6 +58,7 @@ import {
 } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useCurrency } from '../contexts/ConfigContext';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { apiKeysService, ApiKey, CreateApiKeyRequest } from '../services/apiKeys.service';
 import { subscriptionsService } from '../services/subscriptions.service';
@@ -77,6 +78,7 @@ const ApiKeysPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
   const { handleError } = useErrorHandler();
+  const { formatCurrency } = useCurrency();
 
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -197,7 +199,10 @@ const ApiKeysPage: React.FC = () => {
     loadModels(); // ✅ Load models on component mount
     loadConfig(); // Load configuration including LiteLLM API URL
     // Load quota defaults for create key modal
-    configService.getApiKeyDefaults().then(setQuotaDefaults).catch(() => {});
+    configService
+      .getApiKeyDefaults()
+      .then(setQuotaDefaults)
+      .catch(() => {});
   }, []);
 
   // Reload models when page gains focus (e.g., after subscribing to new models)
@@ -462,13 +467,22 @@ const ApiKeysPage: React.FC = () => {
     if (quotaDefaults?.maximums) {
       const max = quotaDefaults.maximums;
       if (max.maxBudget != null && newKeyMaxBudget != null && newKeyMaxBudget > max.maxBudget) {
-        errors.maxBudget = t('pages.apiKeys.quotas.exceedsMaximum', { field: t('pages.apiKeys.quotas.maxBudget'), max: max.maxBudget });
+        errors.maxBudget = t('pages.apiKeys.quotas.exceedsMaximum', {
+          field: t('pages.apiKeys.quotas.maxBudget'),
+          max: max.maxBudget,
+        });
       }
       if (max.tpmLimit != null && newKeyTpmLimit != null && newKeyTpmLimit > max.tpmLimit) {
-        errors.tpmLimit = t('pages.apiKeys.quotas.exceedsMaximum', { field: t('pages.apiKeys.quotas.tpmLimit'), max: max.tpmLimit });
+        errors.tpmLimit = t('pages.apiKeys.quotas.exceedsMaximum', {
+          field: t('pages.apiKeys.quotas.tpmLimit'),
+          max: max.tpmLimit,
+        });
       }
       if (max.rpmLimit != null && newKeyRpmLimit != null && newKeyRpmLimit > max.rpmLimit) {
-        errors.rpmLimit = t('pages.apiKeys.quotas.exceedsMaximum', { field: t('pages.apiKeys.quotas.rpmLimit'), max: max.rpmLimit });
+        errors.rpmLimit = t('pages.apiKeys.quotas.exceedsMaximum', {
+          field: t('pages.apiKeys.quotas.rpmLimit'),
+          max: max.rpmLimit,
+        });
       }
     }
 
@@ -478,23 +492,56 @@ const ApiKeysPage: React.FC = () => {
       const modelName = models.find((m) => m.id === modelId)?.name || modelId;
       if (limits.budget != null && limits.budget > 0) {
         if (newKeyMaxBudget != null && limits.budget > newKeyMaxBudget) {
-          errors[`model-budget-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('pages.apiKeys.quotas.maxBudget'), max: newKeyMaxBudget });
-        } else if (quotaDefaults?.maximums?.maxBudget != null && limits.budget > quotaDefaults.maximums.maxBudget) {
-          errors[`model-budget-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', { model: modelName, field: t('pages.apiKeys.quotas.maxBudget'), max: quotaDefaults.maximums.maxBudget });
+          errors[`model-budget-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', {
+            model: modelName,
+            field: t('pages.apiKeys.quotas.maxBudget'),
+            max: newKeyMaxBudget,
+          });
+        } else if (
+          quotaDefaults?.maximums?.maxBudget != null &&
+          limits.budget > quotaDefaults.maximums.maxBudget
+        ) {
+          errors[`model-budget-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', {
+            model: modelName,
+            field: t('pages.apiKeys.quotas.maxBudget'),
+            max: quotaDefaults.maximums.maxBudget,
+          });
         }
       }
       if (limits.rpm != null && limits.rpm > 0) {
         if (newKeyRpmLimit != null && limits.rpm > newKeyRpmLimit) {
-          errors[`model-rpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('pages.apiKeys.quotas.rpmLimit'), max: newKeyRpmLimit });
-        } else if (quotaDefaults?.maximums?.rpmLimit != null && limits.rpm > quotaDefaults.maximums.rpmLimit) {
-          errors[`model-rpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', { model: modelName, field: t('pages.apiKeys.quotas.rpmLimit'), max: quotaDefaults.maximums.rpmLimit });
+          errors[`model-rpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', {
+            model: modelName,
+            field: t('pages.apiKeys.quotas.rpmLimit'),
+            max: newKeyRpmLimit,
+          });
+        } else if (
+          quotaDefaults?.maximums?.rpmLimit != null &&
+          limits.rpm > quotaDefaults.maximums.rpmLimit
+        ) {
+          errors[`model-rpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', {
+            model: modelName,
+            field: t('pages.apiKeys.quotas.rpmLimit'),
+            max: quotaDefaults.maximums.rpmLimit,
+          });
         }
       }
       if (limits.tpm != null && limits.tpm > 0) {
         if (newKeyTpmLimit != null && limits.tpm > newKeyTpmLimit) {
-          errors[`model-tpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('pages.apiKeys.quotas.tpmLimit'), max: newKeyTpmLimit });
-        } else if (quotaDefaults?.maximums?.tpmLimit != null && limits.tpm > quotaDefaults.maximums.tpmLimit) {
-          errors[`model-tpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', { model: modelName, field: t('pages.apiKeys.quotas.tpmLimit'), max: quotaDefaults.maximums.tpmLimit });
+          errors[`model-tpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsKeyLimit', {
+            model: modelName,
+            field: t('pages.apiKeys.quotas.tpmLimit'),
+            max: newKeyTpmLimit,
+          });
+        } else if (
+          quotaDefaults?.maximums?.tpmLimit != null &&
+          limits.tpm > quotaDefaults.maximums.tpmLimit
+        ) {
+          errors[`model-tpm-${modelId}`] = t('pages.apiKeys.quotas.modelExceedsMaximum', {
+            model: modelName,
+            field: t('pages.apiKeys.quotas.tpmLimit'),
+            max: quotaDefaults.maximums.tpmLimit,
+          });
         }
       }
     }
@@ -717,7 +764,8 @@ const ApiKeysPage: React.FC = () => {
 
       addNotification({
         title: t('pages.apiKeys.notifications.deleteError'),
-        description: extractErrorDetails(err).message || t('pages.apiKeys.notifications.deleteErrorDesc'),
+        description:
+          extractErrorDetails(err).message || t('pages.apiKeys.notifications.deleteErrorDesc'),
         variant: 'danger',
       });
     } finally {
@@ -741,7 +789,10 @@ const ApiKeysPage: React.FC = () => {
 
       addNotification({
         title: t('users.apiKeys.resetSpendSuccess', 'Spend Reset'),
-        description: t('users.apiKeys.resetSpendSuccessDesc', 'The API key spend has been reset to $0.'),
+        description: t(
+          'users.apiKeys.resetSpendSuccessDesc',
+          'The API key spend has been reset to 0.',
+        ),
         variant: 'success',
       });
     } catch (err: any) {
@@ -790,7 +841,8 @@ const ApiKeysPage: React.FC = () => {
         addNotification({
           title: t('pages.apiKeys.notifications.retrieveError'),
           description:
-            extractErrorDetails(error).message || t('pages.apiKeys.notifications.retrieveErrorDesc'),
+            extractErrorDetails(error).message ||
+            t('pages.apiKeys.notifications.retrieveErrorDesc'),
           variant: 'danger',
         });
       }
@@ -1283,75 +1335,78 @@ const ApiKeysPage: React.FC = () => {
             </Content>
 
             {/* Current Spend with Progress Bar and Reset Button - edit mode only, when budget is set */}
-            {isEditMode && editingKey && editingKey.maxBudget != null && editingKey.maxBudget > 0 && (
-              <FormGroup
-                label={t('users.apiKeys.currentSpend', 'Current Spend')}
-                fieldId="key-current-spend"
-              >
-                <Split hasGutter style={{ alignItems: 'center' }}>
-                  <SplitItem isFilled>
-                    <Progress
-                      value={
-                        editingKey.currentSpend != null
-                          ? Math.min((editingKey.currentSpend / editingKey.maxBudget) * 100, 100)
-                          : 0
-                      }
-                      measureLocation={ProgressMeasureLocation.outside}
-                      aria-label={t('users.budget.budgetUtilization', 'Budget utilization')}
-                      variant={
-                        editingKey.currentSpend != null
-                          ? (editingKey.currentSpend / editingKey.maxBudget) * 100 > 95
-                            ? ProgressVariant.danger
-                            : (editingKey.currentSpend / editingKey.maxBudget) * 100 > 80
-                              ? ProgressVariant.warning
-                              : undefined
-                          : undefined
-                      }
-                    />
-                  </SplitItem>
-                  {(editingKey.currentSpend ?? 0) > 0 && (
-                    <SplitItem>
-                      <Button
-                        variant="secondary"
-                        isDanger
-                        onClick={() => setIsResetSpendModalOpen(true)}
-                        isDisabled={resettingSpend}
-                      >
-                        {t('users.apiKeys.resetSpend', 'Reset Spend')}
-                      </Button>
+            {isEditMode &&
+              editingKey &&
+              editingKey.maxBudget != null &&
+              editingKey.maxBudget > 0 && (
+                <FormGroup
+                  label={t('users.apiKeys.currentSpend', 'Current Spend')}
+                  fieldId="key-current-spend"
+                >
+                  <Split hasGutter style={{ alignItems: 'center' }}>
+                    <SplitItem isFilled>
+                      <Progress
+                        value={
+                          editingKey.currentSpend != null
+                            ? Math.min((editingKey.currentSpend / editingKey.maxBudget) * 100, 100)
+                            : 0
+                        }
+                        measureLocation={ProgressMeasureLocation.outside}
+                        aria-label={t('users.budget.budgetUtilization', 'Budget utilization')}
+                        variant={
+                          editingKey.currentSpend != null
+                            ? (editingKey.currentSpend / editingKey.maxBudget) * 100 > 95
+                              ? ProgressVariant.danger
+                              : (editingKey.currentSpend / editingKey.maxBudget) * 100 > 80
+                                ? ProgressVariant.warning
+                                : undefined
+                            : undefined
+                        }
+                      />
                     </SplitItem>
-                  )}
-                </Split>
-                <HelperText>
-                  <HelperTextItem>
-                    ${editingKey.currentSpend?.toFixed(2) || '0.00'} / $
-                    {editingKey.maxBudget.toFixed(2)}
-                  </HelperTextItem>
-                </HelperText>
-              </FormGroup>
-            )}
+                    {(editingKey.currentSpend ?? 0) > 0 && (
+                      <SplitItem>
+                        <Button
+                          variant="secondary"
+                          isDanger
+                          onClick={() => setIsResetSpendModalOpen(true)}
+                          isDisabled={resettingSpend}
+                        >
+                          {t('users.apiKeys.resetSpend', 'Reset Spend')}
+                        </Button>
+                      </SplitItem>
+                    )}
+                  </Split>
+                  <HelperText>
+                    <HelperTextItem>
+                      {formatCurrency(editingKey.currentSpend || 0)} /{' '}
+                      {formatCurrency(editingKey.maxBudget)}
+                    </HelperTextItem>
+                  </HelperText>
+                </FormGroup>
+              )}
 
-            <FormGroup
-              label={t('pages.apiKeys.quotas.maxBudget')}
-              fieldId="key-max-budget"
-            >
+            <FormGroup label={t('pages.apiKeys.quotas.maxBudget')} fieldId="key-max-budget">
               <TextInput
                 id="key-max-budget"
                 type="number"
                 min="0"
                 step="1"
                 value={newKeyMaxBudget ?? ''}
-                onChange={(_event, value) => setNewKeyMaxBudget(value ? parseFloat(value) : undefined)}
+                onChange={(_event, value) =>
+                  setNewKeyMaxBudget(value ? parseFloat(value) : undefined)
+                }
                 placeholder={t('pages.apiKeys.quotas.optionalPlaceholder')}
                 validated={formErrors.maxBudget ? 'error' : 'default'}
               />
               <HelperText>
                 <HelperTextItem variant={formErrors.maxBudget ? 'error' : 'default'}>
-                  {formErrors.maxBudget ?? (
-                    quotaDefaults?.maximums?.maxBudget != null
-                      ? t('pages.apiKeys.quotas.maxAllowed', { max: quotaDefaults.maximums.maxBudget })
-                      : t('pages.apiKeys.quotas.maxBudgetHelper')
-                  )}
+                  {formErrors.maxBudget ??
+                    (quotaDefaults?.maximums?.maxBudget != null
+                      ? t('pages.apiKeys.quotas.maxAllowed', {
+                          max: quotaDefaults.maximums.maxBudget,
+                        })
+                      : t('pages.apiKeys.quotas.maxBudgetHelper'))}
                 </HelperTextItem>
               </HelperText>
             </FormGroup>
@@ -1378,10 +1433,7 @@ const ApiKeysPage: React.FC = () => {
               </FormGroup>
             )}
 
-            <FormGroup
-              label={t('pages.apiKeys.quotas.tpmLimit')}
-              fieldId="key-tpm-limit"
-            >
+            <FormGroup label={t('pages.apiKeys.quotas.tpmLimit')} fieldId="key-tpm-limit">
               <TextInput
                 id="key-tpm-limit"
                 type="number"
@@ -1394,19 +1446,17 @@ const ApiKeysPage: React.FC = () => {
               />
               <HelperText>
                 <HelperTextItem variant={formErrors.tpmLimit ? 'error' : 'default'}>
-                  {formErrors.tpmLimit ?? (
-                    quotaDefaults?.maximums?.tpmLimit != null
-                      ? t('pages.apiKeys.quotas.maxAllowed', { max: quotaDefaults.maximums.tpmLimit })
-                      : t('pages.apiKeys.quotas.tpmLimitHelper')
-                  )}
+                  {formErrors.tpmLimit ??
+                    (quotaDefaults?.maximums?.tpmLimit != null
+                      ? t('pages.apiKeys.quotas.maxAllowed', {
+                          max: quotaDefaults.maximums.tpmLimit,
+                        })
+                      : t('pages.apiKeys.quotas.tpmLimitHelper'))}
                 </HelperTextItem>
               </HelperText>
             </FormGroup>
 
-            <FormGroup
-              label={t('pages.apiKeys.quotas.rpmLimit')}
-              fieldId="key-rpm-limit"
-            >
+            <FormGroup label={t('pages.apiKeys.quotas.rpmLimit')} fieldId="key-rpm-limit">
               <TextInput
                 id="key-rpm-limit"
                 type="number"
@@ -1419,11 +1469,12 @@ const ApiKeysPage: React.FC = () => {
               />
               <HelperText>
                 <HelperTextItem variant={formErrors.rpmLimit ? 'error' : 'default'}>
-                  {formErrors.rpmLimit ?? (
-                    quotaDefaults?.maximums?.rpmLimit != null
-                      ? t('pages.apiKeys.quotas.maxAllowed', { max: quotaDefaults.maximums.rpmLimit })
-                      : t('pages.apiKeys.quotas.rpmLimitHelper')
-                  )}
+                  {formErrors.rpmLimit ??
+                    (quotaDefaults?.maximums?.rpmLimit != null
+                      ? t('pages.apiKeys.quotas.maxAllowed', {
+                          max: quotaDefaults.maximums.rpmLimit,
+                        })
+                      : t('pages.apiKeys.quotas.rpmLimitHelper'))}
                 </HelperTextItem>
               </HelperText>
             </FormGroup>
@@ -1467,7 +1518,9 @@ const ApiKeysPage: React.FC = () => {
                       >
                         {modelName}
                       </Content>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                      <div
+                        style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}
+                      >
                         {/* Per-model budget hidden: requires LiteLLM Enterprise license */}
                         <FormGroup
                           label={t('pages.apiKeys.quotas.modelRpm', 'RPM')}
@@ -1480,7 +1533,10 @@ const ApiKeysPage: React.FC = () => {
                             value={limits.rpm ?? ''}
                             onChange={(_event, value) => {
                               const parsed = parseInt(value, 10);
-                              updateModelLimit('rpm', value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed);
+                              updateModelLimit(
+                                'rpm',
+                                value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed,
+                              );
                             }}
                             isDisabled={creatingKey || updatingKey}
                             aria-label={`${modelName} RPM`}
@@ -1488,7 +1544,9 @@ const ApiKeysPage: React.FC = () => {
                           />
                           {formErrors[`model-rpm-${modelId}`] && (
                             <HelperText>
-                              <HelperTextItem variant="error">{formErrors[`model-rpm-${modelId}`]}</HelperTextItem>
+                              <HelperTextItem variant="error">
+                                {formErrors[`model-rpm-${modelId}`]}
+                              </HelperTextItem>
                             </HelperText>
                           )}
                         </FormGroup>
@@ -1503,7 +1561,10 @@ const ApiKeysPage: React.FC = () => {
                             value={limits.tpm ?? ''}
                             onChange={(_event, value) => {
                               const parsed = parseInt(value, 10);
-                              updateModelLimit('tpm', value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed);
+                              updateModelLimit(
+                                'tpm',
+                                value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed,
+                              );
                             }}
                             isDisabled={creatingKey || updatingKey}
                             aria-label={`${modelName} TPM`}
@@ -1511,7 +1572,9 @@ const ApiKeysPage: React.FC = () => {
                           />
                           {formErrors[`model-tpm-${modelId}`] && (
                             <HelperText>
-                              <HelperTextItem variant="error">{formErrors[`model-tpm-${modelId}`]}</HelperTextItem>
+                              <HelperTextItem variant="error">
+                                {formErrors[`model-tpm-${modelId}`]}
+                              </HelperTextItem>
                             </HelperText>
                           )}
                         </FormGroup>
@@ -1522,7 +1585,6 @@ const ApiKeysPage: React.FC = () => {
               </ExpandableSection>
             )}
           </Form>
-
         </ModalBody>
         <ModalFooter>
           <Button
@@ -1715,15 +1777,21 @@ const ApiKeysPage: React.FC = () => {
                             <Table aria-label="Key details left" variant="compact" borders={false}>
                               <Tbody>
                                 <Tr>
-                                  <Th scope="row"><strong>{t('pages.apiKeys.labels.apiUrl')}</strong></Th>
+                                  <Th scope="row">
+                                    <strong>{t('pages.apiKeys.labels.apiUrl')}</strong>
+                                  </Th>
                                   <Td>{litellmApiUrl}/v1</Td>
                                 </Tr>
                                 <Tr>
-                                  <Th scope="row"><strong>{t('pages.apiKeys.labels.created')}</strong></Th>
+                                  <Th scope="row">
+                                    <strong>{t('pages.apiKeys.labels.created')}</strong>
+                                  </Th>
                                   <Td>{new Date(selectedApiKey.createdAt).toLocaleDateString()}</Td>
                                 </Tr>
                                 <Tr>
-                                  <Th scope="row"><strong>{t('pages.apiKeys.labels.totalRequests')}</strong></Th>
+                                  <Th scope="row">
+                                    <strong>{t('pages.apiKeys.labels.totalRequests')}</strong>
+                                  </Th>
                                   <Td>{selectedApiKey.usageCount.toLocaleString()}</Td>
                                 </Tr>
                               </Tbody>
@@ -1733,20 +1801,34 @@ const ApiKeysPage: React.FC = () => {
                             <Table aria-label="Key limits" variant="compact" borders={false}>
                               <Tbody>
                                 <Tr>
-                                  <Th scope="row"><strong>{t('users.apiKeys.budget', 'Budget')}</strong></Th>
+                                  <Th scope="row">
+                                    <strong>{t('users.apiKeys.budget', 'Budget')}</strong>
+                                  </Th>
                                   <Td>
                                     {selectedApiKey.maxBudget != null
-                                      ? `$${(selectedApiKey.currentSpend ?? 0).toFixed(2)} / $${selectedApiKey.maxBudget.toFixed(2)}`
+                                      ? `${formatCurrency(selectedApiKey.currentSpend ?? 0)} / ${formatCurrency(selectedApiKey.maxBudget)}`
                                       : '-'}
                                   </Td>
                                 </Tr>
                                 <Tr>
-                                  <Th scope="row"><strong>{t('users.apiKeys.tpmLimit', 'TPM Limit')}</strong></Th>
-                                  <Td>{selectedApiKey.tpmLimit != null ? selectedApiKey.tpmLimit.toLocaleString() : '-'}</Td>
+                                  <Th scope="row">
+                                    <strong>{t('users.apiKeys.tpmLimit', 'TPM Limit')}</strong>
+                                  </Th>
+                                  <Td>
+                                    {selectedApiKey.tpmLimit != null
+                                      ? selectedApiKey.tpmLimit.toLocaleString()
+                                      : '-'}
+                                  </Td>
                                 </Tr>
                                 <Tr>
-                                  <Th scope="row"><strong>{t('users.apiKeys.rpmLimit', 'RPM Limit')}</strong></Th>
-                                  <Td>{selectedApiKey.rpmLimit != null ? selectedApiKey.rpmLimit.toLocaleString() : '-'}</Td>
+                                  <Th scope="row">
+                                    <strong>{t('users.apiKeys.rpmLimit', 'RPM Limit')}</strong>
+                                  </Th>
+                                  <Td>
+                                    {selectedApiKey.rpmLimit != null
+                                      ? selectedApiKey.rpmLimit.toLocaleString()
+                                      : '-'}
+                                  </Td>
                                 </Tr>
                               </Tbody>
                             </Table>
@@ -1820,7 +1902,6 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
               )}
             </>
           )}
-
         </ModalBody>
         <ModalFooter>
           <Button
@@ -1949,7 +2030,6 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
               </div>
             </>
           )}
-
         </ModalBody>
         <ModalFooter>
           <Button
@@ -2017,7 +2097,6 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
               </Alert>
             </>
           )}
-
         </ModalBody>
         <ModalFooter>
           <Button variant="danger" onClick={confirmDeleteKey}>
@@ -2050,7 +2129,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
           <p>
             {t(
               'users.apiKeys.resetSpendConfirmBody',
-              'Are you sure you want to reset the current spend for this API key to $0? This action cannot be undone.',
+              'Are you sure you want to reset the current spend for this API key to 0? This action cannot be undone.',
             )}
           </p>
           {editingKey && (

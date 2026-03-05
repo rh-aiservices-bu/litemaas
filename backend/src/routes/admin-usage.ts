@@ -27,11 +27,13 @@ import {
 import { AdminUsageStatsService } from '../services/admin-usage-stats.service';
 import { DailyUsageCacheManager } from '../services/daily-usage-cache-manager';
 import { LiteLLMService } from '../services/litellm.service';
+import { SettingsService } from '../services/settings.service';
 
 const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
   const liteLLMService = new LiteLLMService(fastify);
   const cacheManager = new DailyUsageCacheManager(fastify);
   const adminUsageStatsService = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
+  const settingsService = new SettingsService(fastify);
 
   // Get admin analytics configuration
   const config = fastify.getAdminAnalyticsConfig();
@@ -731,7 +733,12 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
           'Admin requested usage data export',
         );
 
-        const exportData = await adminUsageStatsService.exportUsageData(filters, format);
+        const currencySettings = await settingsService.getCurrencySettings();
+        const exportData = await adminUsageStatsService.exportUsageData(
+          filters,
+          format,
+          currencySettings.code,
+        );
 
         // Set appropriate headers for file download
         const filename = `admin-usage-export-${exportRequest.startDate}-to-${exportRequest.endDate}.${format}`;

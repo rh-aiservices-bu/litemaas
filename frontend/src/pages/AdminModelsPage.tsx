@@ -43,6 +43,7 @@ import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery, useQueryClient } from 'react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useCurrency } from '../contexts/ConfigContext';
 import { adminModelsService } from '../services/adminModels.service';
 import { Model, modelsService } from '../services/models.service';
 import type {
@@ -59,6 +60,7 @@ const AdminModelsPage: React.FC = () => {
   const { user: currentUser } = useAuth();
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
+  const { formatCurrency } = useCurrency();
 
   // State management
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
@@ -673,12 +675,12 @@ const AdminModelsPage: React.FC = () => {
                   <Td>{model.rpm?.toLocaleString() || t('models.admin.table.nA')}</Td>
                   <Td>
                     {model.inputCostPerToken
-                      ? `$${(model.inputCostPerToken * 1000000).toFixed(2)}`
+                      ? formatCurrency(model.inputCostPerToken * 1000000)
                       : t('models.admin.table.nA')}
                   </Td>
                   <Td>
                     {model.outputCostPerToken
-                      ? `$${(model.outputCostPerToken * 1000000).toFixed(2)}`
+                      ? formatCurrency(model.outputCostPerToken * 1000000)
                       : t('models.admin.table.nA')}
                   </Td>
                   <Td>{model.maxTokens?.toLocaleString() || t('models.admin.table.nA')}</Td>

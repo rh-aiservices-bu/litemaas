@@ -221,17 +221,8 @@ export const formatLargeNumber = (num: number): string => {
   return num.toString();
 };
 
-/**
- * Utility function to format currency values consistently
- */
-export const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount || 0);
-};
+// Re-export formatCurrency from formatters for backwards compatibility
+export { formatCurrency } from './formatters';
 
 /**
  * Utility function to format date ranges for chart titles

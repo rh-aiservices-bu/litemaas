@@ -39,6 +39,7 @@ import { KeyIcon, ExternalLinkAltIcon, PlusCircleIcon } from '@patternfly/react-
 import { usersService } from '../../services/users.service';
 import { modelsService } from '../../services/models.service';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { useCurrency } from '../../contexts/ConfigContext';
 import {
   UserApiKey,
   CreateApiKeyForUserRequest,
@@ -68,6 +69,7 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
   const navigate = useNavigate();
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
+  const { formatCurrency, currencyCode } = useCurrency();
 
   // Revoke confirmation modal state
   const [revokeModalOpen, setRevokeModalOpen] = useState(false);
@@ -188,7 +190,7 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
           title: t('users.apiKeys.resetSpendSuccess', 'Spend Reset'),
           description: t(
             'users.apiKeys.resetSpendSuccessDesc',
-            'The API key spend has been reset to $0.',
+            `The API key spend has been reset to ${formatCurrency(0)}.`,
           ),
           variant: 'success',
         });
@@ -342,16 +344,55 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
     for (const [modelId, limits] of Object.entries(editModelLimits)) {
       if (!editSelectedModelIds.includes(modelId)) continue;
       const modelName = availableModels.find((m) => m.id === modelId)?.name || modelId;
-      if (limits.budget != null && limits.budget > 0 && editMaxBudget != null && limits.budget > editMaxBudget) {
-        addNotification({ title: t('users.apiKeys.form.validationError', 'Validation Error'), description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('users.apiKeys.form.modelBudget', 'Budget'), max: editMaxBudget }), variant: 'danger' });
+      if (
+        limits.budget != null &&
+        limits.budget > 0 &&
+        editMaxBudget != null &&
+        limits.budget > editMaxBudget
+      ) {
+        addNotification({
+          title: t('users.apiKeys.form.validationError', 'Validation Error'),
+          description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', {
+            model: modelName,
+            field: t('users.apiKeys.form.modelBudget', 'Budget'),
+            max: editMaxBudget,
+          }),
+          variant: 'danger',
+        });
         return;
       }
-      if (limits.rpm != null && limits.rpm > 0 && editRpmLimit != null && limits.rpm > editRpmLimit) {
-        addNotification({ title: t('users.apiKeys.form.validationError', 'Validation Error'), description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('users.apiKeys.form.rpmLimit', 'RPM'), max: editRpmLimit }), variant: 'danger' });
+      if (
+        limits.rpm != null &&
+        limits.rpm > 0 &&
+        editRpmLimit != null &&
+        limits.rpm > editRpmLimit
+      ) {
+        addNotification({
+          title: t('users.apiKeys.form.validationError', 'Validation Error'),
+          description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', {
+            model: modelName,
+            field: t('users.apiKeys.form.rpmLimit', 'RPM'),
+            max: editRpmLimit,
+          }),
+          variant: 'danger',
+        });
         return;
       }
-      if (limits.tpm != null && limits.tpm > 0 && editTpmLimit != null && limits.tpm > editTpmLimit) {
-        addNotification({ title: t('users.apiKeys.form.validationError', 'Validation Error'), description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('users.apiKeys.form.tpmLimit', 'TPM'), max: editTpmLimit }), variant: 'danger' });
+      if (
+        limits.tpm != null &&
+        limits.tpm > 0 &&
+        editTpmLimit != null &&
+        limits.tpm > editTpmLimit
+      ) {
+        addNotification({
+          title: t('users.apiKeys.form.validationError', 'Validation Error'),
+          description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', {
+            model: modelName,
+            field: t('users.apiKeys.form.tpmLimit', 'TPM'),
+            max: editTpmLimit,
+          }),
+          variant: 'danger',
+        });
         return;
       }
     }
@@ -436,16 +477,55 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
     for (const [modelId, limits] of Object.entries(newKeyModelLimits)) {
       if (!selectedModelIds.includes(modelId)) continue;
       const modelName = availableModels.find((m) => m.id === modelId)?.name || modelId;
-      if (limits.budget != null && limits.budget > 0 && newKeyMaxBudget != null && limits.budget > newKeyMaxBudget) {
-        addNotification({ title: t('users.apiKeys.form.validationError', 'Validation Error'), description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('users.apiKeys.form.modelBudget', 'Budget'), max: newKeyMaxBudget }), variant: 'danger' });
+      if (
+        limits.budget != null &&
+        limits.budget > 0 &&
+        newKeyMaxBudget != null &&
+        limits.budget > newKeyMaxBudget
+      ) {
+        addNotification({
+          title: t('users.apiKeys.form.validationError', 'Validation Error'),
+          description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', {
+            model: modelName,
+            field: t('users.apiKeys.form.modelBudget', 'Budget'),
+            max: newKeyMaxBudget,
+          }),
+          variant: 'danger',
+        });
         return;
       }
-      if (limits.rpm != null && limits.rpm > 0 && newKeyRpmLimit != null && limits.rpm > newKeyRpmLimit) {
-        addNotification({ title: t('users.apiKeys.form.validationError', 'Validation Error'), description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('users.apiKeys.form.rpmLimit', 'RPM'), max: newKeyRpmLimit }), variant: 'danger' });
+      if (
+        limits.rpm != null &&
+        limits.rpm > 0 &&
+        newKeyRpmLimit != null &&
+        limits.rpm > newKeyRpmLimit
+      ) {
+        addNotification({
+          title: t('users.apiKeys.form.validationError', 'Validation Error'),
+          description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', {
+            model: modelName,
+            field: t('users.apiKeys.form.rpmLimit', 'RPM'),
+            max: newKeyRpmLimit,
+          }),
+          variant: 'danger',
+        });
         return;
       }
-      if (limits.tpm != null && limits.tpm > 0 && newKeyTpmLimit != null && limits.tpm > newKeyTpmLimit) {
-        addNotification({ title: t('users.apiKeys.form.validationError', 'Validation Error'), description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', { model: modelName, field: t('users.apiKeys.form.tpmLimit', 'TPM'), max: newKeyTpmLimit }), variant: 'danger' });
+      if (
+        limits.tpm != null &&
+        limits.tpm > 0 &&
+        newKeyTpmLimit != null &&
+        limits.tpm > newKeyTpmLimit
+      ) {
+        addNotification({
+          title: t('users.apiKeys.form.validationError', 'Validation Error'),
+          description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', {
+            model: modelName,
+            field: t('users.apiKeys.form.tpmLimit', 'TPM'),
+            max: newKeyTpmLimit,
+          }),
+          variant: 'danger',
+        });
         return;
       }
     }
@@ -566,7 +646,7 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
   ) => (
     <>
       <FormGroup
-        label={t('users.apiKeys.form.maxBudget', 'Max Budget (USD)')}
+        label={t('users.apiKeys.form.maxBudget', `Max Budget (${currencyCode})`)}
         fieldId={`${prefix}-key-budget`}
       >
         <NumberInput
@@ -581,7 +661,7 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
             setMaxBudget(isNaN(value) ? undefined : value);
           }}
           isDisabled={isLoading}
-          aria-label={t('users.apiKeys.form.maxBudget', 'Max Budget (USD)')}
+          aria-label={t('users.apiKeys.form.maxBudget', `Max Budget (${currencyCode})`)}
           widthChars={10}
         />
       </FormGroup>
@@ -667,7 +747,7 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
 
       {showSoftBudget && maxBudget !== undefined && maxBudget > 0 && (
         <FormGroup
-          label={t('users.apiKeys.form.softBudget', 'Soft Budget Warning (USD)')}
+          label={t('users.apiKeys.form.softBudget', `Soft Budget Warning (${currencyCode})`)}
           fieldId={`${prefix}-key-soft-budget`}
         >
           <NumberInput
@@ -682,7 +762,7 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
               setSoftBudget(isNaN(value) ? undefined : value);
             }}
             isDisabled={isLoading}
-            aria-label={t('users.apiKeys.form.softBudget', 'Soft Budget Warning (USD)')}
+            aria-label={t('users.apiKeys.form.softBudget', `Soft Budget Warning (${currencyCode})`)}
             widthChars={10}
           />
           <HelperText>
@@ -776,7 +856,10 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                       value={limits.rpm ?? ''}
                       onChange={(_event, value) => {
                         const parsed = parseInt(value, 10);
-                        updateModelLimit('rpm', value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed);
+                        updateModelLimit(
+                          'rpm',
+                          value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed,
+                        );
                       }}
                       isDisabled={isLoading}
                       aria-label={`${modelName} RPM`}
@@ -793,7 +876,10 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                       value={limits.tpm ?? ''}
                       onChange={(_event, value) => {
                         const parsed = parseInt(value, 10);
-                        updateModelLimit('tpm', value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed);
+                        updateModelLimit(
+                          'tpm',
+                          value === '' || isNaN(parsed) || parsed < 0 ? undefined : parsed,
+                        );
                       }}
                       isDisabled={isLoading}
                       aria-label={`${modelName} TPM`}
@@ -969,7 +1055,7 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                   {key.maxBudget ? (
                     <div>
                       <Content component={ContentVariants.small}>
-                        ${(key.currentSpend || 0).toFixed(2)} / ${key.maxBudget.toFixed(2)}
+                        {formatCurrency(key.currentSpend || 0)} / {formatCurrency(key.maxBudget)}
                       </Content>
                       {key.budgetUtilization !== undefined && key.budgetUtilization !== null && (
                         <Progress
@@ -1216,8 +1302,10 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                 </Split>
                 <HelperText>
                   <HelperTextItem>
-                    ${keyToEdit.currentSpend?.toFixed(2) || '0.00'} / $
-                    {keyToEdit.maxBudget?.toFixed(2) || t('users.budget.unlimited', 'Unlimited')}
+                    {formatCurrency(keyToEdit.currentSpend || 0)} /{' '}
+                    {keyToEdit.maxBudget != null
+                      ? formatCurrency(keyToEdit.maxBudget)
+                      : t('users.budget.unlimited', 'Unlimited')}
                   </HelperTextItem>
                 </HelperText>
               </FormGroup>
@@ -1275,7 +1363,7 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
           <p>
             {t(
               'users.apiKeys.resetSpendConfirmBody',
-              'Are you sure you want to reset the current spend for this API key to $0? This action cannot be undone.',
+              `Are you sure you want to reset the current spend for this API key to ${formatCurrency(0)}? This action cannot be undone.`,
             )}
           </p>
           {keyToEdit && (

@@ -8,6 +8,12 @@ import {
   UserDefaultsResponseSchema,
   type UserDefaultsInput,
 } from '../schemas/settings';
+import {
+  CurrencySettingsSchema,
+  type CurrencySettingsInput,
+  SupportedCurrenciesResponseSchema,
+} from '../schemas/currency';
+import { SUPPORTED_CURRENCIES } from '../types/currency.types';
 
 const adminSettingsRoutes: FastifyPluginAsync = async (fastify) => {
   const settingsService = new SettingsService(fastify);
@@ -189,6 +195,123 @@ const adminSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         throw fastify.createError(500, 'Failed to update user defaults');
+      }
+    },
+  });
+  // GET /admin/settings/currency
+  fastify.get('/currency', {
+    schema: {
+      tags: ['Admin Settings'],
+      summary: 'Get currency settings',
+      description: 'Get the configured currency for monetary value display.',
+      security: [{ bearerAuth: [] }],
+      response: {
+        200: CurrencySettingsSchema,
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:users')],
+    handler: async (request, _reply) => {
+      const authRequest = request as AuthenticatedRequest;
+
+      try {
+        const currency = await settingsService.getCurrencySettings();
+
+        fastify.log.debug(
+          { adminUser: authRequest.user?.userId },
+          'Admin retrieved currency settings',
+        );
+
+        return currency;
+      } catch (error) {
+        fastify.log.error(
+          { error, adminUser: authRequest.user?.userId },
+          'Failed to get currency settings',
+        );
+        throw fastify.createError(500, 'Failed to retrieve currency settings');
+      }
+    },
+  });
+
+  // GET /admin/settings/currency/supported
+  fastify.get('/currency/supported', {
+    schema: {
+      tags: ['Admin Settings'],
+      summary: 'Get supported currencies',
+      description: 'Get list of all supported currencies.',
+      security: [{ bearerAuth: [] }],
+      response: {
+        200: SupportedCurrenciesResponseSchema,
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:users')],
+    handler: async (request, _reply) => {
+      const authRequest = request as AuthenticatedRequest;
+
+      fastify.log.debug(
+        { adminUser: authRequest.user?.userId },
+        'Admin retrieved supported currencies',
+      );
+
+      return SUPPORTED_CURRENCIES;
+    },
+  });
+
+  // PUT /admin/settings/currency
+  fastify.put<{
+    Body: CurrencySettingsInput;
+  }>('/currency', {
+    schema: {
+      tags: ['Admin Settings'],
+      summary: 'Update currency settings',
+      description:
+        'Update the configured currency for monetary value display. Admin role required.',
+      security: [{ bearerAuth: [] }],
+      body: CurrencySettingsSchema,
+      response: {
+        200: CurrencySettingsSchema,
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:users')],
+    handler: async (request, _reply) => {
+      const authRequest = request as AuthenticatedRequest;
+      const settings = request.body;
+
+      try {
+        fastify.log.info(
+          {
+            adminUser: authRequest.user?.userId,
+            adminUsername: authRequest.user?.username,
+            settings,
+            action: 'update_currency_settings',
+          },
+          'Admin updating currency settings',
+        );
+
+        const updated = await settingsService.updateCurrencySettings(
+          authRequest.user.userId,
+          settings,
+        );
+
+        fastify.log.info(
+          {
+            adminUser: authRequest.user?.userId,
+            settings: updated,
+          },
+          'Currency settings updated successfully',
+        );
+
+        return updated;
+      } catch (error) {
+        fastify.log.error(
+          { error, adminUser: authRequest.user?.userId, settings },
+          'Failed to update currency settings',
+        );
+
+        if (error instanceof Error && (error as any).statusCode === 400) {
+          throw error;
+        }
+
+        throw fastify.createError(500, 'Failed to update currency settings');
       }
     },
   });

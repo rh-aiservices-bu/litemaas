@@ -49,10 +49,13 @@ export default async function configRoutes(fastify: FastifyInstance) {
       const isMockEnabled =
         process.env.OAUTH_MOCK_ENABLED === 'true' || process.env.NODE_ENV === 'development';
 
+      const currency = await settingsService.getCurrencySettings();
+
       const config: ConfigResponse = {
         version: appVersion,
         usageCacheTtlMinutes: Number(fastify.config.USAGE_CACHE_TTL_MINUTES),
         environment: fastify.config.NODE_ENV === 'production' ? 'production' : 'development',
+        currency,
       };
 
       fastify.log.debug({ config }, 'Returning public configuration');

@@ -184,6 +184,7 @@ describe('Config Routes Integration', () => {
         'environment',
         'authMode',
         'litellmApiUrl',
+        'currency',
       ];
 
       // Check that all fields in response are allowed

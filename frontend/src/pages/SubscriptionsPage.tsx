@@ -42,6 +42,7 @@ import {
   ClockIcon,
 } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useCurrency } from '../contexts/ConfigContext';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { subscriptionsService, Subscription } from '../services/subscriptions.service';
 import { getModelFlairs } from '../utils/flairColors';
@@ -52,6 +53,7 @@ const SubscriptionsPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { handleError } = useErrorHandler();
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
 
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -177,9 +179,9 @@ const SubscriptionsPage: React.FC = () => {
     return (
       <Stack hasGutter>
         <Content component={ContentVariants.small}>
-          {t('pages.subscriptions.pricingLabels.input')}: ${inputCostPerMillion.toFixed(2)}/1M{' '}
+          {t('pages.subscriptions.pricingLabels.input')}: {formatCurrency(inputCostPerMillion)}/1M{' '}
           {t('pages.usage.metrics.tokens')} {t('pages.models.pricing.separator')}{' '}
-          {t('pages.subscriptions.pricingLabels.output')}: ${outputCostPerMillion.toFixed(2)}/1M{' '}
+          {t('pages.subscriptions.pricingLabels.output')}: {formatCurrency(outputCostPerMillion)}/1M{' '}
           {t('pages.usage.metrics.tokens')}
         </Content>
       </Stack>
@@ -230,7 +232,8 @@ const SubscriptionsPage: React.FC = () => {
       if (errorDetails.statusCode === 400) {
         addNotification({
           title: t('pages.subscriptions.notifications.cannotCancel'),
-          description: errorDetails.message || t('pages.subscriptions.notifications.cannotCancelDesc'),
+          description:
+            errorDetails.message || t('pages.subscriptions.notifications.cannotCancelDesc'),
           variant: 'warning',
         });
       } else {
@@ -238,7 +241,8 @@ const SubscriptionsPage: React.FC = () => {
         console.error('Failed to cancel subscription:', error);
         addNotification({
           title: t('pages.subscriptions.notifications.cancelError'),
-          description: errorDetails.message || t('pages.subscriptions.notifications.cancelErrorDesc'),
+          description:
+            errorDetails.message || t('pages.subscriptions.notifications.cancelErrorDesc'),
           variant: 'danger',
         });
       }
@@ -535,7 +539,7 @@ const SubscriptionsPage: React.FC = () => {
                   <DescriptionListTerm>{t('pages.subscriptions.pricing')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     {selectedSubscription.pricing
-                      ? `${t('pages.models.pricing.input')}: $${(selectedSubscription.pricing.inputCostPerToken * 1000000).toFixed(2)}/1M ${t('pages.usage.metrics.tokens')} ${t('pages.models.pricing.separator')} ${t('pages.models.pricing.output')}: $${(selectedSubscription.pricing.outputCostPerToken * 1000000).toFixed(2)}/1M ${t('pages.usage.metrics.tokens')}`
+                      ? `${t('pages.models.pricing.input')}: ${formatCurrency(selectedSubscription.pricing.inputCostPerToken * 1000000)}/1M ${t('pages.usage.metrics.tokens')} ${t('pages.models.pricing.separator')} ${t('pages.models.pricing.output')}: ${formatCurrency(selectedSubscription.pricing.outputCostPerToken * 1000000)}/1M ${t('pages.usage.metrics.tokens')}`
                       : t('pages.models.pricingLabel')}
                   </DescriptionListDescription>
                 </DescriptionListGroup>

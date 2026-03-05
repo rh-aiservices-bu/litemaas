@@ -33,6 +33,7 @@ import {
 import { SyncAltIcon, UsersIcon, PlusIcon } from '@patternfly/react-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useCurrency } from '../contexts/ConfigContext';
 import { useBanners } from '../contexts/BannerContext';
 import { modelsService } from '../services/models.service';
 import { bannerService } from '../services/banners.service';
@@ -45,6 +46,7 @@ import type { SimpleBannerUpdateRequest, CreateBannerRequest, Banner } from '../
 import { BannerEditModal, BannerTable } from '../components/banners';
 import { ApiKeyQuotaDefaultsSection, UserDefaultsSection } from '../components/admin';
 import BrandingTab from '../components/branding/BrandingTab';
+import CurrencyTab from '../components/currency/CurrencyTab';
 import { useQuery, useQueryClient } from 'react-query';
 import { extractErrorDetails } from '../utils/error.utils';
 
@@ -64,6 +66,7 @@ const ToolsPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { updateBanner, bulkUpdateVisibility } = useBanners();
   const queryClient = useQueryClient();
+  const { currencySymbol } = useCurrency();
   const [isLoading, setIsLoading] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
   const [activeTabKey, setActiveTabKey] = useState<string | number>('models');
@@ -101,6 +104,9 @@ const ToolsPage: React.FC = () => {
   const canViewBranding =
     (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
   const canManageBranding = user?.roles?.includes('admin') ?? false;
+  const canViewCurrency =
+    (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
+  const canManageCurrency = user?.roles?.includes('admin') ?? false;
 
   // Fetch all banners for admin management
   const { data: allBanners = [] } = useQuery(['allBanners'], () => bannerService.getAllBanners(), {
@@ -714,6 +720,19 @@ const ToolsPage: React.FC = () => {
               </TabContent>
             </Tab>
           )}
+          {/* Currency Tab */}
+          {canViewCurrency && (
+            <Tab
+              eventKey="currency"
+              title={<TabTitleText>{t('pages.tools.currency.tabTitle')}</TabTitleText>}
+            >
+              <TabContent id="currency-tab-content" style={{ paddingTop: '10px' }}>
+                <TabContentBody>
+                  <CurrencyTab canManage={canManageCurrency} />
+                </TabContentBody>
+              </TabContent>
+            </Tab>
+          )}
         </Tabs>
 
         {/* Confirmation Modal */}
@@ -730,7 +749,8 @@ const ToolsPage: React.FC = () => {
               <ul style={{ marginTop: '0.5rem', marginLeft: '1rem' }}>
                 {limitsFormData.maxBudget && (
                   <li style={{ marginBottom: '0.25rem' }}>
-                    {t('pages.tools.maxBudgetLabel')}: ${limitsFormData.maxBudget}
+                    {t('pages.tools.maxBudgetLabel')}: {currencySymbol}
+                    {limitsFormData.maxBudget}
                   </li>
                 )}
                 {limitsFormData.tpmLimit && (

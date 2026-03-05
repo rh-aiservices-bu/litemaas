@@ -16,6 +16,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
 import type { AdminUsageFilters } from '../../services/adminUsage.service';
 import { formatNumber, formatCurrency, formatPercentage } from '../../utils/formatters';
+import { useCurrency } from '../../contexts/ConfigContext';
 import { PER_PAGE_OPTIONS } from '../../services/adminUsage.service';
 
 interface ProviderBreakdownTableProps {
@@ -25,6 +26,7 @@ interface ProviderBreakdownTableProps {
 export const ProviderBreakdownTable: React.FC<ProviderBreakdownTableProps> = ({ filters }) => {
   const { t } = useTranslation();
   const { handleError } = useErrorHandler();
+  const { currencyCode } = useCurrency();
 
   // Pagination state
   const pagination = usePagination({
@@ -185,7 +187,7 @@ export const ProviderBreakdownTable: React.FC<ProviderBreakdownTableProps> = ({ 
                 {formatNumber(provider.metrics.tokens.output)}
               </Td>
               <Td dataLabel={t('adminUsage.providerBreakdown.totalCost', 'Total Cost')}>
-                {formatCurrency(provider.metrics.cost)}
+                {formatCurrency(provider.metrics.cost, currencyCode)}
               </Td>
               <Td dataLabel={t('adminUsage.providerBreakdown.successRate', 'Success Rate')}>
                 {getSuccessRateBadge(provider.metrics.successRate)}

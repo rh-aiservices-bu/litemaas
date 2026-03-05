@@ -50,6 +50,7 @@ import {
   LockIcon,
 } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useCurrency } from '../contexts/ConfigContext';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { modelsService, Model } from '../services/models.service';
 import { subscriptionsService, Subscription } from '../services/subscriptions.service';
@@ -64,6 +65,7 @@ const ModelsPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { handleError } = useErrorHandler();
   const { announcement, announce } = useScreenReaderAnnouncement();
+  const { formatCurrency } = useCurrency();
 
   const [models, setModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
@@ -581,7 +583,7 @@ const ModelsPage: React.FC = () => {
                         <FlexItem>
                           <Content component={ContentVariants.small}>
                             {model.pricing
-                              ? `${t('pages.models.pricing.input')}: $${(model.pricing.input * 1000000).toFixed(2)}/1M ${t('pages.usage.metrics.tokens')} ${t('pages.models.pricing.separator')} ${t('pages.models.pricing.output')}: $${(model.pricing.output * 1000000).toFixed(2)}/1M ${t('pages.usage.metrics.tokens')}`
+                              ? `${t('pages.models.pricing.input')}: ${formatCurrency(model.pricing.input * 1000000)}/1M ${t('pages.usage.metrics.tokens')} ${t('pages.models.pricing.separator')} ${t('pages.models.pricing.output')}: ${formatCurrency(model.pricing.output * 1000000)}/1M ${t('pages.usage.metrics.tokens')}`
                               : t('pages.models.pricingLabel')}
                           </Content>
                         </FlexItem>
@@ -683,13 +685,13 @@ const ModelsPage: React.FC = () => {
                     {selectedModel.pricing ? (
                       <Stack hasGutter>
                         <Content>
-                          {t('pages.models.modal.pricingInput')}: $
-                          {(selectedModel.pricing.input * 1000000).toFixed(2)}/1M{' '}
+                          {t('pages.models.modal.pricingInput')}:{' '}
+                          {formatCurrency(selectedModel.pricing.input * 1000000)}/1M{' '}
                           {t('pages.usage.metrics.tokens')}
                         </Content>
                         <Content>
-                          {t('pages.models.modal.pricingOutput')}: $
-                          {(selectedModel.pricing.output * 1000000).toFixed(2)}/1M{' '}
+                          {t('pages.models.modal.pricingOutput')}:{' '}
+                          {formatCurrency(selectedModel.pricing.output * 1000000)}/1M{' '}
                           {t('pages.usage.metrics.tokens')}
                         </Content>
                       </Stack>
