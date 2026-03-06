@@ -42,7 +42,7 @@ code {
 /* Adjust navigation item sizing */
 .pf-v6-c-nav__link {
   font-size: var(--pf-t--global--font--size--body--default);
-  padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md);
+  padding: var(--pf-t--global--spacer--xs) var(--pf-t--global--spacer--md);
 }
 
 /* Reduce all padding/margin for tighter layout */
