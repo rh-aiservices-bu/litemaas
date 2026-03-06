@@ -153,7 +153,12 @@ export class BrandingService extends BaseService {
     return this.getSettings();
   }
 
-  async uploadImage(type: ImageType, base64Data: string, mimeType: string, userId: string): Promise<void> {
+  async uploadImage(
+    type: ImageType,
+    base64Data: string,
+    mimeType: string,
+    userId: string,
+  ): Promise<void> {
     if (!ALLOWED_MIME_TYPES.includes(mimeType)) {
       throw this.createValidationError(
         `Invalid image format: ${mimeType}`,

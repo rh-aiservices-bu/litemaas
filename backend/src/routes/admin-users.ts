@@ -253,20 +253,28 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
             // Reconcile budget/limits from LiteLLM (source of truth)
             const llmInfo = liteLLMUser.user_info;
             maxBudget = llmInfo.max_budget != null ? Number(llmInfo.max_budget) : undefined;
-            tpmLimit = llmInfo.tpm_limit != null && Number(llmInfo.tpm_limit) !== LITELLM_UNLIMITED
-              ? Number(llmInfo.tpm_limit) : undefined;
-            rpmLimit = llmInfo.rpm_limit != null && Number(llmInfo.rpm_limit) !== LITELLM_UNLIMITED
-              ? Number(llmInfo.rpm_limit) : undefined;
+            tpmLimit =
+              llmInfo.tpm_limit != null && Number(llmInfo.tpm_limit) !== LITELLM_UNLIMITED
+                ? Number(llmInfo.tpm_limit)
+                : undefined;
+            rpmLimit =
+              llmInfo.rpm_limit != null && Number(llmInfo.rpm_limit) !== LITELLM_UNLIMITED
+                ? Number(llmInfo.rpm_limit)
+                : undefined;
 
             // Update local DB if values differ (side-effect reconciliation)
             const dbMaxBudget = user.max_budget !== null ? Number(user.max_budget) : null;
             const dbTpmLimit = user.tpm_limit !== null ? Number(user.tpm_limit) : null;
             const dbRpmLimit = user.rpm_limit !== null ? Number(user.rpm_limit) : null;
             const llmMaxBudget = llmInfo.max_budget ?? null;
-            const llmTpmLimit = llmInfo.tpm_limit != null && Number(llmInfo.tpm_limit) !== LITELLM_UNLIMITED
-              ? llmInfo.tpm_limit : null;
-            const llmRpmLimit = llmInfo.rpm_limit != null && Number(llmInfo.rpm_limit) !== LITELLM_UNLIMITED
-              ? llmInfo.rpm_limit : null;
+            const llmTpmLimit =
+              llmInfo.tpm_limit != null && Number(llmInfo.tpm_limit) !== LITELLM_UNLIMITED
+                ? llmInfo.tpm_limit
+                : null;
+            const llmRpmLimit =
+              llmInfo.rpm_limit != null && Number(llmInfo.rpm_limit) !== LITELLM_UNLIMITED
+                ? llmInfo.rpm_limit
+                : null;
 
             if (
               dbMaxBudget !== llmMaxBudget ||
@@ -446,10 +454,14 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
         return {
           id: String(updatedUser?.id),
           maxBudget: updatedUser?.max_budget !== null ? Number(updatedUser?.max_budget) : undefined,
-          tpmLimit: updatedUser?.tpm_limit !== null && Number(updatedUser?.tpm_limit) !== LITELLM_UNLIMITED
-            ? Number(updatedUser?.tpm_limit) : undefined,
-          rpmLimit: updatedUser?.rpm_limit !== null && Number(updatedUser?.rpm_limit) !== LITELLM_UNLIMITED
-            ? Number(updatedUser?.rpm_limit) : undefined,
+          tpmLimit:
+            updatedUser?.tpm_limit !== null && Number(updatedUser?.tpm_limit) !== LITELLM_UNLIMITED
+              ? Number(updatedUser?.tpm_limit)
+              : undefined,
+          rpmLimit:
+            updatedUser?.rpm_limit !== null && Number(updatedUser?.rpm_limit) !== LITELLM_UNLIMITED
+              ? Number(updatedUser?.rpm_limit)
+              : undefined,
           budgetDuration: updatedUser?.budget_duration
             ? String(updatedUser?.budget_duration)
             : null,
@@ -582,7 +594,11 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
             'ADMIN_RESET_API_KEY_SPEND',
             'API_KEY',
             keyId,
-            JSON.stringify({ targetUserId: id, targetUsername: user.username, resetAt: result.resetAt }),
+            JSON.stringify({
+              targetUserId: id,
+              targetUsername: user.username,
+              resetAt: result.resetAt,
+            }),
           ],
         );
 

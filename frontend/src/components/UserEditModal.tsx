@@ -213,7 +213,11 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
         </Tabs>
       </ModalBody>
       <ModalFooter>
-        <Flex style={{ width: '100%' }} justifyContent={{ default: 'justifyContentSpaceBetween' }} alignItems={{ default: 'alignItemsCenter' }}>
+        <Flex
+          style={{ width: '100%' }}
+          justifyContent={{ default: 'justifyContentSpaceBetween' }}
+          alignItems={{ default: 'alignItemsCenter' }}
+        >
           <FlexItem>
             <Button
               variant="link"

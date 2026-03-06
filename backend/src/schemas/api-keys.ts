@@ -50,13 +50,19 @@ export const CreateApiKeySchema = Type.Object({
     }),
   ),
   budgetDuration: Type.Optional(
-    Type.Union([
-      Type.Literal('daily'),
-      Type.Literal('weekly'),
-      Type.Literal('monthly'),
-      Type.Literal('yearly'),
-      Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$', description: 'Custom duration like 30d, 1mo, 1h' }),
-    ], { description: 'Budget duration period' }),
+    Type.Union(
+      [
+        Type.Literal('daily'),
+        Type.Literal('weekly'),
+        Type.Literal('monthly'),
+        Type.Literal('yearly'),
+        Type.String({
+          pattern: '^\\d+[smhd]$|^\\d+mo$',
+          description: 'Custom duration like 30d, 1mo, 1h',
+        }),
+      ],
+      { description: 'Budget duration period' },
+    ),
   ),
   tpmLimit: Type.Optional(
     Type.Integer({
@@ -121,13 +127,19 @@ export const LegacyCreateApiKeySchema = Type.Object({
     }),
   ),
   budgetDuration: Type.Optional(
-    Type.Union([
-      Type.Literal('daily'),
-      Type.Literal('weekly'),
-      Type.Literal('monthly'),
-      Type.Literal('yearly'),
-      Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$', description: 'Custom duration like 30d, 1mo, 1h' }),
-    ], { description: 'Budget duration period' }),
+    Type.Union(
+      [
+        Type.Literal('daily'),
+        Type.Literal('weekly'),
+        Type.Literal('monthly'),
+        Type.Literal('yearly'),
+        Type.String({
+          pattern: '^\\d+[smhd]$|^\\d+mo$',
+          description: 'Custom duration like 30d, 1mo, 1h',
+        }),
+      ],
+      { description: 'Budget duration period' },
+    ),
   ),
   tpmLimit: Type.Optional(
     Type.Integer({
@@ -193,13 +205,19 @@ export const CreateApiKeyRequestSchema = Type.Object({
     }),
   ),
   budgetDuration: Type.Optional(
-    Type.Union([
-      Type.Literal('daily'),
-      Type.Literal('weekly'),
-      Type.Literal('monthly'),
-      Type.Literal('yearly'),
-      Type.String({ pattern: '^\\d+[smhd]$|^\\d+mo$', description: 'Custom duration like 30d, 1mo, 1h' }),
-    ], { description: 'Budget duration period' }),
+    Type.Union(
+      [
+        Type.Literal('daily'),
+        Type.Literal('weekly'),
+        Type.Literal('monthly'),
+        Type.Literal('yearly'),
+        Type.String({
+          pattern: '^\\d+[smhd]$|^\\d+mo$',
+          description: 'Custom duration like 30d, 1mo, 1h',
+        }),
+      ],
+      { description: 'Budget duration period' },
+    ),
   ),
   tpmLimit: Type.Optional(
     Type.Integer({

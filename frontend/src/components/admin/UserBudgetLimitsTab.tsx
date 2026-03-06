@@ -253,10 +253,11 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
           />
           <HelperText>
             <HelperTextItem>
-              {t(
-                'users.budget.maxBudgetHelp',
-                { defaultValue: 'Maximum spending limit in {{currencyCode}}. Leave empty for no limit.', currencyCode },
-              )}
+              {t('users.budget.maxBudgetHelp', {
+                defaultValue:
+                  'Maximum spending limit in {{currencyCode}}. Leave empty for no limit.',
+                currencyCode,
+              })}
             </HelperTextItem>
           </HelperText>
         </FormGroup>

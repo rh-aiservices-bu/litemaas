@@ -161,11 +161,7 @@ const BrandingTab: React.FC<BrandingTabProps> = ({ canManage }) => {
     t,
   ]);
 
-  const renderImageSection = (
-    type: string,
-    label: string,
-    hasImage: boolean,
-  ) => {
+  const renderImageSection = (type: string, label: string, hasImage: boolean) => {
     const imageUrl = brandingService.getImageUrl(type);
 
     return (
@@ -252,7 +248,11 @@ const BrandingTab: React.FC<BrandingTabProps> = ({ canManage }) => {
               <FlexItem>
                 <Switch
                   id="login-logo-enabled"
-                  label={loginLogoEnabled ? t('pages.tools.branding.useCustom') : t('pages.tools.branding.useDefault')}
+                  label={
+                    loginLogoEnabled
+                      ? t('pages.tools.branding.useCustom')
+                      : t('pages.tools.branding.useDefault')
+                  }
                   isChecked={loginLogoEnabled}
                   onChange={(_event, checked) => setLoginLogoEnabled(checked)}
                   isDisabled={!canManage}
@@ -284,7 +284,11 @@ const BrandingTab: React.FC<BrandingTabProps> = ({ canManage }) => {
               <FlexItem>
                 <Switch
                   id="login-title-enabled"
-                  label={loginTitleEnabled ? t('pages.tools.branding.useCustom') : t('pages.tools.branding.useDefault')}
+                  label={
+                    loginTitleEnabled
+                      ? t('pages.tools.branding.useCustom')
+                      : t('pages.tools.branding.useDefault')
+                  }
                   isChecked={loginTitleEnabled}
                   onChange={(_event, checked) => setLoginTitleEnabled(checked)}
                   isDisabled={!canManage}
@@ -320,17 +324,18 @@ const BrandingTab: React.FC<BrandingTabProps> = ({ canManage }) => {
               <FlexItem>
                 <Switch
                   id="login-subtitle-enabled"
-                  label={loginSubtitleEnabled ? t('pages.tools.branding.useCustom') : t('pages.tools.branding.useDefault')}
+                  label={
+                    loginSubtitleEnabled
+                      ? t('pages.tools.branding.useCustom')
+                      : t('pages.tools.branding.useDefault')
+                  }
                   isChecked={loginSubtitleEnabled}
                   onChange={(_event, checked) => setLoginSubtitleEnabled(checked)}
                   isDisabled={!canManage}
                 />
               </FlexItem>
               <FlexItem>
-                <FormGroup
-                  label={t('pages.tools.branding.loginSubtitle')}
-                  fieldId="login-subtitle"
-                >
+                <FormGroup label={t('pages.tools.branding.loginSubtitle')} fieldId="login-subtitle">
                   <TextArea
                     id="login-subtitle"
                     value={loginSubtitle}
@@ -360,7 +365,11 @@ const BrandingTab: React.FC<BrandingTabProps> = ({ canManage }) => {
               <FlexItem>
                 <Switch
                   id="header-brand-enabled"
-                  label={headerBrandEnabled ? t('pages.tools.branding.useCustom') : t('pages.tools.branding.useDefault')}
+                  label={
+                    headerBrandEnabled
+                      ? t('pages.tools.branding.useCustom')
+                      : t('pages.tools.branding.useDefault')
+                  }
                   isChecked={headerBrandEnabled}
                   onChange={(_event, checked) => setHeaderBrandEnabled(checked)}
                   isDisabled={!canManage}

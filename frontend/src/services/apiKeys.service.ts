@@ -190,8 +190,12 @@ class ApiKeysService {
     return apiClient.delete(`/api-keys/${keyId}`);
   }
 
-  async resetApiKeySpend(keyId: string): Promise<{ id: string; currentSpend: number; resetAt: string }> {
-    return apiClient.post<{ id: string; currentSpend: number; resetAt: string }>(`/api-keys/${keyId}/reset-spend`);
+  async resetApiKeySpend(
+    keyId: string,
+  ): Promise<{ id: string; currentSpend: number; resetAt: string }> {
+    return apiClient.post<{ id: string; currentSpend: number; resetAt: string }>(
+      `/api-keys/${keyId}/reset-spend`,
+    );
   }
 
   async updateApiKey(keyId: string, updates: Partial<CreateApiKeyRequest>): Promise<ApiKey> {

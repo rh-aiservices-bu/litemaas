@@ -258,7 +258,9 @@ export class LiteLLMService extends BaseService {
    */
   private isEnterpriseLicenseError(error: unknown): boolean {
     if (error instanceof Error) {
-      return error.message.includes('enterprise license') || error.message.includes('LiteLLM Enterprise');
+      return (
+        error.message.includes('enterprise license') || error.message.includes('LiteLLM Enterprise')
+      );
     }
     return false;
   }
@@ -539,14 +541,17 @@ export class LiteLLMService extends BaseService {
             'The key will be created without per-model budget enforcement. ' +
             'See: https://docs.litellm.ai/docs/proxy/enterprise',
         );
-        const { model_max_budget: _removed, ...requestWithoutModelBudget } = request;
+        const { model_max_budget: _, ...requestWithoutModelBudget } = request;
         try {
           return await this.makeRequest<LiteLLMKeyGenerationResponse>('/key/generate', {
             method: 'POST',
             body: requestWithoutModelBudget,
           });
         } catch (retryError) {
-          this.fastify.log.error(retryError, 'Failed to generate API key on retry without model_max_budget');
+          this.fastify.log.error(
+            retryError,
+            'Failed to generate API key on retry without model_max_budget',
+          );
           throw retryError;
         }
       }
@@ -655,7 +660,7 @@ export class LiteLLMService extends BaseService {
         this.fastify.log.warn(
           'model_max_budget requires a LiteLLM Enterprise license — retrying key update without per-model budget limits.',
         );
-        const { model_max_budget: _removed, ...updatesWithoutModelBudget } = updates;
+        const { model_max_budget: _, ...updatesWithoutModelBudget } = updates;
         try {
           await this.makeRequest('/key/update', {
             method: 'POST',
@@ -663,7 +668,10 @@ export class LiteLLMService extends BaseService {
           });
           return;
         } catch (retryError) {
-          this.fastify.log.error(retryError, 'Failed to update key on retry without model_max_budget');
+          this.fastify.log.error(
+            retryError,
+            'Failed to update key on retry without model_max_budget',
+          );
           throw retryError;
         }
       }

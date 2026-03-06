@@ -21,6 +21,21 @@ interface MockResponse {
   status?: number;
   statusText?: string;
   json?: ReturnType<typeof vi.fn>;
+  text?: ReturnType<typeof vi.fn>;
+  headers: {
+    get: (name: string) => string | null;
+  };
+}
+
+function createMockResponse(
+  overrides: Omit<MockResponse, 'headers'> & { headers?: MockResponse['headers'] },
+): MockResponse {
+  return {
+    headers: {
+      get: (name: string) => (name === 'content-type' ? 'application/json' : null),
+    },
+    ...overrides,
+  };
 }
 
 describe('LiteLLMService', () => {
@@ -66,10 +81,10 @@ describe('LiteLLMService', () => {
 
   describe('getModels', () => {
     it('should fetch and return available models', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue({ data: mockModels }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getModels();
@@ -87,22 +102,22 @@ describe('LiteLLMService', () => {
     });
 
     it('should handle error response', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
         json: vi.fn().mockResolvedValue({ error: { message: 'Server error' } }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       await expect(service.getModels()).rejects.toThrow('LiteLLM API error: 500 - Server error');
     });
 
     it('should return cached models when available', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue({ data: mockModels }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       // First call should fetch from API
@@ -123,10 +138,10 @@ describe('LiteLLMService', () => {
         litellm_version: '1.81.0',
       };
 
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue(mockHealth),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getHealth();
@@ -144,12 +159,12 @@ describe('LiteLLMService', () => {
     });
 
     it('should handle health check failure', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: false,
         status: 503,
         statusText: 'Service Unavailable',
         json: vi.fn().mockResolvedValue({ error: { message: 'Service unavailable' } }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getHealth();
@@ -166,10 +181,10 @@ describe('LiteLLMService', () => {
         db: 'connected',
       };
 
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue(mockHealth),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       // First call should fetch from API
@@ -183,10 +198,10 @@ describe('LiteLLMService', () => {
 
   describe('getModelById', () => {
     it('should find model by ID', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue({ data: mockModels }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getModelById('gpt-4o');
@@ -195,10 +210,10 @@ describe('LiteLLMService', () => {
     });
 
     it('should return null for non-existent model', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue({ data: mockModels }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getModelById('non-existent-model');
@@ -209,12 +224,12 @@ describe('LiteLLMService', () => {
 
   describe('validateApiKey', () => {
     it('should validate API key successfully', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi
           .fn()
           .mockResolvedValue({ key: 'sk-test', info: { key_name: 'test-key', spend: 0 } }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.validateApiKey('sk-litellm-test123');
@@ -223,11 +238,11 @@ describe('LiteLLMService', () => {
     });
 
     it('should return false for invalid API key', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: false,
         status: 401,
         json: vi.fn().mockResolvedValue({ error: { message: 'Invalid key' } }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.validateApiKey('invalid-key');
@@ -247,10 +262,10 @@ describe('LiteLLMService', () => {
         rpm_limit: 60,
         user_id: 'user-123',
       };
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue({ key: 'sk-test123', info: keyInfo }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getKeyInfo('sk-test123');
@@ -270,10 +285,10 @@ describe('LiteLLMService', () => {
         rpm_limit: 30,
         user_id: 'user-456',
       };
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue(keyInfo),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getKeyInfo('sk-flat-key');
@@ -283,12 +298,12 @@ describe('LiteLLMService', () => {
     });
 
     it('should throw on API error', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: false,
         status: 401,
         statusText: 'Unauthorized',
         json: vi.fn().mockResolvedValue({ error: { message: 'Invalid key' } }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       await expect(service.getKeyInfo('sk-invalid')).rejects.toThrow();
@@ -297,7 +312,7 @@ describe('LiteLLMService', () => {
 
   describe('getKeyAlias', () => {
     it('should unwrap nested v1.81.0 response format', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue({
           key: 'sk-test123',
@@ -309,7 +324,7 @@ describe('LiteLLMService', () => {
             models: ['gpt-4o'],
           },
         }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getKeyAlias('sk-test123');
@@ -318,7 +333,7 @@ describe('LiteLLMService', () => {
     });
 
     it('should handle flat response format for backward compatibility', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue({
           key_alias: 'flat-alias',
@@ -326,7 +341,7 @@ describe('LiteLLMService', () => {
           spend: 5,
           models: ['gpt-4o'],
         }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getKeyAlias('sk-flat-key');
@@ -335,12 +350,12 @@ describe('LiteLLMService', () => {
     });
 
     it('should throw on API error', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: false,
         status: 401,
         statusText: 'Unauthorized',
         json: vi.fn().mockResolvedValue({ error: { message: 'Invalid key' } }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       await expect(service.getKeyAlias('sk-invalid')).rejects.toThrow();
@@ -352,10 +367,12 @@ describe('LiteLLMService', () => {
       vi.mocked(fetch)
         .mockRejectedValueOnce(new Error('Network error'))
         .mockRejectedValueOnce(new Error('Network error'))
-        .mockResolvedValueOnce({
-          ok: true,
-          json: vi.fn().mockResolvedValue({ data: mockModels }),
-        } as Response);
+        .mockResolvedValueOnce(
+          createMockResponse({
+            ok: true,
+            json: vi.fn().mockResolvedValue({ data: mockModels }),
+          }) as Response,
+        );
 
       const result = await service.getModels();
 
@@ -364,12 +381,12 @@ describe('LiteLLMService', () => {
     });
 
     it('should not retry on 4xx errors', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: false,
         status: 400,
         statusText: 'Bad Request',
         json: vi.fn().mockResolvedValue({ error: { message: 'Bad request' } }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       await expect(service.getModels()).rejects.toThrow('LiteLLM API error: 400 - Bad request');
@@ -389,10 +406,10 @@ describe('LiteLLMService', () => {
         created_at: new Date().toISOString(),
       };
 
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue(mockUserResponse),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.createUser({
@@ -412,10 +429,10 @@ describe('LiteLLMService', () => {
         spend: 25,
       };
 
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue(mockUserResponse),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getUserInfo('user-123');
@@ -429,10 +446,10 @@ describe('LiteLLMService', () => {
         teams: [], // Empty teams array indicates user doesn't exist
       };
 
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue(mockUserResponse),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getUserInfo('user-123');
@@ -441,12 +458,12 @@ describe('LiteLLMService', () => {
     });
 
     it('should return null when LiteLLM returns 404 for non-existent user', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: false,
         status: 404,
         statusText: 'Not Found',
         json: vi.fn().mockResolvedValue({ error: { message: 'User not found' } }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getUserInfo('non-existent-user');
@@ -459,12 +476,12 @@ describe('LiteLLMService', () => {
     });
 
     it('should throw on non-404 errors in getUserInfo', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: false,
         status: 500,
         statusText: 'Internal Server Error',
         json: vi.fn().mockResolvedValue({ error: { message: 'Server error' } }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       await expect(service.getUserInfo('user-123')).rejects.toThrow();
@@ -473,12 +490,12 @@ describe('LiteLLMService', () => {
 
   describe('getUserInfoFull', () => {
     it('should return null when LiteLLM returns 404 for non-existent user', async () => {
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: false,
         status: 404,
         statusText: 'Not Found',
         json: vi.fn().mockResolvedValue({ error: { message: 'User not found' } }),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getUserInfoFull('non-existent-user');
@@ -503,10 +520,10 @@ describe('LiteLLMService', () => {
         teams: [{ team_id: 'default-team' }],
       };
 
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue(mockFullUserResponse),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getUserInfoFull('user-123');
@@ -525,10 +542,10 @@ describe('LiteLLMService', () => {
         teams: [],
       };
 
-      const mockResponse: MockResponse = {
+      const mockResponse = createMockResponse({
         ok: true,
         json: vi.fn().mockResolvedValue(mockFullUserResponse),
-      };
+      });
       vi.mocked(fetch).mockResolvedValue(mockResponse as Response);
 
       const result = await service.getUserInfoFull('user-123');

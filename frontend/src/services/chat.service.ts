@@ -237,7 +237,11 @@ export class ChatService {
   /**
    * Export conversation in specified format
    */
-  exportConversation(conversation: ConversationExport, format: ExportFormat, currencySymbol: string = '$'): string {
+  exportConversation(
+    conversation: ConversationExport,
+    format: ExportFormat,
+    currencySymbol: string = '$',
+  ): string {
     switch (format) {
       case 'json':
         return this.exportAsJSON(conversation);

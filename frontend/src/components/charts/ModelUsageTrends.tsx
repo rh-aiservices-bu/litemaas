@@ -40,7 +40,15 @@ export interface ModelUsageTrendsProps {
  * Displays model usage trends over time as a multi-colored stacked chart
  */
 const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
-  ({ data = [], loading = false, height = 400, metricType, title, description, currencySymbol = '$' }) => {
+  ({
+    data = [],
+    loading = false,
+    height = 400,
+    metricType,
+    title,
+    description,
+    currencySymbol = '$',
+  }) => {
     const { t } = useTranslation();
     const [legendExtraHeight, setLegendExtraHeight] = React.useState(0);
     const [containerWidth, setContainerWidth] = React.useState(600);
@@ -191,7 +199,10 @@ const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
     const accessibleData: AccessibleChartData[] = chartData.map((point) => {
       const totalValue = modelNames.reduce((sum, model) => sum + (Number(point[model]) || 0), 0);
       const modelBreakdown = modelNames
-        .map((model) => `${model}: ${formatYTickByMetric(Number(point[model]) || 0, metricType, currencySymbol)}`)
+        .map(
+          (model) =>
+            `${model}: ${formatYTickByMetric(Number(point[model]) || 0, metricType, currencySymbol)}`,
+        )
         .join(', ');
 
       // Build additionalInfo with both raw and formatted values

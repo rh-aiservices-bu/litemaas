@@ -103,7 +103,11 @@ const UserDefaultsSection: React.FC<UserDefaultsSectionProps> = ({ canEdit, isVi
     }
   };
 
-  const labelWithTooltip = (labelKey: string, tooltipKey: string, interpolation?: Record<string, string>) => (
+  const labelWithTooltip = (
+    labelKey: string,
+    tooltipKey: string,
+    interpolation?: Record<string, string>,
+  ) => (
     <span>
       {t(labelKey, interpolation)}{' '}
       <Tooltip content={t(tooltipKey, interpolation)}>
@@ -134,7 +138,7 @@ const UserDefaultsSection: React.FC<UserDefaultsSectionProps> = ({ canEdit, isVi
 
       <Form>
         {/* TPM row */}
-        <Grid hasGutter alignItems={{ default: 'alignItemsCenter' }}>
+        <Grid hasGutter>
           <GridItem span={4}>
             {labelWithTooltip(
               'pages.tools.userDefaults.tpmLabel',
@@ -157,7 +161,7 @@ const UserDefaultsSection: React.FC<UserDefaultsSectionProps> = ({ canEdit, isVi
         </Grid>
 
         {/* RPM row */}
-        <Grid hasGutter alignItems={{ default: 'alignItemsCenter' }}>
+        <Grid hasGutter>
           <GridItem span={4}>
             {labelWithTooltip(
               'pages.tools.userDefaults.rpmLabel',
@@ -180,7 +184,7 @@ const UserDefaultsSection: React.FC<UserDefaultsSectionProps> = ({ canEdit, isVi
         </Grid>
 
         {/* Max Budget row */}
-        <Grid hasGutter alignItems={{ default: 'alignItemsCenter' }}>
+        <Grid hasGutter>
           <GridItem span={4}>
             {labelWithTooltip(
               'pages.tools.userDefaults.maxBudgetLabel',
