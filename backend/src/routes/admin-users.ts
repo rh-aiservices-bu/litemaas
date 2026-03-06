@@ -959,6 +959,7 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }> | null;
           modelRpmLimit?: Record<string, number> | null;
           modelTpmLimit?: Record<string, number> | null;
+          expiresAt?: string | null;
         };
         const currentUser = (request as AuthenticatedRequest).user;
 
@@ -1015,6 +1016,33 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
         // Update quota fields if any were provided
         if (Object.keys(quotaFields).length > 0) {
           updatedKey = await apiKeyService.updateApiKeyLimits(keyId, id, quotaFields);
+        }
+
+        // Update expiresAt if provided (admin is unrestricted)
+        if ('expiresAt' in body) {
+          await fastify.dbUtils.query(
+            `UPDATE api_keys SET expires_at = $1 WHERE id = $2 AND user_id = $3`,
+            [body.expiresAt ? new Date(body.expiresAt) : null, keyId, id],
+          );
+
+          // Sync expiration to LiteLLM
+          const keyForExpiry = await apiKeyService.getApiKey(keyId, id);
+          if (keyForExpiry?.liteLLMKeyId) {
+            const liteLLMUpdates: Record<string, unknown> = {};
+            if (body.expiresAt) {
+              liteLLMUpdates.duration = apiKeyService.calculateDurationFromDate(
+                new Date(body.expiresAt),
+              );
+            } else {
+              liteLLMUpdates.expires = null;
+            }
+            await liteLLMService.updateKey(
+              keyForExpiry.liteLLMKeyId,
+              liteLLMUpdates as Partial<
+                import('../types/api-key.types.js').LiteLLMKeyGenerationRequest
+              >,
+            );
+          }
         }
 
         // If nothing was updated, just fetch current state

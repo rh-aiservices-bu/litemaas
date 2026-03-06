@@ -59,13 +59,35 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
 
   const handleFieldChange = (section: 'defaults' | 'maximums', field: string, value: string) => {
     setSaveSuccess(false);
-    setApiKeyDefaults((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value === '' ? null : field === 'budgetDuration' ? value : parseFloat(value),
-      },
-    }));
+    setApiKeyDefaults((prev) => {
+      const parsedValue =
+        value === ''
+          ? null
+          : field === 'budgetDuration'
+            ? value
+            : field === 'expirationDays'
+              ? parseInt(value, 10)
+              : parseFloat(value);
+
+      const updated = {
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: parsedValue,
+        },
+      };
+
+      // If changing maximum expiration, auto-clear default if it now exceeds maximum
+      if (section === 'maximums' && field === 'expirationDays') {
+        const maxVal = parsedValue as number | null;
+        const defaultVal = updated.defaults.expirationDays;
+        if (maxVal != null && defaultVal != null && defaultVal > maxVal) {
+          updated.defaults = { ...updated.defaults, expirationDays: null };
+        }
+      }
+
+      return updated;
+    });
   };
 
   const handleSave = async () => {
@@ -310,6 +332,77 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
             >
               —
             </Content>
+          </GridItem>
+        </Grid>
+
+        {/* Expiration row — default and maximum */}
+        <Grid hasGutter>
+          <GridItem span={4}>
+            {labelWithTooltip(
+              'pages.tools.apiKeyDefaults.expirationLabel',
+              'pages.tools.apiKeyDefaults.expirationTooltip',
+            )}
+          </GridItem>
+          <GridItem span={4}>
+            <FormSelect
+              id="defaults-expiration-days"
+              value={apiKeyDefaults.defaults.expirationDays?.toString() ?? ''}
+              onChange={(_event, value) => handleFieldChange('defaults', 'expirationDays', value)}
+              isDisabled={!canEdit}
+              aria-label={
+                t('pages.tools.apiKeyDefaults.expirationLabel') +
+                ' - ' +
+                t('pages.tools.apiKeyDefaults.columnDefault')
+              }
+            >
+              <FormSelectOption value="" label={t('pages.tools.apiKeyDefaults.noDefault')} />
+              {(apiKeyDefaults.maximums.expirationDays == null ||
+                30 <= apiKeyDefaults.maximums.expirationDays) && (
+                <FormSelectOption value="30" label={t('pages.tools.apiKeyDefaults.expiration30')} />
+              )}
+              {(apiKeyDefaults.maximums.expirationDays == null ||
+                60 <= apiKeyDefaults.maximums.expirationDays) && (
+                <FormSelectOption value="60" label={t('pages.tools.apiKeyDefaults.expiration60')} />
+              )}
+              {(apiKeyDefaults.maximums.expirationDays == null ||
+                90 <= apiKeyDefaults.maximums.expirationDays) && (
+                <FormSelectOption value="90" label={t('pages.tools.apiKeyDefaults.expiration90')} />
+              )}
+              {(apiKeyDefaults.maximums.expirationDays == null ||
+                180 <= apiKeyDefaults.maximums.expirationDays) && (
+                <FormSelectOption
+                  value="180"
+                  label={t('pages.tools.apiKeyDefaults.expiration180')}
+                />
+              )}
+              {(apiKeyDefaults.maximums.expirationDays == null ||
+                365 <= apiKeyDefaults.maximums.expirationDays) && (
+                <FormSelectOption
+                  value="365"
+                  label={t('pages.tools.apiKeyDefaults.expiration365')}
+                />
+              )}
+            </FormSelect>
+          </GridItem>
+          <GridItem span={4}>
+            <FormSelect
+              id="maximums-expiration-days"
+              value={apiKeyDefaults.maximums.expirationDays?.toString() ?? ''}
+              onChange={(_event, value) => handleFieldChange('maximums', 'expirationDays', value)}
+              isDisabled={!canEdit}
+              aria-label={
+                t('pages.tools.apiKeyDefaults.expirationLabel') +
+                ' - ' +
+                t('pages.tools.apiKeyDefaults.columnMaximum')
+              }
+            >
+              <FormSelectOption value="" label={t('pages.tools.apiKeyDefaults.noMaximum')} />
+              <FormSelectOption value="30" label={t('pages.tools.apiKeyDefaults.expiration30')} />
+              <FormSelectOption value="60" label={t('pages.tools.apiKeyDefaults.expiration60')} />
+              <FormSelectOption value="90" label={t('pages.tools.apiKeyDefaults.expiration90')} />
+              <FormSelectOption value="180" label={t('pages.tools.apiKeyDefaults.expiration180')} />
+              <FormSelectOption value="365" label={t('pages.tools.apiKeyDefaults.expiration365')} />
+            </FormSelect>
           </GridItem>
         </Grid>
 

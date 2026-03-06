@@ -26,6 +26,7 @@ import { modelsService } from '../../services/models.service';
 import { adminSubscriptionsService } from '../../services/adminSubscriptions.service';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { UserSubscription } from '../../types/users';
+import { formatDate } from '../../utils/formatters';
 
 interface UserSubscriptionsTabProps {
   userId: string;
@@ -169,9 +170,9 @@ const UserSubscriptionsTab: React.FC<UserSubscriptionsTabProps> = ({ userId, can
     }
   };
 
-  const formatDate = (dateString?: string) => {
+  const formatDateOrDash = (dateString?: string) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString();
+    return formatDate(dateString);
   };
 
   const getStatusColor = (status: string): 'green' | 'orange' | 'red' | 'grey' => {
@@ -279,7 +280,7 @@ const UserSubscriptionsTab: React.FC<UserSubscriptionsTabProps> = ({ userId, can
                   )}
                 </Td>
                 <Td dataLabel={t('users.subscriptions.createdAt', 'Created')}>
-                  {formatDate(sub.createdAt)}
+                  {formatDateOrDash(sub.createdAt)}
                 </Td>
                 {canEdit && (
                   <Td isActionCell>

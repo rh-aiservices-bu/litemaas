@@ -577,7 +577,18 @@
         "modelsSelectedText": "이 API 키에 대해 {{count}}개 모델이 선택되었습니다",
         "name": "이름",
         "nameHelperText": "이 API 키를 식별할 고유한 이름을 입력하세요",
-        "yourNewApiKey": "새 API 키"
+        "yourNewApiKey": "새 API 키",
+        "expirationNever": "만료 없음",
+        "expiration30": "30일",
+        "expiration60": "60일",
+        "expiration90": "90일",
+        "expiration180": "6개월",
+        "expiration365": "1년",
+        "expirationCustom": "사용자 지정 날짜...",
+        "expirationRequired": "만료일이 필요합니다 (최대: {{max}}일)",
+        "expirationCustomRequired": "사용자 지정 만료일을 선택하세요",
+        "expirationExceedsMax": "선택한 날짜가 최대 허용 만료 기간 {{max}}일을 초과합니다",
+        "expirationMaxHelper": "최대 허용: {{max}}일"
       },
       "fullKeyVisible": "{{keyName}}의 전체 API 키 값이 이제 표시됩니다",
       "hideKey": "키 숨기기",
@@ -705,7 +716,9 @@
         "modelBudget": "예산 ({{currencyCode}})",
         "modelTimePeriod": "기간",
         "modelRpm": "RPM",
-        "modelTpm": "TPM"
+        "modelTpm": "TPM",
+        "modelExceedsKeyLimit": "{{model}}: {{field}}이(가) 키 제한 {{max}}을(를) 초과합니다",
+        "modelExceedsMaximum": "{{model}}: {{field}}이(가) 최대 허용 값 {{max}}을(를) 초과합니다"
       },
       "rateLimits": {
         "basic": "100 요청/분 (기본)",
@@ -1125,7 +1138,15 @@
         "tpmLabel": "TPM",
         "tpmTooltip": "Tokens per minute for new API keys. Default pre-fills the form; maximum enforces a hard cap.",
         "weekly": "Weekly",
-        "yearly": "Yearly"
+        "yearly": "Yearly",
+        "expirationLabel": "만료",
+        "expirationTooltip": "새 API 키의 기본 및 최대 만료 기간입니다. 기본값은 양식을 미리 채우고, 최대값은 엄격한 제한을 적용합니다.",
+        "expirationNever": "만료 없음",
+        "expiration30": "30일",
+        "expiration60": "60일",
+        "expiration90": "90일",
+        "expiration180": "6개월",
+        "expiration365": "1년"
       },
       "allowDismiss": "사용자가 닫을 수 있도록 허용",
       "allowDismissHelper": "활성화하면 사용자가 세션 동안 배너를 닫을 수 있습니다",
@@ -1603,6 +1624,9 @@
         "expiration30": "30 days",
         "expiration60": "60 days",
         "expiration90": "90 days",
+        "expiration180": "6개월",
+        "expiration365": "1년",
+        "expirationCustom": "사용자 지정 날짜...",
         "maxBudget": "Max Budget ({{currencyCode}})",
         "budgetDuration": "Budget Duration",
         "budgetDurationHelp": "How often the budget resets.",
@@ -1659,7 +1683,16 @@
       "tableLabel": "사용자 API 키",
       "tpm": "TPM",
       "lastUsed": "마지막 사용",
-      "viewUsage": "사용량 보기"
+      "viewUsage": "사용량 보기",
+      "currentSpend": "현재 지출",
+      "resetSpend": "지출 초기화",
+      "resetSpendConfirmTitle": "API 키 지출 초기화",
+      "resetSpendConfirmBody": "이 API 키의 현재 지출을 {{formattedZero}}(으)로 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+      "resetSpendSuccess": "지출 초기화 완료",
+      "resetSpendSuccessDesc": "API 키 지출이 {{formattedZero}}(으)로 초기화되었습니다.",
+      "resetSpendError": "지출 초기화 실패",
+      "rpmLimit": "RPM 제한",
+      "tpmLimit": "TPM 제한"
     },
     "budget": {
       "budgetUtilization": "예산 사용률",
@@ -1676,7 +1709,21 @@
       "unlimited": "무제한",
       "updateError": "업데이트 실패",
       "updateSuccess": "예산 업데이트됨",
-      "updateSuccessDesc": "사용자 예산 및 제한이 성공적으로 업데이트되었습니다."
+      "updateSuccessDesc": "사용자 예산 및 제한이 성공적으로 업데이트되었습니다.",
+      "budgetDuration": "예산 기간",
+      "budgetDurationHelp": "예산이 자동으로 초기화되는 빈도입니다.",
+      "budgetDurationNone": "없음 (자동 초기화 안 함)",
+      "budgetDurationDaily": "일별",
+      "budgetDurationWeekly": "주별",
+      "budgetDurationMonthly": "월별",
+      "budgetDurationYearly": "연별",
+      "budgetResetAt": "다음 초기화: {{date}}",
+      "resetSpend": "지출 초기화",
+      "resetSpendConfirmTitle": "사용자 지출 초기화",
+      "resetSpendConfirmBody": "{{username}}의 현재 지출을 {{formattedZero}}(으)로 초기화하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+      "resetSpendSuccess": "지출 초기화 완료",
+      "resetSpendSuccessDesc": "사용자 지출이 {{formattedZero}}(으)로 초기화되었습니다.",
+      "resetSpendError": "초기화 실패"
     },
     "subscriptions": {
       "addError": "추가 실패",

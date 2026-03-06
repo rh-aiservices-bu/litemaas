@@ -19,6 +19,7 @@ import {
 } from '@patternfly/react-core';
 import { CheckCircleIcon, ExclamationTriangleIcon, UserIcon } from '@patternfly/react-icons';
 import { User } from '../../types/users';
+import { formatDate, formatDateTime } from '../../utils/formatters';
 
 interface UserProfileTabProps {
   user: User;
@@ -37,13 +38,9 @@ const UserProfileTab: React.FC<UserProfileTabProps> = ({
 }) => {
   const { t } = useTranslation();
 
-  const formatDate = (dateString?: string) => {
+  const formatDateOrNever = (dateString?: string) => {
     if (!dateString) return t('users.never', 'Never');
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString();
+    return formatDate(dateString);
   };
 
   // Available roles for management
@@ -146,7 +143,9 @@ const UserProfileTab: React.FC<UserProfileTabProps> = ({
 
         <DescriptionListGroup>
           <DescriptionListTerm>{t('users.form.lastLogin', 'Last Login')}</DescriptionListTerm>
-          <DescriptionListDescription>{formatDate(user.lastLoginAt)}</DescriptionListDescription>
+          <DescriptionListDescription>
+            {formatDateOrNever(user.lastLoginAt)}
+          </DescriptionListDescription>
         </DescriptionListGroup>
 
         <DescriptionListGroup>

@@ -179,6 +179,7 @@ export interface UpdateApiKeyForUserRequest {
   modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }> | null;
   modelRpmLimit?: Record<string, number> | null;
   modelTpmLimit?: Record<string, number> | null;
+  expiresAt?: string | null;
 }
 
 // Created API key response (includes full key shown once)
@@ -201,11 +202,13 @@ export interface ApiKeyQuotaDefaults {
     rpmLimit?: number | null;
     budgetDuration?: string | null;
     softBudget?: number | null;
+    expirationDays?: number | null;
   };
   maximums: {
     maxBudget?: number | null;
     tpmLimit?: number | null;
     rpmLimit?: number | null;
+    expirationDays?: number | null;
   };
 }
 

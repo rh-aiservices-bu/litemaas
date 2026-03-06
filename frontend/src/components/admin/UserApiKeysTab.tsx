@@ -33,6 +33,7 @@ import {
   ExpandableSection,
   Split,
   SplitItem,
+  DatePicker,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn } from '@patternfly/react-table';
 import { KeyIcon, ExternalLinkAltIcon, PlusCircleIcon } from '@patternfly/react-icons';
@@ -40,6 +41,7 @@ import { usersService } from '../../services/users.service';
 import { modelsService } from '../../services/models.service';
 import { useNotifications } from '../../contexts/NotificationContext';
 import { useCurrency } from '../../contexts/ConfigContext';
+import { formatDate } from '../../utils/formatters';
 import {
   UserApiKey,
   CreateApiKeyForUserRequest,
@@ -91,6 +93,7 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
   const [newKeyName, setNewKeyName] = useState('');
   const [selectedModelIds, setSelectedModelIds] = useState<string[]>([]);
   const [newKeyExpiration, setNewKeyExpiration] = useState('never');
+  const [newKeyCustomExpiration, setNewKeyCustomExpiration] = useState('');
   const [newKeyMaxBudget, setNewKeyMaxBudget] = useState<number | undefined>(undefined);
   const [newKeyTpmLimit, setNewKeyTpmLimit] = useState<number | undefined>(undefined);
   const [newKeyRpmLimit, setNewKeyRpmLimit] = useState<number | undefined>(undefined);
@@ -115,6 +118,8 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
     undefined,
   );
   const [editModelLimits, setEditModelLimits] = useState<Record<string, ModelLimits>>({});
+  const [editExpiration, setEditExpiration] = useState('never');
+  const [editCustomExpiration, setEditCustomExpiration] = useState('');
 
   // Fetch API keys
   const {
@@ -333,6 +338,17 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
     }
     setEditModelLimits(modelLimits);
 
+    // Pre-fill expiration
+    if (key.expiresAt) {
+      // Use 'custom' and show actual date since we can't know the original preset
+      setEditExpiration('custom');
+      // Format as YYYY-MM-DD for the DatePicker
+      setEditCustomExpiration(new Date(key.expiresAt).toISOString().split('T')[0]);
+    } else {
+      setEditExpiration('never');
+      setEditCustomExpiration('');
+    }
+
     loadAvailableModels();
     setEditModalOpen(true);
   };
@@ -427,9 +443,24 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
     if (Object.keys(modelRpmLimit).length > 0) perModelPayload.modelRpmLimit = modelRpmLimit;
     if (Object.keys(modelTpmLimit).length > 0) perModelPayload.modelTpmLimit = modelTpmLimit;
 
+    // Compute expiresAt for the update
+    let editExpiresAt: string | null | undefined;
+    if (editExpiration === 'never') {
+      editExpiresAt = null; // Clear expiration
+    } else if (editExpiration === 'custom') {
+      editExpiresAt = editCustomExpiration
+        ? new Date(editCustomExpiration).toISOString()
+        : undefined;
+    } else {
+      editExpiresAt = new Date(
+        Date.now() + parseInt(editExpiration, 10) * 24 * 60 * 60 * 1000,
+      ).toISOString();
+    }
+
     updateMutation.mutate({
       keyId: keyToEdit.id,
       modelIds: editSelectedModelIds,
+      expiresAt: editExpiresAt,
       maxBudget: editMaxBudget ?? null,
       tpmLimit: editTpmLimit ?? null,
       rpmLimit: editRpmLimit ?? null,
@@ -537,7 +568,11 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
     }
 
     let expiresAt: string | undefined;
-    if (newKeyExpiration !== 'never') {
+    if (newKeyExpiration === 'custom') {
+      if (newKeyCustomExpiration) {
+        expiresAt = new Date(newKeyCustomExpiration).toISOString();
+      }
+    } else if (newKeyExpiration !== 'never') {
       const days = parseInt(newKeyExpiration, 10);
       expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
     }
@@ -608,9 +643,9 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
     });
   };
 
-  const formatDate = (dateString?: string) => {
+  const formatDateOrDash = (dateString?: string) => {
     if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString();
+    return formatDate(dateString);
   };
 
   const getStatusColor = (key: UserApiKey): 'green' | 'red' | 'grey' => {
@@ -1127,7 +1162,7 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                   </div>
                 </Td>
                 <Td dataLabel={t('users.apiKeys.lastUsed', 'Last Used')}>
-                  {formatDate(key.lastUsedAt)}
+                  {formatDateOrDash(key.lastUsedAt)}
                 </Td>
                 <Td isActionCell>
                   <ActionsColumn
@@ -1277,6 +1312,65 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
               handleEditModelToggle,
               () => setEditModelLimits({}),
             )}
+
+            {/* Expiration */}
+            <FormGroup
+              label={t('users.apiKeys.form.expiration', 'Expiration')}
+              fieldId="edit-key-expiration"
+            >
+              <FormSelect
+                id="edit-key-expiration"
+                value={editExpiration}
+                onChange={(_event, value) => {
+                  setEditExpiration(value);
+                  if (value !== 'custom') setEditCustomExpiration('');
+                }}
+                isDisabled={updateMutation.isLoading || !canEdit}
+              >
+                <FormSelectOption
+                  value="never"
+                  label={t('users.apiKeys.form.expirationNever', 'Never')}
+                />
+                <FormSelectOption
+                  value="30"
+                  label={t('users.apiKeys.form.expiration30', '30 days')}
+                />
+                <FormSelectOption
+                  value="60"
+                  label={t('users.apiKeys.form.expiration60', '60 days')}
+                />
+                <FormSelectOption
+                  value="90"
+                  label={t('users.apiKeys.form.expiration90', '90 days')}
+                />
+                <FormSelectOption
+                  value="180"
+                  label={t('users.apiKeys.form.expiration180', '6 months')}
+                />
+                <FormSelectOption
+                  value="365"
+                  label={t('users.apiKeys.form.expiration365', '1 year')}
+                />
+                <FormSelectOption
+                  value="custom"
+                  label={t('users.apiKeys.form.expirationCustom', 'Custom date...')}
+                />
+              </FormSelect>
+              {editExpiration === 'custom' && (
+                <DatePicker
+                  value={editCustomExpiration}
+                  onChange={(_event, value) => setEditCustomExpiration(value)}
+                  aria-label={t('users.apiKeys.form.expiration', 'Expiration')}
+                  style={{ marginTop: '0.5rem' }}
+                  validators={[
+                    (date: Date) => {
+                      if (date < new Date()) return 'Date must be in the future';
+                      return '';
+                    },
+                  ]}
+                />
+              )}
+            </FormGroup>
 
             {/* Current Spend with Progress Bar and Reset Button */}
             {keyToEdit && (
@@ -1453,7 +1547,10 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
               <FormSelect
                 id="create-key-expiration"
                 value={newKeyExpiration}
-                onChange={(_event, value) => setNewKeyExpiration(value)}
+                onChange={(_event, value) => {
+                  setNewKeyExpiration(value);
+                  if (value !== 'custom') setNewKeyCustomExpiration('');
+                }}
                 isDisabled={createMutation.isLoading}
               >
                 <FormSelectOption
@@ -1472,7 +1569,33 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                   value="90"
                   label={t('users.apiKeys.form.expiration90', '90 days')}
                 />
+                <FormSelectOption
+                  value="180"
+                  label={t('users.apiKeys.form.expiration180', '6 months')}
+                />
+                <FormSelectOption
+                  value="365"
+                  label={t('users.apiKeys.form.expiration365', '1 year')}
+                />
+                <FormSelectOption
+                  value="custom"
+                  label={t('users.apiKeys.form.expirationCustom', 'Custom date...')}
+                />
               </FormSelect>
+              {newKeyExpiration === 'custom' && (
+                <DatePicker
+                  value={newKeyCustomExpiration}
+                  onChange={(_event, value) => setNewKeyCustomExpiration(value)}
+                  aria-label={t('users.apiKeys.form.expiration', 'Expiration')}
+                  style={{ marginTop: '0.5rem' }}
+                  validators={[
+                    (date: Date) => {
+                      if (date < new Date()) return 'Date must be in the future';
+                      return '';
+                    },
+                  ]}
+                />
+              )}
             </FormGroup>
 
             {renderQuotaFields(

@@ -16,11 +16,13 @@ const EMPTY_DEFAULTS: ApiKeyQuotaDefaults = {
     rpmLimit: null,
     budgetDuration: null,
     softBudget: null,
+    expirationDays: null,
   },
   maximums: {
     maxBudget: null,
     tpmLimit: null,
     rpmLimit: null,
+    expirationDays: null,
   },
 };
 
@@ -84,6 +86,16 @@ export class SettingsService extends BaseService {
       defaults.rpmLimit > maximums.rpmLimit
     ) {
       throw this.fastify.createError(400, 'Default RPM limit cannot exceed the maximum limit');
+    }
+    if (
+      maximums.expirationDays != null &&
+      defaults.expirationDays != null &&
+      defaults.expirationDays > maximums.expirationDays
+    ) {
+      throw this.fastify.createError(
+        400,
+        'Default expiration cannot exceed the maximum expiration limit',
+      );
     }
 
     const result = await this.fastify.dbUtils.queryOne<{
