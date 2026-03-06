@@ -82,6 +82,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Admin Navigation Cosmetic Renames**: Improved menu and page naming for consistency across the admin section
+  - Renamed "Users" menu to "Users Management"
+  - Renamed "Tools" menu and page title to "Settings and Tools"
+  - Renamed "Models Management" tab to "Models Sync" (moved to last position)
+  - Simplified "Limits Management" tab to "Limits" and "Banner Management" to "Banners"
+  - Moved "Usage Analytics" to first position in admin navigation
 - **Login Page Default Logo**: Replaced `LogoTitle` with new `Octobean` SVG as the default login page brand image
 - **Fastify `trustProxy` Enabled**: Added `trustProxy: true` to Fastify configuration for correct protocol detection behind edge TLS termination proxies
 - **React Query Global staleTime**: Set to `0` (always refetch on mount) to ensure fresh data on every page navigation; individual queries can still override with their own staleTime
