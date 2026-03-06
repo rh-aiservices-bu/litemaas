@@ -90,6 +90,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Optimized spend queries**: Skips LiteLLM spend fetch for inactive/revoked keys
   - i18n: Expiration-related translation keys added across all 9 locales
 
+- **Admin Audit Log Page**: Full audit log viewer at `/admin/audit` for reviewing system-wide administrative actions
+  - 3 backend endpoints: `GET /api/v1/admin/audit` (paginated logs), `GET /api/v1/admin/audit/actions` (distinct actions), `GET /api/v1/admin/audit/categories` (distinct resource types)
+  - New `admin:audit` RBAC permission (admin + adminReadonly)
+  - Category dropdown filter that dynamically narrows available action options
+  - Human-readable labels for ~50 actions and 11 categories with raw value tooltips
+  - "Show API requests" toggle (off by default, excludes `API_ACCESS` noise)
+  - Date range filters, text search, pagination
+  - New `audit.service.ts` frontend service and `auditCategories.ts` constants with i18n helpers
+  - i18n: Audit-related translation keys added across all 9 locales
+
+- **404 Not Found Page**: `NotFoundPage` component with routing wildcards for unmatched routes
+
+- **Session Expired Warning**: Login page warning alert when session has expired, plus config error alert for backend connectivity issues
+
+- **Chatbot Empty State**: Empty state displayed when user has no API keys, with link to create one
+
 ### Changed
 
 - **Admin Navigation Cosmetic Renames**: Improved menu and page naming for consistency across the admin section
@@ -106,6 +122,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Updated shared `formatDate()` utility in `formatters.ts` to return `YYYY-MM-DD`
   - Added shared `formatDateTime()` utility returning `YYYY-MM-DD HH:MM:SS`
   - Replaced inline `toLocaleDateString()` calls in API Keys page, admin User Management Modal (Profile, API Keys, Subscriptions tabs), and Banners table with shared utilities
+- **Subscriptions Page Cleanup**: Removed commented-out code, added cancel confirmation modal with `ModalFooter`, responsive grid breakpoints
+- **Admin Subscriptions Bulk Alerts**: Approve/deny confirmation modals now display the count of selected items
+- **ProtectedRoute Simplification**: Replaced `EmptyState` loading indicator with a simple `Spinner`
 
 ### Fixed
 
@@ -141,6 +160,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Enterprise-Only Field Handling**: Gracefully handle LiteLLM Enterprise-only `model_max_budget` field in `/key/info` responses to prevent errors on Community Edition
 
+- **Sidebar Vertical Spacing**: Reduced nav spacer padding from `--pf-t--global--spacer--md` to `--xs` to prevent scrollbar appearing at slight zoom levels
+
+- **API URL Construction**: Fixed base URL construction in `api.ts` to handle trailing slashes correctly
+
 ### Documentation
 
 - New: `docs/features/branding-customization.md` — Branding customization feature guide
@@ -149,7 +172,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated: `docs/api/rest-api.md` — Branding, model test, admin settings, and config endpoints
 - Updated: `docs/architecture/database-schema.md` — New branding_settings, api_keys columns, and system_settings table
 - Updated: `docs/architecture/litellm-integration.md` — Actual `/key/info` response structure and null value gotchas
-- Updated: `docs/features/admin-tools.md` — Limits section with all three sub-sections
+- Updated: `docs/features/admin-tools.md` — Limits section with all three sub-sections, Audit Log section
+- Updated: `docs/api/rest-api.md` — Admin Audit Log endpoints
+- Updated: `docs/features/README.md` — Audit Log feature entry
 
 ### Infrastructure
 

@@ -13,6 +13,7 @@ This directory contains documentation for key features and functionality in Lite
 - **[Model Configuration Testing](model-configuration-testing.md)** - Configuration validation and testing features
 - **[Settings and Tools — API Key Quota Defaults](admin-tools.md#api-key-quota-defaults)** - Admin-configurable defaults and maximums for user self-service API key quotas
 - **[Test Chatbot](test-chatbot.md)** - Chatbot testing guide and features
+- **[Audit Log](admin-tools.md#audit-log)** - Admin audit log viewing and filtering
 
 ## Feature Categories
 
@@ -21,6 +22,7 @@ This directory contains documentation for key features and functionality in Lite
 - Role-based access control (RBAC)
 - User management
 - Admin tools and dashboards
+- Audit log viewing and filtering
 - Branding customization (login logo, title, subtitle, header brand)
 
 ### Model Management

@@ -570,3 +570,33 @@ For complete technical documentation, see:
 - **[Admin Usage Analytics Implementation](../archive/features/admin-usage-analytics-implementation-plan.md)** - Complete feature specification
 - **[Usage API Documentation](../api/usage-api.md#admin-endpoints)** - API endpoints and data formats
 - **[REST API Reference](../api/rest-api.md#admin-usage-analytics-apiv1adminusage)** - Detailed endpoint specifications
+
+## Audit Log
+
+The Audit Log page (`/admin/audit`) provides administrators with a comprehensive view of all system-wide administrative actions recorded in the `audit_logs` table.
+
+### Access Requirements
+
+- **Roles**: `admin`, `adminReadonly`
+- **Permission**: `admin:audit`
+
+### Key Features
+
+- **Category and Action Filtering**: Category dropdown filters available actions dynamically. Selecting a category narrows the action dropdown to only show actions within that category.
+- **API Access Toggle**: "Show API requests" switch (off by default) controls whether `API_ACCESS` entries are included. When off, API proxy request logs are excluded to reduce noise.
+- **Human-Readable Labels**: ~50 action types and 11 categories are displayed with human-readable labels (e.g., `MODEL_CREATED` → "Model Created"). Raw database values are shown in tooltips.
+- **Search and Date Filters**: Free-text search across action, resource ID, and metadata. Date range filters for start and end dates.
+- **Pagination**: Configurable page size with top and bottom pagination controls.
+- **Expandable Rows**: Rows with metadata can be expanded to view full JSON details and error messages.
+
+### Navigation
+
+Access from the admin sidebar: **Audit Log** menu item.
+
+### API Endpoints
+
+- `GET /api/v1/admin/audit` — Paginated logs with filtering
+- `GET /api/v1/admin/audit/actions` — Distinct action types (filterable by category)
+- `GET /api/v1/admin/audit/categories` — Distinct resource types (categories)
+
+For detailed endpoint documentation, see the [REST API Reference](../api/rest-api.md#admin-audit-log-apiv1adminaudit).

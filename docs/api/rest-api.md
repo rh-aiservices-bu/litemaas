@@ -2745,6 +2745,89 @@ Response:
 - Setting a value to `null` clears that default (falls back to environment variable default)
 - Updates are logged to `audit_logs` with the admin user ID
 
+### Admin Audit Log (/api/v1/admin/audit)
+
+#### GET /api/v1/admin/audit
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:audit` permission)
+
+Retrieve paginated audit logs with optional filtering.
+
+**Query Parameters**:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `page` | integer | Page number (default: 1) |
+| `limit` | integer | Items per page (default: 20, max: 100) |
+| `action` | string | Filter by action type (e.g., `USER_LOGIN`, `MODEL_CREATED`) |
+| `resourceType` | string | Filter by resource type / category (e.g., `USER`, `MODEL`, `API_ACCESS`) |
+| `userId` | string (UUID) | Filter by user who performed the action |
+| `startDate` | string (ISO date) | Filter logs created on or after this date |
+| `endDate` | string (ISO date) | Filter logs created on or before this date |
+| `search` | string | Search in action, resource ID, and metadata (ILIKE) |
+| `excludeResourceTypes` | string | Comma-separated resource types to exclude (e.g., `API_ACCESS`) |
+
+```json
+Response:
+{
+  "data": [
+    {
+      "id": "uuid",
+      "userId": "uuid",
+      "username": "john.doe",
+      "email": "john@example.com",
+      "action": "MODEL_CREATED",
+      "resourceType": "MODEL",
+      "resourceId": "model-uuid",
+      "success": true,
+      "errorMessage": null,
+      "metadata": { "modelName": "gpt-4" },
+      "ipAddress": "192.168.1.1",
+      "createdAt": "2026-03-01T12:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 150,
+    "totalPages": 8
+  }
+}
+```
+
+#### GET /api/v1/admin/audit/actions
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:audit` permission)
+
+Retrieve a list of all distinct action types from audit logs.
+
+**Query Parameters**:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `excludeResourceTypes` | string | Comma-separated resource types to exclude |
+| `resourceType` | string | Filter actions to those belonging to a specific resource type |
+
+```json
+Response:
+{
+  "actions": ["MODEL_CREATED", "MODEL_UPDATED", "USER_LOGIN", "API_KEY_CREATED"]
+}
+```
+
+#### GET /api/v1/admin/audit/categories
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:audit` permission)
+
+Retrieve a list of all distinct resource types (categories) from audit logs.
+
+```json
+Response:
+{
+  "categories": ["API_ACCESS", "API_KEY", "MODEL", "SUBSCRIPTION", "USER"]
+}
+```
+
 ---
 
 ### Configuration (/api/v1/config)
