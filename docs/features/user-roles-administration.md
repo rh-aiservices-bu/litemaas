@@ -137,43 +137,43 @@ CREATE TABLE users (
 | Admin endpoints       | ✅    | Limited       | ❌   |
 | User endpoints        | ✅    | ✅            | ✅   |
 | System endpoints      | ✅    | ❌            | ❌   |
-| **Admin Tools Page**  |
-| Access Tools page     | ✅    | ✅            | ❌   |
+| **Settings and Tools Page**  |
+| Access Settings and Tools page | ✅    | ✅            | ❌   |
 | Trigger model sync    | ✅    | ❌            | ❌   |
 | View sync results     | ✅    | ✅            | ❌   |
 
-## Admin Tools Page Access
+## Settings and Tools Page Access
 
-The Admin Tools page (`/admin/tools`) provides role-based access to system management tools, with different capabilities for each admin role type.
+The Settings and Tools page (`/admin/tools`) provides role-based access to system management tools, with different capabilities for each admin role type.
 
 ### Access Control
 
 #### Admin Users (`admin` role)
 
-- **Full access** to the Tools page at `/admin/tools`
+- **Full access** to the Settings and Tools page at `/admin/tools`
 - **Can trigger manual model sync**: Refresh button is enabled
 - **View detailed sync results**: Access to all sync statistics and error details
 - **Real-time sync monitoring**: Can monitor sync progress and receive notifications
 
 #### Admin-Readonly Users (`adminReadonly` role)
 
-- **View-only access** to the Tools page at `/admin/tools`
+- **View-only access** to the Settings and Tools page at `/admin/tools`
 - **Cannot trigger sync**: Refresh button is disabled with tooltip explanation
 - **View sync results**: Can see sync statistics and error details from previous syncs
 - **Monitor sync history**: Track when syncs were last performed by admin users
 
 #### Standard Users (`user` role)
 
-- **No access** to the Tools page
+- **No access** to the Settings and Tools page
 - Attempts to navigate to `/admin/tools` result in redirect or 403 error
 - Cannot view or interact with any admin settings functionality
 
-### Tools Page Features by Role
+### Settings and Tools Page Features by Role
 
 | Feature                         | admin | adminReadonly | user |
 | ------------------------------- | ----- | ------------- | ---- |
 | Access `/admin/tools` page      | ✅    | ✅            | ❌   |
-| View Models Management panel    | ✅    | ✅            | ❌   |
+| View Models Sync tab            | ✅    | ✅            | ❌   |
 | Click "Refresh Models" button   | ✅    | ❌ (disabled) | ❌   |
 | See sync progress/loading state | ✅    | ❌            | ❌   |
 | View sync statistics            | ✅    | ✅            | ❌   |
@@ -182,7 +182,7 @@ The Admin Tools page (`/admin/tools`) provides role-based access to system manag
 
 ### UI Implementation Details
 
-The Tools page implements role-based functionality through conditional rendering:
+The Settings and Tools page implements role-based functionality through conditional rendering:
 
 ```typescript
 // Check if user has admin permission (not admin-readonly)
@@ -204,7 +204,7 @@ const canSync = user?.roles?.includes('admin') ?? false;
 )}
 ```
 
-For complete Tools page documentation, see [Admin Tools Guide](./admin-tools.md).
+For complete Settings and Tools page documentation, see [Settings and Tools Guide](./admin-tools.md).
 
 ## API Role Requirements
 

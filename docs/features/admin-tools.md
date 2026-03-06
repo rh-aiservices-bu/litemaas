@@ -1,20 +1,20 @@
-# Admin Tools Page
+# Settings and Tools Page
 
 ## Overview
 
-The Admin Tools page (`/admin/tools`) provides administrative tools for managing LiteMaaS system configurations. Currently, it focuses on **Models Management**, allowing administrators to manually synchronize AI models from LiteLLM.
+The Settings and Tools page (`/admin/tools`) provides administrative tools for managing LiteMaaS system configurations. It includes tabs for Limits, Banners, Branding, Currency, and Models Sync.
 
 ### Access Requirements
 
-The Tools page is restricted to users with administrative privileges:
+The Settings and Tools page is restricted to users with administrative privileges:
 
 - **Admin users**: Full access with ability to trigger synchronization
 - **Admin-readonly users**: View-only access to sync information and statistics
 - **Regular users**: No access (redirected or receive 403 error)
 
-## Models Management Panel
+## Models Sync
 
-The Models Management panel is the primary feature of the Tools page, providing control over model synchronization between LiteLLM and the LiteMaaS database. It also includes model configuration testing capabilities for validating new model setups.
+The Models Sync tab provides control over model synchronization between LiteLLM and the LiteMaaS database. It also includes model configuration testing capabilities for validating new model setups.
 
 ### Purpose
 
@@ -91,7 +91,7 @@ For complete technical documentation, see [Model Configuration Testing](model-co
 #### How to Trigger Sync
 
 1. Navigate to `/admin/tools` in the LiteMaaS interface
-2. Locate the **Models Management** panel
+2. Select the **Models Sync** tab
 3. Click the **"Refresh Models from LiteLLM"** button
 4. Wait for the synchronization to complete
 5. Review the sync results displayed
@@ -287,7 +287,7 @@ For more technical details about the sync process, see:
 
 ## Branding Customization
 
-The Branding Customization feature allows administrators to personalize the login page and application header with custom logos, titles, and subtitles. It is accessible from the **Branding** tab on the Admin Tools page (`/admin/tools`).
+The Branding Customization feature allows administrators to personalize the login page and application header with custom logos, titles, and subtitles. It is accessible from the **Branding** tab on the Settings and Tools page (`/admin/tools`).
 
 ### Access Requirements
 
@@ -309,7 +309,7 @@ The Branding Customization feature allows administrators to personalize the logi
 
 ### How to Customize Branding
 
-1. Navigate to **Admin → Tools** and select the **Branding** tab
+1. Navigate to **Admin → Settings and Tools** and select the **Branding** tab
 2. Toggle the elements you want to customize (Login Logo, Login Title, Login Subtitle, Header Brand)
 3. For images: click **Upload Image** and select a file (takes effect immediately)
 4. For text: enter the desired title or subtitle
@@ -317,9 +317,9 @@ The Branding Customization feature allows administrators to personalize the logi
 
 For complete details, see the [Branding Customization](branding-customization.md) feature documentation.
 
-## Limits Management
+## Limits
 
-The Limits Management feature is accessible from the **Limits** tab on the Admin Tools page (`/admin/tools`). It provides three sections for managing resource limits across the system.
+The Limits feature is accessible from the **Limits** tab on the Settings and Tools page (`/admin/tools`). It provides three sections for managing resource limits across the system.
 
 ### New User Defaults
 
@@ -417,7 +417,7 @@ Allows administrators to update max budget, TPM limit, and RPM limit for **all a
 
 ## Currency Settings
 
-The Currency Settings feature is accessible from the **Currency** tab on the Admin Tools page (`/admin/tools`). It allows administrators to configure the currency used for all monetary value displays across the platform.
+The Currency Settings feature is accessible from the **Currency** tab on the Settings and Tools page (`/admin/tools`). It allows administrators to configure the currency used for all monetary value displays across the platform.
 
 ### Purpose
 
@@ -437,7 +437,7 @@ LiteMaaS supports 25 currencies: USD, EUR, GBP, JPY, CNY, CAD, AUD, CHF, INR, KR
 
 ### How to Change Currency
 
-1. Navigate to **Admin → Tools** and select the **Currency** tab
+1. Navigate to **Admin → Settings and Tools** and select the **Currency** tab
 2. Select the desired currency from the dropdown
 3. Click **Save** to apply the change
 

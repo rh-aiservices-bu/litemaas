@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Configurable Currency Settings**: Admin-controlled currency configuration for all monetary value displays across the platform
-  - New **Currency** tab in Admin Tools page (`/admin/tools`) with dropdown selector from 25 supported currencies
+  - New **Currency** tab in Settings and Tools page (`/admin/tools`) with dropdown selector from 25 supported currencies
   - 25 supported currencies: USD, EUR, GBP, JPY, CNY, CAD, AUD, CHF, INR, KRW, BRL, MXN, SGD, HKD, NZD, SEK, NOK, DKK, PLN, ZAR, TRY, THB, AED, SAR, ILS
   - Backend `SettingsService` extended with `getCurrencySettings()` and `updateCurrencySettings()` methods using `system_settings` table (`currency` key)
   - Three new admin API endpoints: `GET/PUT /api/v1/admin/settings/currency` and `GET /api/v1/admin/settings/currency/supported`
@@ -34,7 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - New `BrandingService` extending `BaseService` with image validation (2 MB max, JPEG/PNG/SVG/GIF/WebP)
   - Five API endpoints under `/api/v1/branding` (public GET for settings/images, admin PATCH/PUT/DELETE for modifications)
   - New `BrandingContext` with React Query (5-min stale time, graceful fallback to defaults)
-  - New `BrandingTab` component with card-based layout in Admin Tools page
+  - New `BrandingTab` component with card-based layout in Settings and Tools page
   - Image storage as base64 in database with binary serving via proper Content-Type headers
   - Cache-busting via `updatedAt` query parameter on image URLs
   - RBAC: public read access for login page, `admin:banners:write` for modifications, adminReadonly for viewing admin UI
@@ -52,7 +52,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Full LiteLLM bidirectional synchronization: fields passed on key create/update, spend and reset dates synced back on read
   - i18n support across all 9 locales
 
-- **Admin Limits Management** (Admin Tools → Limits tab): Three-section admin interface for system-wide quota configuration
+- **Admin Limits** (Settings and Tools → Limits tab): Three-section admin interface for system-wide quota configuration
   - **New User Defaults**: Default TPM, RPM, and max budget applied to newly registered users; stored in `system_settings` table (`user_defaults` key)
   - **API Key Quota Defaults**: Side-by-side grid layout for configuring default and maximum values (max budget, budget duration, soft budget, TPM, RPM) for user self-service key creation; stored in `system_settings` table (`api_key_defaults` key); public endpoint `GET /api/v1/config/api-key-defaults` for frontend pre-fill
   - **Bulk User Limits**: Apply TPM, RPM, and max budget to all existing users at once with confirmation and result summary
@@ -129,7 +129,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated: `docs/api/rest-api.md` — Branding, model test, admin settings, and config endpoints
 - Updated: `docs/architecture/database-schema.md` — New branding_settings, api_keys columns, and system_settings table
 - Updated: `docs/architecture/litellm-integration.md` — Actual `/key/info` response structure and null value gotchas
-- Updated: `docs/features/admin-tools.md` — Limits Management section with all three sub-sections
+- Updated: `docs/features/admin-tools.md` — Limits section with all three sub-sections
 
 ### Infrastructure
 

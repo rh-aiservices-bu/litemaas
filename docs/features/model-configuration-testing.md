@@ -183,7 +183,7 @@ The feature supports all 9 LiteMaaS languages with appropriate translations:
 
 ## Related Documentation
 
-- [Admin Tools Guide](admin-tools.md) - Overview of administrative features
+- [Settings and Tools Guide](admin-tools.md) - Overview of administrative settings and tools
 - [User Roles Administration](user-roles-administration.md) - Role-based access control
 - [API Reference](../api/rest-api.md) - Backend API documentation
 - [Frontend Development](../development/pf6-guide/) - PatternFly 6 component usage

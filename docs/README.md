@@ -62,7 +62,7 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 
 - **[User Roles & Administration](features/user-roles-administration.md)** - RBAC with three-tier role hierarchy
 - **[Users Management](features/users-management.md)** - Admin user management (profile, budget, API keys, subscriptions)
-- **[Admin Tools](features/admin-tools.md)** - Administrative tools and model sync
+- **[Settings and Tools](features/admin-tools.md)** - Administrative settings and tools
 - **[Branding Customization](features/branding-customization.md)** - Custom login page and header branding
 - **[Currency Settings](features/admin-tools.md#currency-settings)** - Configurable currency for monetary displays
 - **[Admin Usage API Key Filter](features/admin-usage-api-key-filter.md)** - API key filtering for usage analytics

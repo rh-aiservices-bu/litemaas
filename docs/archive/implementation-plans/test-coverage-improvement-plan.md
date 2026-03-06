@@ -162,10 +162,10 @@ describe('ToolsPage - Models Sync', () => {
 });
 ```
 
-##### B. Limits Management Tab
+##### B. Limits Tab
 
 ```typescript
-describe('ToolsPage - Limits Management', () => {
+describe('ToolsPage - Limits', () => {
   it('should render limits tab for admin and admin-readonly users');
   it('should not render limits tab for regular users');
   it('should display form with maxBudget, tpmLimit, rpmLimit fields');
@@ -184,10 +184,10 @@ describe('ToolsPage - Limits Management', () => {
 });
 ```
 
-##### C. Banner Management Tab
+##### C. Banners Tab
 
 ```typescript
-describe('ToolsPage - Banner Management', () => {
+describe('ToolsPage - Banners', () => {
   it('should render banner tab for admin and admin-readonly users');
   it('should load all banners on mount using React Query');
   it('should display create banner button for admin users');

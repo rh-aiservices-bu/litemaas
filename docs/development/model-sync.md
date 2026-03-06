@@ -323,15 +323,15 @@ const MOCK_MODELS = [
 
 ## Frontend Integration
 
-### Admin Tools Page
+### Settings and Tools Page
 
-The model sync functionality is exposed to administrators through the Tools page at `/admin/tools`.
+The model sync functionality is exposed to administrators through the Settings and Tools page at `/admin/tools`.
 
 **Location**: `frontend/src/pages/ToolsPage.tsx`
 
 #### Implementation Overview
 
-The Tools page provides a **Models Management** panel that allows administrators to trigger manual model synchronization:
+The Settings and Tools page provides a **Models Sync** tab that allows administrators to trigger manual model synchronization:
 
 ```typescript
 // Role-based access control
@@ -412,7 +412,7 @@ All UI text is internationalized with keys under `pages.tools`:
 {
   "pages": {
     "tools": {
-      "models": "Models Management",
+      "models": "Models Sync",
       "refreshModels": "Refresh Models from LiteLLM",
       "syncInProgress": "Synchronizing models...",
       "syncSuccess": "Models synchronized successfully",
