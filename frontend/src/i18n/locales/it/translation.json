@@ -469,9 +469,9 @@
     "admin": {
       "models": "Gestione Modelli",
       "subscriptions": "Gestione degli Abbonamenti",
-      "tools": "Strumenti",
+      "tools": "Impostazioni e Strumenti",
       "usage": "Analitiche di Utilizzo",
-      "users": "Utenti"
+      "users": "Gestione Utenti"
     },
     "apiKeys": "Chiavi API",
     "chatbot": "Area Giochi del Chatbot",
@@ -1144,7 +1144,7 @@
       "bannerDeleteErrorGeneric": "Si è verificato un errore durante l'eliminazione del banner. Riprova.",
       "bannerDescription": "Crea e gestisci annunci che appaiono nella parte superiore dell'applicazione per tutti gli utenti.",
       "bannerEnglishRequired": "Il contenuto in inglese è obbligatorio (altre lingue sono opzionali)",
-      "bannerManagement": "Gestione Banner",
+      "bannerManagement": "Banner",
       "bannerName": "Nome del Banner",
       "bannerNamePlaceholder": "Inserisci un nome descrittivo per questo banner",
       "bannerNameRequired": "Il nome del banner è obbligatorio",
@@ -1191,14 +1191,14 @@
       "lastUpdated": "Ultimo Aggiornamento",
       "leaveEmptyToKeep": "Lascia vuoto per mantenere il valore corrente",
       "limitsDescription": "Imposta limiti di risorse per tutti gli utenti nel sistema. Le modifiche si applicheranno a tutti gli utenti attivi. I valori predefiniti per i nuovi utenti non cambieranno.",
-      "limitsManagement": "Gestione Limiti",
+      "limitsManagement": "Limiti",
       "bulkUpdate": {
         "title": "Bulk Update All Users",
         "description": "Override resource limits for every active user at once. This does not change defaults for future users."
       },
       "maxBudgetHelper": "Limite massimo di spesa per utente in {{currencyCode}}",
       "maxBudgetLabel": "Budget Massimo ({{currencyCode}})",
-      "models": "Gestione Modelli",
+      "models": "Sincronizzazione Modelli",
       "modelsDescription": "Sincronizza i modelli AI da LiteLLM per assicurarti di avere accesso agli ultimi modelli disponibili.",
       "newModels": "Nuovi Modelli",
       "noBannersFound": "Nessun banner trovato. Crea il tuo primo banner per iniziare.",
@@ -1221,7 +1221,7 @@
       "syncSuccess": "Modelli sincronizzati con successo",
       "syncSuccessDetails": "{{total}} modelli totali ({{new}} nuovi, {{updated}} aggiornati)",
       "syncTime": "Ora",
-      "title": "Strumenti",
+      "title": "Impostazioni e Strumenti",
       "toggleVisibility": "Attiva/disattiva visibilità per {{name}}",
       "totalModels": "Modelli Totali",
       "totalUsersUpdated": "Utenti Totali",

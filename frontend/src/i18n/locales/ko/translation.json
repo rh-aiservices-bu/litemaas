@@ -469,9 +469,9 @@
     "admin": {
       "models": "모델 관리",
       "subscriptions": "구독 관리",
-      "tools": "도구",
+      "tools": "설정 및 도구",
       "usage": "사용량 분석",
-      "users": "사용자"
+      "users": "사용자 관리"
     },
     "apiKeys": "API 키",
     "chatbot": "챗봇 플레이그라운드",
@@ -1144,7 +1144,7 @@
       "bannerDeleteErrorGeneric": "배너 삭제 중 오류가 발생했습니다. 다시 시도해 주세요.",
       "bannerDescription": "모든 사용자에게 표시되는 애플리케이션 상단의 공지사항을 생성하고 관리합니다.",
       "bannerEnglishRequired": "영어 내용은 필수입니다 (다른 언어는 선택사항)",
-      "bannerManagement": "배너 관리",
+      "bannerManagement": "배너",
       "bannerName": "배너 이름",
       "bannerNamePlaceholder": "이 배너의 설명적인 이름을 입력하세요",
       "bannerNameRequired": "배너 이름은 필수입니다",
@@ -1191,14 +1191,14 @@
       "lastUpdated": "마지막 업데이트",
       "leaveEmptyToKeep": "현재 값을 유지하려면 비워두세요",
       "limitsDescription": "시스템의 모든 사용자에게 리소스 제한을 설정합니다. 변경 사항은 모든 활성 사용자에게 적용됩니다. 새 사용자의 기본값은 변경되지 않습니다.",
-      "limitsManagement": "제한 관리",
+      "limitsManagement": "제한",
       "bulkUpdate": {
         "title": "Bulk Update All Users",
         "description": "Override resource limits for every active user at once. This does not change defaults for future users."
       },
       "maxBudgetHelper": "사용자별 최대 지출 제한({{currencyCode}})",
       "maxBudgetLabel": "최대 예산 ({{currencyCode}})",
-      "models": "모델 관리",
+      "models": "모델 동기화",
       "modelsDescription": "최신 사용 가능한 모델에 액세스할 수 있도록 LiteLLM에서 AI 모델을 동기화합니다.",
       "newModels": "새로운 모델",
       "noBannersFound": "배너를 찾을 수 없습니다. 첫 번째 배너를 만들어 시작하세요.",
@@ -1221,7 +1221,7 @@
       "syncSuccess": "모델이 성공적으로 동기화되었습니다",
       "syncSuccessDetails": "총 {{total}}개 모델 ({{new}}개 신규, {{updated}}개 업데이트)",
       "syncTime": "시간",
-      "title": "도구",
+      "title": "설정 및 도구",
       "toggleVisibility": "{{name}}의 표시 전환",
       "totalModels": "총 모델 수",
       "totalUsersUpdated": "총 사용자 수",

@@ -469,9 +469,9 @@
     "admin": {
       "models": "モデル管理",
       "subscriptions": "サブスクリプション管理",
-      "tools": "ツール",
+      "tools": "設定とツール",
       "usage": "使用分析",
-      "users": "ユーザー"
+      "users": "ユーザー管理"
     },
     "apiKeys": "APIキー",
     "chatbot": "チャットボットプレイグラウンド",
@@ -1144,7 +1144,7 @@
       "bannerDeleteErrorGeneric": "バナーの削除中にエラーが発生しました。再度お試しください。",
       "bannerDescription": "全ユーザーに表示されるアプリケーション上部のお知らせを作成・管理します。",
       "bannerEnglishRequired": "英語の内容は必須です（他の言語はオプション）",
-      "bannerManagement": "バナー管理",
+      "bannerManagement": "バナー",
       "bannerName": "バナー名",
       "bannerNamePlaceholder": "このバナーの説明的な名前を入力してください",
       "bannerNameRequired": "バナー名は必須です",
@@ -1191,14 +1191,14 @@
       "lastUpdated": "最終更新",
       "leaveEmptyToKeep": "現在の値を保持するには空欄にしておいてください",
       "limitsDescription": "システム内のすべてのユーザーにリソース制限を設定します。変更はすべてのアクティブユーザーに適用されます。新しいユーザーのデフォルト値は変更されません。",
-      "limitsManagement": "制限管理",
+      "limitsManagement": "制限",
       "bulkUpdate": {
         "title": "Bulk Update All Users",
         "description": "Override resource limits for every active user at once. This does not change defaults for future users."
       },
       "maxBudgetHelper": "ユーザーあたりの最大支出制限（{{currencyCode}}）",
       "maxBudgetLabel": "最大予算 ({{currencyCode}})",
-      "models": "モデル管理",
+      "models": "モデル同期",
       "modelsDescription": "最新の利用可能モデルにアクセスできるようにLiteLLMからAIモデルを同期します。",
       "newModels": "新しいモデル",
       "noBannersFound": "バナーが見つかりません。最初のバナーを作成して開始してください。",
@@ -1221,7 +1221,7 @@
       "syncSuccess": "モデルの同期が成功しました",
       "syncSuccessDetails": "合計{{total}}モデル（{{new}}個新規、{{updated}}個更新）",
       "syncTime": "時刻",
-      "title": "ツール",
+      "title": "設定とツール",
       "toggleVisibility": "{{name}}の表示を切り替え",
       "totalModels": "総モデル数",
       "totalUsersUpdated": "総ユーザー数",

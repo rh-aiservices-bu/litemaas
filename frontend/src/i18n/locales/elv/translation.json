@@ -469,9 +469,9 @@
     "admin": {
       "models": "Vegil Vellyn",
       "subscriptions": "Glaemscath Govannen",
-      "tools": "Echad",
+      "tools": "Estel ah Echad",
       "usage": "Aerlinn-Minithith",
-      "users": "Aduiain"
+      "users": "Tirith Aduiain"
     },
     "apiKeys": "Anguirel-API",
     "chatbot": "Glingad-Celeb",
@@ -1144,7 +1144,7 @@
       "bannerDeleteErrorGeneric": "Gweith orthant pen neledh i faer. Prestanno.",
       "bannerDescription": "Orthor ar thûr i feer i thilin vi baran in aear na hain elei dúnedain.",
       "bannerEnglishRequired": "Rochon Adûnaig (aenyn hain eglain sui thillen)",
-      "bannerManagement": "Tawar Orthad Faer",
+      "bannerManagement": "Tawar",
       "bannerName": "Eneth Faer",
       "bannerNamePlaceholder": "Teithado eneth dannen han faer",
       "bannerNameRequired": "Rochon eneth faer",
@@ -1191,14 +1191,14 @@
       "lastUpdated": "Orthanc Duin",
       "leaveEmptyToKeep": "Awartha lim na mí vaethen fair",
       "limitsDescription": "Orthatha limmad-gelair na îl aduiain mi rond. Ceird thuiar na îl aduiain orthad. Anann aduiain vuin ú-ceird.",
-      "limitsManagement": "Limmad Vellyn",
+      "limitsManagement": "Limmad",
       "bulkUpdate": {
         "title": "Bulk Update All Users",
         "description": "Override resource limits for every active user at once. This does not change defaults for future users."
       },
       "maxBudgetHelper": "Vahamal cost-lim na aduiadan hen {{currencyCode}}",
       "maxBudgetLabel": "Vahamal Linn ({{currencyCode}})",
-      "models": "Echuin Vellyn",
+      "models": "Echuin Sinhronath",
       "modelsDescription": "Sinhronatha isui echuin o LiteLLM na thirad în dalitha na echuin sui vuin.",
       "newModels": "Echuin Vuin",
       "noBannersFound": "Ú-faer trened. Ortho pen faer na thûl.",
@@ -1221,7 +1221,7 @@
       "syncSuccess": "Echuin sinhron sui prestannen",
       "syncSuccessDetails": "{{total}} echuin îl ({{new}} vuin, {{updated}} edraith)",
       "syncTime": "Lû",
-      "title": "Echad",
+      "title": "Estel ah Echad",
       "toggleVisibility": "Prestanno tiruith {{name}}",
       "totalModels": "Echuin îl",
       "totalUsersUpdated": "Aduiain îl",

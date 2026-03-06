@@ -469,9 +469,9 @@
     "admin": {
       "models": "Model Management",
       "subscriptions": "Subscription Management",
-      "tools": "Tools",
+      "tools": "Settings and Tools",
       "usage": "Usage Analytics",
-      "users": "Users"
+      "users": "Users Management"
     },
     "apiKeys": "API Keys",
     "chatbot": "Chatbot Playground",
@@ -1146,7 +1146,7 @@
       "bannerDeleteErrorGeneric": "An error occurred while deleting the banner. Please try again.",
       "bannerDescription": "Create and manage announcements that appear at the top of the application for all users.",
       "bannerEnglishRequired": "English content is required (other languages are optional)",
-      "bannerManagement": "Banner Management",
+      "bannerManagement": "Banners",
       "bannerName": "Banner Name",
       "bannerNamePlaceholder": "Enter a descriptive name for this banner",
       "bannerNameRequired": "Banner name is required",
@@ -1193,14 +1193,14 @@
       "lastUpdated": "Last Updated",
       "leaveEmptyToKeep": "Leave empty to keep current value",
       "limitsDescription": "Set resource limits for all users in the system. Changes will apply to all active users. Defaults for new users won't change.",
-      "limitsManagement": "Limits Management",
+      "limitsManagement": "Limits",
       "bulkUpdate": {
         "title": "Bulk Update All Users",
         "description": "Override resource limits for every active user at once. This does not change defaults for future users."
       },
       "maxBudgetHelper": "Maximum spending limit per user in {{currencyCode}}",
       "maxBudgetLabel": "Maximum Budget ({{currencyCode}})",
-      "models": "Models Management",
+      "models": "Models Sync",
       "modelsDescription": "Synchronize AI models from LiteLLM to ensure you have access to the latest available models.",
       "newModels": "New Models",
       "noBannersFound": "No banners found. Create your first banner to get started.",
@@ -1223,7 +1223,7 @@
       "syncSuccess": "Models synchronized successfully",
       "syncSuccessDetails": "{{total}} total models ({{new}} new, {{updated}} updated)",
       "syncTime": "Time",
-      "title": "Tools",
+      "title": "Settings and Tools",
       "toggleVisibility": "Toggle visibility for {{name}}",
       "totalModels": "Total Models",
       "totalUsersUpdated": "Total Users",

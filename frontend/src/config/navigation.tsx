@@ -82,19 +82,19 @@ export const appConfig: AppConfig = {
       label: 'Admin',
       routes: [
         {
-          id: 'admin-models',
-          path: '/admin/models',
-          element: AdminModelsPage,
-          label: 'nav.admin.models',
-          icon: CubesIcon,
-          requiredRoles: ['admin', 'admin-readonly'],
-        },
-        {
           id: 'admin-usage',
           path: '/admin/usage',
           element: AdminUsagePage,
           label: 'nav.admin.usage',
           icon: ChartBarIcon,
+          requiredRoles: ['admin', 'admin-readonly'],
+        },
+        {
+          id: 'admin-models',
+          path: '/admin/models',
+          element: AdminModelsPage,
+          label: 'nav.admin.models',
+          icon: CubesIcon,
           requiredRoles: ['admin', 'admin-readonly'],
         },
         {
@@ -169,17 +169,17 @@ export const appConfig: AppConfig = {
       requiredRoles: ['admin', 'admin-readonly'],
     },
     {
-      id: 'admin-models',
-      label: 'nav.admin.models',
-      path: '/admin/models',
-      icon: CubesIcon,
-      requiredRoles: ['admin', 'admin-readonly'],
-    },
-    {
       id: 'admin-usage',
       label: 'nav.admin.usage',
       path: '/admin/usage',
       icon: ChartBarIcon,
+      requiredRoles: ['admin', 'admin-readonly'],
+    },
+    {
+      id: 'admin-models',
+      label: 'nav.admin.models',
+      path: '/admin/models',
+      icon: CubesIcon,
       requiredRoles: ['admin', 'admin-readonly'],
     },
     {

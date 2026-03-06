@@ -193,25 +193,25 @@ describe('ToolsPage', () => {
       expect(screen.getByRole('heading', { level: 1, name: /tools/i })).toBeInTheDocument();
     });
 
-    it('should render models tab as default active tab', () => {
+    it('should render limits tab as default active tab', () => {
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
 
-      const modelsTab = screen.getByRole('tab', { name: /models/i });
-      expect(modelsTab).toHaveAttribute('aria-selected', 'true');
+      const limitsTab = screen.getByRole('tab', { name: /limits/i });
+      expect(limitsTab).toHaveAttribute('aria-selected', 'true');
     });
 
     it('should switch between tabs correctly', async () => {
       const user = userEvent.setup();
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
 
-      // Initially on models tab
-      expect(screen.getByRole('tab', { name: /models/i })).toHaveAttribute('aria-selected', 'true');
+      // Initially on limits tab
+      expect(screen.getByRole('tab', { name: /limits/i })).toHaveAttribute('aria-selected', 'true');
 
-      // Click limits tab
-      const limitsTab = screen.getByRole('tab', { name: /limits/i });
-      await user.click(limitsTab);
+      // Click models tab
+      const modelsTab = screen.getByRole('tab', { name: /models/i });
+      await user.click(modelsTab);
 
-      expect(limitsTab).toHaveAttribute('aria-selected', 'true');
+      expect(modelsTab).toHaveAttribute('aria-selected', 'true');
     });
 
     it('should only show models tab for regular users', () => {
@@ -240,14 +240,22 @@ describe('ToolsPage', () => {
   });
 
   describe('Models Sync Tab', () => {
-    it('should render models sync section', () => {
+    async function switchToModelsTab() {
+      const usr = userEvent.setup();
+      const modelsTab = screen.getByRole('tab', { name: /models/i });
+      await usr.click(modelsTab);
+    }
+
+    it('should render models sync section', async () => {
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       expect(screen.getByText(/browse and manage ai models/i)).toBeInTheDocument();
     });
 
-    it('should display sync button for admin users', () => {
+    it('should display sync button for admin users', async () => {
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       const syncButton = screen.getByRole('button', { name: /refresh models/i });
       expect(syncButton).toBeInTheDocument();
@@ -283,6 +291,7 @@ describe('ToolsPage', () => {
       vi.mocked(modelsService.refreshModels).mockResolvedValue(mockRefreshResult);
 
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       const syncButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(syncButton);
@@ -304,6 +313,7 @@ describe('ToolsPage', () => {
       vi.mocked(modelsService.refreshModels).mockResolvedValue(mockRefreshResult);
 
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       const syncButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(syncButton);
@@ -330,6 +340,7 @@ describe('ToolsPage', () => {
       vi.mocked(modelsService.refreshModels).mockResolvedValue(mockRefreshResult);
 
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       const syncButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(syncButton);
@@ -362,6 +373,7 @@ describe('ToolsPage', () => {
       );
 
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       const syncButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(syncButton);
@@ -377,6 +389,7 @@ describe('ToolsPage', () => {
       vi.mocked(modelsService.refreshModels).mockRejectedValue(new Error('Sync failed'));
 
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       const syncButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(syncButton);

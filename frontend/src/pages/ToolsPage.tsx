@@ -69,7 +69,9 @@ const ToolsPage: React.FC = () => {
   const { currencySymbol, currencyCode } = useCurrency();
   const [isLoading, setIsLoading] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
-  const [activeTabKey, setActiveTabKey] = useState<string | number>('models');
+  const isAdmin =
+    (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
+  const [activeTabKey, setActiveTabKey] = useState<string | number>(isAdmin ? 'limits' : 'models');
 
   // Limits Management state
   const [isLimitsLoading, setIsLimitsLoading] = useState(false);
@@ -413,78 +415,6 @@ const ToolsPage: React.FC = () => {
       </PageSection>
       <PageSection>
         <Tabs activeKey={activeTabKey} onSelect={handleTabClick}>
-          {/* Models Management Tab */}
-          <Tab eventKey="models" title={<TabTitleText>{t('pages.tools.models')}</TabTitleText>}>
-            <TabContent id="models-tab-content" style={{ paddingTop: '10px' }}>
-              <TabContentBody>
-                <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
-                  <FlexItem>
-                    <p>{t('pages.tools.modelsDescription')}</p>
-                  </FlexItem>
-
-                  {lastSyncResult && (
-                    <FlexItem>
-                      <Alert
-                        variant={lastSyncResult.success ? 'success' : 'warning'}
-                        title={t('pages.tools.lastSync')}
-                        isInline
-                      >
-                        <DescriptionList isHorizontal>
-                          <DescriptionListGroup>
-                            <DescriptionListTerm>{t('pages.tools.syncTime')}</DescriptionListTerm>
-                            <DescriptionListDescription>
-                              {formatSyncTime(lastSyncResult.syncedAt)}
-                            </DescriptionListDescription>
-                          </DescriptionListGroup>
-                          <DescriptionListGroup>
-                            <DescriptionListTerm>
-                              {t('pages.tools.totalModels')}
-                            </DescriptionListTerm>
-                            <DescriptionListDescription>
-                              {lastSyncResult.totalModels}
-                            </DescriptionListDescription>
-                          </DescriptionListGroup>
-                          <DescriptionListGroup>
-                            <DescriptionListTerm>{t('pages.tools.newModels')}</DescriptionListTerm>
-                            <DescriptionListDescription>
-                              {lastSyncResult.newModels}
-                            </DescriptionListDescription>
-                          </DescriptionListGroup>
-                          <DescriptionListGroup>
-                            <DescriptionListTerm>
-                              {t('pages.tools.updatedModels')}
-                            </DescriptionListTerm>
-                            <DescriptionListDescription>
-                              {lastSyncResult.updatedModels}
-                            </DescriptionListDescription>
-                          </DescriptionListGroup>
-                        </DescriptionList>
-                        {lastSyncResult.errors.length > 0 && (
-                          <div style={{ marginTop: '1rem' }}>
-                            <strong>{t('pages.tools.syncErrors')}:</strong>
-                            <ul style={{ marginTop: '0.5rem' }}>
-                              {lastSyncResult.errors.map((error, index) => (
-                                <li key={index}>{error}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </Alert>
-                    </FlexItem>
-                  )}
-
-                  <FlexItem>
-                    {canSync ? (
-                      syncButton
-                    ) : (
-                      <Tooltip content={t('pages.tools.adminRequired')}>{syncButton}</Tooltip>
-                    )}
-                  </FlexItem>
-                </Flex>
-              </TabContentBody>
-            </TabContent>
-          </Tab>
-
           {/* Limits Management Tab */}
           {canViewLimits && (
             <Tab
@@ -733,6 +663,77 @@ const ToolsPage: React.FC = () => {
               </TabContent>
             </Tab>
           )}
+          {/* Models Sync Tab */}
+          <Tab eventKey="models" title={<TabTitleText>{t('pages.tools.models')}</TabTitleText>}>
+            <TabContent id="models-tab-content" style={{ paddingTop: '10px' }}>
+              <TabContentBody>
+                <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
+                  <FlexItem>
+                    <p>{t('pages.tools.modelsDescription')}</p>
+                  </FlexItem>
+
+                  {lastSyncResult && (
+                    <FlexItem>
+                      <Alert
+                        variant={lastSyncResult.success ? 'success' : 'warning'}
+                        title={t('pages.tools.lastSync')}
+                        isInline
+                      >
+                        <DescriptionList isHorizontal>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>{t('pages.tools.syncTime')}</DescriptionListTerm>
+                            <DescriptionListDescription>
+                              {formatSyncTime(lastSyncResult.syncedAt)}
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>
+                              {t('pages.tools.totalModels')}
+                            </DescriptionListTerm>
+                            <DescriptionListDescription>
+                              {lastSyncResult.totalModels}
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>{t('pages.tools.newModels')}</DescriptionListTerm>
+                            <DescriptionListDescription>
+                              {lastSyncResult.newModels}
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>
+                              {t('pages.tools.updatedModels')}
+                            </DescriptionListTerm>
+                            <DescriptionListDescription>
+                              {lastSyncResult.updatedModels}
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                        </DescriptionList>
+                        {lastSyncResult.errors.length > 0 && (
+                          <div style={{ marginTop: '1rem' }}>
+                            <strong>{t('pages.tools.syncErrors')}:</strong>
+                            <ul style={{ marginTop: '0.5rem' }}>
+                              {lastSyncResult.errors.map((error, index) => (
+                                <li key={index}>{error}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </Alert>
+                    </FlexItem>
+                  )}
+
+                  <FlexItem>
+                    {canSync ? (
+                      syncButton
+                    ) : (
+                      <Tooltip content={t('pages.tools.adminRequired')}>{syncButton}</Tooltip>
+                    )}
+                  </FlexItem>
+                </Flex>
+              </TabContentBody>
+            </TabContent>
+          </Tab>
         </Tabs>
 
         {/* Confirmation Modal */}

@@ -469,9 +469,9 @@
     "admin": {
       "models": "Modellverwaltung",
       "subscriptions": "Abonnementverwaltung",
-      "tools": "Werkzeuge",
+      "tools": "Einstellungen und Werkzeuge",
       "usage": "Nutzungsanalyse",
-      "users": "Benutzer"
+      "users": "Benutzerverwaltung"
     },
     "apiKeys": "API-Schlüssel",
     "chatbot": "Chatbot-Spielplatz",
@@ -1144,7 +1144,7 @@
       "bannerDeleteErrorGeneric": "Ein Fehler ist beim Löschen des Banners aufgetreten. Bitte versuchen Sie es erneut.",
       "bannerDescription": "Erstellen und verwalten Sie Ankündigungen, die oben in der Anwendung für alle Benutzer erscheinen.",
       "bannerEnglishRequired": "Englischer Inhalt ist erforderlich (andere Sprachen sind optional)",
-      "bannerManagement": "Banner-Verwaltung",
+      "bannerManagement": "Banner",
       "bannerName": "Banner-Name",
       "bannerNamePlaceholder": "Geben Sie einen beschreibenden Namen für dieses Banner ein",
       "bannerNameRequired": "Banner-Name ist erforderlich",
@@ -1191,14 +1191,14 @@
       "lastUpdated": "Zuletzt aktualisiert",
       "leaveEmptyToKeep": "Leer lassen, um aktuellen Wert zu behalten",
       "limitsDescription": "Ressourcenlimits für alle Benutzer im System festlegen. Änderungen werden auf alle aktiven Benutzer angewendet. Standards für neue Benutzer ändern sich nicht.",
-      "limitsManagement": "Limits-Management",
+      "limitsManagement": "Limits",
       "bulkUpdate": {
         "title": "Bulk Update All Users",
         "description": "Override resource limits for every active user at once. This does not change defaults for future users."
       },
       "maxBudgetHelper": "Maximales Ausgabenlimit pro Benutzer in {{currencyCode}}",
       "maxBudgetLabel": "Maximales Budget ({{currencyCode}})",
-      "models": "Modell-Management",
+      "models": "Modell-Synchronisation",
       "modelsDescription": "KI-Modelle von LiteLLM synchronisieren, um sicherzustellen, dass Sie Zugriff auf die neuesten verfügbaren Modelle haben.",
       "newModels": "Neue Modelle",
       "noBannersFound": "Keine Banner gefunden. Erstellen Sie Ihr erstes Banner, um zu beginnen.",
@@ -1221,7 +1221,7 @@
       "syncSuccess": "Modelle erfolgreich synchronisiert",
       "syncSuccessDetails": "{{total}} Modelle insgesamt ({{new}} neue, {{updated}} aktualisierte)",
       "syncTime": "Zeit",
-      "title": "Werkzeuge",
+      "title": "Einstellungen und Werkzeuge",
       "toggleVisibility": "Sichtbarkeit für {{name}} umschalten",
       "totalModels": "Modelle insgesamt",
       "totalUsersUpdated": "Benutzer insgesamt",
