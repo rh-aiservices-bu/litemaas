@@ -18,6 +18,7 @@ import { MenuToggle } from '@patternfly/react-core';
 import { format } from 'date-fns';
 import { formatNumber, formatCurrency } from '../../utils/formatters';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { useCurrency } from '../../contexts/ConfigContext';
 
 /**
  * User summary for top users
@@ -67,6 +68,7 @@ export const TopUsersTable: React.FC<TopUsersTableProps> = ({
 }) => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
+  const { currencyCode } = useCurrency();
 
   /**
    * Export top users data as CSV
@@ -264,7 +266,7 @@ export const TopUsersTable: React.FC<TopUsersTableProps> = ({
                     {formatNumber(user.completion_tokens)}
                   </Td>
                   <Td style={{ padding: '8px', textAlign: 'center' }}>
-                    {formatCurrency(user.cost)}
+                    {formatCurrency(user.cost, currencyCode)}
                   </Td>
                 </Tr>
               ))}

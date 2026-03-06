@@ -598,7 +598,7 @@ export class AdminUsageAggregationService extends BaseService {
         pricing: {
           promptCostPerToken: 0, // TODO: Get from model info
           completionCostPerToken: 0,
-          currency: 'USD',
+          currency: 'USD', // LiteLLM source pricing currency
         },
         topUsers,
       };

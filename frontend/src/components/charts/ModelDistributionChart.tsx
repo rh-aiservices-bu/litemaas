@@ -1,6 +1,7 @@
 import React from 'react';
 import { ChartDonut, ChartThemeColor, getCustomTheme } from '@patternfly/react-charts/victory';
 import { useTranslation } from 'react-i18next';
+import { useCurrency } from '../../contexts/ConfigContext';
 import { DonutChartDataPoint, ModelBreakdownData } from '../../utils/chartDataTransformers';
 import AccessibleChart, { AccessibleChartData } from './AccessibleChart';
 
@@ -24,6 +25,7 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
   ariaLabel = 'Model usage distribution',
 }) => {
   const { t } = useTranslation();
+  const { formatCurrency } = useCurrency();
   const [containerWidth, setContainerWidth] = React.useState(600);
   const resizeObserverRef = React.useRef<ResizeObserver | null>(null);
 
@@ -157,7 +159,7 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
               ? `${(model.completion_tokens / 1000).toFixed(1)}K`
               : model.completion_tokens.toString()
           : '0',
-        costFormatted: model?.cost ? `$${model.cost.toFixed(2)}` : '$0.00',
+        costFormatted: model?.cost ? formatCurrency(model.cost) : formatCurrency(0),
       },
     };
   });
@@ -357,7 +359,7 @@ const ModelDistributionChart: React.FC<ModelDistributionChartProps> = ({
                         fontSize: 'var(--pf-t--global--font--size--xs)',
                       }}
                     >
-                      ${model.cost.toFixed(2)}
+                      {formatCurrency(model.cost)}
                     </td>
                   </tr>
                 ))}

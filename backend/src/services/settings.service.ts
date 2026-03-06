@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { BaseService } from './base.service';
 import { ApiKeyQuotaDefaults, UserDefaults } from '../types/api-key.types';
+import { CurrencySettings, DEFAULT_CURRENCY, SUPPORTED_CURRENCIES } from '../types/currency.types';
 
 const EMPTY_USER_DEFAULTS: UserDefaults = {
   maxBudget: null,
@@ -181,6 +182,68 @@ export class SettingsService extends BaseService {
       tpmLimit: isNaN(tpmLimit) ? null : tpmLimit,
       rpmLimit: isNaN(rpmLimit) ? null : rpmLimit,
     };
+  }
+
+  /**
+   * Get currency settings
+   */
+  async getCurrencySettings(): Promise<CurrencySettings> {
+    const result = await this.fastify.dbUtils.queryOne<{
+      value: CurrencySettings;
+    }>(`SELECT value FROM system_settings WHERE key = 'currency_settings'`, []);
+
+    if (!result?.value || Object.keys(result.value).length === 0) {
+      return DEFAULT_CURRENCY;
+    }
+
+    return {
+      ...DEFAULT_CURRENCY,
+      ...result.value,
+    };
+  }
+
+  /**
+   * Update currency settings
+   */
+  async updateCurrencySettings(
+    adminUserId: string,
+    settings: CurrencySettings,
+  ): Promise<CurrencySettings> {
+    const supported = SUPPORTED_CURRENCIES.find((c) => c.code === settings.code);
+    if (!supported) {
+      throw this.fastify.createError(
+        400,
+        `Unsupported currency code: ${settings.code}. Use GET /admin/settings/currency/supported for valid options.`,
+      );
+    }
+
+    const result = await this.fastify.dbUtils.queryOne<{
+      value: CurrencySettings;
+    }>(
+      `INSERT INTO system_settings (key, value, updated_at, updated_by)
+       VALUES ('currency_settings', $1, NOW(), $2)
+       ON CONFLICT (key) DO UPDATE SET
+         value = $1,
+         updated_at = NOW(),
+         updated_by = $2
+       RETURNING value`,
+      [JSON.stringify(settings), adminUserId],
+    );
+
+    // Audit log
+    await this.fastify.dbUtils.query(
+      `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        adminUserId,
+        'UPDATE_CURRENCY_SETTINGS',
+        'SYSTEM_SETTINGS',
+        'currency_settings',
+        JSON.stringify({ settings }),
+      ],
+    );
+
+    return result?.value ?? settings;
   }
 
   /**

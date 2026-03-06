@@ -21,6 +21,7 @@ import { useNotifications } from '../../contexts/NotificationContext';
 import { adminService } from '../../services/admin.service';
 import type { ApiKeyQuotaDefaults } from '../../types/users';
 import { extractErrorDetails } from '../../utils/error.utils';
+import { useCurrency } from '../../contexts/ConfigContext';
 
 interface ApiKeyQuotaDefaultsSectionProps {
   canEdit: boolean;
@@ -33,6 +34,7 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
 }) => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
+  const { currencyCode } = useCurrency();
 
   const [apiKeyDefaults, setApiKeyDefaults] = useState<ApiKeyQuotaDefaults>({
     defaults: {},
@@ -95,10 +97,10 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
     }
   };
 
-  const labelWithTooltip = (labelKey: string, tooltipKey: string) => (
+  const labelWithTooltip = (labelKey: string, tooltipKey: string, interpolation?: Record<string, string>) => (
     <span>
-      {t(labelKey)}{' '}
-      <Tooltip content={t(tooltipKey)}>
+      {t(labelKey, interpolation)}{' '}
+      <Tooltip content={t(tooltipKey, interpolation)}>
         <OutlinedQuestionCircleIcon
           style={{ color: 'var(--pf-t--global--icon--color--subtle)', cursor: 'pointer' }}
         />
@@ -235,6 +237,7 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
             {labelWithTooltip(
               'pages.tools.apiKeyDefaults.maxBudgetLabel',
               'pages.tools.apiKeyDefaults.maxBudgetTooltip',
+              { currencyCode },
             )}
           </GridItem>
           <GridItem span={4}>
@@ -248,7 +251,7 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
               placeholder={t('pages.tools.apiKeyDefaults.noDefault')}
               isDisabled={!canEdit}
               aria-label={
-                t('pages.tools.apiKeyDefaults.maxBudgetLabel') +
+                t('pages.tools.apiKeyDefaults.maxBudgetLabel', { currencyCode }) +
                 ' - ' +
                 t('pages.tools.apiKeyDefaults.columnDefault')
               }
@@ -265,7 +268,7 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
               placeholder={t('pages.tools.apiKeyDefaults.noMaximum')}
               isDisabled={!canEdit}
               aria-label={
-                t('pages.tools.apiKeyDefaults.maxBudgetLabel') +
+                t('pages.tools.apiKeyDefaults.maxBudgetLabel', { currencyCode }) +
                 ' - ' +
                 t('pages.tools.apiKeyDefaults.columnMaximum')
               }
@@ -313,6 +316,7 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
             {labelWithTooltip(
               'pages.tools.apiKeyDefaults.softBudgetLabel',
               'pages.tools.apiKeyDefaults.softBudgetTooltip',
+              { currencyCode },
             )}
           </GridItem>
           <GridItem span={4}>
@@ -325,7 +329,7 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
               onChange={(_event, value) => handleFieldChange('defaults', 'softBudget', value)}
               placeholder={t('pages.tools.apiKeyDefaults.noDefault')}
               isDisabled={!canEdit}
-              aria-label={t('pages.tools.apiKeyDefaults.softBudgetLabel')}
+              aria-label={t('pages.tools.apiKeyDefaults.softBudgetLabel', { currencyCode })}
             />
           </GridItem>
           <GridItem span={4}>

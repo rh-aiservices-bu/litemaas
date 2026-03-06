@@ -18,6 +18,7 @@ import { useNotifications } from '../../contexts/NotificationContext';
 import { adminService } from '../../services/admin.service';
 import type { UserDefaults } from '../../types/users';
 import { extractErrorDetails } from '../../utils/error.utils';
+import { useCurrency } from '../../contexts/ConfigContext';
 
 interface EnvDefaults {
   maxBudget: number | null;
@@ -33,6 +34,7 @@ interface UserDefaultsSectionProps {
 const UserDefaultsSection: React.FC<UserDefaultsSectionProps> = ({ canEdit, isVisible }) => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
+  const { currencyCode } = useCurrency();
 
   const [userDefaults, setUserDefaults] = useState<UserDefaults>({});
   const [envDefaults, setEnvDefaults] = useState<EnvDefaults | null>(null);
@@ -101,10 +103,10 @@ const UserDefaultsSection: React.FC<UserDefaultsSectionProps> = ({ canEdit, isVi
     }
   };
 
-  const labelWithTooltip = (labelKey: string, tooltipKey: string) => (
+  const labelWithTooltip = (labelKey: string, tooltipKey: string, interpolation?: Record<string, string>) => (
     <span>
-      {t(labelKey)}{' '}
-      <Tooltip content={t(tooltipKey)}>
+      {t(labelKey, interpolation)}{' '}
+      <Tooltip content={t(tooltipKey, interpolation)}>
         <OutlinedQuestionCircleIcon
           style={{ color: 'var(--pf-t--global--icon--color--subtle)', cursor: 'pointer' }}
         />
@@ -183,6 +185,7 @@ const UserDefaultsSection: React.FC<UserDefaultsSectionProps> = ({ canEdit, isVi
             {labelWithTooltip(
               'pages.tools.userDefaults.maxBudgetLabel',
               'pages.tools.userDefaults.maxBudgetTooltip',
+              { currencyCode },
             )}
           </GridItem>
           <GridItem span={4}>
@@ -195,7 +198,7 @@ const UserDefaultsSection: React.FC<UserDefaultsSectionProps> = ({ canEdit, isVi
               onChange={(_event, value) => handleFieldChange('maxBudget', value)}
               placeholder={getPlaceholder('maxBudget')}
               isDisabled={!canEdit}
-              aria-label={t('pages.tools.userDefaults.maxBudgetLabel')}
+              aria-label={t('pages.tools.userDefaults.maxBudgetLabel', { currencyCode })}
             />
           </GridItem>
         </Grid>

@@ -18,6 +18,16 @@ export const ConfigResponseSchema = Type.Object(
     environment: Type.Union([Type.Literal('development'), Type.Literal('production')], {
       description: 'Current runtime environment',
     }),
+    currency: Type.Optional(
+      Type.Object(
+        {
+          code: Type.String(),
+          symbol: Type.String(),
+          name: Type.String(),
+        },
+        { description: 'Configured currency for monetary value display' },
+      ),
+    ),
     // Legacy fields for backwards compatibility
     litellmApiUrl: Type.Optional(
       Type.String({

@@ -25,16 +25,20 @@ type MetricType = 'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion
  * Format large numbers with compact notation (K, M, B)
  * Used for legend labels
  */
-export const formatValueForLegend = (value: number, metricType?: MetricType): string => {
+export const formatValueForLegend = (
+  value: number,
+  metricType?: MetricType,
+  currencySymbol: string = '$',
+): string => {
   // For cost, include currency symbol
   if (metricType === 'cost') {
     if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(1)}M`;
+      return `${currencySymbol}${(value / 1000000).toFixed(1)}M`;
     }
     if (value >= 1000) {
-      return `$${(value / 1000).toFixed(1)}K`;
+      return `${currencySymbol}${(value / 1000).toFixed(1)}K`;
     }
-    return `$${value.toFixed(2)}`;
+    return `${currencySymbol}${value.toFixed(2)}`;
   }
 
   // For other metrics, use standard compact notation
@@ -96,6 +100,7 @@ export const generateLogarithmicColorScale = (
   values: number[],
   metricType: MetricType = 'requests',
   levels: number = 6,
+  currencySymbol: string = '$',
 ): LogarithmicColorScale => {
   // Filter out null, undefined, and zero values for scale calculation
   const nonZeroValues = values.filter((v) => v != null && v > 0);
@@ -141,7 +146,7 @@ export const generateLogarithmicColorScale = (
           min: minValue,
           max: minValue,
           color: colors[midLevel],
-          label: formatValueForLegend(minValue, metricType),
+          label: formatValueForLegend(minValue, metricType, currencySymbol),
         },
       ],
       getColorForValue: (value: number) => (value === minValue ? colors[midLevel] : colors[0]),
@@ -165,8 +170,8 @@ export const generateLogarithmicColorScale = (
       color: colors[i],
       label:
         i < levels - 1
-          ? `${formatValueForLegend(threshold, metricType)}-${formatValueForLegend(thresholds[i + 1], metricType)}`
-          : `${formatValueForLegend(threshold, metricType)}+`,
+          ? `${formatValueForLegend(threshold, metricType, currencySymbol)}-${formatValueForLegend(thresholds[i + 1], metricType, currencySymbol)}`
+          : `${formatValueForLegend(threshold, metricType, currencySymbol)}+`,
     }));
 
     return {
@@ -210,8 +215,8 @@ export const generateLogarithmicColorScale = (
     color: colors[i],
     label:
       i < levels - 1
-        ? `${formatValueForLegend(threshold, metricType)}-${formatValueForLegend(thresholds[i + 1], metricType)}`
-        : `${formatValueForLegend(threshold, metricType)}+`,
+        ? `${formatValueForLegend(threshold, metricType, currencySymbol)}-${formatValueForLegend(thresholds[i + 1], metricType, currencySymbol)}`
+        : `${formatValueForLegend(threshold, metricType, currencySymbol)}+`,
   }));
 
   // Helper function to get color for a value

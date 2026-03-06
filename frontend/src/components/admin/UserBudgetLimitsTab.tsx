@@ -26,6 +26,7 @@ import {
 } from '@patternfly/react-core';
 import { usersService } from '../../services/users.service';
 import { useNotifications } from '../../contexts/NotificationContext';
+import { useCurrency } from '../../contexts/ConfigContext';
 import { AdminUserDetails, UserBudgetLimitsUpdate } from '../../types/users';
 
 interface UserBudgetLimitsTabProps {
@@ -37,6 +38,7 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
+  const { formatCurrency, currencyCode } = useCurrency();
 
   // Fetch user details
   const {
@@ -109,7 +111,10 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
       queryClient.invalidateQueries({ queryKey: ['admin-user-details', userId] });
       addNotification({
         title: t('users.budget.resetSpendSuccess', 'Spend Reset'),
-        description: t('users.budget.resetSpendSuccessDesc', 'User spend has been reset to $0.00.'),
+        description: t(
+          'users.budget.resetSpendSuccessDesc',
+          `User spend has been reset to ${formatCurrency(0)}.`,
+        ),
         variant: 'success',
       });
       setIsResetModalOpen(false);
@@ -147,11 +152,12 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
     yearly: t('users.budget.budgetDurationYearly', 'Yearly'),
   };
 
-  const currentSpendLabel = userDetails?.budgetDuration && budgetDurationLabels[userDetails.budgetDuration]
-    ? t('users.budget.currentSpendWithPeriod', 'Current Spend ({{period}})', {
-        period: budgetDurationLabels[userDetails.budgetDuration],
-      })
-    : t('users.budget.currentSpend', 'Current Spend');
+  const currentSpendLabel =
+    userDetails?.budgetDuration && budgetDurationLabels[userDetails.budgetDuration]
+      ? t('users.budget.currentSpendWithPeriod', 'Current Spend ({{period}})', {
+          period: budgetDurationLabels[userDetails.budgetDuration],
+        })
+      : t('users.budget.currentSpend', 'Current Spend');
 
   const budgetDurationOptions = [
     {
@@ -184,10 +190,7 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
     <>
       <Form style={{ paddingTop: '1rem' }}>
         {/* Current Spend with Progress Bar and Reset Button */}
-        <FormGroup
-          label={currentSpendLabel}
-          fieldId="current-spend"
-        >
+        <FormGroup label={currentSpendLabel} fieldId="current-spend">
           <Split hasGutter style={{ alignItems: 'center' }}>
             <SplitItem isFilled>
               <Progress
@@ -218,8 +221,10 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
           </Split>
           <HelperText>
             <HelperTextItem>
-              ${userDetails?.currentSpend?.toFixed(2) || '0.00'} / $
-              {userDetails?.maxBudget?.toFixed(2) || t('users.budget.unlimited', 'Unlimited')}
+              {formatCurrency(userDetails?.currentSpend || 0)} /{' '}
+              {userDetails?.maxBudget != null
+                ? formatCurrency(userDetails.maxBudget)
+                : t('users.budget.unlimited', 'Unlimited')}
             </HelperTextItem>
           </HelperText>
           {userDetails?.budgetResetAt && userDetails?.budgetDuration && (
@@ -250,7 +255,7 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
             <HelperTextItem>
               {t(
                 'users.budget.maxBudgetHelp',
-                'Maximum spending limit in USD. Leave empty for no limit.',
+                { defaultValue: 'Maximum spending limit in {{currencyCode}}. Leave empty for no limit.', currencyCode },
               )}
             </HelperTextItem>
           </HelperText>
@@ -274,10 +279,7 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
           </FormSelect>
           <HelperText>
             <HelperTextItem>
-              {t(
-                'users.budget.budgetDurationHelp',
-                'How often the budget automatically resets.',
-              )}
+              {t('users.budget.budgetDurationHelp', 'How often the budget automatically resets.')}
             </HelperTextItem>
           </HelperText>
           {userDetails?.budgetResetAt && budgetDuration && (
@@ -375,7 +377,7 @@ const UserBudgetLimitsTab: React.FC<UserBudgetLimitsTabProps> = ({ userId, canEd
         <ModalBody>
           {t(
             'users.budget.resetSpendConfirmBody',
-            'Are you sure you want to reset the current spend for {{username}} to $0.00? This action cannot be undone.',
+            `Are you sure you want to reset the current spend for {{username}} to ${formatCurrency(0)}? This action cannot be undone.`,
             { username: userDetails?.username },
           )}
         </ModalBody>

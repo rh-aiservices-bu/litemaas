@@ -28,21 +28,27 @@ export const formatNumber = (value: number): string => {
 };
 
 /**
- * Format currency values consistently with USD formatting
- * @param value - Amount in dollars
- * @returns Formatted currency string (e.g., "$1,234.56")
+ * Format currency values consistently
+ * @param value - Amount in currency units
+ * @param currencyCode - ISO 4217 currency code (default: 'USD')
+ * @returns Formatted currency string (e.g., "$1,234.56", "€1,234.56")
  * @example
  * formatCurrency(1234.56) // "$1,234.56"
- * formatCurrency(0.99) // "$0.99"
+ * formatCurrency(1234.56, 'EUR') // "€1,234.56"
  */
-export const formatCurrency = (value: number): string => {
+export const formatCurrency = (value: number, currencyCode: string = 'USD'): string => {
   if (!isFinite(value) || value < 0) {
-    return '$0.00';
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currencyCode,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(0);
   }
 
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: currencyCode,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value);

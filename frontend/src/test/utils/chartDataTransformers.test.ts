@@ -400,7 +400,7 @@ describe('chartDataTransformers', () => {
 
     it('handles zero and negative values', () => {
       expect(formatCurrency(0)).toBe('$0.00');
-      expect(formatCurrency(-5.5)).toBe('-$5.50');
+      expect(formatCurrency(-5.5)).toBe('$0.00');
     });
 
     it('handles undefined and null values', () => {

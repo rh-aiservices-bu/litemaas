@@ -1,5 +1,6 @@
 import { apiClient } from './api';
 import type { ApiKeyQuotaDefaults, UserDefaults, UserDefaultsResponse } from '../types/users';
+import type { CurrencySettings } from '../types/currency';
 
 export interface BulkUpdateUserLimitsRequest {
   maxBudget?: number;
@@ -74,6 +75,27 @@ class AdminService {
    */
   async updateUserDefaults(data: UserDefaults): Promise<UserDefaults> {
     return await apiClient.put<UserDefaults>('/admin/settings/user-defaults', data);
+  }
+
+  /**
+   * Get supported currencies list
+   */
+  async getSupportedCurrencies(): Promise<CurrencySettings[]> {
+    return await apiClient.get<CurrencySettings[]>('/admin/settings/currency/supported');
+  }
+
+  /**
+   * Get current currency settings
+   */
+  async getCurrencySettings(): Promise<CurrencySettings> {
+    return await apiClient.get<CurrencySettings>('/admin/settings/currency');
+  }
+
+  /**
+   * Update currency settings
+   */
+  async updateCurrencySettings(data: CurrencySettings): Promise<CurrencySettings> {
+    return await apiClient.put<CurrencySettings>('/admin/settings/currency', data);
   }
 }
 

@@ -2,6 +2,7 @@
 
 import { apiClient } from './api';
 import type { ApiKeyQuotaDefaults } from '../types/users';
+import type { CurrencySettings } from '../types/currency';
 
 /**
  * Admin analytics public configuration from backend
@@ -41,6 +42,8 @@ export interface BackendConfig {
   environment: 'development' | 'production';
   // Admin analytics configuration
   adminAnalytics: AdminAnalyticsPublicConfig;
+  // Currency configuration
+  currency?: CurrencySettings;
   // Legacy fields for backwards compatibility
   litellmApiUrl?: string;
   authMode?: 'oauth' | 'mock';
