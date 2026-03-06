@@ -618,13 +618,17 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           if (keyForExpiry?.liteLLMKeyId) {
             const liteLLMUpdates: Record<string, unknown> = {};
             if (expiresAt) {
-              liteLLMUpdates.duration = apiKeyService.calculateDurationFromDate(new Date(expiresAt));
+              liteLLMUpdates.duration = apiKeyService.calculateDurationFromDate(
+                new Date(expiresAt),
+              );
             } else {
               liteLLMUpdates.expires = null;
             }
             await liteLLMService.updateKey(
               keyForExpiry.liteLLMKeyId,
-              liteLLMUpdates as Partial<import('../types/api-key.types.js').LiteLLMKeyGenerationRequest>,
+              liteLLMUpdates as Partial<
+                import('../types/api-key.types.js').LiteLLMKeyGenerationRequest
+              >,
             );
           }
         }

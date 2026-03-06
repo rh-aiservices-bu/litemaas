@@ -251,6 +251,7 @@ export class RBACService {
       permissions: [
         'admin:users', // View admin section
         'admin:usage', // View admin usage analytics
+        'admin:audit', // View audit logs
         'admin:banners:read', // View banners in admin
         'admin:subscriptions:read', // View subscription requests (no write permission)
         'users:read', // List and view users

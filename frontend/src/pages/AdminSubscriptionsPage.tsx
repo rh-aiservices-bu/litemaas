@@ -620,6 +620,16 @@ const AdminSubscriptionsPage: React.FC = () => {
       >
         <ModalHeader title={t('pages.adminSubscriptions.approvalModalTitle')} />
         <ModalBody>
+          {!selectedSubscription && selectedSubscriptions.size > 0 && (
+            <Alert
+              variant="info"
+              title={t('pages.adminSubscriptions.bulkApproveCount', {
+                count: selectedSubscriptions.size,
+              })}
+              isInline
+              style={{ marginBottom: '1rem' }}
+            />
+          )}
           <p>
             {selectedSubscription
               ? t('pages.adminSubscriptions.confirmApprovalSingle', {
@@ -698,6 +708,16 @@ const AdminSubscriptionsPage: React.FC = () => {
       >
         <ModalHeader title={t('pages.adminSubscriptions.denialModalTitle')} />
         <ModalBody>
+          {!selectedSubscription && selectedSubscriptions.size > 0 && (
+            <Alert
+              variant="warning"
+              title={t('pages.adminSubscriptions.bulkDenyCount', {
+                count: selectedSubscriptions.size,
+              })}
+              isInline
+              style={{ marginBottom: '1rem' }}
+            />
+          )}
           <Alert variant="warning" title={t('pages.adminSubscriptions.confirmDenial')} isInline>
             <p>
               {selectedSubscription

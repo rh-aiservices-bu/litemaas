@@ -54,6 +54,7 @@ describe('RBACService', () => {
       expect(adminReadonlyRole!.permissions).toEqual([
         'admin:users',
         'admin:usage',
+        'admin:audit',
         'admin:banners:read',
         'admin:subscriptions:read', // Added for Restricted Model Subscription Approval feature
         'users:read',
@@ -78,7 +79,6 @@ describe('RBACService', () => {
         'api_keys:write',
         'api_keys:delete',
         'admin:system',
-        'admin:audit',
       ];
 
       writePermissions.forEach((permission) => {
@@ -170,9 +170,9 @@ describe('RBACService', () => {
         expect(result).toBe(false);
       });
 
-      it('should deny admin:audit permission', async () => {
+      it('should allow admin:audit permission', async () => {
         const result = await service.hasPermission(mockUser.id, 'admin:audit');
-        expect(result).toBe(false);
+        expect(result).toBe(true);
       });
     });
 
