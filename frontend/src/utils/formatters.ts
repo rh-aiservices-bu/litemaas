@@ -152,22 +152,38 @@ export const formatRelativeTime = (dateString: string): string => {
  * Format a date for display
  * @param dateString - ISO 8601 date string
  * @param options - Intl.DateTimeFormatOptions for customization
- * @returns Formatted date string
+ * @returns Formatted date string in YYYY-MM-DD format
  * @example
- * formatDate('2024-01-15') // "Jan 15, 2024"
- * formatDate('2024-01-15', { dateStyle: 'short' }) // "1/15/24"
+ * formatDate('2024-01-15T10:30:00Z') // "2024-01-15"
  */
-export const formatDate = (
-  dateString: string,
-  options: Intl.DateTimeFormatOptions = {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  },
-): string => {
+export const formatDate = (dateString: string): string => {
   try {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', options);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  } catch {
+    return dateString;
+  }
+};
+
+/**
+ * Format a date string to YYYY-MM-DD HH:MM:SS
+ * @returns Formatted datetime string
+ * @example
+ * formatDateTime('2024-01-15T10:30:00Z') // "2024-01-15 10:30:00"
+ */
+export const formatDateTime = (dateString: string): string => {
+  try {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   } catch {
     return dateString;
   }

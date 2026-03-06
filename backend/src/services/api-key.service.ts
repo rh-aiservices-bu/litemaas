@@ -847,10 +847,10 @@ export class ApiKeyService extends BaseService {
         }
       }
 
-      // Enrich with real-time spend from LiteLLM
+      // Enrich with real-time spend from LiteLLM (skip inactive/revoked keys)
       if (!this.shouldUseMockData()) {
         const spendPromises = apiKeys.map(async (key) => {
-          if (key.lite_llm_key_value) {
+          if (key.lite_llm_key_value && key.is_active && !key.revoked_at) {
             try {
               const liteLLMInfo = await this.liteLLMService.getKeyInfo(
                 key.lite_llm_key_value as string,
@@ -1929,6 +1929,14 @@ export class ApiKeyService extends BaseService {
       this.fastify.log.error(error, 'Failed to cleanup expired API keys');
       throw error;
     }
+  }
+
+  /**
+   * Calculates a LiteLLM duration string from an expiration date.
+   * Public wrapper for use in route handlers.
+   */
+  calculateDurationFromDate(expiresAt: Date): string {
+    return this.calculateDuration(expiresAt);
   }
 
   // Private helper methods

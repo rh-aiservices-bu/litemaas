@@ -577,7 +577,18 @@
         "modelsSelectedText": "{{count}} Modell(e) für diesen API-Schlüssel ausgewählt",
         "name": "Name",
         "nameHelperText": "Geben Sie einen eindeutigen Namen ein, um diesen API-Schlüssel zu identifizieren",
-        "yourNewApiKey": "Ihr neuer API-Schlüssel"
+        "yourNewApiKey": "Ihr neuer API-Schlüssel",
+        "expirationNever": "Nie",
+        "expiration30": "30 Tage",
+        "expiration60": "60 Tage",
+        "expiration90": "90 Tage",
+        "expiration180": "6 Monate",
+        "expiration365": "1 Jahr",
+        "expirationCustom": "Benutzerdefiniertes Datum...",
+        "expirationRequired": "Ein Ablaufdatum ist erforderlich (Maximum: {{max}} Tage)",
+        "expirationCustomRequired": "Bitte wählen Sie ein benutzerdefiniertes Ablaufdatum",
+        "expirationExceedsMax": "Das ausgewählte Datum überschreitet die maximal zulässige Gültigkeitsdauer von {{max}} Tagen",
+        "expirationMaxHelper": "Maximal zulässig: {{max}} Tage"
       },
       "fullKeyVisible": "Vollständiger API-Schlüssel-Wert für {{keyName}} ist jetzt sichtbar",
       "hideKey": "Schlüssel verbergen",
@@ -705,7 +716,9 @@
         "modelBudget": "Budget ({{currencyCode}})",
         "modelTimePeriod": "Zeitraum",
         "modelRpm": "RPM",
-        "modelTpm": "TPM"
+        "modelTpm": "TPM",
+        "modelExceedsKeyLimit": "{{model}}: {{field}} überschreitet das Schlüssellimit von {{max}}",
+        "modelExceedsMaximum": "{{model}}: {{field}} überschreitet den maximal zulässigen Wert von {{max}}"
       },
       "rateLimits": {
         "basic": "100 Anf/Min (Basis)",
@@ -1125,7 +1138,15 @@
         "tpmLabel": "TPM",
         "tpmTooltip": "Tokens per minute for new API keys. Default pre-fills the form; maximum enforces a hard cap.",
         "weekly": "Weekly",
-        "yearly": "Yearly"
+        "yearly": "Yearly",
+        "expirationLabel": "Gültigkeitsdauer",
+        "expirationTooltip": "Standard- und maximale Gültigkeitsdauer für neue API-Schlüssel. Der Standardwert füllt das Formular vor; das Maximum setzt eine feste Obergrenze.",
+        "expirationNever": "Nie",
+        "expiration30": "30 Tage",
+        "expiration60": "60 Tage",
+        "expiration90": "90 Tage",
+        "expiration180": "6 Monate",
+        "expiration365": "1 Jahr"
       },
       "allowDismiss": "Benutzern erlauben zu schließen",
       "allowDismissHelper": "Wenn aktiviert, können Benutzer das Banner für ihre Sitzung schließen",
@@ -1616,7 +1637,10 @@
         "modelTpm": "TPM",
         "create": "Create",
         "apiKey": "API Key",
-        "saveChanges": "Änderungen speichern"
+        "saveChanges": "Änderungen speichern",
+        "expiration180": "6 Monate",
+        "expiration365": "1 Jahr",
+        "expirationCustom": "Benutzerdefiniertes Datum..."
       },
       "keyGenerated": "API Key Generated",
       "keyWarning": "Save this key now",
@@ -1653,7 +1677,16 @@
       "tableLabel": "Benutzer-API-Schlüssel",
       "tpm": "TPM",
       "lastUsed": "Zuletzt verwendet",
-      "viewUsage": "Nutzung anzeigen"
+      "viewUsage": "Nutzung anzeigen",
+      "currentSpend": "Aktuelle Ausgaben",
+      "resetSpend": "Ausgaben zurücksetzen",
+      "resetSpendConfirmTitle": "API-Schlüssel-Ausgaben zurücksetzen",
+      "resetSpendConfirmBody": "Möchten Sie die aktuellen Ausgaben dieses API-Schlüssels wirklich auf {{formattedZero}} zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "resetSpendSuccess": "Ausgaben zurückgesetzt",
+      "resetSpendSuccessDesc": "Die Ausgaben des API-Schlüssels wurden auf {{formattedZero}} zurückgesetzt.",
+      "resetSpendError": "Zurücksetzen der Ausgaben fehlgeschlagen",
+      "rpmLimit": "RPM-Limit",
+      "tpmLimit": "TPM-Limit"
     },
     "budget": {
       "budgetUtilization": "Budgetauslastung",
@@ -1670,7 +1703,21 @@
       "unlimited": "Unbegrenzt",
       "updateError": "Aktualisierung fehlgeschlagen",
       "updateSuccess": "Budget aktualisiert",
-      "updateSuccessDesc": "Das Budget und die Limits des Benutzers wurden erfolgreich aktualisiert."
+      "updateSuccessDesc": "Das Budget und die Limits des Benutzers wurden erfolgreich aktualisiert.",
+      "budgetDuration": "Budgetzeitraum",
+      "budgetDurationHelp": "Wie oft das Budget automatisch zurückgesetzt wird.",
+      "budgetDurationNone": "Keine (kein automatisches Zurücksetzen)",
+      "budgetDurationDaily": "Täglich",
+      "budgetDurationWeekly": "Wöchentlich",
+      "budgetDurationMonthly": "Monatlich",
+      "budgetDurationYearly": "Jährlich",
+      "budgetResetAt": "Nächstes Zurücksetzen: {{date}}",
+      "resetSpend": "Ausgaben zurücksetzen",
+      "resetSpendConfirmTitle": "Benutzerausgaben zurücksetzen",
+      "resetSpendConfirmBody": "Möchten Sie die aktuellen Ausgaben von {{username}} wirklich auf {{formattedZero}} zurücksetzen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "resetSpendSuccess": "Ausgaben zurückgesetzt",
+      "resetSpendSuccessDesc": "Die Benutzerausgaben wurden auf {{formattedZero}} zurückgesetzt.",
+      "resetSpendError": "Zurücksetzen fehlgeschlagen"
     },
     "subscriptions": {
       "addError": "Hinzufügen Fehlgeschlagen",

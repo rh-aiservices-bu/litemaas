@@ -88,8 +88,8 @@ Full API key lifecycle management.
 
 **Actions** (admin only):
 
-- **Create API Key**: Modal with name, model multi-select, expiration preset (never/30/60/90 days), global quotas (max budget, TPM, RPM, budget duration, soft budget, max parallel requests), and optional per-model limits (budget, TPM, RPM)
-- **Edit Quotas**: Full quota editing on existing keys including per-model limits
+- **Create API Key**: Modal with name, model multi-select, expiration (never/30/60/90/180/365 days or custom date), global quotas (max budget, TPM, RPM, budget duration, soft budget, max parallel requests), and optional per-model limits (budget, TPM, RPM)
+- **Edit Quotas**: Full quota editing on existing keys including per-model limits and expiration date
 - **Spend Reset**: Reset a key's accumulated spend to $0 with confirmation modal
 - **Soft Revoke**: Deactivate the key (remains in database for audit purposes)
 - **Permanent Delete**: Irreversibly delete the key from both database and LiteLLM (confirmation required)

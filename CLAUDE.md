@@ -51,7 +51,7 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 - **Unified Management Modal**: Profile, Budget & Limits, API Keys, and Subscriptions tabs
 - **Role Management**: Admin/adminReadonly/user role toggles with conflict detection
 - **Budget & Rate Limits**: Max budget, budget duration, TPM, and RPM with real-time spend from LiteLLM, spend reset, and color-coded utilization progress bars
-- **API Key Lifecycle**: Create, view, edit quotas (including per-model limits), soft revoke, permanent delete, and spend reset
+- **API Key Lifecycle**: Create, view, edit quotas (including per-model limits and expiration), soft revoke, permanent delete, and spend reset
 - **Subscription Management**: Add/remove model subscriptions directly from user modal with automatic LiteLLM key sync
 - **Full Audit Trail**: All admin actions logged with metadata
 - **RBAC**: `users:read` (admin, adminReadonly) for viewing, `users:write` (admin only) for modifications
@@ -61,9 +61,10 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 - **Global quotas**: Max budget, budget duration, TPM, RPM, soft budget, max parallel requests on every key
 - **Per-model limits**: Per-model budget, TPM, and RPM configurable during key creation
 - **User self-service**: Quota fields in Create Key modal pre-filled with admin-configured defaults; backend enforces values ≤ admin maximums
-- **Admin editing**: Full quota editing on existing keys via User Management Modal, plus soft revoke and permanent delete
+- **Admin editing**: Full quota editing on existing keys via User Management Modal, including per-model limits, expiration, plus soft revoke and permanent delete
+- **Expiration management**: Preset options (30/60/90/180/365 days), custom date picker, admin-configurable default and maximum expiration; LiteLLM sync on create and edit
 - **Spend tracking**: Real-time spend from LiteLLM with color-coded budget utilization progress bars and spend reset
-- **Admin Limits tab**: Three-section admin interface — New User Defaults, API Key Quota Defaults (side-by-side default/maximum grid), and Bulk User Limits
+- **Admin Limits tab**: Three-section admin interface — New User Defaults, API Key Quota Defaults (side-by-side default/maximum grid with expiration), and Bulk User Limits
 - **Budget duration flexibility**: Supports predefined periods (`daily`, `weekly`, `monthly`, `yearly`) and custom LiteLLM durations (`30d`, `1mo`, `1h`)
 
 **Branding Customization**: Admin-controlled login page and header branding with per-element toggle switches:

@@ -44,6 +44,7 @@ import {
   Progress,
   ProgressMeasureLocation,
   ProgressVariant,
+  DatePicker,
 } from '@patternfly/react-core';
 import {
   KeyIcon,
@@ -66,6 +67,7 @@ import { modelsService, Model } from '../services/models.service';
 import { configService } from '../services/config.service';
 import type { ApiKeyQuotaDefaults } from '../types/users';
 import { extractErrorDetails } from '../utils/error.utils';
+import { formatDate } from '../utils/formatters';
 
 interface ModelLimits {
   budget?: number;
@@ -91,6 +93,7 @@ const ApiKeysPage: React.FC = () => {
   const [newKeyPermissions, setNewKeyPermissions] = useState<string[]>([]);
   const [newKeyRateLimit, setNewKeyRateLimit] = useState('1000');
   const [newKeyExpiration, setNewKeyExpiration] = useState('never');
+  const [newKeyCustomExpiration, setNewKeyCustomExpiration] = useState('');
   const [creatingKey, setCreatingKey] = useState(false);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
   const [generatedKey, setGeneratedKey] = useState<ApiKey | null>(null);
@@ -431,7 +434,16 @@ const ApiKeysPage: React.FC = () => {
     setNewKeyDescription('');
     setNewKeyPermissions([]);
     setNewKeyRateLimit('1000');
-    setNewKeyExpiration('never');
+    // Pre-fill expiration from admin-configured defaults
+    if (quotaDefaults?.defaults?.expirationDays != null) {
+      setNewKeyExpiration(String(quotaDefaults.defaults.expirationDays));
+    } else if (quotaDefaults?.maximums?.expirationDays != null) {
+      // Maximum is set but no default — pick the smallest available preset
+      setNewKeyExpiration('30');
+    } else {
+      setNewKeyExpiration('never');
+    }
+    setNewKeyCustomExpiration('');
     setSelectedModelIds([]); // ✅ Reset model selection
     setNewKeyModelLimits({}); // Reset per-model limits
     setFormErrors({}); // Clear any previous validation errors
@@ -483,6 +495,25 @@ const ApiKeysPage: React.FC = () => {
           field: t('pages.apiKeys.quotas.rpmLimit'),
           max: max.rpmLimit,
         });
+      }
+      // Validate expiration against maximum
+      if (max.expirationDays != null) {
+        if (newKeyExpiration === 'never') {
+          errors.expiration = t('pages.apiKeys.forms.expirationRequired', {
+            max: max.expirationDays,
+          });
+        } else if (newKeyExpiration === 'custom') {
+          if (!newKeyCustomExpiration) {
+            errors.expiration = t('pages.apiKeys.forms.expirationCustomRequired');
+          } else {
+            const maxDate = new Date(Date.now() + max.expirationDays * 24 * 60 * 60 * 1000);
+            if (new Date(newKeyCustomExpiration) > maxDate) {
+              errors.expiration = t('pages.apiKeys.forms.expirationExceedsMax', {
+                max: max.expirationDays,
+              });
+            }
+          }
+        }
       }
     }
 
@@ -592,6 +623,14 @@ const ApiKeysPage: React.FC = () => {
         const updateRequest = {
           name: newKeyName,
           modelIds: selectedModelIds,
+          expiresAt:
+            newKeyExpiration === 'never'
+              ? null
+              : newKeyExpiration === 'custom'
+                ? new Date(newKeyCustomExpiration).toISOString()
+                : new Date(
+                    Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000,
+                  ).toISOString(),
           maxBudget: newKeyMaxBudget ?? undefined,
           budgetDuration: newKeyBudgetDuration || undefined,
           tpmLimit: newKeyTpmLimit ?? undefined,
@@ -625,11 +664,13 @@ const ApiKeysPage: React.FC = () => {
           modelIds: selectedModelIds, // ✅ Use modelIds for multi-model support
           name: newKeyName,
           expiresAt:
-            newKeyExpiration !== 'never'
-              ? new Date(
-                  Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000,
-                ).toISOString()
-              : undefined,
+            newKeyExpiration === 'never'
+              ? undefined
+              : newKeyExpiration === 'custom'
+                ? new Date(newKeyCustomExpiration).toISOString()
+                : new Date(
+                    Date.now() + parseInt(newKeyExpiration) * 24 * 60 * 60 * 1000,
+                  ).toISOString(),
           // Quota fields
           maxBudget: newKeyMaxBudget,
           budgetDuration: newKeyBudgetDuration || undefined,
@@ -695,7 +736,14 @@ const ApiKeysPage: React.FC = () => {
     setSelectedModelIds(apiKey.models || []);
     setNewKeyPermissions([]); // Reset permissions for edit
     setNewKeyRateLimit('1000'); // Reset rate limit for edit
-    setNewKeyExpiration('never'); // Reset expiration for edit
+    // Pre-fill expiration from existing key
+    if (apiKey.expiresAt) {
+      setNewKeyExpiration('custom');
+      setNewKeyCustomExpiration(new Date(apiKey.expiresAt).toISOString().split('T')[0]);
+    } else {
+      setNewKeyExpiration('never');
+      setNewKeyCustomExpiration('');
+    }
     // Pre-fill quota fields from existing key
     setNewKeyMaxBudget(apiKey.maxBudget ?? undefined);
     setNewKeyBudgetDuration(apiKey.budgetDuration ?? '');
@@ -1114,7 +1162,7 @@ const ApiKeysPage: React.FC = () => {
                       <Td>
                         <Content component={ContentVariants.small}>
                           {apiKey.lastUsed
-                            ? new Date(apiKey.lastUsed).toLocaleDateString()
+                            ? formatDate(apiKey.lastUsed)
                             : t('pages.apiKeys.never')}
                         </Content>
                       </Td>
@@ -1323,6 +1371,101 @@ const ApiKeysPage: React.FC = () => {
                   )}
                 </HelperTextItem>
               </HelperText>
+            </FormGroup>
+
+            {/* Expiration */}
+            <FormGroup label={t('pages.apiKeys.forms.expiration')} fieldId="key-expiration">
+              <FormSelect
+                id="key-expiration"
+                value={newKeyExpiration}
+                onChange={(_event, value) => {
+                  setNewKeyExpiration(value);
+                  if (value !== 'custom') setNewKeyCustomExpiration('');
+                  if (formErrors.expiration) {
+                    const newErrors = { ...formErrors };
+                    delete newErrors.expiration;
+                    setFormErrors(newErrors);
+                  }
+                }}
+                isDisabled={creatingKey}
+                validated={formErrors.expiration ? 'error' : 'default'}
+              >
+                {quotaDefaults?.maximums?.expirationDays == null && (
+                  <FormSelectOption
+                    value="never"
+                    label={t('pages.apiKeys.forms.expirationNever')}
+                  />
+                )}
+                {(quotaDefaults?.maximums?.expirationDays == null ||
+                  30 <= quotaDefaults.maximums.expirationDays) && (
+                  <FormSelectOption value="30" label={t('pages.apiKeys.forms.expiration30')} />
+                )}
+                {(quotaDefaults?.maximums?.expirationDays == null ||
+                  60 <= quotaDefaults.maximums.expirationDays) && (
+                  <FormSelectOption value="60" label={t('pages.apiKeys.forms.expiration60')} />
+                )}
+                {(quotaDefaults?.maximums?.expirationDays == null ||
+                  90 <= quotaDefaults.maximums.expirationDays) && (
+                  <FormSelectOption value="90" label={t('pages.apiKeys.forms.expiration90')} />
+                )}
+                {(quotaDefaults?.maximums?.expirationDays == null ||
+                  180 <= quotaDefaults.maximums.expirationDays) && (
+                  <FormSelectOption value="180" label={t('pages.apiKeys.forms.expiration180')} />
+                )}
+                {(quotaDefaults?.maximums?.expirationDays == null ||
+                  365 <= quotaDefaults.maximums.expirationDays) && (
+                  <FormSelectOption value="365" label={t('pages.apiKeys.forms.expiration365')} />
+                )}
+                <FormSelectOption
+                  value="custom"
+                  label={t('pages.apiKeys.forms.expirationCustom')}
+                />
+              </FormSelect>
+              {newKeyExpiration === 'custom' && (
+                <DatePicker
+                  value={newKeyCustomExpiration}
+                  onChange={(_event, value) => {
+                    setNewKeyCustomExpiration(value);
+                    if (formErrors.expiration) {
+                      const newErrors = { ...formErrors };
+                      delete newErrors.expiration;
+                      setFormErrors(newErrors);
+                    }
+                  }}
+                  aria-label={t('pages.apiKeys.forms.expiration')}
+                  style={{ marginTop: '0.5rem' }}
+                  validators={[
+                    (date: Date) => {
+                      if (date < new Date()) return 'Date must be in the future';
+                      if (quotaDefaults?.maximums?.expirationDays != null) {
+                        const maxDate = new Date(
+                          Date.now() + quotaDefaults.maximums.expirationDays * 24 * 60 * 60 * 1000,
+                        );
+                        if (date > maxDate) {
+                          return t('pages.apiKeys.forms.expirationExceedsMax', {
+                            max: quotaDefaults.maximums.expirationDays,
+                          });
+                        }
+                      }
+                      return '';
+                    },
+                  ]}
+                />
+              )}
+              {formErrors.expiration && (
+                <HelperText id="key-expiration-error">
+                  <HelperTextItem variant="error">{formErrors.expiration}</HelperTextItem>
+                </HelperText>
+              )}
+              {quotaDefaults?.maximums?.expirationDays != null && (
+                <HelperText>
+                  <HelperTextItem>
+                    {t('pages.apiKeys.forms.expirationMaxHelper', {
+                      max: quotaDefaults.maximums.expirationDays,
+                    })}
+                  </HelperTextItem>
+                </HelperText>
+              )}
             </FormGroup>
 
             {/* Quota fields - shown in both create and edit modes */}
@@ -1789,7 +1932,7 @@ const ApiKeysPage: React.FC = () => {
                                   <Th scope="row">
                                     <strong>{t('pages.apiKeys.labels.created')}</strong>
                                   </Th>
-                                  <Td>{new Date(selectedApiKey.createdAt).toLocaleDateString()}</Td>
+                                  <Td>{formatDate(selectedApiKey.createdAt)}</Td>
                                 </Tr>
                                 <Tr>
                                   <Th scope="row">
@@ -1845,7 +1988,7 @@ const ApiKeysPage: React.FC = () => {
                         <Th scope="row">
                           <strong>{t('pages.apiKeys.labels.expires')}</strong>
                         </Th>
-                        <Td>{new Date(selectedApiKey.expiresAt).toLocaleDateString()}</Td>
+                        <Td>{formatDate(selectedApiKey.expiresAt)}</Td>
                       </Tr>
                     )}
                     {selectedApiKey.description && (
@@ -1897,9 +2040,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                   style={{ marginTop: '1rem' }}
                 >
                   {t('pages.apiKeys.messages.keyExpiredMessage', {
-                    date:
-                      selectedApiKey.expiresAt &&
-                      new Date(selectedApiKey.expiresAt).toLocaleDateString(),
+                    date: selectedApiKey.expiresAt && formatDate(selectedApiKey.expiresAt),
                   })}
                 </Alert>
               )}
@@ -2025,7 +2166,7 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \
                         <Th scope="row">
                           <strong>{t('pages.apiKeys.labels.expires')}</strong>
                         </Th>
-                        <Td>{new Date(generatedKey.expiresAt).toLocaleDateString()}</Td>
+                        <Td>{formatDate(generatedKey.expiresAt)}</Td>
                       </Tr>
                     )}
                   </Tbody>

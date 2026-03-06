@@ -289,7 +289,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Convert expiresAt string to Date for service (expects Date object)
         if (mergedBody.expiresAt) {
-          mergedBody.expiresAt = new Date(mergedBody.expiresAt);
+          (mergedBody as any).expiresAt = new Date(mergedBody.expiresAt);
         }
 
         const apiKey = await apiKeyService.createApiKey(user.userId, mergedBody as any);
@@ -607,11 +607,26 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             }
           }
 
-          // Update expiration in DB
+          // Update expiration in DB and sync to LiteLLM
           await fastify.dbUtils.query(
             `UPDATE api_keys SET expires_at = $1 WHERE id = $2 AND user_id = $3`,
             [expiresAt ? new Date(expiresAt) : null, id, user.userId],
           );
+
+          // Sync expiration to LiteLLM
+          const keyForExpiry = await apiKeyService.getApiKey(id, user.userId);
+          if (keyForExpiry?.liteLLMKeyId) {
+            const liteLLMUpdates: Record<string, unknown> = {};
+            if (expiresAt) {
+              liteLLMUpdates.duration = apiKeyService.calculateDurationFromDate(new Date(expiresAt));
+            } else {
+              liteLLMUpdates.expires = null;
+            }
+            await liteLLMService.updateKey(
+              keyForExpiry.liteLLMKeyId,
+              liteLLMUpdates as Partial<import('../types/api-key.types.js').LiteLLMKeyGenerationRequest>,
+            );
+          }
         }
 
         // Update name/models/metadata

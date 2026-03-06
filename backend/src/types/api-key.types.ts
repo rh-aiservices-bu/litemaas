@@ -10,11 +10,13 @@ export interface ApiKeyQuotaDefaults {
     rpmLimit?: number | null;
     budgetDuration?: string | null;
     softBudget?: number | null;
+    expirationDays?: number | null;
   };
   maximums: {
     maxBudget?: number | null;
     tpmLimit?: number | null;
     rpmLimit?: number | null;
+    expirationDays?: number | null;
   };
 }
 

@@ -80,7 +80,7 @@ export interface CreateApiKeyRequest {
   // Legacy support - deprecated
   subscriptionId?: string;
   name?: string;
-  expiresAt?: string;
+  expiresAt?: string | null;
   // Quota fields
   maxBudget?: number;
   budgetDuration?: string;

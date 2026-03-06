@@ -367,8 +367,9 @@ Administrators can configure default and maximum quota values that apply when us
 | `rpmLimit` | integer (nullable) | Default/maximum requests per minute |
 | `budgetDuration` | string (nullable) | Budget reset period (`daily`, `weekly`, `monthly`, `yearly`, or custom like `30d`, `1mo`) |
 | `softBudget` | number (nullable) | Soft budget threshold for warnings (defaults only) |
+| `expirationDays` | integer (nullable) | Default/maximum expiration period in days (e.g., 30, 60, 90, 180, 365) |
 
-Each field has both a **default** value (auto-applied when users omit the field) and a **maximum** value (hard limit that rejects user requests if exceeded). Setting a value to `null` means "not configured" (no default or no limit).
+Each field has both a **default** value (auto-applied when users omit the field) and a **maximum** value (hard limit that rejects user requests if exceeded). Setting a value to `null` means "not configured" (no default or no limit). When a maximum `expirationDays` is set, the "Never" expiration option is removed from the user-facing Create Key modal.
 
 #### How It Works
 

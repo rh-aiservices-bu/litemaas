@@ -577,7 +577,18 @@
         "modelsSelectedText": "{{count}} modèle(s) sélectionné(s) pour cette clé API",
         "name": "Nom",
         "nameHelperText": "Entrez un nom unique pour identifier cette clé API",
-        "yourNewApiKey": "Votre nouvelle clé API"
+        "yourNewApiKey": "Votre nouvelle clé API",
+        "expirationNever": "Jamais",
+        "expiration30": "30 jours",
+        "expiration60": "60 jours",
+        "expiration90": "90 jours",
+        "expiration180": "6 mois",
+        "expiration365": "1 an",
+        "expirationCustom": "Date personnalisée...",
+        "expirationRequired": "Une date d'expiration est requise (maximum : {{max}} jours)",
+        "expirationCustomRequired": "Veuillez sélectionner une date d'expiration personnalisée",
+        "expirationExceedsMax": "La date sélectionnée dépasse la durée d'expiration maximale autorisée de {{max}} jours",
+        "expirationMaxHelper": "Maximum autorisé : {{max}} jours"
       },
       "fullKeyVisible": "La valeur complète de la clé API pour {{keyName}} est maintenant visible",
       "hideKey": "Masquer la clé",
@@ -705,7 +716,9 @@
         "modelBudget": "Budget ({{currencyCode}})",
         "modelTimePeriod": "Période",
         "modelRpm": "RPM",
-        "modelTpm": "TPM"
+        "modelTpm": "TPM",
+        "modelExceedsKeyLimit": "{{model}} : {{field}} dépasse la limite de la clé de {{max}}",
+        "modelExceedsMaximum": "{{model}} : {{field}} dépasse la valeur maximale autorisée de {{max}}"
       },
       "rateLimits": {
         "basic": "100 req/min (Basique)",
@@ -1125,7 +1138,15 @@
         "tpmLabel": "TPM",
         "tpmTooltip": "Tokens per minute for new API keys. Default pre-fills the form; maximum enforces a hard cap.",
         "weekly": "Weekly",
-        "yearly": "Yearly"
+        "yearly": "Yearly",
+        "expirationLabel": "Expiration",
+        "expirationTooltip": "Période d'expiration par défaut et maximale pour les nouvelles clés API. La valeur par défaut pré-remplit le formulaire ; le maximum impose une limite stricte.",
+        "expirationNever": "Jamais",
+        "expiration30": "30 jours",
+        "expiration60": "60 jours",
+        "expiration90": "90 jours",
+        "expiration180": "6 mois",
+        "expiration365": "1 an"
       },
       "allowDismiss": "Permettre aux utilisateurs de fermer",
       "allowDismissHelper": "Lorsque activé, les utilisateurs peuvent fermer la bannière pour leur session",
@@ -1616,7 +1637,10 @@
         "modelTpm": "TPM",
         "create": "Create",
         "apiKey": "API Key",
-        "saveChanges": "Enregistrer les modifications"
+        "saveChanges": "Enregistrer les modifications",
+        "expiration180": "6 mois",
+        "expiration365": "1 an",
+        "expirationCustom": "Date personnalisée..."
       },
       "keyGenerated": "API Key Generated",
       "keyWarning": "Save this key now",
@@ -1653,7 +1677,16 @@
       "tableLabel": "Clés API de l'Utilisateur",
       "tpm": "TPM",
       "lastUsed": "Dernière Utilisation",
-      "viewUsage": "Voir l'Utilisation"
+      "viewUsage": "Voir l'Utilisation",
+      "currentSpend": "Dépenses actuelles",
+      "resetSpend": "Réinitialiser les dépenses",
+      "resetSpendConfirmTitle": "Réinitialiser les dépenses de la clé API",
+      "resetSpendConfirmBody": "Voulez-vous vraiment réinitialiser les dépenses actuelles de cette clé API à {{formattedZero}} ? Cette action est irréversible.",
+      "resetSpendSuccess": "Dépenses réinitialisées",
+      "resetSpendSuccessDesc": "Les dépenses de la clé API ont été réinitialisées à {{formattedZero}}.",
+      "resetSpendError": "Échec de la réinitialisation des dépenses",
+      "rpmLimit": "Limite RPM",
+      "tpmLimit": "Limite TPM"
     },
     "budget": {
       "budgetUtilization": "Utilisation du budget",
@@ -1670,7 +1703,21 @@
       "unlimited": "Illimité",
       "updateError": "Échec de la Mise à Jour",
       "updateSuccess": "Budget Mis à Jour",
-      "updateSuccessDesc": "Le budget et les limites de l'utilisateur ont été mis à jour avec succès."
+      "updateSuccessDesc": "Le budget et les limites de l'utilisateur ont été mis à jour avec succès.",
+      "budgetDuration": "Durée du budget",
+      "budgetDurationHelp": "Fréquence de réinitialisation automatique du budget.",
+      "budgetDurationNone": "Aucune (pas de réinitialisation automatique)",
+      "budgetDurationDaily": "Quotidienne",
+      "budgetDurationWeekly": "Hebdomadaire",
+      "budgetDurationMonthly": "Mensuelle",
+      "budgetDurationYearly": "Annuelle",
+      "budgetResetAt": "Prochaine réinitialisation : {{date}}",
+      "resetSpend": "Réinitialiser les dépenses",
+      "resetSpendConfirmTitle": "Réinitialiser les dépenses de l'utilisateur",
+      "resetSpendConfirmBody": "Voulez-vous vraiment réinitialiser les dépenses actuelles de {{username}} à {{formattedZero}} ? Cette action est irréversible.",
+      "resetSpendSuccess": "Dépenses réinitialisées",
+      "resetSpendSuccessDesc": "Les dépenses de l'utilisateur ont été réinitialisées à {{formattedZero}}.",
+      "resetSpendError": "Échec de la réinitialisation"
     },
     "subscriptions": {
       "addError": "Échec de l'Ajout",

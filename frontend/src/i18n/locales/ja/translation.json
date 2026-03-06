@@ -577,7 +577,18 @@
         "modelsSelectedText": "このAPIキー用に{{count}}個のモデルが選択されました",
         "name": "名前",
         "nameHelperText": "このAPIキーを識別するための一意の名前を入力",
-        "yourNewApiKey": "新しいAPIキー"
+        "yourNewApiKey": "新しいAPIキー",
+        "expirationNever": "無期限",
+        "expiration30": "30日間",
+        "expiration60": "60日間",
+        "expiration90": "90日間",
+        "expiration180": "6か月",
+        "expiration365": "1年",
+        "expirationCustom": "カスタム日付...",
+        "expirationRequired": "有効期限の設定が必要です（最大: {{max}}日）",
+        "expirationCustomRequired": "カスタム有効期限を選択してください",
+        "expirationExceedsMax": "選択した日付が最大有効期限の{{max}}日を超えています",
+        "expirationMaxHelper": "最大許容期間: {{max}}日"
       },
       "fullKeyVisible": "{{keyName}}の完全なAPIキー値が表示されています",
       "hideKey": "キーを隠す",
@@ -705,7 +716,9 @@
         "modelBudget": "予算 ({{currencyCode}})",
         "modelTimePeriod": "期間",
         "modelRpm": "RPM",
-        "modelTpm": "TPM"
+        "modelTpm": "TPM",
+        "modelExceedsKeyLimit": "{{model}}: {{field}}がキーの上限{{max}}を超えています",
+        "modelExceedsMaximum": "{{model}}: {{field}}が最大許容値{{max}}を超えています"
       },
       "rateLimits": {
         "basic": "100リクエスト/分（ベーシック）",
@@ -1125,7 +1138,15 @@
         "tpmLabel": "TPM",
         "tpmTooltip": "Tokens per minute for new API keys. Default pre-fills the form; maximum enforces a hard cap.",
         "weekly": "Weekly",
-        "yearly": "Yearly"
+        "yearly": "Yearly",
+        "expirationLabel": "有効期限",
+        "expirationTooltip": "新しいAPIキーのデフォルトおよび最大有効期限。デフォルトはフォームに事前入力され、最大値は厳格な上限を設定します。",
+        "expirationNever": "無期限",
+        "expiration30": "30日間",
+        "expiration60": "60日間",
+        "expiration90": "90日間",
+        "expiration180": "6か月",
+        "expiration365": "1年"
       },
       "allowDismiss": "ユーザーによる閉じるを許可",
       "allowDismissHelper": "有効にすると、ユーザーはセッション中にバナーを閉じることができます",
@@ -1616,7 +1637,10 @@
         "modelTpm": "TPM",
         "create": "Create",
         "apiKey": "API Key",
-        "saveChanges": "変更を保存"
+        "saveChanges": "変更を保存",
+        "expiration180": "6か月",
+        "expiration365": "1年",
+        "expirationCustom": "カスタム日付..."
       },
       "keyGenerated": "API Key Generated",
       "keyWarning": "Save this key now",
@@ -1653,7 +1677,16 @@
       "tableLabel": "ユーザーAPIキー",
       "tpm": "TPM",
       "lastUsed": "最終使用日",
-      "viewUsage": "使用状況を表示"
+      "viewUsage": "使用状況を表示",
+      "currentSpend": "現在の支出",
+      "resetSpend": "支出をリセット",
+      "resetSpendConfirmTitle": "APIキーの支出をリセット",
+      "resetSpendConfirmBody": "このAPIキーの現在の支出を{{formattedZero}}にリセットしてもよろしいですか？この操作は元に戻せません。",
+      "resetSpendSuccess": "支出がリセットされました",
+      "resetSpendSuccessDesc": "APIキーの支出が{{formattedZero}}にリセットされました。",
+      "resetSpendError": "支出のリセットに失敗しました",
+      "rpmLimit": "RPM制限",
+      "tpmLimit": "TPM制限"
     },
     "budget": {
       "budgetUtilization": "予算使用率",
@@ -1670,7 +1703,21 @@
       "unlimited": "無制限",
       "updateError": "更新に失敗しました",
       "updateSuccess": "予算が更新されました",
-      "updateSuccessDesc": "ユーザーの予算と制限が正常に更新されました。"
+      "updateSuccessDesc": "ユーザーの予算と制限が正常に更新されました。",
+      "budgetDuration": "予算期間",
+      "budgetDurationHelp": "予算が自動的にリセットされる頻度。",
+      "budgetDurationNone": "なし（自動リセットなし）",
+      "budgetDurationDaily": "日次",
+      "budgetDurationWeekly": "週次",
+      "budgetDurationMonthly": "月次",
+      "budgetDurationYearly": "年次",
+      "budgetResetAt": "次回リセット: {{date}}",
+      "resetSpend": "支出をリセット",
+      "resetSpendConfirmTitle": "ユーザーの支出をリセット",
+      "resetSpendConfirmBody": "{{username}}の現在の支出を{{formattedZero}}にリセットしてもよろしいですか？この操作は元に戻せません。",
+      "resetSpendSuccess": "支出がリセットされました",
+      "resetSpendSuccessDesc": "ユーザーの支出が{{formattedZero}}にリセットされました。",
+      "resetSpendError": "リセットに失敗しました"
     },
     "subscriptions": {
       "addError": "追加に失敗しました",

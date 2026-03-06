@@ -718,7 +718,7 @@ Response:
 **Authorization**: Requires valid JWT token (any role)
 **Data Access**: Users can only update their own API keys; admins can update any API key
 
-Update an existing API key's name, models, or metadata
+Update an existing API key's name, models, expiration, or metadata
 
 **Request:**
 
@@ -726,6 +726,7 @@ Update an existing API key's name, models, or metadata
 {
   "name": "Updated Key Name", // Optional: Update display name
   "modelIds": ["gpt-4", "claude-3"], // Optional: Update accessible models
+  "expiresAt": "2025-06-15T00:00:00.000Z", // Optional: expiration date ISO string (null to clear)
   "metadata": {
     // Optional: Update metadata
     "description": "Updated description",
@@ -1587,13 +1588,14 @@ Response (permanent delete):
 
 **Authorization**: Requires `users:write` permission (admin role only)
 
-Update an API key's models, name, and/or quota fields
+Update an API key's models, name, expiration, and/or quota fields
 
 ```json
 Request:
 {
   "modelIds": ["gpt-4", "claude-3", "gemini-pro"],  // Optional: updated model list
   "name": "Updated Key Name",                        // Optional
+  "expiresAt": "2025-06-15T00:00:00.000Z",          // Optional: expiration date ISO string (null to clear)
   "maxBudget": 200.00,                               // Optional: max budget in dollars (null to clear)
   "tpmLimit": 10000,                                 // Optional: tokens per minute (null to clear)
   "rpmLimit": 60,                                    // Optional: requests per minute (null to clear)

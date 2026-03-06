@@ -80,6 +80,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Model Selection UX**: Replaced model Select dropdown with clickable Label chips and a Select All / Deselect All toggle for better visibility of selected models during API key creation
 
+- **API Key Expiration Management**: Full expiration lifecycle for API keys across user self-service and admin interfaces
+  - **User self-service**: Expiration picker in Create/Edit Key modals with preset options (30, 60, 90, 180, 365 days) and custom date picker
+  - **Admin editing**: Edit expiration on existing keys via User Management Modal → API Keys tab, with LiteLLM sync
+  - **Admin-configurable defaults and maximums**: New `expirationDays` field in API Key Quota Defaults (Settings and Tools → Limits) with default pre-fill and maximum enforcement
+  - **Maximum enforcement**: When an admin sets a maximum expiration, the "Never" option is removed and custom dates are validated against the cap
+  - **LiteLLM sync**: Expiration changes synced to LiteLLM via `duration` parameter on create, `expires` on clear
+  - **Backend**: `calculateDurationFromDate()` public method on `ApiKeyService`, `expiresAt` field added to `UpdateApiKeySchema`
+  - **Optimized spend queries**: Skips LiteLLM spend fetch for inactive/revoked keys
+  - i18n: Expiration-related translation keys added across all 9 locales
+
 ### Changed
 
 - **Admin Navigation Cosmetic Renames**: Improved menu and page naming for consistency across the admin section
@@ -92,6 +102,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Fastify `trustProxy` Enabled**: Added `trustProxy: true` to Fastify configuration for correct protocol detection behind edge TLS termination proxies
 - **React Query Global staleTime**: Set to `0` (always refetch on mount) to ensure fresh data on every page navigation; individual queries can still override with their own staleTime
 - **Modal Structure**: All modals now use PatternFly `ModalHeader` for titles and `ModalFooter` for action buttons, replacing inline header/footer patterns
+- **Standardized Date Display Format**: All UI dates now use unambiguous `YYYY-MM-DD` (ISO 8601) format instead of locale-dependent slash formats
+  - Updated shared `formatDate()` utility in `formatters.ts` to return `YYYY-MM-DD`
+  - Added shared `formatDateTime()` utility returning `YYYY-MM-DD HH:MM:SS`
+  - Replaced inline `toLocaleDateString()` calls in API Keys page, admin User Management Modal (Profile, API Keys, Subscriptions tabs), and Banners table with shared utilities
 
 ### Fixed
 

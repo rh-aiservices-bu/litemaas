@@ -639,7 +639,7 @@ export class LiteLLMService extends BaseService {
       }
       return response as LiteLLMKeyInfo;
     } catch (error) {
-      this.fastify.log.error(error, 'Failed to get key info');
+      this.fastify.log.warn(error, 'Failed to get key info from LiteLLM');
       throw error;
     }
   }

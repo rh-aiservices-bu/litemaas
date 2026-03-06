@@ -17,6 +17,7 @@ import {
 } from '@patternfly/react-core';
 import { PencilAltIcon, TrashIcon } from '@patternfly/react-icons';
 import type { Banner } from '../../types/banners';
+import { formatDate } from '../../utils/formatters';
 
 interface BannerTableProps {
   banners: Banner[];
@@ -64,15 +65,6 @@ const BannerTable: React.FC<BannerTableProps> = ({
         return 'green';
       default:
         return 'grey';
-    }
-  };
-
-  // Format date
-  const formatDate = (dateString: string): string => {
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return dateString;
     }
   };
 

@@ -190,6 +190,7 @@ export const UpdateApiKeySchema = Type.Object({
   modelTpmLimit: Type.Optional(
     Type.Union([Type.Null(), Type.Record(Type.String(), Type.Integer({ minimum: 0 }))]),
   ),
+  expiresAt: Type.Optional(Type.Union([Type.Null(), Type.String({ format: 'date-time' })])),
 });
 
 export type UpdateApiKey = Static<typeof UpdateApiKeySchema>;

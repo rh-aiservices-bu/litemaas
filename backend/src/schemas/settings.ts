@@ -18,11 +18,13 @@ export const ApiKeyQuotaDefaultsSchema = Type.Object({
       ]),
     ),
     softBudget: Type.Optional(Type.Union([Type.Null(), Type.Number({ minimum: 0 })])),
+    expirationDays: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 1 })])),
   }),
   maximums: Type.Object({
     maxBudget: Type.Optional(Type.Union([Type.Null(), Type.Number({ minimum: 0 })])),
     tpmLimit: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 0 })])),
     rpmLimit: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 0 })])),
+    expirationDays: Type.Optional(Type.Union([Type.Null(), Type.Integer({ minimum: 1 })])),
   }),
 });
 

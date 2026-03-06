@@ -577,7 +577,18 @@
         "modelsSelectedText": "为此API密钥选择了{{count}}个模型",
         "name": "名称",
         "nameHelperText": "输入唯一名称以识别此API密钥",
-        "yourNewApiKey": "您的新API密钥"
+        "yourNewApiKey": "您的新API密钥",
+        "expirationNever": "永不过期",
+        "expiration30": "30天",
+        "expiration60": "60天",
+        "expiration90": "90天",
+        "expiration180": "6个月",
+        "expiration365": "1年",
+        "expirationCustom": "自定义日期...",
+        "expirationRequired": "需要设置过期时间（最长：{{max}}天）",
+        "expirationCustomRequired": "请选择自定义过期日期",
+        "expirationExceedsMax": "所选日期超过了最大允许过期时间{{max}}天",
+        "expirationMaxHelper": "最大允许：{{max}}天"
       },
       "fullKeyVisible": "{{keyName}}的完整API密钥值现在可见",
       "hideKey": "隐藏密钥",
@@ -705,7 +716,9 @@
         "modelBudget": "预算 ({{currencyCode}})",
         "modelTimePeriod": "时间周期",
         "modelRpm": "RPM",
-        "modelTpm": "TPM"
+        "modelTpm": "TPM",
+        "modelExceedsKeyLimit": "{{model}}：{{field}}超过了密钥限制{{max}}",
+        "modelExceedsMaximum": "{{model}}：{{field}}超过了最大允许值{{max}}"
       },
       "rateLimits": {
         "basic": "100请求/分钟（基础）",
@@ -1125,7 +1138,15 @@
         "tpmLabel": "TPM",
         "tpmTooltip": "Tokens per minute for new API keys. Default pre-fills the form; maximum enforces a hard cap.",
         "weekly": "Weekly",
-        "yearly": "Yearly"
+        "yearly": "Yearly",
+        "expirationLabel": "有效期",
+        "expirationTooltip": "新API密钥的默认和最大有效期。默认值预填表单；最大值强制执行硬性上限。",
+        "expirationNever": "永不过期",
+        "expiration30": "30天",
+        "expiration60": "60天",
+        "expiration90": "90天",
+        "expiration180": "6个月",
+        "expiration365": "1年"
       },
       "allowDismiss": "允许用户关闭",
       "allowDismissHelper": "启用后，用户可以在其会话中关闭横幅",
@@ -1597,6 +1618,9 @@
         "expiration30": "30 days",
         "expiration60": "60 days",
         "expiration90": "90 days",
+        "expiration180": "6个月",
+        "expiration365": "1年",
+        "expirationCustom": "自定义日期...",
         "maxBudget": "Max Budget ({{currencyCode}})",
         "budgetDuration": "Budget Duration",
         "budgetDurationHelp": "How often the budget resets.",
@@ -1653,7 +1677,16 @@
       "tableLabel": "用户 API 密钥",
       "tpm": "TPM",
       "lastUsed": "最后使用",
-      "viewUsage": "查看使用情况"
+      "viewUsage": "查看使用情况",
+      "currentSpend": "当前支出",
+      "resetSpend": "重置支出",
+      "resetSpendConfirmTitle": "重置API密钥支出",
+      "resetSpendConfirmBody": "确定要将此API密钥的当前支出重置为{{formattedZero}}吗？此操作无法撤消。",
+      "resetSpendSuccess": "支出已重置",
+      "resetSpendSuccessDesc": "API密钥支出已重置为{{formattedZero}}。",
+      "resetSpendError": "重置支出失败",
+      "rpmLimit": "RPM限制",
+      "tpmLimit": "TPM限制"
     },
     "budget": {
       "budgetUtilization": "预算使用率",
@@ -1670,7 +1703,21 @@
       "unlimited": "无限制",
       "updateError": "更新失败",
       "updateSuccess": "预算已更新",
-      "updateSuccessDesc": "用户预算和限制已成功更新。"
+      "updateSuccessDesc": "用户预算和限制已成功更新。",
+      "budgetDuration": "预算周期",
+      "budgetDurationHelp": "预算自动重置的频率。",
+      "budgetDurationNone": "无（不自动重置）",
+      "budgetDurationDaily": "每日",
+      "budgetDurationWeekly": "每周",
+      "budgetDurationMonthly": "每月",
+      "budgetDurationYearly": "每年",
+      "budgetResetAt": "下次重置：{{date}}",
+      "resetSpend": "重置支出",
+      "resetSpendConfirmTitle": "重置用户支出",
+      "resetSpendConfirmBody": "确定要将{{username}}的当前支出重置为{{formattedZero}}吗？此操作无法撤消。",
+      "resetSpendSuccess": "支出已重置",
+      "resetSpendSuccessDesc": "用户支出已重置为{{formattedZero}}。",
+      "resetSpendError": "重置失败"
     },
     "subscriptions": {
       "addError": "添加失败",
