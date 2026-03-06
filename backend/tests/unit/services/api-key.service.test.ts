@@ -1218,7 +1218,8 @@ describe('ApiKeyService', () => {
 
       // The INSERT query is the second call (after BEGIN)
       const insertCall = mockPgClient.query.mock.calls.find(
-        (call: unknown[]) => typeof call[0] === 'string' && call[0].includes('INSERT INTO api_keys'),
+        (call: unknown[]) =>
+          typeof call[0] === 'string' && call[0].includes('INSERT INTO api_keys'),
       );
 
       expect(insertCall).toBeDefined();
@@ -1286,7 +1287,9 @@ describe('ApiKeyService', () => {
       expect(result.maxParallelRequests).toBe(5);
       expect(result.budgetDuration).toBe('monthly');
       expect(result.softBudget).toBe(80);
-      expect(result.modelMaxBudget).toEqual({ 'gpt-4o': { budgetLimit: 50, timePeriod: 'monthly' } });
+      expect(result.modelMaxBudget).toEqual({
+        'gpt-4o': { budgetLimit: 50, timePeriod: 'monthly' },
+      });
       expect(result.modelRpmLimit).toEqual({ 'gpt-4o': 60 });
       expect(result.modelTpmLimit).toEqual({ 'gpt-4o': 5000 });
     });
@@ -1396,13 +1399,13 @@ describe('ApiKeyService', () => {
       expect(mockDbUtils.queryOne).toHaveBeenCalledWith(
         expect.stringContaining('budget_duration'),
         expect.arrayContaining([
-          25,      // spend
-          100,     // max_budget
-          10000,   // tpm_limit
-          100,     // rpm_limit
+          25, // spend
+          100, // max_budget
+          10000, // tpm_limit
+          100, // rpm_limit
           'monthly', // budget_duration
-          80,      // soft_budget
-          5,       // max_parallel_requests
+          80, // soft_budget
+          5, // max_parallel_requests
         ]),
       );
     });

@@ -98,7 +98,8 @@ const brandingRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       tags: ['Admin', 'Branding'],
       summary: 'Upload branding image',
-      description: 'Upload a branding image (admin only). Max 2 MB, formats: jpg, jpeg, png, svg, gif, webp',
+      description:
+        'Upload a branding image (admin only). Max 2 MB, formats: jpg, jpeg, png, svg, gif, webp',
       security: [{ bearerAuth: [] }],
       params: BrandingImageParamsSchema,
       body: UploadBrandingImageSchema,

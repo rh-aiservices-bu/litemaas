@@ -354,7 +354,10 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
           title: t('users.apiKeys.form.validationError', 'Validation Error'),
           description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', {
             model: modelName,
-            field: t('users.apiKeys.form.modelBudget', { defaultValue: 'Budget ({{currencyCode}})', currencyCode }),
+            field: t('users.apiKeys.form.modelBudget', {
+              defaultValue: 'Budget ({{currencyCode}})',
+              currencyCode,
+            }),
             max: editMaxBudget,
           }),
           variant: 'danger',
@@ -487,7 +490,10 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
           title: t('users.apiKeys.form.validationError', 'Validation Error'),
           description: t('pages.apiKeys.quotas.modelExceedsKeyLimit', {
             model: modelName,
-            field: t('users.apiKeys.form.modelBudget', { defaultValue: 'Budget ({{currencyCode}})', currencyCode }),
+            field: t('users.apiKeys.form.modelBudget', {
+              defaultValue: 'Budget ({{currencyCode}})',
+              currencyCode,
+            }),
             max: newKeyMaxBudget,
           }),
           variant: 'danger',
@@ -646,7 +652,10 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
   ) => (
     <>
       <FormGroup
-        label={t('users.apiKeys.form.maxBudget', { defaultValue: 'Max Budget ({{currencyCode}})', currencyCode })}
+        label={t('users.apiKeys.form.maxBudget', {
+          defaultValue: 'Max Budget ({{currencyCode}})',
+          currencyCode,
+        })}
         fieldId={`${prefix}-key-budget`}
       >
         <NumberInput
@@ -661,7 +670,10 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
             setMaxBudget(isNaN(value) ? undefined : value);
           }}
           isDisabled={isLoading}
-          aria-label={t('users.apiKeys.form.maxBudget', { defaultValue: 'Max Budget ({{currencyCode}})', currencyCode })}
+          aria-label={t('users.apiKeys.form.maxBudget', {
+            defaultValue: 'Max Budget ({{currencyCode}})',
+            currencyCode,
+          })}
           widthChars={10}
         />
       </FormGroup>
@@ -747,7 +759,10 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
 
       {showSoftBudget && maxBudget !== undefined && maxBudget > 0 && (
         <FormGroup
-          label={t('users.apiKeys.form.softBudget', { defaultValue: 'Soft Budget Warning ({{currencyCode}})', currencyCode })}
+          label={t('users.apiKeys.form.softBudget', {
+            defaultValue: 'Soft Budget Warning ({{currencyCode}})',
+            currencyCode,
+          })}
           fieldId={`${prefix}-key-soft-budget`}
         >
           <NumberInput
@@ -762,7 +777,10 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
               setSoftBudget(isNaN(value) ? undefined : value);
             }}
             isDisabled={isLoading}
-            aria-label={t('users.apiKeys.form.softBudget', { defaultValue: 'Soft Budget Warning ({{currencyCode}})', currencyCode })}
+            aria-label={t('users.apiKeys.form.softBudget', {
+              defaultValue: 'Soft Budget Warning ({{currencyCode}})',
+              currencyCode,
+            })}
             widthChars={10}
           />
           <HelperText>

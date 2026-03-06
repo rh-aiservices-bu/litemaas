@@ -512,7 +512,10 @@ const ToolsPage: React.FC = () => {
 
                     <FlexItem>
                       <Form>
-                        <FormGroup label={t('pages.tools.maxBudgetLabel', { currencyCode })} fieldId="max-budget">
+                        <FormGroup
+                          label={t('pages.tools.maxBudgetLabel', { currencyCode })}
+                          fieldId="max-budget"
+                        >
                           <TextInput
                             id="max-budget"
                             type="number"
@@ -523,7 +526,9 @@ const ToolsPage: React.FC = () => {
                             placeholder={t('pages.tools.leaveEmptyToKeep')}
                             isDisabled={!canUpdateLimits}
                           />
-                          <FormHelperText>{t('pages.tools.maxBudgetHelper', { currencyCode })}</FormHelperText>
+                          <FormHelperText>
+                            {t('pages.tools.maxBudgetHelper', { currencyCode })}
+                          </FormHelperText>
                         </FormGroup>
 
                         <FormGroup label={t('pages.tools.tpmLimitLabel')} fieldId="tpm-limit">

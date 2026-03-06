@@ -235,13 +235,27 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Enforce maximums
         const violations: string[] = [];
-        if (maximums.maxBudget != null && mergedBody.maxBudget != null && mergedBody.maxBudget > maximums.maxBudget) {
-          violations.push(`maxBudget: ${mergedBody.maxBudget} exceeds maximum ${maximums.maxBudget}`);
+        if (
+          maximums.maxBudget != null &&
+          mergedBody.maxBudget != null &&
+          mergedBody.maxBudget > maximums.maxBudget
+        ) {
+          violations.push(
+            `maxBudget: ${mergedBody.maxBudget} exceeds maximum ${maximums.maxBudget}`,
+          );
         }
-        if (maximums.tpmLimit != null && mergedBody.tpmLimit != null && mergedBody.tpmLimit > maximums.tpmLimit) {
+        if (
+          maximums.tpmLimit != null &&
+          mergedBody.tpmLimit != null &&
+          mergedBody.tpmLimit > maximums.tpmLimit
+        ) {
           violations.push(`tpmLimit: ${mergedBody.tpmLimit} exceeds maximum ${maximums.tpmLimit}`);
         }
-        if (maximums.rpmLimit != null && mergedBody.rpmLimit != null && mergedBody.rpmLimit > maximums.rpmLimit) {
+        if (
+          maximums.rpmLimit != null &&
+          mergedBody.rpmLimit != null &&
+          mergedBody.rpmLimit > maximums.rpmLimit
+        ) {
           violations.push(`rpmLimit: ${mergedBody.rpmLimit} exceeds maximum ${maximums.rpmLimit}`);
         }
 
@@ -450,10 +464,16 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             ],
           },
           modelRpmLimit: {
-            anyOf: [{ type: 'null' }, { type: 'object', additionalProperties: { type: 'integer' } }],
+            anyOf: [
+              { type: 'null' },
+              { type: 'object', additionalProperties: { type: 'integer' } },
+            ],
           },
           modelTpmLimit: {
-            anyOf: [{ type: 'null' }, { type: 'object', additionalProperties: { type: 'integer' } }],
+            anyOf: [
+              { type: 'null' },
+              { type: 'object', additionalProperties: { type: 'integer' } },
+            ],
           },
           metadata: {
             type: 'object',
@@ -490,11 +510,27 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
-      const { maxBudget, budgetDuration, tpmLimit, rpmLimit, modelMaxBudget, modelRpmLimit, modelTpmLimit, ...rest } = request.body;
+      const {
+        maxBudget,
+        budgetDuration,
+        tpmLimit,
+        rpmLimit,
+        modelMaxBudget,
+        modelRpmLimit,
+        modelTpmLimit,
+        ...rest
+      } = request.body;
 
       try {
         // Validate quota fields against admin-configured maximums
-        const hasQuotaUpdates = maxBudget !== undefined || budgetDuration !== undefined || tpmLimit !== undefined || rpmLimit !== undefined || modelMaxBudget !== undefined || modelRpmLimit !== undefined || modelTpmLimit !== undefined;
+        const hasQuotaUpdates =
+          maxBudget !== undefined ||
+          budgetDuration !== undefined ||
+          tpmLimit !== undefined ||
+          rpmLimit !== undefined ||
+          modelMaxBudget !== undefined ||
+          modelRpmLimit !== undefined ||
+          modelTpmLimit !== undefined;
         if (hasQuotaUpdates) {
           const quotaConfig = await settingsService.getApiKeyDefaults();
           const { maximums } = quotaConfig;

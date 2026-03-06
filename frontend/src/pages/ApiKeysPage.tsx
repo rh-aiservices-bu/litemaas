@@ -592,10 +592,10 @@ const ApiKeysPage: React.FC = () => {
         const updateRequest = {
           name: newKeyName,
           modelIds: selectedModelIds,
-          maxBudget: newKeyMaxBudget ?? null,
-          budgetDuration: newKeyBudgetDuration || null,
-          tpmLimit: newKeyTpmLimit ?? null,
-          rpmLimit: newKeyRpmLimit ?? null,
+          maxBudget: newKeyMaxBudget ?? undefined,
+          budgetDuration: newKeyBudgetDuration || undefined,
+          tpmLimit: newKeyTpmLimit ?? undefined,
+          rpmLimit: newKeyRpmLimit ?? undefined,
           ...perModelPayload,
           metadata: {
             description: newKeyDescription || undefined,
@@ -1386,7 +1386,10 @@ const ApiKeysPage: React.FC = () => {
                 </FormGroup>
               )}
 
-            <FormGroup label={t('pages.apiKeys.quotas.maxBudget', { currencyCode })} fieldId="key-max-budget">
+            <FormGroup
+              label={t('pages.apiKeys.quotas.maxBudget', { currencyCode })}
+              fieldId="key-max-budget"
+            >
               <TextInput
                 id="key-max-budget"
                 type="number"

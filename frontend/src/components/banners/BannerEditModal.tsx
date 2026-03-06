@@ -175,11 +175,7 @@ const BannerEditModal: React.FC<BannerEditModalProps> = ({
   };
 
   return (
-    <Modal
-      variant={ModalVariant.large}
-      isOpen={isOpen}
-      onClose={onClose}
-    >
+    <Modal variant={ModalVariant.large} isOpen={isOpen} onClose={onClose}>
       <ModalHeader
         title={
           !canEdit && mode === 'edit'

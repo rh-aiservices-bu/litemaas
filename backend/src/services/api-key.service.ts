@@ -856,8 +856,11 @@ export class ApiKeyService extends BaseService {
                 key.lite_llm_key_value as string,
               );
               key.current_spend = liteLLMInfo.spend ?? key.current_spend;
-              key.max_budget = liteLLMInfo.max_budget != null && Number(liteLLMInfo.max_budget) !== LITELLM_UNLIMITED
-                ? liteLLMInfo.max_budget : key.max_budget;
+              key.max_budget =
+                liteLLMInfo.max_budget != null &&
+                Number(liteLLMInfo.max_budget) !== LITELLM_UNLIMITED
+                  ? liteLLMInfo.max_budget
+                  : key.max_budget;
               key.budget_reset_at = liteLLMInfo.budget_reset_at ?? key.budget_reset_at;
             } catch (error) {
               this.fastify.log.warn(
@@ -976,11 +979,14 @@ export class ApiKeyService extends BaseService {
         [
           liteLLMInfo.spend ?? null,
           liteLLMInfo.max_budget != null && Number(liteLLMInfo.max_budget) !== LITELLM_UNLIMITED
-            ? liteLLMInfo.max_budget : null,
+            ? liteLLMInfo.max_budget
+            : null,
           liteLLMInfo.tpm_limit != null && Number(liteLLMInfo.tpm_limit) !== LITELLM_UNLIMITED
-            ? liteLLMInfo.tpm_limit : null,
+            ? liteLLMInfo.tpm_limit
+            : null,
           liteLLMInfo.rpm_limit != null && Number(liteLLMInfo.rpm_limit) !== LITELLM_UNLIMITED
-            ? liteLLMInfo.rpm_limit : null,
+            ? liteLLMInfo.rpm_limit
+            : null,
           liteLLMInfo.budget_duration ?? null,
           liteLLMInfo.litellm_budget_table?.soft_budget ?? liteLLMInfo.soft_budget ?? null,
           liteLLMInfo.max_parallel_requests ?? null,
@@ -2015,13 +2021,19 @@ export class ApiKeyService extends BaseService {
       lastSyncAt: apiKey.last_sync_at ? new Date(apiKey.last_sync_at) : undefined,
       syncStatus: (apiKey.sync_status || 'pending') as 'pending' | 'synced' | 'error',
       syncError: apiKey.sync_error,
-      maxBudget: apiKey.max_budget != null && Number(apiKey.max_budget) !== LITELLM_UNLIMITED
-        ? apiKey.max_budget : undefined,
+      maxBudget:
+        apiKey.max_budget != null && Number(apiKey.max_budget) !== LITELLM_UNLIMITED
+          ? apiKey.max_budget
+          : undefined,
       currentSpend: apiKey.current_spend,
-      tpmLimit: apiKey.tpm_limit != null && Number(apiKey.tpm_limit) !== LITELLM_UNLIMITED
-        ? apiKey.tpm_limit : undefined,
-      rpmLimit: apiKey.rpm_limit != null && Number(apiKey.rpm_limit) !== LITELLM_UNLIMITED
-        ? apiKey.rpm_limit : undefined,
+      tpmLimit:
+        apiKey.tpm_limit != null && Number(apiKey.tpm_limit) !== LITELLM_UNLIMITED
+          ? apiKey.tpm_limit
+          : undefined,
+      rpmLimit:
+        apiKey.rpm_limit != null && Number(apiKey.rpm_limit) !== LITELLM_UNLIMITED
+          ? apiKey.rpm_limit
+          : undefined,
       budgetDuration: apiKey.budget_duration,
       softBudget: apiKey.soft_budget,
       budgetResetAt: apiKey.budget_reset_at ? new Date(apiKey.budget_reset_at) : undefined,

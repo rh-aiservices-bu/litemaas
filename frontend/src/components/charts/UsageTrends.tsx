@@ -471,7 +471,11 @@ const UsageTrends: React.FC<UsageTrendsProps> = ({
             showGrid
             tickValues={yTickValues}
             tickFormat={(value) =>
-              formatYTickByMetric(metricType === 'requests' ? Math.round(value) : value, metricType, currencySymbol)
+              formatYTickByMetric(
+                metricType === 'requests' ? Math.round(value) : value,
+                metricType,
+                currencySymbol,
+              )
             }
             style={{
               tickLabels: { fontSize: AXIS_STYLES.tickLabelFontSize },

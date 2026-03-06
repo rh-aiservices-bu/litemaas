@@ -67,6 +67,20 @@ vi.mock('../services/config.service', () => ({
       usageCacheTTL: 300,
       environment: 'test',
     }),
+    getApiKeyDefaults: vi.fn().mockResolvedValue({
+      defaults: {
+        maxBudget: null,
+        tpmLimit: null,
+        rpmLimit: null,
+        budgetDuration: null,
+        softBudget: null,
+      },
+      maximums: {
+        maxBudget: null,
+        tpmLimit: null,
+        rpmLimit: null,
+      },
+    }),
   },
 }));
 

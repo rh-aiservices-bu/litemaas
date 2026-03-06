@@ -97,7 +97,11 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
     }
   };
 
-  const labelWithTooltip = (labelKey: string, tooltipKey: string, interpolation?: Record<string, string>) => (
+  const labelWithTooltip = (
+    labelKey: string,
+    tooltipKey: string,
+    interpolation?: Record<string, string>,
+  ) => (
     <span>
       {t(labelKey, interpolation)}{' '}
       <Tooltip content={t(tooltipKey, interpolation)}>
@@ -144,7 +148,7 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
         </Grid>
 
         {/* TPM row */}
-        <Grid hasGutter alignItems={{ default: 'alignItemsCenter' }}>
+        <Grid hasGutter>
           <GridItem span={4}>
             {labelWithTooltip(
               'pages.tools.apiKeyDefaults.tpmLabel',
@@ -188,7 +192,7 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
         </Grid>
 
         {/* RPM row */}
-        <Grid hasGutter alignItems={{ default: 'alignItemsCenter' }}>
+        <Grid hasGutter>
           <GridItem span={4}>
             {labelWithTooltip(
               'pages.tools.apiKeyDefaults.rpmLabel',
@@ -232,7 +236,7 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
         </Grid>
 
         {/* Max Budget row */}
-        <Grid hasGutter alignItems={{ default: 'alignItemsCenter' }}>
+        <Grid hasGutter>
           <GridItem span={4}>
             {labelWithTooltip(
               'pages.tools.apiKeyDefaults.maxBudgetLabel',
@@ -277,7 +281,7 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
         </Grid>
 
         {/* Budget Duration row — default only */}
-        <Grid hasGutter alignItems={{ default: 'alignItemsCenter' }}>
+        <Grid hasGutter>
           <GridItem span={4}>
             {labelWithTooltip(
               'pages.tools.apiKeyDefaults.budgetDurationLabel',
@@ -311,7 +315,7 @@ const ApiKeyQuotaDefaultsSection: React.FC<ApiKeyQuotaDefaultsSectionProps> = ({
 
         {/* Soft Budget row — hidden (requires LiteLLM Enterprise) */}
         {/* When LiteLLM Enterprise is available, uncomment this block:
-        <Grid hasGutter alignItems={{ default: 'alignItemsCenter' }}>
+        <Grid hasGutter>
           <GridItem span={4}>
             {labelWithTooltip(
               'pages.tools.apiKeyDefaults.softBudgetLabel',
