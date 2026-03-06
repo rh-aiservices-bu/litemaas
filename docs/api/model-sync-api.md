@@ -184,9 +184,9 @@ Administrators can trigger manual synchronization at any time using the sync API
 
 ## Frontend Integration
 
-### Admin Tools Page
+### Settings and Tools Page
 
-The model sync API is integrated with the frontend through the Admin Tools page (`/admin/tools`), providing a user-friendly interface for triggering manual synchronization.
+The model sync API is integrated with the frontend through the Settings and Tools page (`/admin/tools`), providing a user-friendly interface for triggering manual synchronization.
 
 #### JavaScript Service Integration
 
@@ -279,7 +279,7 @@ catch (error) {
 4. **Accessibility**: WCAG 2.1 AA compliant with screen reader support
 5. **Internationalization**: Translated to 9 languages
 
-For complete frontend implementation details, see [Admin Tools Documentation](../features/admin-tools.md).
+For complete frontend implementation details, see [Settings and Tools Documentation](../features/admin-tools.md).
 
 ## Data Mapping
 

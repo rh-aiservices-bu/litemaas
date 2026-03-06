@@ -159,27 +159,27 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 
 **Admin Routes** (admin/adminReadonly roles required):
 
-- `/admin/users` - **Admin user management (UsersPage.tsx)** - Consolidated modal-based interface:
-  - Tabbed management: Profile, Budget & Limits, API Keys, Subscriptions
-  - Role management with admin/adminReadonly/user toggles
-  - Budget and rate limit configuration with progress indicators
-  - API key creation with auto-subscription and revocation
-  - RBAC: admin (full access) vs adminReadonly (view only)
-- `/admin/models` - Model configuration testing (AdminModelsPage.tsx)
-- `/admin/tools` - Administrative tools with Limits, Branding, and Banners tabs (ToolsPage.tsx)
-  - Limits tab: Bulk User Limits (max budget, TPM, RPM for all users) and API Key Quota Defaults (admin-configurable defaults and maximums)
-- `/admin/subscriptions` - **Subscription approval management (AdminSubscriptionsPage.tsx)** - Approve/deny restricted model access:
-  - Multi-dimensional filtering (status, model, user, date range)
-  - Bulk approve/deny operations with result modals
-  - Granular RBAC (admin vs adminReadonly)
-  - Manual refresh only (no polling)
-  - Full audit trail display
-- `/admin/usage` - **Admin usage analytics (AdminUsagePage.tsx)** - Major feature with comprehensive system-wide analytics:
+- `/admin/usage` - **Usage Analytics (AdminUsagePage.tsx)** - Major feature with comprehensive system-wide analytics:
   - Global metrics with trend analysis
   - Multi-dimensional filtering (users, models, providers, API keys)
   - Day-by-day incremental caching (5-min TTL for current day)
   - Data export (CSV/JSON)
   - ConfigContext integration for dynamic cache TTL
+- `/admin/models` - **Model Management (AdminModelsPage.tsx)** - Model configuration testing
+- `/admin/subscriptions` - **Subscription Management (AdminSubscriptionsPage.tsx)** - Approve/deny restricted model access:
+  - Multi-dimensional filtering (status, model, user, date range)
+  - Bulk approve/deny operations with result modals
+  - Granular RBAC (admin vs adminReadonly)
+  - Manual refresh only (no polling)
+  - Full audit trail display
+- `/admin/users` - **Users Management (UsersPage.tsx)** - Consolidated modal-based interface:
+  - Tabbed management: Profile, Budget & Limits, API Keys, Subscriptions
+  - Role management with admin/adminReadonly/user toggles
+  - Budget and rate limit configuration with progress indicators
+  - API key creation with auto-subscription and revocation
+  - RBAC: admin (full access) vs adminReadonly (view only)
+- `/admin/tools` - **Settings and Tools (ToolsPage.tsx)** - Tabs: Limits, Banners, Branding, Currency, Models Sync
+  - Limits tab: Bulk User Limits (max budget, TPM, RPM for all users) and API Key Quota Defaults (admin-configurable defaults and maximums)
 
 **Protection**: `ProtectedRoute` for auth, `RoleProtectedRoute` for admin routes with required roles
 

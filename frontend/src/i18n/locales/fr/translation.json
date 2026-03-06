@@ -469,9 +469,9 @@
     "admin": {
       "models": "Gestion des Modèles",
       "subscriptions": "Gestion des Abonnements",
-      "tools": "Outils",
+      "tools": "Paramètres et Outils",
       "usage": "Analyses d'utilisation",
-      "users": "Utilisateurs"
+      "users": "Gestion des Utilisateurs"
     },
     "apiKeys": "Clés API",
     "chatbot": "Terrain de Jeu du Chatbot",
@@ -1144,7 +1144,7 @@
       "bannerDeleteErrorGeneric": "Une erreur s'est produite lors de la suppression de la bannière. Veuillez réessayer.",
       "bannerDescription": "Créer et gérer des annonces qui apparaissent en haut de l'application pour tous les utilisateurs.",
       "bannerEnglishRequired": "Le contenu en anglais est obligatoire (les autres langues sont optionnelles)",
-      "bannerManagement": "Gestion des Bannières",
+      "bannerManagement": "Bannières",
       "bannerName": "Nom de la Bannière",
       "bannerNamePlaceholder": "Saisissez un nom descriptif pour cette bannière",
       "bannerNameRequired": "Le nom de la bannière est obligatoire",
@@ -1191,14 +1191,14 @@
       "lastUpdated": "Dernière Mise à Jour",
       "leaveEmptyToKeep": "Laisser vide pour conserver la valeur actuelle",
       "limitsDescription": "Définir les limites de ressources pour tous les utilisateurs du système. Les modifications s'appliqueront à tous les utilisateurs actifs. Les valeurs par défaut pour les nouveaux utilisateurs ne changeront pas.",
-      "limitsManagement": "Gestion des Limites",
+      "limitsManagement": "Limites",
       "bulkUpdate": {
         "title": "Bulk Update All Users",
         "description": "Override resource limits for every active user at once. This does not change defaults for future users."
       },
       "maxBudgetHelper": "Limite de dépenses maximale par utilisateur en {{currencyCode}}",
       "maxBudgetLabel": "Budget Maximum ({{currencyCode}})",
-      "models": "Gestion des Modèles",
+      "models": "Synchronisation des Modèles",
       "modelsDescription": "Synchroniser les modèles d'IA depuis LiteLLM pour s'assurer d'avoir accès aux derniers modèles disponibles.",
       "newModels": "Nouveaux Modèles",
       "noBannersFound": "Aucune bannière trouvée. Créez votre première bannière pour commencer.",
@@ -1221,7 +1221,7 @@
       "syncSuccess": "Modèles synchronisés avec succès",
       "syncSuccessDetails": "{{total}} modèles au total ({{new}} nouveaux, {{updated}} mis à jour)",
       "syncTime": "Heure",
-      "title": "Outils",
+      "title": "Paramètres et Outils",
       "toggleVisibility": "Basculer la visibilité pour {{name}}",
       "totalModels": "Modèles Totaux",
       "totalUsersUpdated": "Utilisateurs Totaux",

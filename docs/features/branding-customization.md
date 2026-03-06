@@ -18,7 +18,7 @@ Branding Customization allows administrators to personalize the LiteMaaS login p
 | Action | Required Role | Description |
 |--------|--------------|-------------|
 | View branding settings | Public | Login page branding is visible to all users (unauthenticated) |
-| View branding admin UI | admin, adminReadonly | Access the Branding tab in Admin Tools |
+| View branding admin UI | admin, adminReadonly | Access the Branding tab in Settings and Tools |
 | Modify branding settings | admin | Update toggles, text, upload/delete images |
 
 ## Customizable Elements
@@ -35,7 +35,7 @@ Branding Customization allows administrators to personalize the LiteMaaS login p
 
 ### BrandingTab
 
-The `BrandingTab` component (`frontend/src/components/branding/BrandingTab.tsx`) is rendered within the Admin Tools page (`/admin/tools`). It provides a card-based layout with four sections:
+The `BrandingTab` component (`frontend/src/components/branding/BrandingTab.tsx`) is rendered within the Settings and Tools page (`/admin/tools`). It provides a card-based layout with four sections:
 
 1. **Login Logo Card** — Toggle switch + image upload/preview/delete
 2. **Login Title Card** — Toggle switch + text input (max 200 characters)
@@ -80,6 +80,6 @@ Images are stored as base64 text in the database. When served via the `GET /imag
 
 ## Related Documentation
 
-- [Admin Tools](admin-tools.md#branding-customization) — Branding section in admin tools guide
+- [Settings and Tools](admin-tools.md#branding-customization) — Branding section in Settings and Tools guide
 - [REST API Reference](../api/rest-api.md#branding-apiv1branding) — Branding API endpoints
 - [Database Schema](../architecture/database-schema.md#branding_settings) — Table definition
