@@ -9,6 +9,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Configurable Currency Settings**: Admin-controlled currency configuration for all monetary value displays across the platform
+  - New **Currency** tab in Admin Tools page (`/admin/tools`) with dropdown selector from 25 supported currencies
+  - 25 supported currencies: USD, EUR, GBP, JPY, CNY, CAD, AUD, CHF, INR, KRW, BRL, MXN, SGD, HKD, NZD, SEK, NOK, DKK, PLN, ZAR, TRY, THB, AED, SAR, ILS
+  - Backend `SettingsService` extended with `getCurrencySettings()` and `updateCurrencySettings()` methods using `system_settings` table (`currency` key)
+  - Three new admin API endpoints: `GET/PUT /api/v1/admin/settings/currency` and `GET /api/v1/admin/settings/currency/supported`
+  - Public config endpoint (`GET /api/v1/config`) now includes `currency` field with code, symbol, and name
+  - Frontend `ConfigContext` extended with `useCurrency()` hook providing `currencyCode`, `currencySymbol`, and `formatCurrency()` helper
+  - All hard-coded dollar signs (`$`) replaced with configurable currency symbol across:
+    - Usage analytics: MetricsOverview, charts (UsageTrends, ModelUsageTrends, ModelDistributionChart, UsageHeatmap), breakdown tables
+    - API key management: ApiKeysPage spend displays, UserApiKeysTab budget/spend columns
+    - Admin interfaces: UserBudgetLimitsTab, UserDefaultsSection, ApiKeyQuotaDefaultsSection
+    - Model pages: AdminModelsPage, ModelsPage, SubscriptionsPage pricing
+    - Backend: CSV/JSON usage data exports with dynamic currency symbol
+  - New `CurrencySettings` TypeBox schema and TypeScript types (backend and frontend)
+  - RBAC: `admin:users` permission for modifications, public read via config endpoint
+  - Default: USD ($) when no currency is configured
+  - i18n: Currency-related translation keys added across all 9 locales
+
 - **Branding Customization**: Admin-controlled login page and application header branding with per-element toggle switches
   - Login page customization: custom logo, title (200 char max), and subtitle (500 char max)
   - Header brand: separate light and dark theme logos for automatic theme-aware display

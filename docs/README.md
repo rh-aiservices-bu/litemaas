@@ -64,6 +64,7 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 - **[Users Management](features/users-management.md)** - Admin user management (profile, budget, API keys, subscriptions)
 - **[Admin Tools](features/admin-tools.md)** - Administrative tools and model sync
 - **[Branding Customization](features/branding-customization.md)** - Custom login page and header branding
+- **[Currency Settings](features/admin-tools.md#currency-settings)** - Configurable currency for monetary displays
 - **[Admin Usage API Key Filter](features/admin-usage-api-key-filter.md)** - API key filtering for usage analytics
 - **[Authentication Flow](features/authentication-flow.md)** - OAuth integration details
 - **[Model Configuration Testing](features/model-configuration-testing.md)** - Configuration validation feature
@@ -155,6 +156,7 @@ See our [Contributing Guide](../CONTRIBUTING.md) for information on:
 - **PatternFly 6 Components**: `docs/development/pf6-guide/`
 - **Accessibility Testing**: `docs/development/accessibility/`
 - **API Key Quotas**: `docs/features/admin-tools.md#api-key-quota-defaults`
+- **Currency Settings**: `docs/features/admin-tools.md#currency-settings`
 - **API Documentation**: `docs/api/rest-api.md`
 - **Authentication Setup**: `docs/deployment/authentication.md`
 - **Chatbot Implementation**: `docs/development/chatbot-implementation.md`

@@ -2637,6 +2637,67 @@ Response:
 - All numeric fields must be ≥ 0
 - Updates are logged to `audit_logs` with the admin user ID
 
+#### GET /api/v1/admin/settings/currency
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:users` permission)
+
+Get the configured currency for monetary value display.
+
+```json
+Response:
+{
+  "code": "USD",
+  "symbol": "$",
+  "name": "US Dollar"
+}
+```
+
+**Notes**:
+- Returns the default currency (USD) if no custom currency has been configured
+
+#### GET /api/v1/admin/settings/currency/supported
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:users` permission)
+
+Get the list of all supported currencies.
+
+```json
+Response:
+[
+  { "code": "USD", "symbol": "$", "name": "US Dollar" },
+  { "code": "EUR", "symbol": "€", "name": "Euro" },
+  { "code": "GBP", "symbol": "£", "name": "British Pound" },
+  ...
+]
+```
+
+#### PUT /api/v1/admin/settings/currency
+
+**Authorization**: Requires `admin` role only (`admin:users` permission)
+
+Update the configured currency for monetary value display. The currency code must be one of the supported currencies.
+
+```json
+Request:
+{
+  "code": "EUR",
+  "symbol": "€",
+  "name": "Euro"
+}
+
+Response:
+{
+  "code": "EUR",
+  "symbol": "€",
+  "name": "Euro"
+}
+```
+
+**Validation Rules**:
+- The `code` must match one of the supported currencies (see `GET .../currency/supported`)
+- Updates are logged to `audit_logs` with the admin user ID
+- The change takes effect immediately for all users via the public config endpoint
+
 #### GET /api/v1/admin/settings/user-defaults
 
 **Authorization**: Requires `admin` or `adminReadonly` role (`admin:users` permission)

@@ -76,6 +76,8 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 - **BrandingContext**: React Context with React Query (5-min stale time, fallback defaults)
 - **RBAC**: `admin:banners:write` for modifications, public for reading
 
+**Configurable Currency**: Admin-controlled currency settings (25 supported currencies) for all monetary displays across the platform. Configured via Admin Tools → Currency tab, stored in `system_settings` table, exposed via public config endpoint. Default: USD ($).
+
 **State Management**: React Context for auth/notifications/config/branding, React Query for server state with dynamic cache TTL from backend configuration.
 
 **Shared Chart Utilities**: Consistent formatting, accessibility, and styling across all chart components via shared utility modules.

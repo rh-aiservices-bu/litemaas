@@ -415,6 +415,55 @@ Allows administrators to update max budget, TPM limit, and RPM limit for **all a
 
 - `POST /api/v1/admin/bulk-update-user-limits` — Apply limits to all active users (admin only)
 
+## Currency Settings
+
+The Currency Settings feature is accessible from the **Currency** tab on the Admin Tools page (`/admin/tools`). It allows administrators to configure the currency used for all monetary value displays across the platform.
+
+### Purpose
+
+By default, LiteMaaS displays all monetary values (budgets, spend, costs) using USD ($). Organizations using a different currency can change the display currency to match their billing currency, ensuring consistent and meaningful cost reporting.
+
+### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access — view and change currency |
+| Admin-readonly | View-only access to current configuration |
+| Regular user | No direct access (but sees the configured currency in all cost displays) |
+
+### Supported Currencies
+
+LiteMaaS supports 25 currencies: USD, EUR, GBP, JPY, CNY, CAD, AUD, CHF, INR, KRW, BRL, MXN, SGD, HKD, NZD, SEK, NOK, DKK, PLN, ZAR, TRY, THB, AED, SAR, ILS.
+
+### How to Change Currency
+
+1. Navigate to **Admin → Tools** and select the **Currency** tab
+2. Select the desired currency from the dropdown
+3. Click **Save** to apply the change
+
+The change takes effect immediately across all pages and for all users.
+
+### Where Currency Is Displayed
+
+The configured currency symbol appears in:
+
+- **Usage analytics**: Metrics overview, trend charts, model distribution, heatmap, breakdown tables
+- **API key management**: Spend displays, budget columns, progress bars
+- **Admin interfaces**: User budget/limits, API key quota defaults, user defaults
+- **Model pages**: Pricing information on models, subscriptions, and admin models pages
+- **Data exports**: CSV and JSON usage exports
+
+### API Endpoints
+
+- `GET /api/v1/admin/settings/currency` — Get current currency (admin, adminReadonly)
+- `GET /api/v1/admin/settings/currency/supported` — Get all supported currencies (admin, adminReadonly)
+- `PUT /api/v1/admin/settings/currency` — Update currency (admin only)
+- `GET /api/v1/config` — Public endpoint includes `currency` field for frontend consumption
+
+For API details, see the [REST API Reference](../api/rest-api.md#admin-settings-apiv1adminsettings).
+
+---
+
 ## Usage Analytics
 
 The Admin Usage Analytics feature (`/admin/usage`) provides comprehensive system-wide visibility into AI model usage across all users, models, and providers.
