@@ -232,6 +232,12 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         if (mergedBody.softBudget == null && defaults.softBudget != null) {
           mergedBody.softBudget = defaults.softBudget;
         }
+        // Apply default expiration if not set by user
+        if (mergedBody.expiresAt == null && defaults.expirationDays != null) {
+          mergedBody.expiresAt = new Date(
+            Date.now() + defaults.expirationDays * 24 * 60 * 60 * 1000,
+          ).toISOString();
+        }
 
         // Enforce maximums
         const violations: string[] = [];
@@ -259,8 +265,31 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           violations.push(`rpmLimit: ${mergedBody.rpmLimit} exceeds maximum ${maximums.rpmLimit}`);
         }
 
+        // Enforce maximum expiration
+        if (maximums.expirationDays != null) {
+          const maxDate = new Date(Date.now() + maximums.expirationDays * 24 * 60 * 60 * 1000);
+          if (mergedBody.expiresAt != null) {
+            const expiresDate = new Date(mergedBody.expiresAt as string);
+            if (expiresDate > maxDate) {
+              violations.push(
+                `expiresAt: exceeds maximum expiration of ${maximums.expirationDays} days`,
+              );
+            }
+          } else {
+            // User chose "Never" but a maximum is configured
+            violations.push(
+              `expiresAt: a maximum expiration of ${maximums.expirationDays} days is configured; 'Never' is not allowed`,
+            );
+          }
+        }
+
         if (violations.length > 0) {
           throw fastify.createError(400, `Quota limits exceeded: ${violations.join('; ')}`);
+        }
+
+        // Convert expiresAt string to Date for service (expects Date object)
+        if (mergedBody.expiresAt) {
+          mergedBody.expiresAt = new Date(mergedBody.expiresAt);
         }
 
         const apiKey = await apiKeyService.createApiKey(user.userId, mergedBody as any);
@@ -415,6 +444,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }> | null;
       modelRpmLimit?: Record<string, number> | null;
       modelTpmLimit?: Record<string, number> | null;
+      expiresAt?: string | null;
       metadata?: {
         description?: string;
         permissions?: string[];
@@ -475,6 +505,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
               { type: 'object', additionalProperties: { type: 'integer' } },
             ],
           },
+          expiresAt: { anyOf: [{ type: 'null' }, { type: 'string', format: 'date-time' }] },
           metadata: {
             type: 'object',
             properties: {
@@ -518,6 +549,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         modelMaxBudget,
         modelRpmLimit,
         modelTpmLimit,
+        expiresAt,
         ...rest
       } = request.body;
 
@@ -549,6 +581,37 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
           if (violations.length > 0) {
             throw fastify.createError(400, `Quota limits exceeded: ${violations.join('; ')}`);
           }
+        }
+
+        // Validate and update expiresAt if provided
+        if ('expiresAt' in request.body) {
+          const quotaConfig = hasQuotaUpdates
+            ? await settingsService.getApiKeyDefaults()
+            : await settingsService.getApiKeyDefaults();
+          const { maximums } = quotaConfig;
+
+          if (maximums.expirationDays != null) {
+            if (expiresAt == null) {
+              // User trying to set "never" but max is configured
+              throw fastify.createError(
+                400,
+                `Quota limits exceeded: expiresAt: a maximum expiration of ${maximums.expirationDays} days is configured; 'Never' is not allowed`,
+              );
+            }
+            const maxDate = new Date(Date.now() + maximums.expirationDays * 24 * 60 * 60 * 1000);
+            if (new Date(expiresAt) > maxDate) {
+              throw fastify.createError(
+                400,
+                `Quota limits exceeded: expiresAt: exceeds maximum expiration of ${maximums.expirationDays} days`,
+              );
+            }
+          }
+
+          // Update expiration in DB
+          await fastify.dbUtils.query(
+            `UPDATE api_keys SET expires_at = $1 WHERE id = $2 AND user_id = $3`,
+            [expiresAt ? new Date(expiresAt) : null, id, user.userId],
+          );
         }
 
         // Update name/models/metadata
