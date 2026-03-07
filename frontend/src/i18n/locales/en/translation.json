@@ -809,7 +809,12 @@
         "usageDataCleanup": "Usage Data Cleanup",
         "userBudgetUpdate": "User Budget Updated",
         "userSpendReset": "User Spend Reset",
-        "userUpdate": "User Updated"
+        "userUpdate": "User Updated",
+        "backupCreate": "Backup Created",
+        "backupDownload": "Backup Downloaded",
+        "backupDelete": "Backup Deleted",
+        "backupRestore": "Backup Restored",
+        "backupTestRestore": "Backup Test Restored"
       },
       "allActions": "All actions",
       "allCategories": "All categories",
@@ -824,7 +829,8 @@
         "subscription": "Subscriptions",
         "team": "Teams",
         "usage": "Usage",
-        "user": "Users"
+        "user": "Users",
+        "backup": "Backup"
       },
       "categoryFilter": "Category",
       "description": "View system audit trail of all administrative actions.",
@@ -1301,6 +1307,65 @@
         "uploadSuccess": "Image uploaded successfully",
         "useCustom": "Use custom",
         "useDefault": "Use default"
+      },
+      "backup": {
+        "tabTitle": "Backup",
+        "litemaasCard": {
+          "title": "LiteMaaS Database",
+          "description": "Back up the LiteMaaS application database including users, models, subscriptions, API keys, and settings."
+        },
+        "litellmCard": {
+          "title": "LiteLLM Database",
+          "description": "Back up the LiteLLM proxy database including usage data and configuration.",
+          "notConfigured": "LiteLLM database connection is not configured. Set the LITELLM_DATABASE_URL environment variable to enable LiteLLM backups."
+        },
+        "createBackup": "Create Backup",
+        "creating": "Creating...",
+        "table": {
+          "database": "Database",
+          "timestamp": "Timestamp",
+          "size": "Size",
+          "actions": "Actions",
+          "empty": "No backups found",
+          "emptyDescription": "Create a backup to get started."
+        },
+        "download": "Download",
+        "restore": "Restore",
+        "testRestore": "Test Restore",
+        "delete": "Delete",
+        "restoreModal": {
+          "title": "Restore Backup",
+          "warning": "This will replace all data in the {{database}} database with the backup from {{timestamp}}. This action cannot be undone.",
+          "typeToConfirm": "Type \"{{database}}\" to confirm:",
+          "confirmPlaceholder": "Type database name to confirm"
+        },
+        "deleteModal": {
+          "title": "Delete Backup",
+          "message": "Are you sure you want to delete the backup \"{{filename}}\"? This action cannot be undone."
+        },
+        "testRestoreModal": {
+          "title": "Test Restore Result",
+          "success": "Test restore completed successfully.",
+          "failure": "Test restore failed.",
+          "tablesRestored": "Tables Restored",
+          "rowsRestored": "Rows Restored",
+          "duration": "Duration",
+          "testSchema": "Test Schema",
+          "warnings": "Warnings"
+        },
+        "testRestoreConfirmModal": {
+          "title": "Confirm Test Restore",
+          "description": "This will restore the backup from {{timestamp}} into a separate test schema in the {{database}} database. The original data will not be modified.",
+          "schemaNameLabel": "Test Schema Name",
+          "schemaNameHelper": "The name of the temporary schema where the backup will be restored for validation."
+        },
+        "notifications": {
+          "backupCreated": "Backup created successfully.",
+          "backupDeleted": "Backup deleted successfully.",
+          "restoreSuccess": "Database restored successfully from backup.",
+          "testRestoreComplete": "Test restore completed.",
+          "error": "An error occurred during the backup operation."
+        }
       },
       "bulkUpdate": {
         "description": "Override resource limits for every active user at once. This does not change defaults for future users.",

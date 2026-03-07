@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Database Backup & Restore**: Full backup and restore for both LiteMaaS and LiteLLM databases from the Settings and Tools → Backup tab
+  - **Create backups**: Compressed `.sql.gz` files (pure SQL, compatible with `psql` for manual restore via `gunzip -c backup.sql.gz | psql`)
+  - **Test restore**: Non-destructive restore to a temporary schema for validation, with editable schema name and human-readable timestamps
+  - **Full restore**: Destructive restore with type-to-confirm safety modal
+  - **Download/delete**: Manage backup files from the UI
+  - **Type-aware SQL serialization**: Correct handling of PostgreSQL array columns (`TEXT[]`) vs JSON/JSONB arrays, quoted identifiers for mixed-case table names (LiteLLM), and timestamp precision preservation via `::text` casting
+  - **LiteLLM direct database access**: New optional `LITELLM_DATABASE_URL` env var for direct PostgreSQL connection to LiteLLM's database
+  - **Configurable storage**: `BACKUP_STORAGE_PATH` env var (default: `./data/backups`)
+  - **CLI restore script**: `backend/src/scripts/restore-backup.ts` for catastrophic recovery when the web UI is unavailable
+  - **RBAC**: New `admin:backup` permission (admin role only); tab visible to adminReadonly but actions disabled
+  - **Audit logging**: All backup operations logged to `audit_logs` table
+  - **i18n**: Full translations across all 9 locales including test restore confirmation modal
+
 - **Configurable Currency Settings**: Admin-controlled currency configuration for all monetary value displays across the platform
   - New **Currency** tab in Settings and Tools page (`/admin/tools`) with dropdown selector from 25 supported currencies
   - 25 supported currencies: USD, EUR, GBP, JPY, CNY, CAD, AUD, CHF, INR, KRW, BRL, MXN, SGD, HKD, NZD, SEK, NOK, DKK, PLN, ZAR, TRY, THB, AED, SAR, ILS

@@ -152,6 +152,7 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 - `chat.service.ts` - Chatbot integration
 - `config.service.ts` - Application configuration and API key quota defaults
 - `admin.service.ts` - Admin operations (API key quota defaults CRUD, bulk user limits, system stats)
+- `backup.service.ts` - **Database backup & restore** (capabilities, create, list, download, delete, restore, test-restore)
 
 ## 🌍 Routing Structure
 
@@ -178,8 +179,9 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
   - Budget and rate limit configuration with progress indicators
   - API key creation with auto-subscription and revocation
   - RBAC: admin (full access) vs adminReadonly (view only)
-- `/admin/tools` - **Settings and Tools (ToolsPage.tsx)** - Tabs: Limits, Banners, Branding, Currency, Models Sync
+- `/admin/tools` - **Settings and Tools (ToolsPage.tsx)** - Tabs: Limits, Banners, Branding, Currency, Models Sync, Backup
   - Limits tab: Bulk User Limits (max budget, TPM, RPM for all users) and API Key Quota Defaults (admin-configurable defaults and maximums)
+  - Backup tab: Create/restore/test-restore/download/delete database backups for LiteMaaS and LiteLLM (admin only, visible read-only for adminReadonly)
 
 **Protection**: `ProtectedRoute` for auth, `RoleProtectedRoute` for admin routes with required roles
 

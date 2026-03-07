@@ -194,6 +194,13 @@ export class RBACService {
       resource: 'admin',
       action: 'usage',
     },
+    {
+      id: 'admin:backup',
+      name: 'Database Backup',
+      description: 'Create, restore, and manage database backups',
+      resource: 'admin',
+      action: 'backup',
+    },
   ];
 
   // System roles
@@ -207,6 +214,7 @@ export class RBACService {
         'admin:users',
         'admin:audit',
         'admin:usage',
+        'admin:backup',
         'admin:banners:read',
         'admin:banners:write',
         'admin:subscriptions:read',

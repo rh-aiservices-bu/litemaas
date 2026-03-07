@@ -809,7 +809,12 @@
         "usageDataCleanup": "Pulizia dati di utilizzo",
         "userBudgetUpdate": "Budget utente aggiornato",
         "userSpendReset": "Spesa utente reimpostata",
-        "userUpdate": "Utente aggiornato"
+        "userUpdate": "Utente aggiornato",
+        "backupCreate": "Backup creato",
+        "backupDownload": "Backup scaricato",
+        "backupDelete": "Backup eliminato",
+        "backupRestore": "Backup ripristinato",
+        "backupTestRestore": "Test di ripristino completato"
       },
       "allActions": "Tutte le azioni",
       "allCategories": "Tutte le categorie",
@@ -824,7 +829,8 @@
         "subscription": "Abbonamenti",
         "team": "Team",
         "usage": "Utilizzo",
-        "user": "Utenti"
+        "user": "Utenti",
+        "backup": "Backup"
       },
       "categoryFilter": "Categoria",
       "description": "Visualizza il registro di audit di sistema di tutte le azioni amministrative.",
@@ -1301,6 +1307,65 @@
         "uploadSuccess": "Immagine caricata con successo",
         "useCustom": "Usa personalizzato",
         "useDefault": "Usa predefinito"
+      },
+      "backup": {
+        "tabTitle": "Backup",
+        "litemaasCard": {
+          "title": "Database LiteMaaS",
+          "description": "Esegui il backup del database dell'applicazione LiteMaaS, inclusi utenti, modelli, abbonamenti, chiavi API e impostazioni."
+        },
+        "litellmCard": {
+          "title": "Database LiteLLM",
+          "description": "Esegui il backup del database del proxy LiteLLM, inclusi dati di utilizzo e configurazione.",
+          "notConfigured": "La connessione al database LiteLLM non è configurata. Imposta la variabile d'ambiente LITELLM_DATABASE_URL per abilitare i backup di LiteLLM."
+        },
+        "createBackup": "Crea backup",
+        "creating": "Creazione in corso...",
+        "table": {
+          "database": "Database",
+          "timestamp": "Data e ora",
+          "size": "Dimensione",
+          "actions": "Azioni",
+          "empty": "Nessun backup trovato",
+          "emptyDescription": "Crea un backup per iniziare."
+        },
+        "download": "Scarica",
+        "restore": "Ripristina",
+        "testRestore": "Ripristino di test",
+        "delete": "Elimina",
+        "restoreModal": {
+          "title": "Ripristina backup",
+          "warning": "Questa operazione sostituirà tutti i dati nel database {{database}} con il backup del {{timestamp}}. Questa azione non può essere annullata.",
+          "typeToConfirm": "Digita \"{{database}}\" per confermare:",
+          "confirmPlaceholder": "Digita il nome del database per confermare"
+        },
+        "deleteModal": {
+          "title": "Elimina backup",
+          "message": "Sei sicuro di voler eliminare il backup \"{{filename}}\"? Questa azione non può essere annullata."
+        },
+        "testRestoreModal": {
+          "title": "Risultato del ripristino di test",
+          "success": "Il ripristino di test è stato completato con successo.",
+          "failure": "Il ripristino di test è fallito.",
+          "tablesRestored": "Tabelle ripristinate",
+          "rowsRestored": "Righe ripristinate",
+          "duration": "Durata",
+          "testSchema": "Schema di test",
+          "warnings": "Avvisi"
+        },
+        "testRestoreConfirmModal": {
+          "title": "Conferma ripristino di test",
+          "description": "Questo ripristinerà il backup del {{timestamp}} in uno schema di test separato nel database {{database}}. I dati originali non verranno modificati.",
+          "schemaNameLabel": "Nome dello schema di test",
+          "schemaNameHelper": "Il nome dello schema temporaneo in cui il backup verrà ripristinato per la validazione."
+        },
+        "notifications": {
+          "backupCreated": "Backup creato con successo.",
+          "backupDeleted": "Backup eliminato con successo.",
+          "restoreSuccess": "Database ripristinato con successo dal backup.",
+          "testRestoreComplete": "Ripristino di test completato.",
+          "error": "Si è verificato un errore durante l'operazione di backup."
+        }
       },
       "bulkUpdate": {
         "description": "Override resource limits for every active user at once. This does not change defaults for future users.",

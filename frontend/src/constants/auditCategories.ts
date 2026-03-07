@@ -20,6 +20,7 @@ export const AUDIT_CATEGORIES: Record<string, LabelMapping> = {
   SYSTEM_SETTINGS: { i18nKey: 'pages.audit.categories.settings', defaultLabel: 'Settings' },
   USAGE_LOG: { i18nKey: 'pages.audit.categories.usage', defaultLabel: 'Usage' },
   API_ACCESS: { i18nKey: 'pages.audit.categories.apiAccess', defaultLabel: 'API Access' },
+  backup: { i18nKey: 'pages.audit.categories.backup', defaultLabel: 'Backup' },
 };
 
 export const AUDIT_ACTION_LABELS: Record<string, LabelMapping> = {
@@ -201,6 +202,28 @@ export const AUDIT_ACTION_LABELS: Record<string, LabelMapping> = {
   USAGE_DATA_CLEANUP: {
     i18nKey: 'pages.audit.actions.usageDataCleanup',
     defaultLabel: 'Usage Data Cleanup',
+  },
+
+  // Backup
+  'backup:create': {
+    i18nKey: 'pages.audit.actions.backupCreate',
+    defaultLabel: 'Backup Created',
+  },
+  'backup:download': {
+    i18nKey: 'pages.audit.actions.backupDownload',
+    defaultLabel: 'Backup Downloaded',
+  },
+  'backup:delete': {
+    i18nKey: 'pages.audit.actions.backupDelete',
+    defaultLabel: 'Backup Deleted',
+  },
+  'backup:restore': {
+    i18nKey: 'pages.audit.actions.backupRestore',
+    defaultLabel: 'Backup Restored',
+  },
+  'backup:test-restore': {
+    i18nKey: 'pages.audit.actions.backupTestRestore',
+    defaultLabel: 'Backup Test Restored',
   },
 };
 

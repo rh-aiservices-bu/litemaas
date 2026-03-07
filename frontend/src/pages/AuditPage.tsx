@@ -200,6 +200,7 @@ const AuditPage: React.FC = () => {
                   </SelectOption>
                   {categories
                     .filter((cat) => showApiAccess || cat !== 'API_ACCESS')
+                    .sort((a, b) => getCategoryLabel(a, t).localeCompare(getCategoryLabel(b, t)))
                     .map((category) => (
                       <SelectOption key={category} value={category}>
                         {getCategoryLabel(category, t)}
