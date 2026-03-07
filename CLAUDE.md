@@ -56,6 +56,8 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 - **Full Audit Trail**: All admin actions logged with metadata
 - **RBAC**: `users:read` (admin, adminReadonly) for viewing, `users:write` (admin only) for modifications
 
+**Admin Audit Log**: Full audit log viewer at `/admin/audit` with category/action filtering, human-readable labels, API access toggle, search, and date range filters. Requires `admin:audit` permission (admin + adminReadonly).
+
 **API Key Quota Management**: Comprehensive budget and rate limit management for API keys across user self-service and admin interfaces:
 
 - **Global quotas**: Max budget, budget duration, TPM, RPM, soft budget, max parallel requests on every key

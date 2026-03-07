@@ -574,7 +574,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Delete model from LiteLLM using the correct LiteLLM model ID
         await liteLLMService.deleteModel(modelRecord.litellm_model_id);
-        console.log('Model deleted from LiteLLM');
+        request.log.info('Model deleted from LiteLLM');
 
         // Log admin action
         await fastify.dbUtils.query(

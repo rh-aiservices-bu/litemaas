@@ -435,7 +435,7 @@ describe('API Client Integration Tests', () => {
         // Authentication handling should have been triggered
         // Note: The exact localStorage and redirect behavior may vary
         // based on the interceptor implementation timing
-        expect(mockWindowLocation.href).toBe('/login');
+        expect(mockWindowLocation.href).toBe('/login?session=expired');
       }
     });
 

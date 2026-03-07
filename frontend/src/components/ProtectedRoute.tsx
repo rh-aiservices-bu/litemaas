@@ -1,7 +1,8 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
-import { Bullseye, Spinner, EmptyState } from '@patternfly/react-core';
+import { Bullseye, Spinner } from '@patternfly/react-core';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -10,23 +11,17 @@ interface ProtectedRouteProps {
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   const location = useLocation();
+  const { t } = useTranslation();
 
   if (loading) {
     return (
       <Bullseye>
-        <EmptyState>
-          <Spinner size="xl" />
-          <div style={{ marginTop: '1rem' }}>
-            <h4>Loading...</h4>
-            <p>Checking authentication status...</p>
-          </div>
-        </EmptyState>
+        <Spinner size="xl" aria-label={t('common.loading')} />
       </Bullseye>
     );
   }
 
   if (!isAuthenticated) {
-    // Redirect to login page with return url
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

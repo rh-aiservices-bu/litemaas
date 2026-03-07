@@ -9,6 +9,7 @@ import {
   UsersIcon,
   ChartBarIcon,
   ClipboardCheckIcon,
+  ListIcon,
 } from '@patternfly/react-icons';
 
 import HomePage from '../pages/HomePage';
@@ -22,6 +23,7 @@ import AdminModelsPage from '../pages/AdminModelsPage';
 import AdminUsagePage from '../pages/AdminUsagePage';
 import AdminSubscriptionsPage from '../pages/AdminSubscriptionsPage';
 import UsersPage from '../pages/UsersPage';
+import AuditPage from '../pages/AuditPage';
 
 import { AppConfig } from '../types/navigation';
 
@@ -114,6 +116,14 @@ export const appConfig: AppConfig = {
           requiredRoles: ['admin', 'admin-readonly'],
         },
         {
+          id: 'admin-audit',
+          path: '/admin/audit',
+          element: AuditPage,
+          label: 'nav.admin.audit',
+          icon: ListIcon,
+          requiredRoles: ['admin', 'admin-readonly'],
+        },
+        {
           id: 'tools',
           path: '/admin/tools',
           element: ToolsPage,
@@ -194,6 +204,13 @@ export const appConfig: AppConfig = {
       label: 'nav.admin.users',
       path: '/admin/users',
       icon: UsersIcon,
+      requiredRoles: ['admin', 'admin-readonly'],
+    },
+    {
+      id: 'admin-audit',
+      label: 'nav.admin.audit',
+      path: '/admin/audit',
+      icon: ListIcon,
       requiredRoles: ['admin', 'admin-readonly'],
     },
     {

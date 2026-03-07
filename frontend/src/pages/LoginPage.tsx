@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import {
+  Alert,
   Button,
   LoginPage as PFLoginPage,
   Stack,
@@ -23,8 +25,11 @@ const LoginPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { login, loginAsAdmin } = useAuth();
   const { brandingSettings } = useBranding();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sessionExpired = searchParams.get('session') === 'expired';
   const [authMode, setAuthMode] = useState<'oauth' | 'mock' | null>(null);
   const [configLoading, setConfigLoading] = useState(true);
+  const [configError, setConfigError] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
 
   // Compute branding overrides
@@ -91,6 +96,7 @@ const LoginPage: React.FC = () => {
         setAuthMode(config.authMode ?? 'oauth');
       } catch (err) {
         console.error('Failed to load configuration:', err);
+        setConfigError(true);
         // Default to oauth mode on error
         setAuthMode('oauth');
       } finally {
@@ -101,6 +107,12 @@ const LoginPage: React.FC = () => {
     loadConfig();
   }, []);
 
+  useEffect(() => {
+    if (sessionExpired) {
+      setSearchParams({}, { replace: true });
+    }
+  }, [sessionExpired, setSearchParams]);
+
   return (
     <PFLoginPage
       brandImgSrc={brandImgSrc}
@@ -110,6 +122,16 @@ const LoginPage: React.FC = () => {
       loginSubtitle={loginPageSubtitle}
     >
       <Stack hasGutter>
+        {sessionExpired && (
+          <StackItem>
+            <Alert variant="warning" title={t('pages.login.sessionExpired')} isInline />
+          </StackItem>
+        )}
+        {configError && (
+          <StackItem>
+            <Alert variant="danger" title={t('pages.login.configError')} isInline />
+          </StackItem>
+        )}
         <StackItem>
           <Button
             variant="primary"
