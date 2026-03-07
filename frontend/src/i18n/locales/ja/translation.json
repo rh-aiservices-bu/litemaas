@@ -809,7 +809,12 @@
         "usageDataCleanup": "使用量データクリーンアップ",
         "userBudgetUpdate": "ユーザー予算更新",
         "userSpendReset": "ユーザー使用量リセット",
-        "userUpdate": "ユーザー更新"
+        "userUpdate": "ユーザー更新",
+        "backupCreate": "バックアップ作成",
+        "backupDownload": "バックアップダウンロード",
+        "backupDelete": "バックアップ削除",
+        "backupRestore": "バックアップ復元",
+        "backupTestRestore": "バックアップテスト復元完了"
       },
       "allActions": "すべてのアクション",
       "allCategories": "すべてのカテゴリ",
@@ -824,7 +829,8 @@
         "subscription": "サブスクリプション",
         "team": "チーム",
         "usage": "使用量",
-        "user": "ユーザー"
+        "user": "ユーザー",
+        "backup": "バックアップ"
       },
       "categoryFilter": "カテゴリ",
       "description": "すべての管理操作のシステム監査ログを表示します。",
@@ -1301,6 +1307,65 @@
         "uploadSuccess": "画像が正常にアップロードされました",
         "useCustom": "カスタムを使用",
         "useDefault": "デフォルトを使用"
+      },
+      "backup": {
+        "tabTitle": "バックアップ",
+        "litemaasCard": {
+          "title": "LiteMaaSデータベース",
+          "description": "ユーザー、モデル、サブスクリプション、APIキー、設定を含むLiteMaaSアプリケーションデータベースをバックアップします。"
+        },
+        "litellmCard": {
+          "title": "LiteLLMデータベース",
+          "description": "使用状況データと設定を含むLiteLLMプロキシデータベースをバックアップします。",
+          "notConfigured": "LiteLLMデータベース接続が設定されていません。LiteLLMバックアップを有効にするには、環境変数LITELLM_DATABASE_URLを設定してください。"
+        },
+        "createBackup": "バックアップを作成",
+        "creating": "作成中...",
+        "table": {
+          "database": "データベース",
+          "timestamp": "日時",
+          "size": "サイズ",
+          "actions": "操作",
+          "empty": "バックアップが見つかりません",
+          "emptyDescription": "バックアップを作成して開始しましょう。"
+        },
+        "download": "ダウンロード",
+        "restore": "復元",
+        "testRestore": "テスト復元",
+        "delete": "削除",
+        "restoreModal": {
+          "title": "バックアップの復元",
+          "warning": "{{database}}データベースのすべてのデータが{{timestamp}}のバックアップに置き換えられます。この操作は元に戻せません。",
+          "typeToConfirm": "確認のため「{{database}}」と入力してください：",
+          "confirmPlaceholder": "確認のためデータベース名を入力"
+        },
+        "deleteModal": {
+          "title": "バックアップの削除",
+          "message": "バックアップ「{{filename}}」を削除してもよろしいですか？この操作は元に戻せません。"
+        },
+        "testRestoreModal": {
+          "title": "テスト復元の結果",
+          "success": "テスト復元が正常に完了しました。",
+          "failure": "テスト復元に失敗しました。",
+          "tablesRestored": "復元されたテーブル数",
+          "rowsRestored": "復元された行数",
+          "duration": "所要時間",
+          "testSchema": "テストスキーマ",
+          "warnings": "警告"
+        },
+        "testRestoreConfirmModal": {
+          "title": "テスト復元の確認",
+          "description": "{{timestamp}}のバックアップを{{database}}データベース内の別のテストスキーマに復元します。元のデータは変更されません。",
+          "schemaNameLabel": "テストスキーマ名",
+          "schemaNameHelper": "バックアップの検証用に復元される一時スキーマの名前です。"
+        },
+        "notifications": {
+          "backupCreated": "バックアップが正常に作成されました。",
+          "backupDeleted": "バックアップが正常に削除されました。",
+          "restoreSuccess": "バックアップからデータベースが正常に復元されました。",
+          "testRestoreComplete": "テスト復元が完了しました。",
+          "error": "バックアップ操作中にエラーが発生しました。"
+        }
       },
       "bulkUpdate": {
         "description": "Override resource limits for every active user at once. This does not change defaults for future users.",

@@ -47,6 +47,7 @@ import { BannerEditModal, BannerTable } from '../components/banners';
 import { ApiKeyQuotaDefaultsSection, UserDefaultsSection } from '../components/admin';
 import BrandingTab from '../components/branding/BrandingTab';
 import CurrencyTab from '../components/currency/CurrencyTab';
+import BackupTab from '../components/backup/BackupTab';
 import { useQuery, useQueryClient } from 'react-query';
 import { extractErrorDetails } from '../utils/error.utils';
 
@@ -109,6 +110,9 @@ const ToolsPage: React.FC = () => {
   const canViewCurrency =
     (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
   const canManageCurrency = user?.roles?.includes('admin') ?? false;
+  const canViewBackup =
+    (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
+  const canManageBackup = user?.roles?.includes('admin') ?? false;
 
   // Fetch all banners for admin management
   const { data: allBanners = [] } = useQuery(['allBanners'], () => bannerService.getAllBanners(), {
@@ -664,6 +668,19 @@ const ToolsPage: React.FC = () => {
               <TabContent id="currency-tab-content" style={{ paddingTop: '10px' }}>
                 <TabContentBody>
                   <CurrencyTab canManage={canManageCurrency} />
+                </TabContentBody>
+              </TabContent>
+            </Tab>
+          )}
+          {/* Backup Tab */}
+          {canViewBackup && (
+            <Tab
+              eventKey="backup"
+              title={<TabTitleText>{t('pages.tools.backup.tabTitle')}</TabTitleText>}
+            >
+              <TabContent id="backup-tab-content" style={{ paddingTop: '10px' }}>
+                <TabContentBody>
+                  <BackupTab canManage={canManageBackup} />
                 </TabContentBody>
               </TabContent>
             </Tab>

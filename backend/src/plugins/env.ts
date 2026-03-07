@@ -52,6 +52,10 @@ const envSchema = Type.Object({
   DEFAULT_USER_MAX_BUDGET: Type.String({ default: '100' }),
   DEFAULT_USER_TPM_LIMIT: Type.String({ default: '100000' }),
   DEFAULT_USER_RPM_LIMIT: Type.String({ default: '120' }),
+
+  // Backup Configuration
+  LITELLM_DATABASE_URL: Type.Optional(Type.String()),
+  BACKUP_STORAGE_PATH: Type.Optional(Type.String()),
 });
 
 const envPlugin: FastifyPluginAsync = async (fastify) => {

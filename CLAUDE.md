@@ -79,6 +79,15 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 - **BrandingContext**: React Context with React Query (5-min stale time, fallback defaults)
 - **RBAC**: `admin:banners:write` for modifications, public for reading
 
+**Database Backup & Restore**: Full backup and restore for both LiteMaaS and LiteLLM databases from Settings and Tools → Backup tab:
+
+- **Backup format**: Compressed `.sql.gz` (pure SQL, compatible with `psql` for manual restore)
+- **Test restore**: Non-destructive restore to temporary schema with data integrity validation
+- **Type-aware serialization**: Correct handling of PG arrays vs JSON arrays, mixed-case identifiers, timestamp precision
+- **CLI restore**: Standalone script for catastrophic recovery (`backend/src/scripts/restore-backup.ts`)
+- **RBAC**: `admin:backup` permission (admin only), tab visible to adminReadonly (read-only)
+- **Configuration**: `LITELLM_DATABASE_URL` for LiteLLM database access, `BACKUP_STORAGE_PATH` for storage location
+
 **Configurable Currency**: Admin-controlled currency settings (25 supported currencies) for all monetary displays across the platform. Configured via Settings and Tools → Currency tab, stored in `system_settings` table, exposed via public config endpoint. Default: USD ($).
 
 **State Management**: React Context for auth/notifications/config/branding, React Query for server state with dynamic cache TTL from backend configuration.

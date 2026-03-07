@@ -809,7 +809,12 @@
         "usageDataCleanup": "사용량 데이터 정리",
         "userBudgetUpdate": "사용자 예산 업데이트",
         "userSpendReset": "사용자 사용량 초기화",
-        "userUpdate": "사용자 업데이트"
+        "userUpdate": "사용자 업데이트",
+        "backupCreate": "백업 생성됨",
+        "backupDownload": "백업 다운로드됨",
+        "backupDelete": "백업 삭제됨",
+        "backupRestore": "백업 복원됨",
+        "backupTestRestore": "백업 테스트 복원 완료"
       },
       "allActions": "모든 작업",
       "allCategories": "모든 카테고리",
@@ -824,7 +829,8 @@
         "subscription": "구독",
         "team": "팀",
         "usage": "사용량",
-        "user": "사용자"
+        "user": "사용자",
+        "backup": "백업"
       },
       "categoryFilter": "카테고리",
       "description": "모든 관리 작업의 시스템 감사 로그를 확인합니다.",
@@ -1301,6 +1307,65 @@
         "uploadSuccess": "이미지가 성공적으로 업로드되었습니다",
         "useCustom": "커스텀 사용",
         "useDefault": "기본값 사용"
+      },
+      "backup": {
+        "tabTitle": "백업",
+        "litemaasCard": {
+          "title": "LiteMaaS 데이터베이스",
+          "description": "사용자, 모델, 구독, API 키 및 설정을 포함한 LiteMaaS 애플리케이션 데이터베이스를 백업합니다."
+        },
+        "litellmCard": {
+          "title": "LiteLLM 데이터베이스",
+          "description": "사용량 데이터 및 구성을 포함한 LiteLLM 프록시 데이터베이스를 백업합니다.",
+          "notConfigured": "LiteLLM 데이터베이스 연결이 구성되지 않았습니다. LiteLLM 백업을 활성화하려면 LITELLM_DATABASE_URL 환경 변수를 설정하세요."
+        },
+        "createBackup": "백업 생성",
+        "creating": "생성 중...",
+        "table": {
+          "database": "데이터베이스",
+          "timestamp": "날짜 및 시간",
+          "size": "크기",
+          "actions": "작업",
+          "empty": "백업을 찾을 수 없습니다",
+          "emptyDescription": "백업을 생성하여 시작하세요."
+        },
+        "download": "다운로드",
+        "restore": "복원",
+        "testRestore": "테스트 복원",
+        "delete": "삭제",
+        "restoreModal": {
+          "title": "백업 복원",
+          "warning": "{{database}} 데이터베이스의 모든 데이터가 {{timestamp}} 백업으로 대체됩니다. 이 작업은 되돌릴 수 없습니다.",
+          "typeToConfirm": "확인하려면 \"{{database}}\"을(를) 입력하세요:",
+          "confirmPlaceholder": "확인을 위해 데이터베이스 이름을 입력하세요"
+        },
+        "deleteModal": {
+          "title": "백업 삭제",
+          "message": "백업 \"{{filename}}\"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
+        },
+        "testRestoreModal": {
+          "title": "테스트 복원 결과",
+          "success": "테스트 복원이 성공적으로 완료되었습니다.",
+          "failure": "테스트 복원에 실패했습니다.",
+          "tablesRestored": "복원된 테이블 수",
+          "rowsRestored": "복원된 행 수",
+          "duration": "소요 시간",
+          "testSchema": "테스트 스키마",
+          "warnings": "경고"
+        },
+        "testRestoreConfirmModal": {
+          "title": "테스트 복원 확인",
+          "description": "{{timestamp}}의 백업을 {{database}} 데이터베이스의 별도 테스트 스키마에 복원합니다. 원본 데이터는 수정되지 않습니다.",
+          "schemaNameLabel": "테스트 스키마 이름",
+          "schemaNameHelper": "백업이 검증을 위해 복원될 임시 스키마의 이름입니다."
+        },
+        "notifications": {
+          "backupCreated": "백업이 성공적으로 생성되었습니다.",
+          "backupDeleted": "백업이 성공적으로 삭제되었습니다.",
+          "restoreSuccess": "백업에서 데이터베이스가 성공적으로 복원되었습니다.",
+          "testRestoreComplete": "테스트 복원이 완료되었습니다.",
+          "error": "백업 작업 중 오류가 발생했습니다."
+        }
       },
       "bulkUpdate": {
         "description": "Override resource limits for every active user at once. This does not change defaults for future users.",

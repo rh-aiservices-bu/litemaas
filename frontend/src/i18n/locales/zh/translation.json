@@ -809,7 +809,12 @@
         "usageDataCleanup": "使用数据清理",
         "userBudgetUpdate": "用户预算已更新",
         "userSpendReset": "用户消费已重置",
-        "userUpdate": "用户已更新"
+        "userUpdate": "用户已更新",
+        "backupCreate": "备份已创建",
+        "backupDownload": "备份已下载",
+        "backupDelete": "备份已删除",
+        "backupRestore": "备份已恢复",
+        "backupTestRestore": "备份测试恢复完成"
       },
       "allActions": "所有操作",
       "allCategories": "所有类别",
@@ -824,7 +829,8 @@
         "subscription": "订阅",
         "team": "团队",
         "usage": "使用量",
-        "user": "用户"
+        "user": "用户",
+        "backup": "备份"
       },
       "categoryFilter": "类别",
       "description": "查看所有管理操作的系统审计日志。",
@@ -1301,6 +1307,65 @@
         "uploadSuccess": "图片上传成功",
         "useCustom": "使用自定义",
         "useDefault": "使用默认"
+      },
+      "backup": {
+        "tabTitle": "备份",
+        "litemaasCard": {
+          "title": "LiteMaaS 数据库",
+          "description": "备份 LiteMaaS 应用数据库，包括用户、模型、订阅、API 密钥和设置。"
+        },
+        "litellmCard": {
+          "title": "LiteLLM 数据库",
+          "description": "备份 LiteLLM 代理数据库，包括使用数据和配置。",
+          "notConfigured": "LiteLLM 数据库连接未配置。请设置 LITELLM_DATABASE_URL 环境变量以启用 LiteLLM 备份。"
+        },
+        "createBackup": "创建备份",
+        "creating": "创建中...",
+        "table": {
+          "database": "数据库",
+          "timestamp": "时间",
+          "size": "大小",
+          "actions": "操作",
+          "empty": "未找到备份",
+          "emptyDescription": "创建备份以开始使用。"
+        },
+        "download": "下载",
+        "restore": "恢复",
+        "testRestore": "测试恢复",
+        "delete": "删除",
+        "restoreModal": {
+          "title": "恢复备份",
+          "warning": "此操作将用 {{timestamp}} 的备份替换 {{database}} 数据库中的所有数据。此操作无法撤消。",
+          "typeToConfirm": "输入 \"{{database}}\" 以确认：",
+          "confirmPlaceholder": "输入数据库名称以确认"
+        },
+        "deleteModal": {
+          "title": "删除备份",
+          "message": "确定要删除备份 \"{{filename}}\" 吗？此操作无法撤消。"
+        },
+        "testRestoreModal": {
+          "title": "测试恢复结果",
+          "success": "测试恢复成功完成。",
+          "failure": "测试恢复失败。",
+          "tablesRestored": "已恢复的表数",
+          "rowsRestored": "已恢复的行数",
+          "duration": "耗时",
+          "testSchema": "测试架构",
+          "warnings": "警告"
+        },
+        "testRestoreConfirmModal": {
+          "title": "确认测试恢复",
+          "description": "这将把 {{timestamp}} 的备份恢复到 {{database}} 数据库中的一个独立测试架构中。原始数据不会被修改。",
+          "schemaNameLabel": "测试架构名称",
+          "schemaNameHelper": "用于验证备份恢复的临时架构名称。"
+        },
+        "notifications": {
+          "backupCreated": "备份创建成功。",
+          "backupDeleted": "备份删除成功。",
+          "restoreSuccess": "数据库已成功从备份恢复。",
+          "testRestoreComplete": "测试恢复已完成。",
+          "error": "备份操作过程中发生错误。"
+        }
       },
       "bulkUpdate": {
         "description": "Override resource limits for every active user at once. This does not change defaults for future users.",

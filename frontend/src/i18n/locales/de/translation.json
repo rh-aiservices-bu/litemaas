@@ -809,7 +809,12 @@
         "usageDataCleanup": "Nutzungsdaten-Bereinigung",
         "userBudgetUpdate": "Benutzer-Budget aktualisiert",
         "userSpendReset": "Benutzer-Ausgaben zurückgesetzt",
-        "userUpdate": "Benutzer aktualisiert"
+        "userUpdate": "Benutzer aktualisiert",
+        "backupCreate": "Sicherung erstellt",
+        "backupDownload": "Sicherung heruntergeladen",
+        "backupDelete": "Sicherung gelöscht",
+        "backupRestore": "Sicherung wiederhergestellt",
+        "backupTestRestore": "Testwiederherstellung durchgeführt"
       },
       "allActions": "Alle Aktionen",
       "allCategories": "Alle Kategorien",
@@ -824,7 +829,8 @@
         "subscription": "Abonnements",
         "team": "Teams",
         "usage": "Nutzung",
-        "user": "Benutzer"
+        "user": "Benutzer",
+        "backup": "Sicherung"
       },
       "categoryFilter": "Kategorie",
       "description": "Systemauditprotokoll aller administrativen Aktionen anzeigen.",
@@ -1301,6 +1307,65 @@
         "uploadSuccess": "Bild erfolgreich hochgeladen",
         "useCustom": "Benutzerdefiniert verwenden",
         "useDefault": "Standard verwenden"
+      },
+      "backup": {
+        "tabTitle": "Sicherung",
+        "litemaasCard": {
+          "title": "LiteMaaS-Datenbank",
+          "description": "Sicherung der LiteMaaS-Anwendungsdatenbank erstellen, einschließlich Benutzer, Modelle, Abonnements, API-Schlüssel und Einstellungen."
+        },
+        "litellmCard": {
+          "title": "LiteLLM-Datenbank",
+          "description": "Sicherung der LiteLLM-Proxy-Datenbank erstellen, einschließlich Nutzungsdaten und Konfiguration.",
+          "notConfigured": "Die LiteLLM-Datenbankverbindung ist nicht konfiguriert. Setzen Sie die Umgebungsvariable LITELLM_DATABASE_URL, um LiteLLM-Sicherungen zu aktivieren."
+        },
+        "createBackup": "Sicherung erstellen",
+        "creating": "Wird erstellt...",
+        "table": {
+          "database": "Datenbank",
+          "timestamp": "Zeitstempel",
+          "size": "Größe",
+          "actions": "Aktionen",
+          "empty": "Keine Sicherungen gefunden",
+          "emptyDescription": "Erstellen Sie eine Sicherung, um zu beginnen."
+        },
+        "download": "Herunterladen",
+        "restore": "Wiederherstellen",
+        "testRestore": "Testwiederherstellung",
+        "delete": "Löschen",
+        "restoreModal": {
+          "title": "Sicherung wiederherstellen",
+          "warning": "Dies ersetzt alle Daten in der {{database}}-Datenbank durch die Sicherung vom {{timestamp}}. Diese Aktion kann nicht rückgängig gemacht werden.",
+          "typeToConfirm": "Geben Sie \"{{database}}\" zur Bestätigung ein:",
+          "confirmPlaceholder": "Datenbankname zur Bestätigung eingeben"
+        },
+        "deleteModal": {
+          "title": "Sicherung löschen",
+          "message": "Sind Sie sicher, dass Sie die Sicherung \"{{filename}}\" löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden."
+        },
+        "testRestoreModal": {
+          "title": "Ergebnis der Testwiederherstellung",
+          "success": "Die Testwiederherstellung wurde erfolgreich abgeschlossen.",
+          "failure": "Die Testwiederherstellung ist fehlgeschlagen.",
+          "tablesRestored": "Wiederhergestellte Tabellen",
+          "rowsRestored": "Wiederhergestellte Zeilen",
+          "duration": "Dauer",
+          "testSchema": "Test-Schema",
+          "warnings": "Warnungen"
+        },
+        "testRestoreConfirmModal": {
+          "title": "Testwiederherstellung bestätigen",
+          "description": "Dies stellt die Sicherung vom {{timestamp}} in einem separaten Test-Schema in der {{database}}-Datenbank wieder her. Die Originaldaten werden nicht verändert.",
+          "schemaNameLabel": "Name des Test-Schemas",
+          "schemaNameHelper": "Der Name des temporären Schemas, in dem die Sicherung zur Validierung wiederhergestellt wird."
+        },
+        "notifications": {
+          "backupCreated": "Sicherung erfolgreich erstellt.",
+          "backupDeleted": "Sicherung erfolgreich gelöscht.",
+          "restoreSuccess": "Datenbank erfolgreich aus der Sicherung wiederhergestellt.",
+          "testRestoreComplete": "Testwiederherstellung abgeschlossen.",
+          "error": "Bei der Sicherungsoperation ist ein Fehler aufgetreten."
+        }
       },
       "bulkUpdate": {
         "description": "Override resource limits for every active user at once. This does not change defaults for future users.",

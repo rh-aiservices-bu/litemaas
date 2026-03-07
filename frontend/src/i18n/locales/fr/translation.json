@@ -809,7 +809,12 @@
         "usageDataCleanup": "Nettoyage des données d'utilisation",
         "userBudgetUpdate": "Budget utilisateur mis à jour",
         "userSpendReset": "Dépenses utilisateur réinitialisées",
-        "userUpdate": "Utilisateur mis à jour"
+        "userUpdate": "Utilisateur mis à jour",
+        "backupCreate": "Sauvegarde créée",
+        "backupDownload": "Sauvegarde téléchargée",
+        "backupDelete": "Sauvegarde supprimée",
+        "backupRestore": "Sauvegarde restaurée",
+        "backupTestRestore": "Test de restauration effectué"
       },
       "allActions": "Toutes les actions",
       "allCategories": "Toutes les catégories",
@@ -824,7 +829,8 @@
         "subscription": "Abonnements",
         "team": "Équipes",
         "usage": "Utilisation",
-        "user": "Utilisateurs"
+        "user": "Utilisateurs",
+        "backup": "Sauvegarde"
       },
       "categoryFilter": "Catégorie",
       "description": "Consulter la piste d'audit système de toutes les actions administratives.",
@@ -1301,6 +1307,65 @@
         "uploadSuccess": "Image téléchargée avec succès",
         "useCustom": "Personnalisé",
         "useDefault": "Par défaut"
+      },
+      "backup": {
+        "tabTitle": "Sauvegarde",
+        "litemaasCard": {
+          "title": "Base de données LiteMaaS",
+          "description": "Sauvegarder la base de données de l'application LiteMaaS, incluant les utilisateurs, modèles, abonnements, clés API et paramètres."
+        },
+        "litellmCard": {
+          "title": "Base de données LiteLLM",
+          "description": "Sauvegarder la base de données du proxy LiteLLM, incluant les données d'utilisation et la configuration.",
+          "notConfigured": "La connexion à la base de données LiteLLM n'est pas configurée. Définissez la variable d'environnement LITELLM_DATABASE_URL pour activer les sauvegardes LiteLLM."
+        },
+        "createBackup": "Créer une sauvegarde",
+        "creating": "Création en cours...",
+        "table": {
+          "database": "Base de données",
+          "timestamp": "Date et heure",
+          "size": "Taille",
+          "actions": "Actions",
+          "empty": "Aucune sauvegarde trouvée",
+          "emptyDescription": "Créez une sauvegarde pour commencer."
+        },
+        "download": "Télécharger",
+        "restore": "Restaurer",
+        "testRestore": "Restauration test",
+        "delete": "Supprimer",
+        "restoreModal": {
+          "title": "Restaurer la sauvegarde",
+          "warning": "Cela remplacera toutes les données de la base de données {{database}} par la sauvegarde du {{timestamp}}. Cette action est irréversible.",
+          "typeToConfirm": "Saisissez \"{{database}}\" pour confirmer :",
+          "confirmPlaceholder": "Saisissez le nom de la base de données pour confirmer"
+        },
+        "deleteModal": {
+          "title": "Supprimer la sauvegarde",
+          "message": "Êtes-vous sûr de vouloir supprimer la sauvegarde \"{{filename}}\" ? Cette action est irréversible."
+        },
+        "testRestoreModal": {
+          "title": "Résultat de la restauration test",
+          "success": "La restauration test s'est terminée avec succès.",
+          "failure": "La restauration test a échoué.",
+          "tablesRestored": "Tables restaurées",
+          "rowsRestored": "Lignes restaurées",
+          "duration": "Durée",
+          "testSchema": "Schéma de test",
+          "warnings": "Avertissements"
+        },
+        "testRestoreConfirmModal": {
+          "title": "Confirmer la restauration test",
+          "description": "Cela restaurera la sauvegarde du {{timestamp}} dans un schéma de test séparé dans la base de données {{database}}. Les données originales ne seront pas modifiées.",
+          "schemaNameLabel": "Nom du schéma de test",
+          "schemaNameHelper": "Le nom du schéma temporaire dans lequel la sauvegarde sera restaurée pour validation."
+        },
+        "notifications": {
+          "backupCreated": "Sauvegarde créée avec succès.",
+          "backupDeleted": "Sauvegarde supprimée avec succès.",
+          "restoreSuccess": "Base de données restaurée avec succès depuis la sauvegarde.",
+          "testRestoreComplete": "Restauration test terminée.",
+          "error": "Une erreur est survenue lors de l'opération de sauvegarde."
+        }
       },
       "bulkUpdate": {
         "description": "Override resource limits for every active user at once. This does not change defaults for future users.",

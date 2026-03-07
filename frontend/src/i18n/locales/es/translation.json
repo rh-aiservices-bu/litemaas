@@ -809,7 +809,12 @@
         "usageDataCleanup": "Limpieza de datos de uso",
         "userBudgetUpdate": "Presupuesto de usuario actualizado",
         "userSpendReset": "Gasto de usuario reiniciado",
-        "userUpdate": "Usuario actualizado"
+        "userUpdate": "Usuario actualizado",
+        "backupCreate": "Copia de seguridad creada",
+        "backupDownload": "Copia de seguridad descargada",
+        "backupDelete": "Copia de seguridad eliminada",
+        "backupRestore": "Copia de seguridad restaurada",
+        "backupTestRestore": "Prueba de restauración completada"
       },
       "allActions": "Todas las acciones",
       "allCategories": "Todas las categorías",
@@ -824,7 +829,8 @@
         "subscription": "Suscripciones",
         "team": "Equipos",
         "usage": "Uso",
-        "user": "Usuarios"
+        "user": "Usuarios",
+        "backup": "Copia de seguridad"
       },
       "categoryFilter": "Categoría",
       "description": "Ver el registro de auditoría del sistema de todas las acciones administrativas.",
@@ -1301,6 +1307,65 @@
         "uploadSuccess": "Imagen subida correctamente",
         "useCustom": "Usar personalizado",
         "useDefault": "Usar predeterminado"
+      },
+      "backup": {
+        "tabTitle": "Copia de seguridad",
+        "litemaasCard": {
+          "title": "Base de datos LiteMaaS",
+          "description": "Respaldar la base de datos de la aplicación LiteMaaS, incluyendo usuarios, modelos, suscripciones, claves API y configuraciones."
+        },
+        "litellmCard": {
+          "title": "Base de datos LiteLLM",
+          "description": "Respaldar la base de datos del proxy LiteLLM, incluyendo datos de uso y configuración.",
+          "notConfigured": "La conexión a la base de datos LiteLLM no está configurada. Establezca la variable de entorno LITELLM_DATABASE_URL para habilitar las copias de seguridad de LiteLLM."
+        },
+        "createBackup": "Crear copia de seguridad",
+        "creating": "Creando...",
+        "table": {
+          "database": "Base de datos",
+          "timestamp": "Fecha y hora",
+          "size": "Tamaño",
+          "actions": "Acciones",
+          "empty": "No se encontraron copias de seguridad",
+          "emptyDescription": "Cree una copia de seguridad para comenzar."
+        },
+        "download": "Descargar",
+        "restore": "Restaurar",
+        "testRestore": "Restauración de prueba",
+        "delete": "Eliminar",
+        "restoreModal": {
+          "title": "Restaurar copia de seguridad",
+          "warning": "Esto reemplazará todos los datos en la base de datos {{database}} con la copia de seguridad de {{timestamp}}. Esta acción no se puede deshacer.",
+          "typeToConfirm": "Escriba \"{{database}}\" para confirmar:",
+          "confirmPlaceholder": "Escriba el nombre de la base de datos para confirmar"
+        },
+        "deleteModal": {
+          "title": "Eliminar copia de seguridad",
+          "message": "¿Está seguro de que desea eliminar la copia de seguridad \"{{filename}}\"? Esta acción no se puede deshacer."
+        },
+        "testRestoreModal": {
+          "title": "Resultado de la restauración de prueba",
+          "success": "La restauración de prueba se completó correctamente.",
+          "failure": "La restauración de prueba falló.",
+          "tablesRestored": "Tablas restauradas",
+          "rowsRestored": "Filas restauradas",
+          "duration": "Duración",
+          "testSchema": "Esquema de prueba",
+          "warnings": "Advertencias"
+        },
+        "testRestoreConfirmModal": {
+          "title": "Confirmar restauración de prueba",
+          "description": "Esto restaurará la copia de seguridad de {{timestamp}} en un esquema de prueba separado en la base de datos {{database}}. Los datos originales no se modificarán.",
+          "schemaNameLabel": "Nombre del esquema de prueba",
+          "schemaNameHelper": "El nombre del esquema temporal donde se restaurará la copia de seguridad para su validación."
+        },
+        "notifications": {
+          "backupCreated": "Copia de seguridad creada correctamente.",
+          "backupDeleted": "Copia de seguridad eliminada correctamente.",
+          "restoreSuccess": "Base de datos restaurada correctamente desde la copia de seguridad.",
+          "testRestoreComplete": "Restauración de prueba completada.",
+          "error": "Ocurrió un error durante la operación de copia de seguridad."
+        }
       },
       "bulkUpdate": {
         "description": "Override resource limits for every active user at once. This does not change defaults for future users.",

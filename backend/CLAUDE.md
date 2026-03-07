@@ -106,6 +106,8 @@ For complete schema and caching details, see [`docs/architecture/database-schema
 
 **User Management Permissions**: `users:read` (admin, adminReadonly — view user details, API keys, subscriptions), `users:write` (admin only — update budget/limits, create/revoke API keys)
 
+**Backup Permissions**: `admin:backup` (admin only — create, download, delete, restore, test-restore backups)
+
 **API Keys**: `Authorization: Bearer sk-litellm-{key}`
 
 **Development**: `MOCK_AUTH=true` for auto-login.
@@ -128,6 +130,7 @@ For details, see [`docs/features/user-roles-administration.md`](../docs/features
 - **Admin**: AdminService, admin-users route (user details, budget/limits, API keys, subscriptions)
 - **Settings**: SettingsService (API key quota defaults and maximums via `system_settings` table)
 - **Branding**: BrandingService (login page and header customization)
+- **Backup**: BackupService (database backup/restore for LiteMaaS and LiteLLM with type-aware SQL serialization)
 
 **Admin Analytics Architecture**: Uses specialized service architecture with orchestrator pattern:
 
@@ -285,7 +288,7 @@ All admin analytics business logic constants are centralized in `src/config/admi
 
 ## 🔗 Environment Variables
 
-Key configuration: DATABASE_URL, JWT_SECRET, OAUTH_CLIENT_ID, LITELLM_API_URL, MOCK_AUTH, plus 15+ admin analytics settings.
+Key configuration: DATABASE_URL, JWT_SECRET, OAUTH_CLIENT_ID, LITELLM_API_URL, MOCK_AUTH, LITELLM_DATABASE_URL (backup/restore), BACKUP_STORAGE_PATH, plus 15+ admin analytics settings.
 
 See [`docs/deployment/configuration.md`](../docs/deployment/configuration.md) and `.env.example` for complete list.
 

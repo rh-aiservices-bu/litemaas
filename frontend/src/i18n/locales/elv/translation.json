@@ -809,7 +809,12 @@
         "usageDataCleanup": "Usage Data Cleanup",
         "userBudgetUpdate": "User Budget Updated",
         "userSpendReset": "User Spend Reset",
-        "userUpdate": "User Updated"
+        "userUpdate": "User Updated",
+        "backupCreate": "Tië-ondonya ortanë",
+        "backupDownload": "Tië-ondonya lantanë",
+        "backupDelete": "Tië-ondonya harnaina",
+        "backupRestore": "Tië-ondonya enquantuva",
+        "backupTestRestore": "Tië-ondonya tyasta-enquantuva"
       },
       "allActions": "All actions",
       "allCategories": "All categories",
@@ -824,7 +829,8 @@
         "subscription": "Subscriptions",
         "team": "Teams",
         "usage": "Usage",
-        "user": "Users"
+        "user": "Users",
+        "backup": "Tië-ondonya"
       },
       "categoryFilter": "Category",
       "description": "View system audit trail of all administrative actions.",
@@ -1301,6 +1307,65 @@
         "uploadSuccess": "Thy image hath been bestowed upon the realm",
         "useCustom": "Bespoke heraldry",
         "useDefault": "Ancestral heraldry"
+      },
+      "backup": {
+        "tabTitle": "Tirith-gwaed",
+        "litemaasCard": {
+          "title": "Gwaed-dagor LiteMaaS",
+          "description": "Tirith gwaed-dagor LiteMaaS, ar aduiain, echuin, deri, têw-iant, a thinnath."
+        },
+        "litellmCard": {
+          "title": "Gwaed-dagor LiteLLM",
+          "description": "Tirith gwaed-dagor LiteLLM, ar aerlinn-gwaed a thinnath.",
+          "notConfigured": "Gwaed-dagor LiteLLM ú-dhannen. Panno LITELLM_DATABASE_URL ereb-gwain an tirith-gwaed LiteLLM."
+        },
+        "createBackup": "Caro tirith-gwaed",
+        "creating": "Carad...",
+        "table": {
+          "database": "Gwaed-dagor",
+          "timestamp": "Lû-anim",
+          "size": "Daer",
+          "actions": "Carith",
+          "empty": "Ú-ennen tirith-gwaed",
+          "emptyDescription": "Caro tirith-gwaed an eched."
+        },
+        "download": "Lanno",
+        "restore": "Adertho",
+        "testRestore": "Aderthad-thírad",
+        "delete": "Drego",
+        "restoreModal": {
+          "title": "Adertho tirith-gwaed",
+          "warning": "Hi aderthon ilphin gwaed i {{database}} gwaed-dagor ned tirith-gwaed o {{timestamp}}. Hi carith ú-aderthad.",
+          "typeToConfirm": "Teithio \"{{database}}\" an tirnad:",
+          "confirmPlaceholder": "Teithio eneth gwaed-dagor an tirnad"
+        },
+        "deleteModal": {
+          "title": "Drego tirith-gwaed",
+          "message": "Im-sennui drego tirith-gwaed \"{{filename}}\"? Hi carith ú-aderthad."
+        },
+        "testRestoreModal": {
+          "title": "Cann aderthad-thírad",
+          "success": "Aderthad-thírad tellin na galu.",
+          "failure": "Aderthad-thírad aun.",
+          "tablesRestored": "Taurain aderthannen",
+          "rowsRestored": "Ristain aderthannen",
+          "duration": "Lû-gûr",
+          "testSchema": "Thírad-echui",
+          "warnings": "Gellathon"
+        },
+        "testRestoreConfirmModal": {
+          "title": "Tirno aderthad-thírad",
+          "description": "Si aderthatha i tirith-gwaed o {{timestamp}} na thírad-echui erain i gwaed-dagor {{database}}. I dagor-gwaith ú-prestannar.",
+          "schemaNameLabel": "Eneth thírad-echui",
+          "schemaNameHelper": "I eneth en echui lû-vir ennas i tirith-gwaed aderthanner an thírad."
+        },
+        "notifications": {
+          "backupCreated": "Tirith-gwaed carnen na galu.",
+          "backupDeleted": "Tirith-gwaed dregon na galu.",
+          "restoreSuccess": "Gwaed-dagor aderthannen na galu o tirith-gwaed.",
+          "testRestoreComplete": "Aderthad-thírad tellin.",
+          "error": "Raeg tollen ned carith tirith-gwaed."
+        }
       },
       "bulkUpdate": {
         "description": "Override resource limits for every active user at once. This does not change defaults for future users.",
