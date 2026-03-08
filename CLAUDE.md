@@ -5,6 +5,7 @@
 > - **Backend Context**: [`backend/CLAUDE.md`](backend/CLAUDE.md) - Fastify API implementation details
 > - **Frontend Context**: [`frontend/CLAUDE.md`](frontend/CLAUDE.md) - React/PatternFly 6 implementation details
 > - **Project Structure**: [`docs/architecture/project-structure.md`](docs/architecture/project-structure.md) - Complete directory structure
+> - **Changelog**: [`CHANGELOG.md`](CHANGELOG.md) - All notable changes per release (Keep a Changelog format)
 > - **Documentation**: See `docs/` for comprehensive guides
 
 ## 🚀 Project Overview
@@ -49,12 +50,47 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 
 - **Unified Management Modal**: Profile, Budget & Limits, API Keys, and Subscriptions tabs
 - **Role Management**: Admin/adminReadonly/user role toggles with conflict detection
-- **Budget & Rate Limits**: Max budget, TPM, and RPM configuration with utilization tracking
-- **API Key Lifecycle**: Create, view, and revoke keys with auto-subscription creation
+- **Budget & Rate Limits**: Max budget, budget duration, TPM, and RPM with real-time spend from LiteLLM, spend reset, and color-coded utilization progress bars
+- **API Key Lifecycle**: Create, view, edit quotas (including per-model limits and expiration), soft revoke, permanent delete, and spend reset
+- **Subscription Management**: Add/remove model subscriptions directly from user modal with automatic LiteLLM key sync
 - **Full Audit Trail**: All admin actions logged with metadata
 - **RBAC**: `users:read` (admin, adminReadonly) for viewing, `users:write` (admin only) for modifications
 
-**State Management**: React Context for auth/notifications/config, React Query for server state with dynamic cache TTL from backend configuration.
+**Admin Audit Log**: Full audit log viewer at `/admin/audit` with category/action filtering, human-readable labels, API access toggle, search, and date range filters. Requires `admin:audit` permission (admin + adminReadonly).
+
+**API Key Quota Management**: Comprehensive budget and rate limit management for API keys across user self-service and admin interfaces:
+
+- **Global quotas**: Max budget, budget duration, TPM, RPM, soft budget, max parallel requests on every key
+- **Per-model limits**: Per-model budget, TPM, and RPM configurable during key creation
+- **User self-service**: Quota fields in Create Key modal pre-filled with admin-configured defaults; backend enforces values ≤ admin maximums
+- **Admin editing**: Full quota editing on existing keys via User Management Modal, including per-model limits, expiration, plus soft revoke and permanent delete
+- **Expiration management**: Preset options (30/60/90/180/365 days), custom date picker, admin-configurable default and maximum expiration; LiteLLM sync on create and edit
+- **Spend tracking**: Real-time spend from LiteLLM with color-coded budget utilization progress bars and spend reset
+- **Admin Limits tab**: Three-section admin interface — New User Defaults, API Key Quota Defaults (side-by-side default/maximum grid with expiration), and Bulk User Limits
+- **Budget duration flexibility**: Supports predefined periods (`daily`, `weekly`, `monthly`, `yearly`) and custom LiteLLM durations (`30d`, `1mo`, `1h`)
+
+**Branding Customization**: Admin-controlled login page and header branding with per-element toggle switches:
+
+- **Login Page**: Custom logo, title (200 char max), and subtitle (500 char max)
+- **Header Brand**: Separate light and dark theme logos
+- **Image Constraints**: 2 MB max, JPEG/PNG/SVG/GIF/WebP formats
+- **Singleton Storage**: Single `branding_settings` database row with base64 image data
+- **Public Endpoints**: Settings metadata and image serving accessible without authentication
+- **BrandingContext**: React Context with React Query (5-min stale time, fallback defaults)
+- **RBAC**: `admin:banners:write` for modifications, public for reading
+
+**Database Backup & Restore**: Full backup and restore for both LiteMaaS and LiteLLM databases from Settings and Tools → Backup tab:
+
+- **Backup format**: Compressed `.sql.gz` (pure SQL, compatible with `psql` for manual restore)
+- **Test restore**: Non-destructive restore to temporary schema with data integrity validation
+- **Type-aware serialization**: Correct handling of PG arrays vs JSON arrays, mixed-case identifiers, timestamp precision
+- **CLI restore**: Standalone script for catastrophic recovery (`backend/src/scripts/restore-backup.ts`)
+- **RBAC**: `admin:backup` permission (admin only), tab visible to adminReadonly (read-only)
+- **Configuration**: `LITELLM_DATABASE_URL` for LiteLLM database access, `BACKUP_STORAGE_PATH` for storage location
+
+**Configurable Currency**: Admin-controlled currency settings (25 supported currencies) for all monetary displays across the platform. Configured via Settings and Tools → Currency tab, stored in `system_settings` table, exposed via public config endpoint. Default: USD ($).
+
+**State Management**: React Context for auth/notifications/config/branding, React Query for server state with dynamic cache TTL from backend configuration.
 
 **Shared Chart Utilities**: Consistent formatting, accessibility, and styling across all chart components via shared utility modules.
 
@@ -65,6 +101,7 @@ For detailed features, see:
 - [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md) - Complete RBAC guide
 - [`docs/features/subscription-approval-workflow.md`](docs/features/subscription-approval-workflow.md) - Complete approval workflow guide
 - [`docs/features/users-management.md`](docs/features/users-management.md) - Admin user management guide
+- [`docs/features/branding-customization.md`](docs/features/branding-customization.md) - Branding customization guide
 - [`docs/archive/features/admin-usage-analytics-implementation-plan.md`](docs/archive/features/admin-usage-analytics-implementation-plan.md) - Comprehensive admin analytics implementation (2000 lines)
 - [`docs/development/chart-components-guide.md`](docs/development/chart-components-guide.md) - Chart component patterns and utilities
 - [`docs/development/pattern-reference.md`](docs/development/pattern-reference.md) - Authoritative code patterns and anti-patterns

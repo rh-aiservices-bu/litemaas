@@ -1,8 +1,30 @@
 import createApp from './app';
 
+let fastifyInstance: any;
+
+const gracefulShutdown = async (signal: string) => {
+  if (fastifyInstance) {
+    fastifyInstance.log.info(`Received ${signal}, shutting down gracefully`);
+    try {
+      await fastifyInstance.close();
+      process.exit(0);
+    } catch (err) {
+      fastifyInstance.log.error(err, 'Error during graceful shutdown');
+      process.exit(1);
+    }
+  } else {
+    console.log(`Received ${signal}, shutting down gracefully`);
+    process.exit(0);
+  }
+};
+
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+
 const start = async () => {
   try {
     const fastify = await createApp();
+    fastifyInstance = fastify;
 
     // Start server
     const host = fastify.config.HOST;
@@ -16,14 +38,5 @@ const start = async () => {
     process.exit(1);
   }
 };
-
-// Handle graceful shutdown
-const gracefulShutdown = async (signal: string) => {
-  console.log(`Received ${signal}, shutting down gracefully`);
-  process.exit(0);
-};
-
-process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 
 start();

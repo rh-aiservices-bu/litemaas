@@ -1,3 +1,9 @@
+/**
+ * Max int32 — sent to LiteLLM as sentinel for "unlimited" since it ignores null on update.
+ * Used for tpm_limit and rpm_limit on both users and API keys.
+ */
+export const LITELLM_UNLIMITED = 2147483647;
+
 export interface LiteLLMConfig {
   apiUrl: string;
   apiKey?: string;

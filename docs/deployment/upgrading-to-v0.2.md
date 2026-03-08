@@ -135,8 +135,10 @@ The health endpoint spelling was corrected. LiteMaaS already uses `/health/liven
 
 | File | Change |
 |------|--------|
-| `backend/src/services/litellm.service.ts` | Dual-format detection for `/key/info` responses; `/health/liveness` endpoint |
-| `backend/src/types/api-key.types.ts` | `LiteLLMKeyInfoResponse` type for nested format |
+| `backend/src/services/litellm.service.ts` | Dual-format detection for `/key/info` responses; `/health/liveness` endpoint; `makeRequest` header priority fix (caller headers override master key) |
+| `backend/src/services/api-key.service.ts` | Sync code reads `soft_budget` from nested `litellm_budget_table`; syncs `budget_reset_at`; handles empty objects as `null` |
+| `backend/src/types/api-key.types.ts` | `LiteLLMKeyInfoResponse` type for nested format; `LiteLLMBudgetTable` interface; nullable types for `expires`, `blocked`, `team_id` |
+| `backend/src/schemas/api-keys.ts` | `LiteLLMBudgetTableSchema`; updated `LiteLLMKeyInfoSchema` with all actual response fields |
 | `deployment/helm/litemaas/values.yaml` | Default LiteLLM image tag updated |
 | `deployment/kustomize/litellm-deployment.yaml` | LiteLLM image tag updated |
 | `dev-tools/compose.yaml` | LiteLLM image tag updated for local development |

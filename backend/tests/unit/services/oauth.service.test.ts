@@ -15,7 +15,12 @@ const createMockFastify = (configOverrides: Record<string, unknown> = {}) =>
       error: vi.fn(),
       debug: vi.fn(),
     },
-    config: { ...configOverrides },
+    config: {
+      DEFAULT_USER_MAX_BUDGET: '10',
+      DEFAULT_USER_TPM_LIMIT: '10000',
+      DEFAULT_USER_RPM_LIMIT: '60',
+      ...configOverrides,
+    },
   }) as unknown as FastifyInstance;
 
 describe('OAuthService', () => {
@@ -286,6 +291,7 @@ describe('OAuthService', () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
         .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // system_settings query (user_defaults)
         .mockResolvedValueOnce(mockUserDbRow); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
       mockLiteLLMService.getUserInfo = vi.fn().mockResolvedValue(null);
@@ -302,6 +308,7 @@ describe('OAuthService', () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
         .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // system_settings query (user_defaults)
         .mockResolvedValueOnce(mockUserDbRow); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
       mockLiteLLMService.getUserInfo = vi.fn().mockResolvedValue(null);
@@ -338,8 +345,9 @@ describe('OAuthService', () => {
     it('should handle LiteLLM sync errors gracefully', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(mockUserDbRow);
+        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // system_settings query (user_defaults)
+        .mockResolvedValueOnce(mockUserDbRow); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
       mockLiteLLMService.getUserInfo = vi.fn().mockResolvedValue(null);
       mockLiteLLMService.createUser = vi.fn().mockRejectedValue(new Error('LiteLLM error'));
@@ -354,8 +362,9 @@ describe('OAuthService', () => {
     it('should log info on successful user creation', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(mockUserDbRow);
+        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // system_settings query (user_defaults)
+        .mockResolvedValueOnce(mockUserDbRow); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
       mockLiteLLMService.getUserInfo = vi.fn().mockResolvedValue(null);
 
@@ -377,8 +386,9 @@ describe('OAuthService', () => {
     it('should map admin groups correctly', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({ ...mockUserDbRow, roles: ['user', 'admin'] });
+        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // system_settings query (user_defaults)
+        .mockResolvedValueOnce({ ...mockUserDbRow, roles: ['user', 'admin'] }); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
       mockLiteLLMService.getUserInfo = vi.fn().mockResolvedValue(null);
 
@@ -392,8 +402,9 @@ describe('OAuthService', () => {
     it('should map readonly groups correctly', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({ ...mockUserDbRow, roles: ['user', 'admin-readonly'] });
+        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // system_settings query (user_defaults)
+        .mockResolvedValueOnce({ ...mockUserDbRow, roles: ['user', 'admin-readonly'] }); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
       mockLiteLLMService.getUserInfo = vi.fn().mockResolvedValue(null);
 
@@ -407,8 +418,9 @@ describe('OAuthService', () => {
     it('should default to user role for unknown groups', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(mockUserDbRow);
+        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // system_settings query (user_defaults)
+        .mockResolvedValueOnce(mockUserDbRow); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
       mockLiteLLMService.getUserInfo = vi.fn().mockResolvedValue(null);
 
@@ -421,8 +433,9 @@ describe('OAuthService', () => {
     it('should handle empty groups array', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce(mockUserDbRow);
+        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // system_settings query (user_defaults)
+        .mockResolvedValueOnce(mockUserDbRow); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
       mockLiteLLMService.getUserInfo = vi.fn().mockResolvedValue(null);
 
@@ -436,6 +449,7 @@ describe('OAuthService', () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
         .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // system_settings query (user_defaults)
         .mockResolvedValueOnce(null); // INSERT RETURNING returns null
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
       mockLiteLLMService.getUserInfo = vi.fn().mockResolvedValue(null);

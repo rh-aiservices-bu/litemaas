@@ -45,6 +45,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { usersService } from '../services/users.service';
 import { User, UserListParams } from '../types/users';
 import { UserEditModal } from '../components';
+import { extractErrorDetails } from '../utils/error.utils';
 
 const UsersPage: React.FC = () => {
   const { t } = useTranslation();
@@ -261,7 +262,7 @@ const UsersPage: React.FC = () => {
               {t('users.error.loadTitle')}
             </Title>
             <EmptyStateBody>
-              {error instanceof Error ? error.message : t('users.error.loadDescription')}
+              {extractErrorDetails(error).message || t('users.error.loadDescription')}
             </EmptyStateBody>
             <EmptyStateActions>
               <Button variant="primary" onClick={() => refetch()}>

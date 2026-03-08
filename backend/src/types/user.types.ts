@@ -113,6 +113,7 @@ export interface LiteLLMUserRequest {
   user_role?: 'proxy_admin' | 'internal_user' | 'internal_user_viewer';
   teams?: string[];
   max_budget?: number;
+  spend?: number;
   models?: string[];
   auto_create_key?: boolean;
   tpm_limit?: number;

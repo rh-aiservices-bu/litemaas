@@ -30,6 +30,12 @@ vi.mock('../../services/models.service', () => ({
 vi.mock('../../services/admin.service', () => ({
   adminService: {
     bulkUpdateUserLimits: vi.fn(),
+    getApiKeyDefaults: vi.fn().mockResolvedValue({ defaults: {}, maximums: {} }),
+    updateApiKeyDefaults: vi.fn().mockResolvedValue({ defaults: {}, maximums: {} }),
+    getUserDefaults: vi
+      .fn()
+      .mockResolvedValue({ envDefaults: { maxBudget: 100, tpmLimit: 100000, rpmLimit: 120 } }),
+    updateUserDefaults: vi.fn().mockResolvedValue({}),
   },
 }));
 
@@ -47,6 +53,38 @@ vi.mock('../../contexts/BannerContext', () => ({
     updateBanner: vi.fn(),
     bulkUpdateVisibility: vi.fn(),
   }),
+}));
+
+// Mock BrandingContext
+vi.mock('../../contexts/BrandingContext', () => ({
+  useBranding: () => ({
+    brandingSettings: {
+      loginLogoEnabled: false,
+      hasLoginLogo: false,
+      loginTitleEnabled: false,
+      loginTitle: null,
+      loginSubtitleEnabled: false,
+      loginSubtitle: null,
+      headerBrandEnabled: false,
+      hasHeaderBrandLight: false,
+      hasHeaderBrandDark: false,
+      updatedAt: null,
+    },
+    isLoading: false,
+    refetch: vi.fn(),
+  }),
+  BrandingProvider: ({ children }: any) => children,
+}));
+
+// Mock branding service
+vi.mock('../../services/branding.service', () => ({
+  brandingService: {
+    getSettings: vi.fn(),
+    updateSettings: vi.fn(),
+    uploadImage: vi.fn(),
+    deleteImage: vi.fn(),
+    getImageUrl: vi.fn((type: string) => `/api/v1/branding/images/${type}`),
+  },
 }));
 
 // Mock React Query
@@ -155,25 +193,25 @@ describe('ToolsPage', () => {
       expect(screen.getByRole('heading', { level: 1, name: /tools/i })).toBeInTheDocument();
     });
 
-    it('should render models tab as default active tab', () => {
+    it('should render limits tab as default active tab', () => {
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
 
-      const modelsTab = screen.getByRole('tab', { name: /models/i });
-      expect(modelsTab).toHaveAttribute('aria-selected', 'true');
+      const limitsTab = screen.getByRole('tab', { name: /limits/i });
+      expect(limitsTab).toHaveAttribute('aria-selected', 'true');
     });
 
     it('should switch between tabs correctly', async () => {
       const user = userEvent.setup();
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
 
-      // Initially on models tab
-      expect(screen.getByRole('tab', { name: /models/i })).toHaveAttribute('aria-selected', 'true');
+      // Initially on limits tab
+      expect(screen.getByRole('tab', { name: /limits/i })).toHaveAttribute('aria-selected', 'true');
 
-      // Click limits tab
-      const limitsTab = screen.getByRole('tab', { name: /limits/i });
-      await user.click(limitsTab);
+      // Click models tab
+      const modelsTab = screen.getByRole('tab', { name: /models/i });
+      await user.click(modelsTab);
 
-      expect(limitsTab).toHaveAttribute('aria-selected', 'true');
+      expect(modelsTab).toHaveAttribute('aria-selected', 'true');
     });
 
     it('should only show models tab for regular users', () => {
@@ -202,14 +240,22 @@ describe('ToolsPage', () => {
   });
 
   describe('Models Sync Tab', () => {
-    it('should render models sync section', () => {
+    async function switchToModelsTab() {
+      const usr = userEvent.setup();
+      const modelsTab = screen.getByRole('tab', { name: /models/i });
+      await usr.click(modelsTab);
+    }
+
+    it('should render models sync section', async () => {
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       expect(screen.getByText(/browse and manage ai models/i)).toBeInTheDocument();
     });
 
-    it('should display sync button for admin users', () => {
+    it('should display sync button for admin users', async () => {
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       const syncButton = screen.getByRole('button', { name: /refresh models/i });
       expect(syncButton).toBeInTheDocument();
@@ -245,6 +291,7 @@ describe('ToolsPage', () => {
       vi.mocked(modelsService.refreshModels).mockResolvedValue(mockRefreshResult);
 
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       const syncButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(syncButton);
@@ -266,6 +313,7 @@ describe('ToolsPage', () => {
       vi.mocked(modelsService.refreshModels).mockResolvedValue(mockRefreshResult);
 
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       const syncButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(syncButton);
@@ -292,6 +340,7 @@ describe('ToolsPage', () => {
       vi.mocked(modelsService.refreshModels).mockResolvedValue(mockRefreshResult);
 
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       const syncButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(syncButton);
@@ -324,6 +373,7 @@ describe('ToolsPage', () => {
       );
 
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       const syncButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(syncButton);
@@ -339,6 +389,7 @@ describe('ToolsPage', () => {
       vi.mocked(modelsService.refreshModels).mockRejectedValue(new Error('Sync failed'));
 
       renderWithAuth(<ToolsPage />, { user: mockAdminUser });
+      await switchToModelsTab();
 
       const syncButton = screen.getByRole('button', { name: /refresh models/i });
       await user.click(syncButton);
@@ -360,7 +411,7 @@ describe('ToolsPage', () => {
       const limitsTab = screen.getByRole('tab', { name: /limits/i });
       await user.click(limitsTab);
 
-      expect(screen.getByText(/bulk update user limits/i)).toBeInTheDocument();
+      expect(screen.getByText(/bulk update all users/i)).toBeInTheDocument();
     });
 
     it('should display form with maxBudget, tpmLimit, rpmLimit fields', async () => {

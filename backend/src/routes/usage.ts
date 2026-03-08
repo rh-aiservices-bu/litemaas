@@ -29,6 +29,59 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
   const cacheManager = new DailyUsageCacheManager(fastify);
   const adminUsageStatsService = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
 
+  // Get current user's budget info
+  fastify.get('/budget', {
+    schema: {
+      tags: ['Usage'],
+      description: 'Get current user budget consumption',
+      security: [{ bearerAuth: [] }],
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            maxBudget: { type: 'number', nullable: true },
+            currentSpend: { type: 'number' },
+            budgetDuration: { type: 'string', nullable: true },
+            budgetResetAt: { type: 'string', nullable: true },
+          },
+        },
+      },
+    },
+    preHandler: [fastify.authenticate],
+    handler: async (request, _reply) => {
+      const user = (request as AuthenticatedRequest).user;
+
+      // Get user budget info from DB
+      const dbUser = await fastify.dbUtils.queryOne(
+        `SELECT max_budget, budget_duration FROM users WHERE id = $1`,
+        [user.userId],
+      );
+
+      // Get current spend and reset date from LiteLLM
+      let currentSpend = 0;
+      let budgetResetAt: string | undefined;
+      try {
+        const liteLLMUser = await liteLLMService.getUserInfoFull(user.userId);
+        if (liteLLMUser?.user_info) {
+          currentSpend = liteLLMUser.user_info.spend ?? 0;
+          budgetResetAt = liteLLMUser.user_info.budget_reset_at ?? undefined;
+        }
+      } catch (err) {
+        fastify.log.warn(
+          { userId: user.userId, error: err instanceof Error ? err.message : err },
+          'Failed to fetch user spend from LiteLLM for budget endpoint',
+        );
+      }
+
+      return {
+        maxBudget: dbUser?.max_budget != null ? Number(dbUser.max_budget) : undefined,
+        currentSpend,
+        budgetDuration: dbUser?.budget_duration ?? undefined,
+        budgetResetAt,
+      };
+    },
+  });
+
   // Get usage metrics (for frontend)
   fastify.get<{
     Querystring: {

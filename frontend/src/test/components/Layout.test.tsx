@@ -91,7 +91,49 @@ vi.mock('../../contexts/ConfigContext', () => ({
     isLoading: false,
     error: null,
   }),
+  useCurrency: () => ({
+    currencyCode: 'USD',
+    currencySymbol: '$',
+    currencyName: 'US Dollar',
+    formatCurrency: (amount: number) => {
+      if (!isFinite(amount) || amount < 0) return '$0.00';
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    },
+  }),
   ConfigProvider: ({ children }: any) => children,
+}));
+
+// Mock BrandingContext
+vi.mock('../../contexts/BrandingContext', () => ({
+  useBranding: () => ({
+    brandingSettings: {
+      loginLogoEnabled: false,
+      hasLoginLogo: false,
+      loginTitleEnabled: false,
+      loginTitle: null,
+      loginSubtitleEnabled: false,
+      loginSubtitle: null,
+      headerBrandEnabled: false,
+      hasHeaderBrandLight: false,
+      hasHeaderBrandDark: false,
+      updatedAt: null,
+    },
+    isLoading: false,
+    refetch: vi.fn(),
+  }),
+  BrandingProvider: ({ children }: any) => children,
+}));
+
+// Mock branding service
+vi.mock('../../services/branding.service', () => ({
+  brandingService: {
+    getImageUrl: vi.fn((type: string) => `/api/v1/branding/images/${type}`),
+  },
 }));
 
 // Mock assets

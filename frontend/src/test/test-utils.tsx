@@ -36,6 +36,20 @@ vi.mock('../contexts/ConfigContext', () => {
       }
       return context;
     },
+    useCurrency: () => ({
+      currencyCode: 'USD',
+      currencySymbol: '$',
+      currencyName: 'US Dollar',
+      formatCurrency: (amount: number) => {
+        if (!isFinite(amount) || amount < 0) return '$0.00';
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(amount);
+      },
+    }),
     ConfigProvider: ({ children }: { children: React.ReactNode }) =>
       React.createElement(
         mockConfigContext.Provider,
@@ -52,6 +66,20 @@ vi.mock('../services/config.service', () => ({
       version: '1.0.0-test',
       usageCacheTTL: 300,
       environment: 'test',
+    }),
+    getApiKeyDefaults: vi.fn().mockResolvedValue({
+      defaults: {
+        maxBudget: null,
+        tpmLimit: null,
+        rpmLimit: null,
+        budgetDuration: null,
+        softBudget: null,
+      },
+      maximums: {
+        maxBudget: null,
+        tpmLimit: null,
+        rpmLimit: null,
+      },
     }),
   },
 }));

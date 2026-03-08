@@ -111,6 +111,20 @@ spec:
                 secretKeyRef:
                   name: backend-secret
                   key: litellm-api-key
+            - name: LITELLM_MASTER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: litellm-master-key
+            - name: LITELLM_DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: backend-secret
+                  key: litellm-database-url
+
+            # Backup Storage Path
+            - name: BACKUP_STORAGE_PATH
+              value: '/data/backups'
 
             # Backend API Rate Limiting (NOT for LLM requests)
             - name: RATE_LIMIT_MAX
@@ -137,6 +151,10 @@ spec:
               memory: '512Mi'
               cpu: '500m'
 
+          volumeMounts:
+            - name: backup-storage
+              mountPath: /data/backups
+
           livenessProbe:
             httpGet:
               path: /api/v1/health/live
@@ -153,3 +171,7 @@ spec:
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 3
+      volumes:
+        - name: backup-storage
+          persistentVolumeClaim:
+            claimName: backend-backup

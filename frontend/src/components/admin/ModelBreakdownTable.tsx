@@ -15,6 +15,7 @@ import { usePagination } from '../../hooks/usePagination';
 import { useErrorHandler } from '../../hooks/useErrorHandler';
 import type { AdminUsageFilters } from '../../services/adminUsage.service';
 import { formatNumber, formatCurrency } from '../../utils/formatters';
+import { useCurrency } from '../../contexts/ConfigContext';
 import { PER_PAGE_OPTIONS } from '../../services/adminUsage.service';
 
 interface ModelBreakdownTableProps {
@@ -24,6 +25,7 @@ interface ModelBreakdownTableProps {
 export const ModelBreakdownTable: React.FC<ModelBreakdownTableProps> = ({ filters }) => {
   const { t } = useTranslation();
   const { handleError } = useErrorHandler();
+  const { currencyCode } = useCurrency();
 
   // Pagination state
   const pagination = usePagination({
@@ -155,7 +157,7 @@ export const ModelBreakdownTable: React.FC<ModelBreakdownTableProps> = ({ filter
                 {formatNumber(model.metrics.tokens.output)}
               </Td>
               <Td dataLabel={t('adminUsage.modelBreakdown.totalCost', 'Total Cost')}>
-                {formatCurrency(model.metrics.cost)}
+                {formatCurrency(model.metrics.cost, currencyCode)}
               </Td>
             </Tr>
           ))}

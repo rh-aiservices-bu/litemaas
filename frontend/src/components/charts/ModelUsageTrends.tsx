@@ -32,6 +32,7 @@ export interface ModelUsageTrendsProps {
   metricType: 'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion_tokens';
   title?: string;
   description?: string;
+  currencySymbol?: string;
 }
 
 /**
@@ -39,7 +40,15 @@ export interface ModelUsageTrendsProps {
  * Displays model usage trends over time as a multi-colored stacked chart
  */
 const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
-  ({ data = [], loading = false, height = 400, metricType, title, description }) => {
+  ({
+    data = [],
+    loading = false,
+    height = 400,
+    metricType,
+    title,
+    description,
+    currencySymbol = '$',
+  }) => {
     const { t } = useTranslation();
     const [legendExtraHeight, setLegendExtraHeight] = React.useState(0);
     const [containerWidth, setContainerWidth] = React.useState(600);
@@ -190,12 +199,15 @@ const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
     const accessibleData: AccessibleChartData[] = chartData.map((point) => {
       const totalValue = modelNames.reduce((sum, model) => sum + (Number(point[model]) || 0), 0);
       const modelBreakdown = modelNames
-        .map((model) => `${model}: ${formatYTickByMetric(Number(point[model]) || 0, metricType)}`)
+        .map(
+          (model) =>
+            `${model}: ${formatYTickByMetric(Number(point[model]) || 0, metricType, currencySymbol)}`,
+        )
         .join(', ');
 
       // Build additionalInfo with both raw and formatted values
       const additionalInfo: { [key: string]: string | number } = {
-        [metricKey]: formatYTickByMetric(totalValue, metricType), // Formatted for display
+        [metricKey]: formatYTickByMetric(totalValue, metricType, currencySymbol), // Formatted for display
         [`${metricKey}Raw`]: totalValue, // Raw for export (matches ${key}Raw pattern)
         modelbreakdown: modelBreakdown, // Formatted for display
       };
@@ -205,7 +217,7 @@ const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
         const modelKey = modelName.toLowerCase().replace(/\s+/g, '');
         const rawValue = Number(point[modelName]) || 0;
         additionalInfo[`${modelKey}Raw`] = rawValue;
-        additionalInfo[`${modelKey}`] = formatYTickByMetric(rawValue, metricType); // Formatted version
+        additionalInfo[`${modelKey}`] = formatYTickByMetric(rawValue, metricType, currencySymbol); // Formatted version
       });
 
       return {
@@ -218,7 +230,7 @@ const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
     // Format value function for accessibility
     const formatAccessibleValue = (value: number | string) => {
       if (typeof value === 'string') return value;
-      return formatYTickByMetric(value, metricType);
+      return formatYTickByMetric(value, metricType, currencySymbol);
     };
 
     // Generate chart description
@@ -239,9 +251,9 @@ const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
         'Stacked chart with {{dataPoints}} data points showing {{modelCount}} models. Total values range from {{minValue}} to {{maxValue}}, with an average of {{avgValue}}.',
       dataPoints: chartData.length,
       modelCount: modelNames.length,
-      minValue: formatYTickByMetric(minValue, metricType),
-      maxValue: formatYTickByMetric(maxValueTotal, metricType),
-      avgValue: formatYTickByMetric(Math.round(avgValue), metricType),
+      minValue: formatYTickByMetric(minValue, metricType, currencySymbol),
+      maxValue: formatYTickByMetric(maxValueTotal, metricType, currencySymbol),
+      avgValue: formatYTickByMetric(Math.round(avgValue), metricType, currencySymbol),
     });
 
     // Calculate integer tick values for requests metric to avoid decimal subdivisions
@@ -297,7 +309,7 @@ const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
 
       // Calculate total value for all models at this date
       const totalValue = modelsWithData.reduce((sum, model) => sum + model.value, 0);
-      const formattedTotal = formatYTickByMetric(totalValue, metricType);
+      const formattedTotal = formatYTickByMetric(totalValue, metricType, currencySymbol);
       const unit =
         metricType === 'requests' ? ' requests' : metricType === 'tokens' ? ' tokens' : '';
 
@@ -440,7 +452,7 @@ const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
                   fontSize="11"
                 >
                   {model.name.length > 25 ? model.name.substring(0, 25) + '...' : model.name}:{' '}
-                  {formatYTickByMetric(model.value, metricType)}
+                  {formatYTickByMetric(model.value, metricType, currencySymbol)}
                 </text>
               </g>
             );
@@ -538,6 +550,7 @@ const ModelUsageTrends: React.FC<ModelUsageTrendsProps> = React.memo(
                 formatYTickByMetric(
                   metricType === 'requests' ? Math.round(value) : value,
                   metricType,
+                  currencySymbol,
                 )
               }
               style={{

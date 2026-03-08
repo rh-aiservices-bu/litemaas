@@ -37,6 +37,20 @@ vi.mock('../../contexts/ConfigContext', () => ({
     isLoading: false,
     error: null,
   }),
+  useCurrency: () => ({
+    currencyCode: 'USD',
+    currencySymbol: '$',
+    currencyName: 'US Dollar',
+    formatCurrency: (amount: number) => {
+      if (!isFinite(amount) || amount < 0) return '$0.00';
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    },
+  }),
   useAdminAnalyticsConfig: () => ({
     pagination: {
       defaultPageSize: 50,

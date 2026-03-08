@@ -6,6 +6,7 @@ import {
   type BackendConfig,
   type AdminAnalyticsPublicConfig,
 } from '../services/config.service';
+import { DEFAULT_CURRENCY } from '../types/currency';
 
 interface ConfigContextType {
   config: BackendConfig | null;
@@ -62,6 +63,38 @@ export const useAdminAnalyticsConfig = (): AdminAnalyticsPublicConfig => {
       },
     }
   );
+};
+
+/**
+ * Hook for accessing currency settings with formatting utility
+ */
+export const useCurrency = () => {
+  const { config } = useConfig();
+  const currency = config?.currency ?? DEFAULT_CURRENCY;
+
+  const formatCurrency = (amount: number): string => {
+    if (!isFinite(amount) || amount < 0) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: currency.code,
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(0);
+    }
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: currency.code,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  return {
+    currencyCode: currency.code,
+    currencySymbol: currency.symbol,
+    currencyName: currency.name,
+    formatCurrency,
+  };
 };
 
 interface ConfigProviderProps {

@@ -1,6 +1,35 @@
 import { ApiKeyMetadata } from './common.types.js';
 
 /**
+ * Admin-configurable defaults and maximums for user-created API keys
+ */
+export interface ApiKeyQuotaDefaults {
+  defaults: {
+    maxBudget?: number | null;
+    tpmLimit?: number | null;
+    rpmLimit?: number | null;
+    budgetDuration?: string | null;
+    softBudget?: number | null;
+    expirationDays?: number | null;
+  };
+  maximums: {
+    maxBudget?: number | null;
+    tpmLimit?: number | null;
+    rpmLimit?: number | null;
+    expirationDays?: number | null;
+  };
+}
+
+/**
+ * Admin-configurable defaults for new user creation
+ */
+export interface UserDefaults {
+  maxBudget?: number | null;
+  tpmLimit?: number | null;
+  rpmLimit?: number | null;
+}
+
+/**
  * API key permissions interface
  */
 export interface ApiKeyPermissions {
@@ -20,6 +49,10 @@ export interface CreateApiKeyRequest {
   budgetDuration?: string;
   tpmLimit?: number;
   rpmLimit?: number;
+  maxParallelRequests?: number;
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  modelRpmLimit?: Record<string, number>;
+  modelTpmLimit?: Record<string, number>;
   teamId?: string;
   tags?: string[];
   permissions?: ApiKeyPermissions;
@@ -118,7 +151,11 @@ export interface LiteLLMKeyGenerationRequest {
   metadata?: ApiKeyMetadata;
   tpm_limit?: number; // tokens per minute
   rpm_limit?: number; // requests per minute
-  budget_duration?: string; // "monthly", "daily", etc.
+  max_parallel_requests?: number; // concurrent in-flight requests
+  budget_duration?: string; // "monthly", "daily", "30d", "1mo", etc.
+  model_max_budget?: Record<string, { budget_limit: number; time_period: string }>; // per-model budgets
+  model_rpm_limit?: Record<string, number>; // per-model RPM
+  model_tpm_limit?: Record<string, number>; // per-model TPM
   permissions?: {
     allow_chat_completions?: boolean;
     allow_embeddings?: boolean;
@@ -130,6 +167,7 @@ export interface LiteLLMKeyGenerationRequest {
   tags?: string[];
   allowed_routes?: string[];
   soft_budget?: number;
+  spend?: number;
 }
 
 export interface LiteLLMKeyGenerationResponse {
@@ -147,21 +185,51 @@ export interface LiteLLMKeyGenerationResponse {
   [key: string]: any;
 }
 
+export interface LiteLLMBudgetTable {
+  budget_id?: string;
+  soft_budget?: number;
+  max_budget?: number;
+  tpm_limit?: number;
+  rpm_limit?: number;
+  max_parallel_requests?: number;
+  model_max_budget?: Record<string, unknown>;
+  budget_duration?: string;
+  budget_reset_at?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface LiteLLMKeyInfo {
   key_name?: string;
+  key_alias?: string;
+  soft_budget_cooldown?: boolean;
   spend: number;
   max_budget?: number;
   models?: string[];
   tpm_limit?: number;
   rpm_limit?: number;
+  max_parallel_requests?: number;
+  budget_duration?: string;
+  budget_reset_at?: string;
+  model_max_budget?: Record<string, { budget_limit: number; time_period: string }>;
+  model_rpm_limit?: Record<string, number>;
+  model_tpm_limit?: Record<string, number>;
+  model_spend?: Record<string, number>;
   user_id?: string;
   team_id?: string;
-  expires?: string;
-  budget_reset_at?: string;
+  expires?: string | null;
+  budget_id?: string;
+  organization_id?: string | null;
   soft_budget?: number;
-  blocked?: boolean;
+  blocked?: boolean | null;
   tags?: string[];
   metadata?: ApiKeyMetadata;
+  allowed_cache_controls?: string[];
+  allowed_routes?: string[];
+  permissions?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+  litellm_budget_table?: LiteLLMBudgetTable;
 }
 
 /**
@@ -176,6 +244,14 @@ export interface LiteLLMKeyInfoResponse {
  * Enhanced API key interface that includes model and subscription details
  */
 export interface EnhancedApiKey extends ApiKey {
+  budgetDuration?: string;
+  softBudget?: number;
+  budgetResetAt?: Date;
+  budgetUtilization?: number; // calculated: currentSpend / maxBudget * 100
+  maxParallelRequests?: number;
+  modelMaxBudget?: Record<string, { budgetLimit: number; timePeriod: string }>;
+  modelRpmLimit?: Record<string, number>;
+  modelTpmLimit?: Record<string, number>;
   modelDetails?: Array<{
     id: string;
     name: string;

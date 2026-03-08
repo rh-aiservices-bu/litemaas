@@ -718,7 +718,7 @@ Response:
 **Authorization**: Requires valid JWT token (any role)
 **Data Access**: Users can only update their own API keys; admins can update any API key
 
-Update an existing API key's name, models, or metadata
+Update an existing API key's name, models, expiration, or metadata
 
 **Request:**
 
@@ -726,6 +726,7 @@ Update an existing API key's name, models, or metadata
 {
   "name": "Updated Key Name", // Optional: Update display name
   "modelIds": ["gpt-4", "claude-3"], // Optional: Update accessible models
+  "expiresAt": "2025-06-15T00:00:00.000Z", // Optional: expiration date ISO string (null to clear)
   "metadata": {
     // Optional: Update metadata
     "description": "Updated description",
@@ -835,6 +836,28 @@ Response:
   "oldPrefix": "sk-litellm"                  // Old prefix was also LiteLLM format
 }
 ```
+
+#### POST /api/v1/api-keys/:id/reset-spend
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only reset spend on their own API keys
+
+Reset an API key's accumulated spend to $0
+
+```json
+Response:
+{
+  "id": "key_456",
+  "currentSpend": 0,
+  "resetAt": "2024-01-20T10:00:00Z"
+}
+```
+
+**Notes**:
+
+- Resets spend in LiteLLM and updates local database
+- Only works on active keys
+- Action is audit logged
 
 #### DELETE /api/v1/api-keys/:id
 
@@ -1220,6 +1243,111 @@ Response:
 }
 ```
 
+### Branding (/api/v1/branding)
+
+Public and admin endpoints for managing application branding (login page and header customization).
+
+#### GET /api/v1/branding
+
+**Authorization**: Public endpoint (no authentication required)
+
+Get branding settings metadata (no image binary data)
+
+```json
+Response:
+{
+  "loginLogoEnabled": true,
+  "hasLoginLogo": true,
+  "loginTitleEnabled": true,
+  "loginTitle": "Welcome to Our Platform",
+  "loginSubtitleEnabled": false,
+  "loginSubtitle": null,
+  "headerBrandEnabled": true,
+  "hasHeaderBrandLight": true,
+  "hasHeaderBrandDark": false,
+  "updatedAt": "2024-01-20T10:00:00Z"
+}
+```
+
+#### PATCH /api/v1/branding
+
+**Authorization**: Requires `admin` role (`admin:banners:write` permission)
+
+Update branding toggles and text fields. All fields are optional — only provided fields are updated.
+
+```json
+Request:
+{
+  "loginLogoEnabled": true,
+  "loginTitleEnabled": true,
+  "loginTitle": "Welcome to Our Platform",
+  "loginSubtitleEnabled": true,
+  "loginSubtitle": "AI Model Management Made Simple",
+  "headerBrandEnabled": false
+}
+
+Response: Same as GET /api/v1/branding
+```
+
+**Constraints**:
+- `loginTitle`: max 200 characters
+- `loginSubtitle`: max 500 characters
+
+#### PUT /api/v1/branding/images/:type
+
+**Authorization**: Requires `admin` role (`admin:banners:write` permission)
+
+Upload a branding image. The image is sent as base64-encoded data.
+
+**Path parameters**:
+- `type`: `login-logo` | `header-brand-light` | `header-brand-dark`
+
+```json
+Request:
+{
+  "data": "<base64-encoded image data>",
+  "mimeType": "image/png"
+}
+
+Response:
+{
+  "message": "Image login-logo uploaded successfully"
+}
+```
+
+**Constraints**:
+- Maximum decoded image size: 2 MB
+- Supported MIME types: `image/jpeg`, `image/jpg`, `image/png`, `image/svg+xml`, `image/gif`, `image/webp`
+
+#### DELETE /api/v1/branding/images/:type
+
+**Authorization**: Requires `admin` role (`admin:banners:write` permission)
+
+Delete a branding image.
+
+**Path parameters**:
+- `type`: `login-logo` | `header-brand-light` | `header-brand-dark`
+
+```json
+Response:
+{
+  "message": "Image login-logo deleted successfully"
+}
+```
+
+#### GET /api/v1/branding/images/:type
+
+**Authorization**: Public endpoint (no authentication required)
+
+Serve a branding image as binary data with the appropriate `Content-Type` header.
+
+**Path parameters**:
+- `type`: `login-logo` | `header-brand-light` | `header-brand-dark`
+
+**Response**: Binary image data with `Content-Type` header matching the stored MIME type and `Cache-Control: public, max-age=3600`.
+
+Returns `404` if no image has been uploaded for the specified type.
+
 ### Health & Status
 
 #### GET /api/v1/health
@@ -1304,9 +1432,10 @@ Update user budget and rate limits
 ```json
 Request:
 {
-  "maxBudget": 200.00,    // Optional
-  "tpmLimit": 20000,      // Optional: tokens per minute
-  "rpmLimit": 120         // Optional: requests per minute
+  "maxBudget": 200.00,          // Optional: max budget in dollars (null to clear)
+  "tpmLimit": 20000,            // Optional: tokens per minute (null to clear)
+  "rpmLimit": 120,              // Optional: requests per minute (null to clear)
+  "budgetDuration": "monthly"   // Optional: budget reset period (daily, weekly, monthly, yearly)
 }
 
 Response:
@@ -1315,6 +1444,7 @@ Response:
   "maxBudget": 200.00,
   "tpmLimit": 20000,
   "rpmLimit": 120,
+  "budgetDuration": "monthly",
   "updatedAt": "2024-01-20T10:00:00Z"
 }
 ```
@@ -1406,36 +1536,77 @@ Response:
 - Subscriptions for each model are auto-created if they don't exist, or reactivated if previously cancelled
 - Action is logged in the audit trail with admin user ID and target user ID
 
-#### DELETE /api/v1/admin/users/:id/api-keys/:keyId
+#### POST /api/v1/admin/users/:id/reset-spend
 
 **Authorization**: Requires `users:write` permission (admin role only)
 
-Revoke (deactivate) a user's API key
+Reset a user's accumulated spend to $0 in LiteLLM
 
 ```json
 Response:
 {
-  "message": "API key revoked successfully"
+  "id": "uuid",
+  "currentSpend": 0,
+  "resetAt": "2024-01-20T10:00:00Z"
 }
 ```
 
 **Notes**:
 
-- Revokes the key in both LiteMaaS and LiteLLM
-- The key is deactivated, not deleted — it remains in the database for audit purposes
+- Resets spend in LiteLLM via `/user/update` with `spend: 0`
+- Updates local database `current_spend` to 0
+- Action is logged in the audit trail
+
+#### DELETE /api/v1/admin/users/:id/api-keys/:keyId
+
+**Authorization**: Requires `users:write` permission (admin role only)
+
+Revoke (deactivate) or permanently delete a user's API key
+
+```json
+Query Parameters:
+- permanent: boolean (optional, default: false) — If true, permanently deletes the key from database and LiteLLM
+
+Response (soft revoke):
+{
+  "message": "API key revoked successfully"
+}
+
+Response (permanent delete):
+{
+  "message": "API key permanently deleted"
+}
+```
+
+**Notes**:
+
+- **Default (no `permanent` param)**: Soft revoke — deactivates the key in both LiteMaaS and LiteLLM. The key remains in the database for audit purposes.
+- **With `?permanent=true`**: Hard delete — permanently removes the key from the database and LiteLLM. This action cannot be undone.
 - Action is logged in the audit trail
 
 #### PATCH /api/v1/admin/users/:id/api-keys/:keyId
 
 **Authorization**: Requires `users:write` permission (admin role only)
 
-Update models associated with an API key, and optionally update the key name
+Update an API key's models, name, expiration, and/or quota fields
 
 ```json
 Request:
 {
-  "modelIds": ["gpt-4", "claude-3", "gemini-pro"],  // Required: updated model list
-  "name": "Updated Key Name"                         // Optional
+  "modelIds": ["gpt-4", "claude-3", "gemini-pro"],  // Optional: updated model list
+  "name": "Updated Key Name",                        // Optional
+  "expiresAt": "2025-06-15T00:00:00.000Z",          // Optional: expiration date ISO string (null to clear)
+  "maxBudget": 200.00,                               // Optional: max budget in dollars (null to clear)
+  "tpmLimit": 10000,                                 // Optional: tokens per minute (null to clear)
+  "rpmLimit": 60,                                    // Optional: requests per minute (null to clear)
+  "budgetDuration": "monthly",                       // Optional: budget reset period (null to clear)
+  "softBudget": 150.00,                              // Optional: soft budget threshold (null to clear)
+  "maxParallelRequests": 5,                          // Optional: max concurrent requests (null to clear)
+  "modelMaxBudget": {                                // Optional: per-model budget limits (null to clear)
+    "gpt-4": { "budgetLimit": 100, "timePeriod": "monthly" }
+  },
+  "modelRpmLimit": { "gpt-4": 30 },                 // Optional: per-model RPM limits (null to clear)
+  "modelTpmLimit": { "gpt-4": 5000 }                // Optional: per-model TPM limits (null to clear)
 }
 
 Response:
@@ -1449,8 +1620,30 @@ Response:
 
 **Notes**:
 
+- All fields are optional — only provided fields are updated
 - Auto-creates subscriptions for any newly added models
 - Updates both local database and LiteLLM configuration
+- Quota fields are synced to LiteLLM via `/key/update`
+
+#### POST /api/v1/admin/users/:id/api-keys/:keyId/reset-spend
+
+**Authorization**: Requires `users:write` permission (admin role only)
+
+Reset an API key's accumulated spend to $0 in LiteLLM
+
+```json
+Response:
+{
+  "id": "key_123",
+  "currentSpend": 0,
+  "resetAt": "2024-01-20T10:00:00Z"
+}
+```
+
+**Notes**:
+
+- Resets spend in LiteLLM and updates local database
+- Action is logged in the audit trail
 
 #### GET /api/v1/admin/users/:id/subscriptions
 
@@ -1486,6 +1679,39 @@ Response:
   }
 }
 ```
+
+#### POST /api/v1/admin/users/:id/subscriptions
+
+**Authorization**: Requires `users:write` permission (admin role only)
+
+Create active subscriptions for a user. Bypasses restricted model approval workflow. Reactivates existing non-active subscriptions.
+
+```json
+Request:
+{
+  "modelIds": ["gpt-4", "claude-3"]  // Required: array of model IDs
+}
+
+Response:
+{
+  "created": [
+    { "id": "sub_123", "modelId": "gpt-4", "status": "active" }
+  ],
+  "activated": [
+    { "id": "sub_456", "modelId": "claude-3", "status": "active" }
+  ],
+  "alreadyActive": []
+}
+```
+
+**Notes**:
+
+- `created`: Newly created subscriptions
+- `activated`: Existing non-active subscriptions that were reactivated
+- `alreadyActive`: Models the user already has active subscriptions for (no action taken)
+- Action is logged in the audit trail
+
+---
 
 ### System Operations (/api/v1/admin/system)
 
@@ -2333,13 +2559,314 @@ Response (Error - Insufficient Permission):
 - API requests from adminReadonly users return 403 Forbidden
 - Follows the pattern of other destructive admin operations
 
+### Admin Settings (/api/v1/admin/settings)
+
+Admin-configurable system settings for managing defaults and limits.
+
+#### GET /api/v1/admin/settings/api-key-defaults
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:users` permission)
+
+Get admin-configured default and maximum values for user self-service API key creation.
+
+```json
+Response:
+{
+  "defaults": {
+    "maxBudget": 50.00,
+    "tpmLimit": 5000,
+    "rpmLimit": 100,
+    "budgetDuration": "monthly",
+    "softBudget": 40.00
+  },
+  "maximums": {
+    "maxBudget": 500.00,
+    "tpmLimit": 50000,
+    "rpmLimit": 1000
+  }
+}
+```
+
+**Notes**:
+- `null` values indicate "not configured" (no default or no limit)
+- An empty `{}` response means no defaults or maximums have been set
+
+#### PUT /api/v1/admin/settings/api-key-defaults
+
+**Authorization**: Requires `admin` role only (`admin:users` permission)
+
+Set default and maximum values for user API key quotas. All fields are optional and nullable.
+
+```json
+Request:
+{
+  "defaults": {
+    "maxBudget": 50.00,
+    "tpmLimit": 5000,
+    "rpmLimit": 100,
+    "budgetDuration": "monthly",
+    "softBudget": 40.00
+  },
+  "maximums": {
+    "maxBudget": 500.00,
+    "tpmLimit": 50000,
+    "rpmLimit": 1000
+  }
+}
+```
+
+```json
+Response:
+{
+  "defaults": {
+    "maxBudget": 50.00,
+    "tpmLimit": 5000,
+    "rpmLimit": 100,
+    "budgetDuration": "monthly",
+    "softBudget": 40.00
+  },
+  "maximums": {
+    "maxBudget": 500.00,
+    "tpmLimit": 50000,
+    "rpmLimit": 1000
+  }
+}
+```
+
+**Validation Rules**:
+- Default values must not exceed their corresponding maximum values
+- `budgetDuration` supports: `daily`, `weekly`, `monthly`, `yearly`, or custom LiteLLM durations (`30d`, `1mo`, `1h`, `60s`)
+- All numeric fields must be ≥ 0
+- Updates are logged to `audit_logs` with the admin user ID
+
+#### GET /api/v1/admin/settings/currency
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:users` permission)
+
+Get the configured currency for monetary value display.
+
+```json
+Response:
+{
+  "code": "USD",
+  "symbol": "$",
+  "name": "US Dollar"
+}
+```
+
+**Notes**:
+- Returns the default currency (USD) if no custom currency has been configured
+
+#### GET /api/v1/admin/settings/currency/supported
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:users` permission)
+
+Get the list of all supported currencies.
+
+```json
+Response:
+[
+  { "code": "USD", "symbol": "$", "name": "US Dollar" },
+  { "code": "EUR", "symbol": "€", "name": "Euro" },
+  { "code": "GBP", "symbol": "£", "name": "British Pound" },
+  ...
+]
+```
+
+#### PUT /api/v1/admin/settings/currency
+
+**Authorization**: Requires `admin` role only (`admin:users` permission)
+
+Update the configured currency for monetary value display. The currency code must be one of the supported currencies.
+
+```json
+Request:
+{
+  "code": "EUR",
+  "symbol": "€",
+  "name": "Euro"
+}
+
+Response:
+{
+  "code": "EUR",
+  "symbol": "€",
+  "name": "Euro"
+}
+```
+
+**Validation Rules**:
+- The `code` must match one of the supported currencies (see `GET .../currency/supported`)
+- Updates are logged to `audit_logs` with the admin user ID
+- The change takes effect immediately for all users via the public config endpoint
+
+#### GET /api/v1/admin/settings/user-defaults
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:users` permission)
+
+Get admin-configured default values applied when new users first log in.
+
+```json
+Response:
+{
+  "maxBudget": 100.00,
+  "tpmLimit": 10000,
+  "rpmLimit": 60
+}
+```
+
+**Notes**:
+- `null` values indicate "not configured" — environment variable defaults are used as fallback
+- An empty `{}` response means no custom defaults have been set
+
+#### PUT /api/v1/admin/settings/user-defaults
+
+**Authorization**: Requires `admin` role only (`admin:users` permission)
+
+Set default values applied when new users first log in. All fields are optional and nullable.
+
+```json
+Request:
+{
+  "maxBudget": 100.00,    // Optional: default max budget for new users
+  "tpmLimit": 10000,      // Optional: default TPM limit for new users
+  "rpmLimit": 60          // Optional: default RPM limit for new users
+}
+
+Response:
+{
+  "maxBudget": 100.00,
+  "tpmLimit": 10000,
+  "rpmLimit": 60
+}
+```
+
+**Notes**:
+- Setting a value to `null` clears that default (falls back to environment variable default)
+- Updates are logged to `audit_logs` with the admin user ID
+
+### Admin Audit Log (/api/v1/admin/audit)
+
+#### GET /api/v1/admin/audit
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:audit` permission)
+
+Retrieve paginated audit logs with optional filtering.
+
+**Query Parameters**:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `page` | integer | Page number (default: 1) |
+| `limit` | integer | Items per page (default: 20, max: 100) |
+| `action` | string | Filter by action type (e.g., `USER_LOGIN`, `MODEL_CREATED`) |
+| `resourceType` | string | Filter by resource type / category (e.g., `USER`, `MODEL`, `API_ACCESS`) |
+| `userId` | string (UUID) | Filter by user who performed the action |
+| `startDate` | string (ISO date) | Filter logs created on or after this date |
+| `endDate` | string (ISO date) | Filter logs created on or before this date |
+| `search` | string | Search in action, resource ID, and metadata (ILIKE) |
+| `excludeResourceTypes` | string | Comma-separated resource types to exclude (e.g., `API_ACCESS`) |
+
+```json
+Response:
+{
+  "data": [
+    {
+      "id": "uuid",
+      "userId": "uuid",
+      "username": "john.doe",
+      "email": "john@example.com",
+      "action": "MODEL_CREATED",
+      "resourceType": "MODEL",
+      "resourceId": "model-uuid",
+      "success": true,
+      "errorMessage": null,
+      "metadata": { "modelName": "gpt-4" },
+      "ipAddress": "192.168.1.1",
+      "createdAt": "2026-03-01T12:00:00.000Z"
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 150,
+    "totalPages": 8
+  }
+}
+```
+
+#### GET /api/v1/admin/audit/actions
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:audit` permission)
+
+Retrieve a list of all distinct action types from audit logs.
+
+**Query Parameters**:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `excludeResourceTypes` | string | Comma-separated resource types to exclude |
+| `resourceType` | string | Filter actions to those belonging to a specific resource type |
+
+```json
+Response:
+{
+  "actions": ["MODEL_CREATED", "MODEL_UPDATED", "USER_LOGIN", "API_KEY_CREATED"]
+}
+```
+
+#### GET /api/v1/admin/audit/categories
+
+**Authorization**: Requires `admin` or `adminReadonly` role (`admin:audit` permission)
+
+Retrieve a list of all distinct resource types (categories) from audit logs.
+
+```json
+Response:
+{
+  "categories": ["API_ACCESS", "API_KEY", "MODEL", "SUBSCRIPTION", "USER"]
+}
+```
+
+---
+
+### Configuration (/api/v1/config)
+
+#### GET /api/v1/config/api-key-defaults
+
+**Authorization**: None required (public endpoint)
+
+Get API key quota defaults and maximums for pre-filling the Create Key form. Returns the same data as the admin endpoint but is publicly accessible.
+
+```json
+Response:
+{
+  "defaults": {
+    "maxBudget": 50.00,
+    "tpmLimit": 5000,
+    "rpmLimit": 100,
+    "budgetDuration": "monthly",
+    "softBudget": 40.00
+  },
+  "maximums": {
+    "maxBudget": 500.00,
+    "tpmLimit": 50000,
+    "rpmLimit": 1000
+  }
+}
+```
+
+**Usage**: The frontend calls this endpoint when loading the Create API Key modal to pre-fill quota fields with admin-configured defaults and display maximum limits in helper text.
+
+---
+
 ## External API Integration Patterns
 
 The LiteMaaS system integrates with external AI model APIs for configuration validation and model discovery. This section documents the expected integration patterns and API structures.
 
 ### Model Configuration Testing
 
-The frontend Model Configuration Testing feature validates external AI model endpoints by making direct API calls. This testing capability enables administrators to verify model configurations before creating or updating models in LiteMaaS.
+The Model Configuration Testing feature validates external AI model endpoints via a dedicated backend endpoint (`POST /api/v1/admin/models/test`). The backend makes the external API call server-side, ensuring API keys are never exposed in browser network requests. This enables administrators to verify model configurations before creating or updating models in LiteMaaS.
 
 #### External API Endpoint Structure
 
@@ -2436,25 +2963,28 @@ Configuration testing handles various error scenarios from external APIs:
 
 #### Model Validation Process
 
-1. **Field Validation**: Ensure required fields are present (API Base URL, API Key, Backend Model Name)
-2. **HTTP Request**: Make GET request to `{API_BASE_URL}/models`
-3. **Authentication**: Use Bearer token authentication with provided API key
-4. **Response Parsing**: Extract model list from `data` array
-5. **Model Verification**: Check if specified model name exists in returned model IDs
-6. **Result Reporting**: Display success or specific error messages
+1. **Field Validation**: Ensure required fields are present (API Base URL, Backend Model Name; API Key required only in create mode)
+2. **API Key Resolution**: Use the provided API key, or if absent and `model_id` is provided, decrypt the stored encrypted key from the database
+3. **HTTP Request**: Make GET request to `{API_BASE_URL}/models`
+4. **Authentication**: Use Bearer token authentication with the resolved API key
+5. **Response Parsing**: Extract model list from `data` array
+6. **Model Verification**: Check if specified model name exists in returned model IDs
+7. **Result Reporting**: Display success or specific error messages
 
 #### Integration Security Considerations
 
+- **Server-Side Execution**: External API calls are made from the backend, not the browser
+- **RBAC Protection**: Endpoint requires `admin:models` permission
 - **HTTPS Enforcement**: All external API calls should use HTTPS
-- **API Key Protection**: Keys are used for validation only, not stored permanently
+- **Encrypted API Key Storage**: Provider API keys are stored encrypted (AES-256-GCM) in the `models` table, enabling configuration testing during model editing without re-entering the key
 - **Error Sanitization**: Error messages don't expose sensitive configuration details
-- **Request Timeout**: Implement reasonable timeout limits for external API calls
-- **Rate Limiting**: Consider implementing rate limiting for test requests
+- **Request Timeout**: Backend enforces a 10-second timeout on external API calls
 
-#### Frontend Implementation Notes
+#### Implementation Notes
 
-The model configuration testing is implemented in `AdminModelsPage.tsx` with:
+The model configuration testing backend is implemented in `backend/src/routes/admin-models.ts` (`POST /test`), with the frontend calling it via `AdminModelsService.testConfiguration()` in `AdminModelsPage.tsx`:
 
+- Structured result types: `model_found`, `model_not_found`, `auth_error`, `connection_error`, `timeout`, `missing_stored_key`
 - State management for testing progress and results
 - Automatic clearing of results when form data changes
 - Proper error categorization and user feedback

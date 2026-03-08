@@ -13,9 +13,11 @@ import {
   ModalVariant,
   ModalBody,
   ModalFooter,
+  ModalHeader,
 } from '@patternfly/react-core';
 import { PencilAltIcon, TrashIcon } from '@patternfly/react-icons';
 import type { Banner } from '../../types/banners';
+import { formatDate } from '../../utils/formatters';
 
 interface BannerTableProps {
   banners: Banner[];
@@ -63,15 +65,6 @@ const BannerTable: React.FC<BannerTableProps> = ({
         return 'green';
       default:
         return 'grey';
-    }
-  };
-
-  // Format date
-  const formatDate = (dateString: string): string => {
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return dateString;
     }
   };
 
@@ -240,10 +233,10 @@ const BannerTable: React.FC<BannerTableProps> = ({
       {/* Delete Confirmation Modal */}
       <Modal
         variant={ModalVariant.small}
-        title={t('pages.tools.confirmDeleteBanner')}
         isOpen={deleteConfirmModal.isOpen}
         onClose={handleDeleteCancel}
       >
+        <ModalHeader title={t('pages.tools.confirmDeleteBanner')} />
         <ModalBody>
           <Content>
             {t('pages.tools.confirmDeleteBannerMessage', { name: deleteConfirmModal.banner?.name })}

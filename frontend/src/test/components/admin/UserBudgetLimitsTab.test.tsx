@@ -5,6 +5,30 @@ import { usersService } from '../../../services/users.service';
 import { renderWithAuth, mockAdminUser } from '../../test-utils';
 import type { AdminUserDetails } from '../../../types/users';
 
+// Mock ConfigContext for useCurrency hook
+vi.mock('../../../contexts/ConfigContext', () => ({
+  useConfig: () => ({
+    config: { version: '1.0.0-test', usageCacheTTL: 300, environment: 'test' },
+    isLoading: false,
+    error: null,
+  }),
+  useCurrency: () => ({
+    currencyCode: 'USD',
+    currencySymbol: '$',
+    currencyName: 'US Dollar',
+    formatCurrency: (amount: number) => {
+      if (!isFinite(amount) || amount < 0) return '$0.00';
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    },
+  }),
+  ConfigProvider: ({ children }: any) => children,
+}));
+
 // Mock the users service
 vi.mock('../../../services/users.service', () => ({
   usersService: {
@@ -163,12 +187,11 @@ describe('UserBudgetLimitsTab', () => {
       // Wait for data to load
       expect(await screen.findByText(/125\.50/)).toBeInTheDocument();
 
-      // Click the plus button to change a value
-      const plusButtons = screen.getAllByRole('button', { name: /plus/i });
-      expect(plusButtons.length).toBeGreaterThan(0);
-
+      // Change a value in the Max Budget input to enable the save button
+      const maxBudgetInput = screen.getByRole('spinbutton', { name: /max budget/i });
       const userEvent = (await import('@testing-library/user-event')).default.setup();
-      await userEvent.click(plusButtons[0]);
+      await userEvent.clear(maxBudgetInput);
+      await userEvent.type(maxBudgetInput, '600');
 
       // Wait for save button to become enabled
       await waitFor(() => {

@@ -101,13 +101,29 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       const { username = 'developer', roles = ['admin', 'user'] } =
         request.body as DevTokenRequestBody;
 
-      const user = {
-        id: '550e8400-e29b-41d4-a716-446655440001', // Use the seeded frontend user ID
-        username,
-        email: `${username}@litemaas.local`,
-        name: 'Development User',
-        roles,
-      };
+      // Try to find a real user in the database by username or email
+      const dbUser = await fastify.dbUtils.queryOne(
+        `SELECT id, username, email, full_name, roles FROM users
+         WHERE username = $1 OR email = $1
+         LIMIT 1`,
+        [username],
+      );
+
+      const user = dbUser
+        ? {
+            id: dbUser.id as string,
+            username: (dbUser.username as string) || username,
+            email: (dbUser.email as string) || `${username}@litemaas.local`,
+            name: (dbUser.full_name as string) || username,
+            roles: roles, // Use the requested roles (allows testing admin vs user)
+          }
+        : {
+            id: '550e8400-e29b-41d4-a716-446655440001', // Fallback to seeded frontend user ID
+            username,
+            email: `${username}@litemaas.local`,
+            name: 'Development User',
+            roles,
+          };
 
       try {
         const accessToken = fastify.generateToken({

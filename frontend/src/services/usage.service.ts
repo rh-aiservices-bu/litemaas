@@ -1,5 +1,6 @@
 import { apiClient } from './api';
 import type { Analytics } from './adminUsage.service';
+import type { UserBudgetInfo } from '../types/users';
 
 export interface UsageMetrics {
   totalRequests: number;
@@ -54,6 +55,14 @@ export interface UserUsageFilters {
 }
 
 class UsageService {
+  /**
+   * Get current user's budget consumption info
+   * @returns Budget info with spend, limits, and reset date
+   */
+  async getBudgetInfo(): Promise<UserBudgetInfo> {
+    return apiClient.get<UserBudgetInfo>('/usage/budget');
+  }
+
   /**
    * Get comprehensive usage analytics for the current user
    * Uses the same analytics engine as admin endpoint, automatically scoped to current user

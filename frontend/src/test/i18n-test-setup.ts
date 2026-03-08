@@ -17,7 +17,7 @@ const testTranslations = {
   'nav.apiKeys': 'API Keys',
   'nav.usage': 'Usage',
   'nav.admin.settings': 'Settings',
-  'nav.admin.users': 'Users',
+  'nav.admin.users': 'Users Management',
   'nav.home': 'Home',
 
   // Common UI elements
@@ -258,7 +258,7 @@ const testTranslations = {
   'pages.settings.syncTime': 'Sync Time',
 
   // Settings - Limits Management
-  'pages.settings.limitsManagement': 'Limits Management',
+  'pages.settings.limitsManagement': 'Limits',
   'pages.settings.limitsDescription': 'Apply user limits to all active users in the system.',
   'pages.settings.maxBudgetLabel': 'Maximum Budget ($)',
   'pages.settings.tpmLimitLabel': 'Tokens per Minute Limit',
@@ -289,8 +289,8 @@ const testTranslations = {
   'pages.settings.updateErrors': 'Update Errors',
 
   // Tools Page
-  'pages.tools.title': 'Tools',
-  'pages.tools.models': 'Models',
+  'pages.tools.title': 'Settings and Tools',
+  'pages.tools.models': 'Models Sync',
   'pages.tools.modelsDescription': 'Browse and manage AI models from LiteLLM',
   'pages.tools.refreshModels': 'Refresh Models',
   'pages.tools.syncInProgress': 'Sync in progress...',
@@ -305,8 +305,11 @@ const testTranslations = {
   'pages.tools.newModels': 'New Models',
   'pages.tools.updatedModels': 'Updated Models',
   'pages.tools.syncErrors': 'Errors',
-  'pages.tools.limitsManagement': 'Limits Management',
+  'pages.tools.limitsManagement': 'Limits',
   'pages.tools.limitsDescription': 'Bulk update user limits for all users',
+  'pages.tools.bulkUpdate.title': 'Bulk Update All Users',
+  'pages.tools.bulkUpdate.description':
+    'Override resource limits for every active user at once. This does not change defaults for future users.',
   'pages.tools.maxBudgetLabel': 'Max Budget ($)',
   'pages.tools.tpmLimitLabel': 'TPM Limit',
   'pages.tools.rpmLimitLabel': 'RPM Limit',
@@ -332,7 +335,7 @@ const testTranslations = {
   'pages.tools.bulkUpdatePartial': '{{success}} succeeded, {{failed}} failed',
   'pages.tools.bulkUpdateError': 'Failed to update users',
   'pages.tools.bulkUpdateErrorGeneric': 'Update failed',
-  'pages.tools.bannerManagement': 'Banner Management',
+  'pages.tools.bannerManagement': 'Banners',
   'pages.tools.bannerDescription': 'Manage system-wide banners',
   'pages.tools.createNewBanner': 'Create New Banner',
   'pages.tools.applying': 'Applying...',

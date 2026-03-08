@@ -101,6 +101,7 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 
 - **AuthContext** - Authentication state (user, roles, isAuthenticated)
 - **NotificationContext** - App-wide notification system
+- **BrandingContext** - Branding settings from `/api/v1/branding` endpoint (5-min stale time, fallback to defaults)
 - **ConfigContext** - Application configuration from `/api/v1/config` endpoint
   - **Base Config**: `usageCacheTtlMinutes`, `version`, `environment`
   - **Admin Analytics Config**: All UI-relevant admin analytics settings (pagination, limits, thresholds)
@@ -147,8 +148,11 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 - `usage.service.ts` - **User usage analytics** (individual user data)
 - `adminUsage.service.ts` - **Admin usage analytics** (system-wide data, all endpoints)
 - `users.service.ts` - **Admin user management** (user details, budget/limits, API keys, subscriptions)
+- `branding.service.ts` - **Branding customization** (settings, image upload/delete)
 - `chat.service.ts` - Chatbot integration
-- `config.service.ts` - Application configuration
+- `config.service.ts` - Application configuration and API key quota defaults
+- `admin.service.ts` - Admin operations (API key quota defaults CRUD, bulk user limits, system stats)
+- `backup.service.ts` - **Database backup & restore** (capabilities, create, list, download, delete, restore, test-restore)
 
 ## 🌍 Routing Structure
 
@@ -156,26 +160,28 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 
 **Admin Routes** (admin/adminReadonly roles required):
 
-- `/admin/users` - **Admin user management (UsersPage.tsx)** - Consolidated modal-based interface:
-  - Tabbed management: Profile, Budget & Limits, API Keys, Subscriptions
-  - Role management with admin/adminReadonly/user toggles
-  - Budget and rate limit configuration with progress indicators
-  - API key creation with auto-subscription and revocation
-  - RBAC: admin (full access) vs adminReadonly (view only)
-- `/admin/models` - Model configuration testing (AdminModelsPage.tsx)
-- `/admin/tools` - Administrative tools (ToolsPage.tsx)
-- `/admin/subscriptions` - **Subscription approval management (AdminSubscriptionsPage.tsx)** - Approve/deny restricted model access:
-  - Multi-dimensional filtering (status, model, user, date range)
-  - Bulk approve/deny operations with result modals
-  - Granular RBAC (admin vs adminReadonly)
-  - Manual refresh only (no polling)
-  - Full audit trail display
-- `/admin/usage` - **Admin usage analytics (AdminUsagePage.tsx)** - Major feature with comprehensive system-wide analytics:
+- `/admin/usage` - **Usage Analytics (AdminUsagePage.tsx)** - Major feature with comprehensive system-wide analytics:
   - Global metrics with trend analysis
   - Multi-dimensional filtering (users, models, providers, API keys)
   - Day-by-day incremental caching (5-min TTL for current day)
   - Data export (CSV/JSON)
   - ConfigContext integration for dynamic cache TTL
+- `/admin/models` - **Model Management (AdminModelsPage.tsx)** - Model configuration testing
+- `/admin/subscriptions` - **Subscription Management (AdminSubscriptionsPage.tsx)** - Approve/deny restricted model access:
+  - Multi-dimensional filtering (status, model, user, date range)
+  - Bulk approve/deny operations with result modals
+  - Granular RBAC (admin vs adminReadonly)
+  - Manual refresh only (no polling)
+  - Full audit trail display
+- `/admin/users` - **Users Management (UsersPage.tsx)** - Consolidated modal-based interface:
+  - Tabbed management: Profile, Budget & Limits, API Keys, Subscriptions
+  - Role management with admin/adminReadonly/user toggles
+  - Budget and rate limit configuration with progress indicators
+  - API key creation with auto-subscription and revocation
+  - RBAC: admin (full access) vs adminReadonly (view only)
+- `/admin/tools` - **Settings and Tools (ToolsPage.tsx)** - Tabs: Limits, Banners, Branding, Currency, Models Sync, Backup
+  - Limits tab: Bulk User Limits (max budget, TPM, RPM for all users) and API Key Quota Defaults (admin-configurable defaults and maximums)
+  - Backup tab: Create/restore/test-restore/download/delete database backups for LiteMaaS and LiteLLM (admin only, visible read-only for adminReadonly)
 
 **Protection**: `ProtectedRoute` for auth, `RoleProtectedRoute` for admin routes with required roles
 

@@ -54,6 +54,8 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useConfig } from '../contexts/ConfigContext';
 import { BannerProvider } from '../contexts/BannerContext';
+import { useBranding } from '../contexts/BrandingContext';
+import { brandingService } from '../services/branding.service';
 import { NotificationDrawer, NotificationBadgeButton } from './NotificationDrawer';
 import { AlertToastGroup } from './AlertToastGroup';
 import { BannerAnnouncement } from './BannerAnnouncement';
@@ -72,6 +74,7 @@ const Layout: React.FC = () => {
   const { unreadCount, toastNotifications, removeToastNotification } = useNotifications();
   const { user, logout } = useAuth();
   const { config } = useConfig();
+  const { brandingSettings } = useBranding();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isDarkTheme, setIsDarkTheme] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
@@ -286,8 +289,8 @@ const Layout: React.FC = () => {
                   key={navItem.id}
                   style={{
                     borderTop: '1px solid var(--pf-t--global--border--color--default)',
-                    paddingTop: 'var(--pf-t--global--spacer--md)',
-                    marginTop: 'var(--pf-t--global--spacer--md)',
+                    paddingTop: 'var(--pf-t--global--spacer--sm)',
+                    marginTop: 'var(--pf-t--global--spacer--sm)',
                   }}
                 >
                   <Content component={ContentVariants.h4}>
@@ -532,7 +535,19 @@ const Layout: React.FC = () => {
             <BarsIcon />
           </Button>
           <img
-            src={isDarkTheme ? LogoTitleWhite : LogoTitle}
+            src={
+              brandingSettings?.headerBrandEnabled
+                ? isDarkTheme
+                  ? brandingSettings?.hasHeaderBrandDark
+                    ? brandingService.getImageUrl('header-brand-dark')
+                    : LogoTitleWhite
+                  : brandingSettings?.hasHeaderBrandLight
+                    ? brandingService.getImageUrl('header-brand-light')
+                    : LogoTitle
+                : isDarkTheme
+                  ? LogoTitleWhite
+                  : LogoTitle
+            }
             alt={appConfig.appTitle}
             style={{
               height: '40px',
@@ -557,7 +572,7 @@ const Layout: React.FC = () => {
         </nav>
         <aside
           role="complementary"
-          style={{ marginTop: 'auto', padding: '1rem', textAlign: 'center' }}
+          style={{ marginTop: 'auto', padding: '0.5rem 1rem', textAlign: 'center' }}
         >
           <Content component={ContentVariants.small}>
             {t('ui.footer.appBy')}{' '}
@@ -567,8 +582,8 @@ const Layout: React.FC = () => {
             <br />
             {t('ui.footer.version')} {config?.version || t('ui.footer.noVersion')}
             <br />
-            <Flex direction={{ default: 'column' }} style={{ width: '100%', alignItems: 'center' }}>
-              <FlexItem style={{ marginBottom: '0rem' }}>
+            <Flex direction={{ default: 'column' }} gap={{ default: 'gapXs' }} style={{ width: '100%', alignItems: 'center' }}>
+              <FlexItem>
                 <Flex direction={{ default: 'row' }} alignItems={{ default: 'alignItemsCenter' }}>
                   <FlexItem>
                     <Content
@@ -579,7 +594,7 @@ const Layout: React.FC = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        marginTop: '0.5rem',
+                        marginTop: '0.25rem',
                         fontSize: 'var(--pf-t--global--font--size--xs)',
                       }}
                     >

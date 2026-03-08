@@ -264,7 +264,7 @@ export const validateDateRange = (
  * Formats currency values consistently with proper localization
  * Ensures secure and consistent monetary display
  */
-export const formatCurrency = (amount: number): string => {
+export const formatCurrency = (amount: number, currencyCode: string = 'USD'): string => {
   const sanitizedAmount = sanitizeNumericValue(amount, {
     allowNegative: false,
     defaultValue: 0,
@@ -272,7 +272,7 @@ export const formatCurrency = (amount: number): string => {
 
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: currencyCode,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(sanitizedAmount);

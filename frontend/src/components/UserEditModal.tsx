@@ -5,6 +5,8 @@ import {
   Modal,
   ModalVariant,
   ModalBody,
+  ModalHeader,
+  ModalFooter,
   Button,
   Alert,
   Spinner,
@@ -145,15 +147,17 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
   return (
     <Modal
       variant={ModalVariant.large}
-      title={
-        canEdit
-          ? t('users.modal.edit.title', 'Edit User')
-          : t('users.modal.view.title', 'User Details')
-      }
       isOpen={true}
       onClose={handleClose}
       onEscapePress={handleClose}
     >
+      <ModalHeader
+        title={
+          canEdit
+            ? t('users.modal.edit.title', 'Edit User')
+            : t('users.modal.view.title', 'User Details')
+        }
+      />
       <ModalBody>
         {error && (
           <Alert
@@ -204,31 +208,26 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
             eventKey="subscriptions"
             title={<TabTitleText>{t('users.tabs.subscriptions', 'Subscriptions')}</TabTitleText>}
           >
-            <UserSubscriptionsTab userId={user.id} />
+            <UserSubscriptionsTab userId={user.id} canEdit={canEdit} />
           </Tab>
         </Tabs>
-
-        {/* Action Buttons */}
-        <div
-          style={{
-            marginTop: '1.5rem',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
+      </ModalBody>
+      <ModalFooter>
+        <Flex
+          style={{ width: '100%' }}
+          justifyContent={{ default: 'justifyContentSpaceBetween' }}
+          alignItems={{ default: 'alignItemsCenter' }}
         >
-          <Flex>
-            <FlexItem>
-              <Button
-                variant="link"
-                icon={<ExternalLinkAltIcon />}
-                iconPosition="right"
-                onClick={handleViewUsageAnalytics}
-              >
-                {t('users.actions.viewUsage', 'View Usage Analytics')}
-              </Button>
-            </FlexItem>
-          </Flex>
+          <FlexItem>
+            <Button
+              variant="link"
+              icon={<ExternalLinkAltIcon />}
+              iconPosition="right"
+              onClick={handleViewUsageAnalytics}
+            >
+              {t('users.actions.viewUsage', 'View Usage Analytics')}
+            </Button>
+          </FlexItem>
 
           <Flex spaceItems={{ default: 'spaceItemsSm' }}>
             {canEdit && activeTabKey === 'profile' && (
@@ -260,8 +259,8 @@ const UserEditModal: React.FC<UserEditModalProps> = ({ user, canEdit, onClose, o
               </Button>
             </FlexItem>
           </Flex>
-        </div>
-      </ModalBody>
+        </Flex>
+      </ModalFooter>
     </Modal>
   );
 };

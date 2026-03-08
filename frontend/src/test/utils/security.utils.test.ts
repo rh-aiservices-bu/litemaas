@@ -503,9 +503,15 @@ describe('Security Utils', () => {
       });
 
       it('rejects future dates', () => {
+        const today = new Date();
+        const recentStart = new Date();
+        recentStart.setDate(today.getDate() - 5);
         const futureDate = new Date();
-        futureDate.setDate(futureDate.getDate() + 10);
-        const result = validateDateRange(validStart, futureDate.toISOString().split('T')[0]);
+        futureDate.setDate(today.getDate() + 10);
+        const result = validateDateRange(
+          recentStart.toISOString().split('T')[0],
+          futureDate.toISOString().split('T')[0],
+        );
         expect(result.isValid).toBe(false);
         expect(result.error).toBe('End date cannot be in the future');
       });

@@ -129,7 +129,7 @@ class ApiClient {
           if (!adminUser) {
             // Only redirect to login if not in admin bypass mode
             localStorage.removeItem('access_token');
-            window.location.href = '/login';
+            window.location.href = '/login?session=expired';
           }
         }
 

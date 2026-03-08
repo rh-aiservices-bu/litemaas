@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { bannerService } from '../services/banners.service';
 import { useAuth } from './AuthContext';
 import { useNotifications } from './NotificationContext';
+import { extractErrorDetails } from '../utils/error.utils';
 import type {
   Banner,
   SimpleBannerUpdateRequest,
@@ -299,7 +300,7 @@ export const BannerProvider: React.FC<BannerProviderProps> = ({ children }) => {
           addNotification({
             variant: 'danger',
             title: 'Error',
-            description: error instanceof Error ? error.message : t('ui.errors.bannerCreateFailed'),
+            description: extractErrorDetails(error).message || t('ui.errors.bannerCreateFailed'),
           });
           throw error; // Re-throw to maintain the async function behavior
         }

@@ -31,6 +31,7 @@ import {
   ExportModal,
   DateRangeFilter,
   ModelFilterSelect,
+  UserBudgetSummary,
   type DatePreset,
 } from '../components/usage';
 import { ApiKeyFilterSelect } from '../components/admin/ApiKeyFilterSelect';
@@ -212,6 +213,8 @@ const UsagePage: React.FC = () => {
             </ToolbarItem>
           </ToolbarContent>
         </Toolbar>
+
+        {currentUser?.id && <UserBudgetSummary userId={currentUser.id} />}
 
         <MetricsOverview data={metricsData} loading={metricsLoading} />
       </PageSection>
