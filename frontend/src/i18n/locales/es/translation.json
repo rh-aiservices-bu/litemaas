@@ -1360,11 +1360,25 @@
           "schemaNameHelper": "El nombre del esquema temporal donde se restaurará la copia de seguridad para su validación."
         },
         "notifications": {
+          "backupCompleted": "Copia de seguridad completada con éxito.",
           "backupCreated": "Copia de seguridad creada correctamente.",
           "backupDeleted": "Copia de seguridad eliminada correctamente.",
+          "backupFailed": "La copia de seguridad ha fallado.",
+          "backupStarted": "Se ha iniciado la copia de seguridad.",
           "restoreSuccess": "Base de datos restaurada correctamente desde la copia de seguridad.",
           "testRestoreComplete": "Restauración de prueba completada.",
           "error": "Ocurrió un error durante la operación de copia de seguridad."
+        },
+        "progress": {
+          "title": "Copia de seguridad en progreso",
+          "database": "Base de datos",
+          "table": "Tabla actual",
+          "tables": "Tablas",
+          "tablesProgress": "{{completed}} / {{total}}",
+          "rows": "Filas procesadas",
+          "elapsed": "Tiempo transcurrido",
+          "seconds": "{{seconds}}s",
+          "alreadyRunning": "Ya hay una copia de seguridad en curso."
         }
       },
       "bulkUpdate": {

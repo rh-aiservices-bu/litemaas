@@ -14,8 +14,9 @@
  */
 
 import { config } from 'dotenv';
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { promises as fs } from 'fs';
+import { createReadStream } from 'fs';
 import * as zlib from 'zlib';
 
 // Load environment variables
@@ -80,10 +81,7 @@ async function getDatabaseUrl(database: 'litemaas' | 'litellm'): Promise<string>
   }
 }
 
-async function readBackup(filePath: string): Promise<{ sqlContent: string; metadata: any }> {
-  console.log(`Reading backup file: ${filePath}`);
-
-  // Read metadata if available
+async function readMetadata(filePath: string): Promise<any> {
   const metaPath = `${filePath}.meta.json`;
   let metadata: any = null;
 
@@ -95,23 +93,90 @@ async function readBackup(filePath: string): Promise<{ sqlContent: string; metad
     console.log(`  Timestamp: ${metadata.timestamp}`);
     console.log(`  Tables: ${metadata.tableCount}`);
     console.log(`  Format Version: ${metadata.formatVersion}`);
-  } catch (error) {
+  } catch {
     console.warn('Warning: Could not read metadata file, continuing anyway...');
   }
 
-  // Read and decompress backup file
-  console.log('Decompressing backup...');
-  const compressedData = await fs.readFile(filePath);
-  const sqlContent = zlib.gunzipSync(compressedData).toString('utf-8');
+  return metadata;
+}
 
-  console.log(`Backup decompressed successfully (${sqlContent.length} bytes)`);
+/**
+ * Stream-decompress a backup file and execute SQL statements in batches.
+ * Avoids loading the entire decompressed SQL into memory.
+ */
+async function streamRestoreSQL(backupPath: string, client: PoolClient): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    const gunzip = zlib.createGunzip();
+    const readStream = createReadStream(backupPath);
+    let buffer = '';
+    let statementsExecuted = 0;
 
-  return { sqlContent, metadata };
+    gunzip.on('data', (chunk: Buffer) => {
+      buffer += chunk.toString('utf-8');
+
+      const lastNewline = buffer.lastIndexOf('\n');
+      if (lastNewline === -1) return;
+
+      const processable = buffer.substring(0, lastNewline);
+      buffer = buffer.substring(lastNewline + 1);
+
+      const statements = processable.split('\n').filter((line) => {
+        const trimmed = line.trim();
+        return trimmed.length > 0 && !trimmed.startsWith('--');
+      });
+
+      if (statements.length > 0) {
+        gunzip.pause();
+        statementsExecuted += statements.length;
+
+        if (statementsExecuted % 10000 === 0) {
+          process.stdout.write(`  ... ${statementsExecuted} statements executed\n`);
+        }
+
+        const batch = statements.join('\n');
+        client
+          .query(batch)
+          .then(() => {
+            gunzip.resume();
+          })
+          .catch((err) => {
+            readStream.destroy();
+            gunzip.destroy();
+            reject(err);
+          });
+      }
+    });
+
+    gunzip.on('end', () => {
+      const remaining = buffer.split('\n').filter((line) => {
+        const trimmed = line.trim();
+        return trimmed.length > 0 && !trimmed.startsWith('--');
+      });
+
+      if (remaining.length > 0) {
+        client
+          .query(remaining.join('\n'))
+          .then(() => {
+            console.log(`  Total: ${statementsExecuted + remaining.length} statements executed`);
+            resolve();
+          })
+          .catch(reject);
+      } else {
+        console.log(`  Total: ${statementsExecuted} statements executed`);
+        resolve();
+      }
+    });
+
+    gunzip.on('error', reject);
+    readStream.on('error', reject);
+
+    readStream.pipe(gunzip);
+  });
 }
 
 async function restoreBackup(
   databaseUrl: string,
-  sqlContent: string,
+  backupPath: string,
   metadata: any,
 ): Promise<void> {
   const pool = new Pool({ connectionString: databaseUrl });
@@ -124,11 +189,10 @@ async function restoreBackup(
       console.log('Starting transaction...');
       await client.query('BEGIN');
 
-      console.log('Executing restore SQL...');
+      console.log('Executing restore SQL (streaming)...');
       console.log('⚠️  WARNING: This will TRUNCATE all tables and restore from backup!');
 
-      // Execute the SQL content
-      await client.query(sqlContent);
+      await streamRestoreSQL(backupPath, client);
 
       console.log('Committing transaction...');
       await client.query('COMMIT');
@@ -141,7 +205,7 @@ async function restoreBackup(
         console.log('Verifying restore:');
         for (const [table, expectedCount] of Object.entries(metadata.rowCounts)) {
           try {
-            const result = await client.query(`SELECT COUNT(*) as count FROM ${table}`);
+            const result = await client.query(`SELECT COUNT(*) as count FROM "${table}"`);
             const actualCount = parseInt(result.rows[0].count, 10);
 
             if (actualCount === expectedCount) {
@@ -149,7 +213,7 @@ async function restoreBackup(
             } else {
               console.log(`  ⚠ ${table}: ${actualCount} rows (expected ${expectedCount})`);
             }
-          } catch (error) {
+          } catch {
             console.log(`  ✗ ${table}: verification failed`);
           }
         }
@@ -203,11 +267,11 @@ async function main() {
 
     console.log('');
 
-    // Read backup
-    const { sqlContent, metadata } = await readBackup(options.file);
+    // Read metadata
+    const metadata = await readMetadata(options.file);
 
-    // Restore backup
-    await restoreBackup(databaseUrl, sqlContent, metadata);
+    // Restore backup (streaming)
+    await restoreBackup(databaseUrl, options.file, metadata);
 
     console.log('');
     console.log('========================================');

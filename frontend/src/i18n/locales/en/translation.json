@@ -1321,6 +1321,17 @@
         },
         "createBackup": "Create Backup",
         "creating": "Creating...",
+        "progress": {
+          "title": "Backup in progress",
+          "database": "Database",
+          "table": "Current table",
+          "tables": "Tables",
+          "tablesProgress": "{{completed}} / {{total}}",
+          "rows": "Rows processed",
+          "elapsed": "Elapsed time",
+          "seconds": "{{seconds}}s",
+          "alreadyRunning": "A backup is already in progress."
+        },
         "table": {
           "database": "Database",
           "timestamp": "Timestamp",
@@ -1360,6 +1371,9 @@
           "schemaNameHelper": "The name of the temporary schema where the backup will be restored for validation."
         },
         "notifications": {
+          "backupStarted": "Backup job started.",
+          "backupCompleted": "Backup completed successfully.",
+          "backupFailed": "Backup failed.",
           "backupCreated": "Backup created successfully.",
           "backupDeleted": "Backup deleted successfully.",
           "restoreSuccess": "Database restored successfully from backup.",

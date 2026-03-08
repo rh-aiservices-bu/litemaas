@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import {
@@ -25,6 +25,8 @@ import {
   DescriptionListTerm,
   DescriptionListDescription,
   Tooltip,
+  Progress,
+  ProgressMeasureLocation,
 } from '@patternfly/react-core';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import {
@@ -39,6 +41,7 @@ import {
   backupService,
   type BackupDatabaseType,
   type BackupInfo,
+  type BackupJobStatus,
   type TestRestoreResult,
 } from '../../services/backup.service';
 import { extractErrorDetails } from '../../utils/error.utils';
@@ -69,40 +72,87 @@ const BackupTab: React.FC<BackupTabProps> = ({ canManage }) => {
     backupService.listBackups(),
   );
 
-  // Mutations
-  const createLitemaasBackup = useMutation(() => backupService.createBackup('litemaas'), {
-    onSuccess: () => {
-      queryClient.invalidateQueries(['backupList']);
-      addNotification({
-        variant: 'success',
-        title: t('pages.tools.backup.notifications.backupCreated'),
-      });
-    },
-    onError: (error: Error) => {
-      addNotification({
-        variant: 'danger',
-        title: t('pages.tools.backup.notifications.error'),
-        description: extractErrorDetails(error).message || undefined,
-      });
-    },
-  });
+  // Backup job state and polling
+  const [jobStatus, setJobStatus] = useState<BackupJobStatus | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const createLitellmBackup = useMutation(() => backupService.createBackup('litellm'), {
-    onSuccess: () => {
-      queryClient.invalidateQueries(['backupList']);
-      addNotification({
-        variant: 'success',
-        title: t('pages.tools.backup.notifications.backupCreated'),
-      });
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }, []);
+
+  const pollJobStatus = useCallback(async () => {
+    try {
+      const status = await backupService.getJobStatus();
+      setJobStatus(status);
+
+      if (status.state === 'completed') {
+        stopPolling();
+        queryClient.invalidateQueries(['backupList']);
+        addNotification({
+          variant: 'success',
+          title: t('pages.tools.backup.notifications.backupCompleted'),
+        });
+      } else if (status.state === 'failed') {
+        stopPolling();
+        addNotification({
+          variant: 'danger',
+          title: t('pages.tools.backup.notifications.backupFailed'),
+          description: status.error || undefined,
+        });
+      }
+    } catch {
+      // Polling failure is non-fatal — will retry on next interval
+    }
+  }, [stopPolling, queryClient, addNotification, t]);
+
+  const startPolling = useCallback(() => {
+    stopPolling();
+    pollingRef.current = setInterval(pollJobStatus, 2000);
+  }, [stopPolling, pollJobStatus]);
+
+  // On mount, check if there's an active job (e.g., admin navigated away and back)
+  useEffect(() => {
+    const checkActiveJob = async () => {
+      try {
+        const status = await backupService.getJobStatus();
+        setJobStatus(status);
+        if (status.state === 'running') {
+          startPolling();
+        }
+      } catch {
+        // Ignore — no active job
+      }
+    };
+    checkActiveJob();
+    return stopPolling;
+  }, [startPolling, stopPolling]);
+
+  const isBackupRunning = jobStatus?.state === 'running';
+
+  // Mutations
+  const startBackupMutation = useMutation(
+    (dbType: BackupDatabaseType) => backupService.startBackup(dbType),
+    {
+      onSuccess: (status) => {
+        setJobStatus(status);
+        startPolling();
+        addNotification({
+          variant: 'info',
+          title: t('pages.tools.backup.notifications.backupStarted'),
+        });
+      },
+      onError: (error: Error) => {
+        addNotification({
+          variant: 'danger',
+          title: t('pages.tools.backup.notifications.error'),
+          description: extractErrorDetails(error).message || undefined,
+        });
+      },
     },
-    onError: (error: Error) => {
-      addNotification({
-        variant: 'danger',
-        title: t('pages.tools.backup.notifications.error'),
-        description: extractErrorDetails(error).message || undefined,
-      });
-    },
-  });
+  );
 
   const deleteBackupMutation = useMutation((id: string) => backupService.deleteBackup(id), {
     onSuccess: () => {
@@ -262,14 +312,12 @@ const BackupTab: React.FC<BackupTabProps> = ({ canManage }) => {
                   <FlexItem>
                     <Button
                       variant="primary"
-                      onClick={() => createLitemaasBackup.mutate()}
-                      isDisabled={!canManage || createLitemaasBackup.isLoading}
-                      isLoading={createLitemaasBackup.isLoading}
+                      onClick={() => startBackupMutation.mutate('litemaas')}
+                      isDisabled={!canManage || isBackupRunning || startBackupMutation.isLoading}
+                      isLoading={startBackupMutation.isLoading}
                       icon={<DatabaseIcon />}
                     >
-                      {createLitemaasBackup.isLoading
-                        ? t('pages.tools.backup.creating')
-                        : t('pages.tools.backup.createBackup')}
+                      {t('pages.tools.backup.createBackup')}
                     </Button>
                   </FlexItem>
                 </Flex>
@@ -290,14 +338,12 @@ const BackupTab: React.FC<BackupTabProps> = ({ canManage }) => {
                     <FlexItem>
                       <Button
                         variant="primary"
-                        onClick={() => createLitellmBackup.mutate()}
-                        isDisabled={!canManage || createLitellmBackup.isLoading}
-                        isLoading={createLitellmBackup.isLoading}
+                        onClick={() => startBackupMutation.mutate('litellm')}
+                        isDisabled={!canManage || isBackupRunning || startBackupMutation.isLoading}
+                        isLoading={startBackupMutation.isLoading}
                         icon={<DatabaseIcon />}
                       >
-                        {createLitellmBackup.isLoading
-                          ? t('pages.tools.backup.creating')
-                          : t('pages.tools.backup.createBackup')}
+                        {t('pages.tools.backup.createBackup')}
                       </Button>
                     </FlexItem>
                   ) : (
@@ -315,6 +361,78 @@ const BackupTab: React.FC<BackupTabProps> = ({ canManage }) => {
           </SplitItem>
         </Split>
       </FlexItem>
+
+      {/* Progress Section: shown when a backup job is running */}
+      {isBackupRunning && jobStatus?.progress && (
+        <FlexItem>
+          <Card isCompact>
+            <CardTitle>
+              <Flex
+                spaceItems={{ default: 'spaceItemsSm' }}
+                alignItems={{ default: 'alignItemsCenter' }}
+              >
+                <FlexItem>
+                  <Spinner size="md" />
+                </FlexItem>
+                <FlexItem>
+                  {t('pages.tools.backup.progress.title')} ({jobStatus.database})
+                </FlexItem>
+              </Flex>
+            </CardTitle>
+            <CardBody>
+              <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
+                <FlexItem>
+                  <Progress
+                    value={
+                      jobStatus.progress.rowsTotal > 0
+                        ? Math.round(
+                            (jobStatus.progress.rowsProcessed / jobStatus.progress.rowsTotal) * 100,
+                          )
+                        : 0
+                    }
+                    title={t('pages.tools.backup.progress.rows')}
+                    measureLocation={ProgressMeasureLocation.outside}
+                    label={`${jobStatus.progress.rowsProcessed.toLocaleString()} / ${jobStatus.progress.rowsTotal.toLocaleString()}`}
+                  />
+                </FlexItem>
+                <FlexItem>
+                  <DescriptionList isCompact isHorizontal>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>
+                        {t('pages.tools.backup.progress.table')}
+                      </DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {jobStatus.progress.currentTable || '—'}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>
+                        {t('pages.tools.backup.progress.tables')}
+                      </DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {t('pages.tools.backup.progress.tablesProgress', {
+                          completed: jobStatus.progress.tablesCompleted,
+                          total: jobStatus.progress.tablesTotal,
+                        })}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                    <DescriptionListGroup>
+                      <DescriptionListTerm>
+                        {t('pages.tools.backup.progress.elapsed')}
+                      </DescriptionListTerm>
+                      <DescriptionListDescription>
+                        {t('pages.tools.backup.progress.seconds', {
+                          seconds: jobStatus.progress.elapsed,
+                        })}
+                      </DescriptionListDescription>
+                    </DescriptionListGroup>
+                  </DescriptionList>
+                </FlexItem>
+              </Flex>
+            </CardBody>
+          </Card>
+        </FlexItem>
+      )}
 
       {/* Bottom Section: Backups Table */}
       <FlexItem>

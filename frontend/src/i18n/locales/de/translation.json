@@ -1364,7 +1364,21 @@
           "backupDeleted": "Sicherung erfolgreich gelöscht.",
           "restoreSuccess": "Datenbank erfolgreich aus der Sicherung wiederhergestellt.",
           "testRestoreComplete": "Testwiederherstellung abgeschlossen.",
-          "error": "Bei der Sicherungsoperation ist ein Fehler aufgetreten."
+          "error": "Bei der Sicherungsoperation ist ein Fehler aufgetreten.",
+          "backupStarted": "Sicherung gestartet.",
+          "backupCompleted": "Sicherung erfolgreich abgeschlossen.",
+          "backupFailed": "Sicherung fehlgeschlagen."
+        },
+        "progress": {
+          "title": "Sicherung läuft",
+          "database": "Datenbank",
+          "table": "Aktuelle Tabelle",
+          "tables": "Tabellen",
+          "tablesProgress": "{{completed}} / {{total}}",
+          "rows": "Verarbeitete Zeilen",
+          "elapsed": "Verstrichene Zeit",
+          "seconds": "{{seconds}}s",
+          "alreadyRunning": "Eine Sicherung wird bereits durchgeführt."
         }
       },
       "bulkUpdate": {

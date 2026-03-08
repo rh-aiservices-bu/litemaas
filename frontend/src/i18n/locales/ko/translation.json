@@ -1359,12 +1359,26 @@
           "schemaNameLabel": "테스트 스키마 이름",
           "schemaNameHelper": "백업이 검증을 위해 복원될 임시 스키마의 이름입니다."
         },
+        "progress": {
+          "title": "백업 진행 중",
+          "database": "데이터베이스",
+          "table": "현재 테이블",
+          "tables": "테이블",
+          "tablesProgress": "{{completed}} / {{total}}",
+          "rows": "처리된 행",
+          "elapsed": "경과 시간",
+          "seconds": "{{seconds}}초",
+          "alreadyRunning": "백업이 이미 진행 중입니다."
+        },
         "notifications": {
           "backupCreated": "백업이 성공적으로 생성되었습니다.",
           "backupDeleted": "백업이 성공적으로 삭제되었습니다.",
           "restoreSuccess": "백업에서 데이터베이스가 성공적으로 복원되었습니다.",
           "testRestoreComplete": "테스트 복원이 완료되었습니다.",
-          "error": "백업 작업 중 오류가 발생했습니다."
+          "error": "백업 작업 중 오류가 발생했습니다.",
+          "backupStarted": "백업이 시작되었습니다.",
+          "backupCompleted": "백업이 성공적으로 완료되었습니다.",
+          "backupFailed": "백업에 실패했습니다."
         }
       },
       "bulkUpdate": {

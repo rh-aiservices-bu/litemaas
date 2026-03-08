@@ -1359,12 +1359,26 @@
           "schemaNameLabel": "テストスキーマ名",
           "schemaNameHelper": "バックアップの検証用に復元される一時スキーマの名前です。"
         },
+        "progress": {
+          "title": "バックアップ実行中",
+          "database": "データベース",
+          "table": "現在のテーブル",
+          "tables": "テーブル",
+          "tablesProgress": "{{completed}} / {{total}}",
+          "rows": "処理済み行数",
+          "elapsed": "経過時間",
+          "seconds": "{{seconds}}秒",
+          "alreadyRunning": "バックアップが既に実行中です。"
+        },
         "notifications": {
           "backupCreated": "バックアップが正常に作成されました。",
           "backupDeleted": "バックアップが正常に削除されました。",
           "restoreSuccess": "バックアップからデータベースが正常に復元されました。",
           "testRestoreComplete": "テスト復元が完了しました。",
-          "error": "バックアップ操作中にエラーが発生しました。"
+          "error": "バックアップ操作中にエラーが発生しました。",
+          "backupStarted": "バックアップを開始しました。",
+          "backupCompleted": "バックアップが正常に完了しました。",
+          "backupFailed": "バックアップに失敗しました。"
         }
       },
       "bulkUpdate": {

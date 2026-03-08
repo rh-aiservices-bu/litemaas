@@ -1359,12 +1359,26 @@
           "schemaNameLabel": "Eneth thírad-echui",
           "schemaNameHelper": "I eneth en echui lû-vir ennas i tirith-gwaed aderthanner an thírad."
         },
+        "progress": {
+          "title": "Tirith-gwaed ned carith",
+          "database": "Gwaed-dagor",
+          "table": "Taur i-sí",
+          "tables": "Taurain",
+          "tablesProgress": "{{completed}} / {{total}}",
+          "rows": "Ristain cernin",
+          "elapsed": "Lû gwannen",
+          "seconds": "{{seconds}}s",
+          "alreadyRunning": "Tirith-gwaed ned carith erin."
+        },
         "notifications": {
           "backupCreated": "Tirith-gwaed carnen na galu.",
           "backupDeleted": "Tirith-gwaed dregon na galu.",
           "restoreSuccess": "Gwaed-dagor aderthannen na galu o tirith-gwaed.",
           "testRestoreComplete": "Aderthad-thírad tellin.",
-          "error": "Raeg tollen ned carith tirith-gwaed."
+          "error": "Raeg tollen ned carith tirith-gwaed.",
+          "backupStarted": "Tirith-gwaed carith orthad.",
+          "backupCompleted": "Tirith-gwaed tellin na galu.",
+          "backupFailed": "Tirith-gwaed aun."
         }
       },
       "bulkUpdate": {

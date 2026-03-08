@@ -25,6 +25,27 @@ export interface BackupInfo {
   metadata: BackupMetadata;
 }
 
+export type BackupJobState = 'idle' | 'running' | 'completed' | 'failed';
+
+export interface BackupJobProgress {
+  currentTable: string;
+  tablesCompleted: number;
+  tablesTotal: number;
+  rowsProcessed: number;
+  rowsTotal: number;
+  elapsed: number;
+}
+
+export interface BackupJobStatus {
+  state: BackupJobState;
+  database?: BackupDatabaseType;
+  progress?: BackupJobProgress;
+  backup?: BackupInfo;
+  error?: string;
+  startedAt?: string;
+  completedAt?: string;
+}
+
 export interface RestoreResult {
   success: boolean;
   tablesRestored: number;
