@@ -50,6 +50,7 @@ The deployment uses a **template-based configuration system**:
    - `OAUTH_CLIENT_SECRET` - OAuth client secret from OpenShift
    - `ADMIN_API_KEY` - Admin API key for backend management operations (generate with `openssl rand -base64 32`)
    - `LITELLM_API_KEY` - LiteLLM master API key (generate with `openssl rand -base64 32`, must start with `sk-`)
+   - `LITELLM_MASTER_KEY` - *(Optional)* Encryption key for stored model API keys (defaults to `LITELLM_API_KEY` if not set)
    - `LITELLM_UI_USERNAME` - LiteLLM admin UI username
    - `LITELLM_UI_PASSWORD` - LiteLLM admin UI password
 
@@ -133,6 +134,7 @@ oc apply -k .
   - OAuth client credentials
   - Admin API key (for backend management API, NOT for LLM requests)
   - LiteLLM API key
+  - LiteLLM master key (encryption key for stored model API keys)
 - `litellm-secret.yaml` - LiteLLM configuration including:
   - LiteLLM database connection string
   - Master API key

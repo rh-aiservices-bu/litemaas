@@ -194,6 +194,13 @@ export class RBACService {
       resource: 'admin',
       action: 'usage',
     },
+    {
+      id: 'admin:backup',
+      name: 'Database Backup',
+      description: 'Create, restore, and manage database backups',
+      resource: 'admin',
+      action: 'backup',
+    },
   ];
 
   // System roles
@@ -207,6 +214,7 @@ export class RBACService {
         'admin:users',
         'admin:audit',
         'admin:usage',
+        'admin:backup',
         'admin:banners:read',
         'admin:banners:write',
         'admin:subscriptions:read',
@@ -251,6 +259,7 @@ export class RBACService {
       permissions: [
         'admin:users', // View admin section
         'admin:usage', // View admin usage analytics
+        'admin:audit', // View audit logs
         'admin:banners:read', // View banners in admin
         'admin:subscriptions:read', // View subscription requests (no write permission)
         'users:read', // List and view users

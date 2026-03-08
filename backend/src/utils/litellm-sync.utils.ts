@@ -1,6 +1,7 @@
 import { FastifyInstance } from 'fastify';
 import { LiteLLMService } from '../services/litellm.service.js';
 import { DefaultTeamService } from '../services/default-team.service.js';
+import { SettingsService } from '../services/settings.service.js';
 import { LiteLLMUserRequest } from '../types/user.types.js';
 
 /**
@@ -78,6 +79,10 @@ export class LiteLLMSyncUtils {
       // Ensure the team exists in LiteLLM before creating user
       await LiteLLMSyncUtils.ensureTeamExistsInLiteLLM(userTeam, fastify, liteLLMService);
 
+      // Get effective user defaults (DB-persisted overrides → env var fallbacks)
+      const settingsService = new SettingsService(fastify);
+      const effectiveDefaults = await settingsService.getEffectiveUserDefaults();
+
       const createUserRequest: LiteLLMUserRequest = {
         user_id: String(user.id),
         user_email: user.email as string,
@@ -85,9 +90,9 @@ export class LiteLLMSyncUtils {
         user_role: (user.roles as string[])?.includes('admin')
           ? 'proxy_admin'
           : ('internal_user' as 'proxy_admin' | 'internal_user' | 'internal_user_viewer'),
-        max_budget: Number(user.max_budget) || Number(process.env.DEFAULT_USER_MAX_BUDGET) || 100,
-        tpm_limit: Number(user.tpm_limit) || Number(process.env.DEFAULT_USER_TPM_LIMIT) || 10000,
-        rpm_limit: Number(user.rpm_limit) || Number(process.env.DEFAULT_USER_RPM_LIMIT) || 60,
+        max_budget: Number(user.max_budget) || effectiveDefaults.maxBudget,
+        tpm_limit: Number(user.tpm_limit) || effectiveDefaults.tpmLimit,
+        rpm_limit: Number(user.rpm_limit) || effectiveDefaults.rpmLimit,
         auto_create_key: false,
         teams: [userTeam], // CRITICAL: Always assign user to a team
       };

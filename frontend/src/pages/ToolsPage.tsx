@@ -20,15 +20,20 @@ import {
   Modal,
   ModalVariant,
   ModalBody,
+  ModalHeader,
   Tabs,
   Tab,
   TabTitleText,
   TabContent,
   TabContentBody,
+  Divider,
+  Content,
+  ContentVariants,
 } from '@patternfly/react-core';
 import { SyncAltIcon, UsersIcon, PlusIcon } from '@patternfly/react-icons';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useCurrency } from '../contexts/ConfigContext';
 import { useBanners } from '../contexts/BannerContext';
 import { modelsService } from '../services/models.service';
 import { bannerService } from '../services/banners.service';
@@ -39,7 +44,12 @@ import {
 } from '../services/admin.service';
 import type { SimpleBannerUpdateRequest, CreateBannerRequest, Banner } from '../types/banners';
 import { BannerEditModal, BannerTable } from '../components/banners';
+import { ApiKeyQuotaDefaultsSection, UserDefaultsSection } from '../components/admin';
+import BrandingTab from '../components/branding/BrandingTab';
+import CurrencyTab from '../components/currency/CurrencyTab';
+import BackupTab from '../components/backup/BackupTab';
 import { useQuery, useQueryClient } from 'react-query';
+import { extractErrorDetails } from '../utils/error.utils';
 
 interface SyncResult {
   success: boolean;
@@ -57,9 +67,12 @@ const ToolsPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { updateBanner, bulkUpdateVisibility } = useBanners();
   const queryClient = useQueryClient();
+  const { currencySymbol, currencyCode } = useCurrency();
   const [isLoading, setIsLoading] = useState(false);
   const [lastSyncResult, setLastSyncResult] = useState<SyncResult | null>(null);
-  const [activeTabKey, setActiveTabKey] = useState<string | number>('models');
+  const isAdmin =
+    (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
+  const [activeTabKey, setActiveTabKey] = useState<string | number>(isAdmin ? 'limits' : 'models');
 
   // Limits Management state
   const [isLimitsLoading, setIsLimitsLoading] = useState(false);
@@ -91,6 +104,15 @@ const ToolsPage: React.FC = () => {
   const canViewBanners =
     (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
   const canManageBanners = user?.roles?.includes('admin') ?? false; // Only full admins can modify
+  const canViewBranding =
+    (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
+  const canManageBranding = user?.roles?.includes('admin') ?? false;
+  const canViewCurrency =
+    (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
+  const canManageCurrency = user?.roles?.includes('admin') ?? false;
+  const canViewBackup =
+    (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
+  const canManageBackup = user?.roles?.includes('admin') ?? false;
 
   // Fetch all banners for admin management
   const { data: allBanners = [] } = useQuery(['allBanners'], () => bannerService.getAllBanners(), {
@@ -138,7 +160,7 @@ const ToolsPage: React.FC = () => {
       addNotification({
         variant: 'danger',
         title: t('pages.tools.syncError'),
-        description: error instanceof Error ? error.message : t('pages.tools.syncErrorGeneric'),
+        description: extractErrorDetails(error).message || t('pages.tools.syncErrorGeneric'),
       });
     } finally {
       setIsLoading(false);
@@ -230,8 +252,7 @@ const ToolsPage: React.FC = () => {
       addNotification({
         variant: 'danger',
         title: t('pages.tools.bulkUpdateError'),
-        description:
-          error instanceof Error ? error.message : t('pages.tools.bulkUpdateErrorGeneric'),
+        description: extractErrorDetails(error).message || t('pages.tools.bulkUpdateErrorGeneric'),
       });
     } finally {
       setIsLimitsLoading(false);
@@ -272,7 +293,7 @@ const ToolsPage: React.FC = () => {
         variant: 'danger',
         title: t('pages.tools.bannerDeleteError'),
         description:
-          error instanceof Error ? error.message : t('pages.tools.bannerDeleteErrorGeneric'),
+          extractErrorDetails(error).message || t('pages.tools.bannerDeleteErrorGeneric'),
       });
     } finally {
       setIsBannerLoading(false);
@@ -369,8 +390,7 @@ const ToolsPage: React.FC = () => {
       addNotification({
         variant: 'danger',
         title: t('pages.tools.bannerSaveError'),
-        description:
-          error instanceof Error ? error.message : t('pages.tools.bannerSaveErrorGeneric'),
+        description: extractErrorDetails(error).message || t('pages.tools.bannerSaveErrorGeneric'),
       });
       throw error; // Re-throw to prevent modal from closing
     } finally {
@@ -399,78 +419,6 @@ const ToolsPage: React.FC = () => {
       </PageSection>
       <PageSection>
         <Tabs activeKey={activeTabKey} onSelect={handleTabClick}>
-          {/* Models Management Tab */}
-          <Tab eventKey="models" title={<TabTitleText>{t('pages.tools.models')}</TabTitleText>}>
-            <TabContent id="models-tab-content" style={{ paddingTop: '10px' }}>
-              <TabContentBody>
-                <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
-                  <FlexItem>
-                    <p>{t('pages.tools.modelsDescription')}</p>
-                  </FlexItem>
-
-                  {lastSyncResult && (
-                    <FlexItem>
-                      <Alert
-                        variant={lastSyncResult.success ? 'success' : 'warning'}
-                        title={t('pages.tools.lastSync')}
-                        isInline
-                      >
-                        <DescriptionList isHorizontal>
-                          <DescriptionListGroup>
-                            <DescriptionListTerm>{t('pages.tools.syncTime')}</DescriptionListTerm>
-                            <DescriptionListDescription>
-                              {formatSyncTime(lastSyncResult.syncedAt)}
-                            </DescriptionListDescription>
-                          </DescriptionListGroup>
-                          <DescriptionListGroup>
-                            <DescriptionListTerm>
-                              {t('pages.tools.totalModels')}
-                            </DescriptionListTerm>
-                            <DescriptionListDescription>
-                              {lastSyncResult.totalModels}
-                            </DescriptionListDescription>
-                          </DescriptionListGroup>
-                          <DescriptionListGroup>
-                            <DescriptionListTerm>{t('pages.tools.newModels')}</DescriptionListTerm>
-                            <DescriptionListDescription>
-                              {lastSyncResult.newModels}
-                            </DescriptionListDescription>
-                          </DescriptionListGroup>
-                          <DescriptionListGroup>
-                            <DescriptionListTerm>
-                              {t('pages.tools.updatedModels')}
-                            </DescriptionListTerm>
-                            <DescriptionListDescription>
-                              {lastSyncResult.updatedModels}
-                            </DescriptionListDescription>
-                          </DescriptionListGroup>
-                        </DescriptionList>
-                        {lastSyncResult.errors.length > 0 && (
-                          <div style={{ marginTop: '1rem' }}>
-                            <strong>{t('pages.tools.syncErrors')}:</strong>
-                            <ul style={{ marginTop: '0.5rem' }}>
-                              {lastSyncResult.errors.map((error, index) => (
-                                <li key={index}>{error}</li>
-                              ))}
-                            </ul>
-                          </div>
-                        )}
-                      </Alert>
-                    </FlexItem>
-                  )}
-
-                  <FlexItem>
-                    {canSync ? (
-                      syncButton
-                    ) : (
-                      <Tooltip content={t('pages.tools.adminRequired')}>{syncButton}</Tooltip>
-                    )}
-                  </FlexItem>
-                </Flex>
-              </TabContentBody>
-            </TabContent>
-          </Tab>
-
           {/* Limits Management Tab */}
           {canViewLimits && (
             <Tab
@@ -480,8 +428,31 @@ const ToolsPage: React.FC = () => {
               <TabContent id="limits-tab-content" style={{ paddingTop: '10px' }}>
                 <TabContentBody>
                   <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
+                    {/* New User Defaults Section */}
                     <FlexItem>
-                      <p>{t('pages.tools.limitsDescription')}</p>
+                      <UserDefaultsSection
+                        canEdit={canUpdateLimits}
+                        isVisible={activeTabKey === 'limits'}
+                      />
+                    </FlexItem>
+
+                    {/* API Key Quota Defaults Section */}
+                    <FlexItem>
+                      <ApiKeyQuotaDefaultsSection
+                        canEdit={canUpdateLimits}
+                        isVisible={activeTabKey === 'limits'}
+                      />
+                    </FlexItem>
+
+                    {/* Bulk Update All Users Section */}
+                    <FlexItem>
+                      <Divider style={{ margin: '1.5rem 0' }} />
+                      <Title headingLevel="h3" size="lg" style={{ marginBottom: '0.5rem' }}>
+                        {t('pages.tools.bulkUpdate.title')}
+                      </Title>
+                      <Content component={ContentVariants.p} style={{ marginBottom: '1rem' }}>
+                        {t('pages.tools.bulkUpdate.description')}
+                      </Content>
                     </FlexItem>
 
                     {lastLimitsUpdate && (
@@ -545,7 +516,10 @@ const ToolsPage: React.FC = () => {
 
                     <FlexItem>
                       <Form>
-                        <FormGroup label={t('pages.tools.maxBudgetLabel')} fieldId="max-budget">
+                        <FormGroup
+                          label={t('pages.tools.maxBudgetLabel', { currencyCode })}
+                          fieldId="max-budget"
+                        >
                           <TextInput
                             id="max-budget"
                             type="number"
@@ -556,7 +530,9 @@ const ToolsPage: React.FC = () => {
                             placeholder={t('pages.tools.leaveEmptyToKeep')}
                             isDisabled={!canUpdateLimits}
                           />
-                          <FormHelperText>{t('pages.tools.maxBudgetHelper')}</FormHelperText>
+                          <FormHelperText>
+                            {t('pages.tools.maxBudgetHelper', { currencyCode })}
+                          </FormHelperText>
                         </FormGroup>
 
                         <FormGroup label={t('pages.tools.tpmLimitLabel')} fieldId="tpm-limit">
@@ -670,15 +646,125 @@ const ToolsPage: React.FC = () => {
               </TabContent>
             </Tab>
           )}
+          {/* Branding Tab */}
+          {canViewBranding && (
+            <Tab
+              eventKey="branding"
+              title={<TabTitleText>{t('pages.tools.branding.tabTitle')}</TabTitleText>}
+            >
+              <TabContent id="branding-tab-content" style={{ paddingTop: '10px' }}>
+                <TabContentBody>
+                  <BrandingTab canManage={canManageBranding} />
+                </TabContentBody>
+              </TabContent>
+            </Tab>
+          )}
+          {/* Currency Tab */}
+          {canViewCurrency && (
+            <Tab
+              eventKey="currency"
+              title={<TabTitleText>{t('pages.tools.currency.tabTitle')}</TabTitleText>}
+            >
+              <TabContent id="currency-tab-content" style={{ paddingTop: '10px' }}>
+                <TabContentBody>
+                  <CurrencyTab canManage={canManageCurrency} />
+                </TabContentBody>
+              </TabContent>
+            </Tab>
+          )}
+          {/* Backup Tab */}
+          {canViewBackup && (
+            <Tab
+              eventKey="backup"
+              title={<TabTitleText>{t('pages.tools.backup.tabTitle')}</TabTitleText>}
+            >
+              <TabContent id="backup-tab-content" style={{ paddingTop: '10px' }}>
+                <TabContentBody>
+                  <BackupTab canManage={canManageBackup} />
+                </TabContentBody>
+              </TabContent>
+            </Tab>
+          )}
+          {/* Models Sync Tab */}
+          <Tab eventKey="models" title={<TabTitleText>{t('pages.tools.models')}</TabTitleText>}>
+            <TabContent id="models-tab-content" style={{ paddingTop: '10px' }}>
+              <TabContentBody>
+                <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsMd' }}>
+                  <FlexItem>
+                    <p>{t('pages.tools.modelsDescription')}</p>
+                  </FlexItem>
+
+                  {lastSyncResult && (
+                    <FlexItem>
+                      <Alert
+                        variant={lastSyncResult.success ? 'success' : 'warning'}
+                        title={t('pages.tools.lastSync')}
+                        isInline
+                      >
+                        <DescriptionList isHorizontal>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>{t('pages.tools.syncTime')}</DescriptionListTerm>
+                            <DescriptionListDescription>
+                              {formatSyncTime(lastSyncResult.syncedAt)}
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>
+                              {t('pages.tools.totalModels')}
+                            </DescriptionListTerm>
+                            <DescriptionListDescription>
+                              {lastSyncResult.totalModels}
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>{t('pages.tools.newModels')}</DescriptionListTerm>
+                            <DescriptionListDescription>
+                              {lastSyncResult.newModels}
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                          <DescriptionListGroup>
+                            <DescriptionListTerm>
+                              {t('pages.tools.updatedModels')}
+                            </DescriptionListTerm>
+                            <DescriptionListDescription>
+                              {lastSyncResult.updatedModels}
+                            </DescriptionListDescription>
+                          </DescriptionListGroup>
+                        </DescriptionList>
+                        {lastSyncResult.errors.length > 0 && (
+                          <div style={{ marginTop: '1rem' }}>
+                            <strong>{t('pages.tools.syncErrors')}:</strong>
+                            <ul style={{ marginTop: '0.5rem' }}>
+                              {lastSyncResult.errors.map((error, index) => (
+                                <li key={index}>{error}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </Alert>
+                    </FlexItem>
+                  )}
+
+                  <FlexItem>
+                    {canSync ? (
+                      syncButton
+                    ) : (
+                      <Tooltip content={t('pages.tools.adminRequired')}>{syncButton}</Tooltip>
+                    )}
+                  </FlexItem>
+                </Flex>
+              </TabContentBody>
+            </TabContent>
+          </Tab>
         </Tabs>
 
         {/* Confirmation Modal */}
         <Modal
           variant={ModalVariant.medium}
-          title={t('pages.tools.confirmBulkUpdate')}
           isOpen={showConfirmModal}
           onClose={() => setShowConfirmModal(false)}
         >
+          <ModalHeader title={t('pages.tools.confirmBulkUpdate')} />
           <ModalBody>
             <p style={{ marginBottom: '1rem' }}>{t('pages.tools.confirmBulkUpdateMessage')}</p>
             <div style={{ marginBottom: '1.5rem' }}>
@@ -686,7 +772,8 @@ const ToolsPage: React.FC = () => {
               <ul style={{ marginTop: '0.5rem', marginLeft: '1rem' }}>
                 {limitsFormData.maxBudget && (
                   <li style={{ marginBottom: '0.25rem' }}>
-                    {t('pages.tools.maxBudgetLabel')}: ${limitsFormData.maxBudget}
+                    {t('pages.tools.maxBudgetLabel', { currencyCode })}: {currencySymbol}
+                    {limitsFormData.maxBudget}
                   </li>
                 )}
                 {limitsFormData.tpmLimit && (

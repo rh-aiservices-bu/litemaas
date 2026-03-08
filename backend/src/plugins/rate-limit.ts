@@ -34,7 +34,7 @@ const rateLimitPlugin: FastifyPluginAsync = async (fastify) => {
         details: {
           limit: context.max,
           timeWindow: rateLimitTimeWindow,
-          remaining: context.ttl,
+          retryAfterMs: context.ttl,
           suggestion: `Please wait ${Math.ceil(context.ttl / 1000)} seconds before trying again`,
         },
         requestId: request.id,

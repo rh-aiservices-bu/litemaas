@@ -64,6 +64,11 @@ describe('LiteLLMSyncUtils', () => {
         queryOne: vi.fn(),
         query: vi.fn(),
       } as any,
+      config: {
+        DEFAULT_USER_MAX_BUDGET: '100',
+        DEFAULT_USER_TPM_LIMIT: '10000',
+        DEFAULT_USER_RPM_LIMIT: '60',
+      } as any,
     };
 
     // Mock LiteLLM service

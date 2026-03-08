@@ -35,9 +35,38 @@ vi.mock('../../services/config.service', () => ({
   },
 }));
 
+// Mock BrandingContext
+vi.mock('../../contexts/BrandingContext', () => ({
+  useBranding: () => ({
+    brandingSettings: {
+      loginLogoEnabled: false,
+      hasLoginLogo: false,
+      loginTitleEnabled: false,
+      loginTitle: null,
+      loginSubtitleEnabled: false,
+      loginSubtitle: null,
+      headerBrandEnabled: false,
+      hasHeaderBrandLight: false,
+      hasHeaderBrandDark: false,
+      updatedAt: null,
+    },
+    isLoading: false,
+    refetch: vi.fn(),
+  }),
+  BrandingProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+// Mock branding service
+vi.mock('../../services/branding.service', () => ({
+  brandingService: {
+    getImageUrl: vi.fn((type: string) => `/api/v1/branding/images/${type}`),
+  },
+}));
+
 // Mock assets
 vi.mock('../../assets', () => ({
   LogoTitle: 'mocked-logo-title.svg',
+  Octobean: 'mocked-octobean.svg',
 }));
 
 const mockConfigService = vi.mocked(configService);

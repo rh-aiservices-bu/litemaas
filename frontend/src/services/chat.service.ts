@@ -237,12 +237,16 @@ export class ChatService {
   /**
    * Export conversation in specified format
    */
-  exportConversation(conversation: ConversationExport, format: ExportFormat): string {
+  exportConversation(
+    conversation: ConversationExport,
+    format: ExportFormat,
+    currencySymbol: string = '$',
+  ): string {
     switch (format) {
       case 'json':
         return this.exportAsJSON(conversation);
       case 'markdown':
-        return this.exportAsMarkdown(conversation);
+        return this.exportAsMarkdown(conversation, currencySymbol);
       default:
         throw new Error(`Unsupported export format: ${format}`);
     }
@@ -426,7 +430,7 @@ export class ChatService {
   /**
    * Export conversation as Markdown
    */
-  private exportAsMarkdown(conversation: ConversationExport): string {
+  private exportAsMarkdown(conversation: ConversationExport, currencySymbol: string = '$'): string {
     const lines: string[] = [];
 
     // Header
@@ -452,7 +456,7 @@ export class ChatService {
     lines.push('');
     lines.push(`- **Total Messages:** ${conversation.metrics.messageCount}`);
     lines.push(`- **Total Tokens:** ${conversation.metrics.totalTokens}`);
-    lines.push(`- **Total Cost:** $${conversation.metrics.totalCost.toFixed(4)}`);
+    lines.push(`- **Total Cost:** ${currencySymbol}${conversation.metrics.totalCost.toFixed(4)}`);
     lines.push(
       `- **Average Response Time:** ${conversation.metrics.averageResponseTime.toFixed(0)}ms`,
     );

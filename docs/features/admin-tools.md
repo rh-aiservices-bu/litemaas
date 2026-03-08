@@ -1,20 +1,20 @@
-# Admin Tools Page
+# Settings and Tools Page
 
 ## Overview
 
-The Admin Tools page (`/admin/tools`) provides administrative tools for managing LiteMaaS system configurations. Currently, it focuses on **Models Management**, allowing administrators to manually synchronize AI models from LiteLLM.
+The Settings and Tools page (`/admin/tools`) provides administrative tools for managing LiteMaaS system configurations. It includes tabs for Limits, Banners, Branding, Currency, Backup, and Models Sync.
 
 ### Access Requirements
 
-The Tools page is restricted to users with administrative privileges:
+The Settings and Tools page is restricted to users with administrative privileges:
 
 - **Admin users**: Full access with ability to trigger synchronization
 - **Admin-readonly users**: View-only access to sync information and statistics
 - **Regular users**: No access (redirected or receive 403 error)
 
-## Models Management Panel
+## Models Sync
 
-The Models Management panel is the primary feature of the Tools page, providing control over model synchronization between LiteLLM and the LiteMaaS database. It also includes model configuration testing capabilities for validating new model setups.
+The Models Sync tab provides control over model synchronization between LiteLLM and the LiteMaaS database. It also includes model configuration testing capabilities for validating new model setups.
 
 ### Purpose
 
@@ -91,7 +91,7 @@ For complete technical documentation, see [Model Configuration Testing](model-co
 #### How to Trigger Sync
 
 1. Navigate to `/admin/tools` in the LiteMaaS interface
-2. Locate the **Models Management** panel
+2. Select the **Models Sync** tab
 3. Click the **"Refresh Models from LiteLLM"** button
 4. Wait for the synchronization to complete
 5. Review the sync results displayed
@@ -285,6 +285,276 @@ For more technical details about the sync process, see:
 - [Model Sync Development Guide](../development/model-sync.md)
 - [Model Sync API Documentation](../api/model-sync-api.md)
 
+## Branding Customization
+
+The Branding Customization feature allows administrators to personalize the login page and application header with custom logos, titles, and subtitles. It is accessible from the **Branding** tab on the Settings and Tools page (`/admin/tools`).
+
+### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access — toggle settings, edit text, upload/delete images |
+| Admin-readonly | View-only access — see current branding configuration |
+| Regular user | No access |
+
+### Customizable Elements
+
+| Element | Type | Constraints |
+|---------|------|-------------|
+| Login Logo | Image upload | 2 MB max; JPEG, PNG, SVG, GIF, WebP |
+| Login Title | Text input | 200 characters max |
+| Login Subtitle | Textarea | 500 characters max |
+| Header Brand (Light) | Image upload | 2 MB max; JPEG, PNG, SVG, GIF, WebP |
+| Header Brand (Dark) | Image upload | 2 MB max; JPEG, PNG, SVG, GIF, WebP |
+
+### How to Customize Branding
+
+1. Navigate to **Admin → Settings and Tools** and select the **Branding** tab
+2. Toggle the elements you want to customize (Login Logo, Login Title, Login Subtitle, Header Brand)
+3. For images: click **Upload Image** and select a file (takes effect immediately)
+4. For text: enter the desired title or subtitle
+5. Click **Save** to persist toggle and text changes
+
+For complete details, see the [Branding Customization](branding-customization.md) feature documentation.
+
+## Limits
+
+The Limits feature is accessible from the **Limits** tab on the Settings and Tools page (`/admin/tools`). It provides three sections for managing resource limits across the system.
+
+### New User Defaults
+
+Administrators can configure default TPM, RPM, and max budget values that are applied to newly registered users on first login.
+
+#### Configurable Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `maxBudget` | number (nullable) | Default max budget for new users |
+| `tpmLimit` | integer (nullable) | Default TPM limit for new users |
+| `rpmLimit` | integer (nullable) | Default RPM limit for new users |
+
+Setting a value to `null` (or leaving it empty) means "not configured" — the system falls back to environment variable defaults (`DEFAULT_USER_TPM_LIMIT`, `DEFAULT_USER_RPM_LIMIT`, `DEFAULT_USER_MAX_BUDGET`), which are shown as placeholders in the form.
+
+#### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access — view and modify defaults |
+| Admin-readonly | View-only access to current configuration |
+| Regular user | No direct access |
+
+#### API Endpoints
+
+- `GET /api/v1/admin/settings/user-defaults` — Get current configuration (admin, adminReadonly)
+- `PUT /api/v1/admin/settings/user-defaults` — Update configuration (admin only)
+
+### API Key Quota Defaults
+
+Administrators can configure default and maximum quota values that apply when users create API keys through the self-service interface.
+
+#### Purpose
+
+- **Consistency**: Ensure all new API keys start with sensible resource limits
+- **Cost control**: Set hard maximums that users cannot exceed
+- **Simplified onboarding**: Users see pre-filled quota values based on admin configuration
+
+#### Configurable Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `maxBudget` | number (nullable) | Default/maximum budget in dollars |
+| `tpmLimit` | integer (nullable) | Default/maximum tokens per minute |
+| `rpmLimit` | integer (nullable) | Default/maximum requests per minute |
+| `budgetDuration` | string (nullable) | Budget reset period (`daily`, `weekly`, `monthly`, `yearly`, or custom like `30d`, `1mo`) |
+| `softBudget` | number (nullable) | Soft budget threshold for warnings (defaults only) |
+| `expirationDays` | integer (nullable) | Default/maximum expiration period in days (e.g., 30, 60, 90, 180, 365) |
+
+Each field has both a **default** value (auto-applied when users omit the field) and a **maximum** value (hard limit that rejects user requests if exceeded). Setting a value to `null` means "not configured" (no default or no limit). When a maximum `expirationDays` is set, the "Never" expiration option is removed from the user-facing Create Key modal.
+
+#### How It Works
+
+1. **Admin configures** defaults and maximums via the Limits tab or `PUT /api/v1/admin/settings/api-key-defaults`
+2. **User opens Create Key modal** — frontend fetches defaults from `GET /api/v1/config/api-key-defaults` (public, no auth)
+3. **Form pre-fills** quota fields with admin defaults; helper text shows configured maximums
+4. **User submits** — backend validates that user values do not exceed admin maximums, applies defaults for omitted fields
+
+#### Validation Behavior
+
+- Default values must be ≤ their corresponding maximum values (enforced on admin save)
+- User-provided values must be ≤ admin maximums (enforced on key creation)
+- `null` maximums mean no upper limit — users can set any value
+
+#### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access — view and modify defaults and maximums |
+| Admin-readonly | View-only access to current configuration |
+| Regular user | No direct access (but benefits from pre-filled defaults in Create Key modal) |
+
+#### API Endpoints
+
+- `GET /api/v1/admin/settings/api-key-defaults` — Get current configuration (admin, adminReadonly)
+- `PUT /api/v1/admin/settings/api-key-defaults` — Update configuration (admin only)
+- `GET /api/v1/config/api-key-defaults` — Public endpoint for frontend pre-fill (no auth)
+
+For API details, see the [REST API Reference](../api/rest-api.md#admin-settings-apiv1adminsettings).
+
+### Bulk User Limits
+
+Allows administrators to update max budget, TPM limit, and RPM limit for **all active users** in a single operation. A confirmation modal previews the changes before they are applied, and results show the number of successfully updated and failed users.
+
+#### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access — execute bulk updates |
+| Admin-readonly | View-only (execute button disabled) |
+| Regular user | No access |
+
+#### API Endpoint
+
+- `POST /api/v1/admin/bulk-update-user-limits` — Apply limits to all active users (admin only)
+
+## Currency Settings
+
+The Currency Settings feature is accessible from the **Currency** tab on the Settings and Tools page (`/admin/tools`). It allows administrators to configure the currency used for all monetary value displays across the platform.
+
+### Purpose
+
+By default, LiteMaaS displays all monetary values (budgets, spend, costs) using USD ($). Organizations using a different currency can change the display currency to match their billing currency, ensuring consistent and meaningful cost reporting.
+
+### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access — view and change currency |
+| Admin-readonly | View-only access to current configuration |
+| Regular user | No direct access (but sees the configured currency in all cost displays) |
+
+### Supported Currencies
+
+LiteMaaS supports 25 currencies: USD, EUR, GBP, JPY, CNY, CAD, AUD, CHF, INR, KRW, BRL, MXN, SGD, HKD, NZD, SEK, NOK, DKK, PLN, ZAR, TRY, THB, AED, SAR, ILS.
+
+### How to Change Currency
+
+1. Navigate to **Admin → Settings and Tools** and select the **Currency** tab
+2. Select the desired currency from the dropdown
+3. Click **Save** to apply the change
+
+The change takes effect immediately across all pages and for all users.
+
+### Where Currency Is Displayed
+
+The configured currency symbol appears in:
+
+- **Usage analytics**: Metrics overview, trend charts, model distribution, heatmap, breakdown tables
+- **API key management**: Spend displays, budget columns, progress bars
+- **Admin interfaces**: User budget/limits, API key quota defaults, user defaults
+- **Model pages**: Pricing information on models, subscriptions, and admin models pages
+- **Data exports**: CSV and JSON usage exports
+
+### API Endpoints
+
+- `GET /api/v1/admin/settings/currency` — Get current currency (admin, adminReadonly)
+- `GET /api/v1/admin/settings/currency/supported` — Get all supported currencies (admin, adminReadonly)
+- `PUT /api/v1/admin/settings/currency` — Update currency (admin only)
+- `GET /api/v1/config` — Public endpoint includes `currency` field for frontend consumption
+
+For API details, see the [REST API Reference](../api/rest-api.md#admin-settings-apiv1adminsettings).
+
+---
+
+## Backup & Restore
+
+The Backup & Restore feature is accessible from the **Backup** tab on the Settings and Tools page (`/admin/tools`). It provides full database backup and restore capabilities for both the LiteMaaS and LiteLLM databases.
+
+### Purpose
+
+Database backup and restore allows administrators to:
+
+- **Create backups**: Generate compressed `.sql.gz` backup files for LiteMaaS and/or LiteLLM databases
+- **Download backups**: Download backup files for off-site storage
+- **Test restore**: Perform non-destructive restore to a temporary schema to validate backup integrity
+- **Full restore**: Restore a backup to the production database (destructive, with confirmation)
+- **Manage backups**: List, download, and delete existing backup files
+- **CLI restore**: Use a standalone script for catastrophic recovery when the web UI is unavailable
+
+### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access -- create, download, delete, restore, and test-restore backups |
+| Admin-readonly | View-only access -- can see the Backup tab but all actions are disabled |
+| Regular user | No access |
+
+**Permission**: `admin:backup` (admin role only)
+
+### Prerequisites
+
+- **LiteMaaS database**: Always available for backup (uses the application's `DATABASE_URL`)
+- **LiteLLM database**: Requires `LITELLM_DATABASE_URL` environment variable to be set. This is a direct PostgreSQL connection string to LiteLLM's database, **not** the LiteLLM API URL. When not configured, only LiteMaaS backup is available.
+
+For environment variable configuration, see the [Configuration Guide](../deployment/configuration.md#backup--restore).
+
+### How to Create a Backup
+
+1. Navigate to **Admin > Settings and Tools** and select the **Backup** tab
+2. Select which databases to back up (LiteMaaS, LiteLLM, or both)
+3. Click **Create Backup**
+4. The backup file (`.sql.gz`) will appear in the backup list once complete
+
+### How to Restore a Backup
+
+#### Test Restore (Recommended First Step)
+
+1. Select a backup from the list
+2. Click **Test Restore**
+3. Optionally edit the temporary schema name
+4. The restore runs against a temporary schema and validates data integrity without affecting production data
+5. Review the test results
+
+#### Full Restore
+
+1. Select a backup from the list
+2. Click **Restore**
+3. Type the confirmation text in the safety modal
+4. The backup is restored to the production database, replacing existing data
+
+### CLI Restore (Catastrophic Recovery)
+
+When the web UI is unavailable, use the standalone restore script:
+
+```bash
+cd backend
+npx tsx src/scripts/restore-backup.ts <path-to-backup.sql.gz>
+```
+
+The script requires `DATABASE_URL` and/or `LITELLM_DATABASE_URL` environment variables to be set. Backup files are also compatible with standard PostgreSQL tools:
+
+```bash
+gunzip -c backup.sql.gz | psql <database-url>
+```
+
+### Technical Details
+
+- **Backup format**: Compressed SQL (`.sql.gz`), compatible with `psql` for manual restore
+- **Type-aware serialization**: Correct handling of PostgreSQL array columns (`TEXT[]`) vs JSON/JSONB arrays, quoted identifiers for mixed-case table names (LiteLLM), and timestamp precision preservation
+- **Storage**: Configurable via `BACKUP_STORAGE_PATH` (default: `./data/backups`)
+- **Audit logging**: All backup operations (create, download, delete, restore, test-restore) are logged to the `audit_logs` table
+
+### API Endpoints
+
+- `GET /api/v1/admin/backup/capabilities` -- Check which databases are available for backup
+- `GET /api/v1/admin/backup` -- List existing backups
+- `POST /api/v1/admin/backup` -- Create a new backup
+- `GET /api/v1/admin/backup/:filename` -- Download a backup file
+- `DELETE /api/v1/admin/backup/:filename` -- Delete a backup file
+- `POST /api/v1/admin/backup/restore` -- Full restore from a backup
+- `POST /api/v1/admin/backup/test-restore` -- Test restore to a temporary schema
+
+---
+
 ## Usage Analytics
 
 The Admin Usage Analytics feature (`/admin/usage`) provides comprehensive system-wide visibility into AI model usage across all users, models, and providers.
@@ -390,3 +660,33 @@ For complete technical documentation, see:
 - **[Admin Usage Analytics Implementation](../archive/features/admin-usage-analytics-implementation-plan.md)** - Complete feature specification
 - **[Usage API Documentation](../api/usage-api.md#admin-endpoints)** - API endpoints and data formats
 - **[REST API Reference](../api/rest-api.md#admin-usage-analytics-apiv1adminusage)** - Detailed endpoint specifications
+
+## Audit Log
+
+The Audit Log page (`/admin/audit`) provides administrators with a comprehensive view of all system-wide administrative actions recorded in the `audit_logs` table.
+
+### Access Requirements
+
+- **Roles**: `admin`, `adminReadonly`
+- **Permission**: `admin:audit`
+
+### Key Features
+
+- **Category and Action Filtering**: Category dropdown filters available actions dynamically. Selecting a category narrows the action dropdown to only show actions within that category.
+- **API Access Toggle**: "Show API requests" switch (off by default) controls whether `API_ACCESS` entries are included. When off, API proxy request logs are excluded to reduce noise.
+- **Human-Readable Labels**: ~50 action types and 11 categories are displayed with human-readable labels (e.g., `MODEL_CREATED` → "Model Created"). Raw database values are shown in tooltips.
+- **Search and Date Filters**: Free-text search across action, resource ID, and metadata. Date range filters for start and end dates.
+- **Pagination**: Configurable page size with top and bottom pagination controls.
+- **Expandable Rows**: Rows with metadata can be expanded to view full JSON details and error messages.
+
+### Navigation
+
+Access from the admin sidebar: **Audit Log** menu item.
+
+### API Endpoints
+
+- `GET /api/v1/admin/audit` — Paginated logs with filtering
+- `GET /api/v1/admin/audit/actions` — Distinct action types (filterable by category)
+- `GET /api/v1/admin/audit/categories` — Distinct resource types (categories)
+
+For detailed endpoint documentation, see the [REST API Reference](../api/rest-api.md#admin-audit-log-apiv1adminaudit).

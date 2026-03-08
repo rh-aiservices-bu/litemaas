@@ -35,6 +35,7 @@ export class AdminUsageExportService extends BaseService {
   async exportUserBreakdownToCSV(
     breakdown: UserBreakdown[],
     filters: AdminUsageFilters,
+    currencyCode: string = 'USD',
   ): Promise<string> {
     try {
       const headers = [
@@ -45,7 +46,7 @@ export class AdminUsageExportService extends BaseService {
         'Total Tokens',
         'Prompt Tokens',
         'Completion Tokens',
-        'Total Cost (USD)',
+        `Total Cost (${currencyCode})`,
       ];
 
       const rows = breakdown.map((user) => [
@@ -76,6 +77,7 @@ export class AdminUsageExportService extends BaseService {
   async exportModelBreakdownToCSV(
     breakdown: ModelBreakdown[],
     filters: AdminUsageFilters,
+    currencyCode: string = 'USD',
   ): Promise<string> {
     try {
       const headers = [
@@ -85,7 +87,7 @@ export class AdminUsageExportService extends BaseService {
         'Total Tokens',
         'Prompt Tokens',
         'Completion Tokens',
-        'Total Cost (USD)',
+        `Total Cost (${currencyCode})`,
         'Unique Users',
       ];
 
@@ -117,6 +119,7 @@ export class AdminUsageExportService extends BaseService {
   async exportProviderBreakdownToCSV(
     breakdown: ProviderBreakdown[],
     filters: AdminUsageFilters,
+    currencyCode: string = 'USD',
   ): Promise<string> {
     try {
       const headers = [
@@ -125,7 +128,7 @@ export class AdminUsageExportService extends BaseService {
         'Total Tokens',
         'Prompt Tokens',
         'Completion Tokens',
-        'Total Cost (USD)',
+        `Total Cost (${currencyCode})`,
         'Unique Users',
         'Unique Models',
       ];

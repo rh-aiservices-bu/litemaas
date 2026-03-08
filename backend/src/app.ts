@@ -49,6 +49,7 @@ export const createApp = async (opts: { logger?: boolean } = {}): Promise<Fastif
         ? requestId[0]
         : requestId || Math.random().toString(36).substring(2, 15);
     },
+    trustProxy: true,
   }).withTypeProvider<TypeBoxTypeProvider>();
 
   // Register core plugins

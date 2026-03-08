@@ -19,6 +19,7 @@ import {
   ModalVariant,
   ModalHeader,
   ModalBody,
+  ModalFooter,
   DescriptionList,
   DescriptionListGroup,
   DescriptionListTerm,
@@ -42,15 +43,18 @@ import {
   ClockIcon,
 } from '@patternfly/react-icons';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useCurrency } from '../contexts/ConfigContext';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { subscriptionsService, Subscription } from '../services/subscriptions.service';
 import { getModelFlairs } from '../utils/flairColors';
+import { extractErrorDetails } from '../utils/error.utils';
 
 const SubscriptionsPage: React.FC = () => {
   const { t } = useTranslation();
   const { addNotification } = useNotifications();
   const { handleError } = useErrorHandler();
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
 
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +62,8 @@ const SubscriptionsPage: React.FC = () => {
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [isRequestingReview, setIsRequestingReview] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [subscriptionToCancel, setSubscriptionToCancel] = useState<Subscription | null>(null);
   const modalTriggerRef = useRef<HTMLElement | null>(null);
   const modalPrimaryButtonRef = useRef<HTMLButtonElement>(null);
 
@@ -176,25 +182,15 @@ const SubscriptionsPage: React.FC = () => {
     return (
       <Stack hasGutter>
         <Content component={ContentVariants.small}>
-          {t('pages.subscriptions.pricingLabels.input')}: ${inputCostPerMillion.toFixed(2)}/1M{' '}
+          {t('pages.subscriptions.pricingLabels.input')}: {formatCurrency(inputCostPerMillion)}/1M{' '}
           {t('pages.usage.metrics.tokens')} {t('pages.models.pricing.separator')}{' '}
-          {t('pages.subscriptions.pricingLabels.output')}: ${outputCostPerMillion.toFixed(2)}/1M{' '}
+          {t('pages.subscriptions.pricingLabels.output')}: {formatCurrency(outputCostPerMillion)}/1M{' '}
           {t('pages.usage.metrics.tokens')}
         </Content>
       </Stack>
     );
   };
-  /* 
-    const getUsagePercentage = (used: number, limit: number) => {
-      return Math.round((used / limit) * 100);
-    };
-  
-    const getUsageVariant = (percentage: number) => {
-      if (percentage >= 90) return 'danger';
-      if (percentage >= 75) return 'warning';
-      return 'success';
-    };
-   */
+
   const handleSubscriptionDetails = (subscription: Subscription, triggerElement?: HTMLElement) => {
     setSelectedSubscription(subscription);
     setIsDetailsModalOpen(true);
@@ -224,11 +220,13 @@ const SubscriptionsPage: React.FC = () => {
       setIsDetailsModalOpen(false);
       await loadSubscriptions();
     } catch (error: any) {
+      const errorDetails = extractErrorDetails(error);
       // Handle API key validation error specifically
-      if (error.statusCode === 400 || error.status === 400) {
+      if (errorDetails.statusCode === 400) {
         addNotification({
           title: t('pages.subscriptions.notifications.cannotCancel'),
-          description: error.message || t('pages.subscriptions.notifications.cannotCancelDesc'),
+          description:
+            errorDetails.message || t('pages.subscriptions.notifications.cannotCancelDesc'),
           variant: 'warning',
         });
       } else {
@@ -236,7 +234,8 @@ const SubscriptionsPage: React.FC = () => {
         console.error('Failed to cancel subscription:', error);
         addNotification({
           title: t('pages.subscriptions.notifications.cancelError'),
-          description: error.message || t('pages.subscriptions.notifications.cancelErrorDesc'),
+          description:
+            errorDetails.message || t('pages.subscriptions.notifications.cancelErrorDesc'),
           variant: 'danger',
         });
       }
@@ -336,7 +335,7 @@ const SubscriptionsPage: React.FC = () => {
             <Grid hasGutter>
               {subscriptions.map((subscription) => {
                 return (
-                  <GridItem key={subscription.id} lg={6} xl={4}>
+                  <GridItem key={subscription.id} sm={12} md={6} lg={6} xl={4}>
                     <Card style={{ height: '100%' }}>
                       <CardTitle>
                         <Flex
@@ -378,47 +377,6 @@ const SubscriptionsPage: React.FC = () => {
                               ))}
                             </Flex>
                           </FlexItem>
-                          {/* TODO: Implement token usage
-                          <FlexItem>
-                            <Progress
-                              value={getUsagePercentage(
-                                subscription.usedTokens,
-                                subscription.quotaTokens,
-                              )}
-                              title={`${t('pages.subscriptions.tokenUsageThisMonth')}: ${subscription.usedTokens.toLocaleString()} / ${subscription.quotaTokens.toLocaleString()} tokens`}
-                              variant={getUsageVariant(
-                                getUsagePercentage(
-                                  subscription.usedTokens,
-                                  subscription.quotaTokens,
-                                ),
-                              )}
-                              measureLocation={ProgressMeasureLocation.outside}
-                              aria-label={`Token usage progress: ${subscription.usedTokens.toLocaleString()} of ${subscription.quotaTokens.toLocaleString()} tokens used (${getUsagePercentage(subscription.usedTokens, subscription.quotaTokens)}%)`}
-                            />
-                            <span className="pf-v6-screen-reader">
-                              Usage level:{' '}
-                              {getUsagePercentage(
-                                subscription.usedTokens,
-                                subscription.quotaTokens,
-                              ) >= 90
-                                ? 'Critical - over 90% used'
-                                : getUsagePercentage(
-                                      subscription.usedTokens,
-                                      subscription.quotaTokens,
-                                    ) >= 75
-                                  ? 'High - over 75% used'
-                                  : 'Normal - under 75% used'}
-                            </span>
-                          </FlexItem> */}
-                          {/* TODO: Implement quotas
-                          <FlexItem>
-                            <Content component={ContentVariants.small}>
-                              {t('pages.subscriptions.quotaFormat', {
-                                requests: subscription.quotaRequests.toLocaleString(),
-                                tokens: subscription.quotaTokens.toLocaleString(),
-                              })}
-                            </Content>
-                          </FlexItem> */}
                         </Flex>
                       </CardBody>
                       <CardFooter>
@@ -467,7 +425,6 @@ const SubscriptionsPage: React.FC = () => {
       {/* Subscription Details Modal */}
       <Modal
         variant={ModalVariant.medium}
-        title={selectedSubscription?.modelName || ''}
         isOpen={isDetailsModalOpen}
         onClose={() => {
           setIsDetailsModalOpen(false);
@@ -495,9 +452,6 @@ const SubscriptionsPage: React.FC = () => {
                 {selectedSubscription?.modelName}
               </Title>
             </FlexItem>
-            {/*             <FlexItem>
-              {selectedSubscription && getStatusBadge(selectedSubscription.status)}
-            </FlexItem> */}
           </Flex>
           <>
             {selectedSubscription && selectedSubscription.modelDescription && (
@@ -534,7 +488,7 @@ const SubscriptionsPage: React.FC = () => {
                   <DescriptionListTerm>{t('pages.subscriptions.pricing')}</DescriptionListTerm>
                   <DescriptionListDescription>
                     {selectedSubscription.pricing
-                      ? `${t('pages.models.pricing.input')}: $${(selectedSubscription.pricing.inputCostPerToken * 1000000).toFixed(2)}/1M ${t('pages.usage.metrics.tokens')} ${t('pages.models.pricing.separator')} ${t('pages.models.pricing.output')}: $${(selectedSubscription.pricing.outputCostPerToken * 1000000).toFixed(2)}/1M ${t('pages.usage.metrics.tokens')}`
+                      ? `${t('pages.models.pricing.input')}: ${formatCurrency(selectedSubscription.pricing.inputCostPerToken * 1000000)}/1M ${t('pages.usage.metrics.tokens')} ${t('pages.models.pricing.separator')} ${t('pages.models.pricing.output')}: ${formatCurrency(selectedSubscription.pricing.outputCostPerToken * 1000000)}/1M ${t('pages.usage.metrics.tokens')}`
                       : t('pages.models.pricingLabel')}
                   </DescriptionListDescription>
                 </DescriptionListGroup>
@@ -572,130 +526,6 @@ const SubscriptionsPage: React.FC = () => {
                     </DescriptionListDescription>
                   </DescriptionListGroup>
                 )}
-                {/* TODO Implement quotas and token counts
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('pages.subscriptions.requestQuota')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {selectedSubscription.quotaRequests.toLocaleString()}{' '}
-                    {t('pages.subscriptions.perMonth')}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('pages.subscriptions.tokenQuota')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    {selectedSubscription.quotaTokens.toLocaleString()}{' '}
-                    {t('pages.subscriptions.perMonth')}
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('pages.subscriptions.requestsUsed')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    <Flex
-                      direction={{ default: 'column' }}
-                      spaceItems={{ default: 'spaceItemsXs' }}
-                    >
-                      <FlexItem>
-                        {selectedSubscription.usedRequests.toLocaleString()} /{' '}
-                        {selectedSubscription.quotaRequests.toLocaleString()}{' '}
-                        {t('pages.subscriptions.requests')}
-                      </FlexItem>
-                      <FlexItem>
-                        <Progress
-                          value={getUsagePercentage(
-                            selectedSubscription.usedRequests,
-                            selectedSubscription.quotaRequests,
-                          )}
-                          variant={getUsageVariant(
-                            getUsagePercentage(
-                              selectedSubscription.usedRequests,
-                              selectedSubscription.quotaRequests,
-                            ),
-                          )}
-                          measureLocation={ProgressMeasureLocation.outside}
-                          aria-label={`Request usage progress: ${selectedSubscription.usedRequests.toLocaleString()} of ${selectedSubscription.quotaRequests.toLocaleString()} requests used (${getUsagePercentage(selectedSubscription.usedRequests, selectedSubscription.quotaRequests)}%)`}
-                        />
-                        <span className="pf-v6-screen-reader">
-                          Usage level:{' '}
-                          {getUsagePercentage(
-                            selectedSubscription.usedRequests,
-                            selectedSubscription.quotaRequests,
-                          ) >= 90
-                            ? 'Critical - over 90% used'
-                            : getUsagePercentage(
-                              selectedSubscription.usedRequests,
-                              selectedSubscription.quotaRequests,
-                            ) >= 75
-                              ? 'High - over 75% used'
-                              : 'Normal - under 75% used'}
-                        </span>
-                      </FlexItem>
-                    </Flex>
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
-
-                <DescriptionListGroup>
-                  <DescriptionListTerm>{t('pages.subscriptions.tokensUsed')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    <Flex
-                      direction={{ default: 'column' }}
-                      spaceItems={{ default: 'spaceItemsXs' }}
-                    >
-                      <FlexItem>
-                        {selectedSubscription.usedTokens.toLocaleString()} /{' '}
-                        {selectedSubscription.quotaTokens.toLocaleString()}{' '}
-                        {t('pages.subscriptions.tokens')}
-                      </FlexItem>
-                      <FlexItem>
-                        <Progress
-                          value={getUsagePercentage(
-                            selectedSubscription.usedTokens,
-                            selectedSubscription.quotaTokens,
-                          )}
-                          variant={getUsageVariant(
-                            getUsagePercentage(
-                              selectedSubscription.usedTokens,
-                              selectedSubscription.quotaTokens,
-                            ),
-                          )}
-                          measureLocation={ProgressMeasureLocation.outside}
-                          aria-label={`Token usage progress: ${selectedSubscription.usedTokens.toLocaleString()} of ${selectedSubscription.quotaTokens.toLocaleString()} tokens used (${getUsagePercentage(selectedSubscription.usedTokens, selectedSubscription.quotaTokens)}%)`}
-                        />
-                        <span className="pf-v6-screen-reader">
-                          Usage level:{' '}
-                          {getUsagePercentage(
-                            selectedSubscription.usedTokens,
-                            selectedSubscription.quotaTokens,
-                          ) >= 90
-                            ? 'Critical - over 90% used'
-                            : getUsagePercentage(
-                              selectedSubscription.usedTokens,
-                              selectedSubscription.quotaTokens,
-                            ) >= 75
-                              ? 'High - over 75% used'
-                              : 'Normal - under 75% used'}
-                        </span>
-                      </FlexItem>
-                    </Flex>
-                  </DescriptionListDescription>
-                </DescriptionListGroup>
- */}
-
-                {/*
-                 <DescriptionListGroup>
-                  <DescriptionListTerm>{t('pages.subscriptions.features')}</DescriptionListTerm>
-                  <DescriptionListDescription>
-                    <Flex spaceItems={{ default: 'spaceItemsSm' }} flexWrap={{ default: 'wrap' }}>
-                      {selectedSubscription.features.map((feature, index) => (
-                        <FlexItem key={index}>
-                          <Label color="blue">{feature}</Label>
-                        </FlexItem>
-                      ))}
-                    </Flex>
-                  </DescriptionListDescription>
-                </DescriptionListGroup> 
-                */}
               </DescriptionList>
 
               {selectedSubscription.status === 'suspended' && (
@@ -735,7 +565,13 @@ const SubscriptionsPage: React.FC = () => {
             <Button
               ref={modalPrimaryButtonRef}
               variant="danger"
-              onClick={() => selectedSubscription && handleCancelSubscription(selectedSubscription)}
+              onClick={() => {
+                if (selectedSubscription) {
+                  setSubscriptionToCancel(selectedSubscription);
+                  setIsDetailsModalOpen(false);
+                  setShowCancelConfirm(true);
+                }
+              }}
               isDisabled={selectedSubscription?.status === 'expired' || isCancelling}
               isLoading={isCancelling}
               aria-label={
@@ -764,6 +600,53 @@ const SubscriptionsPage: React.FC = () => {
             </Button>
           </div>
         </ModalBody>
+      </Modal>
+
+      {/* Cancel Confirmation Modal */}
+      <Modal
+        variant={ModalVariant.small}
+        isOpen={showCancelConfirm}
+        onClose={() => {
+          setShowCancelConfirm(false);
+          setSubscriptionToCancel(null);
+        }}
+      >
+        <ModalHeader
+          title={t('pages.subscriptions.cancelConfirmTitle')}
+          titleIconVariant="warning"
+        />
+        <ModalBody>
+          <p>
+            {t('pages.subscriptions.cancelConfirmMessage', {
+              model: subscriptionToCancel?.modelName,
+            })}
+          </p>
+        </ModalBody>
+        <ModalFooter>
+          <Button
+            variant="danger"
+            onClick={() => {
+              if (subscriptionToCancel) {
+                handleCancelSubscription(subscriptionToCancel);
+                setShowCancelConfirm(false);
+                setSubscriptionToCancel(null);
+              }
+            }}
+            isLoading={isCancelling}
+            isDisabled={isCancelling}
+          >
+            {t('pages.subscriptions.cancelSubscription')}
+          </Button>
+          <Button
+            variant="link"
+            onClick={() => {
+              setShowCancelConfirm(false);
+              setSubscriptionToCancel(null);
+            }}
+          >
+            {t('common.cancel')}
+          </Button>
+        </ModalFooter>
       </Modal>
     </>
   );

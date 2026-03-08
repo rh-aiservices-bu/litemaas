@@ -25,6 +25,9 @@ data:
   REDIS_HOST: {{ $redisHost | quote }}
   REDIS_PORT: {{ .Values.backend.redis.port | quote }}
   {{- end }}
+  {{- if .Values.backend.backup.storagePath }}
+  BACKUP_STORAGE_PATH: {{ .Values.backend.backup.storagePath | quote }}
+  {{- end }}
   {{- if ne (.Values.backend.nodeTlsRejectUnauthorized | toString) "" }}
   NODE_TLS_REJECT_UNAUTHORIZED: {{ .Values.backend.nodeTlsRejectUnauthorized | quote }}
   {{- end }}

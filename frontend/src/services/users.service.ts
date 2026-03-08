@@ -13,7 +13,9 @@ import {
   UserApiKey,
   CreateApiKeyForUserRequest,
   CreatedApiKeyResponse,
+  UpdateApiKeyForUserRequest,
   UserSubscription,
+  CreateUserSubscriptionsResponse,
 } from '../types/users';
 
 export class UsersService {
@@ -205,6 +207,17 @@ export class UsersService {
   }
 
   /**
+   * Reset user's current spend to zero (admin only)
+   */
+  async resetUserSpend(
+    userId: string,
+  ): Promise<{ id: string; currentSpend: number; resetAt: string }> {
+    return apiClient.post<{ id: string; currentSpend: number; resetAt: string }>(
+      `/admin/users/${userId}/reset-spend`,
+    );
+  }
+
+  /**
    * Get user's API keys (admin only)
    */
   async getUserApiKeys(
@@ -251,7 +264,7 @@ export class UsersService {
   }
 
   /**
-   * Update user's API key models (admin only)
+   * Update user's API key (models, name, and/or quotas) (admin only)
    */
   async updateUserApiKeyModels(
     userId: string,
@@ -262,6 +275,54 @@ export class UsersService {
       `/admin/users/${userId}/api-keys/${keyId}`,
       data,
     );
+  }
+
+  /**
+   * Update user's API key with full edit support (admin only)
+   * Supports models, quotas, and all configurable fields
+   */
+  async updateUserApiKey(
+    userId: string,
+    keyId: string,
+    data: UpdateApiKeyForUserRequest,
+  ): Promise<{ id: string; name: string; models: string[]; updatedAt: string }> {
+    return apiClient.patch<{ id: string; name: string; models: string[]; updatedAt: string }>(
+      `/admin/users/${userId}/api-keys/${keyId}`,
+      data,
+    );
+  }
+
+  /**
+   * Reset API key's current spend to zero (admin only)
+   */
+  async resetApiKeySpend(
+    userId: string,
+    keyId: string,
+  ): Promise<{ id: string; currentSpend: number; resetAt: string }> {
+    return apiClient.post<{ id: string; currentSpend: number; resetAt: string }>(
+      `/admin/users/${userId}/api-keys/${keyId}/reset-spend`,
+    );
+  }
+
+  /**
+   * Permanently delete user's API key (admin only)
+   * Unlike revokeUserApiKey which soft-deactivates, this hard-deletes the key
+   */
+  async deleteUserApiKey(userId: string, keyId: string): Promise<void> {
+    await apiClient.delete(`/admin/users/${userId}/api-keys/${keyId}?permanent=true`);
+  }
+
+  /**
+   * Create subscriptions for user (admin only)
+   * Creates active subscriptions, bypassing restricted model approval
+   */
+  async createUserSubscriptions(
+    userId: string,
+    modelIds: string[],
+  ): Promise<CreateUserSubscriptionsResponse> {
+    return apiClient.post<CreateUserSubscriptionsResponse>(`/admin/users/${userId}/subscriptions`, {
+      modelIds,
+    });
   }
 
   /**

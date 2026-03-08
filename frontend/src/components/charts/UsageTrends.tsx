@@ -32,6 +32,7 @@ export interface UsageTrendsProps {
   metricType?: 'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion_tokens';
   title?: string;
   description?: string;
+  currencySymbol?: string;
 }
 
 const UsageTrends: React.FC<UsageTrendsProps> = ({
@@ -41,6 +42,7 @@ const UsageTrends: React.FC<UsageTrendsProps> = ({
   metricType = 'requests',
   title,
   description,
+  currencySymbol = '$',
 }) => {
   const { t } = useTranslation();
   const [containerWidth, setContainerWidth] = React.useState(600);
@@ -201,7 +203,7 @@ const UsageTrends: React.FC<UsageTrendsProps> = ({
     value: point.y || 0,
     additionalInfo: {
       rawValue: point.y || 0,
-      [metricKey]: formatYTickByMetric(point.y || 0, metricType),
+      [metricKey]: formatYTickByMetric(point.y || 0, metricType, currencySymbol),
       [`${metricKey}Raw`]: point.y || 0,
     },
   }));
@@ -209,7 +211,7 @@ const UsageTrends: React.FC<UsageTrendsProps> = ({
   // Format value function for accessibility
   const formatAccessibleValue = (value: number | string) => {
     if (typeof value === 'string') return value;
-    return formatYTickByMetric(value, metricType);
+    return formatYTickByMetric(value, metricType, currencySymbol);
   };
 
   // Generate chart description
@@ -228,9 +230,9 @@ const UsageTrends: React.FC<UsageTrendsProps> = ({
 
   const chartSummary = t('pages.usage.charts.usageTrendsSummary', {
     totalPoints: data.length,
-    minValue: formatYTickByMetric(minValue, metricType),
-    maxValue: formatYTickByMetric(maxValue, metricType),
-    avgValue: formatYTickByMetric(Math.round(avgValue), metricType),
+    minValue: formatYTickByMetric(minValue, metricType, currencySymbol),
+    maxValue: formatYTickByMetric(maxValue, metricType, currencySymbol),
+    avgValue: formatYTickByMetric(Math.round(avgValue), metricType, currencySymbol),
     trend: t(`pages.usage.charts.trend.${trend}`),
   });
 
@@ -276,7 +278,7 @@ const UsageTrends: React.FC<UsageTrendsProps> = ({
     const xValue = Math.round(datum.x);
     const dateLabel = xAxisLabels[xValue] || '';
     const value = datum.y || 0;
-    const formattedValue = formatYTickByMetric(value, metricType);
+    const formattedValue = formatYTickByMetric(value, metricType, currencySymbol);
     const unit = metricType === 'requests' ? ' requests' : metricType === 'tokens' ? ' tokens' : '';
 
     // Calculate tooltip dimensions
@@ -469,7 +471,11 @@ const UsageTrends: React.FC<UsageTrendsProps> = ({
             showGrid
             tickValues={yTickValues}
             tickFormat={(value) =>
-              formatYTickByMetric(metricType === 'requests' ? Math.round(value) : value, metricType)
+              formatYTickByMetric(
+                metricType === 'requests' ? Math.round(value) : value,
+                metricType,
+                currencySymbol,
+              )
             }
             style={{
               tickLabels: { fontSize: AXIS_STYLES.tickLabelFontSize },

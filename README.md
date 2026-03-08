@@ -176,6 +176,7 @@ npm run push:containers
 
 - 📊 [Admin Usage Analytics](docs/archive/features/admin-usage-analytics-implementation-plan.md) - Comprehensive system-wide analytics with caching
 - 🔐 [RBAC & User Roles](docs/features/user-roles-administration.md) - Three-tier role hierarchy and permissions
+- 🎨 [Branding Customization](docs/features/branding-customization.md) - Custom login page and header branding
 - 🔑 [Multi-Model API Keys](docs/archive/features/multi-model-api-keys-implementation.md) - API key architecture
 
 ## Development

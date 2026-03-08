@@ -35,6 +35,7 @@ import {
   transformDailyUsageToHeatmapData,
 } from '../../utils/chartDataTransformers';
 import { formatNumber, formatCurrency } from '../../utils/formatters';
+import { useCurrency } from '../../contexts/ConfigContext';
 import { MetricCard, type TrendData } from '../usage/metrics';
 import { TopUsersTable, type UserSummary } from './TopUsersTable';
 import FullScreenChartModal from '../common/FullScreenChartModal';
@@ -129,6 +130,7 @@ export interface MetricsOverviewProps {
  */
 const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
   const { t } = useTranslation();
+  const { currencyCode, currencySymbol } = useCurrency();
   const [selectedMetric, setSelectedMetric] = useState<
     'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion_tokens'
   >('requests');
@@ -176,7 +178,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
 
   // Prepare chart data
   const chartData = data?.dailyUsage
-    ? transformDailyUsageToChartData(data.dailyUsage)
+    ? transformDailyUsageToChartData(data.dailyUsage, currencySymbol)
     : { requests: [], tokens: [], prompt_tokens: [], completion_tokens: [], cost: [] };
 
   const modelChartData = data?.topModels
@@ -215,8 +217,9 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
       startDate,
       endDate,
       selectedHeatmapMetric,
+      currencySymbol,
     );
-  }, [data?.dailyUsage, data?.period, selectedHeatmapMetric]);
+  }, [data?.dailyUsage, data?.period, selectedHeatmapMetric, currencySymbol]);
 
   return (
     <Grid hasGutter>
@@ -290,7 +293,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
         <MetricCard
           size="compact"
           title={t('adminUsage.totalCost')}
-          value={loading ? '' : formatCurrency(data?.totalCost?.total || 0)}
+          value={loading ? '' : formatCurrency(data?.totalCost?.total || 0, currencyCode)}
           icon={<DollarSignIcon />}
           trend={!loading && data?.trends?.costTrend ? data.trends.costTrend : undefined}
           loading={loading}
@@ -423,6 +426,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
                 metricType={selectedMetric}
                 title={t('adminUsage.charts.usageTrends')}
                 description={t('adminUsage.charts.usageTrendsDescription')}
+                currencySymbol={currencySymbol}
               />
             )}
           </CardBody>
@@ -441,6 +445,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
             metricType={selectedMetric}
             title={t('adminUsage.charts.usageTrends')}
             description={t('adminUsage.charts.usageTrendsDescription')}
+            currencySymbol={currencySymbol}
           />
         </FullScreenChartModal>
       </GridItem>
@@ -537,6 +542,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
                   'adminUsage.charts.modelUsageTrendsDescription',
                   'Model usage breakdown over time',
                 )}
+                currencySymbol={currencySymbol}
               />
             )}
           </CardBody>
@@ -558,6 +564,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
               'adminUsage.charts.modelUsageTrendsDescription',
               'Model usage breakdown over time',
             )}
+            currencySymbol={currencySymbol}
           />
         </FullScreenChartModal>
       </GridItem>
@@ -659,6 +666,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
                   loading={false}
                   height={350}
                   metricType={selectedHeatmapMetric}
+                  currencySymbol={currencySymbol}
                 />
               )}
             </div>
@@ -676,6 +684,7 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
             loading={false}
             height={600}
             metricType={selectedHeatmapMetric}
+            currencySymbol={currencySymbol}
           />
         </FullScreenChartModal>
       </GridItem>

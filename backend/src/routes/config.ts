@@ -6,6 +6,8 @@ import { join } from 'path';
 import { getPublicConfig } from '../config/admin-analytics.config.js';
 import { litellmConfig } from '../config/litellm.js';
 import { ConfigResponseSchema, type ConfigResponse } from '../schemas/config';
+import { SettingsService } from '../services/settings.service';
+import { ApiKeyQuotaDefaultsSchema } from '../schemas/settings';
 
 /**
  * Configuration Routes
@@ -13,6 +15,8 @@ import { ConfigResponseSchema, type ConfigResponse } from '../schemas/config';
  * Exposes safe subset of configuration to frontend
  */
 export default async function configRoutes(fastify: FastifyInstance) {
+  const settingsService = new SettingsService(fastify);
+
   // Read version from root package.json once at startup
   let appVersion = '0.0.0';
   try {
@@ -32,6 +36,9 @@ export default async function configRoutes(fastify: FastifyInstance) {
   fastify.get<{
     Reply: ConfigResponse;
   }>('/', {
+    config: {
+      rateLimit: false,
+    },
     schema: {
       tags: ['Configuration'],
       summary: 'Get public configuration',
@@ -45,10 +52,13 @@ export default async function configRoutes(fastify: FastifyInstance) {
       const isMockEnabled =
         process.env.OAUTH_MOCK_ENABLED === 'true' || process.env.NODE_ENV === 'development';
 
+      const currency = await settingsService.getCurrencySettings();
+
       const config: ConfigResponse = {
         version: appVersion,
         usageCacheTtlMinutes: Number(fastify.config.USAGE_CACHE_TTL_MINUTES),
         environment: fastify.config.NODE_ENV === 'production' ? 'production' : 'development',
+        currency,
       };
 
       fastify.log.debug({ config }, 'Returning public configuration');
@@ -71,6 +81,9 @@ export default async function configRoutes(fastify: FastifyInstance) {
   fastify.get(
     '/admin-analytics',
     {
+      config: {
+        rateLimit: false,
+      },
       schema: {
         description: 'Get public admin analytics configuration',
         tags: ['configuration'],
@@ -129,6 +142,32 @@ export default async function configRoutes(fastify: FastifyInstance) {
       const publicConfig = getPublicConfig(config);
 
       return reply.send(publicConfig);
+    },
+  );
+
+  /**
+   * GET /api/v1/config/api-key-defaults
+   *
+   * Get API key quota defaults and maximums
+   * No authentication required - this is public configuration
+   */
+  fastify.get(
+    '/api-key-defaults',
+    {
+      config: {
+        rateLimit: false,
+      },
+      schema: {
+        description: 'Get API key quota defaults and maximums for user key creation',
+        tags: ['configuration'],
+        response: {
+          200: ApiKeyQuotaDefaultsSchema,
+        },
+      },
+    },
+    async (_request: FastifyRequest, reply: FastifyReply) => {
+      const defaults = await settingsService.getApiKeyDefaults();
+      return reply.send(defaults);
     },
   );
 }

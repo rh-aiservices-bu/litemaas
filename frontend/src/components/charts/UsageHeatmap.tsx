@@ -20,6 +20,7 @@ export interface UsageHeatmapProps {
   metricType?: MetricType;
   height?: number;
   colorScale?: LogarithmicColorScale;
+  currencySymbol?: string;
 }
 
 /**
@@ -36,6 +37,7 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
   loading = false,
   metricType = 'requests',
   height = 300,
+  currencySymbol = '$',
 }) => {
   const { t } = useTranslation();
   const [containerWidth, setContainerWidth] = React.useState(800);
@@ -82,8 +84,8 @@ const UsageHeatmap: React.FC<UsageHeatmapProps> = ({
   // Generate color scale from data
   const colorScale = useMemo(() => {
     const allValues = data.flatMap((week) => week.days.map((day) => day.value || 0));
-    return generateLogarithmicColorScale(allValues, metricType, 6);
-  }, [data, metricType]);
+    return generateLogarithmicColorScale(allValues, metricType, 6, currencySymbol);
+  }, [data, metricType, currencySymbol]);
 
   // Day abbreviations (i18n)
   const dayAbbreviations = [

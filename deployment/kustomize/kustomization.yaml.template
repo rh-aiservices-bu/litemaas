@@ -28,6 +28,7 @@ resources:
   - litellm-service.yaml
 
   # Backend API
+  - backend-pvc.yaml
   - backend-deployment.yaml.local
   - backend-service.yaml
 

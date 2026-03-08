@@ -41,6 +41,7 @@ backend:
     jwtSecret: "<secure-random-key>"        # openssl rand -base64 32
     adminApiKeys: "<secure-random-key>"     # openssl rand -base64 32
     litellmApiKey: "sk-<same-as-masterKey>" # Must match litellm.auth.masterKey
+    litellmMasterKey: "<encryption-key>"   # Optional: for encrypting stored model API keys (defaults to litellmApiKey)
 ```
 
 > **Note**: OAuth client ID, secret, and issuer are auto-configured when using the default ServiceAccount OAuth mode on OpenShift. See [OAuth Configuration](#oauth-configuration) for details.
@@ -146,12 +147,17 @@ helm test litemaas -n litemaas
 | `backend.auth.adminApiKeys` | Admin API keys (comma-separated) | `changeme` |
 | `backend.auth.initialAdminUsers` | Initial admin users (comma-separated usernames; auto-detected on OpenShift if empty) | `""` |
 | `backend.auth.litellmApiKey` | LiteLLM API key (must match `litellm.auth.masterKey`) | `changeme` |
-| `backend.auth.existingSecret` | Use an existing Secret (keys: `database-url`, `cors-origin`, `jwt-secret`, `oauth-client-id`, `oauth-client-secret`, `oauth-issuer`, `oauth-callback-url`, `admin-api-keys`, `litellm-api-key`) | `""` |
+| `backend.auth.litellmMasterKey` | Encryption key for stored model API keys (falls back to `litellmApiKey`) | `""` |
+| `backend.auth.existingSecret` | Use an existing Secret (keys: `database-url`, `cors-origin`, `jwt-secret`, `oauth-client-id`, `oauth-client-secret`, `oauth-issuer`, `oauth-callback-url`, `admin-api-keys`, `litellm-api-key`, `litellm-master-key`, `litellm-database-url`) | `""` |
 | `backend.rateLimit.max` | Rate limit max requests | `1000` |
 | `backend.rateLimit.timeWindow` | Rate limit time window | `5m` |
 | `backend.defaultUser.maxBudget` | Default user max budget | `100` |
 | `backend.defaultUser.tpmLimit` | Default user TPM limit | `100000` |
 | `backend.defaultUser.rpmLimit` | Default user RPM limit | `120` |
+| `backend.backup.litellmDatabaseUrl` | LiteLLM database URL for backup/restore (auto-built when `postgresql.enabled`) | `""` |
+| `backend.backup.storagePath` | Mount path for backup storage inside the container | `/data/backups` |
+| `backend.backup.persistence.size` | Backup PVC storage size | `5Gi` |
+| `backend.backup.persistence.storageClass` | StorageClass for backup PVC (empty = cluster default) | `""` |
 | `backend.nodeTlsRejectUnauthorized` | Set to `"0"` to disable TLS verification | `""` |
 
 ### Frontend

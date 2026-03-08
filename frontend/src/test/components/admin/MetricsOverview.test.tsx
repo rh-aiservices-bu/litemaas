@@ -70,6 +70,30 @@ vi.mock('../../../components/usage/metrics', () => ({
   ),
 }));
 
+// Mock ConfigContext for useCurrency hook
+vi.mock('../../../contexts/ConfigContext', () => ({
+  useConfig: () => ({
+    config: { version: '1.0.0-test', usageCacheTTL: 300, environment: 'test' },
+    isLoading: false,
+    error: null,
+  }),
+  useCurrency: () => ({
+    currencyCode: 'USD',
+    currencySymbol: '$',
+    currencyName: 'US Dollar',
+    formatCurrency: (amount: number) => {
+      if (!isFinite(amount) || amount < 0) return '$0.00';
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(amount);
+    },
+  }),
+  ConfigProvider: ({ children }: any) => children,
+}));
+
 describe('MetricsOverview', () => {
   let queryClient: QueryClient;
 

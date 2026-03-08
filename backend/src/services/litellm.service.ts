@@ -252,12 +252,27 @@ export class LiteLLMService extends BaseService {
     return false;
   }
 
+  /**
+   * Checks whether an error indicates a LiteLLM Enterprise license is required
+   * (e.g. model_max_budget). Used to retry requests without enterprise-only fields.
+   */
+  private isEnterpriseLicenseError(error: unknown): boolean {
+    if (error instanceof Error) {
+      return (
+        error.message.includes('enterprise license') || error.message.includes('LiteLLM Enterprise')
+      );
+    }
+    return false;
+  }
+
   private async makeRequest<T>(
     endpoint: string,
     options: {
       method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
       body?: any;
       headers?: Record<string, string>;
+      /** When true, returns raw text instead of parsing JSON (for endpoints that may return plain text) */
+      rawText?: boolean;
     } = {},
   ): Promise<T> {
     if (this.isCircuitBreakerTripped()) {
@@ -268,18 +283,21 @@ export class LiteLLMService extends BaseService {
       );
     }
 
-    const { method = 'GET', body, headers = {} } = options;
+    const { method = 'GET', body, headers = {}, rawText = false } = options;
 
     const url = `${this.config.baseUrl}${endpoint}`;
 
     const requestHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...headers,
     };
 
+    // Set master key as default auth — caller-provided headers can override
     if (this.config.apiKey) {
       requestHeaders['x-litellm-api-key'] = this.config.apiKey;
     }
+
+    // Caller headers override defaults (e.g., getKeyInfo passes the specific key)
+    Object.assign(requestHeaders, headers);
 
     let lastError: Error;
 
@@ -331,7 +349,25 @@ export class LiteLLMService extends BaseService {
           );
         }
 
-        const data = await response.json();
+        let data: unknown;
+        if (rawText) {
+          data = await response.text();
+        } else {
+          const contentType = response.headers.get('content-type') || '';
+          if (contentType.includes('application/json')) {
+            data = await response.json();
+          } else {
+            // Try JSON first, fall back to text for endpoints that may
+            // return plain text (e.g. LiteLLM v1.81.0+ /health/liveness)
+            const text = await response.text();
+            try {
+              data = JSON.parse(text);
+            } catch {
+              data = text;
+            }
+          }
+        }
+
         this.recordSuccess();
 
         this.fastify.log.debug(
@@ -478,50 +514,17 @@ export class LiteLLMService extends BaseService {
     }
 
     try {
-      // LiteLLM v1.81.0+ returns plain text "I'm alive!" from /health/liveness
-      // instead of JSON. Handle both formats gracefully.
-      const url = `${this.config.baseUrl}/health/liveness`;
-      const requestHeaders: Record<string, string> = {};
-      if (this.config.apiKey) {
-        requestHeaders['x-litellm-api-key'] = this.config.apiKey;
-      }
+      const data = await this.makeRequest<LiteLLMHealth | string>('/health/liveness');
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), this.config.timeout);
+      // LiteLLM v1.81.0+ returns plain text "I'm alive!" instead of JSON.
+      // Normalize to LiteLLMHealth object for both formats.
+      const health: LiteLLMHealth =
+        typeof data === 'string' || !data || typeof data !== 'object' || !('status' in data)
+          ? { status: 'healthy', db: 'connected' }
+          : data;
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: requestHeaders,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        let health: LiteLLMHealth;
-
-        try {
-          const data = await response.json();
-          // LiteLLM v1.81.0+ returns a JSON string "I'm alive!" instead of
-          // a JSON object { status, db }. Handle both formats.
-          if (typeof data === 'string') {
-            health = { status: 'healthy', db: 'connected' };
-          } else if (data && typeof data === 'object' && data.status) {
-            health = data as LiteLLMHealth;
-          } else {
-            health = { status: 'healthy', db: 'connected' };
-          }
-        } catch {
-          // Non-JSON response — treat 200 OK as healthy
-          health = { status: 'healthy', db: 'connected' };
-        }
-
-        this.setCache(cacheKey, health, 30000);
-        this.recordSuccess();
-        return health;
-      }
-
-      throw new Error(`LiteLLM health check returned ${response.status}`);
+      this.setCache(cacheKey, health, 30000);
+      return health;
     } catch (error) {
       this.fastify.log.error(error, 'Failed to check LiteLLM health');
 
@@ -563,6 +566,28 @@ export class LiteLLMService extends BaseService {
         body: request,
       });
     } catch (error) {
+      // Handle LiteLLM Enterprise-only features gracefully
+      if (request.model_max_budget && this.isEnterpriseLicenseError(error)) {
+        this.fastify.log.warn(
+          'model_max_budget requires a LiteLLM Enterprise license — retrying without per-model budget limits. ' +
+            'The key will be created without per-model budget enforcement. ' +
+            'See: https://docs.litellm.ai/docs/proxy/enterprise',
+        );
+        const { model_max_budget: _, ...requestWithoutModelBudget } = request;
+        try {
+          return await this.makeRequest<LiteLLMKeyGenerationResponse>('/key/generate', {
+            method: 'POST',
+            body: requestWithoutModelBudget,
+          });
+        } catch (retryError) {
+          this.fastify.log.error(
+            retryError,
+            'Failed to generate API key on retry without model_max_budget',
+          );
+          throw retryError;
+        }
+      }
+
       this.fastify.log.error(error, 'Failed to generate API key');
       throw error;
     }
@@ -646,7 +671,7 @@ export class LiteLLMService extends BaseService {
       }
       return response as LiteLLMKeyInfo;
     } catch (error) {
-      this.fastify.log.error(error, 'Failed to get key info');
+      this.fastify.log.warn(error, 'Failed to get key info from LiteLLM');
       throw error;
     }
   }
@@ -662,6 +687,27 @@ export class LiteLLMService extends BaseService {
         body: { key: apiKey, ...updates },
       });
     } catch (error) {
+      // Handle LiteLLM Enterprise-only features gracefully
+      if (updates.model_max_budget && this.isEnterpriseLicenseError(error)) {
+        this.fastify.log.warn(
+          'model_max_budget requires a LiteLLM Enterprise license — retrying key update without per-model budget limits.',
+        );
+        const { model_max_budget: _, ...updatesWithoutModelBudget } = updates;
+        try {
+          await this.makeRequest('/key/update', {
+            method: 'POST',
+            body: { key: apiKey, ...updatesWithoutModelBudget },
+          });
+          return;
+        } catch (retryError) {
+          this.fastify.log.error(
+            retryError,
+            'Failed to update key on retry without model_max_budget',
+          );
+          throw retryError;
+        }
+      }
+
       this.fastify.log.error(error, 'Failed to update key');
       throw error;
     }
@@ -885,10 +931,7 @@ export class LiteLLMService extends BaseService {
     } catch (error) {
       // LiteLLM v1.81.0+ returns 404 for non-existent users
       if (this.isLiteLLM404Error(error)) {
-        this.fastify.log.info(
-          { userId },
-          'User does not exist in LiteLLM (404 response)',
-        );
+        this.fastify.log.info({ userId }, 'User does not exist in LiteLLM (404 response)');
         return null;
       }
 
@@ -1033,10 +1076,7 @@ export class LiteLLMService extends BaseService {
     } catch (error) {
       // LiteLLM v1.81.0+ returns 404 for non-existent users
       if (this.isLiteLLM404Error(error)) {
-        this.fastify.log.info(
-          { userId },
-          'User does not exist in LiteLLM (404 response)',
-        );
+        this.fastify.log.info({ userId }, 'User does not exist in LiteLLM (404 response)');
         return null;
       }
 

@@ -35,6 +35,7 @@ import {
   ExportModal,
   DateRangeFilter,
   ModelFilterSelect,
+  UserBudgetSummary,
   type DatePreset,
 } from '../components/usage';
 import { UserFilterSelect } from '../components/admin/UserFilterSelect';
@@ -454,6 +455,10 @@ const AdminUsagePage: React.FC = () => {
           <div role="status" aria-live="polite" className="pf-v6-screen-reader">
             {apiKeyFilterAnnouncement}
           </div>
+        )}
+
+        {selectedUserIds.length === 1 && (
+          <UserBudgetSummary userId={selectedUserIds[0]} isAdminView />
         )}
 
         <MetricsOverview data={metricsData} loading={metricsLoading} />

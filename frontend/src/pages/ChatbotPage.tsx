@@ -6,6 +6,10 @@ import {
   CardBody,
   Content,
   ContentVariants,
+  EmptyState,
+  EmptyStateVariant,
+  EmptyStateBody,
+  EmptyStateActions,
   ExpandableSection,
   Flex,
   FlexItem,
@@ -28,7 +32,7 @@ import {
   TextInput,
   Title,
 } from '@patternfly/react-core';
-import { ClockIcon, CommentsIcon, CubesIcon } from '@patternfly/react-icons';
+import { ClockIcon, CommentsIcon, CubesIcon, KeyIcon } from '@patternfly/react-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGauge, faFlagCheckered } from '@fortawesome/free-solid-svg-icons';
 import React, { useCallback, useEffect, useState } from 'react';
@@ -744,6 +748,25 @@ const ChatbotPage: React.FC = () => {
             </div>
           </FlexItem>
         </Flex>
+      </PageSection>
+    );
+  }
+
+  if (!isLoading && apiKeys.length === 0) {
+    return (
+      <PageSection isFilled>
+        <EmptyState
+          variant={EmptyStateVariant.lg}
+          icon={KeyIcon}
+          titleText={t('pages.chatbot.noApiKeys.title')}
+        >
+          <EmptyStateBody>{t('pages.chatbot.noApiKeys.description')}</EmptyStateBody>
+          <EmptyStateActions>
+            <Button variant="primary" component="a" href="/api-keys">
+              {t('pages.chatbot.noApiKeys.createKey')}
+            </Button>
+          </EmptyStateActions>
+        </EmptyState>
       </PageSection>
     );
   }

@@ -2015,7 +2015,7 @@ export class SubscriptionService extends BaseService {
         ? {
             inputCostPerToken: parseFloat(subscription.input_cost_per_token) as number,
             outputCostPerToken: parseFloat(subscription.output_cost_per_token) as number,
-            currency: 'USD',
+            currency: 'USD', // LiteLLM source pricing currency
           }
         : undefined;
 

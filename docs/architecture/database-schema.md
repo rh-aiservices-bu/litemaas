@@ -66,6 +66,9 @@ CREATE TABLE models (
     -- Subscription Approval Workflow
     restricted_access BOOLEAN DEFAULT false,
 
+    -- Encrypted Provider API Key (AES-256-GCM)
+    encrypted_api_key TEXT,
+
     metadata JSONB DEFAULT '{}',
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -219,6 +222,12 @@ CREATE TABLE api_keys (
     budget_duration VARCHAR(20) DEFAULT 'monthly',
     tpm_limit INTEGER DEFAULT 1000,
     rpm_limit INTEGER DEFAULT 60,
+    soft_budget DECIMAL(10, 2),
+    budget_reset_at TIMESTAMP WITH TIME ZONE,
+    max_parallel_requests INTEGER,
+    model_max_budget JSONB,
+    model_rpm_limit JSONB,
+    model_tpm_limit JSONB,
 
     -- LiteLLM Integration Fields
     lite_llm_key_value VARCHAR(255),       -- Stores actual LiteLLM key value (e.g., "sk-litellm-xxxxx")
@@ -318,6 +327,73 @@ CREATE INDEX idx_daily_cache_updated_at ON daily_usage_cache(updated_at) WHERE i
 **Data Enrichment**: Raw LiteLLM data is enriched with user mappings by joining API key aliases from LiteLLM response with local `api_keys` table to map requests to actual users.
 
 **Note:** Usage data is fetched from LiteLLM's API via the `/user/daily/activity` endpoint and cached in `daily_usage_cache` for performance. Historical data (> 1 day old) is cached permanently, while current day data has a 5-minute TTL.
+
+### branding_settings
+
+Singleton table storing application branding customization (login page and header)
+
+```sql
+CREATE TABLE branding_settings (
+    id INTEGER PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+    login_logo_enabled BOOLEAN DEFAULT false,
+    login_logo_data TEXT,
+    login_logo_mime_type VARCHAR(50),
+    login_title_enabled BOOLEAN DEFAULT false,
+    login_title TEXT,
+    login_subtitle_enabled BOOLEAN DEFAULT false,
+    login_subtitle TEXT,
+    header_brand_enabled BOOLEAN DEFAULT false,
+    header_brand_light_data TEXT,
+    header_brand_light_mime_type VARCHAR(50),
+    header_brand_dark_data TEXT,
+    header_brand_dark_mime_type VARCHAR(50),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_by UUID REFERENCES users(id)
+);
+
+INSERT INTO branding_settings (id) VALUES (1) ON CONFLICT DO NOTHING;
+```
+
+**Design Notes**:
+
+- **Singleton pattern**: The `CHECK (id = 1)` constraint ensures only one row exists. The seed INSERT guarantees the row is always present.
+- **Base64 image storage**: Image data is stored as base64-encoded text. The `_mime_type` columns track the original format for serving with the correct `Content-Type` header.
+- **Enable/disable toggles**: Each branding element (`login_logo`, `login_title`, `login_subtitle`, `header_brand`) has an independent `_enabled` boolean, allowing selective customization.
+- **Audit columns**: `updated_at` and `updated_by` track when and by which admin the settings were last modified.
+
+### system_settings
+
+Key-value store for admin-configurable system settings
+
+```sql
+CREATE TABLE IF NOT EXISTS system_settings (
+    key VARCHAR(100) PRIMARY KEY,
+    value JSONB NOT NULL DEFAULT '{}',
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_by UUID REFERENCES users(id)
+);
+
+COMMENT ON TABLE system_settings IS 'Key-value store for admin-configurable system settings';
+COMMENT ON COLUMN system_settings.key IS 'Setting identifier (e.g., api_key_defaults)';
+COMMENT ON COLUMN system_settings.value IS 'JSONB value containing the setting data';
+COMMENT ON COLUMN system_settings.updated_by IS 'Admin user who last modified this setting';
+
+-- Seed default api_key_defaults row
+INSERT INTO system_settings (key, value)
+VALUES ('api_key_defaults', '{}')
+ON CONFLICT (key) DO NOTHING;
+```
+
+**Design Notes**:
+
+| Aspect | Detail |
+|--------|--------|
+| **Purpose** | Stores admin-configurable defaults and maximums for user self-service API key creation |
+| **Key** | `api_key_defaults` — JSONB with `defaults` and `maximums` objects |
+| **Defaults object** | `maxBudget`, `tpmLimit`, `rpmLimit`, `budgetDuration`, `softBudget` (all nullable) |
+| **Maximums object** | `maxBudget`, `tpmLimit`, `rpmLimit` (all nullable — null means no limit) |
+| **Audit** | `updated_at` and `updated_by` track modification history; changes also logged to `audit_logs` |
+| **Extensibility** | New settings can be added as additional rows without schema migration |
 
 ### audit_logs
 

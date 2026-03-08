@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import {
+  Alert,
   Button,
   LoginPage as PFLoginPage,
   Stack,
@@ -13,16 +15,38 @@ import {
   MenuToggle,
 } from '@patternfly/react-core';
 import { ExternalLinkAltIcon, UserIcon, GlobeIcon } from '@patternfly/react-icons';
-import { LogoTitle } from '../assets';
+import { Octobean } from '../assets';
 import { useAuth } from '../contexts/AuthContext';
+import { useBranding } from '../contexts/BrandingContext';
+import { brandingService } from '../services/branding.service';
 import { configService } from '../services/config.service';
 
 const LoginPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { login, loginAsAdmin } = useAuth();
+  const { brandingSettings } = useBranding();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const sessionExpired = searchParams.get('session') === 'expired';
   const [authMode, setAuthMode] = useState<'oauth' | 'mock' | null>(null);
   const [configLoading, setConfigLoading] = useState(true);
+  const [configError, setConfigError] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+
+  // Compute branding overrides
+  const brandImgSrc =
+    brandingSettings?.loginLogoEnabled && brandingSettings?.hasLoginLogo
+      ? brandingService.getImageUrl('login-logo')
+      : Octobean;
+
+  const loginPageTitle =
+    brandingSettings?.loginTitleEnabled && brandingSettings?.loginTitle
+      ? brandingSettings.loginTitle
+      : t('pages.login.title');
+
+  const loginPageSubtitle =
+    brandingSettings?.loginSubtitleEnabled && brandingSettings?.loginSubtitle
+      ? brandingSettings.loginSubtitle
+      : t('pages.login.subtitle');
 
   const handleLogin = () => {
     login();
@@ -72,6 +96,7 @@ const LoginPage: React.FC = () => {
         setAuthMode(config.authMode ?? 'oauth');
       } catch (err) {
         console.error('Failed to load configuration:', err);
+        setConfigError(true);
         // Default to oauth mode on error
         setAuthMode('oauth');
       } finally {
@@ -82,15 +107,31 @@ const LoginPage: React.FC = () => {
     loadConfig();
   }, []);
 
+  useEffect(() => {
+    if (sessionExpired) {
+      setSearchParams({}, { replace: true });
+    }
+  }, [sessionExpired, setSearchParams]);
+
   return (
     <PFLoginPage
-      brandImgSrc={LogoTitle}
+      brandImgSrc={brandImgSrc}
       brandImgAlt={t('pages.login.brandAlt')}
       backgroundImgSrc="/bg.jpg"
-      loginTitle={t('pages.login.title')}
-      loginSubtitle={t('pages.login.subtitle')}
+      loginTitle={loginPageTitle}
+      loginSubtitle={loginPageSubtitle}
     >
       <Stack hasGutter>
+        {sessionExpired && (
+          <StackItem>
+            <Alert variant="warning" title={t('pages.login.sessionExpired')} isInline />
+          </StackItem>
+        )}
+        {configError && (
+          <StackItem>
+            <Alert variant="danger" title={t('pages.login.configError')} isInline />
+          </StackItem>
+        )}
         <StackItem>
           <Button
             variant="primary"
