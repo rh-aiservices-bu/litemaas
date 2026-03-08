@@ -201,8 +201,15 @@ backend:
     # -- LiteLLM database URL for backup/restore. Auto-constructed when postgresql.enabled is true.
     # Required only if you want to backup/restore the LiteLLM database.
     litellmDatabaseUrl: ""
-    # -- Directory where backup files are stored inside the backend container.
-    storagePath: "./data/backups"
+    # -- Mount path for backup storage inside the container.
+    # This value is set as BACKUP_STORAGE_PATH env var.
+    storagePath: "/data/backups"
+
+    persistence:
+      # -- Storage size for the backup PVC
+      size: 5Gi
+      # -- StorageClass name (empty = cluster default)
+      storageClass: ""
 
   # -- Set to "0" to disable TLS verification (not recommended for production)
   nodeTlsRejectUnauthorized: ""

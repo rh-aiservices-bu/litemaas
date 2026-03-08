@@ -251,6 +251,8 @@ In Helm deployments, `LITELLM_DATABASE_URL` is auto-constructed from PostgreSQL 
 
 In Kustomize deployments, the value is stored in `backend-secret` and constructed from `PG_ADMIN_PASSWORD` by default.
 
+**Persistent Storage**: Both Helm and Kustomize deployments provision a PersistentVolumeClaim (`5Gi` by default) mounted at `/data/backups` to ensure backup files survive pod restarts. In the Helm chart, configure via `backend.backup.persistence.size` and `backend.backup.persistence.storageClass`. Without persistent storage, backups are written to the ephemeral container filesystem and lost on pod restart.
+
 ## Backend API Protection
 
 > **Important**: These settings protect the LiteMaaS backend management API endpoints (user management, API key creation, etc.). They do NOT affect LLM request rate limits, which are configured in LiteLLM using the TPM/RPM values from the Default User Values section.

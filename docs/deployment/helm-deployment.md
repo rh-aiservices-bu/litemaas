@@ -155,7 +155,9 @@ helm test litemaas -n litemaas
 | `backend.defaultUser.tpmLimit` | Default user TPM limit | `100000` |
 | `backend.defaultUser.rpmLimit` | Default user RPM limit | `120` |
 | `backend.backup.litellmDatabaseUrl` | LiteLLM database URL for backup/restore (auto-built when `postgresql.enabled`) | `""` |
-| `backend.backup.storagePath` | Directory for backup file storage inside the container | `./data/backups` |
+| `backend.backup.storagePath` | Mount path for backup storage inside the container | `/data/backups` |
+| `backend.backup.persistence.size` | Backup PVC storage size | `5Gi` |
+| `backend.backup.persistence.storageClass` | StorageClass for backup PVC (empty = cluster default) | `""` |
 | `backend.nodeTlsRejectUnauthorized` | Set to `"0"` to disable TLS verification | `""` |
 
 ### Frontend

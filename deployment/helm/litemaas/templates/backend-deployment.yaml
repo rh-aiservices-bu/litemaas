@@ -99,6 +99,9 @@ spec:
                 secretKeyRef:
                   name: {{ include "litemaas.backend.secretName" . }}
                   key: litellm-database-url
+          volumeMounts:
+            - name: backup-storage
+              mountPath: {{ .Values.backend.backup.storagePath }}
           resources:
             {{- toYaml .Values.backend.resources | nindent 12 }}
           livenessProbe:
@@ -117,3 +120,7 @@ spec:
             periodSeconds: {{ .Values.backend.readinessProbe.periodSeconds }}
             timeoutSeconds: {{ .Values.backend.readinessProbe.timeoutSeconds }}
             failureThreshold: {{ .Values.backend.readinessProbe.failureThreshold }}
+      volumes:
+        - name: backup-storage
+          persistentVolumeClaim:
+            claimName: {{ include "litemaas.backend.fullname" . }}-backup
