@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-03-08
+
 ### Added
 
 - **Database Backup & Restore**: Full backup and restore for both LiteMaaS and LiteLLM databases from the Settings and Tools → Backup tab
@@ -176,6 +178,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Sidebar Vertical Spacing**: Reduced nav spacer padding from `--pf-t--global--spacer--md` to `--xs` to prevent scrollbar appearing at slight zoom levels
 
 - **API URL Construction**: Fixed base URL construction in `api.ts` to handle trailing slashes correctly
+
+- **Rate Limit on Config Endpoints**: Exempted public config endpoints (`/config`, `/config/admin-analytics`, `/config/api-key-defaults`) from global rate limiting; renamed misleading `remaining` field to `retryAfterMs` in rate limit error response
 
 ### Documentation
 
