@@ -1359,9 +1359,23 @@
           "schemaNameLabel": "Nome dello schema di test",
           "schemaNameHelper": "Il nome dello schema temporaneo in cui il backup verrà ripristinato per la validazione."
         },
+        "progress": {
+          "title": "Backup in corso",
+          "database": "Database",
+          "table": "Tabella corrente",
+          "tables": "Tabelle",
+          "tablesProgress": "{{completed}} / {{total}}",
+          "rows": "Righe elaborate",
+          "elapsed": "Tempo trascorso",
+          "seconds": "{{seconds}}s",
+          "alreadyRunning": "Un backup è già in corso."
+        },
         "notifications": {
           "backupCreated": "Backup creato con successo.",
+          "backupCompleted": "Backup completato con successo.",
           "backupDeleted": "Backup eliminato con successo.",
+          "backupFailed": "Il backup non è riuscito.",
+          "backupStarted": "Il backup è stato avviato.",
           "restoreSuccess": "Database ripristinato con successo dal backup.",
           "testRestoreComplete": "Ripristino di test completato.",
           "error": "Si è verificato un errore durante l'operazione di backup."

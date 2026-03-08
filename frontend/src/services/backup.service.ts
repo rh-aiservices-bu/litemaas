@@ -40,6 +40,27 @@ export interface TestRestoreResult extends RestoreResult {
   testSchema: string;
 }
 
+export type BackupJobState = 'idle' | 'running' | 'completed' | 'failed';
+
+export interface BackupJobProgress {
+  currentTable: string;
+  tablesCompleted: number;
+  tablesTotal: number;
+  rowsProcessed: number;
+  rowsTotal: number;
+  elapsed: number;
+}
+
+export interface BackupJobStatus {
+  state: BackupJobState;
+  database?: BackupDatabaseType;
+  progress?: BackupJobProgress;
+  backup?: BackupInfo;
+  error?: string;
+  startedAt?: string;
+  completedAt?: string;
+}
+
 class BackupService {
   /**
    * Get backup capabilities and configuration
@@ -60,12 +81,20 @@ class BackupService {
   }
 
   /**
-   * Create a new backup for the specified database
+   * Start a backup job (returns immediately, poll getJobStatus for progress)
    */
-  async createBackup(dbType: BackupDatabaseType): Promise<BackupInfo> {
-    const response = await apiClient.post<{ data: BackupInfo }>('/admin/backup/create', {
+  async startBackup(dbType: BackupDatabaseType): Promise<BackupJobStatus> {
+    const response = await apiClient.post<{ data: BackupJobStatus }>('/admin/backup/create', {
       database: dbType,
     });
+    return response.data;
+  }
+
+  /**
+   * Get the current backup job status (for polling)
+   */
+  async getJobStatus(): Promise<BackupJobStatus> {
+    const response = await apiClient.get<{ data: BackupJobStatus }>('/admin/backup/status');
     return response.data;
   }
 

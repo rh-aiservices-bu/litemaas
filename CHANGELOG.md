@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-03-08
+
+### Fixed
+
+- **Backup OOM fix**: Streaming backup with PostgreSQL cursors and gzip file streams to prevent JavaScript heap out of memory crashes on large databases (e.g., LiteLLM with 1M+ rows)
+- **Backup restore OOM fix**: Streaming decompression and batched SQL execution for restore and test-restore operations
+- **CLI scripts OOM fix**: Streaming restore and verification in `restore-backup.ts` and `test-backup.ts` scripts
+
+### Added
+
+- **Async backup jobs**: Backup creation runs in the background with real-time progress polling (`GET /admin/backup/status`) — prevents gateway timeouts on large databases
+- **Backup progress UI**: Progress bar (row-based), current table, tables completed, elapsed time — persists across page navigation
+- **Backup test script**: `backend/src/scripts/test-backup.ts` for testing streaming backup against a live database without the full application
+
 ## [0.3.0] - 2026-03-08
 
 ### Added

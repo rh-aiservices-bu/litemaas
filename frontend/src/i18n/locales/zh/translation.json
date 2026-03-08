@@ -1359,12 +1359,26 @@
           "schemaNameLabel": "测试架构名称",
           "schemaNameHelper": "用于验证备份恢复的临时架构名称。"
         },
+        "progress": {
+          "title": "备份进行中",
+          "database": "数据库",
+          "table": "当前表",
+          "tables": "表",
+          "tablesProgress": "{{completed}} / {{total}}",
+          "rows": "已处理行数",
+          "elapsed": "已用时间",
+          "seconds": "{{seconds}}秒",
+          "alreadyRunning": "已有备份正在进行中。"
+        },
         "notifications": {
           "backupCreated": "备份创建成功。",
           "backupDeleted": "备份删除成功。",
           "restoreSuccess": "数据库已成功从备份恢复。",
           "testRestoreComplete": "测试恢复已完成。",
-          "error": "备份操作过程中发生错误。"
+          "error": "备份操作过程中发生错误。",
+          "backupStarted": "备份任务已启动。",
+          "backupCompleted": "备份成功完成。",
+          "backupFailed": "备份失败。"
         }
       },
       "bulkUpdate": {

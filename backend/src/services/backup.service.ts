@@ -1,13 +1,15 @@
 import { FastifyInstance } from 'fastify';
 import { BaseService } from './base.service';
-import { Pool } from 'pg';
+import { Pool, PoolClient } from 'pg';
 import { promises as fs } from 'fs';
+import { createReadStream, createWriteStream } from 'fs';
 import * as path from 'path';
 import * as zlib from 'zlib';
 import {
   BackupCapabilities,
   BackupDatabaseType,
   BackupInfo,
+  BackupJobStatus,
   BackupMetadata,
   RestoreResult,
   TestRestoreResult,
@@ -46,8 +48,128 @@ export class BackupService extends BaseService {
     'system_settings',
   ];
 
+  // In-memory job state (singleton per pod — only one backup at a time)
+  private jobStatus: BackupJobStatus = { state: 'idle' };
+  private jobStartTime = 0;
+
   constructor(fastify: FastifyInstance) {
     super(fastify);
+  }
+
+  /**
+   * Get the current backup job status.
+   * Called by the frontend on mount and during polling.
+   */
+  getJobStatus(): BackupJobStatus {
+    // Update elapsed time for running jobs
+    if (this.jobStatus.state === 'running' && this.jobStatus.progress) {
+      this.jobStatus.progress.elapsed = Math.round((Date.now() - this.jobStartTime) / 1000);
+    }
+    return { ...this.jobStatus };
+  }
+
+  /**
+   * Start a backup job in the background.
+   * Returns immediately with status. The frontend polls getJobStatus() for progress.
+   */
+  startBackupJob(dbType: BackupDatabaseType, userId: string): BackupJobStatus {
+    if (this.jobStatus.state === 'running') {
+      throw ApplicationError.validation(
+        'A backup is already in progress',
+        'database',
+        this.jobStatus.database,
+      );
+    }
+
+    this.jobStartTime = Date.now();
+    this.jobStatus = {
+      state: 'running',
+      database: dbType,
+      startedAt: new Date().toISOString(),
+      progress: {
+        currentTable: '',
+        tablesCompleted: 0,
+        tablesTotal: 0,
+        rowsProcessed: 0,
+        rowsTotal: 0,
+        elapsed: 0,
+      },
+    };
+
+    // Fire and forget — errors are captured in jobStatus
+    this.runBackupJob(dbType, userId).catch((error) => {
+      this.fastify.log.error({ error, dbType }, 'Background backup job failed');
+    });
+
+    return this.getJobStatus();
+  }
+
+  /**
+   * Run the backup job in the background, updating progress as it goes.
+   */
+  private async runBackupJob(dbType: BackupDatabaseType, userId: string): Promise<void> {
+    try {
+      const backupInfo = await this.createBackup(dbType);
+
+      this.jobStatus = {
+        state: 'completed',
+        database: dbType,
+        backup: backupInfo,
+        startedAt: this.jobStatus.startedAt,
+        completedAt: new Date().toISOString(),
+      };
+
+      // Audit log
+      try {
+        await this.fastify.pg.query(
+          `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, success, metadata, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+          [
+            userId,
+            'backup:create',
+            'backup',
+            backupInfo.id,
+            true,
+            JSON.stringify({
+              database: dbType,
+              filename: backupInfo.filename,
+              size: backupInfo.size,
+              tableCount: backupInfo.metadata.tableCount,
+            }),
+          ],
+        );
+      } catch (auditError) {
+        this.fastify.log.error({ error: auditError }, 'Failed to log backup audit trail');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.jobStatus = {
+        state: 'failed',
+        database: dbType,
+        error: errorMessage,
+        startedAt: this.jobStatus.startedAt,
+        completedAt: new Date().toISOString(),
+      };
+
+      // Audit log failure
+      try {
+        await this.fastify.pg.query(
+          `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, success, error_message, metadata, created_at)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())`,
+          [
+            userId,
+            'backup:create',
+            'backup',
+            dbType,
+            false,
+            errorMessage,
+            JSON.stringify({ database: dbType }),
+          ],
+        );
+      } catch (auditError) {
+        this.fastify.log.error({ error: auditError }, 'Failed to log backup audit trail');
+      }
+    }
   }
 
   /**
@@ -87,7 +209,8 @@ export class BackupService extends BaseService {
   }
 
   /**
-   * Create a backup of the specified database
+   * Create a backup of the specified database.
+   * Uses streaming with cursors to avoid loading entire tables into memory.
    */
   async createBackup(dbType: BackupDatabaseType): Promise<BackupInfo> {
     const capabilities = await this.getCapabilities();
@@ -125,21 +248,8 @@ export class BackupService extends BaseService {
       // Get tables to backup
       const tables = await this.getTableList(pool, dbType);
 
-      // Generate SQL content
-      const sqlContent = await this.generateBackupSQL(pool, tables, dbType);
-
-      // Compress and save
-      const compressedData = zlib.gzipSync(sqlContent);
-      await fs.writeFile(backupPath, compressedData);
-
-      // Calculate row counts
-      const rowCounts: Record<string, number> = {};
-      for (const table of tables) {
-        const result = await pool.query(
-          `SELECT COUNT(*) as count FROM ${this.quoteIdentifier(table)}`,
-        );
-        rowCounts[table] = parseInt(result.rows[0].count, 10);
-      }
+      // Stream backup SQL directly to gzip file using cursors
+      const rowCounts = await this.streamBackupSQL(pool, tables, dbType, backupPath, timestamp);
 
       // Create metadata
       const metadata: BackupMetadata = {
@@ -278,7 +388,8 @@ export class BackupService extends BaseService {
   }
 
   /**
-   * Restore a backup to the specified database
+   * Restore a backup to the specified database.
+   * Streams the backup file and executes SQL statements in batches to avoid OOM.
    */
   async restoreBackup(id: string, dbType: BackupDatabaseType): Promise<RestoreResult> {
     const backupPath = this.getBackupPath(id);
@@ -296,10 +407,6 @@ export class BackupService extends BaseService {
       if (metadata.database !== dbType) {
         warnings.push(`Backup was created for ${metadata.database} but restoring to ${dbType}`);
       }
-
-      // Read and decompress backup
-      const compressedData = await fs.readFile(backupPath);
-      const sqlContent = zlib.gunzipSync(compressedData).toString('utf-8');
 
       // Get database pool
       let pool: Pool | undefined;
@@ -320,13 +427,12 @@ export class BackupService extends BaseService {
         throw this.createValidationError('Database pool not available', 'database');
       }
 
-      // Execute restore in transaction
+      // Execute restore in transaction, streaming SQL from the gzip file
       const client = await pool.connect();
       try {
         await client.query('BEGIN');
 
-        // Execute SQL content
-        await client.query(sqlContent);
+        await this.streamRestoreSQL(backupPath, client);
 
         await client.query('COMMIT');
 
@@ -388,10 +494,6 @@ export class BackupService extends BaseService {
       const metaContent = await fs.readFile(metaPath, 'utf-8');
       const metadata: BackupMetadata = JSON.parse(metaContent);
 
-      // Read and decompress backup
-      const compressedData = await fs.readFile(backupPath);
-      const sqlContent = zlib.gunzipSync(compressedData).toString('utf-8');
-
       // Get database pool
       let pool: Pool | undefined;
       let shouldClosePool = false;
@@ -429,11 +531,8 @@ export class BackupService extends BaseService {
           );
         }
 
-        // Modify SQL to use test schema
-        const testSqlContent = this.modifySQLForSchema(sqlContent, testSchema);
-
-        // Execute restore in test schema
-        await client.query(testSqlContent);
+        // Stream restore into the test schema
+        await this.streamRestoreSQL(backupPath, client, testSchema);
 
         await client.query('COMMIT');
 
@@ -517,74 +616,184 @@ export class BackupService extends BaseService {
   private readonly PG_TIMESTAMPTZ_OID = 1184;
 
   /**
-   * Generate SQL content for backup
+   * Number of rows to fetch per cursor batch during backup.
+   * Balances memory usage vs. number of database round-trips.
    */
-  private async generateBackupSQL(
+  private readonly CURSOR_BATCH_SIZE = 1000;
+
+  /**
+   * Stream backup SQL directly to a gzip-compressed file using database cursors.
+   * This avoids loading entire tables into memory, preventing OOM on large databases.
+   * Returns row counts per table for metadata.
+   */
+  private async streamBackupSQL(
     pool: Pool,
     tables: string[],
     dbType: BackupDatabaseType,
-  ): Promise<string> {
-    let sql = `-- Database backup for ${dbType}\n`;
-    sql += `-- Generated at ${new Date().toISOString()}\n\n`;
+    backupPath: string,
+    timestamp: string,
+  ): Promise<Record<string, number>> {
+    const rowCounts: Record<string, number> = {};
 
-    for (const table of tables) {
-      const quotedTable = this.quoteIdentifier(table);
-      sql += `-- Table: ${table}\n`;
-      sql += `TRUNCATE TABLE ${quotedTable} CASCADE;\n`;
+    // Set up streaming gzip writer
+    const gzip = zlib.createGzip();
+    const fileStream = createWriteStream(backupPath);
+    gzip.pipe(fileStream);
 
-      // First, get column metadata to identify types
-      const metaResult = await pool.query(`SELECT * FROM ${quotedTable} LIMIT 0`);
-      const fields = metaResult.fields;
+    // Helper to write to gzip stream with backpressure handling
+    const write = (data: string): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        const ok = gzip.write(data);
+        if (ok) {
+          resolve();
+        } else {
+          gzip.once('drain', resolve);
+          gzip.once('error', reject);
+        }
+      });
+    };
 
-      if (fields.length > 0) {
-        const columns = fields.map((f) => f.name);
-        const quotedColumns = columns.map((c) => this.quoteIdentifier(c)).join(', ');
+    // Use a single client with a transaction for cursor support
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-        // Build sets of columns by type for proper serialization
-        const jsonColumns = new Set(
-          fields
-            .filter((f) => f.dataTypeID === this.PG_JSON_OID || f.dataTypeID === this.PG_JSONB_OID)
-            .map((f) => f.name),
-        );
-        const timestampColumns = new Set(
-          fields
-            .filter(
-              (f) =>
-                f.dataTypeID === this.PG_TIMESTAMP_OID ||
-                f.dataTypeID === this.PG_TIMESTAMPTZ_OID,
-            )
-            .map((f) => f.name),
-        );
-
-        // Cast timestamp columns to text in the query to preserve exact precision and timezone
-        const selectColumns = fields
-          .map((f) => {
-            if (
-              f.dataTypeID === this.PG_TIMESTAMP_OID ||
-              f.dataTypeID === this.PG_TIMESTAMPTZ_OID
-            ) {
-              return `${this.quoteIdentifier(f.name)}::text AS ${this.quoteIdentifier(f.name)}`;
-            }
-            return this.quoteIdentifier(f.name);
-          })
-          .join(', ');
-
-        // Get all rows with timestamps as text
-        const result = await pool.query(`SELECT ${selectColumns} FROM ${quotedTable}`);
-
-        // Generate INSERT statements
-        for (const row of result.rows) {
-          const values = columns.map((col) =>
-            this.escapeSQLValue(row[col], jsonColumns.has(col), timestampColumns.has(col)),
+      // Count total rows across all tables for accurate progress tracking
+      if (this.jobStatus.progress) {
+        this.jobStatus.progress.tablesTotal = tables.length;
+        let totalRows = 0;
+        for (const table of tables) {
+          const countResult = await client.query(
+            `SELECT COUNT(*) as count FROM ${this.quoteIdentifier(table)}`,
           );
-          sql += `INSERT INTO ${quotedTable} (${quotedColumns}) VALUES (${values.join(', ')});\n`;
+          totalRows += parseInt(countResult.rows[0].count, 10);
+        }
+        this.jobStatus.progress.rowsTotal = totalRows;
+      }
+
+      await write(`-- Database backup for ${dbType}\n`);
+      await write(`-- Generated at ${timestamp}\n\n`);
+
+      for (const table of tables) {
+        // Update progress with current table
+        if (this.jobStatus.progress) {
+          this.jobStatus.progress.currentTable = table;
+        }
+
+        await this.streamTableBackup(client, table, write, rowCounts);
+
+        // Update progress after each table
+        if (this.jobStatus.progress) {
+          this.jobStatus.progress.tablesCompleted += 1;
+          this.jobStatus.progress.rowsProcessed += rowCounts[table] || 0;
         }
       }
 
-      sql += '\n';
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
 
-    return sql;
+    // Finalize gzip stream and wait for file write to complete
+    await new Promise<void>((resolve, reject) => {
+      fileStream.on('finish', resolve);
+      fileStream.on('error', reject);
+      gzip.on('error', reject);
+      gzip.end();
+    });
+
+    return rowCounts;
+  }
+
+  /**
+   * Stream a single table's backup data using a cursor.
+   */
+  private async streamTableBackup(
+    client: PoolClient,
+    table: string,
+    write: (data: string) => Promise<void>,
+    rowCounts: Record<string, number>,
+  ): Promise<void> {
+    const quotedTable = this.quoteIdentifier(table);
+    await write(`-- Table: ${table}\n`);
+    await write(`TRUNCATE TABLE ${quotedTable} CASCADE;\n`);
+
+    // Get column metadata to identify types
+    const metaResult = await client.query(`SELECT * FROM ${quotedTable} LIMIT 0`);
+    const fields = metaResult.fields;
+
+    if (fields.length === 0) {
+      rowCounts[table] = 0;
+      await write('\n');
+      return;
+    }
+
+    const columns = fields.map((f) => f.name);
+    const quotedColumns = columns.map((c) => this.quoteIdentifier(c)).join(', ');
+
+    // Build sets of columns by type for proper serialization
+    const jsonColumns = new Set(
+      fields
+        .filter((f) => f.dataTypeID === this.PG_JSON_OID || f.dataTypeID === this.PG_JSONB_OID)
+        .map((f) => f.name),
+    );
+    const timestampColumns = new Set(
+      fields
+        .filter(
+          (f) => f.dataTypeID === this.PG_TIMESTAMP_OID || f.dataTypeID === this.PG_TIMESTAMPTZ_OID,
+        )
+        .map((f) => f.name),
+    );
+
+    // Cast timestamp columns to text to preserve exact precision and timezone
+    const selectColumns = fields
+      .map((f) => {
+        if (f.dataTypeID === this.PG_TIMESTAMP_OID || f.dataTypeID === this.PG_TIMESTAMPTZ_OID) {
+          return `${this.quoteIdentifier(f.name)}::text AS ${this.quoteIdentifier(f.name)}`;
+        }
+        return this.quoteIdentifier(f.name);
+      })
+      .join(', ');
+
+    // Use a cursor to fetch rows in batches
+    const cursorName = `backup_${table.replace(/[^a-zA-Z0-9_]/g, '_')}`;
+    await client.query(
+      `DECLARE ${this.quoteIdentifier(cursorName)} CURSOR FOR SELECT ${selectColumns} FROM ${quotedTable}`,
+    );
+
+    let totalRows = 0;
+    let hasMore = true;
+
+    try {
+      while (hasMore) {
+        const batch = await client.query(
+          `FETCH ${this.CURSOR_BATCH_SIZE} FROM ${this.quoteIdentifier(cursorName)}`,
+        );
+        if (batch.rows.length === 0) {
+          hasMore = false;
+          break;
+        }
+
+        totalRows += batch.rows.length;
+
+        for (const row of batch.rows) {
+          const values = columns.map((col) =>
+            this.escapeSQLValue(row[col], jsonColumns.has(col), timestampColumns.has(col)),
+          );
+          await write(
+            `INSERT INTO ${quotedTable} (${quotedColumns}) VALUES (${values.join(', ')});\n`,
+          );
+        }
+      }
+    } finally {
+      await client.query(`CLOSE ${this.quoteIdentifier(cursorName)}`);
+    }
+
+    rowCounts[table] = totalRows;
+    await write('\n');
   }
 
   /**
@@ -640,21 +849,100 @@ export class BackupService extends BaseService {
   /**
    * Modify SQL to use a specific schema
    */
-  private modifySQLForSchema(sql: string, schema: string): string {
-    // Replace table references with schema-qualified references
-    // Handles both quoted ("table") and unquoted (table) identifiers
-    const lines = sql.split('\n');
-    return lines
-      .map((line) => {
-        if (line.startsWith('TRUNCATE TABLE ')) {
-          return line.replace('TRUNCATE TABLE ', `TRUNCATE TABLE ${schema}.`);
+  /**
+   * Stream-decompress a backup file and execute SQL statements in batches.
+   * Avoids loading the entire decompressed SQL into memory.
+   * Optionally rewrites table references to a different schema (for test restore).
+   */
+  private async streamRestoreSQL(
+    backupPath: string,
+    client: PoolClient,
+    schema?: string,
+  ): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const gunzip = zlib.createGunzip();
+      const readStream = createReadStream(backupPath);
+      let buffer = '';
+
+      gunzip.on('data', (chunk: Buffer) => {
+        buffer += chunk.toString('utf-8');
+
+        // Process complete statements (lines ending with ;)
+        const lastNewline = buffer.lastIndexOf('\n');
+        if (lastNewline === -1) return;
+
+        const processable = buffer.substring(0, lastNewline);
+        buffer = buffer.substring(lastNewline + 1);
+
+        const statements = processable
+          .split('\n')
+          .filter((line) => {
+            const trimmed = line.trim();
+            return trimmed.length > 0 && !trimmed.startsWith('--');
+          })
+          .map((line) => {
+            if (!schema) return line;
+            // Rewrite table references to the target schema
+            if (line.startsWith('TRUNCATE TABLE ')) {
+              return line.replace('TRUNCATE TABLE ', `TRUNCATE TABLE ${schema}.`);
+            }
+            if (line.startsWith('INSERT INTO ')) {
+              return line.replace('INSERT INTO ', `INSERT INTO ${schema}.`);
+            }
+            return line;
+          });
+
+        if (statements.length > 0) {
+          // Pause the stream while we execute, to avoid unbounded buffering
+          gunzip.pause();
+          const batch = statements.join('\n');
+          client
+            .query(batch)
+            .then(() => {
+              gunzip.resume();
+            })
+            .catch((err) => {
+              readStream.destroy();
+              gunzip.destroy();
+              reject(err);
+            });
         }
-        if (line.startsWith('INSERT INTO ')) {
-          return line.replace('INSERT INTO ', `INSERT INTO ${schema}.`);
+      });
+
+      gunzip.on('end', () => {
+        // Process any remaining buffer
+        const remaining = buffer
+          .split('\n')
+          .filter((line) => {
+            const trimmed = line.trim();
+            return trimmed.length > 0 && !trimmed.startsWith('--');
+          })
+          .map((line) => {
+            if (!schema) return line;
+            if (line.startsWith('TRUNCATE TABLE ')) {
+              return line.replace('TRUNCATE TABLE ', `TRUNCATE TABLE ${schema}.`);
+            }
+            if (line.startsWith('INSERT INTO ')) {
+              return line.replace('INSERT INTO ', `INSERT INTO ${schema}.`);
+            }
+            return line;
+          });
+
+        if (remaining.length > 0) {
+          client
+            .query(remaining.join('\n'))
+            .then(() => resolve())
+            .catch(reject);
+        } else {
+          resolve();
         }
-        return line;
-      })
-      .join('\n');
+      });
+
+      gunzip.on('error', reject);
+      readStream.on('error', reject);
+
+      readStream.pipe(gunzip);
+    });
   }
 
   /**

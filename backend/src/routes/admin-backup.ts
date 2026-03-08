@@ -59,7 +59,7 @@ const adminBackupRoutes: FastifyPluginAsync = async (fastify) => {
     },
   );
 
-  // Create a new backup
+  // Start a new backup job (async - returns immediately)
   fastify.post<{
     Body: { database: BackupDatabaseType };
   }>(
@@ -67,8 +67,8 @@ const adminBackupRoutes: FastifyPluginAsync = async (fastify) => {
     {
       schema: {
         tags: ['Admin - Backup'],
-        summary: 'Create a database backup',
-        description: 'Create a compressed backup of the specified database',
+        summary: 'Start a database backup job',
+        description: 'Start a backup job in the background. Poll GET /status for progress.',
         security: [{ bearerAuth: [] }],
         body: {
           type: 'object',
@@ -89,35 +89,36 @@ const adminBackupRoutes: FastifyPluginAsync = async (fastify) => {
       const { database } = request.body as { database: BackupDatabaseType };
 
       try {
-        const backupInfo = await backupService.createBackup(database);
-
-        await logAudit(user.userId, 'backup:create', backupInfo.id, true, {
-          database,
-          filename: backupInfo.filename,
-          size: backupInfo.size,
-          tableCount: backupInfo.metadata.tableCount,
-        });
-
-        return { data: backupInfo };
+        const status = backupService.startBackupJob(database, user.userId);
+        return { data: status };
       } catch (error) {
-        await logAudit(
-          user.userId,
-          'backup:create',
-          database,
-          false,
-          { database },
-          error instanceof Error ? error.message : String(error),
-        );
-
-        fastify.log.error({ error, database }, 'Failed to create backup');
+        fastify.log.error({ error, database }, 'Failed to start backup job');
 
         if (error instanceof ApplicationError) {
           throw error;
         }
 
         const errorMessage = error instanceof Error ? error.message : String(error);
-        throw fastify.createError(500, `Failed to create backup: ${errorMessage}`);
+        throw fastify.createError(500, `Failed to start backup: ${errorMessage}`);
       }
+    },
+  );
+
+  // Get backup job status (for polling)
+  fastify.get(
+    '/status',
+    {
+      schema: {
+        tags: ['Admin - Backup'],
+        summary: 'Get backup job status',
+        description:
+          'Get the current backup job status including progress. Used for polling during backup.',
+        security: [{ bearerAuth: [] }],
+      },
+      preHandler: [fastify.authenticate, fastify.requirePermission('admin:backup')],
+    },
+    async (_request, _reply) => {
+      return { data: backupService.getJobStatus() };
     },
   );
 

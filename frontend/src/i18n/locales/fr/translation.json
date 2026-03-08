@@ -1359,9 +1359,23 @@
           "schemaNameLabel": "Nom du schéma de test",
           "schemaNameHelper": "Le nom du schéma temporaire dans lequel la sauvegarde sera restaurée pour validation."
         },
+        "progress": {
+          "title": "Sauvegarde en cours",
+          "database": "Base de données",
+          "table": "Table en cours",
+          "tables": "Tables",
+          "tablesProgress": "{{completed}} / {{total}}",
+          "rows": "Lignes traitées",
+          "elapsed": "Temps écoulé",
+          "seconds": "{{seconds}}s",
+          "alreadyRunning": "Une sauvegarde est déjà en cours."
+        },
         "notifications": {
           "backupCreated": "Sauvegarde créée avec succès.",
           "backupDeleted": "Sauvegarde supprimée avec succès.",
+          "backupStarted": "La sauvegarde a démarré.",
+          "backupCompleted": "Sauvegarde terminée avec succès.",
+          "backupFailed": "La sauvegarde a échoué.",
           "restoreSuccess": "Base de données restaurée avec succès depuis la sauvegarde.",
           "testRestoreComplete": "Restauration test terminée.",
           "error": "Une erreur est survenue lors de l'opération de sauvegarde."
