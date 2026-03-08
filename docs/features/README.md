@@ -14,6 +14,7 @@ This directory contains documentation for key features and functionality in Lite
 - **[Settings and Tools — API Key Quota Defaults](admin-tools.md#api-key-quota-defaults)** - Admin-configurable defaults and maximums for user self-service API key quotas
 - **[Test Chatbot](test-chatbot.md)** - Chatbot testing guide and features
 - **[Audit Log](admin-tools.md#audit-log)** - Admin audit log viewing and filtering
+- **[Backup & Restore](admin-tools.md#backup--restore)** - Database backup and restore for LiteMaaS and LiteLLM
 
 ## Feature Categories
 

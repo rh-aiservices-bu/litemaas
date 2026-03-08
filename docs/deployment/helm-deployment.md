@@ -148,12 +148,14 @@ helm test litemaas -n litemaas
 | `backend.auth.initialAdminUsers` | Initial admin users (comma-separated usernames; auto-detected on OpenShift if empty) | `""` |
 | `backend.auth.litellmApiKey` | LiteLLM API key (must match `litellm.auth.masterKey`) | `changeme` |
 | `backend.auth.litellmMasterKey` | Encryption key for stored model API keys (falls back to `litellmApiKey`) | `""` |
-| `backend.auth.existingSecret` | Use an existing Secret (keys: `database-url`, `cors-origin`, `jwt-secret`, `oauth-client-id`, `oauth-client-secret`, `oauth-issuer`, `oauth-callback-url`, `admin-api-keys`, `litellm-api-key`, `litellm-master-key`) | `""` |
+| `backend.auth.existingSecret` | Use an existing Secret (keys: `database-url`, `cors-origin`, `jwt-secret`, `oauth-client-id`, `oauth-client-secret`, `oauth-issuer`, `oauth-callback-url`, `admin-api-keys`, `litellm-api-key`, `litellm-master-key`, `litellm-database-url`) | `""` |
 | `backend.rateLimit.max` | Rate limit max requests | `1000` |
 | `backend.rateLimit.timeWindow` | Rate limit time window | `5m` |
 | `backend.defaultUser.maxBudget` | Default user max budget | `100` |
 | `backend.defaultUser.tpmLimit` | Default user TPM limit | `100000` |
 | `backend.defaultUser.rpmLimit` | Default user RPM limit | `120` |
+| `backend.backup.litellmDatabaseUrl` | LiteLLM database URL for backup/restore (auto-built when `postgresql.enabled`) | `""` |
+| `backend.backup.storagePath` | Directory for backup file storage inside the container | `./data/backups` |
 | `backend.nodeTlsRejectUnauthorized` | Set to `"0"` to disable TLS verification | `""` |
 
 ### Frontend

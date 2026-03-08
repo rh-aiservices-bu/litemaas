@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Settings and Tools page (`/admin/tools`) provides administrative tools for managing LiteMaaS system configurations. It includes tabs for Limits, Banners, Branding, Currency, and Models Sync.
+The Settings and Tools page (`/admin/tools`) provides administrative tools for managing LiteMaaS system configurations. It includes tabs for Limits, Banners, Branding, Currency, Backup, and Models Sync.
 
 ### Access Requirements
 
@@ -462,6 +462,96 @@ The configured currency symbol appears in:
 - `GET /api/v1/config` — Public endpoint includes `currency` field for frontend consumption
 
 For API details, see the [REST API Reference](../api/rest-api.md#admin-settings-apiv1adminsettings).
+
+---
+
+## Backup & Restore
+
+The Backup & Restore feature is accessible from the **Backup** tab on the Settings and Tools page (`/admin/tools`). It provides full database backup and restore capabilities for both the LiteMaaS and LiteLLM databases.
+
+### Purpose
+
+Database backup and restore allows administrators to:
+
+- **Create backups**: Generate compressed `.sql.gz` backup files for LiteMaaS and/or LiteLLM databases
+- **Download backups**: Download backup files for off-site storage
+- **Test restore**: Perform non-destructive restore to a temporary schema to validate backup integrity
+- **Full restore**: Restore a backup to the production database (destructive, with confirmation)
+- **Manage backups**: List, download, and delete existing backup files
+- **CLI restore**: Use a standalone script for catastrophic recovery when the web UI is unavailable
+
+### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access -- create, download, delete, restore, and test-restore backups |
+| Admin-readonly | View-only access -- can see the Backup tab but all actions are disabled |
+| Regular user | No access |
+
+**Permission**: `admin:backup` (admin role only)
+
+### Prerequisites
+
+- **LiteMaaS database**: Always available for backup (uses the application's `DATABASE_URL`)
+- **LiteLLM database**: Requires `LITELLM_DATABASE_URL` environment variable to be set. This is a direct PostgreSQL connection string to LiteLLM's database, **not** the LiteLLM API URL. When not configured, only LiteMaaS backup is available.
+
+For environment variable configuration, see the [Configuration Guide](../deployment/configuration.md#backup--restore).
+
+### How to Create a Backup
+
+1. Navigate to **Admin > Settings and Tools** and select the **Backup** tab
+2. Select which databases to back up (LiteMaaS, LiteLLM, or both)
+3. Click **Create Backup**
+4. The backup file (`.sql.gz`) will appear in the backup list once complete
+
+### How to Restore a Backup
+
+#### Test Restore (Recommended First Step)
+
+1. Select a backup from the list
+2. Click **Test Restore**
+3. Optionally edit the temporary schema name
+4. The restore runs against a temporary schema and validates data integrity without affecting production data
+5. Review the test results
+
+#### Full Restore
+
+1. Select a backup from the list
+2. Click **Restore**
+3. Type the confirmation text in the safety modal
+4. The backup is restored to the production database, replacing existing data
+
+### CLI Restore (Catastrophic Recovery)
+
+When the web UI is unavailable, use the standalone restore script:
+
+```bash
+cd backend
+npx tsx src/scripts/restore-backup.ts <path-to-backup.sql.gz>
+```
+
+The script requires `DATABASE_URL` and/or `LITELLM_DATABASE_URL` environment variables to be set. Backup files are also compatible with standard PostgreSQL tools:
+
+```bash
+gunzip -c backup.sql.gz | psql <database-url>
+```
+
+### Technical Details
+
+- **Backup format**: Compressed SQL (`.sql.gz`), compatible with `psql` for manual restore
+- **Type-aware serialization**: Correct handling of PostgreSQL array columns (`TEXT[]`) vs JSON/JSONB arrays, quoted identifiers for mixed-case table names (LiteLLM), and timestamp precision preservation
+- **Storage**: Configurable via `BACKUP_STORAGE_PATH` (default: `./data/backups`)
+- **Audit logging**: All backup operations (create, download, delete, restore, test-restore) are logged to the `audit_logs` table
+
+### API Endpoints
+
+- `GET /api/v1/admin/backup/capabilities` -- Check which databases are available for backup
+- `GET /api/v1/admin/backup` -- List existing backups
+- `POST /api/v1/admin/backup` -- Create a new backup
+- `GET /api/v1/admin/backup/:filename` -- Download a backup file
+- `DELETE /api/v1/admin/backup/:filename` -- Delete a backup file
+- `POST /api/v1/admin/backup/restore` -- Full restore from a backup
+- `POST /api/v1/admin/backup/test-restore` -- Test restore to a temporary schema
 
 ---
 

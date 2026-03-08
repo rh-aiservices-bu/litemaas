@@ -223,6 +223,34 @@ USAGE_CACHE_TTL_MINUTES=5    # Default: 5 minutes
 - `database_wins`: Database data takes precedence
 - `merge`: Attempt to merge conflicts (not yet implemented)
 
+## Backup & Restore
+
+| Variable              | Description                                                        | Default          | Required |
+| --------------------- | ------------------------------------------------------------------ | ---------------- | -------- |
+| `LITELLM_DATABASE_URL`| Direct PostgreSQL connection string to LiteLLM's database          | -                | No       |
+| `BACKUP_STORAGE_PATH` | Directory where backup files (`.sql.gz`) are stored                | `./data/backups` | No       |
+
+The backup feature allows administrators to create, download, and restore full database backups for both the LiteMaaS and LiteLLM databases from the Settings and Tools page.
+
+- **`LITELLM_DATABASE_URL`** is required only if you want to backup/restore the LiteLLM database. This is a direct PostgreSQL connection string, **not** the LiteLLM API URL. When not set, only LiteMaaS database backup is available.
+- **`BACKUP_STORAGE_PATH`** controls where backup files are stored on disk. The directory is created automatically if it does not exist.
+
+### Example
+
+```bash
+# LiteLLM database connection for backup/restore
+LITELLM_DATABASE_URL=postgresql://llmproxy:dbpassword9090@localhost:5432/litellm
+
+# Custom backup storage location
+BACKUP_STORAGE_PATH=/var/data/litemaas/backups
+```
+
+### Deployment Configuration
+
+In Helm deployments, `LITELLM_DATABASE_URL` is auto-constructed from PostgreSQL credentials when `postgresql.enabled` is true. Override with `backend.backup.litellmDatabaseUrl` in your values file.
+
+In Kustomize deployments, the value is stored in `backend-secret` and constructed from `PG_ADMIN_PASSWORD` by default.
+
 ## Backend API Protection
 
 > **Important**: These settings protect the LiteMaaS backend management API endpoints (user management, API key creation, etc.). They do NOT affect LLM request rate limits, which are configured in LiteLLM using the TPM/RPM values from the Default User Values section.
@@ -548,6 +576,10 @@ LITELLM_AUTO_SYNC=true
 LITELLM_SYNC_INTERVAL=300
 LITELLM_TIMEOUT=60000
 LITELLM_RETRIES=5
+
+# Backup & Restore
+LITELLM_DATABASE_URL=postgresql://prod_user:${DB_PASSWORD}@db.internal:5432/litellm
+BACKUP_STORAGE_PATH=/var/data/litemaas/backups
 
 # Security
 ADMIN_API_KEYS=${ADMIN_KEY_1},${ADMIN_KEY_2}
