@@ -36,6 +36,9 @@ export default async function configRoutes(fastify: FastifyInstance) {
   fastify.get<{
     Reply: ConfigResponse;
   }>('/', {
+    config: {
+      rateLimit: false,
+    },
     schema: {
       tags: ['Configuration'],
       summary: 'Get public configuration',
@@ -78,6 +81,9 @@ export default async function configRoutes(fastify: FastifyInstance) {
   fastify.get(
     '/admin-analytics',
     {
+      config: {
+        rateLimit: false,
+      },
       schema: {
         description: 'Get public admin analytics configuration',
         tags: ['configuration'],
@@ -148,6 +154,9 @@ export default async function configRoutes(fastify: FastifyInstance) {
   fastify.get(
     '/api-key-defaults',
     {
+      config: {
+        rateLimit: false,
+      },
       schema: {
         description: 'Get API key quota defaults and maximums for user key creation',
         tags: ['configuration'],
