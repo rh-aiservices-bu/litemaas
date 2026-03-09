@@ -47,7 +47,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Store the callback URL with the state
         const state = fastify.oauthHelpers.generateAndStoreState(callbackUrl);
-        const authUrl = fastify.oauth.generateAuthUrl(state, request);
+        const authUrl = await fastify.oauth.generateAuthUrl(state, request);
 
         fastify.log.debug({ callbackUrl, state }, 'Generated auth URL with stored callback');
 
@@ -272,7 +272,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
             'AUTH', // resource_type for authentication events
             request.ip,
             request.headers['user-agent'] ?? null,
-            JSON.stringify({ oauth_provider: 'openshift', method: 'oauth' }),
+            JSON.stringify({ oauth_provider: fastify.oauth.getAuthProvider(), method: 'oauth' }),
           ],
         );
 

@@ -73,11 +73,14 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
     },
   });
 
+  const authProvider = fastify.config.AUTH_PROVIDER || 'openshift';
+
   // Add OAuth configuration to fastify instance
   fastify.decorate('oauthConfig', {
     clientId: fastify.config.OAUTH_CLIENT_ID,
     issuer: fastify.config.OAUTH_ISSUER,
     callbackUrl: fastify.config.OAUTH_CALLBACK_URL,
+    authProvider,
     isMockEnabled:
       process.env.OAUTH_MOCK_ENABLED === 'true' || process.env.NODE_ENV === 'development',
   });
@@ -85,6 +88,7 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.log.info(
     {
       oauthEnabled: true,
+      authProvider: fastify.oauthConfig.authProvider,
       mockMode: fastify.oauthConfig.isMockEnabled,
       issuer: fastify.oauthConfig.issuer,
     },
@@ -99,6 +103,7 @@ declare module 'fastify' {
       clientId: string;
       issuer: string;
       callbackUrl: string;
+      authProvider: string;
       isMockEnabled: boolean;
     };
     oauthHelpers: {

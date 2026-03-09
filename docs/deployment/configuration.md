@@ -34,15 +34,29 @@ DB_IDLE_TIMEOUT=60000
 DB_CONNECTION_TIMEOUT=10000
 ```
 
-## OAuth Configuration
+## OAuth / OIDC Configuration
 
 | Variable                  | Description                                                          | Default                                   | Required |
 | ------------------------- | -------------------------------------------------------------------- | ----------------------------------------- | -------- |
-| `OAUTH_CLIENT_ID`         | OpenShift OAuth client ID                                            | -                                         | Yes      |
-| `OAUTH_CLIENT_SECRET`     | OpenShift OAuth client secret                                        | -                                         | Yes      |
-| `OAUTH_ISSUER`            | OAuth provider URL                                                   | -                                         | Yes      |
+| `AUTH_PROVIDER`            | Authentication provider: `openshift` or `oidc`                      | `openshift`                               | No       |
+| `OAUTH_CLIENT_ID`         | OAuth/OIDC client ID                                                 | -                                         | Yes      |
+| `OAUTH_CLIENT_SECRET`     | OAuth/OIDC client secret                                             | -                                         | Yes      |
+| `OAUTH_ISSUER`            | OAuth/OIDC provider URL (issuer)                                     | -                                         | Yes      |
 | `OAUTH_CALLBACK_URL`      | OAuth callback URL                                                   | `http://localhost:8081/api/auth/callback` | No       |
-| `K8S_API_SKIP_TLS_VERIFY` | Skip TLS verification for Kubernetes API calls (⚠️ Use with caution) | -                                         | No       |
+| `K8S_API_SKIP_TLS_VERIFY` | Skip TLS verification for Kubernetes API calls (⚠️ OpenShift only)   | -                                         | No       |
+| `OIDC_GROUPS_CLAIM`       | Claim name in OIDC userinfo for group memberships                    | `groups`                                  | No       |
+| `OIDC_SCOPES`             | Override OIDC scopes (space-separated)                               | `openid profile email`                    | No       |
+
+### Authentication Provider
+
+LiteMaaS supports two authentication providers:
+
+- **`openshift`** (default): Uses OpenShift-specific OAuth endpoints (`/oauth/authorize`, `/oauth/token`) and the OpenShift user API (`/apis/user.openshift.io/v1/users/~`) for user information and group membership.
+- **`oidc`**: Uses standard OpenID Connect. Endpoints are auto-discovered via `.well-known/openid-configuration` from the `OAUTH_ISSUER` URL. User information is fetched from the standard `/userinfo` endpoint.
+
+When using `oidc`, you can customize:
+- `OIDC_GROUPS_CLAIM`: The claim name in the userinfo response that contains group memberships (default: `groups`). Some providers use `roles`, `realm_access.roles`, or custom claim names.
+- `OIDC_SCOPES`: Override the default OIDC scopes. Some providers require additional scopes like `groups` to include group claims in the userinfo response.
 
 ### OAuth Flow Architecture
 
@@ -100,14 +114,26 @@ As of the latest update, the backend implements intelligent OAuth callback URL h
 - The backend uses relative redirects (`/auth/callback`) after processing
 - No `FRONTEND_URL` configuration needed
 
-### Example
+### Example (OpenShift)
 
 ```bash
+AUTH_PROVIDER=openshift
 OAUTH_CLIENT_ID=litemaas-oauth-client
 OAUTH_CLIENT_SECRET=super-secret-oauth-key
-OAUTH_ISSUER=https://oauth.openshift.example.com
-# Fallback URL - automatic detection handles most cases
+OAUTH_ISSUER=https://oauth-openshift.apps.cluster.example.com
 OAUTH_CALLBACK_URL=http://localhost:3000/api/auth/callback
+```
+
+### Example (OIDC — Keycloak, Auth0, Okta, Azure AD, etc.)
+
+```bash
+AUTH_PROVIDER=oidc
+OAUTH_CLIENT_ID=litemaas
+OAUTH_CLIENT_SECRET=your-oidc-client-secret
+OAUTH_ISSUER=https://keycloak.example.com/realms/myrealm
+OAUTH_CALLBACK_URL=https://litemaas.example.com/api/auth/callback
+# OIDC_GROUPS_CLAIM=groups       # Customize if your IdP uses a different claim
+# OIDC_SCOPES=openid profile email groups  # Add 'groups' scope if required by your IdP
 ```
 
 ### OAuth Provider Setup
@@ -560,11 +586,16 @@ DATABASE_URL=postgresql://prod_user:${DB_PASSWORD}@db.internal:5432/litemaas_pro
 DB_MAX_CONNECTIONS=50
 DB_IDLE_TIMEOUT=60000
 
-# OAuth
+# Authentication Provider ('openshift' or 'oidc')
+AUTH_PROVIDER=openshift
+
+# OAuth / OIDC
 OAUTH_CLIENT_ID=${OAUTH_PROD_CLIENT_ID}
 OAUTH_CLIENT_SECRET=${OAUTH_PROD_CLIENT_SECRET}
 OAUTH_ISSUER=https://oauth.production.com
 OAUTH_CALLBACK_URL=https://app.production.com/api/auth/callback
+# OIDC_GROUPS_CLAIM=groups    # Only for AUTH_PROVIDER=oidc
+# OIDC_SCOPES=openid profile email  # Only for AUTH_PROVIDER=oidc
 
 # JWT
 JWT_SECRET=${JWT_PROD_SECRET}

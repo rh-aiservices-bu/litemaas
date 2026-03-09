@@ -4,7 +4,7 @@
 
 ## Overview
 
-LiteMaaS implements a comprehensive authentication system that supports OAuth 2.0 (primarily OpenShift) for production environments while providing a convenient mock mode for development. The system automatically provisions users in both the local database and LiteLLM proxy service.
+LiteMaaS implements a comprehensive authentication system that supports both OpenShift OAuth and standard OpenID Connect (OIDC) for production environments, while providing a convenient mock mode for development. The authentication provider is controlled by the `AUTH_PROVIDER` environment variable (`openshift` or `oidc`). The system automatically provisions users in both the local database and LiteLLM proxy service.
 
 ## Architecture
 
@@ -150,9 +150,13 @@ The application will automatically select the correct callback URL based on the 
 
 ## Key Implementation Details
 
-### 1. OpenShift Integration
+### 1. Authentication Provider Integration
 
-The OAuth service correctly handles OpenShift's dual-endpoint architecture:
+LiteMaaS supports two authentication providers via `AUTH_PROVIDER`:
+
+#### OpenShift (`AUTH_PROVIDER=openshift`, default)
+
+The OAuth service handles OpenShift's dual-endpoint architecture:
 
 ```typescript
 // OAuth server for authentication
@@ -161,8 +165,25 @@ const oauthServer = 'https://oauth-openshift.apps.cluster.com';
 // API server for user information (can be overridden via OPENSHIFT_API_URL env var)
 const apiServer = 'https://api.cluster.com:6443';
 
-// User info endpoint
+// User info endpoint (OpenShift-specific)
 const userInfoUrl = `${apiServer}/apis/user.openshift.io/v1/users/~`;
+```
+
+#### Standard OIDC (`AUTH_PROVIDER=oidc`)
+
+For OIDC providers (Keycloak, Auth0, Okta, Azure AD, etc.), endpoints are auto-discovered:
+
+```typescript
+// Discovery document fetched once and cached
+const discoveryUrl = `${issuer}/.well-known/openid-configuration`;
+
+// Endpoints resolved from discovery:
+// - authorization_endpoint (for login redirect)
+// - token_endpoint (for code exchange)
+// - userinfo_endpoint (for user info)
+
+// Group memberships read from configurable claim (default: 'groups')
+const groupsClaim = process.env.OIDC_GROUPS_CLAIM || 'groups';
 ```
 
 ### 2. User Creation Flow (Updated 2025-07-30)
@@ -321,11 +342,18 @@ OAUTH_MOCK_ENABLED=true
 ### Environment Variables
 
 ```env
-# OAuth Configuration
+# Authentication Provider ('openshift' or 'oidc')
+AUTH_PROVIDER=openshift
+
+# OAuth / OIDC Configuration
 OAUTH_CLIENT_ID=litemaas
 OAUTH_CLIENT_SECRET=your-secret-here
-OAUTH_ISSUER=https://oauth-openshift.apps.cluster.com
+OAUTH_ISSUER=https://oauth-openshift.apps.cluster.com  # Or OIDC issuer URL
 OAUTH_CALLBACK_URL=http://localhost:8081/api/auth/callback
+
+# OIDC-specific (only when AUTH_PROVIDER=oidc)
+OIDC_GROUPS_CLAIM=groups          # Claim name for group memberships
+OIDC_SCOPES=openid profile email  # Override default scopes
 
 # Development
 OAUTH_MOCK_ENABLED=true  # Set to false for production

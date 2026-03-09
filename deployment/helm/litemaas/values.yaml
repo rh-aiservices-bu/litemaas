@@ -32,7 +32,7 @@ serviceAccount:
   annotations: {}
 
 # =============================================================================
-# OAuth
+# OAuth / OIDC
 # =============================================================================
 oauth:
   # -- OAuth mode: "serviceaccount" uses the ServiceAccount as an OAuth client
@@ -40,14 +40,28 @@ oauth:
   # client ID/secret/issuer via backend.auth.oauthClientId etc.)
   mode: serviceaccount
 
+  # -- Authentication provider: "openshift" (default) or "oidc" (standard OpenID Connect).
+  # OpenShift uses custom OAuth endpoints and the OpenShift user API for user info.
+  # OIDC uses standard .well-known/openid-configuration discovery and /userinfo endpoint.
+  # When set to "oidc", oauth.mode should typically be "external".
+  authProvider: openshift
+
   # -- OAuth issuer URL. Auto-constructed on OpenShift if empty:
   # https://oauth-openshift.<clusterDomain>
+  # For OIDC providers, set this to the issuer URL (e.g., https://keycloak.example.com/realms/myrealm)
   issuer: ""
 
   # -- ServiceAccount token secret name for SA OAuth mode.
   # The chart creates one automatically when mode is "serviceaccount".
   # Set this to reference a pre-existing token secret.
   existingTokenSecret: ""
+
+  # -- OIDC-specific settings (only used when authProvider is "oidc")
+  oidc:
+    # -- Claim name in OIDC userinfo response containing group memberships
+    groupsClaim: groups
+    # -- Override OIDC scopes (space-separated). Default: "openid profile email"
+    scopes: ""
 
 # =============================================================================
 # PostgreSQL

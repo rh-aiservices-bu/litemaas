@@ -22,6 +22,13 @@ interface DatabaseUser {
   full_name: string;
 }
 
+interface OIDCDiscovery {
+  authorization_endpoint: string;
+  token_endpoint: string;
+  userinfo_endpoint: string;
+  issuer: string;
+}
+
 // Mock users for development
 const MOCK_USERS: MockUser[] = [
   {
@@ -54,6 +61,9 @@ export class OAuthService extends BaseService {
   private isMockEnabled: boolean;
   private liteLLMService: LiteLLMService;
   private defaultTeamService: DefaultTeamService;
+  private authProvider: string;
+  private oidcDiscovery: OIDCDiscovery | null = null;
+  private oidcDiscoveryPromise: Promise<OIDCDiscovery> | null = null;
 
   constructor(fastify: FastifyInstance, liteLLMService?: LiteLLMService) {
     super(fastify);
@@ -61,40 +71,114 @@ export class OAuthService extends BaseService {
       process.env.OAUTH_MOCK_ENABLED === 'true' || process.env.NODE_ENV === 'development';
     this.liteLLMService = liteLLMService || new LiteLLMService(fastify);
     this.defaultTeamService = new DefaultTeamService(fastify, this.liteLLMService);
+    this.authProvider = this.fastify.config.AUTH_PROVIDER || 'openshift';
+  }
+
+  getAuthProvider(): string {
+    return this.authProvider;
+  }
+
+  private async fetchOIDCDiscovery(): Promise<OIDCDiscovery> {
+    if (this.oidcDiscovery) {
+      return this.oidcDiscovery;
+    }
+
+    if (this.oidcDiscoveryPromise) {
+      return this.oidcDiscoveryPromise;
+    }
+
+    this.oidcDiscoveryPromise = (async () => {
+      const issuer = this.fastify.config.OAUTH_ISSUER.replace(/\/$/, '');
+      const discoveryUrl = `${issuer}/.well-known/openid-configuration`;
+
+      this.fastify.log.info({ discoveryUrl }, 'Fetching OIDC discovery document');
+
+      const response = await fetch(discoveryUrl, {
+        headers: { Accept: 'application/json' },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.fastify.log.error(
+          { status: response.status, errorText, discoveryUrl },
+          'Failed to fetch OIDC discovery document',
+        );
+        throw this.createValidationError(
+          'Failed to fetch OIDC discovery document',
+          'issuer',
+          undefined,
+          'Unable to reach the OIDC provider. Check OAUTH_ISSUER configuration',
+        );
+      }
+
+      const discovery = (await response.json()) as OIDCDiscovery;
+
+      this.fastify.log.info(
+        {
+          authorization_endpoint: discovery.authorization_endpoint,
+          token_endpoint: discovery.token_endpoint,
+          userinfo_endpoint: discovery.userinfo_endpoint,
+        },
+        'OIDC discovery complete',
+      );
+
+      this.oidcDiscovery = discovery;
+      return discovery;
+    })();
+
+    return this.oidcDiscoveryPromise;
   }
 
   private getCallbackUrl(request?: any): string {
-    // If request is provided, try to infer the callback URL from the request
     if (request) {
       const origin =
         request.headers.origin ||
         (request.headers.host ? `${request.protocol}://${request.headers.host}` : null);
 
       if (origin) {
-        // Use the origin from where the request came from
         const callbackUrl = `${origin}/api/auth/callback`;
         this.fastify.log.debug({ origin, callbackUrl }, 'Using dynamic OAuth callback URL');
         return callbackUrl;
       }
     }
 
-    // Fall back to configured callback URL
     return this.fastify.config.OAUTH_CALLBACK_URL;
   }
 
-  generateAuthUrl(state: string, request?: any): string {
+  private getScopes(): string {
+    if (this.authProvider === 'oidc') {
+      const customScopes = this.fastify.config.OIDC_SCOPES;
+      return customScopes || 'openid profile email';
+    }
+    return 'user:info user:check-access';
+  }
+
+  async generateAuthUrl(state: string, request?: any): Promise<string> {
     if (this.isMockEnabled) {
       return `/api/auth/mock-login?state=${state}`;
     }
 
-    // Dynamically determine callback URL based on request origin
     const callbackUrl = this.getCallbackUrl(request);
+    const scope = this.getScopes();
 
+    if (this.authProvider === 'oidc') {
+      const discovery = await this.fetchOIDCDiscovery();
+      const params = new URLSearchParams({
+        response_type: 'code',
+        client_id: this.fastify.config.OAUTH_CLIENT_ID,
+        redirect_uri: callbackUrl,
+        scope,
+        state,
+      });
+      return `${discovery.authorization_endpoint}?${params.toString()}`;
+    }
+
+    // OpenShift OAuth
     const params = new URLSearchParams({
       response_type: 'code',
       client_id: this.fastify.config.OAUTH_CLIENT_ID,
       redirect_uri: callbackUrl,
-      scope: 'user:info user:check-access',
+      scope,
       state,
     });
 
@@ -110,32 +194,27 @@ export class OAuthService extends BaseService {
       return this.mockTokenExchange(code);
     }
 
-    // Real OAuth implementation
-    const tokenUrl = `${this.fastify.config.OAUTH_ISSUER}/oauth/token`;
+    const storedCallbackUrl = (this.fastify as any).oauthHelpers.getStoredCallbackUrl(state);
+    const callbackUrl = storedCallbackUrl || this.getCallbackUrl(request);
+
+    let tokenUrl: string;
+
+    if (this.authProvider === 'oidc') {
+      const discovery = await this.fetchOIDCDiscovery();
+      tokenUrl = discovery.token_endpoint;
+    } else {
+      tokenUrl = `${this.fastify.config.OAUTH_ISSUER}/oauth/token`;
+    }
 
     this.fastify.log.debug(
       {
         tokenUrl,
         codePreview: code.substring(0, 20) + '...',
         clientId: this.fastify.config.OAUTH_CLIENT_ID,
+        callbackUrl,
+        authProvider: this.authProvider,
       },
       'Exchanging code for token',
-    );
-
-    // Use the stored callback URL from the authorization phase
-    const storedCallbackUrl = (this.fastify as any).oauthHelpers.getStoredCallbackUrl(state);
-    const callbackUrl = storedCallbackUrl || this.getCallbackUrl(request);
-
-    this.fastify.log.debug(
-      {
-        callbackUrl,
-        storedCallbackUrl,
-        requestHost: request?.headers?.host,
-        requestOrigin: request?.headers?.origin,
-        configuredCallback: this.fastify.config.OAUTH_CALLBACK_URL,
-        state,
-      },
-      'Token exchange callback URL',
     );
 
     const response = await fetch(tokenUrl, {
@@ -180,7 +259,7 @@ export class OAuthService extends BaseService {
         tokenType: tokenResponse.token_type,
         expiresIn: tokenResponse.expires_in,
       },
-      'Token received from OpenShift',
+      'Token received from auth provider',
     );
 
     return tokenResponse;
@@ -191,7 +270,68 @@ export class OAuthService extends BaseService {
       return this.mockGetUserInfo(accessToken);
     }
 
-    // Real OpenShift user info
+    if (this.authProvider === 'oidc') {
+      return this.getOIDCUserInfo(accessToken);
+    }
+
+    return this.getOpenShiftUserInfo(accessToken);
+  }
+
+  private async getOIDCUserInfo(accessToken: string): Promise<OAuthUserInfo> {
+    const discovery = await this.fetchOIDCDiscovery();
+    const userInfoUrl = discovery.userinfo_endpoint;
+
+    this.fastify.log.debug(
+      {
+        userInfoUrl,
+        accessTokenPreview: accessToken.substring(0, 20) + '...',
+      },
+      'Fetching user info from OIDC provider',
+    );
+
+    const response = await fetch(userInfoUrl, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      this.fastify.log.error(
+        {
+          status: response.status,
+          statusText: response.statusText,
+          errorText,
+          userInfoUrl,
+        },
+        'Failed to get user info from OIDC provider',
+      );
+      throw this.createUnauthorizedError(
+        'Failed to get user information',
+        'Unable to retrieve user details from OIDC provider. Please try logging in again',
+      );
+    }
+
+    const userResponse = await response.json();
+
+    this.fastify.log.debug({ userResponse }, 'OIDC user info received');
+
+    const groupsClaim = this.fastify.config.OIDC_GROUPS_CLAIM || 'groups';
+    const groups: string[] = userResponse[groupsClaim] || [];
+
+    return {
+      sub: userResponse.sub,
+      preferred_username:
+        userResponse.preferred_username || userResponse.email || userResponse.sub,
+      name: userResponse.name,
+      email: userResponse.email || userResponse.preferred_username,
+      email_verified: userResponse.email_verified,
+      groups,
+    };
+  }
+
+  private async getOpenShiftUserInfo(accessToken: string): Promise<OAuthUserInfo> {
     // Convert OAuth issuer URL to API server URL if OPENSHIFT_API_URL is not set
     // From: https://oauth-openshift.apps.dev.rhoai.rh-aiservices-bu.com
     // To:   https://api.dev.rhoai.rh-aiservices-bu.com:6443
@@ -201,17 +341,14 @@ export class OAuthService extends BaseService {
     if (this.fastify.config.OPENSHIFT_API_URL) {
       apiServerUrl = this.fastify.config.OPENSHIFT_API_URL;
     } else if (oauthIssuer.includes('oauth-openshift.apps.')) {
-      // Standard OpenShift pattern
       apiServerUrl =
         oauthIssuer.replace('oauth-openshift.apps.', 'api.').replace(/\/$/, '') + ':6443';
     } else {
-      // Fallback: assume the issuer is already the API server
       apiServerUrl = oauthIssuer;
     }
 
     const userInfoUrl = `${apiServerUrl}/apis/user.openshift.io/v1/users/~`;
 
-    // Check if TLS verification should be skipped for K8s API
     const skipTlsVerify = this.fastify.config.K8S_API_SKIP_TLS_VERIFY === 'true';
 
     if (skipTlsVerify) {
@@ -232,7 +369,6 @@ export class OAuthService extends BaseService {
       'Fetching user info from OpenShift API server',
     );
 
-    // Create HTTPS agent if TLS verification should be skipped
     const httpsAgent = skipTlsVerify ? new https.Agent({ rejectUnauthorized: false }) : undefined;
 
     const response = await fetch(userInfoUrl, {
@@ -269,14 +405,13 @@ export class OAuthService extends BaseService {
       sub: userResponse.metadata.uid,
       preferred_username: userResponse.metadata.name,
       name: userResponse.fullName,
-      email: userResponse.metadata.name, // Assuming username is email
+      email: userResponse.metadata.name,
       email_verified: true,
       groups: userResponse.groups || [],
     };
   }
 
   private mockTokenExchange(code: string): OAuthTokenResponse {
-    // Decode mock user from code
     const userIndex = parseInt(code) || 0;
     const user = MOCK_USERS[userIndex] || MOCK_USERS[0];
 
@@ -289,7 +424,6 @@ export class OAuthService extends BaseService {
   }
 
   private mockGetUserInfo(accessToken: string): OAuthUserInfo {
-    // Extract user ID from mock token
     const userId = accessToken.replace('mock_token_', '');
     const user = MOCK_USERS.find((u) => u.id === userId) || MOCK_USERS[0];
 
@@ -359,22 +493,18 @@ export class OAuthService extends BaseService {
   }
 
   /**
-   * Merges existing user roles with OpenShift group-derived roles.
+   * Merges existing user roles with group-derived roles.
    * Application-set roles take precedence - if a user has been explicitly granted
-   * a role through the application, it's preserved even if not in OpenShift groups.
-   * OpenShift groups provide additional roles on top of existing ones.
+   * a role through the application, it's preserved even if not in provider groups.
+   * Provider groups provide additional roles on top of existing ones.
    */
-  private mergeRoles(existingRoles: string[], openShiftRoles: string[]): string[] {
+  private mergeRoles(existingRoles: string[], providerRoles: string[]): string[] {
     const allRoles = new Set<string>();
 
-    // Always ensure 'user' role is present as base
     allRoles.add('user');
 
-    // Add all existing roles (application-set roles are preserved)
     existingRoles.forEach((role) => allRoles.add(role));
-
-    // Add OpenShift-derived roles (additive, doesn't remove existing roles)
-    openShiftRoles.forEach((role) => allRoles.add(role));
+    providerRoles.forEach((role) => allRoles.add(role));
 
     return Array.from(allRoles);
   }
@@ -383,11 +513,9 @@ export class OAuthService extends BaseService {
    * Ensures user is a member of the default team in the database
    */
   private async ensureUserTeamMembership(userId: string, teamId: string): Promise<void> {
-    // Use DefaultTeamService for team membership management
     if (teamId === DefaultTeamService.DEFAULT_TEAM_ID) {
       await this.defaultTeamService.assignUserToDefaultTeam(userId);
     } else {
-      // For non-default teams, keep the original logic for now
       try {
         const existingMembership = await this.fastify.dbUtils.queryOne(
           'SELECT id FROM team_members WHERE user_id = $1 AND team_id = $2',
@@ -430,26 +558,20 @@ export class OAuthService extends BaseService {
     preFetchedDefaults?: { maxBudget: number; tpmLimit: number; rpmLimit: number },
   ): Promise<void> {
     try {
-      // Check if user exists in LiteLLM (using fixed team-based detection)
       const existingUser = await this.liteLLMService.getUserInfo(user.id);
       if (existingUser) {
         this.fastify.log.info({ userId: user.id }, 'User already exists in LiteLLM');
         return;
       }
 
-      // User doesn't exist in LiteLLM, create them with default team assignment
       this.fastify.log.info(
         { userId: user.id, email: user.email },
         'Creating user in LiteLLM with default team',
       );
 
-      // Ensure default team exists in both database and LiteLLM first
       await this.defaultTeamService.ensureDefaultTeamExists();
-
-      // Ensure user is assigned to default team in database
       await this.ensureUserTeamMembership(user.id, DefaultTeamService.DEFAULT_TEAM_ID);
 
-      // Use pre-fetched defaults if available, otherwise fetch from DB/env
       let userDefaults: { maxBudget: number; tpmLimit: number; rpmLimit: number };
       if (preFetchedDefaults) {
         userDefaults = preFetchedDefaults;
@@ -466,8 +588,8 @@ export class OAuthService extends BaseService {
         max_budget: userDefaults.maxBudget,
         tpm_limit: userDefaults.tpmLimit,
         rpm_limit: userDefaults.rpmLimit,
-        auto_create_key: false, // Don't auto-create key during user creation
-        teams: [DefaultTeamService.DEFAULT_TEAM_ID], // CRITICAL: Always assign user to default team
+        auto_create_key: false,
+        teams: [DefaultTeamService.DEFAULT_TEAM_ID],
       });
 
       this.fastify.log.info(
@@ -475,13 +597,11 @@ export class OAuthService extends BaseService {
         'Successfully created user in LiteLLM with default team',
       );
     } catch (createError: any) {
-      // Check if error is due to user already existing (by email)
       if (createError.message && createError.message.includes('already exists')) {
         this.fastify.log.info(
           { userId: user.id, email: user.email },
           'User already exists in LiteLLM (by email) - continuing',
         );
-        // Don't throw - user exists, which is what we wanted
         return;
       }
 
@@ -492,9 +612,6 @@ export class OAuthService extends BaseService {
         },
         'Failed to create user in LiteLLM - will retry during sync',
       );
-
-      // Don't throw here - let the user continue and sync will retry later
-      // The sync process will handle retries
     }
   }
 
@@ -505,14 +622,16 @@ export class OAuthService extends BaseService {
     fullName?: string;
     roles: string[];
   }> {
-    const openShiftRoles = this.mapGroupsToRoles(userInfo.groups || []);
+    const groupRoles = this.mapGroupsToRoles(userInfo.groups || []);
     const initialAdminRoles = this.getInitialAdminRoles(userInfo.preferred_username);
-    const derivedRoles = this.mergeRoles(openShiftRoles, initialAdminRoles);
+    const derivedRoles = this.mergeRoles(groupRoles, initialAdminRoles);
+
+    const oauthProvider = this.authProvider;
 
     // Check if user exists in database
     const existingUser = await this.fastify.dbUtils.queryOne(
       'SELECT * FROM users WHERE oauth_id = $1 AND oauth_provider = $2',
-      [userInfo.sub, 'openshift'],
+      [userInfo.sub, oauthProvider],
     );
 
     let user: {
@@ -525,13 +644,11 @@ export class OAuthService extends BaseService {
     let userDefaults: { maxBudget: number; tpmLimit: number; rpmLimit: number } | undefined;
 
     if (existingUser) {
-      // Merge existing roles with OpenShift group roles
       const existingRoles = Array.isArray(existingUser.roles) ? existingUser.roles : [];
       const mergedRoles = this.mergeRoles(existingRoles, derivedRoles);
 
-      // Update existing user - pass merged roles array directly for PostgreSQL array column
       await this.fastify.dbUtils.query(
-        `UPDATE users SET 
+        `UPDATE users SET
          username = $1, email = $2, full_name = $3, roles = $4, last_login_at = NOW(), updated_at = NOW()
          WHERE id = $5`,
         [
@@ -551,8 +668,6 @@ export class OAuthService extends BaseService {
         roles: mergedRoles,
       };
     } else {
-      // Create new user - for new users, OpenShift roles become their initial roles
-      // Fetch effective user defaults so local DB matches LiteLLM values
       const settingsService = new SettingsService(this.fastify);
       userDefaults = await settingsService.getEffectiveUserDefaults();
 
@@ -564,9 +679,9 @@ export class OAuthService extends BaseService {
           userInfo.preferred_username,
           userInfo.email || userInfo.preferred_username,
           userInfo.name || null,
-          'openshift',
+          oauthProvider,
           userInfo.sub,
-          derivedRoles, // Pass array directly, PostgreSQL will handle the formatting
+          derivedRoles,
           userDefaults.maxBudget,
           userDefaults.tpmLimit,
           userDefaults.rpmLimit,
@@ -590,11 +705,10 @@ export class OAuthService extends BaseService {
       };
     }
 
-    // NEW: Ensure user exists in LiteLLM
+    // Ensure user exists in LiteLLM
     try {
       await this.ensureLiteLLMUser(user, userDefaults);
 
-      // Update sync status to 'synced' if successful
       await this.fastify.dbUtils.query(
         'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
         ['synced', user.id],
@@ -605,7 +719,6 @@ export class OAuthService extends BaseService {
         'User successfully synced to LiteLLM during authentication',
       );
     } catch (error) {
-      // Update sync status to 'error' but don't fail authentication
       await this.fastify.dbUtils.query(
         'UPDATE users SET sync_status = $1, updated_at = NOW() WHERE id = $2',
         ['error', user.id],
@@ -618,8 +731,6 @@ export class OAuthService extends BaseService {
         },
         'Failed to sync user to LiteLLM during authentication - user can still proceed',
       );
-
-      // Continue without throwing - user authentication should not fail due to LiteLLM issues
     }
 
     return user;

@@ -1,0 +1,69 @@
+# =============================================================================
+# LiteMaaS Helm Values — External PostgreSQL + External LiteLLM
+# =============================================================================
+# Use this file when connecting to existing PostgreSQL and LiteLLM instances
+# instead of deploying them as part of the chart.
+#
+# Common scenario: managed database (RDS, Cloud SQL, Azure Database) and a
+# shared LiteLLM proxy already running in another namespace or cluster.
+#
+# Usage:
+#   helm install litemaas deployment/helm/litemaas/ \
+#     -n litemaas --create-namespace \
+#     -f deployment/helm/litemaas/values.external-db.example.yaml
+# =============================================================================
+
+global:
+  platform: kubernetes
+
+# -- Authentication (adjust for your provider)
+oauth:
+  mode: external
+  authProvider: oidc                # or "openshift"
+  issuer: "https://auth.example.com/realms/litemaas"
+  oidc:
+    groupsClaim: groups
+
+# -- Disable built-in PostgreSQL — use external database
+postgresql:
+  enabled: false
+
+# -- Disable built-in LiteLLM — use external instance
+litellm:
+  enabled: false
+  # Database URL is still required for backup/restore of the LiteLLM database.
+  # Set to the external LiteLLM database, or use a placeholder if not needed.
+  databaseUrl: "postgresql://litemaas_user:CHANGE-ME@db.example.com:5432/litellm_db?sslmode=require"
+
+# -- Backend pointing to external services
+backend:
+  # Direct PostgreSQL connection string (use sslmode=require for managed databases)
+  databaseUrl: "postgresql://litemaas_user:CHANGE-ME@db.example.com:5432/litemaas_db?sslmode=require"
+  # External LiteLLM proxy URL
+  litellmApiUrl: "https://litellm.internal.example.com"
+
+  auth:
+    jwtSecret: "CHANGE-ME-jwt-secret"
+    adminApiKeys: "ltm_admin_CHANGE-ME"
+    litellmApiKey: "sk-CHANGE-ME-litellm-key"
+    oauthClientId: "litemaas"
+    oauthClientSecret: "CHANGE-ME-oidc-client-secret"
+    initialAdminUsers: "admin@example.com"
+
+  backup:
+    # LiteLLM database URL for backup/restore (optional)
+    litellmDatabaseUrl: "postgresql://litemaas_user:CHANGE-ME@db.example.com:5432/litellm_db?sslmode=require"
+
+# -- Ingress
+ingress:
+  enabled: true
+  className: nginx
+  frontend:
+    host: litemaas.example.com
+    tls:
+      - secretName: litemaas-tls
+        hosts:
+          - litemaas.example.com
+  litellm:
+    # No LiteLLM Ingress needed since we're using an external instance
+    enabled: false
