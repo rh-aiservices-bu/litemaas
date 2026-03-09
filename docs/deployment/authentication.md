@@ -178,6 +178,14 @@ Both providers map group memberships to LiteMaaS roles using the same role mappi
        oauthClientSecret: "your-oidc-client-secret"
    ```
 
+#### Provider-Specific Notes
+
+**Auth0**: Issuer URL format is `https://{domain}/`. Group claims require a custom Action to add groups to tokens. Use a namespaced claim like `https://litemaas/groups` and set `OIDC_GROUPS_CLAIM` accordingly.
+
+**Okta**: Issuer URL format is `https://{domain}/oauth2/default`. The `groups` claim is available by default but must be added to the ID token in the Authorization Server claims settings.
+
+**Azure AD (Microsoft Entra ID)**: Issuer URL format is `https://login.microsoftonline.com/{tenant-id}/v2.0`. Groups claim returns object IDs by default — configure "Emit groups as role claims" for human-readable names. May require `GroupMember.Read.All` API permission.
+
 #### Option 2: OpenShift OAuth
 
 There are two approaches for configuring OAuth on OpenShift:
@@ -294,6 +302,25 @@ This approach requires cluster-admin privileges to create an `OAuthClient` CR:
    #   "roles": ["admin", "user"]  // Based on OpenShift groups
    # }
    ```
+
+### Switching Authentication Providers
+
+To switch from OpenShift OAuth to OIDC:
+1. Set `AUTH_PROVIDER=oidc`
+2. Update `OAUTH_ISSUER` to your OIDC provider's issuer URL
+3. Configure `OIDC_GROUPS_CLAIM` if your provider uses a non-standard claim name
+4. Add `OIDC_SCOPES` if additional scopes are needed
+
+To switch from OIDC to OpenShift OAuth:
+1. Set `AUTH_PROVIDER=openshift` (or remove — it's the default)
+2. Set `OAUTH_ISSUER` to your OpenShift API URL
+3. Remove OIDC-specific env vars (optional — they are ignored)
+
+**Important notes:**
+- Existing JWT tokens remain valid until expiry regardless of provider change
+- The `oauth_provider` column in the database tracks which provider authenticated each user
+- Group-to-role mapping works identically for both providers
+- A backend restart is required after changing the authentication provider
 
 ## Testing Procedures
 
@@ -650,7 +677,7 @@ npm run dev
 ### 4. OAuth Security
 
 - **Validate redirect URIs**: Prevent open redirect vulnerabilities
-- **Use PKCE**: Implement Proof Key for Code Exchange
+- **PKCE**: PKCE (Proof Key for Code Exchange) is implemented for OIDC providers using S256 challenge method. OpenShift OAuth does not use PKCE.
 - **Validate state parameter**: Prevent CSRF in OAuth flow
 - **Secure client secret**: Never expose OAuth client secret
 
@@ -854,6 +881,40 @@ K8S_API_SKIP_TLS_VERIFY=true
 
 For more details, see [Configuration Guide - Kubernetes API TLS Verification](configuration.md#kubernetes-api-tls-verification).
 
+### Failed to Fetch OIDC Discovery Document
+
+**Symptoms**: Backend fails to start or login fails with discovery-related errors.
+
+**Solutions**:
+
+1. Verify `OAUTH_ISSUER` URL is correct and reachable from the backend
+2. Test with `curl <OAUTH_ISSUER>/.well-known/openid-configuration`
+3. Check egress firewall rules between the backend pod and the OIDC provider
+4. Ensure the URL includes the full realm path (e.g., `https://keycloak.example.com/realms/myrealm`)
+
+### Groups Not Appearing in User Roles
+
+**Symptoms**: Users authenticate successfully but are not assigned expected roles.
+
+**Solutions**:
+
+1. Verify `OIDC_GROUPS_CLAIM` matches your provider's claim name
+2. Some providers require the `groups` scope — add it to `OIDC_SCOPES`
+3. Check that a group membership mapper is configured in your identity provider
+
+### Discovery Endpoint Caching
+
+The OIDC discovery document is cached for 24 hours. If your OIDC provider changes its endpoints, restart the backend to refresh the cache.
+
+### Clock Skew / Token Validation Issues
+
+**Symptoms**: JWT validation fails intermittently or immediately after login.
+
+**Solutions**:
+
+1. Ensure clock synchronization (NTP) between the backend pod and OIDC provider
+2. JWT validation can fail with even small clock differences
+
 ## Additional Resources
 
 - [OAuth 2.0 Security Best Practices](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics)
@@ -863,6 +924,6 @@ For more details, see [Configuration Guide - Kubernetes API TLS Verification](co
 
 ---
 
-**Last Updated**: 2025-01-30  
-**Version**: 1.1.0  
+**Last Updated**: 2026-03-09
+**Version**: 2.0.0
 **Status**: Production Ready

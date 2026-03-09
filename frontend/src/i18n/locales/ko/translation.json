@@ -1040,7 +1040,11 @@
       "subtitle": "AI 모델에 액세스하고 관리하기 위한 Model as a Service 플랫폼입니다.",
       "title": "LiteMaaS에 오신 것을 환영합니다"
     },
+    "authCallback": {
+      "processing": "인증 처리 중..."
+    },
     "login": {
+      "authError": "인증에 실패했습니다. 다시 시도해 주세요.",
       "brandAlt": "LiteMaaS 로고",
       "bypassAuthentication": "개발 및 테스트 목적으로 인증 우회",
       "configError": "애플리케이션 구성을 로드할 수 없습니다. 일부 기능을 사용할 수 없을 수 있습니다.",

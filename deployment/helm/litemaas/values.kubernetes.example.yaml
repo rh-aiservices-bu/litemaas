@@ -26,6 +26,7 @@ oauth:
   issuer: "https://auth.example.com/realms/litemaas"
   oidc:
     groupsClaim: groups
+    # Add 'groups' scope if your provider requires it to include group claims
     scopes: "openid profile email"
 
 # -- PostgreSQL with larger storage for production

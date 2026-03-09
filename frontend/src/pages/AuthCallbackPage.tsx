@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Spinner } from '@patternfly/react-core/dist/esm/components/Spinner';
 import { authService } from '../services/auth.service';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 const AuthCallbackPage: React.FC = () => {
   const navigate = useNavigate();
   const { refreshUser } = useAuth();
+  const { t } = useTranslation();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -32,11 +34,11 @@ const AuthCallbackPage: React.FC = () => {
           navigate('/');
         } else {
           console.error('No token found in callback');
-          navigate('/login');
+          navigate('/login?error=auth_failed');
         }
       } catch (error) {
         console.error('Error handling auth callback:', error);
-        navigate('/login');
+        navigate('/login?error=auth_failed');
       }
     };
 
@@ -45,14 +47,18 @@ const AuthCallbackPage: React.FC = () => {
 
   return (
     <div
+      role="status"
+      aria-live="polite"
       style={{
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         height: '100vh',
       }}
     >
-      <Spinner size="xl" />
+      <Spinner size="xl" aria-label={t('pages.authCallback.processing')} />
+      <p style={{ marginTop: '1rem', textAlign: 'center' }}>{t('pages.authCallback.processing')}</p>
     </div>
   );
 };

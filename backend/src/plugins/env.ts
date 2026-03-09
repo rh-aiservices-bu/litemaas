@@ -27,7 +27,7 @@ const envSchema = Type.Object({
   AUTH_PROVIDER: Type.String({ default: 'openshift' }), // 'openshift' | 'oidc'
   OAUTH_CLIENT_ID: Type.String(),
   OAUTH_CLIENT_SECRET: Type.String(),
-  OAUTH_ISSUER: Type.String(),
+  OAUTH_ISSUER: Type.String({ pattern: '^https?://' }),
   OAUTH_CALLBACK_URL: Type.String({ default: 'http://localhost:8081/api/auth/callback' }),
   K8S_API_SKIP_TLS_VERIFY: Type.Optional(Type.String()),
   OIDC_GROUPS_CLAIM: Type.String({ default: 'groups' }),

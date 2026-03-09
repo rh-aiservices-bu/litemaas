@@ -45,13 +45,24 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           ? `${origin}/api/auth/callback`
           : fastify.config.OAUTH_CALLBACK_URL;
 
-        // Store the callback URL with the state
-        const state = fastify.oauthHelpers.generateAndStoreState(callbackUrl);
-        const authUrl = await fastify.oauth.generateAuthUrl(state, request);
+        // Generate auth URL (may include PKCE for OIDC)
+        const authResult = await fastify.oauth.generateAuthUrl(
+          fastify.oauthHelpers.generateAndStoreState(),
+        );
 
-        fastify.log.debug({ callbackUrl, state }, 'Generated auth URL with stored callback');
+        // Store the callback URL and code verifier with the state
+        const state = fastify.oauthHelpers.generateAndStoreState(
+          callbackUrl,
+          authResult.codeVerifier,
+        );
+        const finalAuthResult = await fastify.oauth.generateAuthUrl(state);
 
-        return { authUrl };
+        fastify.log.debug(
+          { callbackUrl, state, hasPKCE: !!finalAuthResult.codeVerifier },
+          'Generated auth URL with stored callback',
+        );
+
+        return { authUrl: finalAuthResult.url };
       } catch (error) {
         fastify.log.error(error, 'Failed to generate auth URL');
         throw fastify.createError(500, 'Failed to initiate authentication');
@@ -223,8 +234,11 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           throw fastify.createError(400, 'Invalid or expired state parameter');
         }
 
+        // Retrieve code verifier for PKCE (OIDC only)
+        const codeVerifier = fastify.oauthHelpers.getStoredCodeVerifier(state);
+
         // Exchange authorization code for access token
-        const tokenResponse = await fastify.oauth.exchangeCodeForToken(code, state, request);
+        const tokenResponse = await fastify.oauth.exchangeCodeForToken(code, state, codeVerifier);
 
         // Get user information
         const userInfo = await fastify.oauth.getUserInfo(tokenResponse.access_token);
@@ -337,6 +351,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           type: 'object',
           properties: {
             message: { type: 'string' },
+            logoutUrl: { type: 'string', nullable: true },
           },
         },
       },
@@ -355,7 +370,10 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         fastify.log.info({ userId: user.userId, username: user.username }, 'User logged out');
 
-        return { message: 'Logged out successfully' };
+        // Get OIDC logout URL if available
+        const logoutUrl = await fastify.oauth.getLogoutUrl();
+
+        return { message: 'Logged out successfully', logoutUrl };
       } catch (error) {
         fastify.log.error(error, 'Logout error');
         throw fastify.createError(500, 'Logout failed');
@@ -421,6 +439,51 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           error: 'Invalid token',
         });
       }
+    },
+  });
+};
+
+// Admin auth info endpoint - registered separately at /api/v1/admin/auth/info
+export const adminAuthInfoRoute: FastifyPluginAsync = async (fastify) => {
+  fastify.get('/info', {
+    schema: {
+      tags: ['Admin', 'Authentication'],
+      description: 'Get authentication provider information (admin only)',
+      security: [{ bearerAuth: [] }],
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            provider: { type: 'string' },
+            issuer: { type: 'string' },
+            groupsClaim: { type: 'string' },
+            discoveryStatus: { type: 'string', enum: ['healthy', 'not_applicable', 'unknown'] },
+          },
+        },
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:usage')],
+    handler: async (_request, _reply) => {
+      const provider = fastify.oauth.getAuthProvider();
+      const issuer = fastify.config.OAUTH_ISSUER;
+      const groupsClaim = fastify.config.OIDC_GROUPS_CLAIM;
+      const discoveryStatus = await fastify.oauth.getDiscoveryStatus();
+
+      // Extract domain only from issuer
+      let issuerDomain = issuer;
+      try {
+        const url = new URL(issuer);
+        issuerDomain = url.hostname;
+      } catch {
+        // If URL parsing fails, use as-is
+      }
+
+      return {
+        provider,
+        issuer: issuerDomain,
+        groupsClaim,
+        discoveryStatus,
+      };
     },
   });
 };

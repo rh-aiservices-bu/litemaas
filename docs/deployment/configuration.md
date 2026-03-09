@@ -43,6 +43,7 @@ DB_CONNECTION_TIMEOUT=10000
 | `OAUTH_CLIENT_SECRET`     | OAuth/OIDC client secret                                             | -                                         | Yes      |
 | `OAUTH_ISSUER`            | OAuth/OIDC provider URL (issuer)                                     | -                                         | Yes      |
 | `OAUTH_CALLBACK_URL`      | OAuth callback URL                                                   | `http://localhost:8081/api/auth/callback` | No       |
+| `OPENSHIFT_API_URL`         | OpenShift API server URL. By default derived from `OAUTH_ISSUER` by converting `oauth-openshift.apps.*` to `api.*:6443`. Set only if your cluster uses a non-standard URL pattern. | -                                         | No       |
 | `K8S_API_SKIP_TLS_VERIFY` | Skip TLS verification for Kubernetes API calls (⚠️ OpenShift only)   | -                                         | No       |
 | `OIDC_GROUPS_CLAIM`       | Claim name in OIDC userinfo for group memberships                    | `groups`                                  | No       |
 | `OIDC_SCOPES`             | Override OIDC scopes (space-separated)                               | `openid profile email`                    | No       |
@@ -57,6 +58,10 @@ LiteMaaS supports two authentication providers:
 When using `oidc`, you can customize:
 - `OIDC_GROUPS_CLAIM`: The claim name in the userinfo response that contains group memberships (default: `groups`). Some providers use `roles`, `realm_access.roles`, or custom claim names.
 - `OIDC_SCOPES`: Override the default OIDC scopes. Some providers require additional scopes like `groups` to include group claims in the userinfo response.
+
+> **Note**: The OIDC discovery document is cached for 24 hours. If your OIDC provider changes its endpoints, restart the backend to refresh.
+
+For provider-specific setup, see [Keycloak OIDC Setup](keycloak-oidc-setup.md).
 
 ### OAuth Flow Architecture
 

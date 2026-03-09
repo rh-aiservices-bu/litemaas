@@ -134,7 +134,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error) {
       console.error('Login failed:', error);
-      // You might want to show an error notification here
+      window.location.href = '/login?error=auth_failed';
     }
   }, []);
 
@@ -163,9 +163,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      await authService.logout();
+      const logoutResponse = await authService.logout();
       setUser(null);
-      navigate('/login');
+
+      // If OIDC provider has a logout URL, redirect there for single logout
+      if (logoutResponse.logoutUrl) {
+        window.location.href = logoutResponse.logoutUrl;
+      } else {
+        navigate('/login');
+      }
     } catch (error) {
       console.error('Logout failed:', error);
       // Force logout on error

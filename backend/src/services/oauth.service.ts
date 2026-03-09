@@ -1,5 +1,6 @@
 import { FastifyInstance } from 'fastify';
 import * as https from 'https';
+import { randomBytes, createHash } from 'crypto';
 import { OAuthUserInfo, OAuthTokenResponse } from '../types';
 import { LiteLLMService } from './litellm.service';
 import { DefaultTeamService } from './default-team.service';
@@ -27,6 +28,7 @@ interface OIDCDiscovery {
   token_endpoint: string;
   userinfo_endpoint: string;
   issuer: string;
+  end_session_endpoint?: string;
 }
 
 // Mock users for development
@@ -64,6 +66,7 @@ export class OAuthService extends BaseService {
   private authProvider: string;
   private oidcDiscovery: OIDCDiscovery | null = null;
   private oidcDiscoveryPromise: Promise<OIDCDiscovery> | null = null;
+  private oidcDiscoveryCachedAt: number | null = null;
 
   constructor(fastify: FastifyInstance, liteLLMService?: LiteLLMService) {
     super(fastify);
@@ -71,7 +74,7 @@ export class OAuthService extends BaseService {
       process.env.OAUTH_MOCK_ENABLED === 'true' || process.env.NODE_ENV === 'development';
     this.liteLLMService = liteLLMService || new LiteLLMService(fastify);
     this.defaultTeamService = new DefaultTeamService(fastify, this.liteLLMService);
-    this.authProvider = this.fastify.config.AUTH_PROVIDER || 'openshift';
+    this.authProvider = this.fastify.config.AUTH_PROVIDER;
   }
 
   getAuthProvider(): string {
@@ -79,8 +82,16 @@ export class OAuthService extends BaseService {
   }
 
   private async fetchOIDCDiscovery(): Promise<OIDCDiscovery> {
-    if (this.oidcDiscovery) {
-      return this.oidcDiscovery;
+    // Check if cache exists and is still valid (24 hour TTL)
+    if (this.oidcDiscovery && this.oidcDiscoveryCachedAt) {
+      const cacheAge = Date.now() - this.oidcDiscoveryCachedAt;
+      const cacheTTL = 24 * 60 * 60 * 1000; // 24 hours
+      if (cacheAge <= cacheTTL) {
+        return this.oidcDiscovery;
+      }
+      // Cache expired, clear it
+      this.oidcDiscovery = null;
+      this.oidcDiscoveryCachedAt = null;
     }
 
     if (this.oidcDiscoveryPromise) {
@@ -93,55 +104,129 @@ export class OAuthService extends BaseService {
 
       this.fastify.log.info({ discoveryUrl }, 'Fetching OIDC discovery document');
 
-      const response = await fetch(discoveryUrl, {
-        headers: { Accept: 'application/json' },
-      });
+      try {
+        const response = await fetch(discoveryUrl, {
+          headers: { Accept: 'application/json' },
+          signal: AbortSignal.timeout(10000),
+        });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        this.fastify.log.error(
-          { status: response.status, errorText, discoveryUrl },
-          'Failed to fetch OIDC discovery document',
+        if (!response.ok) {
+          const errorText = await response.text();
+          this.fastify.log.error(
+            { status: response.status, errorText, discoveryUrl },
+            'Failed to fetch OIDC discovery document',
+          );
+          throw this.createValidationError(
+            'Failed to fetch OIDC discovery document',
+            'issuer',
+            undefined,
+            'Unable to reach the OIDC provider. Check OAUTH_ISSUER configuration',
+          );
+        }
+
+        let discovery: OIDCDiscovery;
+        try {
+          discovery = (await response.json()) as OIDCDiscovery;
+        } catch (parseError) {
+          this.fastify.log.error(
+            { parseError, discoveryUrl },
+            'Failed to parse OIDC discovery document as JSON',
+          );
+          throw this.createValidationError(
+            'Invalid OIDC discovery document',
+            'issuer',
+            undefined,
+            'The OIDC provider returned an invalid discovery document',
+          );
+        }
+
+        // Validate issuer matches
+        if (discovery.issuer !== issuer) {
+          this.fastify.log.error(
+            { expectedIssuer: issuer, actualIssuer: discovery.issuer },
+            'OIDC discovery issuer mismatch',
+          );
+          throw this.createValidationError(
+            'OIDC discovery issuer mismatch',
+            'issuer',
+            undefined,
+            `Expected issuer ${issuer} but got ${discovery.issuer}`,
+          );
+        }
+
+        // Validate HTTPS in production
+        if (process.env.NODE_ENV === 'production') {
+          const endpoints = [
+            { name: 'authorization_endpoint', url: discovery.authorization_endpoint },
+            { name: 'token_endpoint', url: discovery.token_endpoint },
+            { name: 'userinfo_endpoint', url: discovery.userinfo_endpoint },
+          ];
+
+          for (const endpoint of endpoints) {
+            if (!endpoint.url.startsWith('https://')) {
+              this.fastify.log.error(
+                { endpoint: endpoint.name, url: endpoint.url },
+                'OIDC endpoint does not use HTTPS in production',
+              );
+              throw this.createValidationError(
+                'Insecure OIDC endpoint',
+                'issuer',
+                undefined,
+                `${endpoint.name} must use HTTPS in production`,
+              );
+            }
+          }
+        }
+
+        // Warn if endpoints are on different origins than issuer
+        const issuerOrigin = new URL(issuer).origin;
+        const endpoints = [
+          { name: 'authorization_endpoint', url: discovery.authorization_endpoint },
+          { name: 'token_endpoint', url: discovery.token_endpoint },
+          { name: 'userinfo_endpoint', url: discovery.userinfo_endpoint },
+        ];
+
+        for (const endpoint of endpoints) {
+          try {
+            const endpointOrigin = new URL(endpoint.url).origin;
+            if (endpointOrigin !== issuerOrigin) {
+              this.fastify.log.warn(
+                { endpoint: endpoint.name, issuerOrigin, endpointOrigin },
+                'OIDC endpoint origin differs from issuer origin',
+              );
+            }
+          } catch (urlError) {
+            this.fastify.log.warn(
+              { endpoint: endpoint.name, url: endpoint.url },
+              'Failed to parse endpoint URL',
+            );
+          }
+        }
+
+        this.fastify.log.info(
+          {
+            authorization_endpoint: discovery.authorization_endpoint,
+            token_endpoint: discovery.token_endpoint,
+            userinfo_endpoint: discovery.userinfo_endpoint,
+            end_session_endpoint: discovery.end_session_endpoint,
+          },
+          'OIDC discovery complete',
         );
-        throw this.createValidationError(
-          'Failed to fetch OIDC discovery document',
-          'issuer',
-          undefined,
-          'Unable to reach the OIDC provider. Check OAUTH_ISSUER configuration',
-        );
+
+        this.oidcDiscovery = discovery;
+        this.oidcDiscoveryCachedAt = Date.now();
+        return discovery;
+      } catch (error) {
+        // Clear the promise on failure so next call will retry
+        this.oidcDiscoveryPromise = null;
+        throw error;
       }
-
-      const discovery = (await response.json()) as OIDCDiscovery;
-
-      this.fastify.log.info(
-        {
-          authorization_endpoint: discovery.authorization_endpoint,
-          token_endpoint: discovery.token_endpoint,
-          userinfo_endpoint: discovery.userinfo_endpoint,
-        },
-        'OIDC discovery complete',
-      );
-
-      this.oidcDiscovery = discovery;
-      return discovery;
     })();
 
     return this.oidcDiscoveryPromise;
   }
 
-  private getCallbackUrl(request?: any): string {
-    if (request) {
-      const origin =
-        request.headers.origin ||
-        (request.headers.host ? `${request.protocol}://${request.headers.host}` : null);
-
-      if (origin) {
-        const callbackUrl = `${origin}/api/auth/callback`;
-        this.fastify.log.debug({ origin, callbackUrl }, 'Using dynamic OAuth callback URL');
-        return callbackUrl;
-      }
-    }
-
+  private getCallbackUrl(): string {
     return this.fastify.config.OAUTH_CALLBACK_URL;
   }
 
@@ -153,27 +238,35 @@ export class OAuthService extends BaseService {
     return 'user:info user:check-access';
   }
 
-  async generateAuthUrl(state: string, request?: any): Promise<string> {
+  async generateAuthUrl(state: string): Promise<{ url: string; codeVerifier?: string }> {
     if (this.isMockEnabled) {
-      return `/api/auth/mock-login?state=${state}`;
+      return { url: `/api/auth/mock-login?state=${state}` };
     }
 
-    const callbackUrl = this.getCallbackUrl(request);
+    const callbackUrl = this.getCallbackUrl();
     const scope = this.getScopes();
 
     if (this.authProvider === 'oidc') {
       const discovery = await this.fetchOIDCDiscovery();
+      const pkce = this.generatePKCE();
+
       const params = new URLSearchParams({
         response_type: 'code',
         client_id: this.fastify.config.OAUTH_CLIENT_ID,
         redirect_uri: callbackUrl,
         scope,
         state,
+        code_challenge: pkce.challenge,
+        code_challenge_method: 'S256',
       });
-      return `${discovery.authorization_endpoint}?${params.toString()}`;
+
+      return {
+        url: `${discovery.authorization_endpoint}?${params.toString()}`,
+        codeVerifier: pkce.verifier,
+      };
     }
 
-    // OpenShift OAuth
+    // OpenShift OAuth (no PKCE)
     const params = new URLSearchParams({
       response_type: 'code',
       client_id: this.fastify.config.OAUTH_CLIENT_ID,
@@ -182,20 +275,20 @@ export class OAuthService extends BaseService {
       state,
     });
 
-    return `${this.fastify.config.OAUTH_ISSUER}/oauth/authorize?${params.toString()}`;
+    return { url: `${this.fastify.config.OAUTH_ISSUER}/oauth/authorize?${params.toString()}` };
   }
 
   async exchangeCodeForToken(
     code: string,
     state: string,
-    request?: any,
+    codeVerifier?: string,
   ): Promise<OAuthTokenResponse> {
     if (this.isMockEnabled) {
       return this.mockTokenExchange(code);
     }
 
     const storedCallbackUrl = (this.fastify as any).oauthHelpers.getStoredCallbackUrl(state);
-    const callbackUrl = storedCallbackUrl || this.getCallbackUrl(request);
+    const callbackUrl = storedCallbackUrl || this.getCallbackUrl();
 
     let tokenUrl: string;
 
@@ -213,9 +306,23 @@ export class OAuthService extends BaseService {
         clientId: this.fastify.config.OAUTH_CLIENT_ID,
         callbackUrl,
         authProvider: this.authProvider,
+        hasPKCE: !!codeVerifier,
       },
       'Exchanging code for token',
     );
+
+    const bodyParams: Record<string, string> = {
+      grant_type: 'authorization_code',
+      code,
+      client_id: this.fastify.config.OAUTH_CLIENT_ID,
+      client_secret: this.fastify.config.OAUTH_CLIENT_SECRET,
+      redirect_uri: callbackUrl,
+    };
+
+    // Add PKCE code_verifier for OIDC
+    if (this.authProvider === 'oidc' && codeVerifier) {
+      bodyParams.code_verifier = codeVerifier;
+    }
 
     const response = await fetch(tokenUrl, {
       method: 'POST',
@@ -223,13 +330,8 @@ export class OAuthService extends BaseService {
         'Content-Type': 'application/x-www-form-urlencoded',
         Accept: 'application/json',
       },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        client_id: this.fastify.config.OAUTH_CLIENT_ID,
-        client_secret: this.fastify.config.OAUTH_CLIENT_SECRET,
-        redirect_uri: callbackUrl,
-      }),
+      body: new URLSearchParams(bodyParams),
+      signal: AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {
@@ -251,7 +353,21 @@ export class OAuthService extends BaseService {
       );
     }
 
-    const tokenResponse = await response.json();
+    let tokenResponse: OAuthTokenResponse;
+    try {
+      tokenResponse = await response.json();
+    } catch (parseError) {
+      this.fastify.log.error(
+        { parseError, tokenUrl },
+        'Failed to parse token response as JSON',
+      );
+      throw this.createValidationError(
+        'Invalid token response',
+        'code',
+        undefined,
+        'The authorization provider returned an invalid token response',
+      );
+    }
 
     this.fastify.log.debug(
       {
@@ -294,6 +410,7 @@ export class OAuthService extends BaseService {
         Authorization: `Bearer ${accessToken}`,
         Accept: 'application/json',
       },
+      signal: AbortSignal.timeout(10000),
     });
 
     if (!response.ok) {
@@ -313,12 +430,32 @@ export class OAuthService extends BaseService {
       );
     }
 
-    const userResponse = await response.json();
+    let userResponse: any;
+    try {
+      userResponse = await response.json();
+    } catch (parseError) {
+      this.fastify.log.error(
+        { parseError, userInfoUrl },
+        'Failed to parse OIDC userinfo response as JSON',
+      );
+      throw this.createUnauthorizedError(
+        'Invalid user information response',
+        'The OIDC provider returned an invalid user information response',
+      );
+    }
 
     this.fastify.log.debug({ userResponse }, 'OIDC user info received');
 
     const groupsClaim = this.fastify.config.OIDC_GROUPS_CLAIM || 'groups';
-    const groups: string[] = userResponse[groupsClaim] || [];
+    const claimValue = userResponse[groupsClaim];
+    const groups: string[] = Array.isArray(claimValue) ? claimValue : [];
+
+    if (claimValue && !Array.isArray(claimValue)) {
+      this.fastify.log.warn(
+        { groupsClaim, type: typeof claimValue },
+        'Groups claim is not an array, ignoring',
+      );
+    }
 
     return {
       sub: userResponse.sub,
@@ -376,6 +513,7 @@ export class OAuthService extends BaseService {
         Authorization: `Bearer ${accessToken}`,
         Accept: 'application/json',
       },
+      signal: AbortSignal.timeout(10000),
       // @ts-expect-error - Node.js fetch supports agent option
       agent: httpsAgent,
     });
@@ -397,7 +535,19 @@ export class OAuthService extends BaseService {
       );
     }
 
-    const userResponse = await response.json();
+    let userResponse: any;
+    try {
+      userResponse = await response.json();
+    } catch (parseError) {
+      this.fastify.log.error(
+        { parseError, userInfoUrl },
+        'Failed to parse OpenShift userinfo response as JSON',
+      );
+      throw this.createUnauthorizedError(
+        'Invalid user information response',
+        'The authentication provider returned an invalid user information response',
+      );
+    }
 
     this.fastify.log.debug({ userResponse }, 'OpenShift user info received');
 
@@ -438,9 +588,54 @@ export class OAuthService extends BaseService {
   }
 
   generateState(): string {
-    return (
-      Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-    );
+    return randomBytes(32).toString('hex');
+  }
+
+  private generatePKCE(): { verifier: string; challenge: string } {
+    const verifier = randomBytes(32).toString('base64url');
+    const challenge = createHash('sha256').update(verifier).digest('base64url');
+    return { verifier, challenge };
+  }
+
+  async getLogoutUrl(): Promise<string | null> {
+    if (this.authProvider !== 'oidc') {
+      return null;
+    }
+
+    try {
+      const discovery = await this.fetchOIDCDiscovery();
+      if (!discovery.end_session_endpoint) {
+        return null;
+      }
+
+      const params = new URLSearchParams({
+        post_logout_redirect_uri: this.fastify.config.OAUTH_CALLBACK_URL.replace(
+          '/api/auth/callback',
+          '',
+        ),
+        client_id: this.fastify.config.OAUTH_CLIENT_ID,
+      });
+
+      return `${discovery.end_session_endpoint}?${params.toString()}`;
+    } catch {
+      return null;
+    }
+  }
+
+  async getDiscoveryStatus(): Promise<'healthy' | 'not_applicable' | 'unknown'> {
+    if (this.authProvider !== 'oidc') {
+      return 'not_applicable';
+    }
+
+    if (this.oidcDiscovery && this.oidcDiscoveryCachedAt) {
+      const cacheAge = Date.now() - this.oidcDiscoveryCachedAt;
+      const cacheTTL = 24 * 60 * 60 * 1000;
+      if (cacheAge <= cacheTTL) {
+        return 'healthy';
+      }
+    }
+
+    return 'unknown';
   }
 
   getMockUsers(): MockUser[] {

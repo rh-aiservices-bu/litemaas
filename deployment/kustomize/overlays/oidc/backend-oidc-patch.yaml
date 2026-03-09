@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+spec:
+  template:
+    spec:
+      containers:
+        - name: backend
+          env:
+            # Switch authentication provider to standard OIDC
+            - name: AUTH_PROVIDER
+              value: 'oidc'
+
+            # OIDC Groups Claim
+            # Name of the claim in the OIDC userinfo response that contains group memberships.
+            # Common values: 'groups' (Keycloak, Okta), 'https://example.com/groups' (Auth0)
+            - name: OIDC_GROUPS_CLAIM
+              value: 'groups'
+
+            # OIDC Scopes
+            # Space-separated list of scopes to request from the OIDC provider.
+            # Add 'groups' scope if your provider requires it to include group claims.
+            - name: OIDC_SCOPES
+              value: 'openid profile email'

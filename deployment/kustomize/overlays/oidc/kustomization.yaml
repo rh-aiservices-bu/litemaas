@@ -1,0 +1,14 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# Base resources from the main Kustomize directory
+# Note: The base uses .template files that must be processed first via preparation.sh
+resources:
+  - ../../
+
+# OIDC authentication patch for the backend deployment
+patches:
+  - path: backend-oidc-patch.yaml
+    target:
+      kind: Deployment
+      name: backend

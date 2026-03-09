@@ -111,6 +111,34 @@ sequenceDiagram
     NGINX (port 8080)->>Browser: Return user info
 ```
 
+### OIDC Provider Flow
+
+When using a standard OIDC provider (Keycloak, Auth0, Okta, Azure AD, etc.), the flow uses auto-discovered endpoints and PKCE:
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant B as Backend
+    participant P as OIDC Provider
+
+    U->>F: Click "Log in with SSO"
+    F->>B: POST /api/auth/login
+    B->>P: Fetch .well-known/openid-configuration
+    P-->>B: Discovery document (endpoints)
+    B-->>F: { authUrl } (with PKCE challenge)
+    F->>P: Redirect to authorization_endpoint
+    U->>P: Enter credentials & consent
+    P->>B: Redirect to callback with code
+    B->>P: POST token_endpoint (code + PKCE verifier)
+    P-->>B: { access_token, id_token }
+    B->>P: GET userinfo_endpoint
+    P-->>B: User info + groups
+    B->>B: Map groups to roles, create/update user
+    B-->>F: Redirect with JWT
+    F->>F: Store token, redirect to dashboard
+```
+
 ### Key Differences Between Environments
 
 1. **Development Mode**:
@@ -446,5 +474,10 @@ Updated to use correct endpoints:
 
 1. **Refresh Tokens**: Implement token refresh mechanism
 2. **Session Management**: Add session timeout and renewal
-3. **Multi-Factor Authentication**: Support for 2FA
-4. **Role-Based Access Control**: Fine-grained permissions based on OpenShift groups
+3. **Multi-Factor Authentication**: Support for 2FA via the configured authentication provider
+
+## Related Documentation
+
+- [Authentication Guide](../deployment/authentication.md) — Full setup instructions and troubleshooting
+- [Configuration Guide](../deployment/configuration.md) — Environment variable reference
+- [Keycloak OIDC Setup](../deployment/keycloak-oidc-setup.md) — Step-by-step Keycloak configuration

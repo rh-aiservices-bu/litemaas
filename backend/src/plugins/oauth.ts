@@ -12,7 +12,7 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
   // Session store for OAuth state (in production, use Redis)
   const sessionStore = new Map<
     string,
-    { state: string; timestamp: number; callbackUrl?: string }
+    { state: string; timestamp: number; callbackUrl?: string; codeVerifier?: string }
   >();
 
   // Clean up expired sessions every 5 minutes
@@ -32,9 +32,9 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
 
   // OAuth helper methods
   fastify.decorate('oauthHelpers', {
-    generateAndStoreState: (callbackUrl?: string): string => {
+    generateAndStoreState: (callbackUrl?: string, codeVerifier?: string): string => {
       const state = oauthService.generateState();
-      sessionStore.set(state, { state, timestamp: Date.now(), callbackUrl });
+      sessionStore.set(state, { state, timestamp: Date.now(), callbackUrl, codeVerifier });
       return state;
     },
 
@@ -44,7 +44,7 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
         return false;
       }
 
-      // Don't delete yet - we need to retrieve the callback URL in getStoredCallbackUrl
+      // Don't delete yet - we need to retrieve the callback URL and code verifier
       // The state will be deleted after successful token exchange
 
       // Check if state is not expired (5 minutes)
@@ -55,6 +55,11 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
     getStoredCallbackUrl: (state: string): string | undefined => {
       const session = sessionStore.get(state);
       return session?.callbackUrl;
+    },
+
+    getStoredCodeVerifier: (state: string): string | undefined => {
+      const session = sessionStore.get(state);
+      return session?.codeVerifier;
     },
 
     clearState: (state: string): void => {
@@ -107,9 +112,10 @@ declare module 'fastify' {
       isMockEnabled: boolean;
     };
     oauthHelpers: {
-      generateAndStoreState(callbackUrl?: string): string;
+      generateAndStoreState(callbackUrl?: string, codeVerifier?: string): string;
       validateState(state: string): boolean;
       getStoredCallbackUrl(state: string): string | undefined;
+      getStoredCodeVerifier(state: string): string | undefined;
       clearState(state: string): void;
       clearExpiredStates(): void;
     };

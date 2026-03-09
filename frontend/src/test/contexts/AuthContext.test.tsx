@@ -550,7 +550,7 @@ describe('AuthContext', () => {
     it('logs out regular authenticated user', async () => {
       mockAuthService.isAuthenticated.mockReturnValue(true);
       mockAuthService.getCurrentUser.mockResolvedValue(mockUser);
-      mockAuthService.logout.mockResolvedValue(undefined);
+      mockAuthService.logout.mockResolvedValue({});
 
       const TestComponent = () => {
         const { logout, user, isAuthenticated } = useAuth();
