@@ -590,7 +590,7 @@ describe('OAuthService - OIDC Specific Tests', () => {
           status: 400,
           errorText: 'invalid_grant',
         }),
-        'Failed to exchange code for token',
+        'Failed to exchange authorization code for token',
       );
     });
   });
@@ -816,7 +816,7 @@ describe('OAuthService - OIDC Specific Tests', () => {
         } as Response);
 
       await expect((service as any).getOIDCUserInfo('invalid-token')).rejects.toThrow(
-        /Failed to get user information/i,
+        /Failed to get user info from OIDC provider/i,
       );
       expect(mockFastify.log.error).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1055,6 +1055,162 @@ describe('OAuthService - OIDC Specific Tests', () => {
       );
 
       expect(openshiftService.getAuthProvider()).toBe('openshift');
+    });
+  });
+
+  describe('validateIdToken', () => {
+    it('should pass with valid nonce and audience', () => {
+      const payload = { nonce: 'test-nonce', aud: 'litemaas-client', sub: 'user1' };
+      const idToken = `header.${Buffer.from(JSON.stringify(payload)).toString('base64')}.signature`;
+      const tokenResponse = { access_token: 'at', token_type: 'Bearer', id_token: idToken } as any;
+
+      expect(() => service.validateIdToken(tokenResponse, 'test-nonce')).not.toThrow();
+    });
+
+    it('should throw on nonce mismatch', () => {
+      const payload = { nonce: 'wrong-nonce', aud: 'litemaas-client', sub: 'user1' };
+      const idToken = `header.${Buffer.from(JSON.stringify(payload)).toString('base64')}.signature`;
+      const tokenResponse = { access_token: 'at', token_type: 'Bearer', id_token: idToken } as any;
+
+      expect(() => service.validateIdToken(tokenResponse, 'expected-nonce')).toThrow(
+        'ID token nonce mismatch',
+      );
+    });
+
+    it('should pass when nonce is not expected (no nonce stored)', () => {
+      const payload = { aud: 'litemaas-client', sub: 'user1' };
+      const idToken = `header.${Buffer.from(JSON.stringify(payload)).toString('base64')}.signature`;
+      const tokenResponse = { access_token: 'at', token_type: 'Bearer', id_token: idToken } as any;
+
+      expect(() => service.validateIdToken(tokenResponse)).not.toThrow();
+    });
+
+    it('should validate audience as string', () => {
+      const payload = { aud: 'litemaas-client', sub: 'user1' };
+      const idToken = `header.${Buffer.from(JSON.stringify(payload)).toString('base64')}.signature`;
+      const tokenResponse = { access_token: 'at', token_type: 'Bearer', id_token: idToken } as any;
+
+      expect(() => service.validateIdToken(tokenResponse)).not.toThrow();
+    });
+
+    it('should validate audience as array', () => {
+      const payload = { aud: ['litemaas-client', 'other-client'], sub: 'user1' };
+      const idToken = `header.${Buffer.from(JSON.stringify(payload)).toString('base64')}.signature`;
+      const tokenResponse = { access_token: 'at', token_type: 'Bearer', id_token: idToken } as any;
+
+      expect(() => service.validateIdToken(tokenResponse)).not.toThrow();
+    });
+
+    it('should throw on invalid audience', () => {
+      const payload = { aud: 'wrong-client', sub: 'user1' };
+      const idToken = `header.${Buffer.from(JSON.stringify(payload)).toString('base64')}.signature`;
+      const tokenResponse = { access_token: 'at', token_type: 'Bearer', id_token: idToken } as any;
+
+      expect(() => service.validateIdToken(tokenResponse)).toThrow(
+        'Invalid audience in ID token',
+      );
+    });
+
+    it('should skip validation when no ID token is present', () => {
+      const tokenResponse = { access_token: 'at', token_type: 'Bearer' } as any;
+
+      expect(() => service.validateIdToken(tokenResponse, 'some-nonce')).not.toThrow();
+    });
+  });
+
+  describe('email validation in OIDC userinfo', () => {
+    it('should not use non-email preferred_username as email', async () => {
+      const mockDiscovery = {
+        authorization_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/auth',
+        token_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/token',
+        userinfo_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/userinfo',
+        issuer: 'https://keycloak.example.com/realms/test',
+      };
+
+      let callCount = 0;
+      global.fetch = vi.fn().mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          // Discovery call
+          return Promise.resolve({
+            ok: true,
+            json: async () => mockDiscovery,
+          });
+        }
+        // Userinfo call
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            sub: 'user-123',
+            preferred_username: 'john_doe', // Not a valid email
+            name: 'John Doe',
+            // No email field
+          }),
+        });
+      });
+
+      const userInfo = await service.getUserInfo('test-access-token');
+
+      // preferred_username should be used as username but NOT as email
+      expect(userInfo.preferred_username).toBe('john_doe');
+      expect(userInfo.email).toBeUndefined();
+    });
+  });
+
+  describe('discovery cache failover', () => {
+    it('should use stale cache when refetch fails', async () => {
+      const mockDiscovery = {
+        authorization_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/auth',
+        token_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/token',
+        userinfo_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/userinfo',
+        issuer: 'https://keycloak.example.com/realms/test',
+      };
+
+      // First call succeeds — populates cache
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockDiscovery,
+      });
+
+      await service.getOIDCDiscoveryDocument();
+
+      // Expire the cache by manipulating the internal state
+      (service as any).oidcDiscoveryCachedAt = Date.now() - 25 * 60 * 60 * 1000; // 25 hours ago
+      (service as any).oidcDiscoveryPromise = null; // Clear promise to allow refetch
+
+      // Second call fails — should fall back to stale cache
+      global.fetch = vi.fn().mockRejectedValue(new Error('Network error'));
+
+      const result = await service.getOIDCDiscoveryDocument();
+
+      expect(result).toEqual(mockDiscovery);
+      expect(mockFastify.log.warn).toHaveBeenCalledWith(
+        expect.objectContaining({ error: 'Network error' }),
+        'Using stale OIDC discovery cache due to fetch failure',
+      );
+    });
+  });
+
+  describe('nonce in generateAuthUrl', () => {
+    it('should include nonce in OIDC auth URL', async () => {
+      const mockDiscovery = {
+        authorization_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/auth',
+        token_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/token',
+        userinfo_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/userinfo',
+        issuer: 'https://keycloak.example.com/realms/test',
+      };
+
+      global.fetch = vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => mockDiscovery,
+      });
+
+      const result = await service.generateAuthUrl('test-state');
+
+      expect(result.nonce).toBeDefined();
+      expect(result.nonce).toHaveLength(32); // 16 bytes hex = 32 chars
+      expect(result.url).toContain('nonce=');
+      expect(result.url).toContain(result.nonce);
     });
   });
 });

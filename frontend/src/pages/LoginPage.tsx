@@ -34,6 +34,7 @@ const LoginPage: React.FC = () => {
   const [configError, setConfigError] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [showAuthError, setShowAuthError] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Compute branding overrides
   const brandImgSrc =
@@ -52,6 +53,7 @@ const LoginPage: React.FC = () => {
       : t('pages.login.subtitle');
 
   const handleLogin = () => {
+    setIsLoggingIn(true);
     login();
   };
 
@@ -160,6 +162,8 @@ const LoginPage: React.FC = () => {
             variant="primary"
             onClick={handleLogin}
             isBlock
+            isLoading={isLoggingIn}
+            isDisabled={isLoggingIn}
             icon={<ExternalLinkAltIcon />}
             iconPosition="end"
           >

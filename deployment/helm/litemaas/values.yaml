@@ -194,6 +194,9 @@ backend:
     # -- Encryption key for stored model API keys (AES-256-GCM).
     # Falls back to litellmApiKey if empty. Recommended to set explicitly in production.
     litellmMasterKey: ""
+    # -- Skip TLS verification for Kubernetes API calls (OpenShift only).
+    # WARNING: Only use in dev/test environments with self-signed certificates. Security risk in production.
+    k8sApiSkipTlsVerify: ""
     # -- Use an existing Secret instead of creating one.
     # Must contain keys: database-url, cors-origin, jwt-secret, oauth-client-id,
     # oauth-client-secret, oauth-issuer, oauth-callback-url, admin-api-keys, litellm-api-key, litellm-master-key, litellm-database-url

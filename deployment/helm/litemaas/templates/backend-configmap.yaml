@@ -33,3 +33,6 @@ data:
   {{- if ne (.Values.backend.nodeTlsRejectUnauthorized | toString) "" }}
   NODE_TLS_REJECT_UNAUTHORIZED: {{ .Values.backend.nodeTlsRejectUnauthorized | quote }}
   {{- end }}
+  {{- if .Values.backend.auth.k8sApiSkipTlsVerify }}
+  K8S_API_SKIP_TLS_VERIFY: {{ .Values.backend.auth.k8sApiSkipTlsVerify | quote }}
+  {{- end }}

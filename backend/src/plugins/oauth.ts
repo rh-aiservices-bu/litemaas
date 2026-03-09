@@ -10,9 +10,32 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorate('oauth', oauthService);
 
   // Session store for OAuth state (in production, use Redis)
+  if (process.env.NODE_ENV === 'production') {
+    fastify.log.warn(
+      'Using in-memory session store for OAuth state. This is not suitable for multi-pod deployments. Consider using Redis for session storage.',
+    );
+  }
+
+  if (
+    process.env.NODE_ENV === 'production' &&
+    fastify.config.CORS_ORIGIN &&
+    fastify.config.CORS_ORIGIN.includes('localhost')
+  ) {
+    fastify.log.warn(
+      { corsOrigin: fastify.config.CORS_ORIGIN },
+      'CORS_ORIGIN contains "localhost" in production. This should be explicitly configured for your deployment domain.',
+    );
+  }
+
   const sessionStore = new Map<
     string,
-    { state: string; timestamp: number; callbackUrl?: string; codeVerifier?: string }
+    {
+      state: string;
+      timestamp: number;
+      callbackUrl?: string;
+      codeVerifier?: string;
+      nonce?: string;
+    }
   >();
 
   // Clean up expired sessions every 5 minutes
@@ -36,6 +59,18 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
       const state = oauthService.generateState();
       sessionStore.set(state, { state, timestamp: Date.now(), callbackUrl, codeVerifier });
       return state;
+    },
+
+    storeNonce: (state: string, nonce: string): void => {
+      const session = sessionStore.get(state);
+      if (session) {
+        session.nonce = nonce;
+      }
+    },
+
+    getStoredNonce: (state: string): string | undefined => {
+      const session = sessionStore.get(state);
+      return session?.nonce;
     },
 
     validateState: (state: string): boolean => {
@@ -99,6 +134,17 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
     },
     'OAuth plugin initialized',
   );
+
+  // Pre-fetch OIDC discovery document on startup (non-blocking)
+  if (authProvider === 'oidc' && !fastify.oauthConfig.isMockEnabled) {
+    fastify.log.info('Pre-fetching OIDC discovery document');
+    oauthService.getOIDCDiscoveryDocument().catch((error) => {
+      fastify.log.warn(
+        { error: error instanceof Error ? error.message : 'Unknown error' },
+        'Failed to pre-fetch OIDC discovery document on startup — will retry on first auth request',
+      );
+    });
+  }
 };
 
 declare module 'fastify' {
@@ -116,6 +162,8 @@ declare module 'fastify' {
       validateState(state: string): boolean;
       getStoredCallbackUrl(state: string): string | undefined;
       getStoredCodeVerifier(state: string): string | undefined;
+      storeNonce(state: string, nonce: string): void;
+      getStoredNonce(state: string): string | undefined;
       clearState(state: string): void;
       clearExpiredStates(): void;
     };

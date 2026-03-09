@@ -81,6 +81,31 @@ export class OAuthService extends BaseService {
     return this.authProvider;
   }
 
+  private isValidEmail(value: string | undefined): boolean {
+    if (!value) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+
+  private async assertFetchOk(response: Response, context: string): Promise<void> {
+    if (!response.ok) {
+      const errorText = await response.text();
+      this.fastify.log.error(
+        { status: response.status, statusText: response.statusText, errorText },
+        `Failed to ${context}`,
+      );
+      throw this.createValidationError(
+        `Failed to ${context}`,
+        'oauth',
+        undefined,
+        `The OIDC provider returned an error during ${context}`,
+      );
+    }
+  }
+
+  async getOIDCDiscoveryDocument(): Promise<OIDCDiscovery> {
+    return this.fetchOIDCDiscovery();
+  }
+
   private async fetchOIDCDiscovery(): Promise<OIDCDiscovery> {
     // Check if cache exists and is still valid (24 hour TTL)
     if (this.oidcDiscovery && this.oidcDiscoveryCachedAt) {
@@ -89,10 +114,12 @@ export class OAuthService extends BaseService {
       if (cacheAge <= cacheTTL) {
         return this.oidcDiscovery;
       }
-      // Cache expired, clear it
-      this.oidcDiscovery = null;
-      this.oidcDiscoveryCachedAt = null;
     }
+
+    // Save stale cache for failover before clearing
+    const staleCache = this.oidcDiscovery;
+    this.oidcDiscovery = null;
+    this.oidcDiscoveryCachedAt = null;
 
     if (this.oidcDiscoveryPromise) {
       return this.oidcDiscoveryPromise;
@@ -110,19 +137,7 @@ export class OAuthService extends BaseService {
           signal: AbortSignal.timeout(10000),
         });
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          this.fastify.log.error(
-            { status: response.status, errorText, discoveryUrl },
-            'Failed to fetch OIDC discovery document',
-          );
-          throw this.createValidationError(
-            'Failed to fetch OIDC discovery document',
-            'issuer',
-            undefined,
-            'Unable to reach the OIDC provider. Check OAUTH_ISSUER configuration',
-          );
-        }
+        await this.assertFetchOk(response, 'fetch OIDC discovery document');
 
         let discovery: OIDCDiscovery;
         try {
@@ -219,6 +234,18 @@ export class OAuthService extends BaseService {
       } catch (error) {
         // Clear the promise on failure so next call will retry
         this.oidcDiscoveryPromise = null;
+
+        // Fall back to stale cache if available
+        if (staleCache) {
+          this.fastify.log.warn(
+            { error: error instanceof Error ? error.message : 'Unknown error' },
+            'Using stale OIDC discovery cache due to fetch failure',
+          );
+          this.oidcDiscovery = staleCache;
+          // Don't update cachedAt — keep it expired so next call retries
+          return staleCache;
+        }
+
         throw error;
       }
     })();
@@ -238,7 +265,9 @@ export class OAuthService extends BaseService {
     return 'user:info user:check-access';
   }
 
-  async generateAuthUrl(state: string): Promise<{ url: string; codeVerifier?: string }> {
+  async generateAuthUrl(
+    state: string,
+  ): Promise<{ url: string; codeVerifier?: string; nonce?: string }> {
     if (this.isMockEnabled) {
       return { url: `/api/auth/mock-login?state=${state}` };
     }
@@ -249,6 +278,7 @@ export class OAuthService extends BaseService {
     if (this.authProvider === 'oidc') {
       const discovery = await this.fetchOIDCDiscovery();
       const pkce = this.generatePKCE();
+      const nonce = randomBytes(16).toString('hex');
 
       const params = new URLSearchParams({
         response_type: 'code',
@@ -258,11 +288,13 @@ export class OAuthService extends BaseService {
         state,
         code_challenge: pkce.challenge,
         code_challenge_method: 'S256',
+        nonce,
       });
 
       return {
         url: `${discovery.authorization_endpoint}?${params.toString()}`,
         codeVerifier: pkce.verifier,
+        nonce,
       };
     }
 
@@ -334,24 +366,7 @@ export class OAuthService extends BaseService {
       signal: AbortSignal.timeout(10000),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      this.fastify.log.error(
-        {
-          status: response.status,
-          statusText: response.statusText,
-          errorText,
-          tokenUrl,
-        },
-        'Failed to exchange code for token',
-      );
-      throw this.createValidationError(
-        'Failed to exchange authorization code',
-        'code',
-        undefined,
-        'The authorization code may be expired or invalid. Please try logging in again',
-      );
-    }
+    await this.assertFetchOk(response, 'exchange authorization code for token');
 
     let tokenResponse: OAuthTokenResponse;
     try {
@@ -379,6 +394,71 @@ export class OAuthService extends BaseService {
     );
 
     return tokenResponse;
+  }
+
+  /**
+   * Validates the ID token's nonce and audience claims.
+   * Only applicable when an ID token is present (OIDC flow).
+   */
+  validateIdToken(tokenResponse: OAuthTokenResponse, expectedNonce?: string): void {
+    const idToken = (tokenResponse as any).id_token;
+    if (!idToken || typeof idToken !== 'string') {
+      return; // No ID token to validate (e.g., OpenShift flow)
+    }
+
+    try {
+      const parts = idToken.split('.');
+      if (parts.length !== 3) {
+        this.fastify.log.warn('ID token does not have 3 parts, skipping validation');
+        return;
+      }
+
+      const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString());
+
+      // Validate nonce (M1)
+      if (expectedNonce && payload.nonce !== expectedNonce) {
+        this.fastify.log.error(
+          { expectedNonce, actualNonce: payload.nonce },
+          'ID token nonce mismatch',
+        );
+        throw this.createValidationError(
+          'ID token nonce mismatch',
+          'nonce',
+          undefined,
+          'The authentication response failed security validation. Please try logging in again',
+        );
+      }
+
+      // Validate audience (M2)
+      const expectedClientId = this.fastify.config.OAUTH_CLIENT_ID;
+      const aud = payload.aud;
+      const audValid = Array.isArray(aud)
+        ? aud.includes(expectedClientId)
+        : aud === expectedClientId;
+
+      if (!audValid) {
+        this.fastify.log.error(
+          { expectedAud: expectedClientId, actualAud: aud },
+          'Invalid audience in ID token',
+        );
+        throw this.createValidationError(
+          'Invalid audience in ID token',
+          'aud',
+          undefined,
+          'The authentication response was not intended for this application. Please try logging in again',
+        );
+      }
+
+      this.fastify.log.debug('ID token nonce and audience validated successfully');
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('ID token')) {
+        throw error; // Re-throw our own validation errors
+      }
+      this.fastify.log.warn(
+        { error: error instanceof Error ? error.message : 'Unknown error' },
+        'Failed to decode ID token for validation, skipping',
+      );
+    }
   }
 
   async getUserInfo(accessToken: string): Promise<OAuthUserInfo> {
@@ -413,22 +493,7 @@ export class OAuthService extends BaseService {
       signal: AbortSignal.timeout(10000),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      this.fastify.log.error(
-        {
-          status: response.status,
-          statusText: response.statusText,
-          errorText,
-          userInfoUrl,
-        },
-        'Failed to get user info from OIDC provider',
-      );
-      throw this.createUnauthorizedError(
-        'Failed to get user information',
-        'Unable to retrieve user details from OIDC provider. Please try logging in again',
-      );
-    }
+    await this.assertFetchOk(response, 'get user info from OIDC provider');
 
     let userResponse: any;
     try {
@@ -462,7 +527,11 @@ export class OAuthService extends BaseService {
       preferred_username:
         userResponse.preferred_username || userResponse.email || userResponse.sub,
       name: userResponse.name,
-      email: userResponse.email || userResponse.preferred_username,
+      email:
+        userResponse.email ||
+        (this.isValidEmail(userResponse.preferred_username)
+          ? userResponse.preferred_username
+          : undefined),
       email_verified: userResponse.email_verified,
       groups,
     };
@@ -824,10 +893,34 @@ export class OAuthService extends BaseService {
     const oauthProvider = this.authProvider;
 
     // Check if user exists in database
-    const existingUser = await this.fastify.dbUtils.queryOne(
+    let existingUser = await this.fastify.dbUtils.queryOne(
       'SELECT * FROM users WHERE oauth_id = $1 AND oauth_provider = $2',
       [userInfo.sub, oauthProvider],
     );
+
+    // Provider migration: look up by email if not found by oauth_id
+    if (!existingUser && userInfo.email) {
+      const emailUser = await this.fastify.dbUtils.queryOne(
+        'SELECT * FROM users WHERE email = $1',
+        [userInfo.email],
+      );
+      if (emailUser) {
+        this.fastify.log.info(
+          {
+            userId: emailUser.id,
+            email: userInfo.email,
+            oldProvider: emailUser.oauth_provider,
+            newProvider: oauthProvider,
+          },
+          'Migrating user to new auth provider (matched by email)',
+        );
+        await this.fastify.dbUtils.query(
+          'UPDATE users SET oauth_id = $1, oauth_provider = $2, updated_at = NOW() WHERE id = $3',
+          [userInfo.sub, oauthProvider, String(emailUser.id)],
+        );
+        existingUser = emailUser;
+      }
+    }
 
     let user: {
       id: string;

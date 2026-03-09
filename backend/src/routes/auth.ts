@@ -57,8 +57,13 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         );
         const finalAuthResult = await fastify.oauth.generateAuthUrl(state);
 
+        // Store nonce for ID token validation (OIDC only)
+        if (finalAuthResult.nonce) {
+          fastify.oauthHelpers.storeNonce(state, finalAuthResult.nonce);
+        }
+
         fastify.log.debug(
-          { callbackUrl, state, hasPKCE: !!finalAuthResult.codeVerifier },
+          { callbackUrl, state, hasPKCE: !!finalAuthResult.codeVerifier, hasNonce: !!finalAuthResult.nonce },
           'Generated auth URL with stored callback',
         );
 
@@ -236,9 +241,13 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         // Retrieve code verifier for PKCE (OIDC only)
         const codeVerifier = fastify.oauthHelpers.getStoredCodeVerifier(state);
+        const storedNonce = fastify.oauthHelpers.getStoredNonce(state);
 
         // Exchange authorization code for access token
         const tokenResponse = await fastify.oauth.exchangeCodeForToken(code, state, codeVerifier);
+
+        // Validate ID token nonce and audience (OIDC only)
+        fastify.oauth.validateIdToken(tokenResponse, storedNonce);
 
         // Get user information
         const userInfo = await fastify.oauth.getUserInfo(tokenResponse.access_token);

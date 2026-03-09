@@ -43,21 +43,46 @@ DB_CONNECTION_TIMEOUT=10000
 | `OAUTH_CLIENT_SECRET`     | OAuth/OIDC client secret                                             | -                                         | Yes      |
 | `OAUTH_ISSUER`            | OAuth/OIDC provider URL (issuer)                                     | -                                         | Yes      |
 | `OAUTH_CALLBACK_URL`      | OAuth callback URL                                                   | `http://localhost:8081/api/auth/callback` | No       |
-| `OPENSHIFT_API_URL`         | OpenShift API server URL. By default derived from `OAUTH_ISSUER` by converting `oauth-openshift.apps.*` to `api.*:6443`. Set only if your cluster uses a non-standard URL pattern. | -                                         | No       |
+| `OPENSHIFT_API_URL`       | OpenShift API server URL. Only used with OpenShift OAuth provider. Auto-derived from OAUTH_ISSUER if not set. | -                                         | No       |
 | `K8S_API_SKIP_TLS_VERIFY` | Skip TLS verification for Kubernetes API calls (⚠️ OpenShift only)   | -                                         | No       |
 | `OIDC_GROUPS_CLAIM`       | Claim name in OIDC userinfo for group memberships                    | `groups`                                  | No       |
 | `OIDC_SCOPES`             | Override OIDC scopes (space-separated)                               | `openid profile email`                    | No       |
 
 ### Authentication Provider
 
-LiteMaaS supports two authentication providers:
+LiteMaaS supports two authentication providers via `AUTH_PROVIDER`:
 
-- **`openshift`** (default): Uses OpenShift-specific OAuth endpoints (`/oauth/authorize`, `/oauth/token`) and the OpenShift user API (`/apis/user.openshift.io/v1/users/~`) for user information and group membership.
-- **`oidc`**: Uses standard OpenID Connect. Endpoints are auto-discovered via `.well-known/openid-configuration` from the `OAUTH_ISSUER` URL. User information is fetched from the standard `/userinfo` endpoint.
+#### OpenShift (`AUTH_PROVIDER=openshift`, default)
 
-When using `oidc`, you can customize:
-- `OIDC_GROUPS_CLAIM`: The claim name in the userinfo response that contains group memberships (default: `groups`). Some providers use `roles`, `realm_access.roles`, or custom claim names.
-- `OIDC_SCOPES`: Override the default OIDC scopes. Some providers require additional scopes like `groups` to include group claims in the userinfo response.
+The OAuth service handles OpenShift's dual-endpoint architecture:
+
+```typescript
+// OAuth server for authentication
+const oauthServer = 'https://oauth-openshift.apps.cluster.com';
+
+// API server for user information (can be overridden via OPENSHIFT_API_URL env var)
+const apiServer = 'https://api.cluster.com:6443';
+
+// User info endpoint (OpenShift-specific)
+const userInfoUrl = `${apiServer}/apis/user.openshift.io/v1/users/~`;
+```
+
+#### Standard OIDC (`AUTH_PROVIDER=oidc`)
+
+For OIDC providers (Keycloak, Auth0, Okta, Azure AD, etc.), endpoints are auto-discovered:
+
+```typescript
+// Discovery document fetched once and cached
+const discoveryUrl = `${issuer}/.well-known/openid-configuration`;
+
+// Endpoints resolved from discovery:
+// - authorization_endpoint (for login redirect)
+// - token_endpoint (for code exchange)
+// - userinfo_endpoint (for user info)
+
+// Group memberships read from configurable claim (default: 'groups')
+const groupsClaim = process.env.OIDC_GROUPS_CLAIM || 'groups';
+```
 
 > **Note**: The OIDC discovery document is cached for 24 hours. If your OIDC provider changes its endpoints, restart the backend to refresh.
 
