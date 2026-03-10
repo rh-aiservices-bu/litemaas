@@ -35,6 +35,7 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
       callbackUrl?: string;
       codeVerifier?: string;
       nonce?: string;
+      frontendOrigin?: string;
     }
   >();
 
@@ -97,6 +98,18 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
     getStoredCallbackUrl: (state: string): string | undefined => {
       const session = sessionStore.get(state);
       return session?.callbackUrl;
+    },
+
+    storeFrontendOrigin: (state: string, origin: string): void => {
+      const session = sessionStore.get(state);
+      if (session) {
+        session.frontendOrigin = origin;
+      }
+    },
+
+    getStoredFrontendOrigin: (state: string): string | undefined => {
+      const session = sessionStore.get(state);
+      return session?.frontendOrigin;
     },
 
     getStoredCodeVerifier: (state: string): string | undefined => {
@@ -172,6 +185,8 @@ declare module 'fastify' {
       storeNonce(state: string, nonce: string): void;
       storeCodeVerifier(state: string, codeVerifier: string): void;
       getStoredNonce(state: string): string | undefined;
+      storeFrontendOrigin(state: string, origin: string): void;
+      getStoredFrontendOrigin(state: string): string | undefined;
       clearState(state: string): void;
       clearExpiredStates(): void;
     };

@@ -7,6 +7,7 @@
     "dev": "tsx watch src/index.ts | pino-pretty",
     "dev:logged": "mkdir -p ../logs && tsx watch src/index.ts | pino-pretty | tee ../logs/backend.log",
     "dev:oauth": "env-cmd -f .env.oauth.local tsx watch src/index.ts | pino-pretty",
+    "dev:oidc": "env-cmd -f .env.oidc.local tsx watch src/index.ts | pino-pretty",
     "dev:oauth:logged": "mkdir -p ../logs && env-cmd -f .env.oauth.local tsx watch src/index.ts | pino-pretty | tee ../logs/backend.log",
     "build": "tsc",
     "start": "node dist/index.js",
