@@ -37,37 +37,42 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     },
     handler: async (request, _reply) => {
       try {
-        // Determine the callback URL that will be used
-        const origin =
-          request.headers.origin ||
-          (request.headers.host ? `${request.protocol}://${request.headers.host}` : null);
-        const callbackUrl = origin
-          ? `${origin}/api/auth/callback`
-          : fastify.config.OAUTH_CALLBACK_URL;
+        // Always use the configured callback URL to ensure the redirect_uri matches
+        // between the authorization request and the token exchange (OAuth2 spec requirement).
+        const callbackUrl = fastify.config.OAUTH_CALLBACK_URL;
 
-        // Generate auth URL (may include PKCE for OIDC)
-        const authResult = await fastify.oauth.generateAuthUrl(
-          fastify.oauthHelpers.generateAndStoreState(),
-        );
+        // Single state: store callback URL first, then generate auth URL so the same state
+        // is used in the redirect and the code_verifier we store matches the code_challenge in that URL.
+        const state = fastify.oauthHelpers.generateAndStoreState(callbackUrl);
+        const authResult = await fastify.oauth.generateAuthUrl(state);
 
-        // Store the callback URL and code verifier with the state
-        const state = fastify.oauthHelpers.generateAndStoreState(
-          callbackUrl,
-          authResult.codeVerifier,
-        );
-        const finalAuthResult = await fastify.oauth.generateAuthUrl(state);
+        // Store the code verifier and nonce for this state (must match the auth URL we return)
+        if (authResult.codeVerifier) {
+          fastify.oauthHelpers.storeCodeVerifier(state, authResult.codeVerifier);
+        }
+        if (authResult.nonce) {
+          fastify.oauthHelpers.storeNonce(state, authResult.nonce);
+        }
 
-        // Store nonce for ID token validation (OIDC only)
-        if (finalAuthResult.nonce) {
-          fastify.oauthHelpers.storeNonce(state, finalAuthResult.nonce);
+        // Store the frontend origin so we can redirect back after OIDC callback.
+        // In dev, frontend (:3000) and backend (:8081) are on different origins.
+        // In prod behind a reverse proxy, they share the same origin.
+        const frontendOrigin = request.headers.origin || request.headers.referer;
+        if (frontendOrigin) {
+          try {
+            const origin = new URL(frontendOrigin).origin;
+            fastify.oauthHelpers.storeFrontendOrigin(state, origin);
+          } catch {
+            // Invalid URL, skip — will use relative redirect
+          }
         }
 
         fastify.log.debug(
-          { callbackUrl, state, hasPKCE: !!finalAuthResult.codeVerifier, hasNonce: !!finalAuthResult.nonce },
+          { callbackUrl, state, hasPKCE: !!authResult.codeVerifier, hasNonce: !!authResult.nonce },
           'Generated auth URL with stored callback',
         );
 
-        return { authUrl: finalAuthResult.url };
+        return { authUrl: authResult.url };
       } catch (error) {
         fastify.log.error(error, 'Failed to generate auth URL');
         throw fastify.createError(500, 'Failed to initiate authentication');
@@ -255,6 +260,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         // Process user (create or update in database)
         const user = await fastify.oauth.processOAuthUser(userInfo);
 
+        // Read frontend origin before clearing state (for post-auth redirect)
+        const storedFrontendOrigin = fastify.oauthHelpers.getStoredFrontendOrigin(state);
+
         // Clear the state now that authentication is successful
         fastify.oauthHelpers.clearState(state);
 
@@ -302,10 +310,12 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         fastify.log.info({ userId: user.id, username: user.username }, 'User logged in');
 
         // Redirect to frontend callback page with token in URL fragment (SPA)
-        // Using relative redirect to work in any deployment environment
+        // Use stored frontend origin for cross-origin dev setups (e.g., frontend :3000, backend :8081).
+        // Falls back to relative redirect for same-origin deployments (production behind reverse proxy).
         const callbackPath = `/auth/callback#token=${token}&expires_in=${24 * 60 * 60}`;
+        const redirectUrl = storedFrontendOrigin ? `${storedFrontendOrigin}${callbackPath}` : callbackPath;
 
-        return reply.redirect(callbackPath);
+        return reply.redirect(redirectUrl);
       } catch (error) {
         fastify.log.error(error, 'OAuth callback error');
 
