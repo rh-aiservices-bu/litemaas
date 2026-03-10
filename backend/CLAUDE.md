@@ -98,9 +98,20 @@ For complete schema and caching details, see [`docs/architecture/database-schema
 
 ## 🔐 Authentication & Authorization
 
-**OAuth2 Flow**: `/api/auth/login -> OAuth provider -> /api/auth/callback -> JWT token with roles`
+**OAuth2/OIDC Flow**: `/api/auth/login -> OAuth/OIDC provider -> /api/auth/callback -> JWT token with roles`
 
-**RBAC**: Three-tier hierarchy `admin > adminReadonly > user` with OpenShift group mapping.
+**Dual Provider Support** (`AUTH_PROVIDER` env var):
+- **`openshift`** (default): OpenShift OAuth with Kubernetes user API for groups
+- **`oidc`**: Standard OpenID Connect with auto-discovery, PKCE (S256), nonce validation, and audience claim verification. Supports Keycloak, Auth0, Okta, Azure AD, and any OIDC-compliant provider.
+
+**Key Auth Files**:
+- `src/services/oauth.service.ts` — Core OAuth/OIDC logic (discovery caching, PKCE, token exchange, user provisioning)
+- `src/plugins/oauth.ts` — Session state management (state, code verifier, nonce, frontend origin)
+- `src/routes/auth.ts` — OAuth flow endpoints (`/api/auth/login`, `/callback`, `/logout`, `/validate`)
+
+**OIDC Security**: Discovery document cached 24h with stale-cache failover; nonce and aud claims validated on ID tokens; PKCE S256 challenge for authorization code flow.
+
+**RBAC**: Three-tier hierarchy `admin > adminReadonly > user` with group mapping (OpenShift groups or OIDC group claims via `OIDC_GROUPS_CLAIM`).
 
 **Subscription Approval Permissions**: `admin:subscriptions:read` (admin, adminReadonly), `admin:subscriptions:write` (admin only), `admin:subscriptions:delete` (admin only)
 
@@ -112,7 +123,7 @@ For complete schema and caching details, see [`docs/architecture/database-schema
 
 **Development**: `MOCK_AUTH=true` for auto-login.
 
-For details, see [`docs/features/user-roles-administration.md`](../docs/features/user-roles-administration.md).
+For details, see [`docs/features/user-roles-administration.md`](../docs/features/user-roles-administration.md) and [`docs/deployment/authentication.md`](../docs/deployment/authentication.md).
 
 ## 🎯 Service Layer Pattern
 

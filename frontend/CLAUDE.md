@@ -301,7 +301,12 @@ Use PatternFly 6 design tokens, avoid hardcoded values. Support dark theme with 
 
 ## 🔧 Key Implementation Notes
 
-**Authentication Flow**: OAuth provider → JWT token → localStorage → Auth context
+**Authentication Flow**: OAuth/OIDC provider → JWT token → localStorage → Auth context
+- Frontend initiates login via `POST /api/auth/login` → receives `authUrl` → redirects to provider
+- After authentication, backend redirects to `/auth/callback#token=<jwt>&expires_in=<seconds>`
+- `AuthCallbackPage.tsx` extracts token from URL hash, stores in localStorage, redirects to dashboard
+- `AuthContext` manages auth state (user, roles, isAuthenticated) with token validation via `/api/v1/auth/me`
+- Supports both OpenShift OAuth and standard OIDC providers (configured server-side via `AUTH_PROVIDER`)
 
 **Error Boundaries**: Global `<ErrorBoundary>` and component-level `<ComponentErrorBoundary>`
 

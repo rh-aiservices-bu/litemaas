@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import {
   Alert,
+  AlertActionCloseButton,
   Button,
   LoginPage as PFLoginPage,
   Stack,
@@ -27,10 +28,13 @@ const LoginPage: React.FC = () => {
   const { brandingSettings } = useBranding();
   const [searchParams, setSearchParams] = useSearchParams();
   const sessionExpired = searchParams.get('session') === 'expired';
+  const authError = searchParams.get('error') === 'auth_failed';
   const [authMode, setAuthMode] = useState<'oauth' | 'mock' | null>(null);
   const [configLoading, setConfigLoading] = useState(true);
   const [configError, setConfigError] = useState(false);
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
+  const [showAuthError, setShowAuthError] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // Compute branding overrides
   const brandImgSrc =
@@ -49,6 +53,7 @@ const LoginPage: React.FC = () => {
       : t('pages.login.subtitle');
 
   const handleLogin = () => {
+    setIsLoggingIn(true);
     login();
   };
 
@@ -113,6 +118,14 @@ const LoginPage: React.FC = () => {
     }
   }, [sessionExpired, setSearchParams]);
 
+  useEffect(() => {
+    if (authError) {
+      setShowAuthError(true);
+      // Clear the error param from URL
+      window.history.replaceState({}, '', '/login');
+    }
+  }, [authError]);
+
   return (
     <PFLoginPage
       brandImgSrc={brandImgSrc}
@@ -127,6 +140,18 @@ const LoginPage: React.FC = () => {
             <Alert variant="warning" title={t('pages.login.sessionExpired')} isInline />
           </StackItem>
         )}
+        {showAuthError && (
+          <StackItem>
+            <Alert
+              variant="danger"
+              title={t('pages.login.authError')}
+              isInline
+              actionClose={
+                <AlertActionCloseButton onClose={() => setShowAuthError(false)} />
+              }
+            />
+          </StackItem>
+        )}
         {configError && (
           <StackItem>
             <Alert variant="danger" title={t('pages.login.configError')} isInline />
@@ -137,6 +162,8 @@ const LoginPage: React.FC = () => {
             variant="primary"
             onClick={handleLogin}
             isBlock
+            isLoading={isLoggingIn}
+            isDisabled={isLoggingIn}
             icon={<ExternalLinkAltIcon />}
             iconPosition="end"
           >

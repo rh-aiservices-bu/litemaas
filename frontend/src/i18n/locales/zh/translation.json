@@ -1040,7 +1040,11 @@
       "subtitle": "您的模型即服务平台，用于访问和管理AI模型。",
       "title": "欢迎使用LiteMaaS"
     },
+    "authCallback": {
+      "processing": "正在处理身份验证..."
+    },
     "login": {
+      "authError": "身份验证失败。请重试。",
       "brandAlt": "LiteMaaS标志",
       "bypassAuthentication": "为开发和测试目的绕过身份验证",
       "configError": "无法加载应用程序配置。某些功能可能不可用。",

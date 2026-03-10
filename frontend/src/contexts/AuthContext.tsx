@@ -127,6 +127,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Redirect to the OAuth provider
       if (data.authUrl) {
+        // Store return URL for deep linking (restore after OAuth callback)
+        const currentPath = window.location.pathname + window.location.search;
+        if (currentPath !== '/login' && currentPath !== '/auth/callback') {
+          sessionStorage.setItem('returnUrl', currentPath);
+        }
         window.location.href = data.authUrl;
       } else {
         console.error('No authUrl in response:', data);
@@ -134,7 +139,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error) {
       console.error('Login failed:', error);
-      // You might want to show an error notification here
+      window.location.href = '/login?error=auth_failed';
     }
   }, []);
 
@@ -163,17 +168,55 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      await authService.logout();
+      const logoutResponse = await authService.logout();
+      localStorage.removeItem('token_expires_at');
       setUser(null);
-      navigate('/login');
+
+      // If OIDC provider has a logout URL, redirect there for single logout
+      if (logoutResponse.logoutUrl) {
+        window.location.href = logoutResponse.logoutUrl;
+      } else {
+        navigate('/login');
+      }
     } catch (error) {
       console.error('Logout failed:', error);
       // Force logout on error
       localStorage.removeItem('litemaas_admin_user');
+      localStorage.removeItem('token_expires_at');
       setUser(null);
       navigate('/login');
     }
   }, [navigate]);
+
+  // Token expiration detection — auto-logout when token is near expiry
+  useEffect(() => {
+    if (!user) return;
+    // Skip for admin bypass sessions
+    if (localStorage.getItem('litemaas_admin_user')) return;
+
+    const checkExpiration = () => {
+      const expiresAtStr = localStorage.getItem('token_expires_at');
+      if (!expiresAtStr) return;
+      const expiresAt = parseInt(expiresAtStr, 10);
+      if (isNaN(expiresAt)) return;
+
+      const timeUntilExpiry = expiresAt - Date.now();
+      if (timeUntilExpiry <= 60 * 1000) {
+        // Token expired or expiring within 60 seconds
+        localStorage.removeItem('token_expires_at');
+        authService.setTokens('', '');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        setUser(null);
+        navigate('/login?session=expired');
+      }
+    };
+
+    // Check immediately and then every 30 seconds
+    checkExpiration();
+    const interval = setInterval(checkExpiration, 30 * 1000);
+    return () => clearInterval(interval);
+  }, [user, navigate]);
 
   const isAuthenticated = useMemo(() => {
     return !!user || !!localStorage.getItem('litemaas_admin_user');

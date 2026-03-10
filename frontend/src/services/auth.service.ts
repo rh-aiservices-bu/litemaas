@@ -27,10 +27,10 @@ class AuthService {
     return response.data;
   }
 
-  async logout(): Promise<void> {
+  async logout(): Promise<{ message?: string; logoutUrl?: string }> {
     // Logout endpoint remains at /api/auth for OAuth flow
     const token = this.getAccessToken();
-    await axios.post(
+    const response = await axios.post<{ message?: string; logoutUrl?: string }>(
       '/api/auth/logout',
       {},
       {
@@ -41,6 +41,7 @@ class AuthService {
     );
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
+    return response.data;
   }
 
   async refreshToken(refreshToken: string): Promise<LoginResponse> {

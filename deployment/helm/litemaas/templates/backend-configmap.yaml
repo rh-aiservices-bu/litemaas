@@ -9,7 +9,14 @@ data:
   PORT: "8080"
   NODE_ENV: "production"
   LOG_LEVEL: "info"
+  # Authentication provider: 'openshift' (default) or 'oidc' (standard OpenID Connect)
+  # When set to 'oidc', the backend validates OIDC discovery connectivity on startup
+  AUTH_PROVIDER: {{ .Values.oauth.authProvider | default "openshift" | quote }}
   JWT_EXPIRES_IN: {{ .Values.backend.auth.jwtExpiresIn | quote }}
+  OIDC_GROUPS_CLAIM: {{ .Values.oauth.oidc.groupsClaim | default "groups" | quote }}
+  {{- if .Values.oauth.oidc.scopes }}
+  OIDC_SCOPES: {{ .Values.oauth.oidc.scopes | quote }}
+  {{- end }}
   RATE_LIMIT_MAX: {{ .Values.backend.rateLimit.max | quote }}
   RATE_LIMIT_TIME_WINDOW: {{ .Values.backend.rateLimit.timeWindow | quote }}
   DEFAULT_USER_MAX_BUDGET: {{ .Values.backend.defaultUser.maxBudget | quote }}
@@ -25,4 +32,7 @@ data:
   {{- end }}
   {{- if ne (.Values.backend.nodeTlsRejectUnauthorized | toString) "" }}
   NODE_TLS_REJECT_UNAUTHORIZED: {{ .Values.backend.nodeTlsRejectUnauthorized | quote }}
+  {{- end }}
+  {{- if .Values.backend.auth.k8sApiSkipTlsVerify }}
+  K8S_API_SKIP_TLS_VERIFY: {{ .Values.backend.auth.k8sApiSkipTlsVerify | quote }}
   {{- end }}

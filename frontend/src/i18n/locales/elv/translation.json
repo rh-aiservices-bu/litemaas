@@ -1040,7 +1040,11 @@
       "subtitle": "En echuis-i-Vilya in êl aduial pedo sui henion ned Echuin-Eru.",
       "title": "Mae govannen mi LiteMaaS"
     },
+    "authCallback": {
+      "processing": "Orthad authentication..."
+    },
     "login": {
+      "authError": "Authentication failed. Please try again.",
       "brandAlt": "Logo LiteMaaS",
       "bypassAuthentication": "Orthad authentication sui govad a prestannen",
       "configError": "Ú-bollen tirith i govannas. Naid úva tírad.",

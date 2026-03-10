@@ -1040,7 +1040,11 @@
       "subtitle": "Tu plataforma Modelo como Servicio para acceder y gestionar modelos de IA.",
       "title": "Bienvenido a LiteMaaS"
     },
+    "authCallback": {
+      "processing": "Procesando autenticación..."
+    },
     "login": {
+      "authError": "La autenticación falló. Por favor, inténtalo de nuevo.",
       "brandAlt": "Logo de LiteMaaS",
       "bypassAuthentication": "Omitir autenticación para propósitos de desarrollo y prueba",
       "configError": "No se pudo cargar la configuración de la aplicación. Algunas funciones pueden no estar disponibles.",
