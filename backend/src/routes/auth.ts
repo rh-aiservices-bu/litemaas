@@ -45,29 +45,25 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           ? `${origin}/api/auth/callback`
           : fastify.config.OAUTH_CALLBACK_URL;
 
-        // Generate auth URL (may include PKCE for OIDC)
-        const authResult = await fastify.oauth.generateAuthUrl(
-          fastify.oauthHelpers.generateAndStoreState(),
-        );
+        // Single state: store callback URL first, then generate auth URL so the same state
+        // is used in the redirect and the code_verifier we store matches the code_challenge in that URL.
+        const state = fastify.oauthHelpers.generateAndStoreState(callbackUrl);
+        const authResult = await fastify.oauth.generateAuthUrl(state);
 
-        // Store the callback URL and code verifier with the state
-        const state = fastify.oauthHelpers.generateAndStoreState(
-          callbackUrl,
-          authResult.codeVerifier,
-        );
-        const finalAuthResult = await fastify.oauth.generateAuthUrl(state);
-
-        // Store nonce for ID token validation (OIDC only)
-        if (finalAuthResult.nonce) {
-          fastify.oauthHelpers.storeNonce(state, finalAuthResult.nonce);
+        // Store the code verifier and nonce for this state (must match the auth URL we return)
+        if (authResult.codeVerifier) {
+          fastify.oauthHelpers.storeCodeVerifier(state, authResult.codeVerifier);
+        }
+        if (authResult.nonce) {
+          fastify.oauthHelpers.storeNonce(state, authResult.nonce);
         }
 
         fastify.log.debug(
-          { callbackUrl, state, hasPKCE: !!finalAuthResult.codeVerifier, hasNonce: !!finalAuthResult.nonce },
+          { callbackUrl, state, hasPKCE: !!authResult.codeVerifier, hasNonce: !!authResult.nonce },
           'Generated auth URL with stored callback',
         );
 
-        return { authUrl: finalAuthResult.url };
+        return { authUrl: authResult.url };
       } catch (error) {
         fastify.log.error(error, 'Failed to generate auth URL');
         throw fastify.createError(500, 'Failed to initiate authentication');

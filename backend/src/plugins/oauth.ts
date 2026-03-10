@@ -68,6 +68,13 @@ const oauthPlugin: FastifyPluginAsync = async (fastify) => {
       }
     },
 
+    storeCodeVerifier: (state: string, codeVerifier: string): void => {
+      const session = sessionStore.get(state);
+      if (session) {
+        session.codeVerifier = codeVerifier;
+      }
+    },
+
     getStoredNonce: (state: string): string | undefined => {
       const session = sessionStore.get(state);
       return session?.nonce;
@@ -163,6 +170,7 @@ declare module 'fastify' {
       getStoredCallbackUrl(state: string): string | undefined;
       getStoredCodeVerifier(state: string): string | undefined;
       storeNonce(state: string, nonce: string): void;
+      storeCodeVerifier(state: string, codeVerifier: string): void;
       getStoredNonce(state: string): string | undefined;
       clearState(state: string): void;
       clearExpiredStates(): void;

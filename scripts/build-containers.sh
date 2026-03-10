@@ -19,7 +19,7 @@ NO_CACHE=false
 PLATFORM="linux/amd64"
 LOCAL_ONLY=false
 SKIP_VERSION_CHECK=false
-REGISTRY="quay.io/rh-aiservices-bu"
+REGISTRY="quay.io/mgersdor"
 
 # Function to print colored output
 print_status() {
