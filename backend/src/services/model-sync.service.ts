@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { Pool } from 'pg';
 import { LiteLLMService } from './litellm.service';
 
 export interface ModelSyncResult {
@@ -60,10 +61,24 @@ export class ModelSyncService {
       // Cross-reference with LiteLLM's actual database to filter out stale cached entries.
       // LiteLLM's /model/info API may return models from Redis cache even after deletion.
       // The LiteLLM_ProxyModelTable is the source of truth for what models actually exist.
-      const dbModelsResult = await this.fastify.dbUtils.query(
-        `SELECT model_name FROM "LiteLLM_ProxyModelTable"`,
-      );
-      const dbModelNames = new Set(dbModelsResult.rows.map((r: any) => r.model_name));
+      // Uses a dedicated pool for the LiteLLM DB (separate from the LiteMaaS DB).
+      let dbModelNames: Set<string>;
+      const litellmDbUrl = process.env.LITELLM_DATABASE_URL;
+      if (litellmDbUrl) {
+        const litellmPool = new Pool({ connectionString: litellmDbUrl });
+        try {
+          const dbModelsResult = await litellmPool.query(
+            `SELECT model_name FROM "LiteLLM_ProxyModelTable"`,
+          );
+          dbModelNames = new Set(dbModelsResult.rows.map((r: any) => r.model_name));
+        } finally {
+          await litellmPool.end();
+        }
+      } else {
+        // No LiteLLM DB configured — skip cross-reference, trust the API response
+        this.fastify.log.warn('LITELLM_DATABASE_URL not set — skipping DB cross-reference, using API response directly');
+        dbModelNames = new Set(litellmModels.map((m: any) => m.model_name));
+      }
 
       // Only process models that exist in both the API response AND the database
       const verifiedModels = litellmModels.filter((m: any) => {
