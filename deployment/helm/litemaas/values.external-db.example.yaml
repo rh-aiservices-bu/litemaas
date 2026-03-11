@@ -51,7 +51,7 @@ backend:
     initialAdminUsers: "admin@example.com"
 
   backup:
-    # LiteLLM database URL for backup/restore (optional)
+    # LiteLLM database URL (model sync cross-reference + backup/restore)
     litellmDatabaseUrl: "postgresql://litemaas_user:CHANGE-ME@db.example.com:5432/litellm_db?sslmode=require"
 
 # -- Ingress

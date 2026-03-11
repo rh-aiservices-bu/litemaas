@@ -493,9 +493,9 @@ Database backup and restore allows administrators to:
 ### Prerequisites
 
 - **LiteMaaS database**: Always available for backup (uses the application's `DATABASE_URL`)
-- **LiteLLM database**: Requires `LITELLM_DATABASE_URL` environment variable to be set. This is a direct PostgreSQL connection string to LiteLLM's database, **not** the LiteLLM API URL. When not configured, only LiteMaaS backup is available.
+- **LiteLLM database**: Requires `LITELLM_DATABASE_URL` environment variable to be set. This is a direct PostgreSQL connection string to LiteLLM's database, **not** the LiteLLM API URL. When not configured, only LiteMaaS backup is available. Note: this same variable is also used by model sync to cross-reference against `LiteLLM_ProxyModelTable` — see the [Configuration Guide](../deployment/configuration.md#litellm-database--backup) for details.
 
-For environment variable configuration, see the [Configuration Guide](../deployment/configuration.md#backup--restore).
+For environment variable configuration, see the [Configuration Guide](../deployment/configuration.md#litellm-database--backup).
 
 ### How to Create a Backup
 

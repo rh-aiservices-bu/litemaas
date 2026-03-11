@@ -63,12 +63,13 @@ Once Phase 1 is verified, upgrade LiteLLM to the version bundled with v0.2.0.
 
 ```bash
 helm upgrade litemaas deployment/helm/litemaas/ -n litemaas \
-  --set litellm.image.tag=main-v1.81.0-stable
+  --set litellm.image.repository=quay.io/rh-aiservices-bu/litellm-non-root \
+  --set litellm.image.tag=main-v1.81.0-stable-custom
 ```
 
 ### Kustomize
 
-Update the LiteLLM deployment image to `ghcr.io/berriai/litellm-non_root:main-v1.81.0-stable`.
+Update the LiteLLM deployment image to `quay.io/rh-aiservices-bu/litellm-non-root:main-v1.81.0-stable-custom`.
 
 ### Verify
 
@@ -99,7 +100,7 @@ kubectl logs deployment/<backend-deployment> -n litemaas | grep -i backfill
 | Scenario | Action | Risk |
 |----------|--------|------|
 | Phase 1 fails | `helm rollback litemaas` -- LiteLLM is unchanged | Low |
-| Phase 2 fails | Revert LiteLLM image to `main-v1.74.7-stable` -- updated LiteMaaS handles both versions | Low-Medium (LiteLLM DB migrations may need backup restore) |
+| Phase 2 fails | Revert LiteLLM image to previous version -- updated LiteMaaS handles both versions | Low-Medium (LiteLLM DB migrations may need backup restore) |
 | Both fail | Restore both databases from backup + `helm rollback` | Medium |
 
 The updated LiteMaaS is backward-compatible with the older LiteLLM, so reverting LiteLLM alone is always safe.

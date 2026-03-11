@@ -36,7 +36,7 @@ spec:
                   key: database-url
       containers:
         - name: litellm
-          image: ghcr.io/berriai/litellm-non_root:main-v1.81.0-stable
+          image: quay.io/rh-aiservices-bu/litellm-non-root:main-v1.81.0-stable-custom
           ports:
             - containerPort: 4000
               name: http
