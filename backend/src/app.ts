@@ -7,6 +7,7 @@ import {
   envPlugin,
   loggingPlugin,
   databasePlugin,
+  redisPlugin,
   authPlugin,
   swaggerPlugin,
   rateLimitPlugin,
@@ -86,6 +87,7 @@ export const createApp = async (opts: { logger?: boolean } = {}): Promise<Fastif
   await fastify.register(loggingPlugin);
   await fastify.register(errorHandlerPlugin);
   await fastify.register(databasePlugin);
+  await fastify.register(redisPlugin);
   await fastify.register(authPlugin);
   await fastify.register(oauthPlugin);
   await fastify.register(sessionPlugin);

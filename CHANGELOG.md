@@ -5,9 +5,30 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.0] - 2026-03-11
 
 ### Added
+
+- **Model Capability Management**: Multi-type model support with Chat, Embeddings, Document Conversion, and Tokenize capabilities
+  - **Model type selection**: Radio group in admin create/edit modal to select model type (Chat, Embeddings, Document Conversion)
+  - **Tokenize capability**: Optional checkbox for models that support tokenization
+  - **Document Conversion provider**: Docling provider integration (`docling/` prefix) with `/health` endpoint testing instead of `/models`
+  - **Capability labels**: Color-coded labels (Chat=blue, Embeddings=green, Tokenize=orangered, Document Conversion=orange) on model cards across all pages
+  - **Model-type-specific curl examples**: View Key modal shows contextual curl examples — chat completions, embeddings, or document conversion — based on the selected model's type
+  - **Dynamic API URL**: View Key modal shows `/v1` or `/docling/v1` based on model type
+  - **Chat Playground filtering**: Playground only shows chat-capable models, excluding embeddings and document conversion models
+  - **Adaptive admin form**: Hides irrelevant fields (backend model name, TPM, input/output cost, max tokens, feature checkboxes) for Document Conversion models; shows N/A for TPM and Max Tokens columns
+  - **API response schema**: Added `supportsChat`, `supportsEmbeddings`, `supportsTokenize`, `supportsConvert` boolean fields to models API
+  - **API key model details**: `supportsEmbeddings` and `supportsConvert` fields propagated through API key model details for frontend curl example rendering
+  - **i18n**: Translation keys for model types, capability labels, and curl example comments across all 9 locales
+
+- **Redis Cache Integration**: Optional Redis connection for flushing LiteLLM's model/key cache after CRUD operations
+  - **Redis plugin**: New Fastify plugin (`src/plugins/redis.ts`) with `ioredis` client, lazy connection, retry strategy, and graceful degradation when Redis is unavailable
+  - **Cache flush on CRUD**: Automatic `FLUSHALL` after model create, update, and delete to ensure all LiteLLM proxy pods pick up changes immediately
+  - **Environment variables**: `REDIS_HOST` (optional) and `REDIS_PORT` (default: `6379`)
+  - **Helm chart**: Built-in Redis deployment (`redis.enabled: true` by default) with `redis:7-alpine`, health probes, and resource limits; auto-constructed `REDIS_HOST` when enabled; configurable external Redis via `backend.redis.host`
+  - **Kustomize**: Redis deployment and service manifests with LiteLLM environment variable injection
+  - **LiteLLM integration**: `REDIS_HOST`/`REDIS_PORT` and `DISABLE_SCHEMA_UPDATE` environment variables added to LiteLLM deployment templates
 
 - **OIDC Authentication Support**: Standard OpenID Connect authentication alongside existing OpenShift OAuth, controlled by `AUTH_PROVIDER` environment variable (`openshift` or `oidc`)
   - **Auto-discovery**: Fetches provider endpoints from `.well-known/openid-configuration` with 24-hour cache and stale-cache failover
@@ -26,6 +47,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Model sync reliability**: Comprehensive fixes to model synchronization and lifecycle management
+  - **Deleted model resurrection**: Models no longer reappear after admin deletion — sync cross-references LiteLLM's `LiteLLM_ProxyModelTable` database table (source of truth) instead of relying solely on the API cache, which may contain stale entries
+  - **Direct DB operations on create**: Model creation directly inserts into the local `models` table instead of relying on sync delay, making models immediately available in the frontend
+  - **Full cascade on delete**: Model deletion now deactivates subscriptions, removes API key associations, deletes subscription history, and removes the model row from the local database — with proper foreign key constraint handling
+  - **LiteLLM cache clearing**: `clearCache('models:')` called before sync after CRUD operations to force fresh data
+  - **Graceful 404 on delete**: Handles the case where a model is already removed from LiteLLM without throwing an error
+  - **Dedicated LiteLLM DB pool**: Model sync queries `LiteLLM_ProxyModelTable` via a separate `pg.Pool` using `LITELLM_DATABASE_URL` to avoid connection conflicts
+  - **LiteLLM model stub fallback**: `getModelById()` falls back to local database when LiteLLM API cache hasn't refreshed yet, preventing race condition failures
+  - **Fresh model list during sync**: Sync always fetches fresh models (`refresh: true`) instead of using cached data
+- **N+1 HTTP requests in ApiKeysPage**: `loadModels()` now fetches subscriptions and full model list in 2 parallel requests instead of N+1 individual model fetches
+- **OAuth login for migrated users**: Users migrated by upgrade script (with mismatched IDs between LiteMaaS and LiteLLM) are automatically realigned by email lookup in `LiteLLM_UserTable` during OAuth callback
+- **LiteLLM v1.81.0 health check**: Fixed health check to handle plain text response format instead of expecting JSON
+- **View Key modal model labels**: All model labels now shown (removed default `numLabels` limit) with dynamic API URL based on model type
+- **Admin model form reordering**: RPM and TPM columns swapped to show RPM first (relevant to all model types) and TPM second (not applicable to Document Conversion)
+- **Improved error messages**: Model CRUD error responses now include the model name/ID for easier debugging
+- **Containerfile UBI9 fix**: Added `--nobest` flag to `dnf update` to handle broken UBI9 dependency chains
 - **PKCE mismatch on callback**: Fixed code verifier storage and retrieval to ensure PKCE challenge matches during token exchange
 - **Redirect URI mismatch**: Fixed OAuth callback URL handling for strict redirect_uri matching compliance
 - **Cross-origin redirect**: Fixed post-authentication redirect for dev setups where frontend and backend run on different ports

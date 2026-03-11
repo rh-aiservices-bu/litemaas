@@ -316,6 +316,7 @@
     "weeklyUsagePatterns": "週間使用パターン"
   },
   "common": {
+    "accessRestrictions": "アクセス制限",
     "anUnknownErrorOccurred": "不明なエラーが発生しました",
     "cancel": "キャンセル",
     "chart": "グラフ",
@@ -428,7 +429,12 @@
       "supportsFunctionCalling": "関数呼び出しをサポート",
       "supportsParallelFunctionCalling": "並列関数呼び出しをサポート",
       "supportsToolChoice": "ツール選択をサポート",
+      "supportsTokenize": "トークン化をサポート",
       "supportsVision": "ビジョンをサポート",
+      "modelType": "モデルタイプ",
+      "modelTypeChat": "チャット",
+      "modelTypeEmbeddings": "エンベディング",
+      "modelTypeConvert": "ドキュメント変換",
       "table": {
         "1mTokens": "/100万トークン",
         "actions": "アクション",
@@ -558,7 +564,12 @@
         "copy": "コピー"
       },
       "codeExample": {
+        "commentChat": "安全なLiteLLM APIキーの使用",
+        "commentConvert": "LiteLLM APIキーでドキュメントを変換",
+        "commentEmbeddings": "LiteLLM APIキーでエンベディングを生成",
         "content": "こんにちは、世界！",
+        "convertUrl": "https://arxiv.org/pdf/2501.17887",
+        "embeddingsInput": "料理はおいしく、ウェイターは...",
         "role": "ユーザー"
       },
       "copied": "コピーしました！",

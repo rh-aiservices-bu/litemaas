@@ -142,6 +142,10 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
                   supportsFunctionCalling: { type: 'boolean' },
                   supportsParallelFunctionCalling: { type: 'boolean' },
                   supportsToolChoice: { type: 'boolean' },
+                  supportsChat: { type: 'boolean' },
+                  supportsEmbeddings: { type: 'boolean' },
+                  supportsTokenize: { type: 'boolean' },
+                  supportsConvert: { type: 'boolean' },
                   restrictedAccess: { type: 'boolean' },
                 },
               },
@@ -173,51 +177,51 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
             ORDER BY provider, name
           `);
 
-          if (dbModels.length > 0) {
-            // Use database models (synchronized)
-            models = dbModels.map((model) => ({
-              id: String(model.id),
-              name: String(model.name),
-              provider: String(model.provider),
-              description: model.description ? String(model.description) : '',
-              capabilities: (model.features as string[]) || [],
-              contextLength: Number(model.context_length),
-              pricing:
-                model.input_cost_per_token || model.output_cost_per_token
-                  ? {
-                      input: Number(model.input_cost_per_token) || 0,
-                      output: Number(model.output_cost_per_token) || 0,
-                      unit: 'per_1k_tokens' as const,
-                    }
-                  : undefined,
-              isActive: model.availability === 'available',
-              createdAt: new Date(String(model.created_at)),
-              updatedAt: new Date(String(model.updated_at)),
-              // Admin fields
-              apiBase: model.api_base ? String(model.api_base) : undefined,
-              backendModelName: model.backend_model_name
-                ? String(model.backend_model_name)
+          // Use database as source of truth — empty result means no models available
+          models = dbModels.map((model) => ({
+            id: String(model.id),
+            name: String(model.name),
+            provider: String(model.provider),
+            description: model.description ? String(model.description) : '',
+            capabilities: (model.features as string[]) || [],
+            contextLength: Number(model.context_length),
+            pricing:
+              model.input_cost_per_token || model.output_cost_per_token
+                ? {
+                    input: Number(model.input_cost_per_token) || 0,
+                    output: Number(model.output_cost_per_token) || 0,
+                    unit: 'per_1k_tokens' as const,
+                  }
                 : undefined,
-              inputCostPerToken: model.input_cost_per_token
-                ? Number(model.input_cost_per_token)
-                : undefined,
-              outputCostPerToken: model.output_cost_per_token
-                ? Number(model.output_cost_per_token)
-                : undefined,
-              tpm: model.tpm ? Number(model.tpm) : undefined,
-              rpm: model.rpm ? Number(model.rpm) : undefined,
-              maxTokens: model.max_tokens ? Number(model.max_tokens) : undefined,
-              supportsVision: Boolean(model.supports_vision),
-              supportsFunctionCalling: Boolean(model.supports_function_calling),
-              supportsParallelFunctionCalling: Boolean(model.supports_parallel_function_calling),
-              supportsToolChoice: Boolean(model.supports_tool_choice),
-              restrictedAccess: Boolean(model.restricted_access),
-            }));
+            isActive: model.availability === 'available',
+            createdAt: new Date(String(model.created_at)),
+            updatedAt: new Date(String(model.updated_at)),
+            // Admin fields
+            apiBase: model.api_base ? String(model.api_base) : undefined,
+            backendModelName: model.backend_model_name
+              ? String(model.backend_model_name)
+              : undefined,
+            inputCostPerToken: model.input_cost_per_token
+              ? Number(model.input_cost_per_token)
+              : undefined,
+            outputCostPerToken: model.output_cost_per_token
+              ? Number(model.output_cost_per_token)
+              : undefined,
+            tpm: model.tpm ? Number(model.tpm) : undefined,
+            rpm: model.rpm ? Number(model.rpm) : undefined,
+            maxTokens: model.max_tokens ? Number(model.max_tokens) : undefined,
+            supportsVision: Boolean(model.supports_vision),
+            supportsFunctionCalling: Boolean(model.supports_function_calling),
+            supportsParallelFunctionCalling: Boolean(model.supports_parallel_function_calling),
+            supportsToolChoice: Boolean(model.supports_tool_choice),
+            supportsChat: (model.features as string[])?.includes('chat') || false,
+            supportsEmbeddings: (model.features as string[])?.includes('embeddings') || false,
+            supportsTokenize: (model.features as string[])?.includes('tokenize') || false,
+            supportsConvert: (model.features as string[])?.includes('convert') || false,
+            restrictedAccess: Boolean(model.restricted_access),
+          }));
 
-            fastify.log.debug({ count: models.length }, 'Using synchronized models from database');
-          } else {
-            throw new Error('No models in database, falling back to LiteLLM');
-          }
+          fastify.log.debug({ count: models.length }, 'Using synchronized models from database');
         } catch (dbError) {
           fastify.log.debug(dbError, 'Database models unavailable, fetching from LiteLLM');
 
@@ -481,6 +485,10 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
               supportsFunctionCalling: Boolean(model.supports_function_calling),
               supportsParallelFunctionCalling: Boolean(model.supports_parallel_function_calling),
               supportsToolChoice: Boolean(model.supports_tool_choice),
+              supportsChat: (model.features as string[])?.includes('chat') || false,
+              supportsEmbeddings: (model.features as string[])?.includes('embeddings') || false,
+              supportsTokenize: (model.features as string[])?.includes('tokenize') || false,
+              supportsConvert: (model.features as string[])?.includes('convert') || false,
               inputCostPerToken: model.input_cost_per_token
                 ? Number(model.input_cost_per_token)
                 : undefined,

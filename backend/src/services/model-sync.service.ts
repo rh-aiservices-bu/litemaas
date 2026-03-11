@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { Pool } from 'pg';
 import { LiteLLMService } from './litellm.service';
 
 export interface ModelSyncResult {
@@ -54,11 +55,46 @@ export class ModelSyncService {
     try {
       this.fastify.log.info('Starting model synchronization from LiteLLM...');
 
-      // Fetch models from LiteLLM
-      const litellmModels = await this.litellmService.getModels();
-      result.totalModels = litellmModels.length;
+      // Fetch models from LiteLLM (always refresh, never use cache)
+      const litellmModels = await this.litellmService.getModels({ refresh: true });
 
-      if (litellmModels.length === 0) {
+      // Cross-reference with LiteLLM's actual database to filter out stale cached entries.
+      // LiteLLM's /model/info API may return models from Redis cache even after deletion.
+      // The LiteLLM_ProxyModelTable is the source of truth for what models actually exist.
+      // Uses a dedicated pool for the LiteLLM DB (separate from the LiteMaaS DB).
+      let dbModelNames: Set<string>;
+      const litellmDbUrl = process.env.LITELLM_DATABASE_URL;
+      if (litellmDbUrl) {
+        const litellmPool = new Pool({ connectionString: litellmDbUrl });
+        try {
+          const dbModelsResult = await litellmPool.query(
+            `SELECT model_name FROM "LiteLLM_ProxyModelTable"`,
+          );
+          dbModelNames = new Set(dbModelsResult.rows.map((r: any) => r.model_name));
+        } finally {
+          await litellmPool.end();
+        }
+      } else {
+        // No LiteLLM DB configured — skip cross-reference, trust the API response
+        this.fastify.log.warn('LITELLM_DATABASE_URL not set — skipping DB cross-reference, using API response directly');
+        dbModelNames = new Set(litellmModels.map((m: any) => m.model_name));
+      }
+
+      // Only process models that exist in both the API response AND the database
+      const verifiedModels = litellmModels.filter((m: any) => {
+        if (dbModelNames.has(m.model_name)) {
+          return true;
+        }
+        this.fastify.log.warn(
+          { model_name: m.model_name },
+          'Skipping model from LiteLLM API - not found in LiteLLM database (stale cache entry)',
+        );
+        return false;
+      });
+
+      result.totalModels = verifiedModels.length;
+
+      if (verifiedModels.length === 0) {
         this.fastify.log.info(
           'No models found in LiteLLM - will mark all local models as unavailable',
         );
@@ -67,10 +103,9 @@ export class ModelSyncService {
       // Get existing models from database
       const existingModels = await this.getExistingModels();
       const existingModelIds = new Set(existingModels.map((m) => m.id));
-      const litellmModelIds = new Set(litellmModels.map((m) => m.model_name));
 
-      // Process each LiteLLM model
-      for (const litellmModel of litellmModels) {
+      // Process each verified LiteLLM model
+      for (const litellmModel of verifiedModels) {
         try {
           const modelId = litellmModel.model_name;
           if (existingModelIds.has(modelId)) {
@@ -95,10 +130,11 @@ export class ModelSyncService {
         }
       }
 
-      // Mark unavailable models
+      // Mark unavailable models — use LiteLLM's database table as source of truth,
+      // NOT the API response (which may have cache lag for newly created models).
       if (markUnavailable) {
         const unavailableModelIds = Array.from(existingModelIds).filter(
-          (id) => !litellmModelIds.has(id),
+          (id) => !dbModelNames.has(id),
         );
         for (const modelId of unavailableModelIds) {
           try {
@@ -200,11 +236,22 @@ export class ModelSyncService {
 
     // Build features array
     const features = [];
+    const supportsEmbeddings = litellmModel.model_info?.supports_embeddings || litellmModel.model_info?.supports_embedding || false;
+    const supportsTokenize = litellmModel.model_info?.supports_tokenize || false;
+    const supportsConvert = litellmModel.model_info?.supports_convert || false;
+
+    if (supportsEmbeddings) {
+      features.push('embeddings');
+    } else if (supportsConvert) {
+      features.push('convert');
+    } else {
+      features.push('chat');
+    }
     if (supportsFunctionCalling) features.push('function_calling');
     if (supportsParallelFunctionCalling) features.push('parallel_function_calling');
     if (supportsToolChoice) features.push('tool_choice');
     if (supportsVision) features.push('vision');
-    features.push('chat'); // Assume all models support chat
+    if (supportsTokenize) features.push('tokenize');
 
     await this.fastify.dbUtils.query(
       `
@@ -288,11 +335,22 @@ export class ModelSyncService {
     const supportsToolChoice = litellmModel.model_info?.supports_tool_choice || false;
 
     const features = [];
+    const supportsEmbeddings = litellmModel.model_info?.supports_embeddings || litellmModel.model_info?.supports_embedding || false;
+    const supportsTokenize = litellmModel.model_info?.supports_tokenize || false;
+    const supportsConvert = litellmModel.model_info?.supports_convert || false;
+
+    if (supportsEmbeddings) {
+      features.push('embeddings');
+    } else if (supportsConvert) {
+      features.push('convert');
+    } else {
+      features.push('chat');
+    }
     if (supportsFunctionCalling) features.push('function_calling');
     if (supportsParallelFunctionCalling) features.push('parallel_function_calling');
     if (supportsToolChoice) features.push('tool_choice');
     if (supportsVision) features.push('vision');
-    features.push('chat');
+    if (supportsTokenize) features.push('tokenize');
 
     // Check if update is needed
     if (!forceUpdate) {
@@ -396,7 +454,7 @@ export class ModelSyncService {
    * Mark a model as unavailable with cascade operations
    * Returns statistics about the cascade operations performed
    */
-  private async markModelUnavailable(modelId: string): Promise<{
+  async markModelUnavailable(modelId: string): Promise<{
     subscriptionsDeactivated: number;
     apiKeyModelAssociationsRemoved: number;
     orphanedApiKeysDeactivated: number;
@@ -572,11 +630,18 @@ export class ModelSyncService {
 
     // Build expected features
     const expectedFeatures = [];
+    const supportsEmbeddings = litellmModel.model_info?.supports_embeddings || litellmModel.model_info?.supports_embedding || false;
+    const supportsTokenize = litellmModel.model_info?.supports_tokenize || false;
+    const supportsConvert = litellmModel.model_info?.supports_convert || false;
+
     if (supportsFunctionCalling) expectedFeatures.push('function_calling');
     if (supportsParallelFunctionCalling) expectedFeatures.push('parallel_function_calling');
     if (supportsToolChoice) expectedFeatures.push('tool_choice');
     if (supportsVision) expectedFeatures.push('vision');
-    expectedFeatures.push('chat');
+    if (supportsEmbeddings) expectedFeatures.push('embeddings');
+    else if (supportsConvert) expectedFeatures.push('convert');
+    else expectedFeatures.push('chat');
+    if (supportsTokenize) expectedFeatures.push('tokenize');
 
     // Extract admin fields from LiteLLM model
     const apiBase = litellmModel.litellm_params?.api_base;

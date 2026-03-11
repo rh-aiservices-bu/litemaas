@@ -828,6 +828,53 @@ export class OAuthService extends BaseService {
         return;
       }
 
+      // User not found by our ID. Check if they exist in LiteLLM under a different
+      // user_id (e.g., pre-existing user from before migration). Look up by email
+      // in LiteLLM_UserTable to find their actual LiteLLM user_id.
+      try {
+        const litellmUser = await this.fastify.dbUtils.queryOne<{ user_id: string }>(
+          `SELECT user_id FROM "LiteLLM_UserTable" WHERE user_email = $1`,
+          [user.email],
+        );
+
+        if (litellmUser && litellmUser.user_id !== user.id) {
+          this.fastify.log.info(
+            { litemaasId: user.id, litellmId: litellmUser.user_id, email: user.email },
+            'User exists in LiteLLM with different ID - updating LiteMaaS to match',
+          );
+
+          // Update our users table to use the LiteLLM user_id so they stay in sync.
+          // This handles the case where migration created users with gen_random_uuid()
+          // but LiteLLM already had them with a different user_id.
+          await this.fastify.dbUtils.query(
+            `UPDATE users SET id = $1 WHERE id = $2`,
+            [litellmUser.user_id, user.id],
+          );
+
+          // Update dependent tables
+          const dependentUpdates = [
+            'UPDATE api_keys SET user_id = $1 WHERE user_id = $2',
+            'UPDATE subscriptions SET user_id = $1 WHERE user_id = $2',
+            'UPDATE audit_logs SET user_id = $1 WHERE user_id = $2',
+            'UPDATE team_members SET user_id = $1 WHERE user_id = $2',
+            'UPDATE refresh_tokens SET user_id = $1 WHERE user_id = $2',
+            'UPDATE oauth_sessions SET user_id = $1 WHERE user_id = $2',
+          ];
+          for (const sql of dependentUpdates) {
+            await this.fastify.dbUtils.query(sql, [litellmUser.user_id, user.id]).catch(() => {});
+          }
+
+          this.fastify.log.info(
+            { oldId: user.id, newId: litellmUser.user_id },
+            'User ID realigned with LiteLLM',
+          );
+          return;
+        }
+      } catch (lookupError) {
+        this.fastify.log.debug({ lookupError }, 'Could not look up user in LiteLLM_UserTable');
+      }
+
+      // User doesn't exist in LiteLLM at all, create them with default team assignment
       this.fastify.log.info(
         { userId: user.id, email: user.email },
         'Creating user in LiteLLM with default team',

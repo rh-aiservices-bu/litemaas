@@ -20,6 +20,8 @@ export interface ApiKey {
     name: string;
     provider: string;
     contextLength?: number;
+    supportsEmbeddings?: boolean;
+    supportsConvert?: boolean;
   }[];
   // Quota fields
   maxBudget?: number;
@@ -48,6 +50,8 @@ interface BackendApiKeyDetails {
     name: string;
     provider: string;
     contextLength?: number;
+    supports_embeddings?: boolean;
+    supports_convert?: boolean;
   }[]; // New field for model details
   lastUsedAt?: string;
   expiresAt?: string;
@@ -137,7 +141,14 @@ class ApiKeysService {
       expiresAt: backend.expiresAt,
       description: backend.metadata?.description ? `${backend.metadata.description}` : undefined,
       models: backend.models,
-      modelDetails: backend.modelDetails,
+      modelDetails: backend.modelDetails?.map((md) => ({
+        id: md.id,
+        name: md.name,
+        provider: md.provider,
+        contextLength: md.contextLength ?? (md as Record<string, unknown>).context_length as number | undefined,
+        supportsEmbeddings: md.supports_embeddings ?? (md as Record<string, unknown>).supportsEmbeddings as boolean | undefined,
+        supportsConvert: md.supports_convert ?? (md as Record<string, unknown>).supportsConvert as boolean | undefined,
+      })),
       maxBudget: backend.maxBudget,
       currentSpend: backend.currentSpend,
       tpmLimit: backend.tpmLimit,

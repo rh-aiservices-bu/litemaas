@@ -6,7 +6,7 @@ FROM registry.access.redhat.com/ubi9/nodejs-22 AS base
 USER root
 
 # Update system packages and clean up
-RUN dnf update -y && dnf clean all
+RUN dnf update -y --nobest && dnf clean all
 
 # Set working directory
 WORKDIR /app

@@ -93,7 +93,7 @@ spec:
                 secretKeyRef:
                   name: {{ include "litemaas.backend.secretName" . }}
                   key: litellm-master-key
-            # Backup & Restore — LiteLLM database direct connection
+            # LiteLLM database — model sync cross-reference + backup/restore
             - name: LITELLM_DATABASE_URL
               valueFrom:
                 secretKeyRef:

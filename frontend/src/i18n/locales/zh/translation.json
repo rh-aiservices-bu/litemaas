@@ -316,6 +316,7 @@
     "weeklyUsagePatterns": "每周使用模式"
   },
   "common": {
+    "accessRestrictions": "访问限制",
     "anUnknownErrorOccurred": "发生了未知错误",
     "cancel": "取消",
     "chart": "图表",
@@ -428,7 +429,12 @@
       "supportsFunctionCalling": "支持函数调用",
       "supportsParallelFunctionCalling": "支持并行函数调用",
       "supportsToolChoice": "支持工具选择",
+      "supportsTokenize": "支持分词",
       "supportsVision": "支持视觉",
+      "modelType": "模型类型",
+      "modelTypeChat": "聊天",
+      "modelTypeEmbeddings": "嵌入",
+      "modelTypeConvert": "文档转换",
       "table": {
         "1mTokens": "/100万令牌",
         "actions": "操作",
@@ -558,7 +564,12 @@
         "copy": "复制"
       },
       "codeExample": {
+        "commentChat": "使用您的安全 LiteLLM API 密钥",
+        "commentConvert": "使用您的 LiteLLM API 密钥转换文档",
+        "commentEmbeddings": "使用您的 LiteLLM API 密钥生成嵌入",
         "content": "你好，世界！",
+        "convertUrl": "https://arxiv.org/pdf/2501.17887",
+        "embeddingsInput": "食物很美味，服务员...",
         "role": "用户"
       },
       "copied": "已复制！",

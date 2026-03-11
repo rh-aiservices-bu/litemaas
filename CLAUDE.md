@@ -27,6 +27,17 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 
 **Role-Based Access Control (RBAC)**: Three-tier hierarchy `admin > adminReadonly > user` with OpenShift integration.
 
+**Model Capability Management**: Multi-type model support beyond chat-only models:
+
+- **Model Types**: Chat (default), Embeddings, Document Conversion — selected via radio group in admin model form
+- **Tokenize Capability**: Optional per-model toggle for tokenization support
+- **Document Conversion**: Docling provider integration with `/health` endpoint testing, hidden irrelevant fields (backend model name, TPM, costs, max tokens)
+- **Capability Labels**: Color-coded flair labels on model cards (Chat=blue, Embeddings=green, Tokenize=orangered, Document Conversion=orange)
+- **Type-Specific Curl Examples**: View Key modal shows contextual curl commands based on model type
+- **Chat Playground Filtering**: Only chat-capable models shown in playground
+- **Redis Cache Flush**: Optional Redis integration (`REDIS_HOST`/`REDIS_PORT`) to flush LiteLLM's cache after model CRUD, ensuring all proxy pods pick up changes immediately
+- **Deployment**: Redis deployment included in Helm (`redis.enabled: true`) and Kustomize charts
+
 **Restricted Model Subscription Approval** (Major feature - 2025 Q4): Admin-controlled access to sensitive/costly models with comprehensive approval workflow:
 
 - **Restricted Model Flagging**: Administrators mark models requiring approval
@@ -86,7 +97,7 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 - **Type-aware serialization**: Correct handling of PG arrays vs JSON arrays, mixed-case identifiers, timestamp precision
 - **CLI restore**: Standalone script for catastrophic recovery (`backend/src/scripts/restore-backup.ts`)
 - **RBAC**: `admin:backup` permission (admin only), tab visible to adminReadonly (read-only)
-- **Configuration**: `LITELLM_DATABASE_URL` for LiteLLM database access, `BACKUP_STORAGE_PATH` for storage location
+- **Configuration**: `LITELLM_DATABASE_URL` for LiteLLM database access (also used by model sync cross-referencing), `BACKUP_STORAGE_PATH` for storage location
 
 **Configurable Currency**: Admin-controlled currency settings (25 supported currencies) for all monetary displays across the platform. Configured via Settings and Tools → Currency tab, stored in `system_settings` table, exposed via public config endpoint. Default: USD ($).
 

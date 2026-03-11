@@ -62,13 +62,14 @@ Fastify plugins are registered in specific order:
 
 1. **env** - Load environment variables
 2. **database** - PostgreSQL connection pool
-3. **auth** - JWT token handling
-4. **oauth** - OAuth2 provider setup
-5. **session** - Session management
-6. **rbac** - Role-based access control
-7. **rate-limit** - Request rate limiting
-8. **swagger** - API documentation
-9. **subscription-hooks** - Subscription lifecycle hooks
+3. **redis** - Optional Redis connection for LiteLLM cache flush after model CRUD (`REDIS_HOST`/`REDIS_PORT`)
+4. **auth** - JWT token handling
+5. **oauth** - OAuth2 provider setup
+6. **session** - Session management
+7. **rbac** - Role-based access control
+8. **rate-limit** - Request rate limiting
+9. **swagger** - API documentation
+10. **subscription-hooks** - Subscription lifecycle hooks
 
 ## 🗄️ Database Schema
 
@@ -177,7 +178,7 @@ See [`docs/architecture/services.md`](../docs/architecture/services.md) for comp
 
 ## 📄 LiteLLM Integration
 
-**Model Sync**: Auto-sync on startup from `/model/info` endpoint with graceful fallback to mock data.
+**Model Sync**: Auto-sync on startup from `/model/info` endpoint with LiteLLM database cross-reference (`LiteLLM_ProxyModelTable`) to filter stale cache entries. Direct DB insert on model creation for immediate frontend availability. Full cascade on model deletion (subscriptions, API key associations, model row).
 
 **API Key Flow**: Database creation → LiteLLM key generation → One-time user display.
 
@@ -299,7 +300,7 @@ All admin analytics business logic constants are centralized in `src/config/admi
 
 ## 🔗 Environment Variables
 
-Key configuration: DATABASE_URL, JWT_SECRET, OAUTH_CLIENT_ID, LITELLM_API_URL, MOCK_AUTH, LITELLM_DATABASE_URL (backup/restore), BACKUP_STORAGE_PATH, plus 15+ admin analytics settings.
+Key configuration: DATABASE_URL, JWT_SECRET, OAUTH_CLIENT_ID, LITELLM_API_URL, MOCK_AUTH, LITELLM_DATABASE_URL (backup/restore + model sync cross-reference), BACKUP_STORAGE_PATH, REDIS_HOST/REDIS_PORT (optional, LiteLLM cache flush), plus 15+ admin analytics settings.
 
 See [`docs/deployment/configuration.md`](../docs/deployment/configuration.md) and `.env.example` for complete list.
 

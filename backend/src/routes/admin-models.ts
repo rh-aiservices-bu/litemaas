@@ -43,7 +43,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:models')],
     handler: async (request) => {
-      const { api_base, api_key: providedApiKey, backend_model_name, model_id } = request.body;
+      const { api_base, api_key: providedApiKey, backend_model_name, model_id, supports_convert } = request.body;
 
       let apiKey = providedApiKey;
 
@@ -76,14 +76,50 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         };
       }
 
-      // Build URL: strip trailing slashes, append /models
+      // Build URL: strip trailing slashes
       const baseUrl = api_base.replace(/\/+$/, '');
-      const modelsUrl = `${baseUrl}/models`;
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       try {
+        // Document Conversion models use /health endpoint instead of /models
+        if (supports_convert) {
+          const healthUrl = `${baseUrl}/health`;
+          const response = await fetch(healthUrl, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            signal: controller.signal,
+          });
+
+          if (response.status === 401 || response.status === 403) {
+            return {
+              success: false,
+              result: 'auth_error' as const,
+              message: 'Authentication failed. Check your API key.',
+            };
+          }
+
+          if (!response.ok) {
+            return {
+              success: false,
+              result: 'connection_error' as const,
+              message: `Endpoint returned HTTP ${response.status}`,
+            };
+          }
+
+          return {
+            success: true,
+            result: 'endpoint_reachable' as const,
+            message: 'Document conversion endpoint is reachable and healthy.',
+          };
+        }
+
+        // Standard models: check /models endpoint for model availability
+        const modelsUrl = `${baseUrl}/models`;
         const response = await fetch(modelsUrl, {
           method: 'GET',
           headers: {
@@ -183,17 +219,21 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         supports_function_calling,
         supports_parallel_function_calling,
         supports_tool_choice,
+        supports_embeddings,
+        supports_tokenize,
+        supports_convert,
         restrictedAccess,
       } = request.body;
 
       try {
         // Transform frontend payload to LiteLLM format
+        const provider = supports_convert ? 'docling' : 'openai';
         const liteLLMPayload = {
           model_name,
           litellm_params: {
-            model: `openai/${backend_model_name}`,
+            model: `${provider}/${backend_model_name}`,
             api_base,
-            custom_llm_provider: 'openai' as const,
+            custom_llm_provider: provider as 'openai' | 'docling',
             input_cost_per_token,
             output_cost_per_token,
             tpm,
@@ -207,11 +247,96 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
             supports_function_calling,
             supports_parallel_function_calling,
             supports_tool_choice,
+            supports_embeddings: supports_embeddings || false,
+            supports_tokenize: supports_tokenize || false,
+            supports_convert: supports_convert || false,
           },
         };
 
         // Create model in LiteLLM
         const liteLLMResponse = await liteLLMService.createModel(liteLLMPayload);
+
+        // Extract the LiteLLM model ID from the response
+        const litellmModelId = liteLLMResponse?.model_info?.id || null;
+
+        // Directly insert/update the local models table instead of relying on syncModels
+        // This ensures the model is immediately available in the frontend
+        try {
+          const features = [];
+          if (supports_function_calling) features.push('function_calling');
+          if (supports_parallel_function_calling) features.push('parallel_function_calling');
+          if (supports_tool_choice) features.push('tool_choice');
+          if (supports_vision) features.push('vision');
+          if (supports_embeddings) features.push('embeddings');
+          else if (supports_convert) features.push('convert');
+          else features.push('chat');
+          if (supports_tokenize) features.push('tokenize');
+
+          await fastify.dbUtils.query(
+            `INSERT INTO models (id, name, provider, description, category, context_length,
+              input_cost_per_token, output_cost_per_token, supports_vision, supports_function_calling,
+              supports_tool_choice, supports_parallel_function_calling, supports_streaming,
+              features, availability, version, api_base, tpm, rpm, max_tokens,
+              litellm_model_id, backend_model_name, restricted_access)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+            ON CONFLICT (id) DO UPDATE SET
+              availability = 'available',
+              litellm_model_id = COALESCE($21, models.litellm_model_id),
+              description = COALESCE($4, models.description),
+              backend_model_name = COALESCE($22, models.backend_model_name),
+              restricted_access = COALESCE($23, models.restricted_access),
+              input_cost_per_token = $7,
+              output_cost_per_token = $8,
+              api_base = $17,
+              tpm = $18,
+              rpm = $19,
+              max_tokens = $20,
+              updated_at = CURRENT_TIMESTAMP`,
+            [
+              model_name,                    // $1 id
+              model_name,                    // $2 name
+              'openai',                      // $3 provider
+              description || null,           // $4 description
+              'Language Model',              // $5 category
+              max_tokens || null,            // $6 context_length
+              input_cost_per_token || null,  // $7
+              output_cost_per_token || null, // $8
+              supports_vision || false,      // $9
+              supports_function_calling || false, // $10
+              supports_tool_choice || false, // $11
+              supports_parallel_function_calling || false, // $12
+              true,                          // $13 supports_streaming
+              features,                      // $14
+              'available',                   // $15 availability
+              '1.0',                         // $16 version
+              api_base || null,              // $17
+              tpm || null,                   // $18
+              rpm || null,                   // $19
+              max_tokens || null,            // $20
+              litellmModelId,                // $21
+              backend_model_name || null,    // $22
+              restrictedAccess !== undefined ? restrictedAccess : false, // $23
+            ],
+          );
+
+          fastify.log.info(
+            { model_name, litellmModelId },
+            'Model directly inserted/updated in local database',
+          );
+
+          // Flush LiteLLM's Redis cache so all proxy pods pick up the new model
+          await fastify.flushLiteLLMCache();
+        } catch (dbError) {
+          fastify.log.warn({ dbError, model_name }, 'Failed to directly insert model - falling back to sync');
+          // Fall back to sync approach
+          try {
+            await liteLLMService.clearCache('models:');
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            await modelSyncService.syncModels({ forceUpdate: true });
+          } catch (syncError) {
+            fastify.log.warn({ syncError }, 'Sync also failed after model creation');
+          }
+        }
 
         // Log admin action
         await fastify.dbUtils.query(
@@ -221,7 +346,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
             user.userId,
             'MODEL_CREATE',
             'MODEL',
-            liteLLMResponse?.model_name || model_name,
+            model_name,
             JSON.stringify({
               model_name,
               description,
@@ -236,6 +361,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
               supports_parallel_function_calling,
               supports_tool_choice,
               restrictedAccess,
+              litellmModelId,
             }),
           ],
         );
@@ -278,6 +404,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           fastify.log.warn({ syncError }, 'Model synchronization failed after model creation');
         }
 
+
         reply.status(201);
         return {
           success: true,
@@ -294,7 +421,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         reply.status(500);
         return {
           error: 'CREATE_MODEL_FAILED',
-          message: error.message || 'Failed to create model',
+          message: `Failed to create model '${model_name}'. Please check the configuration and try again.`,
           statusCode: 500,
         };
       }
@@ -337,6 +464,9 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           liteLLMPayload.model_name = updateData.model_name;
         }
 
+        // Determine provider based on model type
+        const updateProvider = updateData.supports_convert ? 'docling' : 'openai';
+
         if (
           Object.keys(updateData).some((key) =>
             [
@@ -347,15 +477,16 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
               'output_cost_per_token',
               'tpm',
               'rpm',
+              'supports_convert',
             ].includes(key),
           )
         ) {
           liteLLMPayload.litellm_params = {};
           if (updateData.backend_model_name) {
-            liteLLMPayload.litellm_params.model = `openai/${updateData.backend_model_name}`;
+            liteLLMPayload.litellm_params.model = `${updateProvider}/${updateData.backend_model_name}`;
           } else if (updateData.model_name) {
             // Fallback to model_name for backward compatibility
-            liteLLMPayload.litellm_params.model = `openai/${updateData.model_name}`;
+            liteLLMPayload.litellm_params.model = `${updateProvider}/${updateData.model_name}`;
           }
           if (updateData.api_base) {
             liteLLMPayload.litellm_params.api_base = updateData.api_base;
@@ -382,7 +513,10 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           updateData.supports_vision !== undefined ||
           updateData.supports_function_calling !== undefined ||
           updateData.supports_parallel_function_calling !== undefined ||
-          updateData.supports_tool_choice !== undefined
+          updateData.supports_tool_choice !== undefined ||
+          updateData.supports_embeddings !== undefined ||
+          updateData.supports_tokenize !== undefined ||
+          updateData.supports_convert !== undefined
         ) {
           liteLLMPayload.model_info = {};
           if (updateData.max_tokens !== undefined) {
@@ -401,6 +535,15 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           }
           if (updateData.supports_tool_choice !== undefined) {
             liteLLMPayload.model_info.supports_tool_choice = updateData.supports_tool_choice;
+          }
+          if (updateData.supports_embeddings !== undefined) {
+            liteLLMPayload.model_info.supports_embeddings = updateData.supports_embeddings;
+          }
+          if (updateData.supports_tokenize !== undefined) {
+            liteLLMPayload.model_info.supports_tokenize = updateData.supports_tokenize;
+          }
+          if (updateData.supports_convert !== undefined) {
+            liteLLMPayload.model_info.supports_convert = updateData.supports_convert;
           }
         }
 
@@ -422,6 +565,9 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         // Update model in LiteLLM using the correct LiteLLM model ID
         await liteLLMService.updateModel(modelRecord.litellm_model_id, liteLLMPayload);
 
+        // Flush LiteLLM's Redis cache so all proxy pods pick up the updated model
+        await fastify.flushLiteLLMCache();
+
         // Log admin action
         await fastify.dbUtils.query(
           `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
@@ -429,8 +575,10 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           [user.userId, 'MODEL_UPDATE', 'MODEL', modelId, JSON.stringify({ modelId, updateData })],
         );
 
-        // Synchronize models after update
+        // Clear cache and synchronize models after update
         try {
+          await liteLLMService.clearCache('models:');
+          await new Promise((resolve) => setTimeout(resolve, 2000));
           await modelSyncService.syncModels({ forceUpdate: true });
 
           // Update the description if provided by the user
@@ -525,7 +673,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         reply.status(statusCode);
         return {
           error: 'UPDATE_MODEL_FAILED',
-          message: error.message || 'Failed to update model',
+          message: `Failed to update model '${modelId}'. Please check the configuration and try again.`,
           statusCode,
         };
       }
@@ -573,8 +721,23 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         // Delete model from LiteLLM using the correct LiteLLM model ID
-        await liteLLMService.deleteModel(modelRecord.litellm_model_id);
-        request.log.info('Model deleted from LiteLLM');
+        try {
+          await liteLLMService.deleteModel(modelRecord.litellm_model_id);
+          fastify.log.info({ modelId, litellmModelId: modelRecord.litellm_model_id }, 'Model deleted from LiteLLM');
+
+          // Flush LiteLLM's Redis cache so all proxy pods stop serving the deleted model
+          await fastify.flushLiteLLMCache();
+        } catch (deleteError: any) {
+          // If model is already gone from LiteLLM (404), proceed with local cleanup
+          if (deleteError.statusCode === 404 || (deleteError.message && deleteError.message.includes('not found'))) {
+            fastify.log.warn(
+              { modelId, litellmModelId: modelRecord.litellm_model_id },
+              'Model not found in LiteLLM (already deleted) - proceeding with local cleanup',
+            );
+          } else {
+            throw deleteError;
+          }
+        }
 
         // Log admin action
         await fastify.dbUtils.query(
@@ -583,13 +746,27 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           [user.userId, 'MODEL_DELETE', 'MODEL', modelId, JSON.stringify({ modelId })],
         );
 
-        // Synchronize models after deletion
+        // Cascade operations: deactivate subscriptions, remove API key associations
         try {
-          await modelSyncService.syncModels({ forceUpdate: true });
-          fastify.log.info('Model synchronization completed after model deletion');
-        } catch (syncError) {
-          fastify.log.warn({ syncError }, 'Model synchronization failed after model deletion');
+          const cascadeResult = await modelSyncService.markModelUnavailable(modelId);
+          fastify.log.info(
+            { modelId, cascadeResult },
+            'Cascade operations completed (subscriptions deactivated, API key associations removed)',
+          );
+        } catch (dbError) {
+          fastify.log.warn({ dbError, modelId }, 'Cascade operations failed - proceeding with delete');
         }
+
+        // Delete referencing rows then the model row itself.
+        // The cascade above deactivates subscriptions but doesn't delete the rows,
+        // so we must remove them to satisfy the foreign key constraint.
+        await fastify.dbUtils.query(`DELETE FROM subscription_status_history WHERE subscription_id IN (SELECT id FROM subscriptions WHERE model_id = $1)`, [modelId]);
+        await fastify.dbUtils.query(`DELETE FROM subscriptions WHERE model_id = $1`, [modelId]);
+        await fastify.dbUtils.query(`DELETE FROM models WHERE id = $1`, [modelId]);
+        fastify.log.info({ modelId }, 'Model row deleted from local database');
+
+        // Clear cache so subsequent reads are fresh
+        await liteLLMService.clearCache('models:');
 
         return {
           success: true,
@@ -602,7 +779,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         reply.status(statusCode);
         return {
           error: 'DELETE_MODEL_FAILED',
-          message: error.message || 'Failed to delete model',
+          message: `Failed to delete model '${modelId}'. Please try again or contact an administrator.`,
           statusCode,
         };
       }

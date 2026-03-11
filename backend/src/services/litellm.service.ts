@@ -455,10 +455,42 @@ export class LiteLLMService extends BaseService {
 
   async getModelById(modelId: string): Promise<LiteLLMModel | null> {
     const models = await this.getModels();
-    return (
+    const found =
       models.find((model) => model.model_name === modelId || model.model_info.id === modelId) ||
-      null
-    );
+      null;
+
+    // If not found in LiteLLM cache, check local models table as fallback.
+    // This handles race conditions where a model was just created/re-created
+    // and the LiteLLM API cache hasn't refreshed yet.
+    if (!found) {
+      try {
+        const localModel = await this.fastify.dbUtils.queryOne<{
+          id: string;
+          litellm_model_id: string;
+          availability: string;
+        }>('SELECT id, litellm_model_id, availability FROM models WHERE id = $1 AND availability = $2', [
+          modelId,
+          'available',
+        ]);
+
+        if (localModel) {
+          this.fastify.log.info(
+            { modelId },
+            'Model not found in LiteLLM cache but exists in local DB, returning stub',
+          );
+          // Return a minimal LiteLLMModel stub so validation passes
+          return {
+            model_name: localModel.id,
+            litellm_params: { model: localModel.id },
+            model_info: { id: localModel.litellm_model_id || localModel.id },
+          } as LiteLLMModel;
+        }
+      } catch (dbError) {
+        this.fastify.log.warn({ dbError, modelId }, 'Failed to check local models table');
+      }
+    }
+
+    return found;
   }
 
   // Enhanced Health Monitoring

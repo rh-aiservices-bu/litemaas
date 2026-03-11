@@ -32,6 +32,10 @@ declare module 'fastify' {
       OIDC_GROUPS_CLAIM: string;
       OIDC_SCOPES?: string;
 
+      // Redis (optional)
+      REDIS_HOST?: string;
+      REDIS_PORT: string;
+
       // LiteLLM
       LITELLM_API_URL: string;
       LITELLM_API_KEY?: string;

@@ -135,6 +135,12 @@ spec:
             - name: BACKUP_STORAGE_PATH
               value: '/data/backups'
 
+            # Redis (for flushing LiteLLM cache after model CRUD)
+            - name: REDIS_HOST
+              value: 'litellm-redis'
+            - name: REDIS_PORT
+              value: '6379'
+
             # Backend API Rate Limiting (NOT for LLM requests)
             - name: RATE_LIMIT_MAX
               value: '1000'

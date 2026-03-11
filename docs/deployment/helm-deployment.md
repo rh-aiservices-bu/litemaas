@@ -142,8 +142,8 @@ helm test litemaas -n litemaas
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `litellm.enabled` | Deploy built-in LiteLLM proxy | `true` |
-| `litellm.image.repository` | LiteLLM image | `ghcr.io/berriai/litellm-non_root` |
-| `litellm.image.tag` | LiteLLM image tag | `main-v1.74.7-stable` |
+| `litellm.image.repository` | LiteLLM image (custom fork with Docling + tokenize support) | `quay.io/rh-aiservices-bu/litellm-non-root` |
+| `litellm.image.tag` | LiteLLM image tag | `main-v1.81.0-stable-custom` |
 | `litellm.databaseUrl` | Explicit database URL (auto-built when `postgresql.enabled`) | `""` |
 | `litellm.auth.masterKey` | LiteLLM master/API key | `changeme` |
 | `litellm.auth.uiUsername` | Admin UI username | `admin` |

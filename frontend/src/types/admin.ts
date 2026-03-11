@@ -13,6 +13,9 @@ export interface LiteLLMModelCreate {
   supports_function_calling: boolean;
   supports_parallel_function_calling: boolean;
   supports_tool_choice: boolean;
+  supports_embeddings?: boolean;
+  supports_tokenize?: boolean;
+  supports_convert?: boolean;
   restrictedAccess?: boolean;
 }
 
@@ -70,6 +73,9 @@ export interface AdminModelFormData {
   supports_function_calling: boolean;
   supports_parallel_function_calling: boolean;
   supports_tool_choice: boolean;
+  supports_embeddings: boolean;
+  supports_tokenize: boolean;
+  supports_convert: boolean;
   restrictedAccess: boolean;
 }
 
@@ -92,6 +98,7 @@ export interface TestModelConfigRequest {
   api_key?: string;
   backend_model_name: string;
   model_id?: string;
+  supports_convert?: boolean;
 }
 
 export interface TestModelConfigResponse {
@@ -99,6 +106,7 @@ export interface TestModelConfigResponse {
   result:
     | 'model_found'
     | 'model_not_found'
+    | 'endpoint_reachable'
     | 'auth_error'
     | 'connection_error'
     | 'timeout'

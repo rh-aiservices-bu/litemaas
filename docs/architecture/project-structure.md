@@ -231,7 +231,7 @@ litemaas/
 #### Core Directories
 
 - **`src/config/`** - Configuration modules for database connections and environment setup
-- **`src/plugins/`** - Fastify plugins registered in specific order (env → database → auth → oauth → session → rbac → rate-limit → swagger → subscription-hooks)
+- **`src/plugins/`** - Fastify plugins registered in specific order (env → database → redis → auth → oauth → session → rbac → rate-limit → swagger → subscription-hooks)
 - **`src/routes/`** - API endpoints organized by functionality, following flat structure
 - **`src/services/`** - Business logic layer with BaseService inheritance pattern
 - **`src/schemas/`** - TypeBox validation schemas for request/response validation

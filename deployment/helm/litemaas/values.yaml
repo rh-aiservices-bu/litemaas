@@ -110,6 +110,26 @@ postgresql:
     failureThreshold: 3
 
 # =============================================================================
+# Redis
+# =============================================================================
+redis:
+  # -- Deploy built-in Redis for LiteLLM cache management.
+  # Used by both LiteLLM (model/key caching) and the backend (cache flush after model CRUD).
+  enabled: true
+
+  image:
+    repository: redis
+    tag: "7-alpine"
+
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "200m"
+
+# =============================================================================
 # LiteLLM
 # =============================================================================
 litellm:
@@ -117,8 +137,8 @@ litellm:
   enabled: true
 
   image:
-    repository: ghcr.io/berriai/litellm-non_root
-    tag: "main-v1.81.0-stable"
+    repository: quay.io/rh-aiservices-bu/litellm-non-root
+    tag: "main-v1.81.0-stable-custom"
 
   # -- Explicit database URL for LiteLLM. Auto-constructed when postgresql.enabled is true.
   databaseUrl: ""
@@ -213,10 +233,18 @@ backend:
     tpmLimit: "100000"
     rpmLimit: "120"
 
+  # -- Redis connection for flushing LiteLLM's cache after model CRUD operations.
+  # Auto-constructed when redis.enabled is true. Set explicitly to use an external Redis.
+  # If empty and redis.enabled is false, cache flush is disabled (non-fatal).
+  redis:
+    host: ""
+    port: "6379"
+
   # -- Backup & Restore configuration
   backup:
-    # -- LiteLLM database URL for backup/restore. Auto-constructed when postgresql.enabled is true.
-    # Required only if you want to backup/restore the LiteLLM database.
+    # -- LiteLLM database URL. Auto-constructed when postgresql.enabled is true.
+    # Used for: (1) model sync cross-referencing to prevent deleted models reappearing,
+    # and (2) LiteLLM database backup/restore. Recommended for production deployments.
     litellmDatabaseUrl: ""
     # -- Mount path for backup storage inside the container.
     # This value is set as BACKUP_STORAGE_PATH env var.

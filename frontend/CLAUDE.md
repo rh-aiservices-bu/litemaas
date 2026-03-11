@@ -141,7 +141,7 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 **Service Pattern**: Consistent service structure for all API endpoints:
 
 - `auth.service.ts` - Authentication (OAuth, profile)
-- `models.service.ts` - Model catalog
+- `models.service.ts` - Model catalog (includes `supportsChat`, `supportsEmbeddings`, `supportsTokenize`, `supportsConvert` capability flags)
 - `subscriptions.service.ts` - User subscriptions (includes request-review endpoint)
 - `adminSubscriptions.service.ts` - **Admin subscription approval** (approval requests, bulk operations, stats)
 - `apiKeys.service.ts` - API key management
@@ -166,7 +166,7 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
   - Day-by-day incremental caching (5-min TTL for current day)
   - Data export (CSV/JSON)
   - ConfigContext integration for dynamic cache TTL
-- `/admin/models` - **Model Management (AdminModelsPage.tsx)** - Model configuration testing
+- `/admin/models` - **Model Management (AdminModelsPage.tsx)** - Model CRUD with type selection (Chat/Embeddings/Document Conversion), Tokenize capability, configuration testing, and adaptive form fields
 - `/admin/subscriptions` - **Subscription Management (AdminSubscriptionsPage.tsx)** - Approve/deny restricted model access:
   - Multi-dimensional filtering (status, model, user, date range)
   - Bulk approve/deny operations with result modals

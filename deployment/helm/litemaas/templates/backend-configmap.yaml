@@ -27,6 +27,11 @@ data:
   INITIAL_ADMIN_USERS: {{ $initialAdmins | quote }}
   {{- end }}
   LITELLM_API_URL: {{ include "litemaas.litellm.url" . | quote }}
+  {{- $redisHost := include "litemaas.redis.host" . }}
+  {{- if $redisHost }}
+  REDIS_HOST: {{ $redisHost | quote }}
+  REDIS_PORT: {{ .Values.backend.redis.port | quote }}
+  {{- end }}
   {{- if .Values.backend.backup.storagePath }}
   BACKUP_STORAGE_PATH: {{ .Values.backend.backup.storagePath | quote }}
   {{- end }}
