@@ -110,6 +110,26 @@ postgresql:
     failureThreshold: 3
 
 # =============================================================================
+# Redis
+# =============================================================================
+redis:
+  # -- Deploy built-in Redis for LiteLLM cache management.
+  # Used by both LiteLLM (model/key caching) and the backend (cache flush after model CRUD).
+  enabled: true
+
+  image:
+    repository: redis
+    tag: "7-alpine"
+
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "200m"
+
+# =============================================================================
 # LiteLLM
 # =============================================================================
 litellm:
@@ -212,6 +232,13 @@ backend:
     maxBudget: "100"
     tpmLimit: "100000"
     rpmLimit: "120"
+
+  # -- Redis connection for flushing LiteLLM's cache after model CRUD operations.
+  # Auto-constructed when redis.enabled is true. Set explicitly to use an external Redis.
+  # If empty and redis.enabled is false, cache flush is disabled (non-fatal).
+  redis:
+    host: ""
+    port: "6379"
 
   # -- Backup & Restore configuration
   backup:

@@ -69,6 +69,12 @@ spec:
               value: 'PRODUCTION'
             - name: STORE_MODEL_IN_DB
               value: 'True'
+            - name: DISABLE_SCHEMA_UPDATE
+              value: 'true'
+            - name: REDIS_HOST
+              value: 'litellm-redis'
+            - name: REDIS_PORT
+              value: '6379'
           resources:
             requests:
               memory: '512Mi'

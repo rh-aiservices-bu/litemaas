@@ -33,6 +33,10 @@ const envSchema = Type.Object({
   OIDC_GROUPS_CLAIM: Type.String({ default: 'groups' }),
   OIDC_SCOPES: Type.Optional(Type.String()),
 
+  // Redis (optional — used to flush LiteLLM's cache after model CRUD)
+  REDIS_HOST: Type.Optional(Type.String()),
+  REDIS_PORT: Type.String({ default: '6379' }),
+
   // LiteLLM
   LITELLM_API_URL: Type.String({ default: 'http://localhost:4000' }),
   LITELLM_API_KEY: Type.Optional(Type.String()),
