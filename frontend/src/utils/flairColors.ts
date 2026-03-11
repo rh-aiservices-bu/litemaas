@@ -19,8 +19,8 @@ export const flairs: Flair[] = [
   { key: 'supportsFunctionCalling', label: 'Function Calling', color: 'purple' },
   { key: 'supportsParallelFunctionCalling', label: 'Parallel Functions', color: 'yellow' },
   { key: 'supportsToolChoice', label: 'Tool Choice', color: 'grey' },
-  { key: 'supportsEmbeddings', label: 'Embeddings', color: 'cyan' },
-  { key: 'supportsTokenize', label: 'Tokenize', color: 'gold' },
+  { key: 'supportsEmbeddings', label: 'Embeddings', color: 'green' },
+  { key: 'supportsTokenize', label: 'Tokenize', color: 'orangered' },
   { key: 'supportsConvert', label: 'Document Conversion', color: 'orange' },
 ];
 
