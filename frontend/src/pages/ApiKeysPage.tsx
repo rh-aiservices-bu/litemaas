@@ -167,25 +167,18 @@ const ApiKeysPage: React.FC = () => {
   const loadModels = async () => {
     try {
       setLoadingModels(true);
-      // Get user's active subscriptions to determine available models
-      const subscriptionsResponse = await subscriptionsService.getSubscriptions(1, 100);
+      // Fetch subscriptions and models in parallel (2 requests instead of N+1)
+      const [subscriptionsResponse, modelsResponse] = await Promise.all([
+        subscriptionsService.getSubscriptions(1, 100),
+        modelsService.getModels(1, 1000),
+      ]);
       const activeSubscriptions = subscriptionsResponse.data.filter(
         (sub) => sub.status === 'active',
       );
 
-      // Extract unique models from subscriptions
-      const uniqueModelIds = [...new Set(activeSubscriptions.map((sub) => sub.modelId))];
-
-      // Fetch detailed model information for each subscribed model
-      const modelPromises = uniqueModelIds.map((modelId) =>
-        modelsService.getModel(modelId).catch((err) => {
-          console.warn(`Failed to load model ${modelId}:`, err);
-          return null;
-        }),
-      );
-
-      const modelResults = await Promise.all(modelPromises);
-      const validModels = modelResults.filter((model) => model !== null) as Model[];
+      // Filter models to only those the user is subscribed to
+      const subscribedModelIds = new Set(activeSubscriptions.map((sub) => sub.modelId));
+      const validModels = modelsResponse.models.filter((m) => subscribedModelIds.has(m.id));
 
       setModels(validModels);
     } catch (err: any) {
