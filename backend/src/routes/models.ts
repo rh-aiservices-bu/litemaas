@@ -210,6 +210,10 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
             supportsFunctionCalling: Boolean(model.supports_function_calling),
             supportsParallelFunctionCalling: Boolean(model.supports_parallel_function_calling),
             supportsToolChoice: Boolean(model.supports_tool_choice),
+            supportsChat: (model.features as string[])?.includes('chat') || false,
+            supportsEmbeddings: (model.features as string[])?.includes('embeddings') || false,
+            supportsTokenize: (model.features as string[])?.includes('tokenize') || false,
+            supportsConvert: (model.features as string[])?.includes('convert') || false,
             restrictedAccess: Boolean(model.restricted_access),
           }));
 
@@ -477,6 +481,10 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
               supportsFunctionCalling: Boolean(model.supports_function_calling),
               supportsParallelFunctionCalling: Boolean(model.supports_parallel_function_calling),
               supportsToolChoice: Boolean(model.supports_tool_choice),
+              supportsChat: (model.features as string[])?.includes('chat') || false,
+              supportsEmbeddings: (model.features as string[])?.includes('embeddings') || false,
+              supportsTokenize: (model.features as string[])?.includes('tokenize') || false,
+              supportsConvert: (model.features as string[])?.includes('convert') || false,
               inputCostPerToken: model.input_cost_per_token
                 ? Number(model.input_cost_per_token)
                 : undefined,

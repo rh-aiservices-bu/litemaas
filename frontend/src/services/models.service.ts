@@ -29,6 +29,10 @@ export interface BackendModel {
   supportsFunctionCalling?: boolean;
   supportsParallelFunctionCalling?: boolean;
   supportsToolChoice?: boolean;
+  supportsChat?: boolean;
+  supportsEmbeddings?: boolean;
+  supportsTokenize?: boolean;
+  supportsConvert?: boolean;
   litellmModelId?: string;
 }
 
@@ -60,6 +64,10 @@ export interface Model {
   supportsFunctionCalling?: boolean;
   supportsParallelFunctionCalling?: boolean;
   supportsToolChoice?: boolean;
+  supportsChat?: boolean;
+  supportsEmbeddings?: boolean;
+  supportsTokenize?: boolean;
+  supportsConvert?: boolean;
   litellmModelId?: string;
 }
 
@@ -156,6 +164,10 @@ class ModelsService {
       supportsFunctionCalling: backendModel.supportsFunctionCalling,
       supportsParallelFunctionCalling: backendModel.supportsParallelFunctionCalling,
       supportsToolChoice: backendModel.supportsToolChoice,
+      supportsChat: backendModel.supportsChat,
+      supportsEmbeddings: backendModel.supportsEmbeddings,
+      supportsTokenize: backendModel.supportsTokenize,
+      supportsConvert: backendModel.supportsConvert,
       litellmModelId: backendModel.litellmModelId,
     };
   }

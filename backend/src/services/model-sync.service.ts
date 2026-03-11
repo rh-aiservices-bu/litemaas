@@ -221,11 +221,18 @@ export class ModelSyncService {
 
     // Build features array
     const features = [];
+    const supportsEmbeddings = litellmModel.model_info?.supports_embedding || false;
+
+    if (supportsEmbeddings) {
+      features.push('embeddings');
+    } else {
+      // Only non-embedding models support chat
+      features.push('chat');
+    }
     if (supportsFunctionCalling) features.push('function_calling');
     if (supportsParallelFunctionCalling) features.push('parallel_function_calling');
     if (supportsToolChoice) features.push('tool_choice');
     if (supportsVision) features.push('vision');
-    features.push('chat'); // Assume all models support chat
 
     await this.fastify.dbUtils.query(
       `
@@ -309,11 +316,17 @@ export class ModelSyncService {
     const supportsToolChoice = litellmModel.model_info?.supports_tool_choice || false;
 
     const features = [];
+    const supportsEmbeddings = litellmModel.model_info?.supports_embedding || false;
+
+    if (supportsEmbeddings) {
+      features.push('embeddings');
+    } else {
+      features.push('chat');
+    }
     if (supportsFunctionCalling) features.push('function_calling');
     if (supportsParallelFunctionCalling) features.push('parallel_function_calling');
     if (supportsToolChoice) features.push('tool_choice');
     if (supportsVision) features.push('vision');
-    features.push('chat');
 
     // Check if update is needed
     if (!forceUpdate) {
