@@ -428,7 +428,12 @@
       "supportsFunctionCalling": "支持函数调用",
       "supportsParallelFunctionCalling": "支持并行函数调用",
       "supportsToolChoice": "支持工具选择",
+      "supportsTokenize": "支持分词",
       "supportsVision": "支持视觉",
+      "modelType": "模型类型",
+      "modelTypeChat": "聊天",
+      "modelTypeEmbeddings": "嵌入",
+      "modelTypeConvert": "文档转换",
       "table": {
         "1mTokens": "/100万令牌",
         "actions": "操作",

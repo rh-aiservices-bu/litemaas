@@ -428,7 +428,12 @@
       "supportsFunctionCalling": "Unterstützt Funktionsaufrufe",
       "supportsParallelFunctionCalling": "Unterstützt Parallele Funktionsaufrufe",
       "supportsToolChoice": "Unterstützt Werkzeugauswahl",
+      "supportsTokenize": "Unterstützt Tokenisierung",
       "supportsVision": "Unterstützt Vision",
+      "modelType": "Modelltyp",
+      "modelTypeChat": "Chat",
+      "modelTypeEmbeddings": "Embeddings",
+      "modelTypeConvert": "Dokumentenkonvertierung",
       "table": {
         "1mTokens": "/1M Token",
         "actions": "Aktionen",

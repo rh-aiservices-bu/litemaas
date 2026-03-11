@@ -428,7 +428,12 @@
       "supportsFunctionCalling": "Puia Echad-Galad",
       "supportsParallelFunctionCalling": "Puia Thâl-Echad-Galad",
       "supportsToolChoice": "Puia Echad-Edhellen",
+      "supportsTokenize": "Puia Técinad",
       "supportsVision": "Puia Tirion",
+      "modelType": "Nólë Samna",
+      "modelTypeChat": "Quetil",
+      "modelTypeEmbeddings": "Nurtanë",
+      "modelTypeConvert": "Parma Vistië",
       "table": {
         "1mTokens": "/1M têw",
         "actions": "Caran",

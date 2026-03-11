@@ -428,7 +428,12 @@
       "supportsFunctionCalling": "Supports Function Calling",
       "supportsParallelFunctionCalling": "Supports Parallel Function Calling",
       "supportsToolChoice": "Supports Tool Choice",
+      "supportsTokenize": "Supports Tokenize",
       "supportsVision": "Supports Vision",
+      "modelType": "Model Type",
+      "modelTypeChat": "Chat",
+      "modelTypeEmbeddings": "Embeddings",
+      "modelTypeConvert": "Document Conversion",
       "table": {
         "1mTokens": "/1M tokens",
         "actions": "Actions",

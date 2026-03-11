@@ -236,18 +236,22 @@ export class ModelSyncService {
 
     // Build features array
     const features = [];
-    const supportsEmbeddings = litellmModel.model_info?.supports_embedding || false;
+    const supportsEmbeddings = litellmModel.model_info?.supports_embeddings || litellmModel.model_info?.supports_embedding || false;
+    const supportsTokenize = litellmModel.model_info?.supports_tokenize || false;
+    const supportsConvert = litellmModel.model_info?.supports_convert || false;
 
     if (supportsEmbeddings) {
       features.push('embeddings');
+    } else if (supportsConvert) {
+      features.push('convert');
     } else {
-      // Only non-embedding models support chat
       features.push('chat');
     }
     if (supportsFunctionCalling) features.push('function_calling');
     if (supportsParallelFunctionCalling) features.push('parallel_function_calling');
     if (supportsToolChoice) features.push('tool_choice');
     if (supportsVision) features.push('vision');
+    if (supportsTokenize) features.push('tokenize');
 
     await this.fastify.dbUtils.query(
       `
@@ -331,10 +335,14 @@ export class ModelSyncService {
     const supportsToolChoice = litellmModel.model_info?.supports_tool_choice || false;
 
     const features = [];
-    const supportsEmbeddings = litellmModel.model_info?.supports_embedding || false;
+    const supportsEmbeddings = litellmModel.model_info?.supports_embeddings || litellmModel.model_info?.supports_embedding || false;
+    const supportsTokenize = litellmModel.model_info?.supports_tokenize || false;
+    const supportsConvert = litellmModel.model_info?.supports_convert || false;
 
     if (supportsEmbeddings) {
       features.push('embeddings');
+    } else if (supportsConvert) {
+      features.push('convert');
     } else {
       features.push('chat');
     }
@@ -342,6 +350,7 @@ export class ModelSyncService {
     if (supportsParallelFunctionCalling) features.push('parallel_function_calling');
     if (supportsToolChoice) features.push('tool_choice');
     if (supportsVision) features.push('vision');
+    if (supportsTokenize) features.push('tokenize');
 
     // Check if update is needed
     if (!forceUpdate) {
@@ -621,11 +630,18 @@ export class ModelSyncService {
 
     // Build expected features
     const expectedFeatures = [];
+    const supportsEmbeddings = litellmModel.model_info?.supports_embeddings || litellmModel.model_info?.supports_embedding || false;
+    const supportsTokenize = litellmModel.model_info?.supports_tokenize || false;
+    const supportsConvert = litellmModel.model_info?.supports_convert || false;
+
     if (supportsFunctionCalling) expectedFeatures.push('function_calling');
     if (supportsParallelFunctionCalling) expectedFeatures.push('parallel_function_calling');
     if (supportsToolChoice) expectedFeatures.push('tool_choice');
     if (supportsVision) expectedFeatures.push('vision');
-    expectedFeatures.push('chat');
+    if (supportsEmbeddings) expectedFeatures.push('embeddings');
+    else if (supportsConvert) expectedFeatures.push('convert');
+    else expectedFeatures.push('chat');
+    if (supportsTokenize) expectedFeatures.push('tokenize');
 
     // Extract admin fields from LiteLLM model
     const apiBase = litellmModel.litellm_params?.api_base;

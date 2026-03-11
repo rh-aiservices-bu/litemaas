@@ -44,6 +44,9 @@ export const AdminCreateModelSchema = Type.Object({
   supports_function_calling: Type.Boolean(),
   supports_parallel_function_calling: Type.Boolean(),
   supports_tool_choice: Type.Boolean(),
+  supports_embeddings: Type.Optional(Type.Boolean()),
+  supports_tokenize: Type.Optional(Type.Boolean()),
+  supports_convert: Type.Optional(Type.Boolean()),
   restrictedAccess: Type.Optional(Type.Boolean()),
 });
 

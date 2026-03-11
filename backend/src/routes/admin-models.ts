@@ -183,6 +183,9 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         supports_function_calling,
         supports_parallel_function_calling,
         supports_tool_choice,
+        supports_embeddings,
+        supports_tokenize,
+        supports_convert,
         restrictedAccess,
       } = request.body;
 
@@ -207,6 +210,9 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
             supports_function_calling,
             supports_parallel_function_calling,
             supports_tool_choice,
+            supports_embeddings: supports_embeddings || false,
+            supports_tokenize: supports_tokenize || false,
+            supports_convert: supports_convert || false,
           },
         };
 
@@ -224,7 +230,10 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           if (supports_parallel_function_calling) features.push('parallel_function_calling');
           if (supports_tool_choice) features.push('tool_choice');
           if (supports_vision) features.push('vision');
-          features.push('chat');
+          if (supports_embeddings) features.push('embeddings');
+          else if (supports_convert) features.push('convert');
+          else features.push('chat');
+          if (supports_tokenize) features.push('tokenize');
 
           await fastify.dbUtils.query(
             `INSERT INTO models (id, name, provider, description, category, context_length,
@@ -463,7 +472,10 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           updateData.supports_vision !== undefined ||
           updateData.supports_function_calling !== undefined ||
           updateData.supports_parallel_function_calling !== undefined ||
-          updateData.supports_tool_choice !== undefined
+          updateData.supports_tool_choice !== undefined ||
+          updateData.supports_embeddings !== undefined ||
+          updateData.supports_tokenize !== undefined ||
+          updateData.supports_convert !== undefined
         ) {
           liteLLMPayload.model_info = {};
           if (updateData.max_tokens !== undefined) {
@@ -482,6 +494,15 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           }
           if (updateData.supports_tool_choice !== undefined) {
             liteLLMPayload.model_info.supports_tool_choice = updateData.supports_tool_choice;
+          }
+          if (updateData.supports_embeddings !== undefined) {
+            liteLLMPayload.model_info.supports_embeddings = updateData.supports_embeddings;
+          }
+          if (updateData.supports_tokenize !== undefined) {
+            liteLLMPayload.model_info.supports_tokenize = updateData.supports_tokenize;
+          }
+          if (updateData.supports_convert !== undefined) {
+            liteLLMPayload.model_info.supports_convert = updateData.supports_convert;
           }
         }
 

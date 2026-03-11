@@ -428,7 +428,12 @@
       "supportsFunctionCalling": "Supporta Chiamate di Funzione",
       "supportsParallelFunctionCalling": "Supporta Chiamate di Funzione Parallele",
       "supportsToolChoice": "Supporta Scelta Strumento",
+      "supportsTokenize": "Supporta Tokenizzazione",
       "supportsVision": "Supporta Visione",
+      "modelType": "Tipo di Modello",
+      "modelTypeChat": "Chat",
+      "modelTypeEmbeddings": "Embeddings",
+      "modelTypeConvert": "Conversione Documenti",
       "table": {
         "1mTokens": "/1M token",
         "actions": "Azioni",

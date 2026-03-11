@@ -428,7 +428,12 @@
       "supportsFunctionCalling": "함수 호출 지원",
       "supportsParallelFunctionCalling": "병렬 함수 호출 지원",
       "supportsToolChoice": "도구 선택 지원",
+      "supportsTokenize": "토큰화 지원",
       "supportsVision": "비전 지원",
+      "modelType": "모델 유형",
+      "modelTypeChat": "채팅",
+      "modelTypeEmbeddings": "임베딩",
+      "modelTypeConvert": "문서 변환",
       "table": {
         "1mTokens": "/100만 토큰",
         "actions": "작업",

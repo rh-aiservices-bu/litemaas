@@ -25,6 +25,7 @@ import {
   ModalVariant,
   NumberInput,
   PageSection,
+  Radio,
   Spinner,
   Stack,
   TextInput,
@@ -85,6 +86,9 @@ const AdminModelsPage: React.FC = () => {
     supports_function_calling: false,
     supports_parallel_function_calling: false,
     supports_tool_choice: false,
+    supports_embeddings: false,
+    supports_tokenize: false,
+    supports_convert: false,
     restrictedAccess: false,
   });
   const [formErrors, setFormErrors] = useState<AdminModelFormErrors>({});
@@ -252,6 +256,9 @@ const AdminModelsPage: React.FC = () => {
       supports_function_calling: false,
       supports_parallel_function_calling: false,
       supports_tool_choice: false,
+      supports_embeddings: false,
+      supports_tokenize: false,
+      supports_convert: false,
       restrictedAccess: false,
     });
     setDisplayInputCost(0);
@@ -343,6 +350,9 @@ const AdminModelsPage: React.FC = () => {
       supports_function_calling: model.supportsFunctionCalling || false,
       supports_parallel_function_calling: model.supportsParallelFunctionCalling || false,
       supports_tool_choice: model.supportsToolChoice || false,
+      supports_embeddings: model.supportsEmbeddings || false,
+      supports_tokenize: model.supportsTokenize || false,
+      supports_convert: model.supportsConvert || false,
       restrictedAccess: model.restrictedAccess || false,
     });
 
@@ -1000,8 +1010,53 @@ const AdminModelsPage: React.FC = () => {
                   </FormGroup>
                 </GridItem>
                 <GridItem span={12}>
+                  <FormGroup label={t('models.admin.modelType')} fieldId="model-type">
+                    <Stack hasGutter>
+                      <Radio
+                        id="model-type-chat"
+                        name="model-type"
+                        label={t('models.admin.modelTypeChat')}
+                        isChecked={!formData.supports_embeddings && !formData.supports_convert}
+                        onChange={() =>
+                          setFormData({ ...formData, supports_embeddings: false, supports_convert: false })
+                        }
+                        isDisabled={isViewModalOpen}
+                      />
+                      <Radio
+                        id="model-type-embeddings"
+                        name="model-type"
+                        label={t('models.admin.modelTypeEmbeddings')}
+                        isChecked={formData.supports_embeddings}
+                        onChange={() =>
+                          setFormData({ ...formData, supports_embeddings: true, supports_convert: false })
+                        }
+                        isDisabled={isViewModalOpen}
+                      />
+                      <Radio
+                        id="model-type-convert"
+                        name="model-type"
+                        label={t('models.admin.modelTypeConvert')}
+                        isChecked={formData.supports_convert}
+                        onChange={() =>
+                          setFormData({ ...formData, supports_convert: true, supports_embeddings: false })
+                        }
+                        isDisabled={isViewModalOpen}
+                      />
+                    </Stack>
+                  </FormGroup>
+                </GridItem>
+                <GridItem span={12}>
                   <FormGroup label={t('common.features')} fieldId="features">
                     <Stack hasGutter>
+                      <Checkbox
+                        id="supports-tokenize"
+                        label={t('models.admin.supportsTokenize')}
+                        isChecked={formData.supports_tokenize}
+                        onChange={(_event, checked) =>
+                          setFormData({ ...formData, supports_tokenize: checked })
+                        }
+                        isDisabled={isViewModalOpen}
+                      />
                       <Checkbox
                         id="supports-vision"
                         label={t('models.admin.supportsVision')}

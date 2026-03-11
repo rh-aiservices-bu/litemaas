@@ -13,6 +13,9 @@ export interface LiteLLMModelCreate {
   supports_function_calling: boolean;
   supports_parallel_function_calling: boolean;
   supports_tool_choice: boolean;
+  supports_embeddings?: boolean;
+  supports_tokenize?: boolean;
+  supports_convert?: boolean;
   restrictedAccess?: boolean;
 }
 
@@ -70,6 +73,9 @@ export interface AdminModelFormData {
   supports_function_calling: boolean;
   supports_parallel_function_calling: boolean;
   supports_tool_choice: boolean;
+  supports_embeddings: boolean;
+  supports_tokenize: boolean;
+  supports_convert: boolean;
   restrictedAccess: boolean;
 }
 
