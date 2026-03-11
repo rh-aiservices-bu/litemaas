@@ -1882,7 +1882,7 @@ const ApiKeysPage: React.FC = () => {
                       </Th>
                       <Td>
                         {selectedApiKey.models && selectedApiKey.models.length > 0 ? (
-                          <LabelGroup>
+                          <LabelGroup numLabels={selectedApiKey.models.length}>
                             {selectedApiKey.models.map((modelId) => {
                               const modelDetail = selectedApiKey.modelDetails?.find(
                                 (m) => m.id === modelId,
@@ -1926,7 +1926,11 @@ const ApiKeysPage: React.FC = () => {
                                   <Th scope="row">
                                     <strong>{t('pages.apiKeys.labels.apiUrl')}</strong>
                                   </Th>
-                                  <Td>{litellmApiUrl}/v1</Td>
+                                  <Td>{litellmApiUrl}/{(() => {
+                                    const detail = selectedApiKey.modelDetails?.find((m) => m.id === selectedModelForExample);
+                                    const fromList = models.find((m) => m.id === selectedModelForExample);
+                                    return (detail?.supportsConvert || fromList?.supportsConvert) ? 'docling/v1' : 'v1';
+                                  })()}</Td>
                                 </Tr>
                                 <Tr>
                                   <Th scope="row">
