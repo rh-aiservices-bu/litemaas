@@ -193,8 +193,9 @@ const ChatbotPage: React.FC = () => {
       try {
         setIsLoadingModels(true);
 
-        // Filter models by API key's supported models
+        // Filter to chat-capable models only, then by API key's allowed models
         const filtered = models
+          .filter((model) => model.supportsChat !== false)
           .filter((model) => selectedApiKey.models?.includes(model.id) || false)
           .map((model) => model.id);
 
