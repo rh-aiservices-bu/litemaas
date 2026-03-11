@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **OIDC Authentication Support**: Standard OpenID Connect authentication alongside existing OpenShift OAuth, controlled by `AUTH_PROVIDER` environment variable (`openshift` or `oidc`)
+  - **Auto-discovery**: Fetches provider endpoints from `.well-known/openid-configuration` with 24-hour cache and stale-cache failover
+  - **PKCE (S256)**: Proof Key for Code Exchange for authorization code flow security
+  - **Nonce validation**: Replay attack protection via ID token nonce claim verification
+  - **Audience (aud) validation**: Ensures ID tokens are intended for the correct client
+  - **Provider support**: Keycloak, Auth0, Okta, Azure AD (Entra ID), and any OIDC-compliant provider
+  - **Group-to-role mapping**: Maps OIDC group claims to LiteMaaS roles using the same logic as OpenShift groups
+  - **Configurable scopes and claims**: `OIDC_SCOPES` and `OIDC_GROUPS_CLAIM` environment variables
+  - **Provider migration**: Email-based user lookup fallback when switching authentication providers
+  - **Cross-origin dev support**: Frontend origin tracking for dev setups with separate frontend/backend ports
+  - **Keycloak setup guide**: Step-by-step instructions at `docs/deployment/keycloak-oidc-setup.md`
+  - **Helm values example**: `deployment/helm/litemaas/values.oidc.example.yaml`
+  - **Kustomize overlay**: `deployment/kustomize/overlays/oidc/`
+  - **59 unit tests**: Comprehensive OIDC test coverage
+
+### Fixed
+
+- **PKCE mismatch on callback**: Fixed code verifier storage and retrieval to ensure PKCE challenge matches during token exchange
+- **Redirect URI mismatch**: Fixed OAuth callback URL handling for strict redirect_uri matching compliance
+- **Cross-origin redirect**: Fixed post-authentication redirect for dev setups where frontend and backend run on different ports
+
 ## [0.3.1] - 2026-03-08
 
 ### Fixed

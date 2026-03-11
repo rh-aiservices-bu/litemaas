@@ -1040,7 +1040,11 @@
       "subtitle": "AIモデルへのアクセスと管理のためのModel as a Serviceプラットフォーム。",
       "title": "LiteMaaSへようこそ"
     },
+    "authCallback": {
+      "processing": "認証を処理中..."
+    },
     "login": {
+      "authError": "認証に失敗しました。もう一度お試しください。",
       "brandAlt": "LiteMaaSロゴ",
       "bypassAuthentication": "開発とテスト目的で認証をバイパス",
       "configError": "アプリケーション設定を読み込めませんでした。一部の機能が利用できない場合があります。",

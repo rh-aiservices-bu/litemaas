@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from 'fastify';
 
 import authUserRoutes from './auth-user';
+import { adminAuthInfoRoute } from './auth';
 import usersRoutes from './users';
 import modelsRoutes from './models';
 import subscriptionsRoutes from './subscriptions';
@@ -37,6 +38,7 @@ const routes: FastifyPluginAsync = async (fastify) => {
 
   // Admin endpoints
   await fastify.register(adminRoutes, { prefix: '/admin' });
+  await fastify.register(adminAuthInfoRoute, { prefix: '/admin/auth' });
   await fastify.register(adminModelsRoutes, { prefix: '/admin/models' });
   await fastify.register(adminSubscriptionsRoutes, { prefix: '/admin/subscriptions' });
   await fastify.register(adminUsageRoutes, { prefix: '/admin/usage' });

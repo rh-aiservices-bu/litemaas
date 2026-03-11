@@ -23,12 +23,15 @@ const envSchema = Type.Object({
   JWT_SECRET: Type.String(),
   JWT_EXPIRES_IN: Type.String({ default: '24h' }),
 
-  // OAuth
+  // OAuth / OIDC
+  AUTH_PROVIDER: Type.String({ default: 'openshift' }), // 'openshift' | 'oidc'
   OAUTH_CLIENT_ID: Type.String(),
   OAUTH_CLIENT_SECRET: Type.String(),
-  OAUTH_ISSUER: Type.String(),
+  OAUTH_ISSUER: Type.String({ pattern: '^https?://' }),
   OAUTH_CALLBACK_URL: Type.String({ default: 'http://localhost:8081/api/auth/callback' }),
   K8S_API_SKIP_TLS_VERIFY: Type.Optional(Type.String()),
+  OIDC_GROUPS_CLAIM: Type.String({ default: 'groups' }),
+  OIDC_SCOPES: Type.Optional(Type.String()),
 
   // Redis (optional — used to flush LiteLLM's cache after model CRUD)
   REDIS_HOST: Type.Optional(Type.String()),

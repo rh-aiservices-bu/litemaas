@@ -22,12 +22,15 @@ declare module 'fastify' {
       JWT_SECRET: string;
       JWT_EXPIRES_IN: string;
 
-      // OAuth
+      // OAuth / OIDC
+      AUTH_PROVIDER: string;
       OAUTH_CLIENT_ID: string;
       OAUTH_CLIENT_SECRET: string;
       OAUTH_ISSUER: string;
       OAUTH_CALLBACK_URL: string;
       K8S_API_SKIP_TLS_VERIFY?: string;
+      OIDC_GROUPS_CLAIM: string;
+      OIDC_SCOPES?: string;
 
       // Redis (optional)
       REDIS_HOST?: string;

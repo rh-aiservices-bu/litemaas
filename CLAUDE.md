@@ -14,7 +14,7 @@
 
 **Monorepo** with two packages:
 
-- **Backend** (`@litemaas/backend`): Fastify API server with PostgreSQL, OAuth2/JWT, RBAC
+- **Backend** (`@litemaas/backend`): Fastify API server with PostgreSQL, OAuth2/OIDC/JWT, RBAC
 - **Frontend** (`@litemaas/frontend`): React + PatternFly 6 UI with 9-language i18n support
 
 **Tech Stack**: Fastify, React, TypeScript, PostgreSQL, PatternFly 6, LiteLLM integration
@@ -185,9 +185,14 @@ See <https://github.com/anthropics/claude-code/issues/4711> for details.
 
 ## 🔐 Security & Authentication
 
-**OAuth2 + JWT** with role-based access control. Three-tier hierarchy: `admin > adminReadonly > user`.
+**OAuth2/OIDC + JWT** with role-based access control. Two authentication providers via `AUTH_PROVIDER` env var:
 
-For details, see [`docs/deployment/authentication.md`](docs/deployment/authentication.md) and [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md).
+- **OpenShift OAuth** (default): Uses OpenShift-specific endpoints with Kubernetes user API for group membership
+- **Standard OIDC**: Auto-discovery, PKCE (S256), nonce/audience validation. Supports Keycloak, Auth0, Okta, Azure AD, and any OIDC-compliant provider.
+
+Three-tier role hierarchy: `admin > adminReadonly > user`. Group-to-role mapping works identically for both providers.
+
+For details, see [`docs/deployment/authentication.md`](docs/deployment/authentication.md), [`docs/deployment/keycloak-oidc-setup.md`](docs/deployment/keycloak-oidc-setup.md), and [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md).
 
 ## 📚 Documentation
 

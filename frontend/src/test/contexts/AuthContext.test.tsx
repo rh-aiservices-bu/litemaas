@@ -550,7 +550,7 @@ describe('AuthContext', () => {
     it('logs out regular authenticated user', async () => {
       mockAuthService.isAuthenticated.mockReturnValue(true);
       mockAuthService.getCurrentUser.mockResolvedValue(mockUser);
-      mockAuthService.logout.mockResolvedValue(undefined);
+      mockAuthService.logout.mockResolvedValue({});
 
       const TestComponent = () => {
         const { logout, user, isAuthenticated } = useAuth();
@@ -628,6 +628,94 @@ describe('AuthContext', () => {
       });
 
       consoleSpy.mockRestore();
+    });
+
+    it('redirects to OIDC provider logout URL when logoutUrl is returned', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(true);
+      mockAuthService.getCurrentUser.mockResolvedValue(mockUser);
+      mockAuthService.logout.mockResolvedValue({
+        logoutUrl: 'https://keycloak.example.com/logout?redirect_uri=http://localhost:3000',
+      });
+
+      // Mock window.location.href setter
+      const locationHrefSpy = vi.spyOn(window, 'location', 'get').mockReturnValue({
+        ...window.location,
+        href: 'http://localhost:3000',
+      } as Location);
+
+      const hrefSetter = vi.fn();
+      Object.defineProperty(window.location, 'href', {
+        set: hrefSetter,
+        configurable: true,
+      });
+
+      const TestComponent = () => {
+        const { logout, user } = useAuth();
+        return (
+          <div>
+            <button onClick={logout}>Logout</button>
+            <span data-testid="user">{user ? user.name : 'null'}</span>
+          </div>
+        );
+      };
+
+      render(
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('user')).toHaveTextContent('Test User');
+      });
+
+      await act(async () => {
+        screen.getByText('Logout').click();
+      });
+
+      await waitFor(() => {
+        expect(mockAuthService.logout).toHaveBeenCalledTimes(1);
+        expect(hrefSetter).toHaveBeenCalledWith(
+          'https://keycloak.example.com/logout?redirect_uri=http://localhost:3000',
+        );
+      });
+
+      locationHrefSpy.mockRestore();
+    });
+
+    it('navigates to /login when no logoutUrl is returned', async () => {
+      mockAuthService.isAuthenticated.mockReturnValue(true);
+      mockAuthService.getCurrentUser.mockResolvedValue(mockUser);
+      mockAuthService.logout.mockResolvedValue({ message: 'Logged out' });
+
+      const TestComponent = () => {
+        const { logout, user } = useAuth();
+        return (
+          <div>
+            <button onClick={logout}>Logout</button>
+            <span data-testid="user">{user ? user.name : 'null'}</span>
+          </div>
+        );
+      };
+
+      render(
+        <AuthProvider>
+          <TestComponent />
+        </AuthProvider>,
+      );
+
+      await waitFor(() => {
+        expect(screen.getByTestId('user')).toHaveTextContent('Test User');
+      });
+
+      await act(async () => {
+        screen.getByText('Logout').click();
+      });
+
+      await waitFor(() => {
+        expect(mockAuthService.logout).toHaveBeenCalledTimes(1);
+        expect(mockNavigate).toHaveBeenCalledWith('/login');
+      });
     });
 
     it('forces logout cleanup on error', async () => {

@@ -16,6 +16,7 @@ const createMockFastify = (configOverrides: Record<string, unknown> = {}) =>
       debug: vi.fn(),
     },
     config: {
+      AUTH_PROVIDER: 'openshift',
       DEFAULT_USER_MAX_BUDGET: '10',
       DEFAULT_USER_TPM_LIMIT: '10000',
       DEFAULT_USER_RPM_LIMIT: '60',

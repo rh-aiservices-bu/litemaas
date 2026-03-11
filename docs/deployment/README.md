@@ -5,8 +5,9 @@ This directory contains guides for deploying and configuring LiteMaaS in various
 ## Deployment Guides
 
 - **[Configuration](configuration.md)** - Environment variables and application settings
-- **[Authentication Setup](authentication.md)** - OAuth2 and JWT configuration
-- **[OAuth Setup Guide](oauth-setup.md)** - Detailed OAuth provider configuration
+- **[Authentication Setup](authentication.md)** - OAuth2/OIDC and JWT configuration
+- **[OAuth Setup Guide](oauth-setup.md)** - Detailed OpenShift OAuth provider configuration
+- **[Keycloak OIDC Setup](keycloak-oidc-setup.md)** - Quick-start guide for Keycloak as an OIDC provider
 - **[Helm Chart Deployment](helm-deployment.md)** - Helm-based deployment for Kubernetes and OpenShift
 - **[Kustomize Deployment](kustomize-deployment.md)** - Kustomize-based deployment for OpenShift
 - **[Container Deployment](containers.md)** - Docker and Podman deployment

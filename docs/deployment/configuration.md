@@ -34,15 +34,59 @@ DB_IDLE_TIMEOUT=60000
 DB_CONNECTION_TIMEOUT=10000
 ```
 
-## OAuth Configuration
+## OAuth / OIDC Configuration
 
 | Variable                  | Description                                                          | Default                                   | Required |
 | ------------------------- | -------------------------------------------------------------------- | ----------------------------------------- | -------- |
-| `OAUTH_CLIENT_ID`         | OpenShift OAuth client ID                                            | -                                         | Yes      |
-| `OAUTH_CLIENT_SECRET`     | OpenShift OAuth client secret                                        | -                                         | Yes      |
-| `OAUTH_ISSUER`            | OAuth provider URL                                                   | -                                         | Yes      |
+| `AUTH_PROVIDER`            | Authentication provider: `openshift` or `oidc`                      | `openshift`                               | No       |
+| `OAUTH_CLIENT_ID`         | OAuth/OIDC client ID                                                 | -                                         | Yes      |
+| `OAUTH_CLIENT_SECRET`     | OAuth/OIDC client secret                                             | -                                         | Yes      |
+| `OAUTH_ISSUER`            | OAuth/OIDC provider URL (issuer)                                     | -                                         | Yes      |
 | `OAUTH_CALLBACK_URL`      | OAuth callback URL                                                   | `http://localhost:8081/api/auth/callback` | No       |
-| `K8S_API_SKIP_TLS_VERIFY` | Skip TLS verification for Kubernetes API calls (⚠️ Use with caution) | -                                         | No       |
+| `OPENSHIFT_API_URL`       | OpenShift API server URL. Only used with OpenShift OAuth provider. Auto-derived from OAUTH_ISSUER if not set. | -                                         | No       |
+| `K8S_API_SKIP_TLS_VERIFY` | Skip TLS verification for Kubernetes API calls (⚠️ OpenShift only)   | -                                         | No       |
+| `OIDC_GROUPS_CLAIM`       | Claim name in OIDC userinfo for group memberships                    | `groups`                                  | No       |
+| `OIDC_SCOPES`             | Override OIDC scopes (space-separated)                               | `openid profile email`                    | No       |
+
+### Authentication Provider
+
+LiteMaaS supports two authentication providers via `AUTH_PROVIDER`:
+
+#### OpenShift (`AUTH_PROVIDER=openshift`, default)
+
+The OAuth service handles OpenShift's dual-endpoint architecture:
+
+```typescript
+// OAuth server for authentication
+const oauthServer = 'https://oauth-openshift.apps.cluster.com';
+
+// API server for user information (can be overridden via OPENSHIFT_API_URL env var)
+const apiServer = 'https://api.cluster.com:6443';
+
+// User info endpoint (OpenShift-specific)
+const userInfoUrl = `${apiServer}/apis/user.openshift.io/v1/users/~`;
+```
+
+#### Standard OIDC (`AUTH_PROVIDER=oidc`)
+
+For OIDC providers (Keycloak, Auth0, Okta, Azure AD, etc.), endpoints are auto-discovered:
+
+```typescript
+// Discovery document fetched once and cached
+const discoveryUrl = `${issuer}/.well-known/openid-configuration`;
+
+// Endpoints resolved from discovery:
+// - authorization_endpoint (for login redirect)
+// - token_endpoint (for code exchange)
+// - userinfo_endpoint (for user info)
+
+// Group memberships read from configurable claim (default: 'groups')
+const groupsClaim = process.env.OIDC_GROUPS_CLAIM || 'groups';
+```
+
+> **Note**: The OIDC discovery document is cached for 24 hours. If your OIDC provider changes its endpoints, restart the backend to refresh.
+
+For provider-specific setup, see [Keycloak OIDC Setup](keycloak-oidc-setup.md).
 
 ### OAuth Flow Architecture
 
@@ -100,14 +144,26 @@ As of the latest update, the backend implements intelligent OAuth callback URL h
 - The backend uses relative redirects (`/auth/callback`) after processing
 - No `FRONTEND_URL` configuration needed
 
-### Example
+### Example (OpenShift)
 
 ```bash
+AUTH_PROVIDER=openshift
 OAUTH_CLIENT_ID=litemaas-oauth-client
 OAUTH_CLIENT_SECRET=super-secret-oauth-key
-OAUTH_ISSUER=https://oauth.openshift.example.com
-# Fallback URL - automatic detection handles most cases
+OAUTH_ISSUER=https://oauth-openshift.apps.cluster.example.com
 OAUTH_CALLBACK_URL=http://localhost:3000/api/auth/callback
+```
+
+### Example (OIDC — Keycloak, Auth0, Okta, Azure AD, etc.)
+
+```bash
+AUTH_PROVIDER=oidc
+OAUTH_CLIENT_ID=litemaas
+OAUTH_CLIENT_SECRET=your-oidc-client-secret
+OAUTH_ISSUER=https://keycloak.example.com/realms/myrealm
+OAUTH_CALLBACK_URL=https://litemaas.example.com/api/auth/callback
+# OIDC_GROUPS_CLAIM=groups       # Customize if your IdP uses a different claim
+# OIDC_SCOPES=openid profile email groups  # Add 'groups' scope if required by your IdP
 ```
 
 ### OAuth Provider Setup
@@ -560,11 +616,16 @@ DATABASE_URL=postgresql://prod_user:${DB_PASSWORD}@db.internal:5432/litemaas_pro
 DB_MAX_CONNECTIONS=50
 DB_IDLE_TIMEOUT=60000
 
-# OAuth
+# Authentication Provider ('openshift' or 'oidc')
+AUTH_PROVIDER=openshift
+
+# OAuth / OIDC
 OAUTH_CLIENT_ID=${OAUTH_PROD_CLIENT_ID}
 OAUTH_CLIENT_SECRET=${OAUTH_PROD_CLIENT_SECRET}
 OAUTH_ISSUER=https://oauth.production.com
 OAUTH_CALLBACK_URL=https://app.production.com/api/auth/callback
+# OIDC_GROUPS_CLAIM=groups    # Only for AUTH_PROVIDER=oidc
+# OIDC_SCOPES=openid profile email  # Only for AUTH_PROVIDER=oidc
 
 # JWT
 JWT_SECRET=${JWT_PROD_SECRET}

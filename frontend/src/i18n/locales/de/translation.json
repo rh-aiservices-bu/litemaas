@@ -1040,7 +1040,11 @@
       "subtitle": "Ihre Model-as-a-Service-Plattform für den Zugriff und die Verwaltung von KI-Modellen.",
       "title": "Willkommen bei LiteMaaS"
     },
+    "authCallback": {
+      "processing": "Authentifizierung wird verarbeitet..."
+    },
     "login": {
+      "authError": "Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
       "brandAlt": "LiteMaaS-Logo",
       "bypassAuthentication": "Authentifizierung für Entwicklungs- und Testzwecke umgehen",
       "configError": "Die Anwendungskonfiguration konnte nicht geladen werden. Einige Funktionen sind möglicherweise nicht verfügbar.",
