@@ -474,7 +474,6 @@ export class ApiKeyService extends BaseService {
             JSON.stringify({
               name: request.name,
               keyPrefix,
-              liteLLMKeyId: liteLLMResponse.key,
               models: modelIds,
               modelCount: modelIds.length,
               legacy: isLegacyRequest,
@@ -489,7 +488,6 @@ export class ApiKeyService extends BaseService {
             userId,
             apiKeyId: apiKey.rows[0].id,
             keyPrefix,
-            liteLLMKeyId: liteLLMResponse.key,
             models: modelIds,
             modelCount: modelIds.length,
             keyAlias: liteLLMRequest.key_alias,
