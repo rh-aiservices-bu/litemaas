@@ -564,7 +564,12 @@
         "copy": "Beria"
       },
       "codeExample": {
+        "commentChat": "Imbi i sérë LiteLLM API caimassë",
+        "commentConvert": "Vistië parma as i LiteLLM API caimassë",
+        "commentEmbeddings": "Onta nurtanë as i LiteLLM API caimassë",
         "content": "Suilad, arda!",
+        "convertUrl": "https://arxiv.org/pdf/2501.17887",
+        "embeddingsInput": "I apsa né mára ar i hérincë...",
         "role": "aduiadan"
       },
       "copied": "Beria!",

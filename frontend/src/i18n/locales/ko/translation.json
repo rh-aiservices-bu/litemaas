@@ -564,7 +564,12 @@
         "copy": "복사"
       },
       "codeExample": {
+        "commentChat": "보안 LiteLLM API 키 사용",
+        "commentConvert": "LiteLLM API 키로 문서 변환",
+        "commentEmbeddings": "LiteLLM API 키로 임베딩 생성",
         "content": "안녕하세요, 세계!",
+        "convertUrl": "https://arxiv.org/pdf/2501.17887",
+        "embeddingsInput": "음식이 맛있었고 웨이터가...",
         "role": "사용자"
       },
       "copied": "복사됨!",

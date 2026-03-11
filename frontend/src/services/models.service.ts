@@ -164,10 +164,10 @@ class ModelsService {
       supportsFunctionCalling: backendModel.supportsFunctionCalling,
       supportsParallelFunctionCalling: backendModel.supportsParallelFunctionCalling,
       supportsToolChoice: backendModel.supportsToolChoice,
-      supportsChat: backendModel.supportsChat,
-      supportsEmbeddings: backendModel.supportsEmbeddings,
-      supportsTokenize: backendModel.supportsTokenize,
-      supportsConvert: backendModel.supportsConvert,
+      supportsChat: backendModel.supportsChat ?? backendModel.capabilities?.includes('chat') ?? false,
+      supportsEmbeddings: backendModel.supportsEmbeddings ?? backendModel.capabilities?.includes('embeddings') ?? false,
+      supportsTokenize: backendModel.supportsTokenize ?? backendModel.capabilities?.includes('tokenize') ?? false,
+      supportsConvert: backendModel.supportsConvert ?? backendModel.capabilities?.includes('convert') ?? false,
       litellmModelId: backendModel.litellmModelId,
     };
   }

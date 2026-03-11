@@ -564,7 +564,12 @@
         "copy": "コピー"
       },
       "codeExample": {
+        "commentChat": "安全なLiteLLM APIキーの使用",
+        "commentConvert": "LiteLLM APIキーでドキュメントを変換",
+        "commentEmbeddings": "LiteLLM APIキーでエンベディングを生成",
         "content": "こんにちは、世界！",
+        "convertUrl": "https://arxiv.org/pdf/2501.17887",
+        "embeddingsInput": "料理はおいしく、ウェイターは...",
         "role": "ユーザー"
       },
       "copied": "コピーしました！",

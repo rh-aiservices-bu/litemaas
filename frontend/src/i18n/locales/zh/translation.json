@@ -564,7 +564,12 @@
         "copy": "复制"
       },
       "codeExample": {
+        "commentChat": "使用您的安全 LiteLLM API 密钥",
+        "commentConvert": "使用您的 LiteLLM API 密钥转换文档",
+        "commentEmbeddings": "使用您的 LiteLLM API 密钥生成嵌入",
         "content": "你好，世界！",
+        "convertUrl": "https://arxiv.org/pdf/2501.17887",
+        "embeddingsInput": "食物很美味，服务员...",
         "role": "用户"
       },
       "copied": "已复制！",

@@ -56,6 +56,8 @@ export interface ApiKeyWithSecret {
     name: string;
     provider: string;
     context_length?: number;
+    supports_embeddings?: boolean;
+    supports_convert?: boolean;
   }>;
   // Backward compatibility
   subscriptionId?: string;
@@ -312,12 +314,14 @@ export class ApiKeyService extends BaseService {
 
       // Validate user has active subscriptions for all requested models
       const validModels = await this.fastify.dbUtils.queryMany(
-        `SELECT DISTINCT s.model_id, s.id as subscription_id, 
-                m.name as model_name, m.provider
+        `SELECT DISTINCT s.model_id, s.id as subscription_id,
+                m.name as model_name, m.provider, m.context_length,
+                COALESCE('embeddings' = ANY(m.features), false) as supports_embeddings,
+                COALESCE('convert' = ANY(m.features), false) as supports_convert
          FROM subscriptions s
          JOIN models m ON s.model_id = m.id
-         WHERE s.user_id = $1 
-           AND s.status = 'active' 
+         WHERE s.user_id = $1
+           AND s.status = 'active'
            AND s.model_id = ANY($2::text[])`,
         [userId, `{${modelIds.join(',')}}`],
       );
@@ -512,6 +516,8 @@ export class ApiKeyService extends BaseService {
             name: String(m.model_name),
             provider: String(m.provider),
             context_length: Number(m.context_length),
+            supports_embeddings: Boolean(m.supports_embeddings),
+            supports_convert: Boolean(m.supports_convert),
           })),
           subscriptionId: isLegacyRequest
             ? (request as LegacyCreateApiKeyRequest).subscriptionId
@@ -764,7 +770,9 @@ export class ApiKeyService extends BaseService {
              'id', m.id,
              'name', m.name,
              'provider', m.provider,
-             'context_length', m.context_length
+             'context_length', m.context_length,
+             'supports_embeddings', COALESCE('embeddings' = ANY(m.features), false),
+             'supports_convert', COALESCE('convert' = ANY(m.features), false)
            )) FILTER (WHERE m.id IS NOT NULL) as model_details
          FROM api_keys ak
          LEFT JOIN api_key_models akm ON ak.id = akm.api_key_id
@@ -826,7 +834,9 @@ export class ApiKeyService extends BaseService {
       for (const key of apiKeys) {
         if ((!key.models || (key.models as string[]).length === 0) && key.subscription_id) {
           const subscription = await this.fastify.dbUtils.queryOne(
-            `SELECT s.model_id, m.name, m.provider, m.context_length
+            `SELECT s.model_id, m.name, m.provider, m.context_length,
+                    COALESCE('embeddings' = ANY(m.features), false) as supports_embeddings,
+                    COALESCE('convert' = ANY(m.features), false) as supports_convert
              FROM subscriptions s
              JOIN models m ON s.model_id = m.id
              WHERE s.id = $1`,
@@ -841,6 +851,8 @@ export class ApiKeyService extends BaseService {
                 name: subscription.name,
                 provider: subscription.provider,
                 context_length: subscription.context_length,
+                supports_embeddings: subscription.supports_embeddings,
+                supports_convert: subscription.supports_convert,
               },
             ];
           }

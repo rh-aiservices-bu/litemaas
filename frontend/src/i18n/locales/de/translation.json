@@ -564,7 +564,12 @@
         "copy": "Kopieren"
       },
       "codeExample": {
+        "commentChat": "Verwendung Ihres sicheren LiteLLM API-Schlüssels",
+        "commentConvert": "Ein Dokument mit Ihrem LiteLLM API-Schlüssel konvertieren",
+        "commentEmbeddings": "Embeddings mit Ihrem LiteLLM API-Schlüssel generieren",
         "content": "Hallo, Welt!",
+        "convertUrl": "https://arxiv.org/pdf/2501.17887",
+        "embeddingsInput": "Das Essen war köstlich und der Kellner...",
         "role": "Benutzer"
       },
       "copied": "Kopiert!",

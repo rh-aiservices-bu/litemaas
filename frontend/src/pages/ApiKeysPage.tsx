@@ -2009,16 +2009,54 @@ const ApiKeysPage: React.FC = () => {
                 </Content>
                 <CodeBlock>
                   <CodeBlockCode>
-                    {`# Using your secure LiteLLM API key
-curl -X POST ${litellmApiUrl}/v1/chat/completions \
-  -H "Authorization: Bearer ${visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey ? selectedApiKey.fullKey : '<click-show-key-to-reveal>'}" \
-  -H "Content-Type: application/json" \
+                    {(() => {
+                      const bearerToken = visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey ? selectedApiKey.fullKey : '<click-show-key-to-reveal>';
+                      const modelName = selectedModelForExample || 'gpt-4';
+                      // Check model type from both API key modelDetails and loaded models array
+                      const selectedModelDetail = selectedApiKey.modelDetails?.find((m) => m.id === selectedModelForExample);
+                      const selectedModelFromList = models.find((m) => m.id === selectedModelForExample);
+                      const isEmbeddingsModel = selectedModelDetail?.supportsEmbeddings || selectedModelFromList?.supportsEmbeddings;
+                      const isConvertModel = selectedModelDetail?.supportsConvert || selectedModelFromList?.supportsConvert;
+
+                      if (isEmbeddingsModel) {
+                        return `# ${t('pages.apiKeys.codeExample.commentEmbeddings')}
+curl -X POST ${litellmApiUrl}/v1/embeddings \\
+  -H "accept: application/json" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${bearerToken}" \\
   -d '{
-    "model": "${selectedModelForExample || 'gpt-4'}",
+    "encoding_format": "float",
+    "input": "${t('pages.apiKeys.codeExample.embeddingsInput')}",
+    "model": "${modelName}"
+  }'`;
+                      }
+
+                      if (isConvertModel) {
+                        return `# ${t('pages.apiKeys.codeExample.commentConvert')}
+curl -X POST ${litellmApiUrl}/docling/v1/convert/source \\
+  -H "accept: application/json" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${bearerToken}" \\
+  -d '{
+    "model": "${modelName}",
+    "sources": [{"kind": "http", "url": "${t('pages.apiKeys.codeExample.convertUrl')}"}],
+    "options": {
+      "image_export_mode": "placeholder"
+    }
+  }'`;
+                      }
+
+                      return `# ${t('pages.apiKeys.codeExample.commentChat')}
+curl -X POST ${litellmApiUrl}/v1/chat/completions \\
+  -H "Authorization: Bearer ${bearerToken}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "${modelName}",
     "messages": [
       {"role": "${t('pages.apiKeys.codeExample.role')}", "content": "${t('pages.apiKeys.codeExample.content')}"}
     ]
-  }'`}
+  }'`;
+                    })()}
                   </CodeBlockCode>
                 </CodeBlock>
               </div>
