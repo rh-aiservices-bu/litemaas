@@ -316,6 +316,7 @@
     "weeklyUsagePatterns": "Pattern di Utilizzo Settimanali"
   },
   "common": {
+    "accessRestrictions": "Restrizioni di accesso",
     "anUnknownErrorOccurred": "Si è verificato un errore sconosciuto",
     "cancel": "Annulla",
     "chart": "Grafico",
@@ -428,7 +429,12 @@
       "supportsFunctionCalling": "Supporta Chiamate di Funzione",
       "supportsParallelFunctionCalling": "Supporta Chiamate di Funzione Parallele",
       "supportsToolChoice": "Supporta Scelta Strumento",
+      "supportsTokenize": "Supporta Tokenizzazione",
       "supportsVision": "Supporta Visione",
+      "modelType": "Tipo di Modello",
+      "modelTypeChat": "Chat",
+      "modelTypeEmbeddings": "Embeddings",
+      "modelTypeConvert": "Conversione Documenti",
       "table": {
         "1mTokens": "/1M token",
         "actions": "Azioni",
@@ -558,7 +564,12 @@
         "copy": "Copia"
       },
       "codeExample": {
+        "commentChat": "Utilizzo della tua chiave API LiteLLM sicura",
+        "commentConvert": "Converti un documento con la tua chiave API LiteLLM",
+        "commentEmbeddings": "Genera embeddings con la tua chiave API LiteLLM",
         "content": "Ciao, mondo!",
+        "convertUrl": "https://arxiv.org/pdf/2501.17887",
+        "embeddingsInput": "Il cibo era delizioso e il cameriere...",
         "role": "utente"
       },
       "copied": "Copiato!",
@@ -1040,7 +1051,11 @@
       "subtitle": "La tua piattaforma Model as a Service per accedere e gestire i modelli AI.",
       "title": "Benvenuti su LiteMaaS"
     },
+    "authCallback": {
+      "processing": "Elaborazione autenticazione..."
+    },
     "login": {
+      "authError": "Autenticazione fallita. Riprova di nuovo.",
       "brandAlt": "Logo LiteMaaS",
       "bypassAuthentication": "Bypassa autenticazione per scopi di sviluppo e test",
       "configError": "Impossibile caricare la configurazione dell'applicazione. Alcune funzionalità potrebbero non essere disponibili.",

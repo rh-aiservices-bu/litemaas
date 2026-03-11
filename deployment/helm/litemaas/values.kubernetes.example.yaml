@@ -1,0 +1,91 @@
+# =============================================================================
+# LiteMaaS Helm Values — Kubernetes with Ingress + External OIDC
+# =============================================================================
+# Standard Kubernetes deployment with nginx Ingress and an external OIDC
+# provider (Keycloak, Auth0, Okta, Azure AD, etc.).
+#
+# This example also demonstrates:
+#   - TLS termination at the Ingress
+#   - Custom resource limits for production
+#   - Larger PostgreSQL storage
+#
+# Usage:
+#   helm install litemaas deployment/helm/litemaas/ \
+#     -n litemaas --create-namespace \
+#     -f deployment/helm/litemaas/values.kubernetes.example.yaml
+# =============================================================================
+
+global:
+  platform: kubernetes
+  imagePullPolicy: IfNotPresent
+
+# -- OIDC authentication
+oauth:
+  mode: external
+  authProvider: oidc
+  issuer: "https://auth.example.com/realms/litemaas"
+  oidc:
+    groupsClaim: groups
+    # Add 'groups' scope if your provider requires it to include group claims
+    scopes: "openid profile email"
+
+# -- PostgreSQL with larger storage for production
+postgresql:
+  auth:
+    password: "CHANGE-ME-pg-password"
+  persistence:
+    size: 20Gi
+
+# -- LiteLLM
+litellm:
+  auth:
+    masterKey: "sk-CHANGE-ME-litellm-key"
+    uiPassword: "CHANGE-ME-ui-password"
+  resources:
+    requests:
+      memory: "1Gi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+
+# -- Backend
+backend:
+  auth:
+    jwtSecret: "CHANGE-ME-jwt-secret"
+    adminApiKeys: "ltm_admin_CHANGE-ME"
+    litellmApiKey: "sk-CHANGE-ME-litellm-key"
+    oauthClientId: "litemaas"
+    oauthClientSecret: "CHANGE-ME-oidc-client-secret"
+    initialAdminUsers: "admin@example.com"
+  defaultUser:
+    maxBudget: "200"
+    tpmLimit: "200000"
+    rpmLimit: "240"
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "200m"
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+
+# -- Ingress with TLS
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  frontend:
+    host: litemaas.example.com
+    tls:
+      - secretName: litemaas-tls
+        hosts:
+          - litemaas.example.com
+  litellm:
+    enabled: true
+    host: litellm.example.com
+    tls:
+      - secretName: litellm-tls
+        hosts:
+          - litellm.example.com

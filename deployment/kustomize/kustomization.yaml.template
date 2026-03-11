@@ -19,6 +19,10 @@ resources:
   - postgres-statefulset.yaml
   - postgres-service.yaml
 
+  # Redis Cache
+  - redis-deployment.yaml
+  - redis-service.yaml
+
   # LiteLLM AI Proxy
   - litellm-deployment.yaml
   - litellm-service.yaml

@@ -48,6 +48,23 @@ Component fullnames
 {{- printf "%s" (include "litemaas.fullname" .) | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
+{{- define "litemaas.redis.fullname" -}}
+{{- printf "%s-redis" (include "litemaas.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Redis host — auto-constructed when built-in Redis is enabled,
+otherwise must be provided explicitly via backend.redis.host.
+Returns empty string if Redis is not configured.
+*/}}
+{{- define "litemaas.redis.host" -}}
+{{- if .Values.backend.redis.host }}
+{{- .Values.backend.redis.host }}
+{{- else if .Values.redis.enabled }}
+{{- include "litemaas.redis.fullname" . }}
+{{- end }}
+{{- end }}
+
 {{/*
 Common labels
 */}}

@@ -1,0 +1,17 @@
+{{- if .Values.redis.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "litemaas.redis.fullname" . }}
+  labels:
+    {{- include "litemaas.componentLabels" (dict "context" . "component" "cache") | nindent 4 }}
+spec:
+  selector:
+    {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "cache") | nindent 4 }}
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+      protocol: TCP
+  type: ClusterIP
+{{- end }}

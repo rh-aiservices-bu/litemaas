@@ -167,25 +167,18 @@ const ApiKeysPage: React.FC = () => {
   const loadModels = async () => {
     try {
       setLoadingModels(true);
-      // Get user's active subscriptions to determine available models
-      const subscriptionsResponse = await subscriptionsService.getSubscriptions(1, 100);
+      // Fetch subscriptions and models in parallel (2 requests instead of N+1)
+      const [subscriptionsResponse, modelsResponse] = await Promise.all([
+        subscriptionsService.getSubscriptions(1, 100),
+        modelsService.getModels(1, 1000),
+      ]);
       const activeSubscriptions = subscriptionsResponse.data.filter(
         (sub) => sub.status === 'active',
       );
 
-      // Extract unique models from subscriptions
-      const uniqueModelIds = [...new Set(activeSubscriptions.map((sub) => sub.modelId))];
-
-      // Fetch detailed model information for each subscribed model
-      const modelPromises = uniqueModelIds.map((modelId) =>
-        modelsService.getModel(modelId).catch((err) => {
-          console.warn(`Failed to load model ${modelId}:`, err);
-          return null;
-        }),
-      );
-
-      const modelResults = await Promise.all(modelPromises);
-      const validModels = modelResults.filter((model) => model !== null) as Model[];
+      // Filter models to only those the user is subscribed to
+      const subscribedModelIds = new Set(activeSubscriptions.map((sub) => sub.modelId));
+      const validModels = modelsResponse.models.filter((m) => subscribedModelIds.has(m.id));
 
       setModels(validModels);
     } catch (err: any) {
@@ -1882,7 +1875,7 @@ const ApiKeysPage: React.FC = () => {
                       </Th>
                       <Td>
                         {selectedApiKey.models && selectedApiKey.models.length > 0 ? (
-                          <LabelGroup>
+                          <LabelGroup numLabels={selectedApiKey.models.length}>
                             {selectedApiKey.models.map((modelId) => {
                               const modelDetail = selectedApiKey.modelDetails?.find(
                                 (m) => m.id === modelId,
@@ -1926,7 +1919,11 @@ const ApiKeysPage: React.FC = () => {
                                   <Th scope="row">
                                     <strong>{t('pages.apiKeys.labels.apiUrl')}</strong>
                                   </Th>
-                                  <Td>{litellmApiUrl}/v1</Td>
+                                  <Td>{litellmApiUrl}/{(() => {
+                                    const detail = selectedApiKey.modelDetails?.find((m) => m.id === selectedModelForExample);
+                                    const fromList = models.find((m) => m.id === selectedModelForExample);
+                                    return (detail?.supportsConvert || fromList?.supportsConvert) ? 'docling/v1' : 'v1';
+                                  })()}</Td>
                                 </Tr>
                                 <Tr>
                                   <Th scope="row">
@@ -2009,16 +2006,54 @@ const ApiKeysPage: React.FC = () => {
                 </Content>
                 <CodeBlock>
                   <CodeBlockCode>
-                    {`# Using your secure LiteLLM API key
-curl -X POST ${litellmApiUrl}/v1/chat/completions \
-  -H "Authorization: Bearer ${visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey ? selectedApiKey.fullKey : '<click-show-key-to-reveal>'}" \
-  -H "Content-Type: application/json" \
+                    {(() => {
+                      const bearerToken = visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey ? selectedApiKey.fullKey : '<click-show-key-to-reveal>';
+                      const modelName = selectedModelForExample || 'gpt-4';
+                      // Check model type from both API key modelDetails and loaded models array
+                      const selectedModelDetail = selectedApiKey.modelDetails?.find((m) => m.id === selectedModelForExample);
+                      const selectedModelFromList = models.find((m) => m.id === selectedModelForExample);
+                      const isEmbeddingsModel = selectedModelDetail?.supportsEmbeddings || selectedModelFromList?.supportsEmbeddings;
+                      const isConvertModel = selectedModelDetail?.supportsConvert || selectedModelFromList?.supportsConvert;
+
+                      if (isEmbeddingsModel) {
+                        return `# ${t('pages.apiKeys.codeExample.commentEmbeddings')}
+curl -X POST ${litellmApiUrl}/v1/embeddings \\
+  -H "accept: application/json" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${bearerToken}" \\
   -d '{
-    "model": "${selectedModelForExample || 'gpt-4'}",
+    "encoding_format": "float",
+    "input": "${t('pages.apiKeys.codeExample.embeddingsInput')}",
+    "model": "${modelName}"
+  }'`;
+                      }
+
+                      if (isConvertModel) {
+                        return `# ${t('pages.apiKeys.codeExample.commentConvert')}
+curl -X POST ${litellmApiUrl}/docling/v1/convert/source \\
+  -H "accept: application/json" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer ${bearerToken}" \\
+  -d '{
+    "model": "${modelName}",
+    "sources": [{"kind": "http", "url": "${t('pages.apiKeys.codeExample.convertUrl')}"}],
+    "options": {
+      "image_export_mode": "placeholder"
+    }
+  }'`;
+                      }
+
+                      return `# ${t('pages.apiKeys.codeExample.commentChat')}
+curl -X POST ${litellmApiUrl}/v1/chat/completions \\
+  -H "Authorization: Bearer ${bearerToken}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "model": "${modelName}",
     "messages": [
       {"role": "${t('pages.apiKeys.codeExample.role')}", "content": "${t('pages.apiKeys.codeExample.content')}"}
     ]
-  }'`}
+  }'`;
+                    })()}
                   </CodeBlockCode>
                 </CodeBlock>
               </div>

@@ -52,7 +52,9 @@ And more...
 
 ## Upgrade Notices
 
-> **Upgrading from a previous version?** If you have an existing LiteMaaS deployment, this release requires a two-phase upgrade. Review the [Upgrade Guide for v0.2.0](docs/deployment/upgrading-to-v0.2.md) before proceeding.
+> **Upgrading from v0.3.x?** Version 0.4.0 switches to a **custom LiteLLM fork** (for Docling and tokenize support) and expands the role of `LITELLM_DATABASE_URL`. Review the [Upgrade Guide for v0.4.0](docs/deployment/upgrading-to-v0.4.md) before proceeding.
+>
+> **Upgrading from v0.1.x?** First follow the [Upgrade Guide for v0.2.0](docs/deployment/upgrading-to-v0.2.md), then the v0.4.0 guide above.
 
 ## 🚀 Deployment
 
@@ -167,7 +169,8 @@ npm run push:containers
 - 📖 [API Reference](docs/api/README.md) - Complete REST API documentation
 - 🗂️ [Project Structure](docs/architecture/project-structure.md) - Complete file organization map
 - 🔧 [Configuration Guide](docs/deployment/configuration.md) - Environment variables and setup
-- 🔄 [Upgrading to v0.2.0](docs/deployment/upgrading-to-v0.2.md) - Migration guide for existing deployments
+- 🔄 [Upgrading to v0.4.0](docs/deployment/upgrading-to-v0.4.md) - Migration guide for v0.3.x deployments (LiteLLM fork + Redis)
+- 🔄 [Upgrading to v0.2.0](docs/deployment/upgrading-to-v0.2.md) - Migration guide for v0.1.x deployments
 - 🛠️ [Development Guide](docs/development/setup.md) - Local development setup
 - 🚀 [Production Deployment](docs/deployment/production-guide.md) - Production deployment options
 - 🎨 [UI Guidelines (PatternFly 6)](docs/development/pf6-guide/README.md) - Frontend development standards

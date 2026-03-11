@@ -27,7 +27,7 @@ litemaas/
 │   │   │   ├── env.ts        # Environment variables
 │   │   │   ├── database.ts   # PostgreSQL connection pool
 │   │   │   ├── auth.ts       # JWT authentication
-│   │   │   ├── oauth.ts      # OAuth2 provider
+│   │   │   ├── oauth.ts      # OAuth2/OIDC provider (session state, PKCE)
 │   │   │   ├── session.ts    # Session management
 │   │   │   ├── rbac.ts       # Role-based access control
 │   │   │   ├── rate-limit.ts # Rate limiting
@@ -71,7 +71,7 @@ litemaas/
 │   │   │   ├── litellm.service.ts # LiteLLM API client
 │   │   │   ├── litellm-integration.service.ts # LiteLLM integration layer
 │   │   │   ├── model-sync.service.ts # Model synchronization
-│   │   │   ├── oauth.service.ts # OAuth provider integration
+│   │   │   ├── oauth.service.ts # OAuth/OIDC provider integration (discovery, PKCE, token exchange)
 │   │   │   ├── rbac.service.ts # Role-based access control
 │   │   │   ├── session.service.ts # Session management
 │   │   │   ├── subscription.service.ts # Subscription management
@@ -109,6 +109,7 @@ litemaas/
 │   │   └── unit/            # Service unit tests
 │   │       ├── services/
 │   │       │   ├── admin-usage-stats.service.test.ts # Admin analytics tests
+│   │       │   ├── oauth.service.oidc.test.ts # OIDC authentication tests (59 tests)
 │   │       │   └── ... (other service tests)
 │   └── dist/                # TypeScript build output
 ├── frontend/                  # React Application
@@ -230,7 +231,7 @@ litemaas/
 #### Core Directories
 
 - **`src/config/`** - Configuration modules for database connections and environment setup
-- **`src/plugins/`** - Fastify plugins registered in specific order (env → database → auth → oauth → session → rbac → rate-limit → swagger → subscription-hooks)
+- **`src/plugins/`** - Fastify plugins registered in specific order (env → database → redis → auth → oauth → session → rbac → rate-limit → swagger → subscription-hooks)
 - **`src/routes/`** - API endpoints organized by functionality, following flat structure
 - **`src/services/`** - Business logic layer with BaseService inheritance pattern
 - **`src/schemas/`** - TypeBox validation schemas for request/response validation

@@ -316,6 +316,7 @@
     "weeklyUsagePatterns": "주간 사용 패턴"
   },
   "common": {
+    "accessRestrictions": "접근 제한",
     "anUnknownErrorOccurred": "알 수 없는 오류가 발생했습니다",
     "cancel": "취소",
     "chart": "차트",
@@ -428,7 +429,12 @@
       "supportsFunctionCalling": "함수 호출 지원",
       "supportsParallelFunctionCalling": "병렬 함수 호출 지원",
       "supportsToolChoice": "도구 선택 지원",
+      "supportsTokenize": "토큰화 지원",
       "supportsVision": "비전 지원",
+      "modelType": "모델 유형",
+      "modelTypeChat": "채팅",
+      "modelTypeEmbeddings": "임베딩",
+      "modelTypeConvert": "문서 변환",
       "table": {
         "1mTokens": "/100만 토큰",
         "actions": "작업",
@@ -558,7 +564,12 @@
         "copy": "복사"
       },
       "codeExample": {
+        "commentChat": "보안 LiteLLM API 키 사용",
+        "commentConvert": "LiteLLM API 키로 문서 변환",
+        "commentEmbeddings": "LiteLLM API 키로 임베딩 생성",
         "content": "안녕하세요, 세계!",
+        "convertUrl": "https://arxiv.org/pdf/2501.17887",
+        "embeddingsInput": "음식이 맛있었고 웨이터가...",
         "role": "사용자"
       },
       "copied": "복사됨!",
@@ -1040,7 +1051,11 @@
       "subtitle": "AI 모델에 액세스하고 관리하기 위한 Model as a Service 플랫폼입니다.",
       "title": "LiteMaaS에 오신 것을 환영합니다"
     },
+    "authCallback": {
+      "processing": "인증 처리 중..."
+    },
     "login": {
+      "authError": "인증에 실패했습니다. 다시 시도해 주세요.",
       "brandAlt": "LiteMaaS 로고",
       "bypassAuthentication": "개발 및 테스트 목적으로 인증 우회",
       "configError": "애플리케이션 구성을 로드할 수 없습니다. 일부 기능을 사용할 수 없을 수 있습니다.",

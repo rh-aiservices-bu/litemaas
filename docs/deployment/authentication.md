@@ -4,21 +4,20 @@
 
 LiteMaaS implements a multi-layered authentication system that supports different access methods based on use case and environment. The system is designed to be secure in production while remaining developer-friendly during local development.
 
-**Updated**: 2025-08-19
+**Updated**: 2026-03-09
 
-- **Role-Based Access Control (RBAC)**: Three-tier role hierarchy with OpenShift group mapping
-- **Administrative Features**: New admin endpoints for user and system management
+- **OIDC Support**: Standard OpenID Connect authentication alongside OpenShift OAuth
+- **Role-Based Access Control (RBAC)**: Three-tier role hierarchy with group mapping (OpenShift groups or OIDC claims)
+- **Administrative Features**: Admin endpoints for user and system management
 - OAuth endpoints reorganized: `/api/auth` for flow, `/api/v1/auth` for user operations
-- Fixed user profile schema issues
-- Enhanced OAuth integration with OpenShift
-- Improved error handling and user creation flow
+- Enhanced OAuth/OIDC integration with configurable providers
 
 ## Authentication Methods
 
 ### 1. JWT Tokens (Frontend Sessions)
 
 - **Purpose**: User authentication for web interface
-- **Usage**: Generated after OAuth2/OpenShift SSO login
+- **Usage**: Generated after OAuth2/OpenShift SSO or OIDC login
 - **Format**: Standard JWT with user claims
 - **Storage**: Frontend stores in memory/localStorage
 - **Header**: `Authorization: Bearer <jwt_token>`
@@ -58,17 +57,24 @@ LiteMaaS implements a multi-layered authentication system that supports differen
 
 ```bash
 # Backend environment variables (.env)
+
+# Authentication Provider: 'openshift' (default) or 'oidc'
+AUTH_PROVIDER=openshift
 OPENSHIFT_API_URL=https://api.your-cluster.com:6443
 
 # JWT Configuration
 JWT_SECRET=your-secure-jwt-secret-here
 JWT_EXPIRES_IN=24h
 
-# OAuth2 (OpenShift SSO)
+# OAuth2 / OIDC
 OAUTH_CLIENT_ID=your-client-id
 OAUTH_CLIENT_SECRET=your-client-secret
 OAUTH_ISSUER=https://oauth-openshift.apps.your-cluster.com
 OAUTH_CALLBACK_URL=http://localhost:8081/api/auth/callback
+
+# OIDC-specific (only when AUTH_PROVIDER=oidc)
+# OIDC_GROUPS_CLAIM=groups
+# OIDC_SCOPES=openid profile email
 
 # Admin API Keys (comma-separated)
 ADMIN_API_KEYS=ltm_admin_dev123456789,ltm_admin_test987654321
@@ -86,7 +92,10 @@ CORS_ORIGIN=http://localhost:3000,http://localhost:3001
 ```bash
 # Production environment variables
 
+# Authentication Provider
+AUTH_PROVIDER=openshift  # or 'oidc' for standard OIDC providers
 OPENSHIFT_API_URL=https://api.your-cluster.com:6443
+
 # Remove or comment out development settings
 # ALLOWED_FRONTEND_ORIGINS=
 # ALLOW_DEV_TOKENS=false
@@ -94,14 +103,90 @@ OPENSHIFT_API_URL=https://api.your-cluster.com:6443
 # Use strong, randomly generated keys
 ADMIN_API_KEYS=ltm_admin_prod_<32-char-random-string>
 
-# Ensure proper OAuth configuration
+# Ensure proper OAuth/OIDC configuration
 OAUTH_REDIRECT_URI=https://your-production-domain/api/auth/callback
 
 # Strict CORS
 CORS_ORIGIN=https://your-production-domain
 ```
 
-### 3. OAuth2/OpenShift SSO Setup
+### 3. Authentication Provider Setup
+
+LiteMaaS supports two authentication providers, controlled by the `AUTH_PROVIDER` environment variable:
+
+- **`openshift`** (default): Uses OpenShift-specific OAuth endpoints and the Kubernetes user API for user info and group membership.
+- **`oidc`**: Uses standard OpenID Connect with auto-discovery (`.well-known/openid-configuration`). Works with Keycloak, Auth0, Okta, Azure AD, and any OIDC-compliant provider.
+
+Both providers map group memberships to LiteMaaS roles using the same role mapping logic.
+
+#### Option 1: Standard OIDC Provider (Keycloak, Auth0, Okta, Azure AD, etc.)
+
+> **Keycloak users**: See the [Keycloak OIDC Setup Guide](keycloak-oidc-setup.md) for step-by-step instructions with screenshots-level detail.
+
+1. Register LiteMaaS as a client in your OIDC provider:
+   - **Client ID**: Choose a name (e.g., `litemaas`)
+   - **Client Secret**: Generate a secure secret
+   - **Redirect URI**: `https://your-domain.com/api/auth/callback`
+   - **Grant Type**: Authorization Code
+   - **Scopes**: `openid`, `profile`, `email` (and `groups` if your provider requires it)
+
+2. Configure environment variables:
+
+   ```bash
+   AUTH_PROVIDER=oidc
+   OAUTH_CLIENT_ID=litemaas
+   OAUTH_CLIENT_SECRET=your-oidc-client-secret
+   OAUTH_ISSUER=https://keycloak.example.com/realms/myrealm
+   OAUTH_CALLBACK_URL=https://your-domain.com/api/auth/callback
+   ```
+
+3. (Optional) Configure group claim and scopes:
+
+   ```bash
+   # If your provider uses a different claim name for groups
+   OIDC_GROUPS_CLAIM=groups  # Default. Keycloak uses 'groups', Auth0 may use custom claims
+
+   # If your provider requires additional scopes for group information
+   OIDC_SCOPES=openid profile email groups
+   ```
+
+4. Configure role mapping via groups. The same group-to-role mapping applies:
+
+   | Group Name         | LiteMaaS Role(s)          |
+   |--------------------|---------------------------|
+   | `litemaas-admins`  | `admin`, `user`           |
+   | `administrators`   | `admin`, `user`           |
+   | `litemaas-readonly`| `admin-readonly`, `user`  |
+   | `litemaas-users`   | `user`                    |
+   | `developers`       | `user`                    |
+
+   Create these groups in your OIDC provider and assign users accordingly.
+
+5. When deploying with the Helm chart:
+
+   ```yaml
+   oauth:
+     mode: external
+     authProvider: oidc
+     issuer: "https://keycloak.example.com/realms/myrealm"
+     oidc:
+       groupsClaim: groups
+       scopes: "openid profile email groups"
+   backend:
+     auth:
+       oauthClientId: "litemaas"
+       oauthClientSecret: "your-oidc-client-secret"
+   ```
+
+#### Provider-Specific Notes
+
+**Auth0**: Issuer URL format is `https://{domain}/`. Group claims require a custom Action to add groups to tokens. Use a namespaced claim like `https://litemaas/groups` and set `OIDC_GROUPS_CLAIM` accordingly.
+
+**Okta**: Issuer URL format is `https://{domain}/oauth2/default`. The `groups` claim is available by default but must be added to the ID token in the Authorization Server claims settings.
+
+**Azure AD (Microsoft Entra ID)**: Issuer URL format is `https://login.microsoftonline.com/{tenant-id}/v2.0`. Groups claim returns object IDs by default — configure "Emit groups as role claims" for human-readable names. May require `GroupMember.Read.All` API permission.
+
+#### Option 2: OpenShift OAuth
 
 There are two approaches for configuring OAuth on OpenShift:
 
@@ -217,6 +302,25 @@ This approach requires cluster-admin privileges to create an `OAuthClient` CR:
    #   "roles": ["admin", "user"]  // Based on OpenShift groups
    # }
    ```
+
+### Switching Authentication Providers
+
+To switch from OpenShift OAuth to OIDC:
+1. Set `AUTH_PROVIDER=oidc`
+2. Update `OAUTH_ISSUER` to your OIDC provider's issuer URL
+3. Configure `OIDC_GROUPS_CLAIM` if your provider uses a non-standard claim name
+4. Add `OIDC_SCOPES` if additional scopes are needed
+
+To switch from OIDC to OpenShift OAuth:
+1. Set `AUTH_PROVIDER=openshift` (or remove — it's the default)
+2. Set `OAUTH_ISSUER` to your OpenShift API URL
+3. Remove OIDC-specific env vars (optional — they are ignored)
+
+**Important notes:**
+- Existing JWT tokens remain valid until expiry regardless of provider change
+- The `oauth_provider` column in the database tracks which provider authenticated each user
+- Group-to-role mapping works identically for both providers
+- A backend restart is required after changing the authentication provider
 
 ## Testing Procedures
 
@@ -573,7 +677,7 @@ npm run dev
 ### 4. OAuth Security
 
 - **Validate redirect URIs**: Prevent open redirect vulnerabilities
-- **Use PKCE**: Implement Proof Key for Code Exchange
+- **PKCE**: PKCE (Proof Key for Code Exchange) is implemented for OIDC providers using S256 challenge method. OpenShift OAuth does not use PKCE.
 - **Validate state parameter**: Prevent CSRF in OAuth flow
 - **Secure client secret**: Never expose OAuth client secret
 
@@ -777,6 +881,40 @@ K8S_API_SKIP_TLS_VERIFY=true
 
 For more details, see [Configuration Guide - Kubernetes API TLS Verification](configuration.md#kubernetes-api-tls-verification).
 
+### Failed to Fetch OIDC Discovery Document
+
+**Symptoms**: Backend fails to start or login fails with discovery-related errors.
+
+**Solutions**:
+
+1. Verify `OAUTH_ISSUER` URL is correct and reachable from the backend
+2. Test with `curl <OAUTH_ISSUER>/.well-known/openid-configuration`
+3. Check egress firewall rules between the backend pod and the OIDC provider
+4. Ensure the URL includes the full realm path (e.g., `https://keycloak.example.com/realms/myrealm`)
+
+### Groups Not Appearing in User Roles
+
+**Symptoms**: Users authenticate successfully but are not assigned expected roles.
+
+**Solutions**:
+
+1. Verify `OIDC_GROUPS_CLAIM` matches your provider's claim name
+2. Some providers require the `groups` scope — add it to `OIDC_SCOPES`
+3. Check that a group membership mapper is configured in your identity provider
+
+### Discovery Endpoint Caching
+
+The OIDC discovery document is cached for 24 hours. If your OIDC provider changes its endpoints, restart the backend to refresh the cache.
+
+### Clock Skew / Token Validation Issues
+
+**Symptoms**: JWT validation fails intermittently or immediately after login.
+
+**Solutions**:
+
+1. Ensure clock synchronization (NTP) between the backend pod and OIDC provider
+2. JWT validation can fail with even small clock differences
+
 ## Additional Resources
 
 - [OAuth 2.0 Security Best Practices](https://datatracker.ietf.org/doc/html/draft-ietf-oauth-security-topics)
@@ -786,6 +924,6 @@ For more details, see [Configuration Guide - Kubernetes API TLS Verification](co
 
 ---
 
-**Last Updated**: 2025-01-30  
-**Version**: 1.1.0  
+**Last Updated**: 2026-03-09
+**Version**: 2.0.0
 **Status**: Production Ready

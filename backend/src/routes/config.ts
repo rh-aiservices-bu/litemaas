@@ -68,6 +68,7 @@ export default async function configRoutes(fastify: FastifyInstance) {
         // Legacy fields for backwards compatibility
         litellmApiUrl: litellmConfig.apiUrl,
         authMode: isMockEnabled ? 'mock' : 'oauth',
+        authProvider: fastify.config.AUTH_PROVIDER || 'openshift',
       };
     },
   });

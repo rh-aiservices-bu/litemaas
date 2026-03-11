@@ -14,6 +14,24 @@ This guide covers deploying LiteMaaS using the Helm chart, which works on both v
    - `quay.io/rh-aiservices-bu/litemaas-backend`
    - `quay.io/rh-aiservices-bu/litemaas-frontend`
 
+## Example Values Files
+
+The chart ships with example values files for common deployment scenarios:
+
+| File | Use Case |
+|------|----------|
+| `values.openshift.example.yaml` | OpenShift with ServiceAccount OAuth (simplest) |
+| `values.oidc.example.yaml` | OIDC provider (Keycloak, Auth0, Okta) on Kubernetes |
+| `values.kubernetes.example.yaml` | Kubernetes with Ingress + OIDC + production resources |
+| `values.external-db.example.yaml` | External PostgreSQL and LiteLLM instances |
+
+Copy the closest match and customize it:
+
+```bash
+cp deployment/helm/litemaas/values.oidc.example.yaml my-values.yaml
+# Edit my-values.yaml with your configuration
+```
+
 ## Quick Start
 
 ### 1. Create a values file
@@ -100,8 +118,11 @@ helm test litemaas -n litemaas
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `oauth.mode` | OAuth mode: `serviceaccount` (SA as OAuth client, OpenShift) or `external` (bring your own) | `serviceaccount` |
-| `oauth.issuer` | OAuth issuer URL (auto-constructed on OpenShift if empty) | `""` |
+| `oauth.authProvider` | Authentication provider: `openshift` or `oidc` (standard OpenID Connect) | `openshift` |
+| `oauth.issuer` | OAuth/OIDC issuer URL (auto-constructed on OpenShift if empty) | `""` |
 | `oauth.existingTokenSecret` | Pre-existing SA token Secret name (chart creates one if empty) | `""` |
+| `oauth.oidc.groupsClaim` | OIDC claim name for group memberships | `groups` |
+| `oauth.oidc.scopes` | Override OIDC scopes (space-separated) | `""` |
 
 ### PostgreSQL
 
@@ -121,8 +142,8 @@ helm test litemaas -n litemaas
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `litellm.enabled` | Deploy built-in LiteLLM proxy | `true` |
-| `litellm.image.repository` | LiteLLM image | `ghcr.io/berriai/litellm-non_root` |
-| `litellm.image.tag` | LiteLLM image tag | `main-v1.74.7-stable` |
+| `litellm.image.repository` | LiteLLM image (custom fork with Docling + tokenize support) | `quay.io/rh-aiservices-bu/litellm-non-root` |
+| `litellm.image.tag` | LiteLLM image tag | `main-v1.81.0-stable-custom` |
 | `litellm.databaseUrl` | Explicit database URL (auto-built when `postgresql.enabled`) | `""` |
 | `litellm.auth.masterKey` | LiteLLM master/API key | `changeme` |
 | `litellm.auth.uiUsername` | Admin UI username | `admin` |
@@ -353,6 +374,29 @@ route:
 ```
 
 > **Migration note**: If upgrading from a previous chart version that used an `OAuthClient` CR, set `oauth.mode: external` to preserve your existing configuration.
+
+### Standard OIDC Provider (Keycloak, Auth0, Okta, Azure AD, etc.)
+
+To use a standard OpenID Connect provider instead of OpenShift OAuth:
+
+```yaml
+oauth:
+  mode: external
+  authProvider: oidc
+  issuer: "https://keycloak.example.com/realms/myrealm"
+  oidc:
+    groupsClaim: groups           # Claim name for group memberships
+    scopes: "openid profile email groups"  # Include 'groups' if required by your IdP
+
+backend:
+  auth:
+    oauthClientId: "litemaas"
+    oauthClientSecret: "your-oidc-client-secret"
+```
+
+The backend will auto-discover the authorization, token, and userinfo endpoints from the OIDC provider's `.well-known/openid-configuration` document. Group memberships from the userinfo response are mapped to LiteMaaS roles using the same mapping as OpenShift groups.
+
+> **Note**: Ensure your OIDC provider is configured to include group claims in the userinfo response. Some providers require adding a `groups` scope or configuring a client mapper.
 
 ## Upgrading
 

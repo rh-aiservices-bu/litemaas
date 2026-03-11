@@ -316,6 +316,7 @@
     "weeklyUsagePatterns": "Modèles d'utilisation hebdomadaire"
   },
   "common": {
+    "accessRestrictions": "Restrictions d'accès",
     "anUnknownErrorOccurred": "Une erreur inconnue s'est produite",
     "cancel": "Annuler",
     "chart": "Graphique",
@@ -428,7 +429,12 @@
       "supportsFunctionCalling": "Prend en charge l'Appel de Fonctions",
       "supportsParallelFunctionCalling": "Prend en charge l'Appel de Fonctions Parallèles",
       "supportsToolChoice": "Prend en charge le Choix d'Outils",
+      "supportsTokenize": "Prend en Charge la Tokenisation",
       "supportsVision": "Prend en Charge la Vision",
+      "modelType": "Type de Modèle",
+      "modelTypeChat": "Chat",
+      "modelTypeEmbeddings": "Embeddings",
+      "modelTypeConvert": "Conversion de Documents",
       "table": {
         "1mTokens": "/1M tokens",
         "actions": "Actions",
@@ -558,7 +564,12 @@
         "copy": "Copier"
       },
       "codeExample": {
+        "commentChat": "Utilisation de votre clé API LiteLLM sécurisée",
+        "commentConvert": "Convertir un document avec votre clé API LiteLLM",
+        "commentEmbeddings": "Générer des embeddings avec votre clé API LiteLLM",
         "content": "Bonjour, monde !",
+        "convertUrl": "https://arxiv.org/pdf/2501.17887",
+        "embeddingsInput": "La nourriture était délicieuse et le serveur...",
         "role": "utilisateur"
       },
       "copied": "Copié !",
@@ -1040,7 +1051,11 @@
       "subtitle": "Votre plateforme Modèle en tant que Service pour accéder et gérer les modèles IA.",
       "title": "Bienvenue dans LiteMaaS"
     },
+    "authCallback": {
+      "processing": "Traitement de l'authentification..."
+    },
     "login": {
+      "authError": "L'authentification a échoué. Veuillez réessayer.",
       "brandAlt": "Logo LiteMaaS",
       "bypassAuthentication": "Contourner l'authentification à des fins de développement et de test",
       "configError": "Impossible de charger la configuration de l'application. Certaines fonctionnalités peuvent être indisponibles.",

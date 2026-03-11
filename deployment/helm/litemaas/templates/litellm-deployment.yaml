@@ -57,6 +57,15 @@ spec:
               value: "PRODUCTION"
             - name: STORE_MODEL_IN_DB
               value: "True"
+            - name: DISABLE_SCHEMA_UPDATE
+              value: "true"
+            {{- $redisHost := include "litemaas.redis.host" . }}
+            {{- if $redisHost }}
+            - name: REDIS_HOST
+              value: {{ $redisHost | quote }}
+            - name: REDIS_PORT
+              value: {{ .Values.backend.redis.port | quote }}
+            {{- end }}
           resources:
             {{- toYaml .Values.litellm.resources | nindent 12 }}
           livenessProbe:

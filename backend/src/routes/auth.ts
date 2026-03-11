@@ -37,21 +37,42 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     },
     handler: async (request, _reply) => {
       try {
-        // Determine the callback URL that will be used
-        const origin =
-          request.headers.origin ||
-          (request.headers.host ? `${request.protocol}://${request.headers.host}` : null);
-        const callbackUrl = origin
-          ? `${origin}/api/auth/callback`
-          : fastify.config.OAUTH_CALLBACK_URL;
+        // Always use the configured callback URL to ensure the redirect_uri matches
+        // between the authorization request and the token exchange (OAuth2 spec requirement).
+        const callbackUrl = fastify.config.OAUTH_CALLBACK_URL;
 
-        // Store the callback URL with the state
+        // Single state: store callback URL first, then generate auth URL so the same state
+        // is used in the redirect and the code_verifier we store matches the code_challenge in that URL.
         const state = fastify.oauthHelpers.generateAndStoreState(callbackUrl);
-        const authUrl = fastify.oauth.generateAuthUrl(state, request);
+        const authResult = await fastify.oauth.generateAuthUrl(state);
 
-        fastify.log.debug({ callbackUrl, state }, 'Generated auth URL with stored callback');
+        // Store the code verifier and nonce for this state (must match the auth URL we return)
+        if (authResult.codeVerifier) {
+          fastify.oauthHelpers.storeCodeVerifier(state, authResult.codeVerifier);
+        }
+        if (authResult.nonce) {
+          fastify.oauthHelpers.storeNonce(state, authResult.nonce);
+        }
 
-        return { authUrl };
+        // Store the frontend origin so we can redirect back after OIDC callback.
+        // In dev, frontend (:3000) and backend (:8081) are on different origins.
+        // In prod behind a reverse proxy, they share the same origin.
+        const frontendOrigin = request.headers.origin || request.headers.referer;
+        if (frontendOrigin) {
+          try {
+            const origin = new URL(frontendOrigin).origin;
+            fastify.oauthHelpers.storeFrontendOrigin(state, origin);
+          } catch {
+            // Invalid URL, skip — will use relative redirect
+          }
+        }
+
+        fastify.log.debug(
+          { callbackUrl, state, hasPKCE: !!authResult.codeVerifier, hasNonce: !!authResult.nonce },
+          'Generated auth URL with stored callback',
+        );
+
+        return { authUrl: authResult.url };
       } catch (error) {
         fastify.log.error(error, 'Failed to generate auth URL');
         throw fastify.createError(500, 'Failed to initiate authentication');
@@ -223,14 +244,24 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           throw fastify.createError(400, 'Invalid or expired state parameter');
         }
 
+        // Retrieve code verifier for PKCE (OIDC only)
+        const codeVerifier = fastify.oauthHelpers.getStoredCodeVerifier(state);
+        const storedNonce = fastify.oauthHelpers.getStoredNonce(state);
+
         // Exchange authorization code for access token
-        const tokenResponse = await fastify.oauth.exchangeCodeForToken(code, state, request);
+        const tokenResponse = await fastify.oauth.exchangeCodeForToken(code, state, codeVerifier);
+
+        // Validate ID token nonce and audience (OIDC only)
+        fastify.oauth.validateIdToken(tokenResponse, storedNonce);
 
         // Get user information
         const userInfo = await fastify.oauth.getUserInfo(tokenResponse.access_token);
 
         // Process user (create or update in database)
         const user = await fastify.oauth.processOAuthUser(userInfo);
+
+        // Read frontend origin before clearing state (for post-auth redirect)
+        const storedFrontendOrigin = fastify.oauthHelpers.getStoredFrontendOrigin(state);
 
         // Clear the state now that authentication is successful
         fastify.oauthHelpers.clearState(state);
@@ -272,17 +303,19 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
             'AUTH', // resource_type for authentication events
             request.ip,
             request.headers['user-agent'] ?? null,
-            JSON.stringify({ oauth_provider: 'openshift', method: 'oauth' }),
+            JSON.stringify({ oauth_provider: fastify.oauth.getAuthProvider(), method: 'oauth' }),
           ],
         );
 
         fastify.log.info({ userId: user.id, username: user.username }, 'User logged in');
 
         // Redirect to frontend callback page with token in URL fragment (SPA)
-        // Using relative redirect to work in any deployment environment
+        // Use stored frontend origin for cross-origin dev setups (e.g., frontend :3000, backend :8081).
+        // Falls back to relative redirect for same-origin deployments (production behind reverse proxy).
         const callbackPath = `/auth/callback#token=${token}&expires_in=${24 * 60 * 60}`;
+        const redirectUrl = storedFrontendOrigin ? `${storedFrontendOrigin}${callbackPath}` : callbackPath;
 
-        return reply.redirect(callbackPath);
+        return reply.redirect(redirectUrl);
       } catch (error) {
         fastify.log.error(error, 'OAuth callback error');
 
@@ -337,6 +370,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           type: 'object',
           properties: {
             message: { type: 'string' },
+            logoutUrl: { type: 'string', nullable: true },
           },
         },
       },
@@ -355,7 +389,10 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
         fastify.log.info({ userId: user.userId, username: user.username }, 'User logged out');
 
-        return { message: 'Logged out successfully' };
+        // Get OIDC logout URL if available
+        const logoutUrl = await fastify.oauth.getLogoutUrl();
+
+        return { message: 'Logged out successfully', logoutUrl };
       } catch (error) {
         fastify.log.error(error, 'Logout error');
         throw fastify.createError(500, 'Logout failed');
@@ -421,6 +458,51 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
           error: 'Invalid token',
         });
       }
+    },
+  });
+};
+
+// Admin auth info endpoint - registered separately at /api/v1/admin/auth/info
+export const adminAuthInfoRoute: FastifyPluginAsync = async (fastify) => {
+  fastify.get('/info', {
+    schema: {
+      tags: ['Admin', 'Authentication'],
+      description: 'Get authentication provider information (admin only)',
+      security: [{ bearerAuth: [] }],
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            provider: { type: 'string' },
+            issuer: { type: 'string' },
+            groupsClaim: { type: 'string' },
+            discoveryStatus: { type: 'string', enum: ['healthy', 'not_applicable', 'unknown'] },
+          },
+        },
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:usage')],
+    handler: async (_request, _reply) => {
+      const provider = fastify.oauth.getAuthProvider();
+      const issuer = fastify.config.OAUTH_ISSUER;
+      const groupsClaim = fastify.config.OIDC_GROUPS_CLAIM;
+      const discoveryStatus = await fastify.oauth.getDiscoveryStatus();
+
+      // Extract domain only from issuer
+      let issuerDomain = issuer;
+      try {
+        const url = new URL(issuer);
+        issuerDomain = url.hostname;
+      } catch {
+        // If URL parsing fails, use as-is
+      }
+
+      return {
+        provider,
+        issuer: issuerDomain,
+        groupsClaim,
+        discoveryStatus,
+      };
     },
   });
 };

@@ -74,6 +74,15 @@ spec:
             - name: JWT_EXPIRES_IN
               value: '24h'
 
+            # Authentication Provider ('openshift' or 'oidc')
+            # Uncomment and change to 'oidc' for standard OpenID Connect providers
+            # - name: AUTH_PROVIDER
+            #   value: 'oidc'
+            # - name: OIDC_GROUPS_CLAIM
+            #   value: 'groups'
+            # - name: OIDC_SCOPES
+            #   value: 'openid profile email'
+
             # OAuth Configuration
             - name: OAUTH_CLIENT_ID
               valueFrom:
@@ -125,6 +134,12 @@ spec:
             # Backup Storage Path
             - name: BACKUP_STORAGE_PATH
               value: '/data/backups'
+
+            # Redis (for flushing LiteLLM cache after model CRUD)
+            - name: REDIS_HOST
+              value: 'litellm-redis'
+            - name: REDIS_PORT
+              value: '6379'
 
             # Backend API Rate Limiting (NOT for LLM requests)
             - name: RATE_LIMIT_MAX

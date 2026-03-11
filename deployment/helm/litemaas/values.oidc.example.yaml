@@ -1,0 +1,65 @@
+# =============================================================================
+# LiteMaaS Helm Values — Standard OIDC Provider
+# =============================================================================
+# Use this file when authenticating with a standard OpenID Connect provider
+# such as Keycloak, Auth0, Okta, or Azure AD.
+#
+# Usage:
+#   helm install litemaas deployment/helm/litemaas/ \
+#     -n litemaas --create-namespace \
+#     -f deployment/helm/litemaas/values.oidc.example.yaml
+#
+# See docs/deployment/keycloak-oidc-setup.md for Keycloak-specific setup.
+# =============================================================================
+
+global:
+  platform: kubernetes
+
+# -- OIDC authentication
+oauth:
+  mode: external
+  authProvider: oidc
+  issuer: "https://keycloak.example.com/realms/litemaas"
+  oidc:
+    groupsClaim: groups
+    # Add 'groups' scope if your provider requires it to include group claims
+    scopes: "openid profile email groups"
+
+# -- Secrets — CHANGE ALL VALUES BELOW
+postgresql:
+  auth:
+    password: "CHANGE-ME-pg-password"
+
+litellm:
+  auth:
+    masterKey: "sk-CHANGE-ME-litellm-key"
+    uiPassword: "CHANGE-ME-ui-password"
+
+backend:
+  auth:
+    jwtSecret: "CHANGE-ME-jwt-secret"
+    adminApiKeys: "ltm_admin_CHANGE-ME"
+    litellmApiKey: "sk-CHANGE-ME-litellm-key"        # Must match litellm.auth.masterKey
+    # OIDC client credentials from your identity provider
+    oauthClientId: "litemaas"
+    oauthClientSecret: "CHANGE-ME-oidc-client-secret"
+    # Bootstrap admin user(s) — comma-separated usernames
+    initialAdminUsers: "admin@example.com"
+
+# -- Ingress (adjust for your environment)
+ingress:
+  enabled: true
+  className: nginx
+  frontend:
+    host: litemaas.example.com
+    tls:
+      - secretName: litemaas-tls
+        hosts:
+          - litemaas.example.com
+  litellm:
+    enabled: true
+    host: litellm.example.com
+    tls:
+      - secretName: litellm-tls
+        hosts:
+          - litellm.example.com

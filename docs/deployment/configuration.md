@@ -34,15 +34,59 @@ DB_IDLE_TIMEOUT=60000
 DB_CONNECTION_TIMEOUT=10000
 ```
 
-## OAuth Configuration
+## OAuth / OIDC Configuration
 
 | Variable                  | Description                                                          | Default                                   | Required |
 | ------------------------- | -------------------------------------------------------------------- | ----------------------------------------- | -------- |
-| `OAUTH_CLIENT_ID`         | OpenShift OAuth client ID                                            | -                                         | Yes      |
-| `OAUTH_CLIENT_SECRET`     | OpenShift OAuth client secret                                        | -                                         | Yes      |
-| `OAUTH_ISSUER`            | OAuth provider URL                                                   | -                                         | Yes      |
+| `AUTH_PROVIDER`            | Authentication provider: `openshift` or `oidc`                      | `openshift`                               | No       |
+| `OAUTH_CLIENT_ID`         | OAuth/OIDC client ID                                                 | -                                         | Yes      |
+| `OAUTH_CLIENT_SECRET`     | OAuth/OIDC client secret                                             | -                                         | Yes      |
+| `OAUTH_ISSUER`            | OAuth/OIDC provider URL (issuer)                                     | -                                         | Yes      |
 | `OAUTH_CALLBACK_URL`      | OAuth callback URL                                                   | `http://localhost:8081/api/auth/callback` | No       |
-| `K8S_API_SKIP_TLS_VERIFY` | Skip TLS verification for Kubernetes API calls (⚠️ Use with caution) | -                                         | No       |
+| `OPENSHIFT_API_URL`       | OpenShift API server URL. Only used with OpenShift OAuth provider. Auto-derived from OAUTH_ISSUER if not set. | -                                         | No       |
+| `K8S_API_SKIP_TLS_VERIFY` | Skip TLS verification for Kubernetes API calls (⚠️ OpenShift only)   | -                                         | No       |
+| `OIDC_GROUPS_CLAIM`       | Claim name in OIDC userinfo for group memberships                    | `groups`                                  | No       |
+| `OIDC_SCOPES`             | Override OIDC scopes (space-separated)                               | `openid profile email`                    | No       |
+
+### Authentication Provider
+
+LiteMaaS supports two authentication providers via `AUTH_PROVIDER`:
+
+#### OpenShift (`AUTH_PROVIDER=openshift`, default)
+
+The OAuth service handles OpenShift's dual-endpoint architecture:
+
+```typescript
+// OAuth server for authentication
+const oauthServer = 'https://oauth-openshift.apps.cluster.com';
+
+// API server for user information (can be overridden via OPENSHIFT_API_URL env var)
+const apiServer = 'https://api.cluster.com:6443';
+
+// User info endpoint (OpenShift-specific)
+const userInfoUrl = `${apiServer}/apis/user.openshift.io/v1/users/~`;
+```
+
+#### Standard OIDC (`AUTH_PROVIDER=oidc`)
+
+For OIDC providers (Keycloak, Auth0, Okta, Azure AD, etc.), endpoints are auto-discovered:
+
+```typescript
+// Discovery document fetched once and cached
+const discoveryUrl = `${issuer}/.well-known/openid-configuration`;
+
+// Endpoints resolved from discovery:
+// - authorization_endpoint (for login redirect)
+// - token_endpoint (for code exchange)
+// - userinfo_endpoint (for user info)
+
+// Group memberships read from configurable claim (default: 'groups')
+const groupsClaim = process.env.OIDC_GROUPS_CLAIM || 'groups';
+```
+
+> **Note**: The OIDC discovery document is cached for 24 hours. If your OIDC provider changes its endpoints, restart the backend to refresh.
+
+For provider-specific setup, see [Keycloak OIDC Setup](keycloak-oidc-setup.md).
 
 ### OAuth Flow Architecture
 
@@ -100,14 +144,26 @@ As of the latest update, the backend implements intelligent OAuth callback URL h
 - The backend uses relative redirects (`/auth/callback`) after processing
 - No `FRONTEND_URL` configuration needed
 
-### Example
+### Example (OpenShift)
 
 ```bash
+AUTH_PROVIDER=openshift
 OAUTH_CLIENT_ID=litemaas-oauth-client
 OAUTH_CLIENT_SECRET=super-secret-oauth-key
-OAUTH_ISSUER=https://oauth.openshift.example.com
-# Fallback URL - automatic detection handles most cases
+OAUTH_ISSUER=https://oauth-openshift.apps.cluster.example.com
 OAUTH_CALLBACK_URL=http://localhost:3000/api/auth/callback
+```
+
+### Example (OIDC — Keycloak, Auth0, Okta, Azure AD, etc.)
+
+```bash
+AUTH_PROVIDER=oidc
+OAUTH_CLIENT_ID=litemaas
+OAUTH_CLIENT_SECRET=your-oidc-client-secret
+OAUTH_ISSUER=https://keycloak.example.com/realms/myrealm
+OAUTH_CALLBACK_URL=https://litemaas.example.com/api/auth/callback
+# OIDC_GROUPS_CLAIM=groups       # Customize if your IdP uses a different claim
+# OIDC_SCOPES=openid profile email groups  # Add 'groups' scope if required by your IdP
 ```
 
 ### OAuth Provider Setup
@@ -223,22 +279,26 @@ USAGE_CACHE_TTL_MINUTES=5    # Default: 5 minutes
 - `database_wins`: Database data takes precedence
 - `merge`: Attempt to merge conflicts (not yet implemented)
 
-## Backup & Restore
+## LiteLLM Database & Backup
 
 | Variable              | Description                                                        | Default          | Required |
 | --------------------- | ------------------------------------------------------------------ | ---------------- | -------- |
-| `LITELLM_DATABASE_URL`| Direct PostgreSQL connection string to LiteLLM's database          | -                | No       |
+| `LITELLM_DATABASE_URL`| Direct PostgreSQL connection string to LiteLLM's database          | -                | Recommended |
 | `BACKUP_STORAGE_PATH` | Directory where backup files (`.sql.gz`) are stored                | `./data/backups` | No       |
 
-The backup feature allows administrators to create, download, and restore full database backups for both the LiteMaaS and LiteLLM databases from the Settings and Tools page.
+**`LITELLM_DATABASE_URL`** is a direct PostgreSQL connection string to LiteLLM's database (**not** the LiteLLM API URL). It is used for two purposes:
 
-- **`LITELLM_DATABASE_URL`** is required only if you want to backup/restore the LiteLLM database. This is a direct PostgreSQL connection string, **not** the LiteLLM API URL. When not set, only LiteMaaS database backup is available.
+1. **Model sync cross-referencing**: During model synchronization, the backend queries `LiteLLM_ProxyModelTable` to verify which models actually exist in LiteLLM's database. This prevents deleted models from reappearing due to stale entries in LiteLLM's API/Redis cache. Without this variable, sync relies solely on the LiteLLM API response, which may contain stale data.
+2. **Database backup/restore**: Required to backup and restore the LiteLLM database from the Settings and Tools page. When not set, only LiteMaaS database backup is available.
+
+> **Recommendation**: Always set `LITELLM_DATABASE_URL` in production to ensure reliable model lifecycle management. Without it, admin-deleted models may reappear after sync if LiteLLM's cache has not yet expired.
+
 - **`BACKUP_STORAGE_PATH`** controls where backup files are stored on disk. The directory is created automatically if it does not exist.
 
 ### Example
 
 ```bash
-# LiteLLM database connection for backup/restore
+# LiteLLM database connection (used for model sync + backup/restore)
 LITELLM_DATABASE_URL=postgresql://llmproxy:dbpassword9090@localhost:5432/litellm
 
 # Custom backup storage location
@@ -252,6 +312,26 @@ In Helm deployments, `LITELLM_DATABASE_URL` is auto-constructed from PostgreSQL 
 In Kustomize deployments, the value is stored in `backend-secret` and constructed from `PG_ADMIN_PASSWORD` by default.
 
 **Persistent Storage**: Both Helm and Kustomize deployments provision a PersistentVolumeClaim (`5Gi` by default) mounted at `/data/backups` to ensure backup files survive pod restarts. In the Helm chart, configure via `backend.backup.persistence.size` and `backend.backup.persistence.storageClass`. Without persistent storage, backups are written to the ephemeral container filesystem and lost on pod restart.
+
+## Redis Cache
+
+| Variable     | Description                                             | Default | Required |
+| ------------ | ------------------------------------------------------- | ------- | -------- |
+| `REDIS_HOST` | Redis hostname for flushing LiteLLM's cache after model CRUD | -       | No       |
+| `REDIS_PORT` | Redis port                                              | `6379`  | No       |
+
+When configured, the backend flushes LiteLLM's Redis cache (`FLUSHALL`) after every model create, update, or delete operation to ensure all LiteLLM proxy pods immediately pick up the changes. When `REDIS_HOST` is not set, cache flush is silently skipped (non-fatal).
+
+- In **Helm** deployments, a built-in Redis is deployed when `redis.enabled: true` (default). The `REDIS_HOST` is auto-constructed from the release name. To use an external Redis, set `backend.redis.host` and optionally `backend.redis.port`.
+- In **Kustomize** deployments, Redis is deployed via `redis-deployment.yaml` and `redis-service.yaml`.
+- Both the **backend** and **LiteLLM** receive the same `REDIS_HOST`/`REDIS_PORT` environment variables so they share a single Redis instance.
+
+### Example
+
+```bash
+REDIS_HOST=litellm-redis
+REDIS_PORT=6379
+```
 
 ## Backend API Protection
 
@@ -560,11 +640,16 @@ DATABASE_URL=postgresql://prod_user:${DB_PASSWORD}@db.internal:5432/litemaas_pro
 DB_MAX_CONNECTIONS=50
 DB_IDLE_TIMEOUT=60000
 
-# OAuth
+# Authentication Provider ('openshift' or 'oidc')
+AUTH_PROVIDER=openshift
+
+# OAuth / OIDC
 OAUTH_CLIENT_ID=${OAUTH_PROD_CLIENT_ID}
 OAUTH_CLIENT_SECRET=${OAUTH_PROD_CLIENT_SECRET}
 OAUTH_ISSUER=https://oauth.production.com
 OAUTH_CALLBACK_URL=https://app.production.com/api/auth/callback
+# OIDC_GROUPS_CLAIM=groups    # Only for AUTH_PROVIDER=oidc
+# OIDC_SCOPES=openid profile email  # Only for AUTH_PROVIDER=oidc
 
 # JWT
 JWT_SECRET=${JWT_PROD_SECRET}
@@ -579,7 +664,7 @@ LITELLM_SYNC_INTERVAL=300
 LITELLM_TIMEOUT=60000
 LITELLM_RETRIES=5
 
-# Backup & Restore
+# LiteLLM Database (model sync cross-reference + backup/restore)
 LITELLM_DATABASE_URL=postgresql://prod_user:${DB_PASSWORD}@db.internal:5432/litellm
 BACKUP_STORAGE_PATH=/var/data/litemaas/backups
 

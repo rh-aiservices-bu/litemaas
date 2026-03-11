@@ -14,7 +14,7 @@
 
 **Monorepo** with two packages:
 
-- **Backend** (`@litemaas/backend`): Fastify API server with PostgreSQL, OAuth2/JWT, RBAC
+- **Backend** (`@litemaas/backend`): Fastify API server with PostgreSQL, OAuth2/OIDC/JWT, RBAC
 - **Frontend** (`@litemaas/frontend`): React + PatternFly 6 UI with 9-language i18n support
 
 **Tech Stack**: Fastify, React, TypeScript, PostgreSQL, PatternFly 6, LiteLLM integration
@@ -26,6 +26,17 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 ## 🔧 Key Features
 
 **Role-Based Access Control (RBAC)**: Three-tier hierarchy `admin > adminReadonly > user` with OpenShift integration.
+
+**Model Capability Management**: Multi-type model support beyond chat-only models:
+
+- **Model Types**: Chat (default), Embeddings, Document Conversion — selected via radio group in admin model form
+- **Tokenize Capability**: Optional per-model toggle for tokenization support
+- **Document Conversion**: Docling provider integration with `/health` endpoint testing, hidden irrelevant fields (backend model name, TPM, costs, max tokens)
+- **Capability Labels**: Color-coded flair labels on model cards (Chat=blue, Embeddings=green, Tokenize=orangered, Document Conversion=orange)
+- **Type-Specific Curl Examples**: View Key modal shows contextual curl commands based on model type
+- **Chat Playground Filtering**: Only chat-capable models shown in playground
+- **Redis Cache Flush**: Optional Redis integration (`REDIS_HOST`/`REDIS_PORT`) to flush LiteLLM's cache after model CRUD, ensuring all proxy pods pick up changes immediately
+- **Deployment**: Redis deployment included in Helm (`redis.enabled: true`) and Kustomize charts
 
 **Restricted Model Subscription Approval** (Major feature - 2025 Q4): Admin-controlled access to sensitive/costly models with comprehensive approval workflow:
 
@@ -86,7 +97,7 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 - **Type-aware serialization**: Correct handling of PG arrays vs JSON arrays, mixed-case identifiers, timestamp precision
 - **CLI restore**: Standalone script for catastrophic recovery (`backend/src/scripts/restore-backup.ts`)
 - **RBAC**: `admin:backup` permission (admin only), tab visible to adminReadonly (read-only)
-- **Configuration**: `LITELLM_DATABASE_URL` for LiteLLM database access, `BACKUP_STORAGE_PATH` for storage location
+- **Configuration**: `LITELLM_DATABASE_URL` for LiteLLM database access (also used by model sync cross-referencing), `BACKUP_STORAGE_PATH` for storage location
 
 **Configurable Currency**: Admin-controlled currency settings (25 supported currencies) for all monetary displays across the platform. Configured via Settings and Tools → Currency tab, stored in `system_settings` table, exposed via public config endpoint. Default: USD ($).
 
@@ -185,9 +196,14 @@ See <https://github.com/anthropics/claude-code/issues/4711> for details.
 
 ## 🔐 Security & Authentication
 
-**OAuth2 + JWT** with role-based access control. Three-tier hierarchy: `admin > adminReadonly > user`.
+**OAuth2/OIDC + JWT** with role-based access control. Two authentication providers via `AUTH_PROVIDER` env var:
 
-For details, see [`docs/deployment/authentication.md`](docs/deployment/authentication.md) and [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md).
+- **OpenShift OAuth** (default): Uses OpenShift-specific endpoints with Kubernetes user API for group membership
+- **Standard OIDC**: Auto-discovery, PKCE (S256), nonce/audience validation. Supports Keycloak, Auth0, Okta, Azure AD, and any OIDC-compliant provider.
+
+Three-tier role hierarchy: `admin > adminReadonly > user`. Group-to-role mapping works identically for both providers.
+
+For details, see [`docs/deployment/authentication.md`](docs/deployment/authentication.md), [`docs/deployment/keycloak-oidc-setup.md`](docs/deployment/keycloak-oidc-setup.md), and [`docs/features/user-roles-administration.md`](docs/features/user-roles-administration.md).
 
 ## 📚 Documentation
 

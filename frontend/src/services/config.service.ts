@@ -44,6 +44,8 @@ export interface BackendConfig {
   adminAnalytics: AdminAnalyticsPublicConfig;
   // Currency configuration
   currency?: CurrencySettings;
+  // Authentication provider type
+  authProvider?: 'openshift' | 'oidc';
   // Legacy fields for backwards compatibility
   litellmApiUrl?: string;
   authMode?: 'oauth' | 'mock';

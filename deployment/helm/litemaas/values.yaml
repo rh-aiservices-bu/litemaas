@@ -32,7 +32,7 @@ serviceAccount:
   annotations: {}
 
 # =============================================================================
-# OAuth
+# OAuth / OIDC
 # =============================================================================
 oauth:
   # -- OAuth mode: "serviceaccount" uses the ServiceAccount as an OAuth client
@@ -40,14 +40,28 @@ oauth:
   # client ID/secret/issuer via backend.auth.oauthClientId etc.)
   mode: serviceaccount
 
+  # -- Authentication provider: "openshift" (default) or "oidc" (standard OpenID Connect).
+  # OpenShift uses custom OAuth endpoints and the OpenShift user API for user info.
+  # OIDC uses standard .well-known/openid-configuration discovery and /userinfo endpoint.
+  # When set to "oidc", oauth.mode should typically be "external".
+  authProvider: openshift
+
   # -- OAuth issuer URL. Auto-constructed on OpenShift if empty:
   # https://oauth-openshift.<clusterDomain>
+  # For OIDC providers, set this to the issuer URL (e.g., https://keycloak.example.com/realms/myrealm)
   issuer: ""
 
   # -- ServiceAccount token secret name for SA OAuth mode.
   # The chart creates one automatically when mode is "serviceaccount".
   # Set this to reference a pre-existing token secret.
   existingTokenSecret: ""
+
+  # -- OIDC-specific settings (only used when authProvider is "oidc")
+  oidc:
+    # -- Claim name in OIDC userinfo response containing group memberships
+    groupsClaim: groups
+    # -- Override OIDC scopes (space-separated). Default: "openid profile email"
+    scopes: ""
 
 # =============================================================================
 # PostgreSQL
@@ -96,6 +110,26 @@ postgresql:
     failureThreshold: 3
 
 # =============================================================================
+# Redis
+# =============================================================================
+redis:
+  # -- Deploy built-in Redis for LiteLLM cache management.
+  # Used by both LiteLLM (model/key caching) and the backend (cache flush after model CRUD).
+  enabled: true
+
+  image:
+    repository: redis
+    tag: "7-alpine"
+
+  resources:
+    requests:
+      memory: "64Mi"
+      cpu: "50m"
+    limits:
+      memory: "128Mi"
+      cpu: "200m"
+
+# =============================================================================
 # LiteLLM
 # =============================================================================
 litellm:
@@ -103,8 +137,8 @@ litellm:
   enabled: true
 
   image:
-    repository: ghcr.io/berriai/litellm-non_root
-    tag: "main-v1.81.0-stable"
+    repository: quay.io/rh-aiservices-bu/litellm-non-root
+    tag: "main-v1.81.0-stable-custom"
 
   # -- Explicit database URL for LiteLLM. Auto-constructed when postgresql.enabled is true.
   databaseUrl: ""
@@ -180,6 +214,9 @@ backend:
     # -- Encryption key for stored model API keys (AES-256-GCM).
     # Falls back to litellmApiKey if empty. Recommended to set explicitly in production.
     litellmMasterKey: ""
+    # -- Skip TLS verification for Kubernetes API calls (OpenShift only).
+    # WARNING: Only use in dev/test environments with self-signed certificates. Security risk in production.
+    k8sApiSkipTlsVerify: ""
     # -- Use an existing Secret instead of creating one.
     # Must contain keys: database-url, cors-origin, jwt-secret, oauth-client-id,
     # oauth-client-secret, oauth-issuer, oauth-callback-url, admin-api-keys, litellm-api-key, litellm-master-key, litellm-database-url
@@ -196,10 +233,18 @@ backend:
     tpmLimit: "100000"
     rpmLimit: "120"
 
+  # -- Redis connection for flushing LiteLLM's cache after model CRUD operations.
+  # Auto-constructed when redis.enabled is true. Set explicitly to use an external Redis.
+  # If empty and redis.enabled is false, cache flush is disabled (non-fatal).
+  redis:
+    host: ""
+    port: "6379"
+
   # -- Backup & Restore configuration
   backup:
-    # -- LiteLLM database URL for backup/restore. Auto-constructed when postgresql.enabled is true.
-    # Required only if you want to backup/restore the LiteLLM database.
+    # -- LiteLLM database URL. Auto-constructed when postgresql.enabled is true.
+    # Used for: (1) model sync cross-referencing to prevent deleted models reappearing,
+    # and (2) LiteLLM database backup/restore. Recommended for production deployments.
     litellmDatabaseUrl: ""
     # -- Mount path for backup storage inside the container.
     # This value is set as BACKUP_STORAGE_PATH env var.

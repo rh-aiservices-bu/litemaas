@@ -316,6 +316,7 @@
     "weeklyUsagePatterns": "Wöchentliche Nutzungsmuster"
   },
   "common": {
+    "accessRestrictions": "Zugriffsbeschränkungen",
     "anUnknownErrorOccurred": "Ein unbekannter Fehler ist aufgetreten",
     "cancel": "Abbrechen",
     "chart": "Diagramm",
@@ -428,7 +429,12 @@
       "supportsFunctionCalling": "Unterstützt Funktionsaufrufe",
       "supportsParallelFunctionCalling": "Unterstützt Parallele Funktionsaufrufe",
       "supportsToolChoice": "Unterstützt Werkzeugauswahl",
+      "supportsTokenize": "Unterstützt Tokenisierung",
       "supportsVision": "Unterstützt Vision",
+      "modelType": "Modelltyp",
+      "modelTypeChat": "Chat",
+      "modelTypeEmbeddings": "Embeddings",
+      "modelTypeConvert": "Dokumentenkonvertierung",
       "table": {
         "1mTokens": "/1M Token",
         "actions": "Aktionen",
@@ -558,7 +564,12 @@
         "copy": "Kopieren"
       },
       "codeExample": {
+        "commentChat": "Verwendung Ihres sicheren LiteLLM API-Schlüssels",
+        "commentConvert": "Ein Dokument mit Ihrem LiteLLM API-Schlüssel konvertieren",
+        "commentEmbeddings": "Embeddings mit Ihrem LiteLLM API-Schlüssel generieren",
         "content": "Hallo, Welt!",
+        "convertUrl": "https://arxiv.org/pdf/2501.17887",
+        "embeddingsInput": "Das Essen war köstlich und der Kellner...",
         "role": "Benutzer"
       },
       "copied": "Kopiert!",
@@ -1040,7 +1051,11 @@
       "subtitle": "Ihre Model-as-a-Service-Plattform für den Zugriff und die Verwaltung von KI-Modellen.",
       "title": "Willkommen bei LiteMaaS"
     },
+    "authCallback": {
+      "processing": "Authentifizierung wird verarbeitet..."
+    },
     "login": {
+      "authError": "Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
       "brandAlt": "LiteMaaS-Logo",
       "bypassAuthentication": "Authentifizierung für Entwicklungs- und Testzwecke umgehen",
       "configError": "Die Anwendungskonfiguration konnte nicht geladen werden. Einige Funktionen sind möglicherweise nicht verfügbar.",

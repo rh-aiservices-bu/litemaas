@@ -106,8 +106,17 @@ const adminAuditRoutes: FastifyPluginAsync = async (fastify) => {
           [...params, limitNum, offset],
         );
 
+        // Sanitize sensitive fields from audit log metadata
+        const sanitizedRows = dataResult.rows.map((row: any) => {
+          if (row.metadata && typeof row.metadata === 'object') {
+            const { liteLLMKeyId, ...safeMetadata } = row.metadata;
+            return { ...row, metadata: safeMetadata };
+          }
+          return row;
+        });
+
         return {
-          data: dataResult.rows,
+          data: sanitizedRows,
           pagination: {
             page: pageNum,
             limit: limitNum,

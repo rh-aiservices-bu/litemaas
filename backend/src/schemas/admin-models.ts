@@ -5,7 +5,7 @@ import { TimestampSchema } from './common.js';
 export const LiteLLMModelParamsSchema = Type.Object({
   model: Type.String(),
   api_base: Type.String(),
-  custom_llm_provider: Type.Literal('openai'),
+  custom_llm_provider: Type.Union([Type.Literal('openai'), Type.Literal('docling')]),
   input_cost_per_token: Type.Number({ minimum: 0 }),
   output_cost_per_token: Type.Number({ minimum: 0 }),
   tpm: Type.Integer({ minimum: 1 }),
@@ -44,6 +44,9 @@ export const AdminCreateModelSchema = Type.Object({
   supports_function_calling: Type.Boolean(),
   supports_parallel_function_calling: Type.Boolean(),
   supports_tool_choice: Type.Boolean(),
+  supports_embeddings: Type.Optional(Type.Boolean()),
+  supports_tokenize: Type.Optional(Type.Boolean()),
+  supports_convert: Type.Optional(Type.Boolean()),
   restrictedAccess: Type.Optional(Type.Boolean()),
 });
 
@@ -97,6 +100,7 @@ export const AdminTestModelConfigSchema = Type.Object({
   api_key: Type.Optional(Type.String()),
   backend_model_name: Type.String(),
   model_id: Type.Optional(Type.String()),
+  supports_convert: Type.Optional(Type.Boolean()),
 });
 
 export const AdminTestModelConfigResponseSchema = Type.Object({
@@ -104,6 +108,7 @@ export const AdminTestModelConfigResponseSchema = Type.Object({
   result: Type.Union([
     Type.Literal('model_found'),
     Type.Literal('model_not_found'),
+    Type.Literal('endpoint_reachable'),
     Type.Literal('auth_error'),
     Type.Literal('connection_error'),
     Type.Literal('timeout'),

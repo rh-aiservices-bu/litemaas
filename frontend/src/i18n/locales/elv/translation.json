@@ -316,6 +316,7 @@
     "weeklyUsagePatterns": "Veth-Aerlinn Echad"
   },
   "common": {
+    "accessRestrictions": "Estolad mennel",
     "anUnknownErrorOccurred": "Ohtar ú-dhuilin tûl",
     "cancel": "Daeglos",
     "chart": "Minithith",
@@ -428,7 +429,12 @@
       "supportsFunctionCalling": "Puia Echad-Galad",
       "supportsParallelFunctionCalling": "Puia Thâl-Echad-Galad",
       "supportsToolChoice": "Puia Echad-Edhellen",
+      "supportsTokenize": "Puia Técinad",
       "supportsVision": "Puia Tirion",
+      "modelType": "Nólë Samna",
+      "modelTypeChat": "Quetil",
+      "modelTypeEmbeddings": "Nurtanë",
+      "modelTypeConvert": "Parma Vistië",
       "table": {
         "1mTokens": "/1M têw",
         "actions": "Caran",
@@ -558,7 +564,12 @@
         "copy": "Beria"
       },
       "codeExample": {
+        "commentChat": "Imbi i sérë LiteLLM API caimassë",
+        "commentConvert": "Vistië parma as i LiteLLM API caimassë",
+        "commentEmbeddings": "Onta nurtanë as i LiteLLM API caimassë",
         "content": "Suilad, arda!",
+        "convertUrl": "https://arxiv.org/pdf/2501.17887",
+        "embeddingsInput": "I apsa né mára ar i hérincë...",
         "role": "aduiadan"
       },
       "copied": "Beria!",
@@ -1040,7 +1051,11 @@
       "subtitle": "En echuis-i-Vilya in êl aduial pedo sui henion ned Echuin-Eru.",
       "title": "Mae govannen mi LiteMaaS"
     },
+    "authCallback": {
+      "processing": "Orthad authentication..."
+    },
     "login": {
+      "authError": "Authentication failed. Please try again.",
       "brandAlt": "Logo LiteMaaS",
       "bypassAuthentication": "Orthad authentication sui govad a prestannen",
       "configError": "Ú-bollen tirith i govannas. Naid úva tírad.",
