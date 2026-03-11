@@ -316,6 +316,7 @@
     "weeklyUsagePatterns": "Veth-Aerlinn Echad"
   },
   "common": {
+    "accessRestrictions": "Estolad mennel",
     "anUnknownErrorOccurred": "Ohtar ú-dhuilin tûl",
     "cancel": "Daeglos",
     "chart": "Minithith",

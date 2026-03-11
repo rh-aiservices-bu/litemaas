@@ -316,6 +316,7 @@
     "weeklyUsagePatterns": "주간 사용 패턴"
   },
   "common": {
+    "accessRestrictions": "접근 제한",
     "anUnknownErrorOccurred": "알 수 없는 오류가 발생했습니다",
     "cancel": "취소",
     "chart": "차트",

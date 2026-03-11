@@ -316,6 +316,7 @@
     "weeklyUsagePatterns": "每周使用模式"
   },
   "common": {
+    "accessRestrictions": "访问限制",
     "anUnknownErrorOccurred": "发生了未知错误",
     "cancel": "取消",
     "chart": "图表",

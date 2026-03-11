@@ -316,6 +316,7 @@
     "weeklyUsagePatterns": "週間使用パターン"
   },
   "common": {
+    "accessRestrictions": "アクセス制限",
     "anUnknownErrorOccurred": "不明なエラーが発生しました",
     "cancel": "キャンセル",
     "chart": "グラフ",

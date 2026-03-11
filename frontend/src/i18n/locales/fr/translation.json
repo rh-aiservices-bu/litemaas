@@ -316,6 +316,7 @@
     "weeklyUsagePatterns": "Modèles d'utilisation hebdomadaire"
   },
   "common": {
+    "accessRestrictions": "Restrictions d'accès",
     "anUnknownErrorOccurred": "Une erreur inconnue s'est produite",
     "cancel": "Annuler",
     "chart": "Graphique",

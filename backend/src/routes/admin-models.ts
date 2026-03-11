@@ -43,7 +43,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:models')],
     handler: async (request) => {
-      const { api_base, api_key: providedApiKey, backend_model_name, model_id } = request.body;
+      const { api_base, api_key: providedApiKey, backend_model_name, model_id, supports_convert } = request.body;
 
       let apiKey = providedApiKey;
 
@@ -76,14 +76,50 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         };
       }
 
-      // Build URL: strip trailing slashes, append /models
+      // Build URL: strip trailing slashes
       const baseUrl = api_base.replace(/\/+$/, '');
-      const modelsUrl = `${baseUrl}/models`;
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 10000);
 
       try {
+        // Document Conversion models use /health endpoint instead of /models
+        if (supports_convert) {
+          const healthUrl = `${baseUrl}/health`;
+          const response = await fetch(healthUrl, {
+            method: 'GET',
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              'Content-Type': 'application/json',
+            },
+            signal: controller.signal,
+          });
+
+          if (response.status === 401 || response.status === 403) {
+            return {
+              success: false,
+              result: 'auth_error' as const,
+              message: 'Authentication failed. Check your API key.',
+            };
+          }
+
+          if (!response.ok) {
+            return {
+              success: false,
+              result: 'connection_error' as const,
+              message: `Endpoint returned HTTP ${response.status}`,
+            };
+          }
+
+          return {
+            success: true,
+            result: 'endpoint_reachable' as const,
+            message: 'Document conversion endpoint is reachable and healthy.',
+          };
+        }
+
+        // Standard models: check /models endpoint for model availability
+        const modelsUrl = `${baseUrl}/models`;
         const response = await fetch(modelsUrl, {
           method: 'GET',
           headers: {
@@ -191,12 +227,13 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         // Transform frontend payload to LiteLLM format
+        const provider = supports_convert ? 'docling' : 'openai';
         const liteLLMPayload = {
           model_name,
           litellm_params: {
-            model: `openai/${backend_model_name}`,
+            model: `${provider}/${backend_model_name}`,
             api_base,
-            custom_llm_provider: 'openai' as const,
+            custom_llm_provider: provider as 'openai' | 'docling',
             input_cost_per_token,
             output_cost_per_token,
             tpm,
@@ -427,6 +464,9 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           liteLLMPayload.model_name = updateData.model_name;
         }
 
+        // Determine provider based on model type
+        const updateProvider = updateData.supports_convert ? 'docling' : 'openai';
+
         if (
           Object.keys(updateData).some((key) =>
             [
@@ -437,15 +477,16 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
               'output_cost_per_token',
               'tpm',
               'rpm',
+              'supports_convert',
             ].includes(key),
           )
         ) {
           liteLLMPayload.litellm_params = {};
           if (updateData.backend_model_name) {
-            liteLLMPayload.litellm_params.model = `openai/${updateData.backend_model_name}`;
+            liteLLMPayload.litellm_params.model = `${updateProvider}/${updateData.backend_model_name}`;
           } else if (updateData.model_name) {
             // Fallback to model_name for backward compatibility
-            liteLLMPayload.litellm_params.model = `openai/${updateData.model_name}`;
+            liteLLMPayload.litellm_params.model = `${updateProvider}/${updateData.model_name}`;
           }
           if (updateData.api_base) {
             liteLLMPayload.litellm_params.api_base = updateData.api_base;

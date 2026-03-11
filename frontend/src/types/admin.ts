@@ -98,6 +98,7 @@ export interface TestModelConfigRequest {
   api_key?: string;
   backend_model_name: string;
   model_id?: string;
+  supports_convert?: boolean;
 }
 
 export interface TestModelConfigResponse {
@@ -105,6 +106,7 @@ export interface TestModelConfigResponse {
   result:
     | 'model_found'
     | 'model_not_found'
+    | 'endpoint_reachable'
     | 'auth_error'
     | 'connection_error'
     | 'timeout'

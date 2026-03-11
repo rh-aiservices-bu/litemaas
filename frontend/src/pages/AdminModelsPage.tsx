@@ -278,7 +278,7 @@ const AdminModelsPage: React.FC = () => {
       errors.model_name = t('models.admin.modelNameCannotContainSpaces');
     }
 
-    if (!formData.backend_model_name.trim()) {
+    if (!formData.supports_convert && !formData.backend_model_name.trim()) {
       errors.backend_model_name = t('models.admin.backendModelNameIsRequired');
     }
 
@@ -408,13 +408,18 @@ const AdminModelsPage: React.FC = () => {
 
   const handleTestConfiguration = async () => {
     // Validate required fields first
-    if (!formData.api_base || !formData.backend_model_name) {
+    if (!formData.api_base || (!formData.supports_convert && !formData.backend_model_name)) {
+      const missing = [
+        !formData.api_base ? t('models.admin.apiBaseUrlIsRequired') : '',
+        !formData.supports_convert && !formData.backend_model_name
+          ? t('models.admin.backendModelNameIsRequired')
+          : '',
+      ]
+        .filter(Boolean)
+        .join(', ');
       setTestResult({
         type: 'danger',
-        message:
-          t('models.admin.apiBaseUrlIsRequired') +
-          ', ' +
-          t('models.admin.backendModelNameIsRequired'),
+        message: missing,
       });
       return;
     }
@@ -435,6 +440,7 @@ const AdminModelsPage: React.FC = () => {
       const payload: TestModelConfigRequest = {
         api_base: formData.api_base,
         backend_model_name: formData.backend_model_name,
+        ...(formData.supports_convert && { supports_convert: true }),
       };
 
       if (formData.api_key) {
@@ -447,6 +453,7 @@ const AdminModelsPage: React.FC = () => {
 
       switch (response.result) {
         case 'model_found':
+        case 'endpoint_reachable':
           setTestResult({
             type: 'success',
             message: t('models.admin.connectionSuccessful'),
@@ -757,6 +764,48 @@ const AdminModelsPage: React.FC = () => {
             <Form>
               <Grid hasGutter>
                 <GridItem span={12}>
+                  <FormGroup label={t('models.admin.modelType')} fieldId="model-type">
+                    <Flex spaceItems={{ default: 'spaceItemsLg' }}>
+                      <FlexItem>
+                        <Radio
+                          id="model-type-chat"
+                          name="model-type"
+                          label={t('models.admin.modelTypeChat')}
+                          isChecked={!formData.supports_embeddings && !formData.supports_convert}
+                          onChange={() =>
+                            setFormData({ ...formData, supports_embeddings: false, supports_convert: false })
+                          }
+                          isDisabled={isViewModalOpen}
+                        />
+                      </FlexItem>
+                      <FlexItem>
+                        <Radio
+                          id="model-type-embeddings"
+                          name="model-type"
+                          label={t('models.admin.modelTypeEmbeddings')}
+                          isChecked={formData.supports_embeddings}
+                          onChange={() =>
+                            setFormData({ ...formData, supports_embeddings: true, supports_convert: false })
+                          }
+                          isDisabled={isViewModalOpen}
+                        />
+                      </FlexItem>
+                      <FlexItem>
+                        <Radio
+                          id="model-type-convert"
+                          name="model-type"
+                          label={t('models.admin.modelTypeConvert')}
+                          isChecked={formData.supports_convert}
+                          onChange={() =>
+                            setFormData({ ...formData, supports_convert: true, supports_embeddings: false, backend_model_name: 'docling' })
+                          }
+                          isDisabled={isViewModalOpen}
+                        />
+                      </FlexItem>
+                    </Flex>
+                  </FormGroup>
+                </GridItem>
+                <GridItem span={12}>
                   <FormGroup label={t('models.admin.modelName')} isRequired fieldId="model-name">
                     <TextInput
                       id="model-name"
@@ -801,6 +850,7 @@ const AdminModelsPage: React.FC = () => {
                     )}
                   </FormGroup>
                 </GridItem>
+                {!formData.supports_convert && (
                 <GridItem span={12}>
                   <FormGroup
                     label={t('models.admin.backendModelName')}
@@ -826,6 +876,7 @@ const AdminModelsPage: React.FC = () => {
                     )}
                   </FormGroup>
                 </GridItem>
+                )}
                 <GridItem span={12}>
                   <FormGroup
                     label={t('models.admin.apiKey')}
@@ -852,6 +903,62 @@ const AdminModelsPage: React.FC = () => {
                     )}
                   </FormGroup>
                 </GridItem>
+                <GridItem span={6}>
+                  <FormGroup label={t('models.admin.rpmRequestsPerMinute')} fieldId="rpm">
+                    <NumberInput
+                      id="rpm"
+                      value={formData.rpm}
+                      onChange={(event) => {
+                        const value = parseInt((event.target as HTMLInputElement).value) || 1;
+                        setFormData({ ...formData, rpm: value });
+                      }}
+                      onPlus={() => {
+                        setFormData({ ...formData, rpm: formData.rpm + 1 });
+                      }}
+                      onMinus={() => {
+                        setFormData({ ...formData, rpm: Math.max(1, formData.rpm - 1) });
+                      }}
+                      min={1}
+                      validated={formErrors.rpm ? 'error' : 'default'}
+                      isDisabled={isViewModalOpen}
+                    />
+                    {formErrors.rpm && (
+                      <HelperText>
+                        <HelperTextItem variant="error">{formErrors.rpm}</HelperTextItem>
+                      </HelperText>
+                    )}
+                  </FormGroup>
+                </GridItem>
+                {!formData.supports_convert && (
+                <GridItem span={6}>
+                  <FormGroup label={t('models.admin.tpmTokensPerMinute')} fieldId="tpm">
+                    <NumberInput
+                      id="tpm"
+                      value={formData.tpm}
+                      onChange={(event) => {
+                        const value = parseInt((event.target as HTMLInputElement).value) || 1;
+                        setFormData({ ...formData, tpm: value });
+                      }}
+                      onPlus={() => {
+                        setFormData({ ...formData, tpm: formData.tpm + 1 });
+                      }}
+                      onMinus={() => {
+                        setFormData({ ...formData, tpm: Math.max(1, formData.tpm - 1) });
+                      }}
+                      min={1}
+                      validated={formErrors.tpm ? 'error' : 'default'}
+                      isDisabled={isViewModalOpen}
+                    />
+                    {formErrors.tpm && (
+                      <HelperText>
+                        <HelperTextItem variant="error">{formErrors.tpm}</HelperTextItem>
+                      </HelperText>
+                    )}
+                  </FormGroup>
+                </GridItem>
+                )}
+                {!formData.supports_convert && (
+                <>
                 <GridItem span={6}>
                   <FormGroup
                     label={t('models.admin.inputCostPerMillionTokens')}
@@ -929,58 +1036,6 @@ const AdminModelsPage: React.FC = () => {
                   </FormGroup>
                 </GridItem>
                 <GridItem span={6}>
-                  <FormGroup label={t('models.admin.tpmTokensPerMinute')} fieldId="tpm">
-                    <NumberInput
-                      id="tpm"
-                      value={formData.tpm}
-                      onChange={(event) => {
-                        const value = parseInt((event.target as HTMLInputElement).value) || 1;
-                        setFormData({ ...formData, tpm: value });
-                      }}
-                      onPlus={() => {
-                        setFormData({ ...formData, tpm: formData.tpm + 1 });
-                      }}
-                      onMinus={() => {
-                        setFormData({ ...formData, tpm: Math.max(1, formData.tpm - 1) });
-                      }}
-                      min={1}
-                      validated={formErrors.tpm ? 'error' : 'default'}
-                      isDisabled={isViewModalOpen}
-                    />
-                    {formErrors.tpm && (
-                      <HelperText>
-                        <HelperTextItem variant="error">{formErrors.tpm}</HelperTextItem>
-                      </HelperText>
-                    )}
-                  </FormGroup>
-                </GridItem>
-                <GridItem span={6}>
-                  <FormGroup label={t('models.admin.rpmRequestsPerMinute')} fieldId="rpm">
-                    <NumberInput
-                      id="rpm"
-                      value={formData.rpm}
-                      onChange={(event) => {
-                        const value = parseInt((event.target as HTMLInputElement).value) || 1;
-                        setFormData({ ...formData, rpm: value });
-                      }}
-                      onPlus={() => {
-                        setFormData({ ...formData, rpm: formData.rpm + 1 });
-                      }}
-                      onMinus={() => {
-                        setFormData({ ...formData, rpm: Math.max(1, formData.rpm - 1) });
-                      }}
-                      min={1}
-                      validated={formErrors.rpm ? 'error' : 'default'}
-                      isDisabled={isViewModalOpen}
-                    />
-                    {formErrors.rpm && (
-                      <HelperText>
-                        <HelperTextItem variant="error">{formErrors.rpm}</HelperTextItem>
-                      </HelperText>
-                    )}
-                  </FormGroup>
-                </GridItem>
-                <GridItem span={6}>
                   <FormGroup label={t('models.admin.maxTokens')} fieldId="max-tokens">
                     <NumberInput
                       id="max-tokens"
@@ -1009,42 +1064,9 @@ const AdminModelsPage: React.FC = () => {
                     )}
                   </FormGroup>
                 </GridItem>
-                <GridItem span={12}>
-                  <FormGroup label={t('models.admin.modelType')} fieldId="model-type">
-                    <Stack hasGutter>
-                      <Radio
-                        id="model-type-chat"
-                        name="model-type"
-                        label={t('models.admin.modelTypeChat')}
-                        isChecked={!formData.supports_embeddings && !formData.supports_convert}
-                        onChange={() =>
-                          setFormData({ ...formData, supports_embeddings: false, supports_convert: false })
-                        }
-                        isDisabled={isViewModalOpen}
-                      />
-                      <Radio
-                        id="model-type-embeddings"
-                        name="model-type"
-                        label={t('models.admin.modelTypeEmbeddings')}
-                        isChecked={formData.supports_embeddings}
-                        onChange={() =>
-                          setFormData({ ...formData, supports_embeddings: true, supports_convert: false })
-                        }
-                        isDisabled={isViewModalOpen}
-                      />
-                      <Radio
-                        id="model-type-convert"
-                        name="model-type"
-                        label={t('models.admin.modelTypeConvert')}
-                        isChecked={formData.supports_convert}
-                        onChange={() =>
-                          setFormData({ ...formData, supports_convert: true, supports_embeddings: false })
-                        }
-                        isDisabled={isViewModalOpen}
-                      />
-                    </Stack>
-                  </FormGroup>
-                </GridItem>
+                </>
+                )}
+                {!formData.supports_convert && (
                 <GridItem span={12}>
                   <FormGroup label={t('common.features')} fieldId="features">
                     <Stack hasGutter>
@@ -1093,6 +1115,13 @@ const AdminModelsPage: React.FC = () => {
                         }
                         isDisabled={isViewModalOpen}
                       />
+                    </Stack>
+                  </FormGroup>
+                </GridItem>
+                )}
+                <GridItem span={12}>
+                  <FormGroup label={t('common.accessRestrictions')} fieldId="access-restrictions">
+                    <Stack hasGutter>
                       <Checkbox
                         id="restricted-access"
                         label={t('models.admin.restrictedAccessLabel')}
@@ -1157,7 +1186,7 @@ const AdminModelsPage: React.FC = () => {
                       isLoading={isTestingConfig}
                       isDisabled={
                         !formData.api_base ||
-                        !formData.backend_model_name ||
+                        (!formData.supports_convert && !formData.backend_model_name) ||
                         (isCreateModalOpen && !formData.api_key)
                       }
                     >
