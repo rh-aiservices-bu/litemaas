@@ -612,8 +612,8 @@ const AdminModelsPage: React.FC = () => {
                 <Th width={25} modifier="truncate">
                   {t('models.admin.table.apiBase')}
                 </Th>
-                <Th>{t('models.admin.table.tpm')}</Th>
                 <Th>{t('models.admin.table.rpm')}</Th>
+                <Th>{t('models.admin.table.tpm')}</Th>
                 <Th>
                   <div>
                     {t('models.admin.table.inputCost')}
@@ -688,8 +688,8 @@ const AdminModelsPage: React.FC = () => {
                       <>{t('models.admin.table.nA')}</>
                     )}
                   </Td>
-                  <Td>{model.tpm?.toLocaleString() || t('models.admin.table.nA')}</Td>
                   <Td>{model.rpm?.toLocaleString() || t('models.admin.table.nA')}</Td>
+                  <Td>{model.supportsConvert ? t('models.admin.table.nA') : (model.tpm?.toLocaleString() || t('models.admin.table.nA'))}</Td>
                   <Td>
                     {model.inputCostPerToken
                       ? formatCurrency(model.inputCostPerToken * 1000000)
@@ -700,7 +700,7 @@ const AdminModelsPage: React.FC = () => {
                       ? formatCurrency(model.outputCostPerToken * 1000000)
                       : t('models.admin.table.nA')}
                   </Td>
-                  <Td>{model.maxTokens?.toLocaleString() || t('models.admin.table.nA')}</Td>
+                  <Td>{model.supportsConvert ? t('models.admin.table.nA') : (model.maxTokens?.toLocaleString() || t('models.admin.table.nA'))}</Td>
                   <Td>
                     <Flex spaceItems={{ default: 'spaceItemsXs' }} flexWrap={{ default: 'wrap' }}>
                       {getModelFlairs(model).map(({ key, label, color }) => (
