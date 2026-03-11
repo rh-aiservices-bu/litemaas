@@ -45,6 +45,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Kustomize overlay**: `deployment/kustomize/overlays/oidc/`
   - **59 unit tests**: Comprehensive OIDC test coverage
 
+### Security
+
+- **Audit log API key redaction**: API keys are no longer stored or displayed in clear text in audit log details
+  - Removed `liteLLMKeyId` (full API key value) from `API_KEY_CREATE` audit log metadata and application logs
+  - Added server-side sanitization to strip `liteLLMKeyId` from all audit log API responses, protecting historical entries
+
 ### Fixed
 
 - **Model sync reliability**: Comprehensive fixes to model synchronization and lifecycle management
