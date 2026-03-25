@@ -89,6 +89,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             expiresAt: apiKey.expiresAt,
             isActive: apiKey.isActive,
             revokedAt: apiKey.revokedAt,
+            archivedAt: apiKey.archivedAt,
             liteLLMKeyId: apiKey.liteLLMKeyId,
             lastSyncAt: apiKey.lastSyncAt,
             syncStatus: apiKey.syncStatus,
@@ -730,6 +731,88 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         throw fastify.createError(500, 'Failed to reset API key spend');
+      }
+    },
+  });
+
+  // Archive API key
+  fastify.post<{
+    Params: { id: string };
+    Reply: { message: string; archivedAt: string };
+  }>('/:id/archive', {
+    schema: {
+      tags: ['API Keys'],
+      description: 'Archive an API key (hides from user view, preserved for audit)',
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: { id: { type: 'string' } },
+        required: ['id'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' },
+            archivedAt: { type: 'string', format: 'date-time' },
+          },
+        },
+      },
+    },
+    preHandler: fastify.authenticateWithDevBypass,
+    handler: async (request, _reply) => {
+      const user = (request as AuthenticatedRequest).user;
+      const { id } = request.params;
+
+      try {
+        await apiKeyService.archiveApiKey(id, user.userId);
+        return {
+          message: 'API key archived successfully',
+          archivedAt: new Date().toISOString(),
+        };
+      } catch (error) {
+        fastify.log.error(error, 'Failed to archive API key');
+        if ((error as ErrorWithStatusCode).statusCode) throw error;
+        throw fastify.createError(500, 'Failed to archive API key');
+      }
+    },
+  });
+
+  // Unarchive API key
+  fastify.post<{
+    Params: { id: string };
+    Reply: { message: string };
+  }>('/:id/unarchive', {
+    schema: {
+      tags: ['API Keys'],
+      description: 'Unarchive an API key (makes visible again but stays inactive)',
+      security: [{ bearerAuth: [] }],
+      params: {
+        type: 'object',
+        properties: { id: { type: 'string' } },
+        required: ['id'],
+      },
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            message: { type: 'string' },
+          },
+        },
+      },
+    },
+    preHandler: fastify.authenticateWithDevBypass,
+    handler: async (request, _reply) => {
+      const user = (request as AuthenticatedRequest).user;
+      const { id } = request.params;
+
+      try {
+        await apiKeyService.unarchiveApiKey(id, user.userId);
+        return { message: 'API key unarchived successfully' };
+      } catch (error) {
+        fastify.log.error(error, 'Failed to unarchive API key');
+        if ((error as ErrorWithStatusCode).statusCode) throw error;
+        throw fastify.createError(500, 'Failed to unarchive API key');
       }
     },
   });

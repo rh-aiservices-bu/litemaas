@@ -104,6 +104,7 @@ interface ApiKeyDbRow {
   is_active: boolean;
   created_at: Date | string;
   revoked_at?: Date | string;
+  archived_at?: Date | string;
   lite_llm_key_value?: string;
   last_sync_at?: Date | string;
   sync_status?: string;
@@ -731,7 +732,7 @@ export class ApiKeyService extends BaseService {
     userId: string,
     options: ApiKeyListParams = {},
   ): Promise<{ data: EnhancedApiKey[]; total: number }> {
-    const { subscriptionId, modelIds, isActive, page = 1, limit = 20 } = options;
+    const { subscriptionId, modelIds, isActive, includeArchived, page = 1, limit = 20 } = options;
     const offset = (page - 1) * limit;
 
     if (this.shouldUseMockData()) {
@@ -794,6 +795,11 @@ export class ApiKeyService extends BaseService {
         params.push(isActive);
       }
 
+      // Exclude archived keys unless explicitly requested (admin use)
+      if (!includeArchived) {
+        query += ` AND ak.archived_at IS NULL`;
+      }
+
       query += ` GROUP BY ak.id ORDER BY ak.created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
       params.push(limit, offset);
 
@@ -821,6 +827,10 @@ export class ApiKeyService extends BaseService {
         countQuery += ` AND ak.is_active = $${countParams.length + 1}`;
         // @ts-expect-error: Boolean parameter valid for PostgreSQL
         countParams.push(isActive);
+      }
+
+      if (!includeArchived) {
+        countQuery += ` AND ak.archived_at IS NULL`;
       }
 
       const [apiKeys, countResult] = await Promise.all([
@@ -2035,6 +2045,7 @@ export class ApiKeyService extends BaseService {
       isActive: apiKey.is_active,
       createdAt: new Date(apiKey.created_at),
       revokedAt: apiKey.revoked_at ? new Date(apiKey.revoked_at) : undefined,
+      archivedAt: apiKey.archived_at ? new Date(apiKey.archived_at) : undefined,
       liteLLMKeyId: apiKey.lite_llm_key_value || liteLLMResponse?.key,
       lastSyncAt: apiKey.last_sync_at ? new Date(apiKey.last_sync_at) : undefined,
       syncStatus: (apiKey.sync_status || 'pending') as 'pending' | 'synced' | 'error',
@@ -2196,6 +2207,16 @@ export class ApiKeyService extends BaseService {
         [successfulKeyIds, modelId],
       );
 
+      // Archive keys that now have zero models
+      await this.fastify.dbUtils.query(
+        `UPDATE api_keys
+         SET is_active = false, archived_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+         WHERE id = ANY($1)
+           AND archived_at IS NULL
+           AND id NOT IN (SELECT DISTINCT api_key_id FROM api_key_models)`,
+        [successfulKeyIds],
+      );
+
       this.fastify.log.info(
         {
           userId,
@@ -2220,5 +2241,78 @@ export class ApiKeyService extends BaseService {
         'Some API keys could not be updated in LiteLLM - database unchanged for those keys',
       );
     }
+  }
+
+  /**
+   * Archive an API key — hides it from the user's view while preserving it for audit.
+   * Also deactivates in LiteLLM if still active there.
+   */
+  async archiveApiKey(keyId: string, userId: string): Promise<void> {
+    const key = await this.fastify.dbUtils.queryOne<{ id: string; archived_at: Date | null; lite_llm_key_value: string | null; is_active: boolean }>(
+      `SELECT id, archived_at, lite_llm_key_value, is_active FROM api_keys WHERE id = $1 AND user_id = $2`,
+      [keyId, userId],
+    );
+
+    if (!key) {
+      throw this.createNotFoundError('API Key', keyId, 'API key not found or access denied');
+    }
+
+    if (key.archived_at) {
+      throw this.createValidationError('API key is already archived', 'archivedAt', key.archived_at);
+    }
+
+    // Deactivate in LiteLLM first if active
+    if (key.is_active && key.lite_llm_key_value && !this.shouldUseMockData()) {
+      try {
+        await this.liteLLMService.deleteKey(key.lite_llm_key_value);
+      } catch (error) {
+        this.fastify.log.warn({ keyId, error }, 'Failed to delete key from LiteLLM during archive');
+      }
+    }
+
+    await this.fastify.dbUtils.query(
+      `UPDATE api_keys SET archived_at = CURRENT_TIMESTAMP, is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+      [keyId],
+    );
+
+    await this.fastify.dbUtils.query(
+      `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [userId, 'API_KEY_ARCHIVED', 'API_KEY', keyId, JSON.stringify({ keyId })],
+    );
+
+    this.fastify.log.info({ keyId, userId }, 'API key archived');
+  }
+
+  /**
+   * Unarchive an API key — makes it visible again but keeps it inactive.
+   * The user must re-subscribe and reassign models to reactivate.
+   */
+  async unarchiveApiKey(keyId: string, userId: string): Promise<void> {
+    const key = await this.fastify.dbUtils.queryOne<{ id: string; archived_at: Date | null }>(
+      `SELECT id, archived_at FROM api_keys WHERE id = $1 AND user_id = $2`,
+      [keyId, userId],
+    );
+
+    if (!key) {
+      throw this.createNotFoundError('API Key', keyId, 'API key not found or access denied');
+    }
+
+    if (!key.archived_at) {
+      throw this.createValidationError('API key is not archived', 'archivedAt', null);
+    }
+
+    await this.fastify.dbUtils.query(
+      `UPDATE api_keys SET archived_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+      [keyId],
+    );
+
+    await this.fastify.dbUtils.query(
+      `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [userId, 'API_KEY_UNARCHIVED', 'API_KEY', keyId, JSON.stringify({ keyId })],
+    );
+
+    this.fastify.log.info({ keyId, userId }, 'API key unarchived');
   }
 }

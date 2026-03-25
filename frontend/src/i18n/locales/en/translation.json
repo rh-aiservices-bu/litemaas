@@ -635,6 +635,7 @@
         "keyCreatedMessage": "Your API key has been created successfully.",
         "keyCreatedSuccess": "{{name}} has been created successfully",
         "keyDeleted": "{{name}} has been deleted",
+        "keyArchivedMessage": "This key has been archived and is no longer active.",
         "keyExpiredMessage": "This API key has expired on {{date}}.",
         "keyRevokedMessage": "This API key has been revoked and can no longer be used.",
         "keyUpdatedSuccess": "{{name}} has been updated successfully",
@@ -659,6 +660,7 @@
         "createdTitle": "API Key Created Successfully",
         "deleteTitle": "Delete API Key",
         "editTitle": "Edit API Key",
+        "keyArchived": "Key Archived",
         "keyExpired": "Key Expired",
         "keyRevoked": "Key Revoked",
         "secureRetrieval": "Secure Key Retrieval",
@@ -1652,6 +1654,7 @@
   },
   "status": {
     "active": "Active",
+    "archived": "Archived",
     "inactive": "Inactive"
   },
   "ui": {
