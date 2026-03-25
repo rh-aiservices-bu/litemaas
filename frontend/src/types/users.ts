@@ -148,6 +148,7 @@ export interface UserApiKey {
   createdAt: string;
   expiresAt?: string;
   revokedAt?: string;
+  archivedAt?: string;
 }
 
 // Create API key for user request
