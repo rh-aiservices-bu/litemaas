@@ -400,12 +400,14 @@ const ApiKeysPage: React.FC = () => {
       active: 'green',
       revoked: 'orange',
       expired: 'red',
+      archived: 'grey',
     } as const;
 
     const icons = {
       active: <CheckCircleIcon />,
       revoked: <ExclamationTriangleIcon />,
       expired: <ExclamationTriangleIcon />,
+      archived: <ExclamationTriangleIcon />,
     };
 
     return (
@@ -2097,6 +2099,16 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \\
                   {t('pages.apiKeys.messages.keyExpiredMessage', {
                     date: selectedApiKey.expiresAt && formatDate(selectedApiKey.expiresAt),
                   })}
+                </Alert>
+              )}
+
+              {selectedApiKey.status === 'archived' && (
+                <Alert
+                  variant="info"
+                  title={t('pages.apiKeys.modals.keyArchived', 'Key Archived')}
+                  style={{ marginTop: '1rem' }}
+                >
+                  {t('pages.apiKeys.messages.keyArchivedMessage', 'This key has been archived and is no longer active.')}
                 </Alert>
               )}
             </>
