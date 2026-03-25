@@ -295,6 +295,10 @@ ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS max_parallel_requests INTEGER;
 ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS model_max_budget JSONB;
 ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS model_rpm_limit JSONB;
 ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS model_tpm_limit JSONB;
+
+-- Archived keys: hidden from user view, preserved for audit trail
+ALTER TABLE api_keys ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP WITH TIME ZONE;
+CREATE INDEX IF NOT EXISTS idx_api_keys_archived_at ON api_keys(archived_at);
 `;
 
 // API Key Models junction table
@@ -864,6 +868,15 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
 
     console.log('⚙️ Creating system_settings table...');
     await dbUtils.query(systemSettingsTable);
+
+    console.log('📦 Backfilling archived_at for orphaned API keys...');
+    await dbUtils.query(`
+      UPDATE api_keys
+      SET archived_at = COALESCE(revoked_at, updated_at, CURRENT_TIMESTAMP)
+      WHERE is_active = false
+        AND archived_at IS NULL
+        AND id NOT IN (SELECT DISTINCT api_key_id FROM api_key_models)
+    `);
 
     console.log('✅ Database migrations completed successfully!');
   } catch (error) {

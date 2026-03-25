@@ -93,6 +93,7 @@ export interface ApiKey {
   createdAt: Date;
   lastUsedAt?: Date;
   revokedAt?: Date;
+  archivedAt?: Date;
   // LiteLLM integration fields
   liteLLMKeyId?: string;
   lastSyncAt?: Date;
@@ -322,6 +323,7 @@ export interface ApiKeyListParams {
   subscriptionId?: string; // Kept for backward compatibility
   modelIds?: string[]; // New multi-model filtering
   isActive?: boolean;
+  includeArchived?: boolean; // Include archived keys (admin use)
 }
 
 export interface ApiKeyValidation {

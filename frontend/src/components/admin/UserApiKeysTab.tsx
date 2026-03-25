@@ -648,13 +648,15 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
     return formatDate(dateString);
   };
 
-  const getStatusColor = (key: UserApiKey): 'green' | 'red' | 'grey' => {
+  const getStatusColor = (key: UserApiKey): 'green' | 'red' | 'grey' | 'orange' => {
+    if (key.archivedAt) return 'orange';
     if (key.revokedAt) return 'red';
     if (!key.isActive) return 'grey';
     return 'green';
   };
 
   const getStatusLabel = (key: UserApiKey): string => {
+    if (key.archivedAt) return t('status.archived', 'Archived');
     if (key.revokedAt) return t('status.revoked', 'Revoked');
     if (!key.isActive) return t('status.inactive', 'Inactive');
     return t('status.active', 'Active');
