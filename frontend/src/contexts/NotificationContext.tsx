@@ -1,4 +1,12 @@
-import React, { createContext, useContext, useState, useCallback, useRef, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  ReactNode,
+} from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { ToastNotification } from '../components/AlertToastGroup';
 
@@ -49,6 +57,13 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
     description: '',
     timestamp: 0,
   });
+  const timersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set());
+
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach((timer) => clearTimeout(timer));
+    };
+  }, []);
 
   const addNotification = useCallback(
     (notification: Omit<Notification, 'id' | 'timestamp' | 'isRead'>) => {
@@ -94,9 +109,11 @@ export const NotificationProvider: React.FC<NotificationProviderProps> = ({ chil
 
       // Auto-remove success notifications from drawer after 5 seconds
       if (notification.variant === 'success') {
-        setTimeout(() => {
+        const timer = setTimeout(() => {
+          timersRef.current.delete(timer);
           setNotifications((prev) => prev.filter((n) => n.id !== newNotification.id));
         }, 2000);
+        timersRef.current.add(timer);
       }
     },
     [],

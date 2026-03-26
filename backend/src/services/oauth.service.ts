@@ -372,10 +372,7 @@ export class OAuthService extends BaseService {
     try {
       tokenResponse = await response.json();
     } catch (parseError) {
-      this.fastify.log.error(
-        { parseError, tokenUrl },
-        'Failed to parse token response as JSON',
-      );
+      this.fastify.log.error({ parseError, tokenUrl }, 'Failed to parse token response as JSON');
       throw this.createValidationError(
         'Invalid token response',
         'code',
@@ -524,8 +521,7 @@ export class OAuthService extends BaseService {
 
     return {
       sub: userResponse.sub,
-      preferred_username:
-        userResponse.preferred_username || userResponse.email || userResponse.sub,
+      preferred_username: userResponse.preferred_username || userResponse.email || userResponse.sub,
       name: userResponse.name,
       email:
         userResponse.email ||
@@ -846,10 +842,10 @@ export class OAuthService extends BaseService {
           // Update our users table to use the LiteLLM user_id so they stay in sync.
           // This handles the case where migration created users with gen_random_uuid()
           // but LiteLLM already had them with a different user_id.
-          await this.fastify.dbUtils.query(
-            `UPDATE users SET id = $1 WHERE id = $2`,
-            [litellmUser.user_id, user.id],
-          );
+          await this.fastify.dbUtils.query(`UPDATE users SET id = $1 WHERE id = $2`, [
+            litellmUser.user_id,
+            user.id,
+          ]);
 
           // Update dependent tables
           const dependentUpdates = [
