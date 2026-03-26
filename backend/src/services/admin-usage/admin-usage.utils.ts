@@ -376,7 +376,7 @@ export function extractProviderFromModel(modelName: string): string {
 // ============================================================================
 
 /**
- * Check if date is historical (more than 1 day old)
+ * Check if date is historical (at least 1 day old, yesterday or older)
  *
  * @param date - Date to check
  * @returns true if historical
@@ -384,7 +384,7 @@ export function extractProviderFromModel(modelName: string): string {
 export function isHistoricalDate(date: Date): boolean {
   const now = new Date();
   const daysDiff = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-  return daysDiff > 1;
+  return daysDiff >= 1;
 }
 
 /**

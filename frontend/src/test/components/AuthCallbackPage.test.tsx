@@ -171,7 +171,7 @@ describe('AuthCallbackPage', () => {
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith('No token found in callback');
-        expect(mockNavigate).toHaveBeenCalledWith('/login');
+        expect(mockNavigate).toHaveBeenCalledWith('/login?error=auth_failed');
       });
 
       expect(mockAuthService.setTokens).not.toHaveBeenCalled();
@@ -188,7 +188,7 @@ describe('AuthCallbackPage', () => {
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith('No token found in callback');
-        expect(mockNavigate).toHaveBeenCalledWith('/login');
+        expect(mockNavigate).toHaveBeenCalledWith('/login?error=auth_failed');
       });
 
       consoleSpy.mockRestore();
@@ -202,7 +202,7 @@ describe('AuthCallbackPage', () => {
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith('No token found in callback');
-        expect(mockNavigate).toHaveBeenCalledWith('/login');
+        expect(mockNavigate).toHaveBeenCalledWith('/login?error=auth_failed');
       });
 
       consoleSpy.mockRestore();
@@ -219,7 +219,7 @@ describe('AuthCallbackPage', () => {
         expect(mockAuthService.setTokens).toHaveBeenCalledWith('valid-token', 'valid-token');
         expect(mockRefreshUser).toHaveBeenCalledTimes(1);
         expect(consoleSpy).toHaveBeenCalledWith('Error handling auth callback:', expect.any(Error));
-        expect(mockNavigate).toHaveBeenCalledWith('/login');
+        expect(mockNavigate).toHaveBeenCalledWith('/login?error=auth_failed');
       });
 
       consoleSpy.mockRestore();
@@ -236,7 +236,7 @@ describe('AuthCallbackPage', () => {
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith('Error handling auth callback:', expect.any(Error));
-        expect(mockNavigate).toHaveBeenCalledWith('/login');
+        expect(mockNavigate).toHaveBeenCalledWith('/login?error=auth_failed');
       });
 
       expect(mockRefreshUser).not.toHaveBeenCalled();
@@ -298,7 +298,7 @@ describe('AuthCallbackPage', () => {
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith('No token found in callback');
-        expect(mockNavigate).toHaveBeenCalledWith('/login');
+        expect(mockNavigate).toHaveBeenCalledWith('/login?error=auth_failed');
       });
 
       consoleSpy.mockRestore();
@@ -461,7 +461,7 @@ describe('AuthCallbackPage', () => {
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith('Error handling auth callback:', expect.any(Error));
-        expect(mockNavigate).toHaveBeenCalledWith('/login');
+        expect(mockNavigate).toHaveBeenCalledWith('/login?error=auth_failed');
       });
 
       consoleSpy.mockRestore();
@@ -499,7 +499,7 @@ describe('AuthCallbackPage', () => {
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith('No token found in callback');
-        expect(mockNavigate).toHaveBeenCalledWith('/login');
+        expect(mockNavigate).toHaveBeenCalledWith('/login?error=auth_failed');
       });
 
       consoleSpy.mockRestore();
@@ -513,7 +513,7 @@ describe('AuthCallbackPage', () => {
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith('No token found in callback');
-        expect(mockNavigate).toHaveBeenCalledWith('/login');
+        expect(mockNavigate).toHaveBeenCalledWith('/login?error=auth_failed');
       });
 
       consoleSpy.mockRestore();
@@ -527,7 +527,7 @@ describe('AuthCallbackPage', () => {
 
       await waitFor(() => {
         expect(consoleSpy).toHaveBeenCalledWith('No token found in callback');
-        expect(mockNavigate).toHaveBeenCalledWith('/login');
+        expect(mockNavigate).toHaveBeenCalledWith('/login?error=auth_failed');
       });
 
       consoleSpy.mockRestore();

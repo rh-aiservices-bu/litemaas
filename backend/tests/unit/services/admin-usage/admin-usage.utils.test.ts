@@ -5,6 +5,7 @@ import {
   calculateComparisonPeriod,
   parseDateAsUTC,
   isTodayUTC,
+  isHistoricalDate,
   formatLargeNumber,
   formatCurrency,
   formatPercentage,
@@ -285,6 +286,28 @@ describe('admin-usage.utils', () => {
 
     it('should handle empty array', () => {
       expect(sumBy([], 'value')).toBe(0);
+    });
+  });
+
+  describe('isHistoricalDate', () => {
+    it('should return false for today', () => {
+      expect(isHistoricalDate(new Date())).toBe(false);
+    });
+
+    it('should return true for yesterday', () => {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      expect(isHistoricalDate(yesterday)).toBe(true);
+    });
+
+    it('should return true for two days ago', () => {
+      const twoDaysAgo = new Date();
+      twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+      expect(isHistoricalDate(twoDaysAgo)).toBe(true);
+    });
+
+    it('should return true for far past dates', () => {
+      expect(isHistoricalDate(new Date('2020-01-01'))).toBe(true);
     });
   });
 });

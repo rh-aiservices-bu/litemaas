@@ -313,7 +313,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         // Use stored frontend origin for cross-origin dev setups (e.g., frontend :3000, backend :8081).
         // Falls back to relative redirect for same-origin deployments (production behind reverse proxy).
         const callbackPath = `/auth/callback#token=${token}&expires_in=${24 * 60 * 60}`;
-        const redirectUrl = storedFrontendOrigin ? `${storedFrontendOrigin}${callbackPath}` : callbackPath;
+        const redirectUrl = storedFrontendOrigin
+          ? `${storedFrontendOrigin}${callbackPath}`
+          : callbackPath;
 
         return reply.redirect(redirectUrl);
       } catch (error) {

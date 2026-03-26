@@ -582,7 +582,11 @@ const Layout: React.FC = () => {
             <br />
             {t('ui.footer.version')} {config?.version || t('ui.footer.noVersion')}
             <br />
-            <Flex direction={{ default: 'column' }} gap={{ default: 'gapXs' }} style={{ width: '100%', alignItems: 'center' }}>
+            <Flex
+              direction={{ default: 'column' }}
+              gap={{ default: 'gapXs' }}
+              style={{ width: '100%', alignItems: 'center' }}
+            >
               <FlexItem>
                 <Flex direction={{ default: 'row' }} alignItems={{ default: 'alignItemsCenter' }}>
                   <FlexItem>

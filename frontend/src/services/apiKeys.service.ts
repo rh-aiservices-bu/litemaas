@@ -145,9 +145,15 @@ class ApiKeysService {
         id: md.id,
         name: md.name,
         provider: md.provider,
-        contextLength: md.contextLength ?? (md as Record<string, unknown>).context_length as number | undefined,
-        supportsEmbeddings: md.supports_embeddings ?? (md as Record<string, unknown>).supportsEmbeddings as boolean | undefined,
-        supportsConvert: md.supports_convert ?? (md as Record<string, unknown>).supportsConvert as boolean | undefined,
+        contextLength:
+          md.contextLength ??
+          ((md as Record<string, unknown>).context_length as number | undefined),
+        supportsEmbeddings:
+          md.supports_embeddings ??
+          ((md as Record<string, unknown>).supportsEmbeddings as boolean | undefined),
+        supportsConvert:
+          md.supports_convert ??
+          ((md as Record<string, unknown>).supportsConvert as boolean | undefined),
       })),
       maxBudget: backend.maxBudget,
       currentSpend: backend.currentSpend,

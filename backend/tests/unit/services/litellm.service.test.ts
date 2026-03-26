@@ -73,7 +73,7 @@ describe('LiteLLMService', () => {
 
     service = new LiteLLMService(mockFastify as FastifyInstance, {
       baseUrl: 'http://localhost:4000',
-      apiKey: 'sk-1104',
+      apiKey: 'sk-test-master-key',
       enableMocking: false,
     });
     vi.clearAllMocks();
@@ -94,7 +94,7 @@ describe('LiteLLMService', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'x-litellm-api-key': 'sk-1104',
+          'x-litellm-api-key': 'sk-test-master-key',
         },
         body: undefined,
         signal: expect.any(AbortSignal),
@@ -151,7 +151,7 @@ describe('LiteLLMService', () => {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
-          'x-litellm-api-key': 'sk-1104',
+          'x-litellm-api-key': 'sk-test-master-key',
         },
         body: undefined,
         signal: expect.any(AbortSignal),

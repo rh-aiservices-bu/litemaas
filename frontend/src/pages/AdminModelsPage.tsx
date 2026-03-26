@@ -689,7 +689,11 @@ const AdminModelsPage: React.FC = () => {
                     )}
                   </Td>
                   <Td>{model.rpm?.toLocaleString() || t('models.admin.table.nA')}</Td>
-                  <Td>{model.supportsConvert ? t('models.admin.table.nA') : (model.tpm?.toLocaleString() || t('models.admin.table.nA'))}</Td>
+                  <Td>
+                    {model.supportsConvert
+                      ? t('models.admin.table.nA')
+                      : model.tpm?.toLocaleString() || t('models.admin.table.nA')}
+                  </Td>
                   <Td>
                     {model.inputCostPerToken
                       ? formatCurrency(model.inputCostPerToken * 1000000)
@@ -700,7 +704,11 @@ const AdminModelsPage: React.FC = () => {
                       ? formatCurrency(model.outputCostPerToken * 1000000)
                       : t('models.admin.table.nA')}
                   </Td>
-                  <Td>{model.supportsConvert ? t('models.admin.table.nA') : (model.maxTokens?.toLocaleString() || t('models.admin.table.nA'))}</Td>
+                  <Td>
+                    {model.supportsConvert
+                      ? t('models.admin.table.nA')
+                      : model.maxTokens?.toLocaleString() || t('models.admin.table.nA')}
+                  </Td>
                   <Td>
                     <Flex spaceItems={{ default: 'spaceItemsXs' }} flexWrap={{ default: 'wrap' }}>
                       {getModelFlairs(model).map(({ key, label, color }) => (
@@ -773,7 +781,11 @@ const AdminModelsPage: React.FC = () => {
                           label={t('models.admin.modelTypeChat')}
                           isChecked={!formData.supports_embeddings && !formData.supports_convert}
                           onChange={() =>
-                            setFormData({ ...formData, supports_embeddings: false, supports_convert: false })
+                            setFormData({
+                              ...formData,
+                              supports_embeddings: false,
+                              supports_convert: false,
+                            })
                           }
                           isDisabled={isViewModalOpen}
                         />
@@ -785,7 +797,11 @@ const AdminModelsPage: React.FC = () => {
                           label={t('models.admin.modelTypeEmbeddings')}
                           isChecked={formData.supports_embeddings}
                           onChange={() =>
-                            setFormData({ ...formData, supports_embeddings: true, supports_convert: false })
+                            setFormData({
+                              ...formData,
+                              supports_embeddings: true,
+                              supports_convert: false,
+                            })
                           }
                           isDisabled={isViewModalOpen}
                         />
@@ -797,7 +813,12 @@ const AdminModelsPage: React.FC = () => {
                           label={t('models.admin.modelTypeConvert')}
                           isChecked={formData.supports_convert}
                           onChange={() =>
-                            setFormData({ ...formData, supports_convert: true, supports_embeddings: false, backend_model_name: 'docling' })
+                            setFormData({
+                              ...formData,
+                              supports_convert: true,
+                              supports_embeddings: false,
+                              backend_model_name: 'docling',
+                            })
                           }
                           isDisabled={isViewModalOpen}
                         />
@@ -851,31 +872,31 @@ const AdminModelsPage: React.FC = () => {
                   </FormGroup>
                 </GridItem>
                 {!formData.supports_convert && (
-                <GridItem span={12}>
-                  <FormGroup
-                    label={t('models.admin.backendModelName')}
-                    isRequired
-                    fieldId="backend-model-name"
-                  >
-                    <TextInput
-                      id="backend-model-name"
-                      value={formData.backend_model_name}
-                      onChange={(_event, value) =>
-                        setFormData({ ...formData, backend_model_name: value })
-                      }
-                      validated={formErrors.backend_model_name ? 'error' : 'default'}
-                      placeholder={t('models.admin.enterBackendModelName')}
-                      isDisabled={isViewModalOpen}
-                    />
-                    {formErrors.backend_model_name && (
-                      <HelperText>
-                        <HelperTextItem variant="error">
-                          {formErrors.backend_model_name}
-                        </HelperTextItem>
-                      </HelperText>
-                    )}
-                  </FormGroup>
-                </GridItem>
+                  <GridItem span={12}>
+                    <FormGroup
+                      label={t('models.admin.backendModelName')}
+                      isRequired
+                      fieldId="backend-model-name"
+                    >
+                      <TextInput
+                        id="backend-model-name"
+                        value={formData.backend_model_name}
+                        onChange={(_event, value) =>
+                          setFormData({ ...formData, backend_model_name: value })
+                        }
+                        validated={formErrors.backend_model_name ? 'error' : 'default'}
+                        placeholder={t('models.admin.enterBackendModelName')}
+                        isDisabled={isViewModalOpen}
+                      />
+                      {formErrors.backend_model_name && (
+                        <HelperText>
+                          <HelperTextItem variant="error">
+                            {formErrors.backend_model_name}
+                          </HelperTextItem>
+                        </HelperText>
+                      )}
+                    </FormGroup>
+                  </GridItem>
                 )}
                 <GridItem span={12}>
                   <FormGroup
@@ -930,194 +951,197 @@ const AdminModelsPage: React.FC = () => {
                   </FormGroup>
                 </GridItem>
                 {!formData.supports_convert && (
-                <GridItem span={6}>
-                  <FormGroup label={t('models.admin.tpmTokensPerMinute')} fieldId="tpm">
-                    <NumberInput
-                      id="tpm"
-                      value={formData.tpm}
-                      onChange={(event) => {
-                        const value = parseInt((event.target as HTMLInputElement).value) || 1;
-                        setFormData({ ...formData, tpm: value });
-                      }}
-                      onPlus={() => {
-                        setFormData({ ...formData, tpm: formData.tpm + 1 });
-                      }}
-                      onMinus={() => {
-                        setFormData({ ...formData, tpm: Math.max(1, formData.tpm - 1) });
-                      }}
-                      min={1}
-                      validated={formErrors.tpm ? 'error' : 'default'}
-                      isDisabled={isViewModalOpen}
-                    />
-                    {formErrors.tpm && (
-                      <HelperText>
-                        <HelperTextItem variant="error">{formErrors.tpm}</HelperTextItem>
-                      </HelperText>
-                    )}
-                  </FormGroup>
-                </GridItem>
+                  <GridItem span={6}>
+                    <FormGroup label={t('models.admin.tpmTokensPerMinute')} fieldId="tpm">
+                      <NumberInput
+                        id="tpm"
+                        value={formData.tpm}
+                        onChange={(event) => {
+                          const value = parseInt((event.target as HTMLInputElement).value) || 1;
+                          setFormData({ ...formData, tpm: value });
+                        }}
+                        onPlus={() => {
+                          setFormData({ ...formData, tpm: formData.tpm + 1 });
+                        }}
+                        onMinus={() => {
+                          setFormData({ ...formData, tpm: Math.max(1, formData.tpm - 1) });
+                        }}
+                        min={1}
+                        validated={formErrors.tpm ? 'error' : 'default'}
+                        isDisabled={isViewModalOpen}
+                      />
+                      {formErrors.tpm && (
+                        <HelperText>
+                          <HelperTextItem variant="error">{formErrors.tpm}</HelperTextItem>
+                        </HelperText>
+                      )}
+                    </FormGroup>
+                  </GridItem>
                 )}
                 {!formData.supports_convert && (
-                <>
-                <GridItem span={6}>
-                  <FormGroup
-                    label={t('models.admin.inputCostPerMillionTokens')}
-                    fieldId="input-cost"
-                  >
-                    <NumberInput
-                      id="input-cost"
-                      value={displayInputCost}
-                      onChange={(event) => {
-                        const value = parseFloat((event.target as HTMLInputElement).value) || 0;
-                        setDisplayInputCost(value);
-                        setFormData({ ...formData, input_cost_per_token: value / 1000000 });
-                      }}
-                      onPlus={() => {
-                        const newValue = Math.round((displayInputCost + 0.01) * 10000) / 10000;
-                        setDisplayInputCost(newValue);
-                        setFormData({ ...formData, input_cost_per_token: newValue / 1000000 });
-                      }}
-                      onMinus={() => {
-                        const newValue =
-                          Math.round(Math.max(0, displayInputCost - 0.01) * 10000) / 10000;
-                        setDisplayInputCost(newValue);
-                        setFormData({ ...formData, input_cost_per_token: newValue / 1000000 });
-                      }}
-                      min={0}
-                      step={0.01}
-                      validated={formErrors.input_cost_per_token ? 'error' : 'default'}
-                      isDisabled={isViewModalOpen}
-                    />
-                    {formErrors.input_cost_per_token && (
-                      <HelperText>
-                        <HelperTextItem variant="error">
-                          {formErrors.input_cost_per_token}
-                        </HelperTextItem>
-                      </HelperText>
-                    )}
-                  </FormGroup>
-                </GridItem>
-                <GridItem span={6}>
-                  <FormGroup
-                    label={t('models.admin.outputCostPerMillionTokens')}
-                    fieldId="output-cost"
-                  >
-                    <NumberInput
-                      id="output-cost"
-                      value={displayOutputCost}
-                      onChange={(event) => {
-                        const value = parseFloat((event.target as HTMLInputElement).value) || 0;
-                        setDisplayOutputCost(value);
-                        setFormData({ ...formData, output_cost_per_token: value / 1000000 });
-                      }}
-                      onPlus={() => {
-                        const newValue = Math.round((displayOutputCost + 0.01) * 10000) / 10000;
-                        setDisplayOutputCost(newValue);
-                        setFormData({ ...formData, output_cost_per_token: newValue / 1000000 });
-                      }}
-                      onMinus={() => {
-                        const newValue =
-                          Math.round(Math.max(0, displayOutputCost - 0.01) * 10000) / 10000;
-                        setDisplayOutputCost(newValue);
-                        setFormData({ ...formData, output_cost_per_token: newValue / 1000000 });
-                      }}
-                      min={0}
-                      step={0.01}
-                      validated={formErrors.output_cost_per_token ? 'error' : 'default'}
-                      isDisabled={isViewModalOpen}
-                    />
-                    {formErrors.output_cost_per_token && (
-                      <HelperText>
-                        <HelperTextItem variant="error">
-                          {formErrors.output_cost_per_token}
-                        </HelperTextItem>
-                      </HelperText>
-                    )}
-                  </FormGroup>
-                </GridItem>
-                <GridItem span={6}>
-                  <FormGroup label={t('models.admin.maxTokens')} fieldId="max-tokens">
-                    <NumberInput
-                      id="max-tokens"
-                      value={formData.max_tokens}
-                      onChange={(event) => {
-                        const value = parseInt((event.target as HTMLInputElement).value) || 1;
-                        setFormData({ ...formData, max_tokens: value });
-                      }}
-                      onPlus={() => {
-                        setFormData({ ...formData, max_tokens: formData.max_tokens + 1 });
-                      }}
-                      onMinus={() => {
-                        setFormData({
-                          ...formData,
-                          max_tokens: Math.max(1, formData.max_tokens - 1),
-                        });
-                      }}
-                      min={1}
-                      validated={formErrors.max_tokens ? 'error' : 'default'}
-                      isDisabled={isViewModalOpen}
-                    />
-                    {formErrors.max_tokens && (
-                      <HelperText>
-                        <HelperTextItem variant="error">{formErrors.max_tokens}</HelperTextItem>
-                      </HelperText>
-                    )}
-                  </FormGroup>
-                </GridItem>
-                </>
+                  <>
+                    <GridItem span={6}>
+                      <FormGroup
+                        label={t('models.admin.inputCostPerMillionTokens')}
+                        fieldId="input-cost"
+                      >
+                        <NumberInput
+                          id="input-cost"
+                          value={displayInputCost}
+                          onChange={(event) => {
+                            const value = parseFloat((event.target as HTMLInputElement).value) || 0;
+                            setDisplayInputCost(value);
+                            setFormData({ ...formData, input_cost_per_token: value / 1000000 });
+                          }}
+                          onPlus={() => {
+                            const newValue = Math.round((displayInputCost + 0.01) * 10000) / 10000;
+                            setDisplayInputCost(newValue);
+                            setFormData({ ...formData, input_cost_per_token: newValue / 1000000 });
+                          }}
+                          onMinus={() => {
+                            const newValue =
+                              Math.round(Math.max(0, displayInputCost - 0.01) * 10000) / 10000;
+                            setDisplayInputCost(newValue);
+                            setFormData({ ...formData, input_cost_per_token: newValue / 1000000 });
+                          }}
+                          min={0}
+                          step={0.01}
+                          validated={formErrors.input_cost_per_token ? 'error' : 'default'}
+                          isDisabled={isViewModalOpen}
+                        />
+                        {formErrors.input_cost_per_token && (
+                          <HelperText>
+                            <HelperTextItem variant="error">
+                              {formErrors.input_cost_per_token}
+                            </HelperTextItem>
+                          </HelperText>
+                        )}
+                      </FormGroup>
+                    </GridItem>
+                    <GridItem span={6}>
+                      <FormGroup
+                        label={t('models.admin.outputCostPerMillionTokens')}
+                        fieldId="output-cost"
+                      >
+                        <NumberInput
+                          id="output-cost"
+                          value={displayOutputCost}
+                          onChange={(event) => {
+                            const value = parseFloat((event.target as HTMLInputElement).value) || 0;
+                            setDisplayOutputCost(value);
+                            setFormData({ ...formData, output_cost_per_token: value / 1000000 });
+                          }}
+                          onPlus={() => {
+                            const newValue = Math.round((displayOutputCost + 0.01) * 10000) / 10000;
+                            setDisplayOutputCost(newValue);
+                            setFormData({ ...formData, output_cost_per_token: newValue / 1000000 });
+                          }}
+                          onMinus={() => {
+                            const newValue =
+                              Math.round(Math.max(0, displayOutputCost - 0.01) * 10000) / 10000;
+                            setDisplayOutputCost(newValue);
+                            setFormData({ ...formData, output_cost_per_token: newValue / 1000000 });
+                          }}
+                          min={0}
+                          step={0.01}
+                          validated={formErrors.output_cost_per_token ? 'error' : 'default'}
+                          isDisabled={isViewModalOpen}
+                        />
+                        {formErrors.output_cost_per_token && (
+                          <HelperText>
+                            <HelperTextItem variant="error">
+                              {formErrors.output_cost_per_token}
+                            </HelperTextItem>
+                          </HelperText>
+                        )}
+                      </FormGroup>
+                    </GridItem>
+                    <GridItem span={6}>
+                      <FormGroup label={t('models.admin.maxTokens')} fieldId="max-tokens">
+                        <NumberInput
+                          id="max-tokens"
+                          value={formData.max_tokens}
+                          onChange={(event) => {
+                            const value = parseInt((event.target as HTMLInputElement).value) || 1;
+                            setFormData({ ...formData, max_tokens: value });
+                          }}
+                          onPlus={() => {
+                            setFormData({ ...formData, max_tokens: formData.max_tokens + 1 });
+                          }}
+                          onMinus={() => {
+                            setFormData({
+                              ...formData,
+                              max_tokens: Math.max(1, formData.max_tokens - 1),
+                            });
+                          }}
+                          min={1}
+                          validated={formErrors.max_tokens ? 'error' : 'default'}
+                          isDisabled={isViewModalOpen}
+                        />
+                        {formErrors.max_tokens && (
+                          <HelperText>
+                            <HelperTextItem variant="error">{formErrors.max_tokens}</HelperTextItem>
+                          </HelperText>
+                        )}
+                      </FormGroup>
+                    </GridItem>
+                  </>
                 )}
                 {!formData.supports_convert && (
-                <GridItem span={12}>
-                  <FormGroup label={t('common.features')} fieldId="features">
-                    <Stack hasGutter>
-                      <Checkbox
-                        id="supports-tokenize"
-                        label={t('models.admin.supportsTokenize')}
-                        isChecked={formData.supports_tokenize}
-                        onChange={(_event, checked) =>
-                          setFormData({ ...formData, supports_tokenize: checked })
-                        }
-                        isDisabled={isViewModalOpen}
-                      />
-                      <Checkbox
-                        id="supports-vision"
-                        label={t('models.admin.supportsVision')}
-                        isChecked={formData.supports_vision}
-                        onChange={(_event, checked) =>
-                          setFormData({ ...formData, supports_vision: checked })
-                        }
-                        isDisabled={isViewModalOpen}
-                      />
-                      <Checkbox
-                        id="supports-function-calling"
-                        label={t('models.admin.supportsFunctionCalling')}
-                        isChecked={formData.supports_function_calling}
-                        onChange={(_event, checked) =>
-                          setFormData({ ...formData, supports_function_calling: checked })
-                        }
-                        isDisabled={isViewModalOpen}
-                      />
-                      <Checkbox
-                        id="supports-parallel-function-calling"
-                        label={t('models.admin.supportsParallelFunctionCalling')}
-                        isChecked={formData.supports_parallel_function_calling}
-                        onChange={(_event, checked) =>
-                          setFormData({ ...formData, supports_parallel_function_calling: checked })
-                        }
-                        isDisabled={isViewModalOpen}
-                      />
-                      <Checkbox
-                        id="supports-tool-choice"
-                        label={t('models.admin.supportsToolChoice')}
-                        isChecked={formData.supports_tool_choice}
-                        onChange={(_event, checked) =>
-                          setFormData({ ...formData, supports_tool_choice: checked })
-                        }
-                        isDisabled={isViewModalOpen}
-                      />
-                    </Stack>
-                  </FormGroup>
-                </GridItem>
+                  <GridItem span={12}>
+                    <FormGroup label={t('common.features')} fieldId="features">
+                      <Stack hasGutter>
+                        <Checkbox
+                          id="supports-tokenize"
+                          label={t('models.admin.supportsTokenize')}
+                          isChecked={formData.supports_tokenize}
+                          onChange={(_event, checked) =>
+                            setFormData({ ...formData, supports_tokenize: checked })
+                          }
+                          isDisabled={isViewModalOpen}
+                        />
+                        <Checkbox
+                          id="supports-vision"
+                          label={t('models.admin.supportsVision')}
+                          isChecked={formData.supports_vision}
+                          onChange={(_event, checked) =>
+                            setFormData({ ...formData, supports_vision: checked })
+                          }
+                          isDisabled={isViewModalOpen}
+                        />
+                        <Checkbox
+                          id="supports-function-calling"
+                          label={t('models.admin.supportsFunctionCalling')}
+                          isChecked={formData.supports_function_calling}
+                          onChange={(_event, checked) =>
+                            setFormData({ ...formData, supports_function_calling: checked })
+                          }
+                          isDisabled={isViewModalOpen}
+                        />
+                        <Checkbox
+                          id="supports-parallel-function-calling"
+                          label={t('models.admin.supportsParallelFunctionCalling')}
+                          isChecked={formData.supports_parallel_function_calling}
+                          onChange={(_event, checked) =>
+                            setFormData({
+                              ...formData,
+                              supports_parallel_function_calling: checked,
+                            })
+                          }
+                          isDisabled={isViewModalOpen}
+                        />
+                        <Checkbox
+                          id="supports-tool-choice"
+                          label={t('models.admin.supportsToolChoice')}
+                          isChecked={formData.supports_tool_choice}
+                          onChange={(_event, checked) =>
+                            setFormData({ ...formData, supports_tool_choice: checked })
+                          }
+                          isDisabled={isViewModalOpen}
+                        />
+                      </Stack>
+                    </FormGroup>
+                  </GridItem>
                 )}
                 <GridItem span={12}>
                   <FormGroup label={t('common.accessRestrictions')} fieldId="access-restrictions">

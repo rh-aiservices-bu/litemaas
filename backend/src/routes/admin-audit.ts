@@ -109,7 +109,7 @@ const adminAuditRoutes: FastifyPluginAsync = async (fastify) => {
         // Sanitize sensitive fields from audit log metadata
         const sanitizedRows = dataResult.rows.map((row: any) => {
           if (row.metadata && typeof row.metadata === 'object') {
-            const { liteLLMKeyId, ...safeMetadata } = row.metadata;
+            const { liteLLMKeyId: _liteLLMKeyId, ...safeMetadata } = row.metadata;
             return { ...row, metadata: safeMetadata };
           }
           return row;

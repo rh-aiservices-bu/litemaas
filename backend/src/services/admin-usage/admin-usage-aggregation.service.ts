@@ -1508,7 +1508,7 @@ export class AdminUsageAggregationService extends BaseService {
     this.fastify.log.debug({ date: dayData.date }, 'Enriching data with user mappings');
 
     try {
-      // Query all active API keys with their pre-computed key_hash
+      // Query all API keys (including inactive/revoked) with their pre-computed key_hash
       // This approach is resilient to API key renaming since we match by the stable
       // hash of the actual LiteLLM key value (stored in key_hash), not the mutable alias
       let apiKeyMappings: ApiKeyUserMapping[] = [];
@@ -1525,7 +1525,6 @@ export class AdminUsageAggregationService extends BaseService {
             u.roles[1] as role
           FROM api_keys ak
           JOIN users u ON ak.user_id = u.id
-          WHERE ak.is_active = true
         `;
 
         const result = await this.executeQuery<{ rows: any[] }>(
@@ -1547,7 +1546,7 @@ export class AdminUsageAggregationService extends BaseService {
 
         this.fastify.log.debug(
           {
-            totalActiveKeys: result.rows.length,
+            totalKeys: result.rows.length,
             mappedCount: apiKeyMappings.length,
           },
           'API key mappings retrieved using pre-computed key_hash',
