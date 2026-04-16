@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Usage analytics enrichment**: Revoked or inactive API keys are now included in user mapping during usage report enrichment, fixing undercounted requests and spend for users whose keys were later deactivated
 - **Usage cache staleness**: Yesterday's completed usage data is now permanently cached instead of being re-fetched on every request, improving performance and consistency
 - **Notification timer cleanup**: Success notification auto-dismiss timers are now properly cleared on component unmount, fixing intermittent `window is not defined` errors during test runs
+- **LiteLLM schema creation**: Set `DISABLE_SCHEMA_UPDATE` to `false` in Helm and Kustomize deployment templates, fixing fresh deployments where LiteLLM could not create its database schema
 
 ## [0.4.0] - 2026-03-11
 
