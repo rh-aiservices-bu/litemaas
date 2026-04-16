@@ -43,7 +43,13 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('admin:models')],
     handler: async (request) => {
-      const { api_base, api_key: providedApiKey, backend_model_name, model_id, supports_convert } = request.body;
+      const {
+        api_base,
+        api_key: providedApiKey,
+        backend_model_name,
+        model_id,
+        supports_convert,
+      } = request.body;
 
       let apiKey = providedApiKey;
 
@@ -293,28 +299,28 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
               max_tokens = $20,
               updated_at = CURRENT_TIMESTAMP`,
             [
-              model_name,                    // $1 id
-              model_name,                    // $2 name
-              'openai',                      // $3 provider
-              description || null,           // $4 description
-              'Language Model',              // $5 category
-              max_tokens || null,            // $6 context_length
-              input_cost_per_token || null,  // $7
+              model_name, // $1 id
+              model_name, // $2 name
+              'openai', // $3 provider
+              description || null, // $4 description
+              'Language Model', // $5 category
+              max_tokens || null, // $6 context_length
+              input_cost_per_token || null, // $7
               output_cost_per_token || null, // $8
-              supports_vision || false,      // $9
+              supports_vision || false, // $9
               supports_function_calling || false, // $10
               supports_tool_choice || false, // $11
               supports_parallel_function_calling || false, // $12
-              true,                          // $13 supports_streaming
-              features,                      // $14
-              'available',                   // $15 availability
-              '1.0',                         // $16 version
-              api_base || null,              // $17
-              tpm || null,                   // $18
-              rpm || null,                   // $19
-              max_tokens || null,            // $20
-              litellmModelId,                // $21
-              backend_model_name || null,    // $22
+              true, // $13 supports_streaming
+              features, // $14
+              'available', // $15 availability
+              '1.0', // $16 version
+              api_base || null, // $17
+              tpm || null, // $18
+              rpm || null, // $19
+              max_tokens || null, // $20
+              litellmModelId, // $21
+              backend_model_name || null, // $22
               restrictedAccess !== undefined ? restrictedAccess : false, // $23
             ],
           );
@@ -327,7 +333,10 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           // Flush LiteLLM's Redis cache so all proxy pods pick up the new model
           await fastify.flushLiteLLMCache();
         } catch (dbError) {
-          fastify.log.warn({ dbError, model_name }, 'Failed to directly insert model - falling back to sync');
+          fastify.log.warn(
+            { dbError, model_name },
+            'Failed to directly insert model - falling back to sync',
+          );
           // Fall back to sync approach
           try {
             await liteLLMService.clearCache('models:');
@@ -403,7 +412,6 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         } catch (syncError) {
           fastify.log.warn({ syncError }, 'Model synchronization failed after model creation');
         }
-
 
         reply.status(201);
         return {
@@ -723,13 +731,19 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         // Delete model from LiteLLM using the correct LiteLLM model ID
         try {
           await liteLLMService.deleteModel(modelRecord.litellm_model_id);
-          fastify.log.info({ modelId, litellmModelId: modelRecord.litellm_model_id }, 'Model deleted from LiteLLM');
+          fastify.log.info(
+            { modelId, litellmModelId: modelRecord.litellm_model_id },
+            'Model deleted from LiteLLM',
+          );
 
           // Flush LiteLLM's Redis cache so all proxy pods stop serving the deleted model
           await fastify.flushLiteLLMCache();
         } catch (deleteError: any) {
           // If model is already gone from LiteLLM (404), proceed with local cleanup
-          if (deleteError.statusCode === 404 || (deleteError.message && deleteError.message.includes('not found'))) {
+          if (
+            deleteError.statusCode === 404 ||
+            (deleteError.message && deleteError.message.includes('not found'))
+          ) {
             fastify.log.warn(
               { modelId, litellmModelId: modelRecord.litellm_model_id },
               'Model not found in LiteLLM (already deleted) - proceeding with local cleanup',
@@ -754,13 +768,19 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
             'Cascade operations completed (subscriptions deactivated, API key associations removed)',
           );
         } catch (dbError) {
-          fastify.log.warn({ dbError, modelId }, 'Cascade operations failed - proceeding with delete');
+          fastify.log.warn(
+            { dbError, modelId },
+            'Cascade operations failed - proceeding with delete',
+          );
         }
 
         // Delete referencing rows then the model row itself.
         // The cascade above deactivates subscriptions but doesn't delete the rows,
         // so we must remove them to satisfy the foreign key constraint.
-        await fastify.dbUtils.query(`DELETE FROM subscription_status_history WHERE subscription_id IN (SELECT id FROM subscriptions WHERE model_id = $1)`, [modelId]);
+        await fastify.dbUtils.query(
+          `DELETE FROM subscription_status_history WHERE subscription_id IN (SELECT id FROM subscriptions WHERE model_id = $1)`,
+          [modelId],
+        );
         await fastify.dbUtils.query(`DELETE FROM subscriptions WHERE model_id = $1`, [modelId]);
         await fastify.dbUtils.query(`DELETE FROM models WHERE id = $1`, [modelId]);
         fastify.log.info({ modelId }, 'Model row deleted from local database');

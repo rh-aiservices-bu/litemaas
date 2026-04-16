@@ -76,7 +76,9 @@ export class ModelSyncService {
         }
       } else {
         // No LiteLLM DB configured — skip cross-reference, trust the API response
-        this.fastify.log.warn('LITELLM_DATABASE_URL not set — skipping DB cross-reference, using API response directly');
+        this.fastify.log.warn(
+          'LITELLM_DATABASE_URL not set — skipping DB cross-reference, using API response directly',
+        );
         dbModelNames = new Set(litellmModels.map((m: any) => m.model_name));
       }
 
@@ -236,7 +238,10 @@ export class ModelSyncService {
 
     // Build features array
     const features = [];
-    const supportsEmbeddings = litellmModel.model_info?.supports_embeddings || litellmModel.model_info?.supports_embedding || false;
+    const supportsEmbeddings =
+      litellmModel.model_info?.supports_embeddings ||
+      litellmModel.model_info?.supports_embedding ||
+      false;
     const supportsTokenize = litellmModel.model_info?.supports_tokenize || false;
     const supportsConvert = litellmModel.model_info?.supports_convert || false;
 
@@ -335,7 +340,10 @@ export class ModelSyncService {
     const supportsToolChoice = litellmModel.model_info?.supports_tool_choice || false;
 
     const features = [];
-    const supportsEmbeddings = litellmModel.model_info?.supports_embeddings || litellmModel.model_info?.supports_embedding || false;
+    const supportsEmbeddings =
+      litellmModel.model_info?.supports_embeddings ||
+      litellmModel.model_info?.supports_embedding ||
+      false;
     const supportsTokenize = litellmModel.model_info?.supports_tokenize || false;
     const supportsConvert = litellmModel.model_info?.supports_convert || false;
 
@@ -630,7 +638,10 @@ export class ModelSyncService {
 
     // Build expected features
     const expectedFeatures = [];
-    const supportsEmbeddings = litellmModel.model_info?.supports_embeddings || litellmModel.model_info?.supports_embedding || false;
+    const supportsEmbeddings =
+      litellmModel.model_info?.supports_embeddings ||
+      litellmModel.model_info?.supports_embedding ||
+      false;
     const supportsTokenize = litellmModel.model_info?.supports_tokenize || false;
     const supportsConvert = litellmModel.model_info?.supports_convert || false;
 

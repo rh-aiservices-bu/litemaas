@@ -70,7 +70,7 @@ spec:
             - name: STORE_MODEL_IN_DB
               value: 'True'
             - name: DISABLE_SCHEMA_UPDATE
-              value: 'true'
+              value: 'false'
             - name: REDIS_HOST
               value: 'litellm-redis'
             - name: REDIS_PORT

@@ -1919,11 +1919,20 @@ const ApiKeysPage: React.FC = () => {
                                   <Th scope="row">
                                     <strong>{t('pages.apiKeys.labels.apiUrl')}</strong>
                                   </Th>
-                                  <Td>{litellmApiUrl}/{(() => {
-                                    const detail = selectedApiKey.modelDetails?.find((m) => m.id === selectedModelForExample);
-                                    const fromList = models.find((m) => m.id === selectedModelForExample);
-                                    return (detail?.supportsConvert || fromList?.supportsConvert) ? 'docling/v1' : 'v1';
-                                  })()}</Td>
+                                  <Td>
+                                    {litellmApiUrl}/
+                                    {(() => {
+                                      const detail = selectedApiKey.modelDetails?.find(
+                                        (m) => m.id === selectedModelForExample,
+                                      );
+                                      const fromList = models.find(
+                                        (m) => m.id === selectedModelForExample,
+                                      );
+                                      return detail?.supportsConvert || fromList?.supportsConvert
+                                        ? 'docling/v1'
+                                        : 'v1';
+                                    })()}
+                                  </Td>
                                 </Tr>
                                 <Tr>
                                   <Th scope="row">
@@ -2007,13 +2016,24 @@ const ApiKeysPage: React.FC = () => {
                 <CodeBlock>
                   <CodeBlockCode>
                     {(() => {
-                      const bearerToken = visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey ? selectedApiKey.fullKey : '<click-show-key-to-reveal>';
+                      const bearerToken =
+                        visibleKeys.has(selectedApiKey.id) && selectedApiKey.fullKey
+                          ? selectedApiKey.fullKey
+                          : '<click-show-key-to-reveal>';
                       const modelName = selectedModelForExample || 'gpt-4';
                       // Check model type from both API key modelDetails and loaded models array
-                      const selectedModelDetail = selectedApiKey.modelDetails?.find((m) => m.id === selectedModelForExample);
-                      const selectedModelFromList = models.find((m) => m.id === selectedModelForExample);
-                      const isEmbeddingsModel = selectedModelDetail?.supportsEmbeddings || selectedModelFromList?.supportsEmbeddings;
-                      const isConvertModel = selectedModelDetail?.supportsConvert || selectedModelFromList?.supportsConvert;
+                      const selectedModelDetail = selectedApiKey.modelDetails?.find(
+                        (m) => m.id === selectedModelForExample,
+                      );
+                      const selectedModelFromList = models.find(
+                        (m) => m.id === selectedModelForExample,
+                      );
+                      const isEmbeddingsModel =
+                        selectedModelDetail?.supportsEmbeddings ||
+                        selectedModelFromList?.supportsEmbeddings;
+                      const isConvertModel =
+                        selectedModelDetail?.supportsConvert ||
+                        selectedModelFromList?.supportsConvert;
 
                       if (isEmbeddingsModel) {
                         return `# ${t('pages.apiKeys.codeExample.commentEmbeddings')}

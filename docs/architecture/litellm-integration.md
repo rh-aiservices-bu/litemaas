@@ -671,7 +671,7 @@ if (error.message?.includes('already exists')) {
 
 ```bash
 LITELLM_API_URL=http://localhost:4000
-LITELLM_API_KEY=sk-1104
+LITELLM_API_KEY=sk-your-master-key
 ```
 
 ### Mock Mode
@@ -702,7 +702,7 @@ LITELLM_API_KEY=sk-1104
 All LiteLLM API requests require authentication via the `x-litellm-api-key` header:
 
 ```http
-x-litellm-api-key: sk-1104
+x-litellm-api-key: sk-your-master-key
 ```
 
 **Exception**: The `/key/info` endpoint uses the actual API key being queried as the authentication header value. LiteMaaS's `makeRequest()` method sets the master key as the default `x-litellm-api-key` header, but callers can override this by passing their own headers (e.g., `getKeyInfo` passes the specific API key for self-lookup).

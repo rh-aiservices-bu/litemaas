@@ -146,9 +146,7 @@ const LoginPage: React.FC = () => {
               variant="danger"
               title={t('pages.login.authError')}
               isInline
-              actionClose={
-                <AlertActionCloseButton onClose={() => setShowAuthError(false)} />
-              }
+              actionClose={<AlertActionCloseButton onClose={() => setShowAuthError(false)} />}
             />
           </StackItem>
         )}

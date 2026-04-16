@@ -77,8 +77,7 @@ const createMockOIDCDiscovery = (overrides = {}) => ({
   authorization_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/auth',
   token_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/token',
   userinfo_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/userinfo',
-  end_session_endpoint:
-    'https://keycloak.example.com/realms/test/protocol/openid-connect/logout',
+  end_session_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/logout',
   ...overrides,
 });
 
@@ -1106,9 +1105,7 @@ describe('OAuthService - OIDC Specific Tests', () => {
       const idToken = `header.${Buffer.from(JSON.stringify(payload)).toString('base64')}.signature`;
       const tokenResponse = { access_token: 'at', token_type: 'Bearer', id_token: idToken } as any;
 
-      expect(() => service.validateIdToken(tokenResponse)).toThrow(
-        'Invalid audience in ID token',
-      );
+      expect(() => service.validateIdToken(tokenResponse)).toThrow('Invalid audience in ID token');
     });
 
     it('should skip validation when no ID token is present', () => {
@@ -1121,9 +1118,11 @@ describe('OAuthService - OIDC Specific Tests', () => {
   describe('email validation in OIDC userinfo', () => {
     it('should not use non-email preferred_username as email', async () => {
       const mockDiscovery = {
-        authorization_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/auth',
+        authorization_endpoint:
+          'https://keycloak.example.com/realms/test/protocol/openid-connect/auth',
         token_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/token',
-        userinfo_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/userinfo',
+        userinfo_endpoint:
+          'https://keycloak.example.com/realms/test/protocol/openid-connect/userinfo',
         issuer: 'https://keycloak.example.com/realms/test',
       };
 
@@ -1160,9 +1159,11 @@ describe('OAuthService - OIDC Specific Tests', () => {
   describe('discovery cache failover', () => {
     it('should use stale cache when refetch fails', async () => {
       const mockDiscovery = {
-        authorization_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/auth',
+        authorization_endpoint:
+          'https://keycloak.example.com/realms/test/protocol/openid-connect/auth',
         token_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/token',
-        userinfo_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/userinfo',
+        userinfo_endpoint:
+          'https://keycloak.example.com/realms/test/protocol/openid-connect/userinfo',
         issuer: 'https://keycloak.example.com/realms/test',
       };
 
@@ -1194,9 +1195,11 @@ describe('OAuthService - OIDC Specific Tests', () => {
   describe('nonce in generateAuthUrl', () => {
     it('should include nonce in OIDC auth URL', async () => {
       const mockDiscovery = {
-        authorization_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/auth',
+        authorization_endpoint:
+          'https://keycloak.example.com/realms/test/protocol/openid-connect/auth',
         token_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/token',
-        userinfo_endpoint: 'https://keycloak.example.com/realms/test/protocol/openid-connect/userinfo',
+        userinfo_endpoint:
+          'https://keycloak.example.com/realms/test/protocol/openid-connect/userinfo',
         issuer: 'https://keycloak.example.com/realms/test',
       };
 

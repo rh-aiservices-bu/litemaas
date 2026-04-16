@@ -468,10 +468,10 @@ export class LiteLLMService extends BaseService {
           id: string;
           litellm_model_id: string;
           availability: string;
-        }>('SELECT id, litellm_model_id, availability FROM models WHERE id = $1 AND availability = $2', [
-          modelId,
-          'available',
-        ]);
+        }>(
+          'SELECT id, litellm_model_id, availability FROM models WHERE id = $1 AND availability = $2',
+          [modelId, 'available'],
+        );
 
         if (localModel) {
           this.fastify.log.info(
