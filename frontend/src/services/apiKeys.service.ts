@@ -5,7 +5,7 @@ export interface ApiKey {
   name: string;
   keyPreview: string;
   fullKey?: string;
-  status: 'active' | 'revoked' | 'expired';
+  status: 'active' | 'revoked' | 'expired' | 'archived';
   permissions: string[];
   usageCount: number;
   rateLimit: number;
@@ -58,6 +58,7 @@ interface BackendApiKeyDetails {
   isActive: boolean;
   createdAt: string;
   revokedAt?: string;
+  archivedAt?: string;
   maxBudget?: number;
   currentSpend?: number;
   tpmLimit?: number;
@@ -113,9 +114,11 @@ export interface ApiKeysResponse {
 
 class ApiKeysService {
   private mapBackendToFrontend(backend: BackendApiKeyDetails): ApiKey {
-    let status: 'active' | 'revoked' | 'expired' = 'active';
+    let status: 'active' | 'revoked' | 'expired' | 'archived' = 'active';
 
-    if (backend.revokedAt) {
+    if (backend.archivedAt) {
+      status = 'archived';
+    } else if (backend.revokedAt) {
       status = 'revoked';
     } else if (backend.expiresAt && new Date(backend.expiresAt) < new Date()) {
       status = 'expired';
@@ -213,6 +216,14 @@ class ApiKeysService {
     return apiClient.post<{ id: string; currentSpend: number; resetAt: string }>(
       `/api-keys/${keyId}/reset-spend`,
     );
+  }
+
+  async archiveApiKey(keyId: string): Promise<{ message: string; archivedAt: string }> {
+    return apiClient.post<{ message: string; archivedAt: string }>(`/api-keys/${keyId}/archive`);
+  }
+
+  async unarchiveApiKey(keyId: string): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>(`/api-keys/${keyId}/unarchive`);
   }
 
   async updateApiKey(keyId: string, updates: Partial<CreateApiKeyRequest>): Promise<ApiKey> {

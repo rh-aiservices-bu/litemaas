@@ -938,10 +938,10 @@ export class SubscriptionService extends BaseService {
         );
 
         if (remainingModels.rows.length === 0) {
-          // No models left - deactivate the key
+          // No models left - deactivate and archive the key
           await client.query(
-            `UPDATE api_keys 
-             SET is_active = false, updated_at = CURRENT_TIMESTAMP
+            `UPDATE api_keys
+             SET is_active = false, archived_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
              WHERE id = $1`,
             [key.id],
           );
@@ -960,7 +960,7 @@ export class SubscriptionService extends BaseService {
 
           this.fastify.log.info(
             { keyId: key.id, keyName: key.name },
-            'API key deactivated due to no remaining models after subscription cancellation',
+            'API key deactivated and archived due to no remaining models after subscription cancellation',
           );
         } else {
           // Update LiteLLM key to remove the cancelled model

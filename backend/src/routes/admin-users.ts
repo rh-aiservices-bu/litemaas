@@ -650,8 +650,8 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
           throw fastify.createNotFoundError('User');
         }
 
-        // Get API keys using the service
-        const result = await apiKeyService.getUserApiKeys(id, { page, limit, isActive });
+        // Get API keys using the service (admins see archived keys)
+        const result = await apiKeyService.getUserApiKeys(id, { page, limit, isActive, includeArchived: true });
 
         return {
           data: result.data.map((key) => ({
@@ -667,6 +667,7 @@ const adminUsersRoutes: FastifyPluginAsync = async (fastify) => {
             createdAt: String(key.createdAt),
             expiresAt: key.expiresAt ? String(key.expiresAt) : undefined,
             revokedAt: key.revokedAt ? String(key.revokedAt) : undefined,
+            archivedAt: key.archivedAt ? String(key.archivedAt) : undefined,
             tpmLimit: key.tpmLimit,
             rpmLimit: key.rpmLimit,
             budgetDuration: key.budgetDuration,
