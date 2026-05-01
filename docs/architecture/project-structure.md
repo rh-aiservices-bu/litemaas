@@ -119,10 +119,10 @@ litemaas/
 │   │   │   └── icons/        # Custom icons
 │   │   ├── components/        # Reusable components
 │   │   │   ├── admin/        # Admin-only components
-│   │   │   │   ├── MetricsOverview.tsx # Analytics metrics cards
+│   │   │   │   ├── MetricsOverview.tsx # Shared usage analytics dashboard with auth-aware admin sections
 │   │   │   │   ├── UserFilterSelect.tsx # User multi-select filter
 │   │   │   │   ├── ApiKeyFilterSelect.tsx # API key filter (cascading)
-│   │   │   │   ├── TopUsersTable.tsx # Top users by usage table
+│   │   │   │   ├── TopUsersTable.tsx # Admin-only top users by usage table
 │   │   │   │   ├── ProviderBreakdownTable.tsx # Provider breakdown table
 │   │   │   │   ├── UserProfileTab.tsx # User profile display with role toggles
 │   │   │   │   ├── UserBudgetLimitsTab.tsx # Budget & rate limit configuration
