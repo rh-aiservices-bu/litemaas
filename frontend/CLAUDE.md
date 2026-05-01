@@ -119,8 +119,8 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 **Admin Component Structure**:
 
 - `components/admin/` - Admin-specific UI components
-  - `MetricsOverview.tsx` - Main analytics dashboard with trend indicators
-  - `TopUsersTable.tsx` - User usage breakdown table
+  - `MetricsOverview.tsx` - Shared usage analytics dashboard with trend indicators and auth-aware admin sections
+  - `TopUsersTable.tsx` - Admin-only user usage breakdown table rendered by `MetricsOverview`
   - `UserFilterSelect.tsx` - Multi-select user filter with search
   - `ApiKeyFilterSelect.tsx` - Cascading API key filter (depends on selected users)
   - `ProviderBreakdownTable.tsx` - Provider metrics (component ready, integration pending)
