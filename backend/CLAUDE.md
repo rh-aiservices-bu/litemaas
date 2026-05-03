@@ -122,7 +122,7 @@ For complete schema and caching details, see [`docs/architecture/database-schema
 
 **API Keys**: `Authorization: Bearer sk-litellm-{key}`
 
-**Development**: `MOCK_AUTH=true` for auto-login.
+**Development**: `OAUTH_MOCK_ENABLED=true` for auto-login (also enabled by default when `NODE_ENV=development`).
 
 For details, see [`docs/features/user-roles-administration.md`](../docs/features/user-roles-administration.md) and [`docs/deployment/authentication.md`](../docs/deployment/authentication.md).
 
@@ -300,7 +300,7 @@ All admin analytics business logic constants are centralized in `src/config/admi
 
 ## 🔗 Environment Variables
 
-Key configuration: DATABASE_URL, JWT_SECRET, OAUTH_CLIENT_ID, LITELLM_API_URL, MOCK_AUTH, LITELLM_DATABASE_URL (backup/restore + model sync cross-reference), BACKUP_STORAGE_PATH, REDIS_HOST/REDIS_PORT (optional, LiteLLM cache flush), plus 15+ admin analytics settings.
+Key configuration: DATABASE_URL, JWT_SECRET, OAUTH_CLIENT_ID, LITELLM_API_URL, OAUTH_MOCK_ENABLED, LITELLM_DATABASE_URL (backup/restore + model sync cross-reference), BACKUP_STORAGE_PATH, REDIS_HOST/REDIS_PORT (optional, LiteLLM cache flush), plus 15+ admin analytics settings.
 
 See [`docs/deployment/configuration.md`](../docs/deployment/configuration.md) and `.env.example` for complete list.
 
