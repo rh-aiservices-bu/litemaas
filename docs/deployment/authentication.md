@@ -792,7 +792,7 @@ NODE_ENV=production
 ALLOW_DEV_TOKENS=false
 # Remove ALLOWED_FRONTEND_ORIGINS
 JWT_SECRET=<strong-production-secret>
-ADMIN_API_KEYS=<strong-production-keys>
+ADMIN_API_KEYS=ltm_admin_<strong-random-string>
 ```
 
 ### 3. Testing Production Auth
