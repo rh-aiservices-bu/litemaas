@@ -58,6 +58,13 @@ declare module 'fastify' {
       DEFAULT_USER_MAX_BUDGET: string;
       DEFAULT_USER_TPM_LIMIT: string;
       DEFAULT_USER_RPM_LIMIT: string;
+
+      // Backup
+      LITELLM_DATABASE_URL?: string;
+      BACKUP_STORAGE_PATH?: string;
+
+      // Support Agent
+      SUPPORT_AGENT_URL?: string;
     };
 
     // Remove custom logger interface to avoid conflict with Fastify's built-in logger

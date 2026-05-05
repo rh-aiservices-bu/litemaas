@@ -63,6 +63,9 @@ const envSchema = Type.Object({
   // Backup Configuration
   LITELLM_DATABASE_URL: Type.Optional(Type.String()),
   BACKUP_STORAGE_PATH: Type.Optional(Type.String()),
+
+  // Support Agent
+  SUPPORT_AGENT_URL: Type.Optional(Type.String()),
 });
 
 const envPlugin: FastifyPluginAsync = async (fastify) => {

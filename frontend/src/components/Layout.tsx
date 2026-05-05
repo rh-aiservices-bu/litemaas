@@ -54,6 +54,7 @@ import { useNotifications } from '../contexts/NotificationContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useConfig } from '../contexts/ConfigContext';
 import { BannerProvider } from '../contexts/BannerContext';
+import SupportChat from './SupportChat';
 import { useBranding } from '../contexts/BrandingContext';
 import { brandingService } from '../services/branding.service';
 import { NotificationDrawer, NotificationBadgeButton } from './NotificationDrawer';
@@ -707,6 +708,7 @@ const Layout: React.FC = () => {
           </DrawerContentBody>
         </DrawerContent>
       </Drawer>
+      {config?.supportChatEnabled && <SupportChat />}
     </BannerProvider>
   );
 };

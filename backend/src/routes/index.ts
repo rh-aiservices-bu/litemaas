@@ -19,6 +19,7 @@ import adminAuditRoutes from './admin-audit';
 import adminBackupRoutes from './admin-backup';
 import bannerRoutes from './banners';
 import brandingRoutes from './branding';
+import assistantRoutes from './assistant';
 
 const routes: FastifyPluginAsync = async (fastify) => {
   // Register all route handlers
@@ -52,6 +53,11 @@ const routes: FastifyPluginAsync = async (fastify) => {
 
   // Branding endpoints
   await fastify.register(brandingRoutes, { prefix: '/branding' });
+
+  // Assistant (support chat) routes - only when SUPPORT_AGENT_URL is configured
+  if (fastify.config.SUPPORT_AGENT_URL) {
+    await fastify.register(assistantRoutes, { prefix: '/assistant' });
+  }
 
   // Root endpoint
   fastify.get('/', {

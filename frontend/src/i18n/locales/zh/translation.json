@@ -2049,5 +2049,42 @@
       "roleConflict": "角色冲突",
       "roleConflictDesc": "管理员和管理员（只读）角色冲突。管理员角色将优先。"
     }
+  },
+  "supportChat": {
+    "toggle": {
+      "tooltip": "支持助手",
+      "ariaLabel": "切换支持聊天"
+    },
+    "ariaLabel": "支持聊天助手",
+    "header": {
+      "title": "支持助手",
+      "close": "关闭聊天"
+    },
+    "welcome": {
+      "title": "我能帮您什么？",
+      "description": "请随时询问有关使用 LiteMaaS 的任何问题。我可以帮助您进行设置、配置和故障排除。"
+    },
+    "input": {
+      "placeholder": "输入您的问题..."
+    },
+    "messages": {
+      "blocked": "我无法回应该请求。",
+      "error": "出了点问题。请重试。",
+      "streamError": "响应过程中发生错误。"
+    },
+    "actions": {
+      "stop": "停止生成",
+      "retry": "重试",
+      "newConversation": "新对话"
+    },
+    "feedback": {
+      "helpful": "回复有帮助",
+      "notHelpful": "回复没有帮助"
+    },
+    "status": {
+      "unavailable": "支持助手当前不可用",
+      "connecting": "连接中...",
+      "rateLimit": "消息过多。请稍候。"
+    }
   }
 }

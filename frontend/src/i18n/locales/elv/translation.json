@@ -2049,5 +2049,42 @@
       "roleConflict": "Varad-Glaemscaul",
       "roleConflictDesc": "Aran a Aran-leithron barad glaemscatha. Aran-varad tiri orthor."
     }
+  },
+  "supportChat": {
+    "toggle": {
+      "tooltip": "Ortheri-Curunír",
+      "ariaLabel": "Nestad ortheri athrabeth"
+    },
+    "ariaLabel": "Ortheri athrabeth curunír",
+    "header": {
+      "title": "Ortheri-Curunír",
+      "close": "Edlothad athrabeth"
+    },
+    "welcome": {
+      "title": "Man le nathon?",
+      "description": "Cenich nin am LiteMaaS. Ortherin le vi hestad, manad, a nethad."
+    },
+    "input": {
+      "placeholder": "Teithach i chen lín..."
+    },
+    "messages": {
+      "blocked": "Ú-orthoron sen.",
+      "error": "Naeg tollen. Athrado adel.",
+      "streamError": "Naeg vi i dangweth."
+    },
+    "actions": {
+      "stop": "Daro i odhril",
+      "retry": "Athrado",
+      "newConversation": "Sîr athrabeth"
+    },
+    "feedback": {
+      "helpful": "Dangweth orthui",
+      "notHelpful": "Dangweth ú-orthui"
+    },
+    "status": {
+      "unavailable": "Ortheri-curunír ú-thír sí",
+      "connecting": "Gwaediad...",
+      "rateLimit": "Taith limp. Daro aes."
+    }
   }
 }

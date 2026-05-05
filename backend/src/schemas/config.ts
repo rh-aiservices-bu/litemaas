@@ -28,6 +28,11 @@ export const ConfigResponseSchema = Type.Object(
         { description: 'Configured currency for monetary value display' },
       ),
     ),
+    supportChatEnabled: Type.Optional(
+      Type.Boolean({
+        description: 'Whether the support chat assistant feature is enabled',
+      }),
+    ),
     // Legacy fields for backwards compatibility
     litellmApiUrl: Type.Optional(
       Type.String({

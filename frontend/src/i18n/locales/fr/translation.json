@@ -2049,5 +2049,42 @@
       "roleConflict": "Conflit de Rôles",
       "roleConflictDesc": "Les rôles Administrateur et Administrateur-lecture seule sont en conflit. Le rôle Administrateur aura la priorité."
     }
+  },
+  "supportChat": {
+    "toggle": {
+      "tooltip": "Assistant Support",
+      "ariaLabel": "Basculer le chat de support"
+    },
+    "ariaLabel": "Assistant de chat de support",
+    "header": {
+      "title": "Assistant Support",
+      "close": "Fermer le chat"
+    },
+    "welcome": {
+      "title": "Comment puis-je vous aider ?",
+      "description": "Posez-moi toute question sur l'utilisation de LiteMaaS. Je peux aider avec l'installation, la configuration et le dépannage."
+    },
+    "input": {
+      "placeholder": "Tapez votre question..."
+    },
+    "messages": {
+      "blocked": "Je ne suis pas en mesure de répondre à cette demande.",
+      "error": "Une erreur s'est produite. Veuillez réessayer.",
+      "streamError": "Une erreur s'est produite lors de la réponse."
+    },
+    "actions": {
+      "stop": "Arrêter la génération",
+      "retry": "Réessayer",
+      "newConversation": "Nouvelle conversation"
+    },
+    "feedback": {
+      "helpful": "La réponse a été utile",
+      "notHelpful": "La réponse n'a pas été utile"
+    },
+    "status": {
+      "unavailable": "L'assistant de support est actuellement indisponible",
+      "connecting": "Connexion...",
+      "rateLimit": "Trop de messages. Veuillez patienter un instant."
+    }
   }
 }

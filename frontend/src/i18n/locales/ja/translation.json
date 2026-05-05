@@ -2049,5 +2049,42 @@
       "roleConflict": "役割の競合",
       "roleConflictDesc": "管理者と管理者（読み取り専用）の役割が競合しています。管理者の役割が優先されます。"
     }
+  },
+  "supportChat": {
+    "toggle": {
+      "tooltip": "サポートアシスタント",
+      "ariaLabel": "サポートチャットを切り替え"
+    },
+    "ariaLabel": "サポートチャットアシスタント",
+    "header": {
+      "title": "サポートアシスタント",
+      "close": "チャットを閉じる"
+    },
+    "welcome": {
+      "title": "どのようにお手伝いできますか？",
+      "description": "LiteMaaSの使用について何でもお聞きください。セットアップ、設定、トラブルシューティングをお手伝いします。"
+    },
+    "input": {
+      "placeholder": "質問を入力してください..."
+    },
+    "messages": {
+      "blocked": "そのリクエストには応答できません。",
+      "error": "問題が発生しました。もう一度お試しください。",
+      "streamError": "応答中にエラーが発生しました。"
+    },
+    "actions": {
+      "stop": "生成を停止",
+      "retry": "再試行",
+      "newConversation": "新しい会話"
+    },
+    "feedback": {
+      "helpful": "回答が役に立った",
+      "notHelpful": "回答が役に立たなかった"
+    },
+    "status": {
+      "unavailable": "サポートアシスタントは現在利用できません",
+      "connecting": "接続中...",
+      "rateLimit": "メッセージが多すぎます。しばらくお待ちください。"
+    }
   }
 }

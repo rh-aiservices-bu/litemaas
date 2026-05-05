@@ -44,6 +44,8 @@ export interface BackendConfig {
   adminAnalytics: AdminAnalyticsPublicConfig;
   // Currency configuration
   currency?: CurrencySettings;
+  /** Whether the support chat assistant feature is enabled */
+  supportChatEnabled?: boolean;
   // Authentication provider type
   authProvider?: 'openshift' | 'oidc';
   // Legacy fields for backwards compatibility

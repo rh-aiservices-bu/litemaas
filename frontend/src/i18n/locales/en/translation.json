@@ -2048,5 +2048,42 @@
       "roleConflict": "Role Conflict",
       "roleConflictDesc": "Admin and Admin-readonly roles conflict. Admin role will take precedence."
     }
+  },
+  "supportChat": {
+    "toggle": {
+      "tooltip": "Support Assistant",
+      "ariaLabel": "Toggle support chat"
+    },
+    "ariaLabel": "Support chat assistant",
+    "header": {
+      "title": "Support Assistant",
+      "close": "Close chat"
+    },
+    "welcome": {
+      "title": "How can I help you?",
+      "description": "Ask me anything about using LiteMaaS. I can help with setup, configuration, and troubleshooting."
+    },
+    "input": {
+      "placeholder": "Type your question..."
+    },
+    "messages": {
+      "blocked": "I'm unable to respond to that request.",
+      "error": "Something went wrong. Please try again.",
+      "streamError": "An error occurred during the response."
+    },
+    "actions": {
+      "stop": "Stop generating",
+      "retry": "Retry",
+      "newConversation": "New conversation"
+    },
+    "feedback": {
+      "helpful": "Response was helpful",
+      "notHelpful": "Response was not helpful"
+    },
+    "status": {
+      "unavailable": "Support assistant is currently unavailable",
+      "connecting": "Connecting...",
+      "rateLimit": "Too many messages. Please wait a moment."
+    }
   }
 }

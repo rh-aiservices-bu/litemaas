@@ -59,6 +59,7 @@ export default async function configRoutes(fastify: FastifyInstance) {
         usageCacheTtlMinutes: Number(fastify.config.USAGE_CACHE_TTL_MINUTES),
         environment: fastify.config.NODE_ENV === 'production' ? 'production' : 'development',
         currency,
+        supportChatEnabled: !!fastify.config.SUPPORT_AGENT_URL,
       };
 
       fastify.log.debug({ config }, 'Returning public configuration');
