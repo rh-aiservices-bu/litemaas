@@ -176,6 +176,31 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
         }
       }
 
+      // Check if it's a read-only admin API key
+      if (token.startsWith('ltm_readonly_')) {
+        const isValidReadonlyKey = await fastify.validateAdminReadonlyApiKey(token);
+        if (isValidReadonlyKey) {
+          const readonlyUser = {
+            userId: 'admin-readonly-api-key',
+            username: 'admin-readonly-api',
+            email: 'admin-readonly@litemaas.local',
+            name: 'Admin Read-Only API Key',
+            roles: ['admin-readonly', 'api'],
+            iat: Math.floor(Date.now() / 1000),
+            exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60,
+          };
+
+          (request as AuthenticatedRequest).user = readonlyUser;
+          fastify.log.debug(
+            { keyPrefix: token.substring(0, 18) + '...' },
+            'Admin read-only API key authentication successful',
+          );
+          return;
+        } else {
+          throw new Error('Invalid admin read-only API key');
+        }
+      }
+
       // Check if it's a user API key (for external API access)
       if (token.startsWith('sk-')) {
         const keyValidation = await fastify.validateUserApiKey(token);
@@ -346,6 +371,24 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
     return isValid;
   });
 
+  // Admin read-only API key validation
+  fastify.decorate('validateAdminReadonlyApiKey', async (apiKey: string): Promise<boolean> => {
+    const validReadonlyKeys = process.env.ADMIN_READONLY_API_KEYS?.split(',') || [];
+    const isValid = validReadonlyKeys.includes(apiKey);
+
+    if (isValid) {
+      fastify.log.info(
+        {
+          keyPrefix: apiKey.substring(0, 18) + '...',
+          ip: 'unknown',
+        },
+        'Admin read-only API key used',
+      );
+    }
+
+    return isValid;
+  });
+
   // User API key validation (delegated to ApiKeyService)
   fastify.decorate('validateUserApiKey', async (apiKey: string) => {
     try {
@@ -403,6 +446,7 @@ declare module 'fastify' {
       refreshToken: string,
     ) => Promise<import('../services/token.service').TokenPair | null>;
     validateAdminApiKey: (apiKey: string) => Promise<boolean>;
+    validateAdminReadonlyApiKey: (apiKey: string) => Promise<boolean>;
     validateUserApiKey: (
       apiKey: string,
     ) => Promise<import('../types/api-key.types.js').ApiKeyValidation>;

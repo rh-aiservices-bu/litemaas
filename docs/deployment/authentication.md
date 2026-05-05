@@ -76,8 +76,11 @@ OAUTH_CALLBACK_URL=http://localhost:8081/api/auth/callback
 # OIDC_GROUPS_CLAIM=groups
 # OIDC_SCOPES=openid profile email
 
-# Admin API Keys (comma-separated)
+# Admin API Keys (comma-separated, must start with "ltm_admin_")
 ADMIN_API_KEYS=ltm_admin_dev123456789,ltm_admin_test987654321
+
+# Admin Read-Only API Keys (comma-separated, must start with "ltm_readonly_")
+ADMIN_READONLY_API_KEYS=ltm_readonly_dev123456789
 
 # Development Settings
 ALLOWED_FRONTEND_ORIGINS=localhost:3000,localhost:3001,127.0.0.1:3000
@@ -102,6 +105,7 @@ OPENSHIFT_API_URL=https://api.your-cluster.com:6443
 
 # Use strong, randomly generated keys
 ADMIN_API_KEYS=ltm_admin_prod_<32-char-random-string>
+ADMIN_READONLY_API_KEYS=ltm_readonly_prod_<32-char-random-string>
 
 # Ensure proper OAuth/OIDC configuration
 OAUTH_REDIRECT_URI=https://your-production-domain/api/auth/callback

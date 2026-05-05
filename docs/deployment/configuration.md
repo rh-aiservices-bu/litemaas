@@ -340,6 +340,7 @@ REDIS_PORT=6379
 | Variable                   | Description                              | Default                                                       | Required |
 | -------------------------- | ---------------------------------------- | ------------------------------------------------------------- | -------- |
 | `ADMIN_API_KEYS`           | Comma-separated admin API keys (each key **must** start with `ltm_admin_`) | -                                                             | No       |
+| `ADMIN_READONLY_API_KEYS`  | Comma-separated read-only admin API keys (each key **must** start with `ltm_readonly_`) | -                                                             | No       |
 | `RATE_LIMIT_MAX`           | Max backend API requests per time window | `100`                                                         | No       |
 | `RATE_LIMIT_TIME_WINDOW`   | Backend API rate limit time window       | `1m`                                                          | No       |
 | `ALLOWED_FRONTEND_ORIGINS` | Comma-separated allowed origins          | `localhost:3000,localhost:3001,127.0.0.1:3000,127.0.0.1:3001` | No       |
@@ -348,6 +349,7 @@ REDIS_PORT=6379
 
 ```bash
 ADMIN_API_KEYS=ltm_admin_key1,ltm_admin_key2,ltm_admin_key3
+ADMIN_READONLY_API_KEYS=ltm_readonly_key1,ltm_readonly_key2
 
 # Backend API rate limiting (protects management endpoints)
 RATE_LIMIT_MAX=200                    # 200 backend API calls per time window
@@ -670,6 +672,7 @@ BACKUP_STORAGE_PATH=/var/data/litemaas/backups
 
 # Security
 ADMIN_API_KEYS=ltm_admin_${ADMIN_KEY_1},ltm_admin_${ADMIN_KEY_2}
+ADMIN_READONLY_API_KEYS=ltm_readonly_${READONLY_KEY_1}
 RATE_LIMIT_MAX=1000
 RATE_LIMIT_TIME_WINDOW=5m
 ALLOWED_FRONTEND_ORIGINS=app.production.com,www.production.com
