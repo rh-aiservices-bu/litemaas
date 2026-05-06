@@ -21,6 +21,7 @@ import MessageBox from '@patternfly/chatbot/dist/dynamic/MessageBox';
 import '@patternfly/chatbot/dist/css/main.css';
 
 import { assistantService } from '../services/assistant.service';
+import type { MessageBoxHandle } from '@patternfly/chatbot/dist/dynamic/MessageBox';
 import type { SupportChatMessage } from '../types/supportChat';
 
 import userAvatarImg from '../assets/images/avatar-placeholder.svg';
@@ -36,7 +37,7 @@ const SupportChat: React.FC = () => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const abortControllerRef = useRef<AbortController | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messageBoxRef = useRef<MessageBoxHandle>(null);
 
   useEffect(() => {
     assistantService
@@ -46,9 +47,7 @@ const SupportChat: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    messageBoxRef.current?.scrollToBottom({ behavior: 'smooth' });
   }, [messages]);
 
   const generateId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -214,7 +213,7 @@ const SupportChat: React.FC = () => {
           </ChatbotHeaderActions>
         </ChatbotHeader>
         <ChatbotContent>
-          <MessageBox>
+          <MessageBox ref={messageBoxRef}>
             {messages.length === 0 ? (
               <ChatbotWelcomePrompt
                 title={t('supportChat.welcome.title')}
