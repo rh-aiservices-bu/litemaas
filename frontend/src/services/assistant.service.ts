@@ -66,6 +66,7 @@ class AssistantService {
     const reader = response.body.getReader();
     const decoder = new TextDecoder();
     let buffer = '';
+    let currentEventType = '';
 
     try {
       // eslint-disable-next-line no-constant-condition
@@ -77,8 +78,6 @@ class AssistantService {
         const lines = buffer.split('\n');
         buffer = lines.pop() || '';
 
-        let currentEventType = '';
-
         for (const line of lines) {
           if (line.startsWith('event: ')) {
             currentEventType = line.slice(7).trim();
@@ -88,7 +87,8 @@ class AssistantService {
 
             try {
               const data = JSON.parse(dataStr);
-              const event = this.parseSSEEvent(currentEventType, data);
+              const resolvedType = currentEventType || this.inferEventType(data);
+              const event = this.parseSSEEvent(resolvedType, data);
               if (event) {
                 this.handleSSEEvent(event, callbacks);
               }
@@ -103,6 +103,14 @@ class AssistantService {
     } finally {
       reader.releaseLock();
     }
+  }
+
+  private inferEventType(data: Record<string, unknown>): string {
+    if ('chunk' in data) return 'chunk';
+    if ('retract_chunk' in data) return 'retract_chunk';
+    if ('done' in data) return 'done';
+    if ('error' in data) return 'error';
+    return '';
   }
 
   private parseSSEEvent(

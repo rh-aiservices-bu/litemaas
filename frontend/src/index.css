@@ -121,11 +121,15 @@ code {
 }
 
 .pf-chatbot__header {
-  padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md);
+  padding: var(--pf-t--global--spacer--xxs) var(--pf-t--global--spacer--xxs);
 }
 
 .pf-chatbot__message {
   padding-bottom: var(--pf-t--global--spacer--md);
+}
+
+.pf-chatbot__message-textarea {
+  margin-top: 0.75rem !important;
 }
 
 .pf-chatbot__footer-container {
