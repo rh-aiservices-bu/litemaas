@@ -111,6 +111,11 @@ code {
   }
 }
 
+/* Ensure chatbot toggle appears above PatternFly Drawer content (z-index: 100) and Page masthead (z-index: 300) */
+.pf-v6-c-button.pf-chatbot__button {
+  z-index: var(--pf-t--global--z-index--md);
+}
+
 .chat-header {
   background-color: #0084ff !important;
   border-top-left-radius: 10px !important;
