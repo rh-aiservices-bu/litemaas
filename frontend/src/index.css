@@ -111,9 +111,25 @@ code {
   }
 }
 
-/* Ensure chatbot toggle appears above PatternFly Drawer content (z-index: 100) and Page masthead (z-index: 300) */
+/* Support chat overrides */
 .pf-v6-c-button.pf-chatbot__button {
   z-index: var(--pf-t--global--z-index--md);
+}
+
+.pf-chatbot--default {
+  border: 1px solid var(--pf-t--global--border--color--default);
+}
+
+.pf-chatbot__header {
+  padding: var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--md);
+}
+
+.pf-chatbot__message {
+  padding-bottom: var(--pf-t--global--spacer--md);
+}
+
+.pf-chatbot__footer-container {
+  padding: 0 var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--sm) var(--pf-t--global--spacer--sm);
 }
 
 .chat-header {
