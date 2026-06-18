@@ -725,6 +725,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         properties: {
           userId: { type: 'string' },
         },
+        required: ['userId'],
       },
       response: {
         200: {
@@ -736,10 +737,10 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: [fastify.authenticate, fastify.requirePermission('subscriptions:write')],
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:subscriptions:write')],
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
-      const { userId } = request.body as { userId?: string };
+      const { userId } = request.body as { userId: string };
 
       try {
         const resetCount = await subscriptionService.resetQuotas(userId);
