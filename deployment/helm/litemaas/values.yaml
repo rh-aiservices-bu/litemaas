@@ -121,6 +121,13 @@ redis:
     repository: redis
     tag: "7-alpine"
 
+  auth:
+    # -- Redis password (CHANGE THIS). Set to "" to disable authentication.
+    password: changeme
+    # -- Use an existing Secret instead of creating one.
+    # Must contain key: password
+    existingSecret: ""
+
   resources:
     requests:
       memory: "64Mi"

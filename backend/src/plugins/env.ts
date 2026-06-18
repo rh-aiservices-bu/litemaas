@@ -36,6 +36,7 @@ const envSchema = Type.Object({
   // Redis (optional — used to flush LiteLLM's cache after model CRUD)
   REDIS_HOST: Type.Optional(Type.String()),
   REDIS_PORT: Type.String({ default: '6379' }),
+  REDIS_PASSWORD: Type.Optional(Type.String()),
 
   // LiteLLM
   LITELLM_API_URL: Type.String({ default: 'http://localhost:4000' }),
