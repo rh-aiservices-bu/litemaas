@@ -22,6 +22,13 @@ nameOverride: ""
 # -- Override fully qualified app name
 fullnameOverride: ""
 
+# -- Network policy configuration
+networkPolicy:
+  # -- Enable NetworkPolicies for network segmentation.
+  # When enabled, deploys deny-all-ingress default and per-component allow rules
+  # so only expected traffic flows are permitted (e.g., only backend can reach PostgreSQL).
+  enabled: false
+
 # -- ServiceAccount configuration
 serviceAccount:
   # -- Create a ServiceAccount
