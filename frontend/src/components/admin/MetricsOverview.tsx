@@ -36,6 +36,7 @@ import {
 } from '../../utils/chartDataTransformers';
 import { formatNumber, formatCurrency } from '../../utils/formatters';
 import { useCurrency } from '../../contexts/ConfigContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { MetricCard, type TrendData } from '../usage/metrics';
 import { TopUsersTable, type UserSummary } from './TopUsersTable';
 import FullScreenChartModal from '../common/FullScreenChartModal';
@@ -126,11 +127,12 @@ export interface MetricsOverviewProps {
 
 /**
  * MetricsOverview Component
- * Main dashboard component that displays admin usage analytics overview
+ * Main dashboard component that displays usage analytics overview
  */
 const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
   const { t } = useTranslation();
   const { currencyCode, currencySymbol } = useCurrency();
+  const { user } = useAuth();
   const [selectedMetric, setSelectedMetric] = useState<
     'requests' | 'tokens' | 'cost' | 'prompt_tokens' | 'completion_tokens'
   >('requests');
@@ -148,6 +150,9 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
   >('requests');
   const [isHeatmapSelectOpen, setIsHeatmapSelectOpen] = useState(false);
   const [isHeatmapExpanded, setIsHeatmapExpanded] = useState(false);
+
+  const roles = user?.roles || [];
+  const isAdmin = roles.includes('admin') || roles.includes('admin-readonly');
 
   const getSuccessRateVariant = (rate: number): 'default' | 'success' | 'warning' | 'danger' => {
     if (rate >= 95) return 'success';
@@ -762,23 +767,25 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
         </FullScreenChartModal>
       </GridItem>
 
-      {/* Row 4 - Top Users Table */}
-      <GridItem lg={6} md={12} sm={12}>
-        <TopUsersTable
-          topUsers={topUsers}
-          loading={loading}
-          onExpand={() => setIsTopUsersExpanded(true)}
-        />
+      {/* Row 4 - Top Users Table (admin only) */}
+      {isAdmin && (
+        <GridItem lg={6} md={12} sm={12}>
+          <TopUsersTable
+            topUsers={topUsers}
+            loading={loading}
+            onExpand={() => setIsTopUsersExpanded(true)}
+          />
 
-        {/* Full Screen Modal for Top Users */}
-        <FullScreenChartModal
-          isOpen={isTopUsersExpanded}
-          onClose={() => setIsTopUsersExpanded(false)}
-          title={t('adminUsage.charts.topUsers')}
-        >
-          <TopUsersTable topUsers={topUsers} loading={loading} />
-        </FullScreenChartModal>
-      </GridItem>
+          {/* Full Screen Modal for Top Users */}
+          <FullScreenChartModal
+            isOpen={isTopUsersExpanded}
+            onClose={() => setIsTopUsersExpanded(false)}
+            title={t('adminUsage.charts.topUsers')}
+          >
+            <TopUsersTable topUsers={topUsers} loading={loading} />
+          </FullScreenChartModal>
+        </GridItem>
+      )}
     </Grid>
   );
 };

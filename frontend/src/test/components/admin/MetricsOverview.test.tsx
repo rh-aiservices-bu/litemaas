@@ -5,6 +5,7 @@ import { I18nextProvider } from 'react-i18next';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import i18n from '../../../i18n';
 import MetricsOverview, { type GlobalMetrics } from '../../../components/admin/MetricsOverview';
+import { AuthContext } from '../../../contexts/AuthContext';
 
 // Mock chart components to simplify testing
 vi.mock('../../../components/charts', () => ({
@@ -262,18 +263,43 @@ describe('MetricsOverview', () => {
     ...overrides,
   });
 
-  const renderComponent = (props: Partial<Parameters<typeof MetricsOverview>[0]> = {}) => {
+  const renderComponent = (
+    props: Partial<Parameters<typeof MetricsOverview>[0]> = {},
+    userOverrides?: { roles?: string[] } | null,
+  ) => {
     const defaultProps = {
       data: createMockData(),
       loading: false,
     };
 
+    const authContextValue = {
+      user:
+        userOverrides === null
+          ? null
+          : {
+              id: 'admin-user-id',
+              username: 'admin.user',
+              email: 'admin@example.com',
+              name: 'Admin User',
+              roles: ['admin'],
+              ...userOverrides,
+            },
+      loading: false,
+      isAuthenticated: userOverrides !== null,
+      login: vi.fn(),
+      loginAsAdmin: vi.fn(),
+      logout: vi.fn(async () => {}),
+      refreshUser: vi.fn(async () => {}),
+    };
+
     return render(
-      <QueryClientProvider client={queryClient}>
-        <I18nextProvider i18n={i18n}>
-          <MetricsOverview {...defaultProps} {...props} />
-        </I18nextProvider>
-      </QueryClientProvider>,
+      <AuthContext.Provider value={authContextValue}>
+        <QueryClientProvider client={queryClient}>
+          <I18nextProvider i18n={i18n}>
+            <MetricsOverview {...defaultProps} {...props} />
+          </I18nextProvider>
+        </QueryClientProvider>
+      </AuthContext.Provider>,
     );
   };
 
@@ -629,6 +655,30 @@ describe('MetricsOverview', () => {
       // Top users expand might be from the table itself, but we can test the modal functionality
       // Since we mocked the table, we can't directly test the onExpand callback
       // But we verified the modal infrastructure works in other tests
+    });
+
+    it('should show TopUsersTable when isAdmin is true', () => {
+      renderComponent();
+
+      expect(screen.getByTestId('top-users-table')).toBeInTheDocument();
+    });
+
+    it('should hide TopUsersTable when isAdmin is false', () => {
+      renderComponent({}, { roles: ['user'] });
+
+      expect(screen.queryByTestId('top-users-table')).not.toBeInTheDocument();
+    });
+
+    it('should show TopUsersTable for admin-readonly users', () => {
+      renderComponent({}, { roles: ['admin-readonly'] });
+
+      expect(screen.getByTestId('top-users-table')).toBeInTheDocument();
+    });
+
+    it('should hide TopUsersTable when no authenticated user is available', () => {
+      renderComponent({}, null);
+
+      expect(screen.queryByTestId('top-users-table')).not.toBeInTheDocument();
     });
   });
 });
