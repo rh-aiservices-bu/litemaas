@@ -14,7 +14,6 @@ describe('Config Routes Integration', () => {
     // Set test environment
     process.env.NODE_ENV = 'test';
     process.env.OAUTH_MOCK_ENABLED = 'true'; // Enable mock OAuth for testing
-    process.env.ALLOWED_FRONTEND_ORIGINS = ''; // Disable frontend bypass
 
     app = await createApp({ logger: false });
     await app.ready();

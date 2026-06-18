@@ -8,7 +8,7 @@ describe('Security Tests', () => {
 
   beforeAll(async () => {
     // Use strict authentication mode for security tests
-    app = await createTestApp({ strictAuth: true, logger: false });
+    app = await createTestApp({ logger: false });
   });
 
   afterAll(async () => {

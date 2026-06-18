@@ -126,7 +126,7 @@ const swaggerPlugin: FastifyPluginAsync = async (fastify) => {
     schema: {
       hide: true,
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: (_request, reply) => {
       reply.send(fastify.swagger());
     },

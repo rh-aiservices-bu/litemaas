@@ -16,7 +16,6 @@ describe('Admin Users Routes Integration', () => {
 
   beforeAll(async () => {
     process.env.NODE_ENV = 'test';
-    process.env.ALLOWED_FRONTEND_ORIGINS = '';
 
     app = await createApp({ logger: false });
     await app.ready();

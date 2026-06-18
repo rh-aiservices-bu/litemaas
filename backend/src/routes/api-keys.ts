@@ -57,7 +57,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         200: ApiKeyResponseSchema,
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { page = 1, limit = 20, subscriptionId, modelIds, isActive } = request.query;
@@ -143,7 +143,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         200: SingleApiKeyResponseSchema,
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
@@ -190,7 +190,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         201: SingleApiKeyResponseSchema,
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
       const body = request.body;
@@ -348,7 +348,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
@@ -407,7 +407,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
@@ -537,7 +537,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
@@ -715,7 +715,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
@@ -762,7 +762,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
 
@@ -985,11 +985,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: [
-      fastify.authenticateWithDevBypass,
-      fastify.requireRecentAuth,
-      fastify.keyOperationRateLimit,
-    ],
+    preHandler: [fastify.authenticate, fastify.requireRecentAuth, fastify.keyOperationRateLimit],
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
