@@ -47,6 +47,7 @@ DB_CONNECTION_TIMEOUT=10000
 | `K8S_API_SKIP_TLS_VERIFY` | Skip TLS verification for Kubernetes API calls (⚠️ OpenShift only)   | -                                         | No       |
 | `OIDC_GROUPS_CLAIM`       | Claim name in OIDC userinfo for group memberships                    | `groups`                                  | No       |
 | `OIDC_SCOPES`             | Override OIDC scopes (space-separated)                               | `openid profile email`                    | No       |
+| `OAUTH_MOCK_ENABLED`      | Enable mock OAuth flow, bypassing real provider. Also enabled automatically when `NODE_ENV=development`. | `false`                                   | No       |
 
 ### Authentication Provider
 

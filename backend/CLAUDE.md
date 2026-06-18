@@ -122,7 +122,7 @@ For complete schema and caching details, see [`docs/architecture/database-schema
 
 **API Keys**: `Authorization: Bearer sk-litellm-{key}`
 
-**Development**: `OAUTH_MOCK_ENABLED=true` for auto-login (also enabled by default when `NODE_ENV=development`).
+**Development**: `OAUTH_MOCK_ENABLED=true` enables mock authentication, bypassing real OAuth (also enabled by default when `NODE_ENV=development`).
 
 For details, see [`docs/features/user-roles-administration.md`](../docs/features/user-roles-administration.md) and [`docs/deployment/authentication.md`](../docs/deployment/authentication.md).
 

@@ -320,7 +320,7 @@ For detailed patterns, see [`docs/development/accessibility/`](../docs/developme
 
 The frontend has no build-time `VITE_*` configuration of its own. At runtime, the container is configured via `BACKEND_URL` (used to proxy `/api` requests). Auth-mode signaling — including whether mock auth is enabled — comes from the backend's public `GET /api/v1/config` endpoint (`authMode: 'oauth' | 'mock'`), consumed by `LoginPage.tsx`. To toggle mock auth, set `OAUTH_MOCK_ENABLED` on the **backend**, not the frontend.
 
-See [`docs/deployment/configuration.md`](../docs/deployment/configuration.md) for complete list.
+See [`docs/deployment/containers.md`](../docs/deployment/containers.md) for container configuration and [`docs/deployment/configuration.md`](../docs/deployment/configuration.md) for backend environment variables.
 
 ## 🚨 Error Handling Architecture
 
