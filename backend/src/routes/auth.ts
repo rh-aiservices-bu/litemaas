@@ -114,8 +114,9 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     handler: async (request, _reply) => {
-      // Only allow in development or with explicit dev token environment variable
-      if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_DEV_TOKENS) {
+      // Only allow in development or test environments
+      const devAllowedEnvs = ['development', 'test'];
+      if (!devAllowedEnvs.includes(process.env.NODE_ENV || '')) {
         throw fastify.createError(404, 'Endpoint not available');
       }
 
@@ -194,7 +195,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     handler: async (request, reply) => {
-      if (process.env.NODE_ENV === 'production') {
+      const devAllowedEnvs = ['development', 'test'];
+      if (!devAllowedEnvs.includes(process.env.NODE_ENV || '')) {
         throw fastify.createNotFoundError('Endpoint');
       }
 
@@ -353,7 +355,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     handler: async (_request, _reply) => {
-      if (process.env.NODE_ENV === 'production') {
+      const devAllowedEnvs = ['development', 'test'];
+      if (!devAllowedEnvs.includes(process.env.NODE_ENV || '')) {
         throw fastify.createNotFoundError('Endpoint');
       }
 

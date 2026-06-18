@@ -79,9 +79,8 @@ OAUTH_CALLBACK_URL=http://localhost:8081/api/auth/callback
 # Admin API Keys (comma-separated)
 ADMIN_API_KEYS=ltm_admin_dev123456789,ltm_admin_test987654321
 
-# Development Settings
-ALLOWED_FRONTEND_ORIGINS=localhost:3000,localhost:3001,127.0.0.1:3000
-ALLOW_DEV_TOKENS=true
+# Development Settings (dev-token and mock-login endpoints are automatically
+# available when NODE_ENV=development or NODE_ENV=test)
 
 # CORS Configuration
 CORS_ORIGIN=http://localhost:3000,http://localhost:3001
@@ -96,9 +95,8 @@ CORS_ORIGIN=http://localhost:3000,http://localhost:3001
 AUTH_PROVIDER=openshift  # or 'oidc' for standard OIDC providers
 OPENSHIFT_API_URL=https://api.your-cluster.com:6443
 
-# Remove or comment out development settings
-# ALLOWED_FRONTEND_ORIGINS=
-# ALLOW_DEV_TOKENS=false
+# Dev-token and mock-login endpoints are automatically disabled
+# when NODE_ENV=production (no configuration needed)
 
 # Use strong, randomly generated keys
 ADMIN_API_KEYS=ltm_admin_prod_<32-char-random-string>
@@ -789,8 +787,6 @@ graph TD
 ```bash
 # Production .env
 NODE_ENV=production
-ALLOW_DEV_TOKENS=false
-# Remove ALLOWED_FRONTEND_ORIGINS
 JWT_SECRET=<strong-production-secret>
 ADMIN_API_KEYS=<strong-production-keys>
 ```
