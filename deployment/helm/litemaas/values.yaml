@@ -154,6 +154,48 @@ litellm:
     # Must contain keys: database-url, master-key, ui-username, ui-password
     existingSecret: ""
 
+  # -- Enable SSL verification for model API calls (set to false for self-signed certs)
+  # ⚠️ Security Warning: Only disable for development/testing or when using internal
+  # services with self-signed certificates (e.g., KServe on OpenShift)
+  sslVerify: true
+
+  # -- Extra environment variables for LiteLLM container
+  # Use this to inject custom CA bundle environment variables for production SSL setup
+  # Example:
+  #   extraEnv:
+  #     - name: REQUESTS_CA_BUNDLE
+  #       value: /etc/ssl/certs/kserve-ca-bundle.crt
+  #     - name: SSL_CERT_FILE
+  #       value: /etc/ssl/certs/kserve-ca-bundle.crt
+  #     - name: CURL_CA_BUNDLE
+  #       value: /etc/ssl/certs/kserve-ca-bundle.crt
+  #     # Set to "0" to disable Python's default HTTPS certificate verification (PEP 493)
+  #     - name: PYTHONHTTPSVERIFY
+  #       value: "0"
+  extraEnv: []
+
+  # -- Extra volumes for LiteLLM pod
+  # Use this to mount custom CA bundles from ConfigMaps for production SSL setup
+  # Example:
+  #   extraVolumes:
+  #     - name: kserve-ca-bundle
+  #       configMap:
+  #         name: kserve-ca-bundle
+  #         items:
+  #           - key: ca-bundle.crt
+  #             path: kserve-ca-bundle.crt
+  extraVolumes: []
+
+  # -- Extra volume mounts for LiteLLM container
+  # Use this to mount custom CA bundle files for production SSL setup
+  # Example:
+  #   extraVolumeMounts:
+  #     - name: kserve-ca-bundle
+  #       mountPath: /etc/ssl/certs/kserve-ca-bundle.crt
+  #       subPath: kserve-ca-bundle.crt
+  #       readOnly: true
+  extraVolumeMounts: []
+
   resources:
     requests:
       memory: "512Mi"

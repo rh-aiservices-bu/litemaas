@@ -35,6 +35,7 @@ Welcome to the LiteMaaS documentation! This guide will help you understand, depl
 - **[Kustomize Deployment](deployment/kustomize-deployment.md)** - Kustomize-based deployment for OpenShift
 - **[Container Deployment](deployment/containers.md)** - Docker/Podman deployment
 - **[Production Guide](deployment/production-guide.md)** - Production best practices
+- **[LiteLLM SSL Configuration](deployment/litellm-ssl-configuration.md)** - SSL setup for internal services (KServe, self-signed certs)
 - **[Upgrading to v0.4.0](deployment/upgrading-to-v0.4.md)** - Migration guide for v0.3.x deployments (LiteLLM fork + Redis)
 - **[Upgrading to v0.2.0](deployment/upgrading-to-v0.2.md)** - Migration guide for v0.1.x deployments
 - **[Authentication Setup](deployment/authentication.md)** - OAuth/OIDC configuration

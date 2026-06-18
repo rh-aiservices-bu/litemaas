@@ -20,6 +20,10 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "litemaas.serviceAccountName" . }}
+      {{- with .Values.litellm.extraVolumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       initContainers:
         {{- include "litemaas.initWaitForDatabase" (dict "context" . "secretName" (include "litemaas.litellm.secretName" .) "secretKey" "database-url") | nindent 8 }}
       containers:
@@ -66,6 +70,18 @@ spec:
             - name: REDIS_PORT
               value: {{ .Values.backend.redis.port | quote }}
             {{- end }}
+            {{- if not .Values.litellm.sslVerify }}
+            # Disable SSL verification for internal services (e.g., KServe with self-signed certs)
+            - name: SSL_VERIFY
+              value: "false"
+            {{- end }}
+            {{- with .Values.litellm.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.litellm.extraVolumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           resources:
             {{- toYaml .Values.litellm.resources | nindent 12 }}
           livenessProbe:

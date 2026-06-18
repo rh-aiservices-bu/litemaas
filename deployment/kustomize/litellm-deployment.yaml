@@ -75,6 +75,10 @@ spec:
               value: 'litellm-redis'
             - name: REDIS_PORT
               value: '6379'
+            # Uncomment to disable SSL verification for internal services with self-signed certs
+            # ⚠️ Security Warning: Only use in development/testing or with trusted internal services
+            # - name: SSL_VERIFY
+            #   value: 'false'
           resources:
             requests:
               memory: '512Mi'
