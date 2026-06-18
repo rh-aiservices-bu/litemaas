@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import i18n from '../../../i18n';
 import MetricsOverview, { type GlobalMetrics } from '../../../components/admin/MetricsOverview';
 import { AuthContext } from '../../../contexts/AuthContext';
+import { type User } from '../../../services/auth.service';
 
 // Mock chart components to simplify testing
 vi.mock('../../../components/charts', () => ({
@@ -265,7 +266,7 @@ describe('MetricsOverview', () => {
 
   const renderComponent = (
     props: Partial<Parameters<typeof MetricsOverview>[0]> = {},
-    userOverrides?: { roles?: string[] } | null,
+    userOverrides?: Partial<User> | null,
   ) => {
     const defaultProps = {
       data: createMockData(),

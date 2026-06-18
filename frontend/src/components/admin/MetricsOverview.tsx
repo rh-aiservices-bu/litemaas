@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Grid,
@@ -153,6 +153,12 @@ const MetricsOverview: React.FC<MetricsOverviewProps> = ({ data, loading }) => {
 
   const roles = user?.roles || [];
   const isAdmin = roles.includes('admin') || roles.includes('admin-readonly');
+
+  useEffect(() => {
+    if (!isAdmin) {
+      setIsTopUsersExpanded(false);
+    }
+  }, [isAdmin]);
 
   const getSuccessRateVariant = (rate: number): 'default' | 'success' | 'warning' | 'danger' => {
     if (rate >= 95) return 'success';
