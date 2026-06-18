@@ -78,8 +78,10 @@ litellm:
       value: /etc/ssl/certs/kserve-ca-bundle.crt
     - name: CURL_CA_BUNDLE
       value: /etc/ssl/certs/kserve-ca-bundle.crt
-    - name: PYTHONHTTPSVERIFY
-      value: /etc/ssl/certs/kserve-ca-bundle.crt
+    # Set to "0" to disable Python's default HTTPS certificate verification (PEP 493)
+    # Only use when CA bundle approach is not possible
+    # - name: PYTHONHTTPSVERIFY
+    #   value: "0"
   
   # Extra volumes - mount ConfigMap containing CA bundle
   extraVolumes:
@@ -245,8 +247,10 @@ litellm:
       value: /etc/ssl/certs/kserve-ca-bundle.crt
     - name: CURL_CA_BUNDLE
       value: /etc/ssl/certs/kserve-ca-bundle.crt
-    - name: PYTHONHTTPSVERIFY
-      value: /etc/ssl/certs/kserve-ca-bundle.crt
+    # Set to "0" to disable Python's default HTTPS certificate verification (PEP 493)
+    # Only use when CA bundle approach is not possible
+    # - name: PYTHONHTTPSVERIFY
+    #   value: "0"
   
   # Mount ConfigMap as volume
   extraVolumes:
