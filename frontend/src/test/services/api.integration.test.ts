@@ -182,6 +182,7 @@ describe('API Client Integration Tests', () => {
   });
 
   afterEach(() => {
+    vi.unstubAllGlobals();
     vi.unstubAllEnvs();
   });
 
