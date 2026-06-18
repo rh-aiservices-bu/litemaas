@@ -123,6 +123,30 @@ describe('Security Tests', () => {
       }
     });
 
+    it('should prevent cross-user session invalidation (IDOR)', async () => {
+      const user1Token = generateTestToken('user-1', ['user']);
+      const user2Token = generateTestToken('user-2', ['user']);
+
+      // User2 attempts to invalidate a session belonging to user1
+      // Even with a valid session ID, it should be rejected because user2 doesn't own it
+      const response = await app.inject({
+        method: 'DELETE',
+        url: '/api/auth/sessions/fake-session-id-belonging-to-user1',
+        headers: { authorization: `Bearer ${user2Token}` },
+      });
+
+      // Should return 404 (session not found or not owned by requesting user)
+      expect(response.statusCode).toBe(404);
+
+      // Verify own session invalidation attempt with non-existent ID also returns 404
+      const ownResponse = await app.inject({
+        method: 'DELETE',
+        url: '/api/auth/sessions/nonexistent-session-id',
+        headers: { authorization: `Bearer ${user1Token}` },
+      });
+      expect(ownResponse.statusCode).toBe(404);
+    });
+
     it('should validate API key authentication alongside JWT', async () => {
       // Test that API key authentication works properly
       const response = await app.inject({
