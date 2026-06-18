@@ -1681,20 +1681,16 @@ export class AdminUsageAggregationService extends BaseService {
             const userMetrics = enrichedData.breakdown.models[modelName].users[userId].metrics;
             userMetrics.api_requests += keyData.metrics.api_requests;
             userMetrics.total_tokens += keyData.metrics.total_tokens;
-            userMetrics.prompt_tokens +=
-              keyData.metrics.prompt_tokens || keyData.metrics.prompt_tokens || 0;
-            userMetrics.completion_tokens +=
-              keyData.metrics.completion_tokens || keyData.metrics.completion_tokens || 0;
+            userMetrics.prompt_tokens += keyData.metrics.prompt_tokens || 0;
+            userMetrics.completion_tokens += keyData.metrics.completion_tokens || 0;
             userMetrics.spend += keyData.metrics.spend;
             userMetrics.successful_requests += keyData.metrics.successful_requests || 0;
             userMetrics.failed_requests += keyData.metrics.failed_requests || 0;
 
             // Aggregate to model metrics
             const modelMetrics = enrichedData.breakdown.models[modelName].metrics;
-            modelMetrics.prompt_tokens +=
-              keyData.metrics.prompt_tokens || keyData.metrics.prompt_tokens || 0;
-            modelMetrics.completion_tokens +=
-              keyData.metrics.completion_tokens || keyData.metrics.completion_tokens || 0;
+            modelMetrics.prompt_tokens += keyData.metrics.prompt_tokens || 0;
+            modelMetrics.completion_tokens += keyData.metrics.completion_tokens || 0;
             modelMetrics.successful_requests += keyData.metrics.successful_requests || 0;
             modelMetrics.failed_requests += keyData.metrics.failed_requests || 0;
 
@@ -1722,10 +1718,8 @@ export class AdminUsageAggregationService extends BaseService {
             const userTotalMetrics = enrichedData.breakdown.users[userId].metrics;
             userTotalMetrics.api_requests += keyData.metrics.api_requests;
             userTotalMetrics.total_tokens += keyData.metrics.total_tokens;
-            userTotalMetrics.prompt_tokens +=
-              keyData.metrics.prompt_tokens || keyData.metrics.prompt_tokens || 0;
-            userTotalMetrics.completion_tokens +=
-              keyData.metrics.completion_tokens || keyData.metrics.completion_tokens || 0;
+            userTotalMetrics.prompt_tokens += keyData.metrics.prompt_tokens || 0;
+            userTotalMetrics.completion_tokens += keyData.metrics.completion_tokens || 0;
             userTotalMetrics.spend += keyData.metrics.spend;
             userTotalMetrics.successful_requests += keyData.metrics.successful_requests || 0;
             userTotalMetrics.failed_requests += keyData.metrics.failed_requests || 0;
@@ -1750,10 +1744,8 @@ export class AdminUsageAggregationService extends BaseService {
             const userModelMetrics = enrichedData.breakdown.users[userId].models[modelName].metrics;
             userModelMetrics.api_requests += keyData.metrics.api_requests;
             userModelMetrics.total_tokens += keyData.metrics.total_tokens;
-            userModelMetrics.prompt_tokens +=
-              keyData.metrics.prompt_tokens || keyData.metrics.prompt_tokens || 0;
-            userModelMetrics.completion_tokens +=
-              keyData.metrics.completion_tokens || keyData.metrics.completion_tokens || 0;
+            userModelMetrics.prompt_tokens += keyData.metrics.prompt_tokens || 0;
+            userModelMetrics.completion_tokens += keyData.metrics.completion_tokens || 0;
             userModelMetrics.spend += keyData.metrics.spend;
             userModelMetrics.successful_requests += keyData.metrics.successful_requests || 0;
             userModelMetrics.failed_requests += keyData.metrics.failed_requests || 0;
@@ -1789,10 +1781,9 @@ export class AdminUsageAggregationService extends BaseService {
             }
             unmappedModelMetrics[modelName].api_requests += keyData.metrics.api_requests || 0;
             unmappedModelMetrics[modelName].total_tokens += keyData.metrics.total_tokens || 0;
-            unmappedModelMetrics[modelName].prompt_tokens +=
-              keyData.metrics.prompt_tokens || keyData.metrics.prompt_tokens || 0;
+            unmappedModelMetrics[modelName].prompt_tokens += keyData.metrics.prompt_tokens || 0;
             unmappedModelMetrics[modelName].completion_tokens +=
-              keyData.metrics.completion_tokens || keyData.metrics.completion_tokens || 0;
+              keyData.metrics.completion_tokens || 0;
             unmappedModelMetrics[modelName].spend += keyData.metrics.spend || 0;
             unmappedModelMetrics[modelName].successful_requests +=
               keyData.metrics.successful_requests || 0;
@@ -1925,40 +1916,13 @@ export class AdminUsageAggregationService extends BaseService {
         }
       });
 
-      // Recalculate global metrics from aggregated model data
-      // This replaces the placeholder values from fetchDailyDataFromLiteLLM with actual success/failure counts
+      // Recalculate global success/failure from aggregated model data
       enrichedData.metrics.successful_requests = 0;
       enrichedData.metrics.failed_requests = 0;
-      enrichedData.metrics.prompt_tokens = 0;
-      enrichedData.metrics.completion_tokens = 0;
       Object.values(enrichedData.breakdown.models).forEach((modelData) => {
         enrichedData.metrics.successful_requests += modelData.metrics.successful_requests;
         enrichedData.metrics.failed_requests += modelData.metrics.failed_requests;
-        enrichedData.metrics.prompt_tokens += modelData.metrics.prompt_tokens;
-        enrichedData.metrics.completion_tokens += modelData.metrics.completion_tokens;
       });
-
-      // Validate token counts: prompt + completion should approximately equal total
-      const calculatedTotal = enrichedData.metrics.prompt_tokens + enrichedData.metrics.completion_tokens;
-      const reportedTotal = enrichedData.metrics.total_tokens;
-      const tokenDifference = Math.abs(calculatedTotal - reportedTotal);
-      const percentDifference = reportedTotal > 0 ? (tokenDifference / reportedTotal) * 100 : 0;
-
-      if (percentDifference > 1) {
-        // More than 1% difference suggests data inconsistency
-        this.fastify.log.warn(
-          {
-            date: dayData.date,
-            prompt_tokens: enrichedData.metrics.prompt_tokens,
-            completion_tokens: enrichedData.metrics.completion_tokens,
-            calculated_total: calculatedTotal,
-            reported_total: reportedTotal,
-            difference: tokenDifference,
-            percent_difference: percentDifference.toFixed(2) + '%',
-          },
-          'Token count validation: prompt + completion does not match total tokens',
-        );
-      }
 
       this.fastify.log.debug(
         {
@@ -2038,13 +2002,13 @@ export class AdminUsageAggregationService extends BaseService {
               metrics,
             };
 
-            // Add unmapped metrics to model totals (to include both mapped and unmapped usage)
+            // Add unmapped prompt/completion/success/failure to model totals.
+            // api_requests, total_tokens, and spend already come from the LiteLLM
+            // aggregate used to initialize the model metrics — only the fields that
+            // were initialized to 0 and summed per-key need the unmapped contribution.
             const modelMetrics = enrichedData.breakdown.models[modelName].metrics;
-            modelMetrics.api_requests += metrics.api_requests;
-            modelMetrics.total_tokens += metrics.total_tokens;
             modelMetrics.prompt_tokens += metrics.prompt_tokens;
             modelMetrics.completion_tokens += metrics.completion_tokens;
-            modelMetrics.spend += metrics.spend;
             modelMetrics.successful_requests += metrics.successful_requests || 0;
             modelMetrics.failed_requests += metrics.failed_requests || 0;
 
@@ -2069,8 +2033,6 @@ export class AdminUsageAggregationService extends BaseService {
         enrichedData.metrics.successful_requests -= skippedRequests;
         enrichedData.metrics.total_tokens -= totalSkippedTokens;
         enrichedData.metrics.spend -= totalSkippedSpend;
-        // Note: prompt_tokens and completion_tokens are recalculated from models later,
-        // so they will automatically exclude skipped values
 
         this.fastify.log.info(
           {
@@ -2096,6 +2058,37 @@ export class AdminUsageAggregationService extends BaseService {
             },
           },
           'Global metrics adjusted to exclude skipped requests',
+        );
+      }
+
+      // Recalculate global prompt/completion from final model totals
+      // (now includes both mapped and unmapped, excludes skipped)
+      enrichedData.metrics.prompt_tokens = 0;
+      enrichedData.metrics.completion_tokens = 0;
+      Object.values(enrichedData.breakdown.models).forEach((modelData) => {
+        enrichedData.metrics.prompt_tokens += modelData.metrics.prompt_tokens;
+        enrichedData.metrics.completion_tokens += modelData.metrics.completion_tokens;
+      });
+
+      // Validate token counts: prompt + completion should approximately equal total
+      const calculatedTotal =
+        enrichedData.metrics.prompt_tokens + enrichedData.metrics.completion_tokens;
+      const reportedTotal = enrichedData.metrics.total_tokens;
+      const tokenDifference = Math.abs(calculatedTotal - reportedTotal);
+      const percentDifference = reportedTotal > 0 ? (tokenDifference / reportedTotal) * 100 : 0;
+
+      if (percentDifference > 1) {
+        this.fastify.log.warn(
+          {
+            date: dayData.date,
+            prompt_tokens: enrichedData.metrics.prompt_tokens,
+            completion_tokens: enrichedData.metrics.completion_tokens,
+            calculated_total: calculatedTotal,
+            reported_total: reportedTotal,
+            difference: tokenDifference,
+            percent_difference: percentDifference.toFixed(2) + '%',
+          },
+          'Token count validation: prompt + completion does not match total tokens',
         );
       }
 
