@@ -126,7 +126,7 @@ describe('Auth Routes Integration', () => {
       expect(response.statusCode).toBe(200);
       const result = JSON.parse(response.body);
       expect(result.user.username).toBe('testuser');
-      expect(result.user.email).toBe('testuser@litemaas.local');
+      expect(result.user.email).toBe('test@example.com');
     });
 
     it('should generate development token with custom roles', async () => {

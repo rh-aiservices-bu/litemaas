@@ -91,7 +91,7 @@ describe('Error Flows Integration', () => {
 
       const result = JSON.parse(response.body);
       expect(result.error.code).toBe('UNAUTHORIZED');
-      expect(result.error.message).toBe('Authentication required');
+      expect(result.error.message).toBe('Invalid or missing authentication token');
       expect(result.requestId).toBeDefined();
       // Note: Basic auth responses don't include statusCode, timestamp fields
     });
