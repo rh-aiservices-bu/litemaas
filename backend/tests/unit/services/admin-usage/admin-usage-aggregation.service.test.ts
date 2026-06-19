@@ -1,11 +1,15 @@
 // backend/tests/unit/services/admin-usage/admin-usage-aggregation.service.test.ts
 
-import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
 import { createTestApp } from '../../../helpers/test-app';
 import { initTestConfig } from '../../../helpers/test-config';
 import { AdminUsageAggregationService } from '../../../../src/services/admin-usage/admin-usage-aggregation.service';
 import { extractProviderFromModel } from '../../../../src/services/admin-usage/admin-usage.utils';
-import type { EnrichedDayData, AdminUsageFilters } from '../../../../src/types/admin-usage.types';
+import type {
+  EnrichedDayData,
+  AdminUsageFilters,
+  LiteLLMDayData,
+} from '../../../../src/types/admin-usage.types';
 
 describe('AdminUsageAggregationService', () => {
   let fastify: any;
@@ -544,6 +548,305 @@ describe('AdminUsageAggregationService', () => {
       expect(openai!.topModels).toHaveLength(1);
       expect(openai!.topModels[0].modelName).toBe('openai/gpt-4');
       expect(openai!.topModels[0].cost).toBe(1.25);
+    });
+  });
+
+  // ============================================================================
+  // enrichWithUserMapping — skipped + unmapped success/failure accounting
+  // ============================================================================
+
+  describe('enrichWithUserMapping: skipped and unmapped success/failure', () => {
+    // Calls the private method directly with DB unavailable (so all non-skipped
+    // keys land in the "unmapped / Unknown User" bucket). This lets us exercise
+    // the full skipped-exclusion and unmapped-folding paths without a real DB.
+    const callEnrich = async (dayData: LiteLLMDayData): Promise<EnrichedDayData> => {
+      return (aggregationService as any).enrichWithUserMapping(dayData);
+    };
+
+    it('should exclude skipped (empty-hash) requests from global successful_requests', async () => {
+      const dayData: LiteLLMDayData = {
+        date: '2025-06-18',
+        metrics: {
+          api_requests: 20,
+          total_tokens: 1000,
+          prompt_tokens: 600,
+          completion_tokens: 400,
+          spend: 0.5,
+          successful_requests: 0,
+          failed_requests: 0,
+        },
+        breakdown: {
+          models: {
+            'openai/gpt-4': {
+              metrics: {
+                api_requests: 20,
+                total_tokens: 1000,
+                prompt_tokens: 600,
+                completion_tokens: 400,
+                spend: 0.5,
+              },
+              api_keys: {
+                // Valid key — will be unmapped (no DB) but still counted
+                hash_valid: {
+                  metrics: {
+                    api_requests: 15,
+                    total_tokens: 800,
+                    prompt_tokens: 500,
+                    completion_tokens: 300,
+                    spend: 0.4,
+                    successful_requests: 14,
+                    failed_requests: 1,
+                  },
+                },
+                // Skipped key — empty string hash, should be excluded entirely
+                '': {
+                  metrics: {
+                    api_requests: 5,
+                    total_tokens: 200,
+                    prompt_tokens: 100,
+                    completion_tokens: 100,
+                    spend: 0.1,
+                    successful_requests: 3,
+                    failed_requests: 2,
+                  },
+                },
+              },
+            },
+          },
+          api_keys: {},
+          providers: {},
+        },
+      };
+
+      const result = await callEnrich(dayData);
+
+      // Global metrics should reflect only the valid key
+      expect(result.metrics.successful_requests).toBe(14);
+      expect(result.metrics.failed_requests).toBe(1);
+      expect(result.metrics.api_requests).toBe(15);
+      expect(result.metrics.total_tokens).toBe(800);
+      expect(result.metrics.spend).toBeCloseTo(0.4);
+    });
+
+    it('should include unmapped keys in global successful/failed counts', async () => {
+      const dayData: LiteLLMDayData = {
+        date: '2025-06-18',
+        metrics: {
+          api_requests: 30,
+          total_tokens: 1500,
+          prompt_tokens: 900,
+          completion_tokens: 600,
+          spend: 0.75,
+          successful_requests: 0,
+          failed_requests: 0,
+        },
+        breakdown: {
+          models: {
+            'openai/gpt-4': {
+              metrics: {
+                api_requests: 30,
+                total_tokens: 1500,
+                prompt_tokens: 900,
+                completion_tokens: 600,
+                spend: 0.75,
+              },
+              api_keys: {
+                hash_a: {
+                  metrics: {
+                    api_requests: 10,
+                    total_tokens: 500,
+                    prompt_tokens: 300,
+                    completion_tokens: 200,
+                    spend: 0.25,
+                    successful_requests: 9,
+                    failed_requests: 1,
+                  },
+                },
+                hash_b: {
+                  metrics: {
+                    api_requests: 20,
+                    total_tokens: 1000,
+                    prompt_tokens: 600,
+                    completion_tokens: 400,
+                    spend: 0.5,
+                    successful_requests: 18,
+                    failed_requests: 2,
+                  },
+                },
+              },
+            },
+          },
+          api_keys: {},
+          providers: {},
+        },
+      };
+
+      const result = await callEnrich(dayData);
+
+      // Both keys are unmapped (no DB). Global totals must include both.
+      expect(result.metrics.successful_requests).toBe(27);
+      expect(result.metrics.failed_requests).toBe(3);
+    });
+
+    it('should handle mixed mapped, unmapped, and skipped across multiple models', async () => {
+      // Set up a DB mock so hash_mapped resolves to a real user
+      vi.spyOn(aggregationService as any, 'isDatabaseUnavailable').mockReturnValue(false);
+      vi.spyOn(aggregationService as any, 'executeQuery').mockResolvedValue({
+        rows: [
+          {
+            litellm_key_alias: 'sk-mapped',
+            key_hash: 'hash_mapped',
+            user_id: 'user-1',
+            key_name: 'Mapped Key',
+            username: 'alice',
+            email: 'alice@example.com',
+            role: 'user',
+          },
+        ],
+      });
+
+      const dayData: LiteLLMDayData = {
+        date: '2025-06-18',
+        metrics: {
+          api_requests: 50,
+          total_tokens: 2500,
+          prompt_tokens: 1500,
+          completion_tokens: 1000,
+          spend: 1.25,
+          successful_requests: 0,
+          failed_requests: 0,
+        },
+        breakdown: {
+          models: {
+            'openai/gpt-4': {
+              metrics: {
+                api_requests: 30,
+                total_tokens: 1500,
+                prompt_tokens: 900,
+                completion_tokens: 600,
+                spend: 0.75,
+              },
+              api_keys: {
+                hash_mapped: {
+                  metrics: {
+                    api_requests: 20,
+                    total_tokens: 1000,
+                    prompt_tokens: 600,
+                    completion_tokens: 400,
+                    spend: 0.5,
+                    successful_requests: 18,
+                    failed_requests: 2,
+                  },
+                },
+                '': {
+                  metrics: {
+                    api_requests: 10,
+                    total_tokens: 500,
+                    prompt_tokens: 300,
+                    completion_tokens: 200,
+                    spend: 0.25,
+                    successful_requests: 2,
+                    failed_requests: 8,
+                  },
+                },
+              },
+            },
+            'anthropic/claude-3': {
+              metrics: {
+                api_requests: 20,
+                total_tokens: 1000,
+                prompt_tokens: 600,
+                completion_tokens: 400,
+                spend: 0.5,
+              },
+              api_keys: {
+                hash_unmapped: {
+                  metrics: {
+                    api_requests: 20,
+                    total_tokens: 1000,
+                    prompt_tokens: 600,
+                    completion_tokens: 400,
+                    spend: 0.5,
+                    successful_requests: 17,
+                    failed_requests: 3,
+                  },
+                },
+              },
+            },
+          },
+          api_keys: {},
+          providers: {},
+        },
+      };
+
+      const result = await callEnrich(dayData);
+
+      // Mapped (18s/2f) + Unmapped (17s/3f) = 35 successful, 5 failed
+      // Skipped (2s/8f) must NOT be included
+      expect(result.metrics.successful_requests).toBe(35);
+      expect(result.metrics.failed_requests).toBe(5);
+
+      // Global totals should also exclude skipped for other fields
+      expect(result.metrics.api_requests).toBe(40); // 50 - 10 skipped
+      expect(result.metrics.total_tokens).toBe(2000); // 2500 - 500 skipped
+      expect(result.metrics.spend).toBeCloseTo(1.0); // 1.25 - 0.25 skipped
+
+      // prompt/completion recalculated from model totals (mapped + unmapped only)
+      expect(result.metrics.prompt_tokens).toBe(1200); // 600 mapped + 600 unmapped
+      expect(result.metrics.completion_tokens).toBe(800); // 400 mapped + 400 unmapped
+
+      vi.restoreAllMocks();
+    });
+
+    it('should not produce negative successful_requests when all traffic is skipped', async () => {
+      const dayData: LiteLLMDayData = {
+        date: '2025-06-18',
+        metrics: {
+          api_requests: 5,
+          total_tokens: 200,
+          prompt_tokens: 120,
+          completion_tokens: 80,
+          spend: 0.1,
+          successful_requests: 0,
+          failed_requests: 0,
+        },
+        breakdown: {
+          models: {
+            'openai/gpt-4': {
+              metrics: {
+                api_requests: 5,
+                total_tokens: 200,
+                prompt_tokens: 120,
+                completion_tokens: 80,
+                spend: 0.1,
+              },
+              api_keys: {
+                '': {
+                  metrics: {
+                    api_requests: 5,
+                    total_tokens: 200,
+                    prompt_tokens: 120,
+                    completion_tokens: 80,
+                    spend: 0.1,
+                    successful_requests: 0,
+                    failed_requests: 5,
+                  },
+                },
+              },
+            },
+          },
+          api_keys: {},
+          providers: {},
+        },
+      };
+
+      const result = await callEnrich(dayData);
+
+      expect(result.metrics.successful_requests).toBe(0);
+      expect(result.metrics.failed_requests).toBe(0);
+      expect(result.metrics.api_requests).toBe(0);
+      expect(result.metrics.total_tokens).toBe(0);
+      expect(result.metrics.spend).toBeCloseTo(0);
     });
   });
 
