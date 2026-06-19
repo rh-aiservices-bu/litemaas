@@ -84,6 +84,29 @@ describe('Security Tests', () => {
       expect(response.statusCode).toBe(401);
     });
 
+    it('should block dev-token, mock-login, and mock-users outside dev/test environments', async () => {
+      const originalNodeEnv = process.env.NODE_ENV;
+      try {
+        process.env.NODE_ENV = 'staging';
+        const stagingApp = await createTestApp({ logger: false });
+
+        const endpoints = [
+          { method: 'POST' as const, url: '/api/auth/dev-token', payload: {} },
+          { method: 'GET' as const, url: '/api/auth/mock-login?state=test' },
+          { method: 'GET' as const, url: '/api/auth/mock-users' },
+        ];
+
+        for (const endpoint of endpoints) {
+          const response = await stagingApp.inject(endpoint);
+          expect(response.statusCode).toBe(404);
+        }
+
+        await stagingApp.close();
+      } finally {
+        process.env.NODE_ENV = originalNodeEnv;
+      }
+    });
+
     it('should prevent access to other users resources', async () => {
       const user1Token = generateTestToken('user-1', ['user']);
       const user2Token = generateTestToken('user-2', ['user']);
