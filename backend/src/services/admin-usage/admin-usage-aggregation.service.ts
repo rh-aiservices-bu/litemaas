@@ -1916,27 +1916,6 @@ export class AdminUsageAggregationService extends BaseService {
         }
       });
 
-      // Recalculate global success/failure from aggregated model data
-      enrichedData.metrics.successful_requests = 0;
-      enrichedData.metrics.failed_requests = 0;
-      Object.values(enrichedData.breakdown.models).forEach((modelData) => {
-        enrichedData.metrics.successful_requests += modelData.metrics.successful_requests;
-        enrichedData.metrics.failed_requests += modelData.metrics.failed_requests;
-      });
-
-      this.fastify.log.debug(
-        {
-          date: dayData.date,
-          successfulRequests: enrichedData.metrics.successful_requests,
-          failedRequests: enrichedData.metrics.failed_requests,
-          promptTokens: enrichedData.metrics.prompt_tokens,
-          completionTokens: enrichedData.metrics.completion_tokens,
-          totalTokens: enrichedData.metrics.total_tokens,
-          totalRequests: enrichedData.metrics.api_requests,
-        },
-        'Global success/failure metrics recalculated from model data',
-      );
-
       // Calculate total unmapped requests (excluding skipped ones)
       const totalUnmappedRequests =
         (dayData.metrics?.api_requests || 0) - mappedRequests - skippedRequests;
@@ -2022,15 +2001,14 @@ export class AdminUsageAggregationService extends BaseService {
         });
       }
 
-      // Adjust global metrics to exclude skipped requests
+      // Adjust global api_requests, total_tokens, spend to exclude skipped requests.
+      // These fields still carry the original LiteLLM aggregate; subtract skipped portion.
       if (skippedRequests > 0) {
         const originalRequests = enrichedData.metrics.api_requests;
-        const originalSuccessful = enrichedData.metrics.successful_requests;
         const originalTotalTokens = enrichedData.metrics.total_tokens;
         const originalSpend = enrichedData.metrics.spend;
 
         enrichedData.metrics.api_requests -= skippedRequests;
-        enrichedData.metrics.successful_requests -= skippedRequests;
         enrichedData.metrics.total_tokens -= totalSkippedTokens;
         enrichedData.metrics.spend -= totalSkippedSpend;
 
@@ -2046,13 +2024,11 @@ export class AdminUsageAggregationService extends BaseService {
             },
             before: {
               requests: originalRequests,
-              successful: originalSuccessful,
               total_tokens: originalTotalTokens,
               spend: originalSpend,
             },
             after: {
               requests: enrichedData.metrics.api_requests,
-              successful: enrichedData.metrics.successful_requests,
               total_tokens: enrichedData.metrics.total_tokens,
               spend: enrichedData.metrics.spend,
             },
@@ -2061,14 +2037,32 @@ export class AdminUsageAggregationService extends BaseService {
         );
       }
 
-      // Recalculate global prompt/completion from final model totals
-      // (now includes both mapped and unmapped, excludes skipped)
+      // Recalculate global prompt/completion/success/failure from final model totals.
+      // Model totals now include mapped + unmapped keys and exclude skipped keys,
+      // so this single pass produces correct global values.
       enrichedData.metrics.prompt_tokens = 0;
       enrichedData.metrics.completion_tokens = 0;
+      enrichedData.metrics.successful_requests = 0;
+      enrichedData.metrics.failed_requests = 0;
       Object.values(enrichedData.breakdown.models).forEach((modelData) => {
         enrichedData.metrics.prompt_tokens += modelData.metrics.prompt_tokens;
         enrichedData.metrics.completion_tokens += modelData.metrics.completion_tokens;
+        enrichedData.metrics.successful_requests += modelData.metrics.successful_requests;
+        enrichedData.metrics.failed_requests += modelData.metrics.failed_requests;
       });
+
+      this.fastify.log.debug(
+        {
+          date: dayData.date,
+          successfulRequests: enrichedData.metrics.successful_requests,
+          failedRequests: enrichedData.metrics.failed_requests,
+          promptTokens: enrichedData.metrics.prompt_tokens,
+          completionTokens: enrichedData.metrics.completion_tokens,
+          totalTokens: enrichedData.metrics.total_tokens,
+          totalRequests: enrichedData.metrics.api_requests,
+        },
+        'Global metrics recalculated from final model totals',
+      );
 
       // Validate token counts: prompt + completion should approximately equal total
       const calculatedTotal =
