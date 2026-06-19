@@ -7,12 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **LiteLLM SSL configuration**: Configurable SSL verification for LiteLLM with internal Kubernetes/OpenShift services using self-signed certificates (e.g., KServe inference endpoints)
+  - `litellm.sslVerify` Helm parameter (default: `true`) and `SSL_VERIFY` env var in Kustomize
+  - Production CA bundle support via `litellm.extraEnv`, `litellm.extraVolumes`, and `litellm.extraVolumeMounts` for injecting custom CA certificates without disabling SSL globally
+  - New `docs/deployment/litellm-ssl-configuration.md` guide with OpenShift auto-inject, custom CA, and development quick-fix options
+
+### Changed
+
+- **Top Users restricted to admin users**: Top Users table in usage analytics overview is now only visible to users with `admin` or `admin-readonly` roles, with proper state cleanup on role changes
+
 ### Fixed
 
 - **Usage analytics enrichment**: Revoked or inactive API keys are now included in user mapping during usage report enrichment, fixing undercounted requests and spend for users whose keys were later deactivated
 - **Usage cache staleness**: Yesterday's completed usage data is now permanently cached instead of being re-fetched on every request, improving performance and consistency
+- **Usage analytics billing calculation**: Eliminated token double-counting where model metrics were initialized with LiteLLM's already-aggregated prompt/completion tokens then added again per API key, and excluded tokens/spend from skipped requests with empty or invalid API keys
+- **Usage analytics unmapped metrics**: Fixed unmapped metrics being added to model totals for fields already initialized from LiteLLM aggregate (api_requests, total_tokens, spend); relocated token validation to run after all adjustments
+- **Usage analytics global request counts**: Fixed global successful/failed request counts excluding unmapped traffic because recalculation ran before unmapped metrics were folded into model totals; removed incorrect skippedRequests subtraction
 - **Notification timer cleanup**: Success notification auto-dismiss timers are now properly cleared on component unmount, fixing intermittent `window is not defined` errors during test runs
 - **LiteLLM schema creation**: Set `DISABLE_SCHEMA_UPDATE` to `false` in Helm and Kustomize deployment templates, fixing fresh deployments where LiteLLM could not create its database schema
+- **PYTHONHTTPSVERIFY Helm value**: Corrected from CA bundle file path to boolean toggle (`"0"`) per PEP 493; commented out by default since CA bundle approach is preferred
+
+### Documentation
+
+- Fixed documentation drift on `MOCK_AUTH` and Redis configuration in `.env.example` and CLAUDE.md files
+- Added `OAUTH_MOCK_ENABLED` to `.env.example` and `docs/deployment/configuration.md`
+
+### Contributors
+
+- Guillaume Moutier
+- Markus Gersdorf
+- Adriano Machado
+- Co-authored-by: Claude (AI pair programming assistant)
 
 ## [0.4.0] - 2026-03-11
 
