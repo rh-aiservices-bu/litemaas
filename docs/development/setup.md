@@ -19,6 +19,8 @@ git clone https://github.com/rh-aiservices-bu/litemaas.git
 cd litemaas
 ```
 
+> **Note**: The `dev` branch is the integration branch — create feature branches from `dev` and target PRs at `dev`. See the [Contributing Guide](../../CONTRIBUTING.md#1-create-a-feature-branch) for the full development workflow.
+
 ### 2. Install Dependencies
 
 ```bash
