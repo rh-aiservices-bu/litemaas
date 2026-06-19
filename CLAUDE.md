@@ -157,6 +157,14 @@ docker compose up -d  # Local development with containers (using compose.yaml)
 
 _See `docs/development/` for detailed setup, `docs/deployment/helm-deployment.md` for Helm deployment, and `docs/deployment/configuration.md` for environment variables_
 
+## 🔀 Git Workflow
+
+**⚠️ IMPORTANT**: The `dev` branch is the integration branch. All feature branches and pull requests MUST target `dev`, NOT `main`. The `main` branch is reserved for stable releases only.
+
+- **Create feature branches from**: `dev`
+- **Target PRs at**: `dev`
+- **Never push directly to**: `main` or `dev`
+
 ## 🚨 CRITICAL DEVELOPMENT NOTES
 
 ### Development Server and Logging Setup
