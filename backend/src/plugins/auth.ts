@@ -15,128 +15,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
   const tokenService = new TokenService(fastify);
   fastify.decorate('tokenService', tokenService);
 
-  // Frontend-friendly authentication with fallback
-  fastify.decorate(
-    'authenticateWithDevBypass',
-    async (request: FastifyRequest, reply: FastifyReply) => {
-      try {
-        const origin = request.headers.origin;
-        const referer = request.headers.referer;
-        const token = request.headers.authorization;
-
-        // Debug logging
-        fastify.log.debug(
-          {
-            url: request.url,
-            method: request.method,
-            origin,
-            referer,
-            hasToken: !!token,
-            userAgent: request.headers['user-agent'],
-          },
-          'Authentication request details',
-        );
-
-        // First, try normal authentication if token is provided
-        if (token) {
-          try {
-            await fastify.authenticate(request, reply);
-            return; // Authentication successful
-          } catch (error) {
-            // If token authentication fails, continue to frontend bypass logic
-            fastify.log.debug('Token authentication failed, checking frontend bypass');
-          }
-        }
-
-        // Frontend bypass for localhost origins (both dev and production for testing)
-        const allowedOrigins = process.env.ALLOWED_FRONTEND_ORIGINS?.split(',') || [
-          'localhost:3000',
-          'localhost:3001',
-          '127.0.0.1:3000',
-          '127.0.0.1:3001',
-        ];
-
-        // Check if request is from allowed frontend
-        const isFromAllowedFrontend = allowedOrigins.some(
-          (allowedOrigin) =>
-            (origin && origin.includes(allowedOrigin)) ||
-            (referer && referer.includes(allowedOrigin)),
-        );
-
-        // Also allow requests that look like they're from a browser/frontend
-        // This handles proxied requests from Vite dev server
-        const userAgent = request.headers['user-agent'] || '';
-        const acceptHeader = request.headers.accept || '';
-
-        const isLikelyFrontendRequest =
-          // Requests with browser user agents
-          (userAgent.includes('Mozilla') ||
-            userAgent.includes('Chrome') ||
-            userAgent.includes('Safari') ||
-            userAgent.includes('Firefox')) &&
-          // Requests that accept JSON (typical for API calls)
-          (acceptHeader.includes('application/json') || acceptHeader.includes('*/*')) &&
-          // Not curl or other CLI tools
-          !userAgent.includes('curl') &&
-          !userAgent.includes('wget') &&
-          !userAgent.includes('Postman');
-
-        if (isFromAllowedFrontend || isLikelyFrontendRequest) {
-          const mockUser = {
-            userId: '550e8400-e29b-41d4-a716-446655440001',
-            username: 'frontend',
-            email: 'frontend@litemaas.local',
-            name: 'Frontend User',
-            roles: ['admin', 'user'],
-            iat: Math.floor(Date.now() / 1000),
-            exp: Math.floor(Date.now() / 1000) + 24 * 60 * 60, // 24 hours
-          };
-
-          (request as AuthenticatedRequest).user = mockUser;
-
-          const bypassReason = isFromAllowedFrontend ? 'allowed-origin' : 'browser-pattern';
-
-          if (process.env.NODE_ENV === 'production') {
-            fastify.log.warn(
-              {
-                ip: request.ip,
-                origin,
-                referer,
-                userAgent,
-                url: request.url,
-                method: request.method,
-                bypassReason,
-              },
-              'Frontend bypass used in production mode - consider implementing proper authentication',
-            );
-          } else {
-            fastify.log.debug({ bypassReason, userAgent }, 'Frontend request bypass');
-          }
-          return;
-        }
-
-        // If no bypass applies, require strict authentication
-        return reply.status(401).send({
-          error: {
-            code: 'UNAUTHORIZED',
-            message: 'Authentication required',
-          },
-          requestId: request.id,
-        });
-      } catch (error) {
-        fastify.log.error(error, 'Authentication with dev bypass failed');
-        return reply.status(401).send({
-          error: {
-            code: 'UNAUTHORIZED',
-            message: 'Authentication required',
-          },
-          requestId: request.id,
-        });
-      }
-    },
-  );
-
-  // Enhanced authentication decorator
+  // Authentication decorator
   fastify.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       // Try to get token from Authorization header
@@ -385,7 +264,6 @@ declare module 'fastify' {
   interface FastifyInstance {
     tokenService: TokenService;
     authenticate: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
-    authenticateWithDevBypass: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     optionalAuth: (request: FastifyRequest, reply: FastifyReply) => Promise<void>;
     requireRole: (
       roles: string[],

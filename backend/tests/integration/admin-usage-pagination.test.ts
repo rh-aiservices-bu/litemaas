@@ -18,7 +18,6 @@ describe('Admin Usage Pagination', () => {
   beforeAll(async () => {
     // Set test environment
     process.env.NODE_ENV = 'test';
-    process.env.ALLOWED_FRONTEND_ORIGINS = ''; // Disable frontend bypass
 
     app = await createApp({ logger: false });
     await app.ready();

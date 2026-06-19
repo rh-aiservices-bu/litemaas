@@ -62,7 +62,6 @@ describe('Error Flows Integration', () => {
   beforeAll(async () => {
     // Set test environment to prevent dev bypass authentication
     process.env.NODE_ENV = 'test';
-    process.env.ALLOWED_FRONTEND_ORIGINS = ''; // Disable frontend bypass
 
     app = await createApp({ logger: false });
     await app.ready();
@@ -78,7 +77,6 @@ describe('Error Flows Integration', () => {
     vi.clearAllMocks();
     // Ensure test environment settings
     process.env.NODE_ENV = 'test';
-    process.env.ALLOWED_FRONTEND_ORIGINS = '';
   });
 
   describe('Authentication and Authorization Error Flows', () => {

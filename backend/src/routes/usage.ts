@@ -125,7 +125,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: [fastify.authenticateWithDevBypass, validateUsageMetricsQuery],
+    preHandler: [fastify.authenticate, validateUsageMetricsQuery],
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, modelId, apiKeyId } = request.query;
@@ -454,7 +454,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: [fastify.authenticateWithDevBypass, validateUsageSummaryQuery],
+    preHandler: [fastify.authenticate, validateUsageSummaryQuery],
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, modelId, subscriptionId, granularity } = request.query;
@@ -547,7 +547,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { startDate, endDate, interval = 'day', modelId, subscriptionId } = request.query;
@@ -625,7 +625,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (_request, _reply) => {
       // TODO: This endpoint should fetch from LiteLLM API
       // For now, returning empty data since local logging is not implemented
@@ -714,7 +714,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (_request, _reply) => {
       // TODO: This endpoint should fetch from LiteLLM API
       // For now, returning empty data since local logging is not implemented
@@ -751,7 +751,7 @@ const usageRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: [fastify.authenticateWithDevBypass, validateUsageExportQuery],
+    preHandler: [fastify.authenticate, validateUsageExportQuery],
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
       const {

@@ -8,7 +8,7 @@ describe('Security Tests', () => {
 
   beforeAll(async () => {
     // Use strict authentication mode for security tests
-    app = await createTestApp({ strictAuth: true, logger: false });
+    app = await createTestApp({ logger: false });
   });
 
   afterAll(async () => {
@@ -55,6 +55,35 @@ describe('Security Tests', () => {
       // Models endpoint is public, so it should not return 401
       // It may return 200 (success) or 500 (if LiteLLM/DB unavailable)
       expect([200, 500]).toContain(modelsResponse.statusCode);
+    });
+
+    it('should reject unauthenticated requests with browser-like User-Agent (CWE-287 regression)', async () => {
+      const browserUserAgents = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+        'Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0',
+      ];
+
+      const protectedEndpoints = [
+        { method: 'GET' as const, url: '/api/v1/api-keys' },
+        { method: 'GET' as const, url: '/api/v1/subscriptions' },
+        { method: 'GET' as const, url: '/api/v1/usage/dashboard' },
+      ];
+
+      for (const ua of browserUserAgents) {
+        for (const endpoint of protectedEndpoints) {
+          const response = await app.inject({
+            method: endpoint.method,
+            url: endpoint.url,
+            headers: {
+              'user-agent': ua,
+              accept: 'application/json',
+            },
+          });
+
+          expect(response.statusCode).toBe(401);
+        }
+      }
     });
 
     it('should reject requests with invalid tokens', async () => {

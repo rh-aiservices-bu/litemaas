@@ -17,14 +17,6 @@ beforeAll(async () => {
   // Register test-specific plugins or overrides
   await global.testApp.register(async function (fastify) {
     // Override authentication for testing
-    fastify.decorate(
-      'authenticateWithDevBypass',
-      async (request: FastifyRequest, _reply: FastifyReply) => {
-        // Mock user for testing
-        request.user = mockUser;
-      },
-    );
-
     fastify.decorate('authenticate', async (request: FastifyRequest, _reply: FastifyReply) => {
       // Mock user for testing
       request.user = mockUser;
