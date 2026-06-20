@@ -29,14 +29,12 @@ spec:
       serviceAccountName: {{ include "litemaas.fullname" . }}-hook
       restartPolicy: OnFailure
       securityContext:
-        runAsNonRoot: true
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: oauth-setup
           image: "{{ .Values.hook.image.repository }}:{{ .Values.hook.image.tag }}"
           securityContext:
-            allowPrivilegeEscalation: false
-            capabilities:
-              drop: [ALL]
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
           env:
             - name: ROUTE_NAME
               value: {{ include "litemaas.frontend.fullname" . | quote }}

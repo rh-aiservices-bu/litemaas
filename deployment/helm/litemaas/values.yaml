@@ -43,6 +43,19 @@ networkPolicy:
     # -- Pod labels that identify the ingress controller pods (omit to allow all pods in matched namespaces)
     # podSelector: {}
 
+# -- Pod-level security context applied to all workloads.
+# Matches the pattern already used in the OAuth setup hook Job.
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Container-level security context applied to all workloads.
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+
 # -- ServiceAccount configuration
 serviceAccount:
   # -- Create a ServiceAccount
