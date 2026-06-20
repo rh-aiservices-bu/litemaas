@@ -69,7 +69,7 @@ spec:
               value: {{ $redisHost | quote }}
             - name: REDIS_PORT
               value: {{ .Values.backend.redis.port | quote }}
-            {{- if .Values.redis.auth.password }}
+            {{- if (include "litemaas.redis.authEnabled" .) }}
             - name: REDIS_PASSWORD
               valueFrom:
                 secretKeyRef:

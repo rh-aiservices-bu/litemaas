@@ -17,8 +17,12 @@ spec:
       containers:
         - name: redis
           image: redis:7-alpine
-          # To enable authentication, uncomment the command and env below,
-          # and create a Secret named 'redis-auth' with key 'password'.
+          # To enable authentication:
+          # 1. Create a Secret: oc create secret generic redis-auth --from-literal=password=<your-password>
+          # 2. Uncomment the command and env below.
+          # 3. Uncomment the authenticated probe variants below (and remove the unauthenticated ones).
+          # 4. Add REDIS_PASSWORD to backend-deployment.yaml.template and litellm-deployment.yaml
+          #    (see commented blocks in those files).
           # command: ["redis-server", "--requirepass", "$(REDIS_PASSWORD)"]
           # env:
           #   - name: REDIS_PASSWORD
@@ -39,6 +43,11 @@ spec:
           livenessProbe:
             exec:
               command:
+                # Authenticated variant (uncomment when auth is enabled):
+                # - sh
+                # - -c
+                # - redis-cli -a "$REDIS_PASSWORD" --no-auth-warning ping
+                # Unauthenticated (remove when auth is enabled):
                 - redis-cli
                 - ping
             initialDelaySeconds: 10
@@ -48,6 +57,11 @@ spec:
           readinessProbe:
             exec:
               command:
+                # Authenticated variant (uncomment when auth is enabled):
+                # - sh
+                # - -c
+                # - redis-cli -a "$REDIS_PASSWORD" --no-auth-warning ping
+                # Unauthenticated (remove when auth is enabled):
                 - redis-cli
                 - ping
             initialDelaySeconds: 5

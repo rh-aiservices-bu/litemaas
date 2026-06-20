@@ -24,7 +24,7 @@ spec:
         - name: redis
           image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
-          {{- if .Values.redis.auth.password }}
+          {{- if (include "litemaas.redis.authEnabled" .) }}
           command: ["redis-server", "--requirepass", "$(REDIS_PASSWORD)"]
           env:
             - name: REDIS_PASSWORD
@@ -41,7 +41,7 @@ spec:
           livenessProbe:
             exec:
               command:
-                {{- if .Values.redis.auth.password }}
+                {{- if (include "litemaas.redis.authEnabled" .) }}
                 - sh
                 - -c
                 - redis-cli -a "$REDIS_PASSWORD" --no-auth-warning ping
@@ -56,7 +56,7 @@ spec:
           readinessProbe:
             exec:
               command:
-                {{- if .Values.redis.auth.password }}
+                {{- if (include "litemaas.redis.authEnabled" .) }}
                 - sh
                 - -c
                 - redis-cli -a "$REDIS_PASSWORD" --no-auth-warning ping
