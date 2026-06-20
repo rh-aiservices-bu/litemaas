@@ -28,6 +28,18 @@ networkPolicy:
   # When enabled, deploys deny-all-ingress default and per-component allow rules
   # so only expected traffic flows are permitted (e.g., only backend can reach PostgreSQL).
   enabled: false
+  # -- Selectors to identify ingress controller / OpenShift router pods.
+  # By default namespaceSelector is empty ({}) which matches all namespaces.
+  # Restrict to your controller's namespace and pods for tighter segmentation, e.g.:
+  #   namespaceSelector:
+  #     kubernetes.io/metadata.name: ingress-nginx
+  #   podSelector:
+  #     app.kubernetes.io/name: ingress-nginx
+  ingressController:
+    # -- Namespace labels that identify the ingress controller namespace
+    namespaceSelector: {}
+    # -- Pod labels that identify the ingress controller pods (omit to allow all pods in matched namespaces)
+    # podSelector: {}
 
 # -- ServiceAccount configuration
 serviceAccount:
