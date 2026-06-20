@@ -36,8 +36,10 @@ networkPolicy:
   #   podSelector:
   #     app.kubernetes.io/name: ingress-nginx
   ingressController:
-    # -- Namespace labels that identify the ingress controller namespace
-    namespaceSelector: {}
+    # -- Namespace labels that identify the ingress controller namespace.
+    # Required when networkPolicy and ingress/route are both enabled.
+    # Example: { kubernetes.io/metadata.name: ingress-nginx }
+    namespaceSelector: null
     # -- Pod labels that identify the ingress controller pods (omit to allow all pods in matched namespaces)
     # podSelector: {}
 

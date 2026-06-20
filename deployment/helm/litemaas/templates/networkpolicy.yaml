@@ -1,4 +1,9 @@
 {{- if .Values.networkPolicy.enabled }}
+{{- if or .Values.ingress.enabled .Values.route.enabled }}
+{{- if not .Values.networkPolicy.ingressController.namespaceSelector }}
+{{- fail "networkPolicy.ingressController.namespaceSelector is required when networkPolicy and ingress/route are both enabled. Set it to your ingress controller's namespace labels (e.g. kubernetes.io/metadata.name: ingress-nginx)." }}
+{{- end }}
+{{- end }}
 # =============================================================================
 # Default deny-all ingress for LiteMaaS pods
 # =============================================================================
