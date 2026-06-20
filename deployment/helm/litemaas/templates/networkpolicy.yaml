@@ -1,0 +1,201 @@
+{{- if .Values.networkPolicy.enabled }}
+{{- if or .Values.ingress.enabled .Values.route.enabled }}
+{{- if not .Values.networkPolicy.ingressController.namespaceSelector }}
+{{- fail "networkPolicy.ingressController.namespaceSelector is required when networkPolicy and ingress/route are both enabled. Set it to your ingress controller's namespace labels (e.g. kubernetes.io/metadata.name: ingress-nginx)." }}
+{{- end }}
+{{- end }}
+# =============================================================================
+# Default deny-all ingress for LiteMaaS pods
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "litemaas.fullname" . }}-deny-all
+  labels:
+    {{- include "litemaas.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  policyTypes:
+    - Ingress
+{{- if .Values.postgresql.enabled }}
+---
+# =============================================================================
+# PostgreSQL: allow ingress from backend and litellm only
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "litemaas.fullname" . }}-postgresql
+  labels:
+    {{- include "litemaas.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "database") | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "api") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 5432
+    {{- if .Values.litellm.enabled }}
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "ai-proxy") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 5432
+    {{- end }}
+{{- end }}
+{{- if .Values.redis.enabled }}
+---
+# =============================================================================
+# Redis: allow ingress from backend and litellm only
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "litemaas.fullname" . }}-redis
+  labels:
+    {{- include "litemaas.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "cache") | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "api") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 6379
+    {{- if .Values.litellm.enabled }}
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "ai-proxy") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 6379
+    {{- end }}
+{{- end }}
+{{- if .Values.litellm.enabled }}
+---
+# =============================================================================
+# LiteLLM: allow ingress from backend (and ingress controller when exposed)
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "litemaas.fullname" . }}-litellm
+  labels:
+    {{- include "litemaas.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "ai-proxy") | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "api") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 4000
+    {{- if or (and .Values.ingress.enabled .Values.ingress.litellm.enabled) (and .Values.route.enabled .Values.route.litellm.enabled) }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              {{- toYaml .Values.networkPolicy.ingressController.namespaceSelector | nindent 14 }}
+          {{- with .Values.networkPolicy.ingressController.podSelector }}
+          podSelector:
+            matchLabels:
+              {{- toYaml . | nindent 14 }}
+          {{- end }}
+      ports:
+        - protocol: TCP
+          port: 4000
+    {{- end }}
+{{- end }}
+---
+# =============================================================================
+# Backend: allow ingress from frontend and ingress controller
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "litemaas.fullname" . }}-backend
+  labels:
+    {{- include "litemaas.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "api") | nindent 6 }}
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "web") | nindent 14 }}
+      ports:
+        - protocol: TCP
+          port: 8080
+    {{- if or .Values.ingress.enabled .Values.route.enabled }}
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              {{- toYaml .Values.networkPolicy.ingressController.namespaceSelector | nindent 14 }}
+          {{- with .Values.networkPolicy.ingressController.podSelector }}
+          podSelector:
+            matchLabels:
+              {{- toYaml . | nindent 14 }}
+          {{- end }}
+      ports:
+        - protocol: TCP
+          port: 8080
+    {{- end }}
+---
+# =============================================================================
+# Frontend: allow ingress from ingress controller
+# =============================================================================
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "litemaas.fullname" . }}-frontend
+  labels:
+    {{- include "litemaas.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "litemaas.componentSelectorLabels" (dict "context" . "component" "web") | nindent 6 }}
+  policyTypes:
+    - Ingress
+  {{- if or .Values.ingress.enabled .Values.route.enabled }}
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              {{- toYaml .Values.networkPolicy.ingressController.namespaceSelector | nindent 14 }}
+          {{- with .Values.networkPolicy.ingressController.podSelector }}
+          podSelector:
+            matchLabels:
+              {{- toYaml . | nindent 14 }}
+          {{- end }}
+      ports:
+        - protocol: TCP
+          port: 8080
+  {{- end }}
+{{- end }}
