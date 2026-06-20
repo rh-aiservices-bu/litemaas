@@ -124,27 +124,39 @@ describe('Security Tests', () => {
     });
 
     it('should prevent cross-user session invalidation (IDOR)', async () => {
-      const user1Token = generateTestToken('user-1', ['user']);
-      const user2Token = generateTestToken('user-2', ['user']);
+      const user1Id = 'idor-user-1';
+      const user2Token = generateTestToken('idor-user-2', ['user']);
+      const sessionId = 'idor-test-session';
 
-      // User2 attempts to invalidate a session belonging to user1
-      // Even with a valid session ID, it should be rejected because user2 doesn't own it
+      // Inject a session owned by user1 directly into the in-memory store
+      const sessionStore = (app.sessionService as any).sessionStore as Map<string, any>;
+      sessionStore.set(sessionId, {
+        id: sessionId,
+        userId: user1Id,
+        token: 'dummy',
+        ipAddress: '127.0.0.1',
+        userAgent: 'vitest',
+        createdAt: new Date(),
+        lastActivityAt: new Date(),
+        expiresAt: new Date(Date.now() + 3600_000),
+        isActive: true,
+      });
+
+      // User2 attempts to invalidate user1's session — should be rejected
       const response = await app.inject({
         method: 'DELETE',
-        url: '/api/auth/sessions/fake-session-id-belonging-to-user1',
+        url: `/api/auth/sessions/${sessionId}`,
         headers: { authorization: `Bearer ${user2Token}` },
       });
-
-      // Should return 404 (session not found or not owned by requesting user)
       expect(response.statusCode).toBe(404);
 
-      // Verify own session invalidation attempt with non-existent ID also returns 404
-      const ownResponse = await app.inject({
-        method: 'DELETE',
-        url: '/api/auth/sessions/nonexistent-session-id',
-        headers: { authorization: `Bearer ${user1Token}` },
-      });
-      expect(ownResponse.statusCode).toBe(404);
+      // Verify user1's session is still active after the failed attempt
+      const session = sessionStore.get(sessionId);
+      expect(session).toBeDefined();
+      expect(session.isActive).toBe(true);
+
+      // Clean up
+      sessionStore.delete(sessionId);
     });
 
     it('should validate API key authentication alongside JWT', async () => {

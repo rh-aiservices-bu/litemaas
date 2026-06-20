@@ -129,6 +129,18 @@ const sessionPlugin: FastifyPluginAsync = async (fastify) => {
                 message: { type: 'string' },
               },
             },
+            404: {
+              type: 'object',
+              properties: {
+                error: {
+                  type: 'object',
+                  properties: {
+                    code: { type: 'string' },
+                    message: { type: 'string' },
+                  },
+                },
+              },
+            },
           },
         },
         preHandler: fastify.authenticate,
