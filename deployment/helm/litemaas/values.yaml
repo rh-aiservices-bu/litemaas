@@ -29,8 +29,8 @@ networkPolicy:
   # so only expected traffic flows are permitted (e.g., only backend can reach PostgreSQL).
   enabled: false
   # -- Selectors to identify ingress controller / OpenShift router pods.
-  # By default namespaceSelector is empty ({}) which matches all namespaces.
-  # Restrict to your controller's namespace and pods for tighter segmentation, e.g.:
+  # Required when networkPolicy and ingress/route are both enabled.
+  # Example:
   #   namespaceSelector:
   #     kubernetes.io/metadata.name: ingress-nginx
   #   podSelector:
