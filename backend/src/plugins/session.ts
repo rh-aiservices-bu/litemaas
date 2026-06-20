@@ -129,12 +129,28 @@ const sessionPlugin: FastifyPluginAsync = async (fastify) => {
                 message: { type: 'string' },
               },
             },
+            404: {
+              type: 'object',
+              properties: {
+                error: {
+                  type: 'object',
+                  properties: {
+                    code: { type: 'string' },
+                    message: { type: 'string' },
+                  },
+                },
+              },
+            },
           },
         },
         preHandler: fastify.authenticate,
         handler: async (request, _reply) => {
+          const user = (request as AuthenticatedRequest).user;
           const { sessionId } = request.params as { sessionId: string };
-          await sessionService.invalidateSession(sessionId);
+          const result = await sessionService.invalidateSession(sessionId, user.userId);
+          if (!result) {
+            throw fastify.createNotFoundError('Session');
+          }
           return { success: true };
         },
       });

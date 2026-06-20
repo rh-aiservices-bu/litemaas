@@ -175,6 +175,42 @@ describe('Security Tests', () => {
       }
     });
 
+    it('should prevent cross-user session invalidation (IDOR)', async () => {
+      const user1Id = 'idor-user-1';
+      const user2Token = generateTestToken('idor-user-2', ['user']);
+      const sessionId = 'idor-test-session';
+
+      // Inject a session owned by user1 directly into the in-memory store
+      const sessionStore = (app.sessionService as any).sessionStore as Map<string, any>;
+      sessionStore.set(sessionId, {
+        id: sessionId,
+        userId: user1Id,
+        token: 'dummy',
+        ipAddress: '127.0.0.1',
+        userAgent: 'vitest',
+        createdAt: new Date(),
+        lastActivityAt: new Date(),
+        expiresAt: new Date(Date.now() + 3600_000),
+        isActive: true,
+      });
+
+      // User2 attempts to invalidate user1's session — should be rejected
+      const response = await app.inject({
+        method: 'DELETE',
+        url: `/api/auth/sessions/${sessionId}`,
+        headers: { authorization: `Bearer ${user2Token}` },
+      });
+      expect(response.statusCode).toBe(404);
+
+      // Verify user1's session is still active after the failed attempt
+      const session = sessionStore.get(sessionId);
+      expect(session).toBeDefined();
+      expect(session.isActive).toBe(true);
+
+      // Clean up
+      sessionStore.delete(sessionId);
+    });
+
     it('should validate API key authentication alongside JWT', async () => {
       // Test that API key authentication works properly
       const response = await app.inject({

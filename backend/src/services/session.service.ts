@@ -181,10 +181,16 @@ export class SessionService {
     return session;
   }
 
-  async invalidateSession(sessionId: string): Promise<boolean> {
+  async invalidateSession(sessionId: string, userId?: string): Promise<boolean> {
     const session = this.sessionStore.get(sessionId);
 
     if (!session) {
+      return false;
+    }
+
+    // Ownership check: when userId is provided (user-facing endpoint),
+    // verify the session belongs to the requesting user
+    if (userId && session.userId !== userId) {
       return false;
     }
 
@@ -199,11 +205,18 @@ export class SessionService {
       await this.fastify.tokenService.revokeRefreshToken(session.refreshToken);
     }
 
-    // Update database
-    await this.fastify.dbUtils.query(
-      'UPDATE user_sessions SET is_active = false, ended_at = NOW() WHERE id = $1',
-      [sessionId],
-    );
+    // Update database — include user_id filter when ownership is being enforced
+    if (userId) {
+      await this.fastify.dbUtils.query(
+        'UPDATE user_sessions SET is_active = false, ended_at = NOW() WHERE id = $1 AND user_id = $2',
+        [sessionId, userId],
+      );
+    } else {
+      await this.fastify.dbUtils.query(
+        'UPDATE user_sessions SET is_active = false, ended_at = NOW() WHERE id = $1',
+        [sessionId],
+      );
+    }
 
     this.fastify.log.info(
       {
