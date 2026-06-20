@@ -33,7 +33,7 @@ const mockBackendApiKeys = [
       },
     ],
     lastUsedAt: '2024-06-23T00:00:00.000Z',
-    expiresAt: '2026-06-01T00:00:00.000Z',
+    expiresAt: '2030-06-01T00:00:00.000Z',
     isActive: true,
     createdAt: '2024-06-01T00:00:00.000Z',
     revokedAt: null,
