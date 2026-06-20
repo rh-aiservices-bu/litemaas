@@ -75,6 +75,12 @@ spec:
               value: 'litellm-redis'
             - name: REDIS_PORT
               value: '6379'
+            # Uncomment to enable Redis authentication (requires redis-auth Secret):
+            # - name: REDIS_PASSWORD
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: redis-auth
+            #       key: password
             # Uncomment to disable SSL verification for internal services with self-signed certs
             # ⚠️ Security Warning: Only use in development/testing or with trusted internal services
             # - name: SSL_VERIFY

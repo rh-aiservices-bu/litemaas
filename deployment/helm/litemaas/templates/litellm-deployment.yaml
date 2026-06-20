@@ -69,6 +69,13 @@ spec:
               value: {{ $redisHost | quote }}
             - name: REDIS_PORT
               value: {{ .Values.backend.redis.port | quote }}
+            {{- if (include "litemaas.redis.authEnabled" .) }}
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.redis.secretName" . }}
+                  key: password
+            {{- end }}
             {{- end }}
             {{- if not .Values.litellm.sslVerify }}
             # Disable SSL verification for internal services (e.g., KServe with self-signed certs)

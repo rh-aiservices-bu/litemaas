@@ -106,6 +106,18 @@ app.kubernetes.io/component: {{ .component }}
 
 {{/* ========== Secret name helpers ========== */}}
 
+{{- define "litemaas.redis.authEnabled" -}}
+{{- if or .Values.redis.auth.password .Values.redis.auth.existingSecret -}}true{{- end -}}
+{{- end -}}
+
+{{- define "litemaas.redis.secretName" -}}
+{{- if .Values.redis.auth.existingSecret }}
+{{- .Values.redis.auth.existingSecret }}
+{{- else }}
+{{- include "litemaas.redis.fullname" . }}
+{{- end }}
+{{- end }}
+
 {{- define "litemaas.postgresql.secretName" -}}
 {{- if .Values.postgresql.auth.existingSecret }}
 {{- .Values.postgresql.auth.existingSecret }}

@@ -99,6 +99,14 @@ spec:
                 secretKeyRef:
                   name: {{ include "litemaas.backend.secretName" . }}
                   key: litellm-database-url
+            {{- if and (include "litemaas.redis.host" .) (include "litemaas.redis.authEnabled" .) }}
+            # Redis authentication
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.redis.secretName" . }}
+                  key: password
+            {{- end }}
           volumeMounts:
             - name: backup-storage
               mountPath: {{ .Values.backend.backup.storagePath }}
