@@ -1,11 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { server } from '../mocks/server';
-import { http, HttpResponse } from 'msw';
-import {
-  usageService,
-  type UsageFilters,
-  type UserUsageFilters,
-} from '../../services/usage.service';
+import { type UserUsageFilters, usageService } from '../../services/usage.service';
 
 // Mock fetch for export functionality since it's not using apiClient
 const mockFetch = vi.fn();
@@ -29,186 +23,6 @@ describe('UsageService', () => {
     global.fetch = mockFetch;
   });
 
-  describe('getUsageMetrics', () => {
-    it('should fetch usage metrics without filters', async () => {
-      const result = await usageService.getUsageMetrics();
-
-      expect(result).toHaveProperty('totalRequests', 125430);
-      expect(result).toHaveProperty('totalTokens', 8950000);
-      expect(result).toHaveProperty('totalCost', 1247.5);
-      expect(result).toHaveProperty('averageResponseTime', 1.2);
-      expect(result).toHaveProperty('successRate', 99.2);
-      expect(result).toHaveProperty('activeModels', 8);
-      expect(result).toHaveProperty('topModels');
-      expect(result).toHaveProperty('dailyUsage');
-      expect(result).toHaveProperty('hourlyUsage');
-      expect(result).toHaveProperty('errorBreakdown');
-    });
-
-    it('should fetch usage metrics with all filters', async () => {
-      const filters: UsageFilters = {
-        startDate: '2024-06-01',
-        endDate: '2024-06-30',
-        modelId: 'gpt-4',
-        apiKeyId: 'key-1',
-      };
-
-      const result = await usageService.getUsageMetrics(filters);
-
-      // Mock returns different data for specific filters
-      expect(result.totalRequests).toBe(25000); // Filtered for key-1
-      expect(result.totalTokens).toBe(2000000);
-      expect(result.totalCost).toBe(400.0);
-    });
-
-    it('should fetch usage metrics with startDate and endDate filters', async () => {
-      const filters: UsageFilters = {
-        startDate: '2024-06-01',
-        endDate: '2024-06-30',
-      };
-
-      const result = await usageService.getUsageMetrics(filters);
-      expect(result).toHaveProperty('totalRequests');
-      expect(result).toHaveProperty('totalTokens');
-    });
-
-    it('should fetch usage metrics with modelId filter', async () => {
-      const filters: UsageFilters = {
-        modelId: 'gpt-4',
-      };
-
-      const result = await usageService.getUsageMetrics(filters);
-
-      // Mock returns specific data for gpt-4
-      expect(result.totalRequests).toBe(50000);
-      expect(result.totalTokens).toBe(4000000);
-      expect(result.totalCost).toBe(800.0);
-    });
-
-    it('should fetch usage metrics with apiKeyId filter', async () => {
-      const filters: UsageFilters = {
-        apiKeyId: 'key-1',
-      };
-
-      const result = await usageService.getUsageMetrics(filters);
-
-      // Mock returns specific data for key-1
-      expect(result.totalRequests).toBe(25000);
-      expect(result.totalTokens).toBe(2000000);
-      expect(result.totalCost).toBe(400.0);
-    });
-
-    it('should handle empty filters object', async () => {
-      const filters: UsageFilters = {};
-
-      const result = await usageService.getUsageMetrics(filters);
-      expect(result).toHaveProperty('totalRequests');
-      expect(result).toHaveProperty('totalTokens');
-    });
-
-    it('should construct URL parameters correctly', async () => {
-      const filters: UsageFilters = {
-        startDate: '2024-06-01',
-        endDate: '2024-06-30',
-        modelId: 'gpt-4',
-        apiKeyId: 'key-1',
-      };
-
-      // Mock the handler to capture the request URL
-      let requestUrl: string = '';
-      server.use(
-        http.get('/api/v1/usage/metrics', ({ request }) => {
-          requestUrl = request.url;
-          return HttpResponse.json({
-            totalRequests: 100,
-            totalTokens: 1000,
-            totalCost: 10.0,
-            averageResponseTime: 1.0,
-            successRate: 95.0,
-            activeModels: 1,
-            topModels: [],
-            dailyUsage: [],
-            hourlyUsage: [],
-            errorBreakdown: [],
-          });
-        }),
-      );
-
-      await usageService.getUsageMetrics(filters);
-
-      const url = new URL(requestUrl);
-      expect(url.searchParams.get('startDate')).toBe('2024-06-01');
-      expect(url.searchParams.get('endDate')).toBe('2024-06-30');
-      expect(url.searchParams.get('modelId')).toBe('gpt-4');
-      expect(url.searchParams.get('apiKeyId')).toBe('key-1');
-    });
-
-    it('should handle API errors', async () => {
-      server.use(
-        http.get('/api/v1/usage/metrics', () => {
-          return HttpResponse.json(
-            { message: 'Internal server error', statusCode: 500 },
-            { status: 500 },
-          );
-        }),
-      );
-
-      await expect(usageService.getUsageMetrics()).rejects.toThrow();
-    });
-
-    it('should handle network errors', async () => {
-      server.use(
-        http.get('/api/v1/usage/metrics', () => {
-          return HttpResponse.error();
-        }),
-      );
-
-      await expect(usageService.getUsageMetrics()).rejects.toThrow();
-    });
-
-    it('should validate response structure', async () => {
-      const result = await usageService.getUsageMetrics();
-
-      expect(result.topModels).toBeInstanceOf(Array);
-      expect(result.dailyUsage).toBeInstanceOf(Array);
-      expect(result.hourlyUsage).toBeInstanceOf(Array);
-      expect(result.errorBreakdown).toBeInstanceOf(Array);
-
-      // Validate topModels structure
-      if (result.topModels.length > 0) {
-        const topModel = result.topModels[0];
-        expect(topModel).toHaveProperty('name');
-        expect(topModel).toHaveProperty('requests');
-        expect(topModel).toHaveProperty('tokens');
-        expect(topModel).toHaveProperty('cost');
-      }
-
-      // Validate dailyUsage structure
-      if (result.dailyUsage.length > 0) {
-        const dailyUsage = result.dailyUsage[0];
-        expect(dailyUsage).toHaveProperty('date');
-        expect(dailyUsage).toHaveProperty('requests');
-        expect(dailyUsage).toHaveProperty('tokens');
-        expect(dailyUsage).toHaveProperty('cost');
-      }
-
-      // Validate hourlyUsage structure
-      if (result.hourlyUsage.length > 0) {
-        const hourlyUsage = result.hourlyUsage[0];
-        expect(hourlyUsage).toHaveProperty('hour');
-        expect(hourlyUsage).toHaveProperty('requests');
-      }
-
-      // Validate errorBreakdown structure
-      if (result.errorBreakdown.length > 0) {
-        const errorBreakdown = result.errorBreakdown[0];
-        expect(errorBreakdown).toHaveProperty('type');
-        expect(errorBreakdown).toHaveProperty('count');
-        expect(errorBreakdown).toHaveProperty('percentage');
-      }
-    });
-  });
-
   describe('exportUsageData', () => {
     beforeEach(() => {
       mockFetch.mockClear();
@@ -227,17 +41,17 @@ describe('UsageService', () => {
       const result = await usageService.exportUsageData();
 
       expect(mockFetch).toHaveBeenCalledTimes(1);
-      // Service adds default 30-day date range when no filters provided
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /\/api\/v1\/usage\/export\?format=csv&startDate=\d{4}-\d{2}-\d{2}&endDate=\d{4}-\d{2}-\d{2}/,
-        ),
-        {
-          headers: {
-            Authorization: 'Bearer mock-token',
-          },
-        },
-      );
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('/api/v1/usage/export');
+      expect(options.method).toBe('POST');
+      expect(options.headers).toEqual({
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer mock-token',
+      });
+      const body = JSON.parse(options.body);
+      expect(body.format).toBe('csv');
+      expect(body.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(body.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(result).toBeInstanceOf(Blob);
     });
 
@@ -252,12 +66,10 @@ describe('UsageService', () => {
 
       const result = await usageService.exportUsageData(undefined, 'json');
 
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /\/api\/v1\/usage\/export\?format=json&startDate=\d{4}-\d{2}-\d{2}&endDate=\d{4}-\d{2}-\d{2}/,
-        ),
-        expect.any(Object),
-      );
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('/api/v1/usage/export');
+      expect(options.method).toBe('POST');
+      expect(JSON.parse(options.body).format).toBe('json');
       expect(result).toBeInstanceOf(Blob);
     });
 
@@ -277,18 +89,21 @@ describe('UsageService', () => {
 
       const result = await usageService.exportUsageData(filters, 'csv');
 
-      // URLSearchParams encodes brackets as %5B%5D
-      const expectedUrl =
-        '/api/v1/usage/export?format=csv&startDate=2024-06-01&endDate=2024-06-30&modelIds%5B%5D=gpt-4&apiKeyIds%5B%5D=key-1';
-      expect(mockFetch).toHaveBeenCalledWith(expectedUrl, {
-        headers: {
-          Authorization: 'Bearer mock-token',
-        },
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('/api/v1/usage/export');
+      expect(options.method).toBe('POST');
+      const body = JSON.parse(options.body);
+      expect(body).toMatchObject({
+        startDate: '2024-06-01',
+        endDate: '2024-06-30',
+        format: 'csv',
+        modelIds: ['gpt-4'],
+        apiKeyIds: ['key-1'],
       });
       expect(result).toBeInstanceOf(Blob);
     });
 
-    it('should construct URL parameters correctly with partial filters', async () => {
+    it('should send modelIds in JSON body', async () => {
       const csvBlob = new Blob(['partial filtered data'], { type: 'text/csv' });
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -303,13 +118,13 @@ describe('UsageService', () => {
 
       await usageService.exportUsageData(filters);
 
-      // URLSearchParams encodes brackets as %5B%5D
-      const expectedUrl =
-        '/api/v1/usage/export?format=csv&startDate=2024-06-01&endDate=2024-06-30&modelIds%5B%5D=gpt-4';
-      expect(mockFetch).toHaveBeenCalledWith(expectedUrl, expect.any(Object));
+      const [url, options] = mockFetch.mock.calls[0];
+      expect(url).toBe('/api/v1/usage/export');
+      const body = JSON.parse(options.body);
+      expect(body.modelIds).toEqual(['gpt-4']);
     });
 
-    it('should handle empty filters object', async () => {
+    it('should use default date range when no filters provided', async () => {
       const csvBlob = new Blob(['all data'], { type: 'text/csv' });
       mockFetch.mockResolvedValueOnce({
         ok: true,
@@ -318,13 +133,11 @@ describe('UsageService', () => {
 
       await usageService.exportUsageData();
 
+      const [, options] = mockFetch.mock.calls[0];
+      const body = JSON.parse(options.body);
       // Should use default date range (last 30 days)
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /\/api\/v1\/usage\/export\?format=csv&startDate=\d{4}-\d{2}-\d{2}&endDate=\d{4}-\d{2}-\d{2}/,
-        ),
-        expect.any(Object),
-      );
+      expect(body.startDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(body.endDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     });
 
     it('should handle authentication from localStorage', async () => {
@@ -348,11 +161,8 @@ describe('UsageService', () => {
 
       await usageService.exportUsageData();
 
-      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), {
-        headers: {
-          Authorization: 'Bearer specific-token-123',
-        },
-      });
+      const [, options] = mockFetch.mock.calls[0];
+      expect(options.headers['Authorization']).toBe('Bearer specific-token-123');
     });
 
     it('should handle missing authentication token', async () => {
@@ -373,11 +183,8 @@ describe('UsageService', () => {
 
       await usageService.exportUsageData();
 
-      expect(mockFetch).toHaveBeenCalledWith(expect.any(String), {
-        headers: {
-          Authorization: 'Bearer null',
-        },
-      });
+      const [, options] = mockFetch.mock.calls[0];
+      expect(options.headers['Authorization']).toBe('Bearer null');
     });
 
     it('should handle API errors during export', async () => {
@@ -422,12 +229,9 @@ describe('UsageService', () => {
       });
 
       await usageService.exportUsageData(undefined, 'csv');
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /\/api\/v1\/usage\/export\?format=csv&startDate=\d{4}-\d{2}-\d{2}&endDate=\d{4}-\d{2}-\d{2}/,
-        ),
-        expect.any(Object),
-      );
+      const [csvUrl, csvOptions] = mockFetch.mock.calls[0];
+      expect(csvUrl).toBe('/api/v1/usage/export');
+      expect(JSON.parse(csvOptions.body).format).toBe('csv');
 
       mockFetch.mockClear();
       const jsonBlob = new Blob(['json data'], { type: 'application/json' });
@@ -437,102 +241,18 @@ describe('UsageService', () => {
       });
 
       await usageService.exportUsageData(undefined, 'json');
-      expect(mockFetch).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /\/api\/v1\/usage\/export\?format=json&startDate=\d{4}-\d{2}-\d{2}&endDate=\d{4}-\d{2}-\d{2}/,
-        ),
-        expect.any(Object),
-      );
+      const [jsonUrl, jsonOptions] = mockFetch.mock.calls[0];
+      expect(jsonUrl).toBe('/api/v1/usage/export');
+      expect(JSON.parse(jsonOptions.body).format).toBe('json');
     });
   });
 
   describe('service instance', () => {
     it('should be a singleton instance', () => {
       expect(usageService).toBeDefined();
-      expect(typeof usageService.getUsageMetrics).toBe('function');
       expect(typeof usageService.exportUsageData).toBe('function');
-    });
-
-    it('should maintain method context', async () => {
-      const { getUsageMetrics } = usageService;
-
-      const result = await getUsageMetrics();
-      expect(result).toHaveProperty('totalRequests');
-    });
-  });
-
-  describe('URL parameter handling', () => {
-    it('should handle undefined filter values correctly', async () => {
-      const filters: UsageFilters = {
-        startDate: '2024-06-01',
-        endDate: undefined,
-        modelId: undefined,
-        apiKeyId: 'key-1',
-      };
-
-      let requestUrl: string = '';
-      server.use(
-        http.get('/api/v1/usage/metrics', ({ request }) => {
-          requestUrl = request.url;
-          return HttpResponse.json({
-            totalRequests: 100,
-            totalTokens: 1000,
-            totalCost: 10.0,
-            averageResponseTime: 1.0,
-            successRate: 95.0,
-            activeModels: 1,
-            topModels: [],
-            dailyUsage: [],
-            hourlyUsage: [],
-            errorBreakdown: [],
-          });
-        }),
-      );
-
-      await usageService.getUsageMetrics(filters);
-
-      const url = new URL(requestUrl);
-      expect(url.searchParams.get('startDate')).toBe('2024-06-01');
-      expect(url.searchParams.get('endDate')).toBeNull();
-      expect(url.searchParams.get('modelId')).toBeNull();
-      expect(url.searchParams.get('apiKeyId')).toBe('key-1');
-    });
-
-    it('should handle empty string filter values', async () => {
-      const filters: UsageFilters = {
-        startDate: '',
-        endDate: '2024-06-30',
-        modelId: '',
-        apiKeyId: 'key-1',
-      };
-
-      let requestUrl: string = '';
-      server.use(
-        http.get('/api/v1/usage/metrics', ({ request }) => {
-          requestUrl = request.url;
-          return HttpResponse.json({
-            totalRequests: 100,
-            totalTokens: 1000,
-            totalCost: 10.0,
-            averageResponseTime: 1.0,
-            successRate: 95.0,
-            activeModels: 1,
-            topModels: [],
-            dailyUsage: [],
-            hourlyUsage: [],
-            errorBreakdown: [],
-          });
-        }),
-      );
-
-      await usageService.getUsageMetrics(filters);
-
-      const url = new URL(requestUrl);
-      // Empty strings are not added as parameters (correct behavior)
-      expect(url.searchParams.get('startDate')).toBeNull();
-      expect(url.searchParams.get('endDate')).toBe('2024-06-30');
-      expect(url.searchParams.get('modelId')).toBeNull();
-      expect(url.searchParams.get('apiKeyId')).toBe('key-1');
+      expect(typeof usageService.getAnalytics).toBe('function');
+      expect(typeof usageService.getBudgetInfo).toBe('function');
     });
   });
 });

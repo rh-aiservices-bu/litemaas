@@ -2,47 +2,6 @@ import { apiClient } from './api';
 import type { Analytics } from './adminUsage.service';
 import type { UserBudgetInfo } from '../types/users';
 
-export interface UsageMetrics {
-  totalRequests: number;
-  totalTokens: number;
-  totalCost: number;
-  averageResponseTime: number;
-  successRate: number;
-  activeModels: number;
-  topModels: {
-    name: string;
-    requests: number;
-    tokens: number;
-    prompt_tokens: number;
-    completion_tokens: number;
-    cost: number;
-  }[];
-  dailyUsage: {
-    date: string;
-    requests: number;
-    tokens: number;
-    prompt_tokens: number;
-    completion_tokens: number;
-    cost: number;
-  }[];
-  hourlyUsage: {
-    hour: string;
-    requests: number;
-  }[];
-  errorBreakdown: {
-    type: string;
-    count: number;
-    percentage: number;
-  }[];
-}
-
-export interface UsageFilters {
-  startDate?: string;
-  endDate?: string;
-  modelId?: string;
-  apiKeyId?: string;
-}
-
 /**
  * User usage filters for analytics (no userIds, user is automatically scoped)
  */
@@ -74,52 +33,31 @@ class UsageService {
   }
 
   /**
-   * Get usage metrics (legacy endpoint - consider using getAnalytics instead)
-   * @deprecated Use getAnalytics for comprehensive analytics
-   */
-  async getUsageMetrics(filters?: UsageFilters): Promise<UsageMetrics> {
-    const params = new URLSearchParams();
-
-    if (filters?.startDate) params.append('startDate', filters.startDate);
-    if (filters?.endDate) params.append('endDate', filters.endDate);
-    if (filters?.modelId) params.append('modelId', filters.modelId);
-    if (filters?.apiKeyId) params.append('apiKeyId', filters.apiKeyId);
-
-    return apiClient.get<UsageMetrics>(`/usage/metrics?${params}`);
-  }
-
-  /**
    * Export usage data using analytics data
    * @param filters User usage filters (optional - defaults to last 30 days)
    * @param format Export format (csv or json)
    * @returns Blob containing exported data
    */
   async exportUsageData(filters?: UserUsageFilters, format: 'csv' | 'json' = 'csv'): Promise<Blob> {
-    const params = new URLSearchParams({ format });
-
-    // Use provided filters or default to last 30 days
     const endDate = filters?.endDate || new Date().toISOString().split('T')[0];
     const startDate =
       filters?.startDate ||
       new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    params.append('startDate', startDate);
-    params.append('endDate', endDate);
-
-    if (filters?.modelIds?.length) {
-      filters.modelIds.forEach((id) => params.append('modelIds[]', id));
-    }
-    if (filters?.providerIds?.length) {
-      filters.providerIds.forEach((id) => params.append('providerIds[]', id));
-    }
-    if (filters?.apiKeyIds?.length) {
-      filters.apiKeyIds.forEach((id) => params.append('apiKeyIds[]', id));
-    }
-
-    const response = await fetch(`/api/v1/usage/export?${params}`, {
+    const response = await fetch('/api/v1/usage/export', {
+      method: 'POST',
       headers: {
+        'Content-Type': 'application/json',
         Authorization: `Bearer ${localStorage.getItem('access_token')}`,
       },
+      body: JSON.stringify({
+        startDate,
+        endDate,
+        format,
+        modelIds: filters?.modelIds,
+        providerIds: filters?.providerIds,
+        apiKeyIds: filters?.apiKeyIds,
+      }),
     });
 
     if (!response.ok) {

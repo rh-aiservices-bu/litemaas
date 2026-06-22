@@ -943,93 +943,47 @@ Response:
 }
 ```
 
-### Usage Statistics
+### Usage Analytics & Export
 
-#### GET /api/v1/usage/summary
+#### POST /api/v1/usage/analytics
 
 **Authorization**: Requires valid JWT token (any role)
-**Data Access**:
+**Data Access**: Automatically scoped to the authenticated user's data
 
-- Standard users: Only their own usage data
-- Admin users: All usage data (use `?userId=all` for admin view)
-
-Get usage summary
+Get comprehensive usage analytics using the admin analytics pipeline.
 
 ```json
-Query Parameters:
-- startDate: ISO date
-- endDate: ISO date
-
-Response:
+Request:
 {
-  "period": {
-    "start": "2024-01-01T00:00:00Z",
-    "end": "2024-01-31T23:59:59Z"
-  },
-  "totals": {
-    "requests": 15000,
-    "tokens": 1500000,
-    "cost": 45.00
-  },
-  "byModel": [
-    {
-      "modelId": "gpt-4",
-      "requests": 10000,
-      "tokens": 1000000,
-      "cost": 30.00
-    }
-  ]
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31",
+  "modelIds": ["gpt-4"],
+  "providerIds": ["openai"],
+  "apiKeyIds": ["key-alias-1"]
 }
+
+Response: Same format as POST /api/v1/admin/usage/analytics
 ```
 
-#### GET /api/v1/usage/timeseries
+#### POST /api/v1/usage/export
 
 **Authorization**: Requires valid JWT token (any role)
-**Data Access**:
+**Data Access**: Automatically scoped to the authenticated user's data
 
-- Standard users: Only their own usage data
-- Admin users: All usage data (use `?userId=all` for admin view)
-
-Get usage time series
+Export usage data in CSV or JSON format. Uses the admin analytics pipeline for consistent token reconciliation.
 
 ```json
-Query Parameters:
-- startDate: ISO date
-- endDate: ISO date
-- interval: hour|day|week|month
-- modelId: string (optional)
-
-Response:
+Request:
 {
-  "interval": "day",
-  "data": [
-    {
-      "timestamp": "2024-01-01T00:00:00Z",
-      "requests": 500,
-      "tokens": 50000,
-      "cost": 1.50
-    }
-  ]
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31",
+  "format": "csv",
+  "modelIds": ["gpt-4"],
+  "providerIds": ["openai"],
+  "apiKeyIds": ["key-alias-1"]
 }
-```
 
-#### GET /api/v1/usage/export
-
-**Authorization**: Requires valid JWT token (any role)
-**Data Access**:
-
-- Standard users: Only their own usage data
-- Admin users: All usage data (use `?userId=all` for admin view)
-
-Export usage data
-
-```json
-Query Parameters:
-- startDate: ISO date
-- endDate: ISO date
-- format: csv|json
-
-Response: File download
+Response: File download (text/csv or application/json)
 ```
 
 ### Teams

@@ -87,7 +87,7 @@ async function checkBackend() {
     { name: 'Models (public)', path: '/api/models?page=1&limit=5' },
     { name: 'Subscriptions (protected)', path: '/api/subscriptions' },
     { name: 'API Keys (protected)', path: '/api/api-keys' },
-    { name: 'Usage (protected)', path: '/api/usage/metrics' },
+    { name: 'Usage Budget (protected)', path: '/api/v1/usage/budget' },
     {
       name: 'Admin API Key Test',
       path: '/api/subscriptions',

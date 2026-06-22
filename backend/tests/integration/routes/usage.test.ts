@@ -6,175 +6,27 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { createApp } from '../../../src/app';
-import { generateTestToken } from '../setup';
+import { generateTestToken, createTestUsers, TEST_USER_IDS } from '../setup';
 
 describe('Usage Routes Integration', () => {
   let app: FastifyInstance;
   let userToken: string;
 
   beforeAll(async () => {
-    // Set test environment
     process.env.NODE_ENV = 'test';
 
     app = await createApp({ logger: false });
     await app.ready();
 
-    // Generate test tokens
-    userToken = generateTestToken('user-123', ['user']);
+    await createTestUsers(app);
+
+    userToken = generateTestToken(TEST_USER_IDS.USER, ['user']);
   });
 
   afterAll(async () => {
     if (app) {
       await app.close();
     }
-  });
-
-  describe('GET /api/v1/usage/metrics', () => {
-    it('should require authentication', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/usage/metrics',
-      });
-
-      // May return 401 or 200 depending on dev bypass
-      expect([200, 401, 500]).toContain(response.statusCode);
-    });
-
-    it('should retrieve usage metrics for authenticated user', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/usage/metrics',
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-
-      expect([200, 500]).toContain(response.statusCode);
-
-      if (response.statusCode === 200) {
-        const result = JSON.parse(response.body);
-        expect(result).toHaveProperty('totalRequests');
-        expect(result).toHaveProperty('totalTokens');
-        expect(result).toHaveProperty('totalCost');
-        expect(result).toHaveProperty('averageResponseTime');
-        expect(result).toHaveProperty('successRate');
-        expect(result).toHaveProperty('activeModels');
-        expect(result).toHaveProperty('topModels');
-        expect(result).toHaveProperty('dailyUsage');
-        expect(Array.isArray(result.topModels)).toBe(true);
-        expect(Array.isArray(result.dailyUsage)).toBe(true);
-      }
-    });
-
-    it('should support date range filtering', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/usage/metrics?startDate=2025-01-01&endDate=2025-01-31',
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-
-      expect([200, 400, 500]).toContain(response.statusCode);
-    });
-
-    it('should support model filtering', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/usage/metrics?modelId=gpt-4',
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-
-      expect([200, 500]).toContain(response.statusCode);
-    });
-
-    it('should support API key filtering', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/usage/metrics?apiKeyId=550e8400-e29b-41d4-a716-446655440001',
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-
-      // 403 is valid when API key doesn't belong to user (security check)
-      expect([200, 400, 403, 500]).toContain(response.statusCode);
-    });
-
-    it('should validate date format', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/usage/metrics?startDate=invalid-date',
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-
-      expect([200, 400, 500]).toContain(response.statusCode);
-    });
-
-    it('should return metrics with correct structure', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/usage/metrics',
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-
-      if (response.statusCode === 200) {
-        const result = JSON.parse(response.body);
-        expect(typeof result.totalRequests).toBe('number');
-        expect(typeof result.totalTokens).toBe('number');
-        expect(typeof result.totalCost).toBe('number');
-        expect(typeof result.averageResponseTime).toBe('number');
-        expect(typeof result.successRate).toBe('number');
-      }
-    });
-
-    it('should return top models with correct structure', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/usage/metrics',
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-
-      if (response.statusCode === 200) {
-        const result = JSON.parse(response.body);
-        if (result.topModels.length > 0) {
-          const model = result.topModels[0];
-          expect(model).toHaveProperty('name');
-          expect(model).toHaveProperty('requests');
-          expect(model).toHaveProperty('tokens');
-          expect(model).toHaveProperty('cost');
-        }
-      }
-    });
-
-    it('should return daily usage with correct structure', async () => {
-      const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/usage/metrics',
-        headers: {
-          Authorization: `Bearer ${userToken}`,
-        },
-      });
-
-      if (response.statusCode === 200) {
-        const result = JSON.parse(response.body);
-        if (result.dailyUsage.length > 0) {
-          const day = result.dailyUsage[0];
-          expect(day).toHaveProperty('date');
-          expect(day).toHaveProperty('requests');
-          expect(day).toHaveProperty('tokens');
-          expect(day).toHaveProperty('cost');
-        }
-      }
-    });
   });
 
   describe('POST /api/v1/usage/analytics', () => {
@@ -188,7 +40,7 @@ describe('Usage Routes Integration', () => {
         },
       });
 
-      expect([401, 500]).toContain(response.statusCode);
+      expect(response.statusCode).toBe(401);
     });
 
     it('should retrieve analytics for authenticated user', async () => {
@@ -204,14 +56,11 @@ describe('Usage Routes Integration', () => {
         },
       });
 
-      expect([200, 500]).toContain(response.statusCode);
-
-      if (response.statusCode === 200) {
-        const result = JSON.parse(response.body);
-        expect(result).toHaveProperty('totalRequests');
-        expect(result).toHaveProperty('totalTokens');
-        expect(result).toHaveProperty('totalCost');
-      }
+      expect(response.statusCode).toBe(200);
+      const result = JSON.parse(response.body);
+      expect(result).toHaveProperty('totalRequests');
+      expect(result).toHaveProperty('totalTokens');
+      expect(result).toHaveProperty('totalCost');
     });
 
     it('should support model IDs filtering', async () => {
@@ -228,7 +77,7 @@ describe('Usage Routes Integration', () => {
         },
       });
 
-      expect([200, 400, 500]).toContain(response.statusCode);
+      expect(response.statusCode).toBe(200);
     });
 
     it('should support provider IDs filtering', async () => {
@@ -245,10 +94,10 @@ describe('Usage Routes Integration', () => {
         },
       });
 
-      expect([200, 400, 500]).toContain(response.statusCode);
+      expect(response.statusCode).toBe(200);
     });
 
-    it('should support API key IDs filtering', async () => {
+    it('should reject API key IDs not belonging to user', async () => {
       const response = await app.inject({
         method: 'POST',
         url: '/api/v1/usage/analytics',
@@ -262,8 +111,9 @@ describe('Usage Routes Integration', () => {
         },
       });
 
-      // 403 is valid when API keys don't belong to user (security check)
-      expect([200, 400, 401, 403, 500]).toContain(response.statusCode);
+      expect(response.statusCode).toBe(403);
+      const result = JSON.parse(response.body);
+      expect(result.code).toBe('FORBIDDEN_API_KEYS');
     });
 
     it('should require startDate and endDate', async () => {
@@ -276,7 +126,7 @@ describe('Usage Routes Integration', () => {
         payload: {},
       });
 
-      expect([400, 500]).toContain(response.statusCode);
+      expect(response.statusCode).toBe(400);
     });
 
     it('should validate date format', async () => {
@@ -292,26 +142,194 @@ describe('Usage Routes Integration', () => {
         },
       });
 
-      expect([400, 500]).toContain(response.statusCode);
+      expect(response.statusCode).toBe(400);
+    });
+  });
+
+  describe('POST /api/v1/usage/export', () => {
+    it('should require authentication', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/usage/export',
+        payload: {
+          startDate: '2025-01-01',
+          endDate: '2025-01-31',
+        },
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('should require startDate and endDate', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/usage/export',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+        payload: {},
+      });
+
+      expect(response.statusCode).toBe(400);
+    });
+
+    it('should reject reversed date range', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/usage/export',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+        payload: {
+          startDate: '2025-01-31',
+          endDate: '2025-01-01',
+        },
+      });
+
+      expect(response.statusCode).toBe(400);
+      const result = JSON.parse(response.body);
+      expect(result.code).toBe('INVALID_DATE_RANGE');
+    });
+
+    it('should reject API keys not belonging to user', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/usage/export',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+        payload: {
+          startDate: '2025-01-01',
+          endDate: '2025-01-31',
+          apiKeyIds: ['nonexistent-key-alias'],
+        },
+      });
+
+      expect(response.statusCode).toBe(403);
+      const result = JSON.parse(response.body);
+      expect(result.code).toBe('FORBIDDEN_API_KEYS');
+      expect(result.details.invalidApiKeys).toContain('nonexistent-key-alias');
+    });
+
+    it('should return CSV with per-day rows when export succeeds', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/usage/export',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+        payload: {
+          startDate: '2025-01-01',
+          endDate: '2025-01-07',
+          format: 'csv',
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['content-type']).toBe('text/csv');
+      expect(response.headers['content-disposition']).toContain('usage-export-');
+      expect(response.headers['content-disposition']).toContain('.csv');
+
+      const csv = response.body;
+      const lines = csv.split('\n');
+      const header = lines[0];
+
+      expect(header).toContain('Date');
+      expect(header).toContain('Prompt Tokens');
+      expect(header).toContain('Completion Tokens');
+      expect(header).not.toContain('User ID');
+      expect(header).not.toContain('Username');
+      expect(header).not.toContain('Email');
+
+      for (const line of lines.slice(1)) {
+        if (!line.trim()) continue;
+        const fields = line.split(',');
+        const totalTokens = parseInt(fields[2]);
+        const promptTokens = parseInt(fields[3]);
+        const completionTokens = parseInt(fields[4]);
+        expect(totalTokens).toBe(promptTokens + completionTokens);
+      }
+    });
+
+    it('should return JSON with daily breakdown type when format is json', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/usage/export',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+        payload: {
+          startDate: '2025-01-01',
+          endDate: '2025-01-07',
+          format: 'json',
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+      expect(response.headers['content-type']).toContain('application/json');
+      expect(response.headers['content-disposition']).toContain('.json');
+
+      const parsed = JSON.parse(response.body);
+      expect(parsed.metadata.breakdownType).toBe('daily');
+      expect(Array.isArray(parsed.data)).toBe(true);
+
+      for (const day of parsed.data) {
+        expect(day).toHaveProperty('date');
+        expect(day).toHaveProperty('tokens');
+        expect(day).toHaveProperty('prompt_tokens');
+        expect(day).toHaveProperty('completion_tokens');
+        expect(day.tokens).toBe(day.prompt_tokens + day.completion_tokens);
+      }
+    });
+
+    it('should support optional filter arrays', async () => {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/v1/usage/export',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+        payload: {
+          startDate: '2025-01-01',
+          endDate: '2025-01-31',
+          modelIds: ['gpt-4'],
+          providerIds: ['openai'],
+        },
+      });
+
+      expect(response.statusCode).toBe(200);
+    });
+
+    it('should not accept GET method', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/usage/export',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
+
+      expect(response.statusCode).toBe(404);
     });
   });
 
   describe('Data Privacy', () => {
     it('should only return data for authenticated user', async () => {
       const response = await app.inject({
-        method: 'GET',
-        url: '/api/v1/usage/metrics',
+        method: 'POST',
+        url: '/api/v1/usage/analytics',
         headers: {
           Authorization: `Bearer ${userToken}`,
         },
+        payload: {
+          startDate: '2025-01-01',
+          endDate: '2025-01-31',
+        },
       });
 
-      if (response.statusCode === 200) {
-        // The service automatically scopes data to the authenticated user
-        // We can verify the response is successful without exposing other users' data
-        const result = JSON.parse(response.body);
-        expect(result).toHaveProperty('totalRequests');
-      }
+      expect(response.statusCode).toBe(200);
+      const result = JSON.parse(response.body);
+      expect(result).toHaveProperty('totalRequests');
     });
   });
 
@@ -327,7 +345,7 @@ describe('Usage Routes Integration', () => {
         payload: 'invalid-json',
       });
 
-      expect([400, 500]).toContain(response.statusCode);
+      expect(response.statusCode).toBe(400);
     });
 
     it('should handle missing required fields', async () => {
@@ -339,11 +357,10 @@ describe('Usage Routes Integration', () => {
         },
         payload: {
           startDate: '2025-01-01',
-          // Missing endDate
         },
       });
 
-      expect([400, 500]).toContain(response.statusCode);
+      expect(response.statusCode).toBe(400);
     });
   });
 });

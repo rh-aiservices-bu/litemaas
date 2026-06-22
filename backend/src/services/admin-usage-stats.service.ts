@@ -507,6 +507,30 @@ export class AdminUsageStatsService extends BaseService {
   }
 
   /**
+   * Export daily usage data in CSV or JSON format.
+   * Returns per-day rows with reconciled token totals — suitable for user-facing exports.
+   */
+  async exportDailyUsageData(
+    filters: AdminUsageFilters,
+    format: 'csv' | 'json',
+    currencyCode: string = 'USD',
+  ): Promise<string> {
+    try {
+      const analytics = await this.getAnalytics(filters);
+      const dailyUsage = analytics.dailyUsage || [];
+
+      if (format === 'json') {
+        return this.exportService.exportToJSON(dailyUsage, filters, 'daily');
+      } else {
+        return this.exportService.exportDailyUsageToCSV(dailyUsage, filters, currencyCode);
+      }
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to export daily usage data');
+      throw ApplicationError.fromUnknown(error, 'exporting daily usage data');
+    }
+  }
+
+  /**
    * Force refresh current day's data
    *
    * Invalidates both LiteLLM service cache and database cache, then fetches fresh data from LiteLLM.

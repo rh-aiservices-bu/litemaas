@@ -1,7 +1,25 @@
 // Chart data transformation utilities for usage analytics
 // Transforms API data structures into chart-ready formats
 
-import { UsageMetrics } from '../services/usage.service';
+// Local types for legacy chart transformer functions
+type DailyUsageEntry = {
+  date: string;
+  requests: number;
+  tokens: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  cost: number;
+};
+type TopModelEntry = {
+  name: string;
+  requests: number;
+  tokens: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  cost: number;
+};
+type HourlyUsageEntry = { hour: string; requests: number };
+type ErrorBreakdownEntry = { type: string; count: number; percentage: number };
 
 // TypeScript interfaces for chart data structures
 export interface LineChartDataPoint {
@@ -41,7 +59,7 @@ export interface DailyUsageChartData {
  * Converts API data into Victory.js compatible format with proper date sorting
  */
 export const transformDailyUsageToChartData = (
-  dailyUsage: UsageMetrics['dailyUsage'] = [],
+  dailyUsage: DailyUsageEntry[] = [],
   currencySymbol: string = '$',
 ): DailyUsageChartData => {
   // Sort by date to ensure chronological order
@@ -106,7 +124,7 @@ export const transformDailyUsageToChartData = (
  * Calculates percentages and formats for donut chart display
  */
 export const transformModelBreakdownToChartData = (
-  topModels: UsageMetrics['topModels'] = [],
+  topModels: TopModelEntry[] = [],
   totalRequests: number = 0,
 ): {
   chartData: DonutChartDataPoint[];
@@ -152,7 +170,7 @@ export const transformModelBreakdownToChartData = (
  * Formats hour labels and handles missing data points
  */
 export const transformHourlyUsageToChartData = (
-  hourlyUsage: UsageMetrics['hourlyUsage'] = [],
+  hourlyUsage: HourlyUsageEntry[] = [],
 ): LineChartDataPoint[] => {
   // Sort by hour to ensure chronological order
   const sortedData = [...hourlyUsage].sort((a, b) => {
@@ -194,7 +212,7 @@ export const transformHourlyUsageToChartData = (
  * Formats error types and ensures valid percentages
  */
 export const transformErrorBreakdownToChartData = (
-  errorBreakdown: UsageMetrics['errorBreakdown'] = [],
+  errorBreakdown: ErrorBreakdownEntry[] = [],
 ): DonutChartDataPoint[] => {
   // Handle missing data gracefully
   if (errorBreakdown.length === 0) {
