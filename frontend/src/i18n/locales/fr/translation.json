@@ -1505,7 +1505,23 @@
       "variantSuccess": "Succès (Vert)",
       "variantWarning": "Avertissement (Orange)",
       "visibility": "Visibilité",
-      "visible": "Visible"
+      "visible": "Visible",
+      "usageSync": {
+        "tabTitle": "Synchronisation des données d'utilisation",
+        "title": "Synchronisation des données d'utilisation",
+        "description": "Réimportez les données d'utilisation depuis LiteLLM pour une plage de dates sélectionnée. Cette opération supprime les données en cache et les récupère avec les calculs actuels. Utilisez-la après des migrations ou lorsque les données d'utilisation doivent être recalculées. Sélectionnez une plage de dates et traitez par blocs gérables pour éviter la surcharge du système.",
+        "startDate": "Date de début",
+        "endDate": "Date de fin",
+        "resyncButton": "Actualiser les données d'utilisation",
+        "syncing": "Synchronisation en cours...",
+        "invalidRange": "La date de début doit être antérieure ou égale à la date de fin.",
+        "adminRequired": "Droits administrateur requis pour synchroniser les données d'utilisation.",
+        "notifications": {
+          "successTitle": "Données d'utilisation synchronisées",
+          "success": "Resynchronisation réussie de {{processed}} sur {{total}} jours de données d'utilisation.",
+          "errorTitle": "Échec de la synchronisation des données d'utilisation"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {

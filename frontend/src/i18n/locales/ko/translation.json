@@ -1505,7 +1505,23 @@
       "variantSuccess": "성공 (녹색)",
       "variantWarning": "경고 (주황색)",
       "visibility": "표시",
-      "visible": "표시"
+      "visible": "표시",
+      "usageSync": {
+        "tabTitle": "사용 데이터 동기화",
+        "title": "사용 데이터 동기화",
+        "description": "선택한 날짜 범위에 대해 LiteLLM에서 사용 데이터를 다시 가져옵니다. 캐시된 데이터를 삭제하고 최신 계산으로 다시 불러옵니다. 마이그레이션 후 또는 사용 데이터를 재계산해야 할 때 사용하세요. 날짜 범위를 선택하고 시스템 과부하를 방지하기 위해 적절한 단위로 나누어 처리하세요.",
+        "startDate": "시작 날짜",
+        "endDate": "종료 날짜",
+        "resyncButton": "사용 데이터 새로고침",
+        "syncing": "동기화 중...",
+        "invalidRange": "시작 날짜는 종료 날짜보다 이전이거나 같아야 합니다.",
+        "adminRequired": "사용 데이터를 동기화하려면 관리자 권한이 필요합니다.",
+        "notifications": {
+          "successTitle": "사용 데이터 동기화 완료",
+          "success": "{{total}}일 중 {{processed}}일치 사용 데이터를 성공적으로 재동기화했습니다.",
+          "errorTitle": "사용 데이터 동기화 실패"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {

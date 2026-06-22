@@ -1505,7 +1505,23 @@
       "variantSuccess": "成功（绿色）",
       "variantWarning": "警告（橙色）",
       "visibility": "可见性",
-      "visible": "可见"
+      "visible": "可见",
+      "usageSync": {
+        "tabTitle": "使用数据同步",
+        "title": "使用数据同步",
+        "description": "从 LiteLLM 重新导入所选日期范围的使用数据。此操作将删除缓存数据并使用最新计算重新获取。可在迁移后或使用数据需要重新计算时使用。请选择日期范围并分批处理，以避免系统过载。",
+        "startDate": "开始日期",
+        "endDate": "结束日期",
+        "resyncButton": "刷新使用数据",
+        "syncing": "同步中...",
+        "invalidRange": "开始日期必须早于或等于结束日期。",
+        "adminRequired": "同步使用数据需要管理员权限。",
+        "notifications": {
+          "successTitle": "使用数据已同步",
+          "success": "已成功重新同步 {{total}} 天中的 {{processed}} 天使用数据。",
+          "errorTitle": "使用数据同步失败"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {

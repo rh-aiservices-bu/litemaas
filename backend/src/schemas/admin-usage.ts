@@ -400,6 +400,26 @@ export const FilterOptionsResponseSchema = Type.Object({
   ),
 });
 
+export const ResyncRequestSchema = Type.Object({
+  startDate: Type.String({
+    format: 'date',
+    description: 'Start date for resyncing (YYYY-MM-DD)',
+  }),
+  endDate: Type.String({
+    format: 'date',
+    description: 'End date for resyncing (YYYY-MM-DD)',
+  }),
+});
+
+export const ResyncResponseSchema = Type.Object({
+  message: Type.String(),
+  daysProcessed: Type.Number(),
+  daysTotal: Type.Number(),
+  startDate: Type.String(),
+  endDate: Type.String(),
+  resyncedAt: Type.String({ format: 'date-time' }),
+});
+
 export const AdminUsageErrorResponseSchema = Type.Object({
   error: Type.String({ description: 'Error message' }),
   code: Type.Optional(Type.String({ description: 'Error code' })),

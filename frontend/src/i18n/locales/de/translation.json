@@ -1505,7 +1505,23 @@
       "variantSuccess": "Erfolg (Grün)",
       "variantWarning": "Warnung (Orange)",
       "visibility": "Sichtbarkeit",
-      "visible": "Sichtbar"
+      "visible": "Sichtbar",
+      "usageSync": {
+        "tabTitle": "Nutzungsdaten-Synchronisierung",
+        "title": "Nutzungsdaten-Synchronisierung",
+        "description": "Nutzungsdaten aus LiteLLM für einen ausgewählten Datumsbereich erneut importieren. Dabei werden gecachte Daten gelöscht und mit aktuellen Berechnungen neu abgerufen. Verwenden Sie diese Funktion nach Migrationen oder wenn Nutzungsdaten neu berechnet werden müssen. Wählen Sie einen Datumsbereich und verarbeiten Sie ihn in überschaubaren Blöcken, um eine Überlastung des Systems zu vermeiden.",
+        "startDate": "Startdatum",
+        "endDate": "Enddatum",
+        "resyncButton": "Nutzungsdaten aktualisieren",
+        "syncing": "Synchronisierung läuft...",
+        "invalidRange": "Das Startdatum muss vor oder gleich dem Enddatum liegen.",
+        "adminRequired": "Administratorzugriff erforderlich, um Nutzungsdaten zu synchronisieren.",
+        "notifications": {
+          "successTitle": "Nutzungsdaten synchronisiert",
+          "success": "{{processed}} von {{total}} Tagen der Nutzungsdaten erfolgreich neu synchronisiert.",
+          "errorTitle": "Synchronisierung der Nutzungsdaten fehlgeschlagen"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {

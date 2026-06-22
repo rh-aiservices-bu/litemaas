@@ -1505,7 +1505,23 @@
       "variantSuccess": "成功（緑）",
       "variantWarning": "警告（オレンジ）",
       "visibility": "表示",
-      "visible": "表示"
+      "visible": "表示",
+      "usageSync": {
+        "tabTitle": "使用データ同期",
+        "title": "使用データ同期",
+        "description": "選択した日付範囲の使用データをLiteLLMから再インポートします。これによりキャッシュデータが削除され、最新の計算で再取得されます。マイグレーション後や使用データの再計算が必要な場合に使用してください。日付範囲を選択し、システム過負荷を避けるため適切なチャンクに分けて処理してください。",
+        "startDate": "開始日",
+        "endDate": "終了日",
+        "resyncButton": "使用データを更新",
+        "syncing": "同期中...",
+        "invalidRange": "開始日は終了日以前の日付を指定してください。",
+        "adminRequired": "使用データを同期するには管理者権限が必要です。",
+        "notifications": {
+          "successTitle": "使用データを同期しました",
+          "success": "{{total}}日分のうち{{processed}}日分の使用データを正常に再同期しました。",
+          "errorTitle": "使用データの同期に失敗しました"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {

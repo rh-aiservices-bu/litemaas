@@ -179,7 +179,7 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
   - Budget and rate limit configuration with progress indicators
   - API key creation with auto-subscription and revocation
   - RBAC: admin (full access) vs adminReadonly (view only)
-- `/admin/tools` - **Settings and Tools (ToolsPage.tsx)** - Tabs: Limits, Banners, Branding, Currency, Models Sync, Backup
+- `/admin/tools` - **Settings and Tools (ToolsPage.tsx)** - Tabs: Limits, Banners, Branding, Currency, Backup, Usage Data Sync, Models Sync
   - Limits tab: Bulk User Limits (max budget, TPM, RPM for all users) and API Key Quota Defaults (admin-configurable defaults and maximums)
   - Backup tab: Create/restore/test-restore/download/delete database backups for LiteMaaS and LiteLLM (admin only, visible read-only for adminReadonly)
 

@@ -13,11 +13,14 @@ import {
   RebuildCacheResponseSchema,
   FilterOptionsQuerySchema,
   FilterOptionsResponseSchema,
+  ResyncRequestSchema,
+  ResyncResponseSchema,
   AdminUsageErrorResponseSchema,
   type ExportQuery,
 } from '../schemas/admin-usage';
 import type { AdminUsageFilters } from '../types/admin-usage.types';
 import { getRateLimitConfig } from '../config/rate-limit.config';
+import { ApplicationError } from '../utils/errors';
 import {
   validateDateRangeWithWarning,
   validateDateRangeSize,
@@ -825,6 +828,87 @@ const adminUsageRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.code(500).send({
           error: 'Internal server error while refreshing current day data',
           code: 'REFRESH_FAILED',
+        });
+      }
+    },
+  });
+
+  /**
+   * POST /api/v1/admin/usage/resync
+   * Re-sync usage data for a date range from LiteLLM
+   *
+   * Deletes cached usage data for the specified date range and re-imports it
+   * from LiteLLM day-by-day. Useful after migrations or when cached data needs
+   * to be recalculated with updated enrichment logic.
+   *
+   * @requires admin role (write operation)
+   */
+  fastify.post<{
+    Body: { startDate: string; endDate: string };
+  }>('/resync', {
+    config: {
+      rateLimit: getRateLimitConfig('analytics'),
+    },
+    schema: {
+      tags: ['Admin Usage Analytics'],
+      summary: 'Re-sync usage data for a date range',
+      description:
+        'Delete cached usage data and re-import from LiteLLM for the specified date range. Processes day-by-day sequentially.',
+      security: [{ bearerAuth: [] }],
+      body: ResyncRequestSchema,
+      response: {
+        200: ResyncResponseSchema,
+        400: AdminUsageErrorResponseSchema,
+        401: AdminUsageErrorResponseSchema,
+        403: AdminUsageErrorResponseSchema,
+        429: AdminUsageErrorResponseSchema,
+        500: AdminUsageErrorResponseSchema,
+      },
+    },
+    preHandler: [fastify.authenticate, fastify.requireAdmin],
+    handler: async (request, reply) => {
+      const authRequest = request as AuthenticatedRequest;
+      const { startDate, endDate } = request.body;
+
+      try {
+        fastify.log.info(
+          {
+            adminUser: authRequest.user?.userId,
+            adminUsername: authRequest.user?.username,
+            startDate,
+            endDate,
+            action: 'resync_usage_data',
+          },
+          'Admin requested usage data resync',
+        );
+
+        const result = await adminUsageStatsService.resyncDateRange(startDate, endDate);
+
+        return reply.code(200).send({
+          message: `Successfully re-synced ${result.daysProcessed} of ${result.daysTotal} days`,
+          daysProcessed: result.daysProcessed,
+          daysTotal: result.daysTotal,
+          startDate: result.startDate,
+          endDate: result.endDate,
+          resyncedAt: new Date().toISOString(),
+        });
+      } catch (error) {
+        const appError = ApplicationError.fromUnknown(error, 'resyncing usage data');
+        const statusCode = appError.statusCode < 500 ? appError.statusCode : 500;
+
+        fastify.log.error(
+          {
+            error,
+            adminUser: authRequest.user?.userId,
+            startDate,
+            endDate,
+          },
+          'Failed to resync usage data',
+        );
+
+        return reply.code(statusCode).send({
+          error: appError.message,
+          code: 'RESYNC_FAILED',
         });
       }
     },

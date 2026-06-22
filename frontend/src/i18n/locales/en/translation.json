@@ -1505,7 +1505,23 @@
       "variantSuccess": "Success (Green)",
       "variantWarning": "Warning (Orange)",
       "visibility": "Visibility",
-      "visible": "Visible"
+      "visible": "Visible",
+      "usageSync": {
+        "tabTitle": "Usage Data Sync",
+        "title": "Usage Data Sync",
+        "description": "Re-import usage data from LiteLLM for a selected date range. This deletes cached data and re-fetches it with current calculations. Use this after migrations or when usage data needs recalculation. Select a date range and process in manageable chunks to avoid system overload.",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "resyncButton": "Refresh usage data",
+        "syncing": "Syncing...",
+        "invalidRange": "Start date must be before or equal to end date.",
+        "adminRequired": "Admin access required to sync usage data.",
+        "notifications": {
+          "successTitle": "Usage data synced",
+          "success": "Successfully re-synced {{processed}} of {{total}} days of usage data.",
+          "errorTitle": "Usage data sync failed"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {

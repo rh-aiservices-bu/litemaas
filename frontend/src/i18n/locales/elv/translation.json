@@ -1505,7 +1505,23 @@
       "variantSuccess": "Orthad (Calen)",
       "variantWarning": "Balch (Galadh)",
       "visibility": "Tiruith",
-      "visible": "Tiria"
+      "visible": "Tiria",
+      "usageSync": {
+        "tabTitle": "Sennui Gwanur-Mathon",
+        "title": "Sennui Gwanur-Mathon",
+        "description": "Erio i mathon gwanur o LiteLLM an dîr-annûn dînen. I sennui hennio i mathon orthad a eria dîn sui gwanur edaid. Boe ledhi sui heryn orthad, hen dân i chrûm anann. Tiro dîr-annûn a orthado sui rîn vi thimraid maer, ben gwanur lagor i chost.",
+        "startDate": "Erin Echui",
+        "endDate": "Erin Methed",
+        "resyncButton": "Eria mathon gwanur",
+        "syncing": "Gwanuriel...",
+        "invalidRange": "Boe i erin echui na farad vi erin methed, egor sennui.",
+        "adminRequired": "Aníron heryn aran an gwanur i mathon gwanur.",
+        "notifications": {
+          "successTitle": "Mathon gwanur orthaded",
+          "success": "Gwanuriel vi orthad {{processed}} o {{total}} aurin mathon gwanur.",
+          "errorTitle": "Gwanur mathon úvannen"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {

@@ -174,6 +174,8 @@ The Settings and Tools page (`/admin/tools`) provides role-based access to syste
 | ------------------------------- | ----- | ------------- | ---- |
 | Access `/admin/tools` page      | ✅    | ✅            | ❌   |
 | View Models Sync tab            | ✅    | ✅            | ❌   |
+| View Usage Data Sync tab        | ✅    | ✅            | ❌   |
+| Click "Refresh usage data"      | ✅    | ❌ (disabled) | ❌   |
 | Click "Refresh Models" button   | ✅    | ❌ (disabled) | ❌   |
 | See sync progress/loading state | ✅    | ❌            | ❌   |
 | View sync statistics            | ✅    | ✅            | ❌   |
