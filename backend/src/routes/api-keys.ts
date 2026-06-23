@@ -89,6 +89,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
             expiresAt: apiKey.expiresAt,
             isActive: apiKey.isActive,
             revokedAt: apiKey.revokedAt,
+            liteLLMKeyAlias: apiKey.liteLLMKeyAlias,
             liteLLMKeyId: apiKey.liteLLMKeyId,
             lastSyncAt: apiKey.lastSyncAt,
             syncStatus: apiKey.syncStatus,

@@ -200,6 +200,7 @@ const UsagePage: React.FC = () => {
                 selected={selectedModelIds}
                 onSelect={handleModelFilterChange}
                 dateRange={{ startDate: filters.startDate, endDate: filters.endDate }}
+                useAdminEndpoint={false}
               />
             </ToolbarItem>
 
@@ -209,6 +210,7 @@ const UsagePage: React.FC = () => {
                 onSelect={handleApiKeyFilterChange}
                 selectedUserIds={currentUser?.id ? [currentUser.id] : []}
                 isDisabled={false}
+                useAdminEndpoint={false}
               />
             </ToolbarItem>
           </ToolbarContent>

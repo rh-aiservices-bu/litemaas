@@ -298,6 +298,7 @@ export const ApiKeyResponseSchema = Type.Object({
       ),
       modelRpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
       modelTpmLimit: Type.Optional(Type.Record(Type.String(), Type.Integer())),
+      liteLLMKeyAlias: Type.Optional(Type.String()),
       metadata: Type.Optional(Type.Record(Type.String(), Type.Any())),
     }),
   ),
