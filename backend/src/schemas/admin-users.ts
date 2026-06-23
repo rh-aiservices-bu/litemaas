@@ -99,6 +99,7 @@ export const UserApiKeySchema = Type.Object({
   createdAt: Type.String({ format: 'date-time' }),
   expiresAt: Type.Optional(Type.String({ format: 'date-time' })),
   revokedAt: Type.Optional(Type.String({ format: 'date-time' })),
+  archivedAt: Type.Optional(Type.String({ format: 'date-time' })),
 });
 
 export type UserApiKey = Static<typeof UserApiKeySchema>;
