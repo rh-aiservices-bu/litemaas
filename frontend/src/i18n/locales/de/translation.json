@@ -635,6 +635,7 @@
         "keyCreatedMessage": "Ihr API-Schlüssel wurde erfolgreich erstellt.",
         "keyCreatedSuccess": "{{name}} wurde erfolgreich erstellt",
         "keyDeleted": "{{name}} wurde gelöscht",
+        "keyArchivedMessage": "Dieser API-Schlüssel wurde archiviert und ist nicht mehr aktiv.",
         "keyExpiredMessage": "Dieser API-Schlüssel ist am {{date}} abgelaufen.",
         "keyRevokedMessage": "Dieser API-Schlüssel wurde widerrufen und kann nicht mehr verwendet werden.",
         "keyUpdatedSuccess": "{{name}} wurde erfolgreich aktualisiert",
@@ -659,6 +660,7 @@
         "createdTitle": "API-Schlüssel erfolgreich erstellt",
         "deleteTitle": "API-Schlüssel löschen",
         "editTitle": "API-Schlüssel bearbeiten",
+        "keyArchived": "Schlüssel archiviert",
         "keyExpired": "Schlüssel abgelaufen",
         "keyRevoked": "Schlüssel widerrufen",
         "secureRetrieval": "Sichere Schlüsselabfrage",
@@ -1668,6 +1670,7 @@
   },
   "status": {
     "active": "Aktiv",
+    "archived": "Archiviert",
     "inactive": "Inaktiv"
   },
   "ui": {
@@ -1909,6 +1912,10 @@
       "revokeError": "Widerruf fehlgeschlagen",
       "revokeSuccess": "API-Schlüssel widerrufen",
       "revokeSuccessDesc": "Der API-Schlüssel wurde erfolgreich deaktiviert.",
+      "unarchive": "Archivierung aufheben",
+      "unarchiveError": "Archivierung fehlgeschlagen",
+      "unarchiveSuccess": "API-Schlüssel wiederhergestellt",
+      "unarchiveSuccessDesc": "Der API-Schlüssel wurde wiederhergestellt und ist nun für den Benutzer sichtbar.",
       "rpm": "RPM",
       "rpmLimit": "RPM-Limit",
       "status": "Status",

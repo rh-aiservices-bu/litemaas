@@ -185,6 +185,31 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
     },
   );
 
+  // Unarchive mutation
+  const unarchiveMutation = useMutation(
+    (keyId: string) => usersService.unarchiveUserApiKey(userId, keyId),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['admin-user-api-keys', userId]);
+        addNotification({
+          title: t('users.apiKeys.unarchiveSuccess', 'API Key Unarchived'),
+          description: t(
+            'users.apiKeys.unarchiveSuccessDesc',
+            'The API key has been restored and is now visible to the user.',
+          ),
+          variant: 'success',
+        });
+      },
+      onError: (err: Error) => {
+        addNotification({
+          title: t('users.apiKeys.unarchiveError', 'Unarchive Failed'),
+          description: err.message,
+          variant: 'danger',
+        });
+      },
+    },
+  );
+
   // Reset spend mutation
   const resetSpendMutation = useMutation(
     (keyId: string) => usersService.resetApiKeySpend(userId, keyId),
@@ -648,13 +673,15 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
     return formatDate(dateString);
   };
 
-  const getStatusColor = (key: UserApiKey): 'green' | 'red' | 'grey' => {
+  const getStatusColor = (key: UserApiKey): 'green' | 'red' | 'grey' | 'orange' => {
+    if (key.archivedAt) return 'orange';
     if (key.revokedAt) return 'red';
     if (!key.isActive) return 'grey';
     return 'green';
   };
 
   const getStatusLabel = (key: UserApiKey): string => {
+    if (key.archivedAt) return t('status.archived', 'Archived');
     if (key.revokedAt) return t('status.revoked', 'Revoked');
     if (!key.isActive) return t('status.inactive', 'Inactive');
     return t('status.active', 'Active');
@@ -1184,6 +1211,14 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                             {
                               title: t('users.apiKeys.revoke', 'Revoke'),
                               onClick: () => handleRevokeClick(key),
+                            },
+                          ]
+                        : []),
+                      ...(canEdit && key.archivedAt
+                        ? [
+                            {
+                              title: t('users.apiKeys.unarchive', 'Unarchive'),
+                              onClick: () => unarchiveMutation.mutate(key.id),
                             },
                           ]
                         : []),

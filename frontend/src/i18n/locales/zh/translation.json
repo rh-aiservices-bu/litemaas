@@ -635,6 +635,7 @@
         "keyCreatedMessage": "您的API密钥已成功创建。",
         "keyCreatedSuccess": "{{name}}已成功创建",
         "keyDeleted": "{{name}}已被删除",
+        "keyArchivedMessage": "此API密钥已被归档，不再处于活跃状态。",
         "keyExpiredMessage": "此API密钥已于{{date}}过期。",
         "keyRevokedMessage": "此API密钥已被撤销，无法再使用。",
         "keyUpdatedSuccess": "{{name}} 已成功更新",
@@ -659,6 +660,7 @@
         "createdTitle": "API密钥创建成功",
         "deleteTitle": "删除API密钥",
         "editTitle": "编辑API密钥",
+        "keyArchived": "密钥已归档",
         "keyExpired": "密钥已过期",
         "keyRevoked": "密钥已撤销",
         "secureRetrieval": "安全密钥检索",
@@ -1668,6 +1670,7 @@
   },
   "status": {
     "active": "活跃",
+    "archived": "已归档",
     "inactive": "非活跃"
   },
   "ui": {
@@ -1909,6 +1912,10 @@
       "revokeError": "撤销失败",
       "revokeSuccess": "API 密钥已撤销",
       "revokeSuccessDesc": "API 密钥已成功停用。",
+      "unarchive": "取消归档",
+      "unarchiveError": "取消归档失败",
+      "unarchiveSuccess": "API 密钥已取消归档",
+      "unarchiveSuccessDesc": "API 密钥已恢复，用户现在可以看到该密钥。",
       "rpm": "RPM",
       "rpmLimit": "RPM限制",
       "status": "状态",
