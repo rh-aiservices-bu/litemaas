@@ -307,4 +307,133 @@ describe('ApiKeyFilterSelect', () => {
       expect(mockApiClient.get.mock.calls.length).toBe(firstCallCount);
     });
   });
+
+  describe('useAdminEndpoint={false} (user mode)', () => {
+    it('should fetch from user-scoped /api-keys endpoint', async () => {
+      const mockUserKeys = {
+        data: [
+          {
+            id: 'key-1',
+            name: 'My Key',
+            liteLLMKeyAlias: 'sk-my-key-alias',
+            keyPrefix: 'sk-abc',
+            isActive: true,
+          },
+        ],
+      };
+
+      mockApiClient.get.mockResolvedValueOnce(mockUserKeys);
+
+      renderComponent({
+        selectedUserIds: ['user-1'],
+        useAdminEndpoint: false,
+      });
+
+      await waitFor(() => {
+        expect(mockApiClient.get).toHaveBeenCalledWith('/api-keys?limit=100&isActive=true');
+      });
+    });
+
+    it('should not require selectedUserIds to fetch', async () => {
+      mockApiClient.get.mockResolvedValueOnce({ data: [] });
+
+      renderComponent({
+        selectedUserIds: [],
+        useAdminEndpoint: false,
+      });
+
+      await waitFor(() => {
+        expect(mockApiClient.get).toHaveBeenCalledWith('/api-keys?limit=100&isActive=true');
+      });
+    });
+
+    it('should display key name without username', async () => {
+      const mockUserKeys = {
+        data: [
+          {
+            id: 'key-1',
+            name: 'Production Key',
+            liteLLMKeyAlias: 'sk-prod-alias',
+            keyPrefix: 'sk-abc',
+            isActive: true,
+          },
+        ],
+      };
+
+      mockApiClient.get.mockResolvedValueOnce(mockUserKeys);
+
+      const user = userEvent.setup();
+      renderComponent({
+        selectedUserIds: [],
+        useAdminEndpoint: false,
+      });
+
+      await waitFor(() => {
+        expect(mockApiClient.get).toHaveBeenCalled();
+      });
+
+      const input = screen.getByPlaceholderText(/all api keys \(click to filter\)/i);
+      await user.click(input);
+
+      await waitFor(() => {
+        const option = screen.getByText('Production Key');
+        expect(option).toBeInTheDocument();
+        expect(screen.queryByText(/\(.*\)/)).not.toBeInTheDocument();
+      });
+    });
+
+    it('should filter out keys without liteLLMKeyAlias', async () => {
+      const mockUserKeys = {
+        data: [
+          {
+            id: 'key-1',
+            name: 'Has Alias',
+            liteLLMKeyAlias: 'sk-alias',
+            keyPrefix: 'sk-abc',
+            isActive: true,
+          },
+          {
+            id: 'key-2',
+            name: 'No Alias',
+            keyPrefix: 'sk-def',
+            isActive: true,
+          },
+        ],
+      };
+
+      mockApiClient.get.mockResolvedValueOnce(mockUserKeys);
+
+      const user = userEvent.setup();
+      renderComponent({
+        selectedUserIds: [],
+        useAdminEndpoint: false,
+      });
+
+      await waitFor(() => {
+        expect(mockApiClient.get).toHaveBeenCalled();
+      });
+
+      const input = screen.getByPlaceholderText(/all api keys \(click to filter\)/i);
+      await user.click(input);
+
+      await waitFor(() => {
+        expect(screen.getByText('Has Alias')).toBeInTheDocument();
+        expect(screen.queryByText('No Alias')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should show placeholder without "select users" text', () => {
+      renderComponent({
+        selectedUserIds: [],
+        useAdminEndpoint: false,
+      });
+
+      expect(
+        screen.getByPlaceholderText(/all api keys \(click to filter\)/i),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByPlaceholderText(/select users first/i),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

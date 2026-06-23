@@ -119,6 +119,7 @@ interface ApiKeyDbRow {
   budget_duration?: string;
   soft_budget?: number;
   budget_reset_at?: Date | string;
+  litellm_key_alias?: string;
   metadata?: Record<string, unknown>;
   model_details?: unknown[];
   subscription_id?: string;
@@ -2035,6 +2036,7 @@ export class ApiKeyService extends BaseService {
       isActive: apiKey.is_active,
       createdAt: new Date(apiKey.created_at),
       revokedAt: apiKey.revoked_at ? new Date(apiKey.revoked_at) : undefined,
+      liteLLMKeyAlias: apiKey.litellm_key_alias,
       liteLLMKeyId: apiKey.lite_llm_key_value || liteLLMResponse?.key,
       lastSyncAt: apiKey.last_sync_at ? new Date(apiKey.last_sync_at) : undefined,
       syncStatus: (apiKey.sync_status || 'pending') as 'pending' | 'synced' | 'error',

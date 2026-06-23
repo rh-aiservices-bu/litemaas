@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Dev-only endpoints locked down**: `dev-token`, `mock-login`, and `mock-users` endpoints now restricted to development and test environments only via allowlist
 - **Session invalidation IDOR**: Session delete endpoint now enforces ownership check, preventing users from invalidating other users' sessions
 - **Swagger/dev endpoint visibility**: Swagger `hide` property now uses the same allowlist as handler guards, preventing dev endpoints from being advertised in non-development environments
+- **UsagePage 403 errors for regular users**: `ModelFilterSelect` and `ApiKeyFilterSelect` on the user usage page (`/usage`) unconditionally called admin-only endpoints; both now accept a `useAdminEndpoint` prop and fall back to user-scoped `/models` and `/api-keys` endpoints (#135)
 - **Usage analytics enrichment**: Revoked or inactive API keys are now included in user mapping during usage report enrichment, fixing undercounted requests and spend for users whose keys were later deactivated
 - **Usage cache staleness**: Yesterday's completed usage data is now permanently cached instead of being re-fetched on every request, improving performance and consistency
 - **Usage analytics billing calculation**: Eliminated token double-counting where model metrics were initialized with LiteLLM's already-aggregated prompt/completion tokens then added again per API key, and excluded tokens/spend from skipped requests with empty or invalid API keys

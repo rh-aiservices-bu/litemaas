@@ -265,6 +265,7 @@ export interface EnhancedApiKey extends ApiKey {
     quotaRequests: number;
     usedRequests: number;
   }>;
+  liteLLMKeyAlias?: string;
   // PHASE 1 FIX: Add actual LiteLLM key fields
   liteLLMKey?: string; // Masked key for list views, full key for individual retrieval
   liteLLMKeyId?: string; // Full LiteLLM key ID for internal use
