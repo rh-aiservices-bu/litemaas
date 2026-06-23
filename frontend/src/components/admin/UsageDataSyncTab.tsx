@@ -145,6 +145,7 @@ const UsageDataSyncTab: React.FC<UsageDataSyncTabProps> = ({ canManage }) => {
                     onChange={handleStartDateChange}
                     aria-label={t('pages.tools.usageSync.startDate')}
                     isDisabled={isSyncing}
+                    appendTo={document.body}
                   />
                 </FormGroup>
               </FlexItem>
@@ -155,6 +156,7 @@ const UsageDataSyncTab: React.FC<UsageDataSyncTabProps> = ({ canManage }) => {
                     onChange={handleEndDateChange}
                     aria-label={t('pages.tools.usageSync.endDate')}
                     isDisabled={isSyncing}
+                    appendTo={document.body}
                   />
                 </FormGroup>
               </FlexItem>
