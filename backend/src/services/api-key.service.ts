@@ -2177,9 +2177,13 @@ export class ApiKeyService extends BaseService {
             [apiKey.id, modelId],
           );
 
-          await this.liteLLMService.updateKey(apiKey.lite_llm_key_value, {
-            models: remainingModels.map((m) => m.model_id),
-          });
+          if (remainingModels.length === 0) {
+            await this.liteLLMService.deleteKey(apiKey.lite_llm_key_value);
+          } else {
+            await this.liteLLMService.updateKey(apiKey.lite_llm_key_value, {
+              models: remainingModels.map((m) => m.model_id),
+            });
+          }
 
           liteLLMUpdates.push({ keyId: apiKey.id, success: true });
         } catch (error) {
@@ -2281,13 +2285,10 @@ export class ApiKeyService extends BaseService {
       );
     }
 
-    // Deactivate in LiteLLM first if active
+    // Deactivate in LiteLLM first if active — let errors propagate so the key
+    // stays visible rather than being archived while still active remotely
     if (key.is_active && key.lite_llm_key_value && !this.shouldUseMockData()) {
-      try {
-        await this.liteLLMService.deleteKey(key.lite_llm_key_value);
-      } catch (error) {
-        this.fastify.log.warn({ keyId, error }, 'Failed to delete key from LiteLLM during archive');
-      }
+      await this.liteLLMService.deleteKey(key.lite_llm_key_value);
     }
 
     const result = await this.fastify.dbUtils.queryOne<{ archived_at: Date }>(
@@ -2296,7 +2297,7 @@ export class ApiKeyService extends BaseService {
     );
 
     const auditUserId = adminUserId || userId;
-    const metadata = adminUserId ? { keyId, adminUserId } : { keyId };
+    const metadata = adminUserId ? { keyId, adminUserId, targetUserId: userId } : { keyId };
 
     await this.fastify.dbUtils.query(
       `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
@@ -2336,7 +2337,7 @@ export class ApiKeyService extends BaseService {
     );
 
     const auditUserId = adminUserId || userId;
-    const metadata = adminUserId ? { keyId, adminUserId } : { keyId };
+    const metadata = adminUserId ? { keyId, adminUserId, targetUserId: userId } : { keyId };
 
     await this.fastify.dbUtils.query(
       `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)

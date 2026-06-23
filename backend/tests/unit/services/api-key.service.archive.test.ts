@@ -96,24 +96,18 @@ describe('ApiKeyService - Archive', () => {
       await expect(service.archiveApiKey('key-1', 'user-1')).rejects.toThrow();
     });
 
-    it('should succeed even if LiteLLM deletion fails', async () => {
-      const archivedAt = new Date('2026-06-23T12:00:00Z');
-      mockDbUtils.queryOne
-        .mockResolvedValueOnce({
-          id: 'key-1',
-          archived_at: null,
-          lite_llm_key_value: 'sk-litellm-abc',
-          is_active: true,
-        })
-        .mockResolvedValueOnce({ archived_at: archivedAt });
-      mockDbUtils.query.mockResolvedValue({ rowCount: 1 });
+    it('should throw if LiteLLM deletion fails (key stays visible)', async () => {
+      mockDbUtils.queryOne.mockResolvedValueOnce({
+        id: 'key-1',
+        archived_at: null,
+        lite_llm_key_value: 'sk-litellm-abc',
+        is_active: true,
+      });
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
       (mockLiteLLMService.deleteKey as any).mockRejectedValueOnce(new Error('LiteLLM down'));
 
-      const result = await service.archiveApiKey('key-1', 'user-1');
-
-      expect(result.archivedAt).toEqual(archivedAt);
-      expect((mockFastify.log as any).warn).toHaveBeenCalled();
+      await expect(service.archiveApiKey('key-1', 'user-1')).rejects.toThrow('LiteLLM down');
+      expect(mockDbUtils.queryOne).toHaveBeenCalledTimes(1);
     });
 
     it('should skip LiteLLM deletion for inactive keys', async () => {
@@ -152,10 +146,12 @@ describe('ApiKeyService - Archive', () => {
       expect(selectCall[0]).not.toContain('user_id');
       expect(selectCall[1]).toEqual(['key-1']);
 
-      // Audit log should reference admin
+      // Audit log should reference admin and target user
       const auditCall = mockDbUtils.query.mock.calls[0];
       expect(auditCall[1][0]).toBe('admin-1');
-      expect(auditCall[1][4]).toContain('admin-1');
+      const metadata = JSON.parse(auditCall[1][4]);
+      expect(metadata.adminUserId).toBe('admin-1');
+      expect(metadata.targetUserId).toBe('user-1');
     });
   });
 
@@ -206,15 +202,54 @@ describe('ApiKeyService - Archive', () => {
       const selectCall = mockDbUtils.queryOne.mock.calls[0];
       expect(selectCall[0]).not.toContain('user_id');
       expect(selectCall[1]).toEqual(['key-1']);
+
+      // Audit log should include targetUserId
+      const auditCall = mockDbUtils.query.mock.calls.find((call: any[]) =>
+        call[0].includes('INSERT INTO audit_logs'),
+      );
+      const metadata = JSON.parse(auditCall![1][4]);
+      expect(metadata.adminUserId).toBe('admin-1');
+      expect(metadata.targetUserId).toBe('user-1');
     });
   });
 
   describe('removeModelFromUserApiKeys - auto-archive', () => {
+    it('should delete key from LiteLLM (not update) when no remaining models', async () => {
+      mockDbUtils.queryMany.mockResolvedValueOnce([
+        { id: 'key-1', lite_llm_key_value: 'sk-litellm-1' },
+      ]);
+      mockDbUtils.queryMany.mockResolvedValueOnce([]);
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+      mockPgClient.query.mockResolvedValue({ rowCount: 1 });
+
+      await service.removeModelFromUserApiKeys('user-1', 'model-1');
+
+      expect(mockLiteLLMService.deleteKey).toHaveBeenCalledWith('sk-litellm-1');
+      expect(mockLiteLLMService.updateKey).not.toHaveBeenCalled();
+    });
+
+    it('should update key in LiteLLM with remaining models when some remain', async () => {
+      mockDbUtils.queryMany.mockResolvedValueOnce([
+        { id: 'key-1', lite_llm_key_value: 'sk-litellm-1' },
+      ]);
+      mockDbUtils.queryMany.mockResolvedValueOnce([{ model_id: 'model-2' }]);
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+      mockPgClient.query.mockResolvedValue({ rowCount: 1 });
+
+      await service.removeModelFromUserApiKeys('user-1', 'model-1');
+
+      expect(mockLiteLLMService.updateKey).toHaveBeenCalledWith('sk-litellm-1', {
+        models: ['model-2'],
+      });
+      expect(mockLiteLLMService.deleteKey).not.toHaveBeenCalled();
+    });
+
     it('should archive keys with zero remaining models in a transaction', async () => {
       mockDbUtils.queryMany.mockResolvedValueOnce([
         { id: 'key-1', lite_llm_key_value: 'sk-litellm-1' },
       ]);
-      // Remaining models query (inside the loop) - no remaining models
       mockDbUtils.queryMany.mockResolvedValueOnce([]);
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(true);
 
@@ -222,15 +257,12 @@ describe('ApiKeyService - Archive', () => {
 
       await service.removeModelFromUserApiKeys('user-1', 'model-1');
 
-      // Should use withTransaction for the DELETE + archive UPDATE
       expect(mockFastify.dbUtils!.withTransaction).toHaveBeenCalled();
 
-      // DELETE from api_key_models
       expect(mockPgClient.query).toHaveBeenCalledWith(
         expect.stringContaining('DELETE FROM api_key_models'),
         expect.any(Array),
       );
-      // Archive UPDATE
       expect(mockPgClient.query).toHaveBeenCalledWith(
         expect.stringContaining('archived_at = CURRENT_TIMESTAMP'),
         expect.any(Array),
