@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Usage Data Sync tool**: Admin tool in Settings and Tools to re-import usage data from LiteLLM for a selected date range, useful after migrations or when cached data needs recalculation with current enrichment logic (token reconciliation, user mapping)
+  - Backend: `resyncDateRange()` on AdminUsageStatsService, `deleteDateRange()` on DailyUsageCacheManager, new `POST /api/v1/admin/usage/resync` endpoint
+  - Frontend: UsageDataSyncTab with date range pickers and sync button
+  - RBAC: `admin:usage` permission (admin only), tab visible to adminReadonly (read-only)
+  - i18n: Translations across all 9 locales
+- **NetworkPolicy resources**: Deny-all-ingress default plus per-component allow rules for network segmentation, gated by `networkPolicy.enabled` (default `false`)
+  - Configurable ingress controller selectors via `networkPolicy.ingressController.{namespaceSelector,podSelector}`
+  - Ingress controller rules gated behind `ingress.enabled || route.enabled`
+  - Fail-fast validation when networkPolicy and ingress/route are both enabled without explicit ingress controller selectors
+- **Redis authentication support**: `requirepass` authentication for Redis deployments
+  - Backend: ioredis client accepts optional `REDIS_PASSWORD`
+  - Helm: `redis.auth.password` value with `existingSecret` support, `redis-secret.yaml` template, authenticated health probes, and `REDIS_PASSWORD` env var injected into backend and LiteLLM deployments
+  - Kustomize: commented instructions for enabling auth
+  - Fixed auth conditionals for external Redis and existingSecret scenarios
+- **SecurityContext for all workloads**: Pod-level (`runAsNonRoot`, seccomp `RuntimeDefault`) and container-level (`allowPrivilegeEscalation: false`, drop ALL capabilities) security contexts added to all 5 main workloads (backend, frontend, LiteLLM, PostgreSQL, Redis), init containers, and hook Job
+  - Configurable via `podSecurityContext` and `containerSecurityContext` in `values.yaml`
 - **LiteLLM SSL configuration**: Configurable SSL verification for LiteLLM with internal Kubernetes/OpenShift services using self-signed certificates (e.g., KServe inference endpoints)
   - `litellm.sslVerify` Helm parameter (default: `true`) and `SSL_VERIFY` env var in Kustomize
   - Production CA bundle support via `litellm.extraEnv`, `litellm.extraVolumes`, and `litellm.extraVolumeMounts` for injecting custom CA certificates without disabling SSL globally
@@ -20,6 +36,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Usage analytics token reconciliation**: `total_tokens` is now consistently computed as `prompt_tokens + completion_tokens` at every breakdown level (model, user, provider, API key, daily), fixing dashboard mismatches where total tokens did not equal prompt + completion tokens
+- **User usage export migrated to admin pipeline**: User export endpoint now returns per-day rows with reconciled token totals instead of a single aggregated record, with date range validation, API key ownership checks, and currency-aware cost headers
+- **Date picker popover clipping**: DatePicker calendar in Usage Data Sync tab now renders at `document.body` to prevent clipping by tab panel overflow
+- **Production authentication bypass removed**: Removed `authenticateWithDevBypass` which allowed unauthenticated access in production when `MOCK_AUTH` was unset
+- **Dev-only endpoints locked down**: `dev-token`, `mock-login`, and `mock-users` endpoints now restricted to development and test environments only via allowlist
+- **Session invalidation IDOR**: Session delete endpoint now enforces ownership check, preventing users from invalidating other users' sessions
+- **Swagger/dev endpoint visibility**: Swagger `hide` property now uses the same allowlist as handler guards, preventing dev endpoints from being advertised in non-development environments
 - **Usage analytics enrichment**: Revoked or inactive API keys are now included in user mapping during usage report enrichment, fixing undercounted requests and spend for users whose keys were later deactivated
 - **Usage cache staleness**: Yesterday's completed usage data is now permanently cached instead of being re-fetched on every request, improving performance and consistency
 - **Usage analytics billing calculation**: Eliminated token double-counting where model metrics were initialized with LiteLLM's already-aggregated prompt/completion tokens then added again per API key, and excluded tokens/spend from skipped requests with empty or invalid API keys
@@ -29,16 +52,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **LiteLLM schema creation**: Set `DISABLE_SCHEMA_UPDATE` to `false` in Helm and Kustomize deployment templates, fixing fresh deployments where LiteLLM could not create its database schema
 - **PYTHONHTTPSVERIFY Helm value**: Corrected from CA bundle file path to boolean toggle (`"0"`) per PEP 493; commented out by default since CA bundle approach is preferred
 
+### Security
+
+- **CWE-287 — Authentication bypass**: Removed `authenticateWithDevBypass` function that fell through to mock authentication in production when `MOCK_AUTH` was not explicitly set
+- **CWE-639 — Session IDOR**: Session invalidation now enforces ownership, preventing horizontal privilege escalation via session ID guessing
+- **CWE-250 — SecurityContext hardening**: All Helm workloads now run with `runAsNonRoot`, seccomp `RuntimeDefault`, `allowPrivilegeEscalation: false`, and drop ALL capabilities
+- **CWE-284 — Network segmentation**: NetworkPolicy resources restrict pod-to-pod traffic so only expected flows (e.g., backend → PostgreSQL, backend → Redis) are permitted
+- **CWE-284 — Redis authentication**: Redis deployments now require `requirepass` authentication by default, preventing unauthenticated access from any pod that can reach port 6379
+- **Dev endpoint exposure**: `dev-token`, `mock-login`, and `mock-users` endpoints are now blocked outside development/test environments
+
 ### Documentation
 
 - Fixed documentation drift on `MOCK_AUTH` and Redis configuration in `.env.example` and CLAUDE.md files
 - Added `OAUTH_MOCK_ENABLED` to `.env.example` and `docs/deployment/configuration.md`
+- Aligned `CONTRIBUTING.md` and setup guide with dev-branch workflow
+- Added git workflow section to `CLAUDE.md`
+- Removed 4 unused legacy usage endpoints and their dead frontend code
+
+### Tests
+
+- Added CWE-287 regression test for browser User-Agent authentication bypass
+- Strengthened IDOR test with real session injection and ownership verification
+- Added Swagger hide regression test to verify dev endpoint visibility matches allowlist
+- Fixed 10 broken test expectations across 3 test files
+- Added missing `jsonwebtoken` dev dependency for backend tests
+- Updated mock API key expiration date to prevent time-sensitive test failures
 
 ### Contributors
 
 - Guillaume Moutier
-- Markus Gersdorf
-- Adriano Machado
+- Chris Brown (new contributor)
+- Markus Gersdorf (new contributor)
+- Adriano Machado (new contributor)
 - Co-authored-by: Claude (AI pair programming assistant)
 
 ## [0.4.0] - 2026-03-11
