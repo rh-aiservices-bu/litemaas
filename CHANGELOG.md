@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Usage analytics billing calculation**: Eliminated token double-counting where model metrics were initialized with LiteLLM's already-aggregated prompt/completion tokens then added again per API key, and excluded tokens/spend from skipped requests with empty or invalid API keys
 - **Usage analytics unmapped metrics**: Fixed unmapped metrics being added to model totals for fields already initialized from LiteLLM aggregate (api_requests, total_tokens, spend); relocated token validation to run after all adjustments
 - **Usage analytics global request counts**: Fixed global successful/failed request counts excluding unmapped traffic because recalculation ran before unmapped metrics were folded into model totals; removed incorrect skippedRequests subtraction
+- **API key archiving on subscription deletion**: Subscription cancellation now archives associated API keys instead of only deactivating them, preventing orphaned keys from remaining visible to users; `archivedAt` exposed in admin API responses to restore the Archived badge and Unarchive action; admin API keys query cache invalidated on subscription removal
+- **LiteLLM access expansion on archive**: Deleting the last model from an API key now removes the key from LiteLLM entirely instead of updating it with an empty model list, which would silently grant access to all models; LiteLLM errors in archive/unarchive now propagate so keys remain visible for admin intervention on failure; subscription cancellation deletes from LiteLLM before archiving locally
 - **Notification timer cleanup**: Success notification auto-dismiss timers are now properly cleared on component unmount, fixing intermittent `window is not defined` errors during test runs
 - **LiteLLM schema creation**: Set `DISABLE_SCHEMA_UPDATE` to `false` in Helm and Kustomize deployment templates, fixing fresh deployments where LiteLLM could not create its database schema
 - **PYTHONHTTPSVERIFY Helm value**: Corrected from CA bundle file path to boolean toggle (`"0"`) per PEP 493; commented out by default since CA bundle approach is preferred
@@ -85,6 +87,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Chris Brown (new contributor)
 - Markus Gersdorf (new contributor)
 - Adriano Machado (new contributor)
+- Bryon Baker (new contributor)
 - Co-authored-by: Claude (AI pair programming assistant)
 
 ## [0.4.0] - 2026-03-11
