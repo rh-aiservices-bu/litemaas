@@ -635,6 +635,7 @@
         "keyCreatedMessage": "Votre clé API a été créée avec succès.",
         "keyCreatedSuccess": "{{name}} a été créé avec succès",
         "keyDeleted": "{{name}} a été supprimé",
+        "keyArchivedMessage": "Cette clé API a été archivée et n'est plus active.",
         "keyExpiredMessage": "Cette clé API a expiré le {{date}}.",
         "keyRevokedMessage": "Cette clé API a été révoquée et ne peut plus être utilisée.",
         "keyUpdatedSuccess": "{{name}} a été mise à jour avec succès",
@@ -659,6 +660,7 @@
         "createdTitle": "Clé API Créée avec Succès",
         "deleteTitle": "Supprimer la Clé API",
         "editTitle": "Modifier la Clé API",
+        "keyArchived": "Clé Archivée",
         "keyExpired": "Clé Expirée",
         "keyRevoked": "Clé Révoquée",
         "secureRetrieval": "Récupération Sécurisée de la Clé",
@@ -1668,6 +1670,7 @@
   },
   "status": {
     "active": "Actif",
+    "archived": "Archivée",
     "inactive": "Inactif"
   },
   "ui": {
@@ -1909,6 +1912,10 @@
       "revokeError": "Échec de la Révocation",
       "revokeSuccess": "Clé API Révoquée",
       "revokeSuccessDesc": "La clé API a été désactivée avec succès.",
+      "unarchive": "Désarchiver",
+      "unarchiveError": "Échec du Désarchivage",
+      "unarchiveSuccess": "Clé API Restaurée",
+      "unarchiveSuccessDesc": "La clé API a été restaurée et est désormais visible par l'utilisateur.",
       "rpm": "RPM",
       "rpmLimit": "Limite RPM",
       "status": "Statut",

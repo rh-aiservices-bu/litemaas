@@ -635,6 +635,7 @@
         "keyCreatedMessage": "La tua chiave API è stata creata con successo.",
         "keyCreatedSuccess": "{{name}} è stata creata con successo",
         "keyDeleted": "{{name}} è stata eliminata",
+        "keyArchivedMessage": "Questa chiave API è stata archiviata e non è più attiva.",
         "keyExpiredMessage": "Questa chiave API è scaduta il {{date}}.",
         "keyRevokedMessage": "Questa chiave API è stata revocata e non può più essere utilizzata.",
         "keyUpdatedSuccess": "{{name}} è stata aggiornata con successo",
@@ -659,6 +660,7 @@
         "createdTitle": "Chiave API Creata con Successo",
         "deleteTitle": "Elimina Chiave API",
         "editTitle": "Modifica Chiave API",
+        "keyArchived": "Chiave Archiviata",
         "keyExpired": "Chiave Scaduta",
         "keyRevoked": "Chiave Revocata",
         "secureRetrieval": "Recupero Sicuro Chiave",
@@ -1668,6 +1670,7 @@
   },
   "status": {
     "active": "Attivo",
+    "archived": "Archiviata",
     "inactive": "Inattivo"
   },
   "ui": {
@@ -1909,6 +1912,10 @@
       "revokeError": "Revoca Fallita",
       "revokeSuccess": "Chiave API Revocata",
       "revokeSuccessDesc": "La chiave API è stata disattivata con successo.",
+      "unarchive": "Ripristina",
+      "unarchiveError": "Ripristino non riuscito",
+      "unarchiveSuccess": "Chiave API Ripristinata",
+      "unarchiveSuccessDesc": "La chiave API è stata ripristinata ed è ora visibile all'utente.",
       "rpm": "RPM",
       "rpmLimit": "Limite RPM",
       "status": "Stato",

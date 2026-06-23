@@ -635,6 +635,7 @@
         "keyCreatedMessage": "API 키가 성공적으로 생성되었습니다.",
         "keyCreatedSuccess": "{{name}}이(가) 성공적으로 생성되었습니다",
         "keyDeleted": "{{name}}이(가) 삭제되었습니다",
+        "keyArchivedMessage": "이 API 키는 보관 처리되어 더 이상 활성 상태가 아닙니다.",
         "keyExpiredMessage": "이 API 키는 {{date}}에 만료되었습니다.",
         "keyRevokedMessage": "이 API 키는 취소되었으며 더 이상 사용할 수 없습니다.",
         "keyUpdatedSuccess": "{{name}}이(가) 성공적으로 업데이트되었습니다",
@@ -659,6 +660,7 @@
         "createdTitle": "API 키가 성공적으로 생성되었습니다",
         "deleteTitle": "API 키 삭제",
         "editTitle": "API 키 편집",
+        "keyArchived": "키 보관됨",
         "keyExpired": "키 만료됨",
         "keyRevoked": "키 취소됨",
         "secureRetrieval": "안전한 키 검색",
@@ -1668,6 +1670,7 @@
   },
   "status": {
     "active": "활성",
+    "archived": "보관됨",
     "inactive": "비활성"
   },
   "ui": {
@@ -1915,6 +1918,10 @@
       "revokeError": "취소 실패",
       "revokeSuccess": "API 키가 취소되었습니다",
       "revokeSuccessDesc": "API 키가 성공적으로 비활성화되었습니다.",
+      "unarchive": "보관 취소",
+      "unarchiveError": "보관 취소 실패",
+      "unarchiveSuccess": "API 키 보관 취소됨",
+      "unarchiveSuccessDesc": "API 키가 복원되어 사용자에게 다시 표시됩니다.",
       "rpm": "RPM",
       "rpmLimit": "RPM 제한",
       "status": "상태",

@@ -400,7 +400,7 @@ const ApiKeysPage: React.FC = () => {
       active: 'green',
       revoked: 'orange',
       expired: 'red',
-      archived: 'grey',
+      archived: 'orange',
     } as const;
 
     const icons = {

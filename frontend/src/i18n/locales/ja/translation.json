@@ -635,6 +635,7 @@
         "keyCreatedMessage": "APIキーが正常に作成されました。",
         "keyCreatedSuccess": "{{name}}が正常に作成されました",
         "keyDeleted": "{{name}}が削除されました",
+        "keyArchivedMessage": "このAPIキーはアーカイブされ、無効になりました。",
         "keyExpiredMessage": "このAPIキーは{{date}}に期限切れになりました。",
         "keyRevokedMessage": "このAPIキーは取り消され、使用できなくなりました。",
         "keyUpdatedSuccess": "{{name}}が正常に更新されました",
@@ -659,6 +660,7 @@
         "createdTitle": "APIキーが正常に作成されました",
         "deleteTitle": "APIキーを削除",
         "editTitle": "APIキーを編集",
+        "keyArchived": "キーアーカイブ済み",
         "keyExpired": "キー期限切れ",
         "keyRevoked": "キー取り消し済み",
         "secureRetrieval": "安全なキー取得",
@@ -1668,6 +1670,7 @@
   },
   "status": {
     "active": "アクティブ",
+    "archived": "アーカイブ済み",
     "inactive": "非アクティブ"
   },
   "ui": {
@@ -1909,6 +1912,10 @@
       "revokeError": "取り消しに失敗しました",
       "revokeSuccess": "APIキーが取り消されました",
       "revokeSuccessDesc": "APIキーが正常に無効化されました。",
+      "unarchive": "アーカイブ解除",
+      "unarchiveError": "アーカイブ解除に失敗しました",
+      "unarchiveSuccess": "APIキーのアーカイブを解除しました",
+      "unarchiveSuccessDesc": "APIキーが復元され、ユーザーに再び表示されるようになりました。",
       "rpm": "RPM",
       "rpmLimit": "RPM制限",
       "status": "ステータス",

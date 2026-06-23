@@ -264,6 +264,13 @@ export class UsersService {
   }
 
   /**
+   * Unarchive a user's API key (admin only)
+   */
+  async unarchiveUserApiKey(userId: string, keyId: string): Promise<void> {
+    await apiClient.post(`/admin/users/${userId}/api-keys/${keyId}/unarchive`);
+  }
+
+  /**
    * Update user's API key (models, name, and/or quotas) (admin only)
    */
   async updateUserApiKeyModels(

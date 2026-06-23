@@ -635,6 +635,7 @@
         "keyCreatedMessage": "Anguirel-API banda prestann.",
         "keyCreatedSuccess": "{{name}} band prestann",
         "keyDeleted": "{{name}} orthad",
+        "keyArchivedMessage": "Anguirel-API sin aglarnen a ú-fîr.",
         "keyExpiredMessage": "Anguirel-API sin firn {{date}}.",
         "keyRevokedMessage": "Anguirel-API sin tógail a ú-ern aerlinn.",
         "keyUpdatedSuccess": "{{name}} orthant sui chenin",
@@ -659,6 +660,7 @@
         "createdTitle": "Anguirel-API Band Prestann",
         "deleteTitle": "Orthad Anguirel-API",
         "editTitle": "Orthad Anguirel-API",
+        "keyArchived": "Anguirel Aglarnen",
         "keyExpired": "Anguirel Firn",
         "keyRevoked": "Anguirel Tógail",
         "secureRetrieval": "Anguirel Díhen Dotha",
@@ -1668,6 +1670,7 @@
   },
   "status": {
     "active": "Fîr",
+    "archived": "Aglarnen",
     "inactive": "Firn"
   },
   "ui": {
@@ -1909,6 +1912,10 @@
       "revokeError": "Thurio ú-gwannad",
       "revokeSuccess": "API-Cair Thurion",
       "revokeSuccessDesc": "ELV: The API key has been deactivated successfully.",
+      "unarchive": "Díheno Aglar",
+      "unarchiveError": "Díheno Aglar Fael",
+      "unarchiveSuccess": "Anguirel-API Díheno Aglarnen",
+      "unarchiveSuccessDesc": "Anguirel-API edregol a sí tirin na aduiadan.",
       "rpm": "RPM",
       "rpmLimit": "RPM Rim",
       "status": "Said",

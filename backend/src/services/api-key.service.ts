@@ -2203,21 +2203,23 @@ export class ApiKeyService extends BaseService {
     const successfulKeyIds = liteLLMUpdates.filter((u) => u.success).map((u) => u.keyId);
 
     if (successfulKeyIds.length > 0) {
-      await this.fastify.dbUtils.query(
-        `DELETE FROM api_key_models
-         WHERE api_key_id = ANY($1) AND model_id = $2`,
-        [successfulKeyIds, modelId],
-      );
+      await this.fastify.dbUtils.withTransaction(async (client) => {
+        await client.query(
+          `DELETE FROM api_key_models
+           WHERE api_key_id = ANY($1) AND model_id = $2`,
+          [successfulKeyIds, modelId],
+        );
 
-      // Archive keys that now have zero models
-      await this.fastify.dbUtils.query(
-        `UPDATE api_keys
-         SET is_active = false, archived_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-         WHERE id = ANY($1)
-           AND archived_at IS NULL
-           AND id NOT IN (SELECT DISTINCT api_key_id FROM api_key_models)`,
-        [successfulKeyIds],
-      );
+        // Archive keys that now have zero models
+        await client.query(
+          `UPDATE api_keys
+           SET is_active = false, archived_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+           WHERE id = ANY($1)
+             AND archived_at IS NULL
+             AND id NOT IN (SELECT DISTINCT api_key_id FROM api_key_models)`,
+          [successfulKeyIds],
+        );
+      });
 
       this.fastify.log.info(
         {
@@ -2249,10 +2251,22 @@ export class ApiKeyService extends BaseService {
    * Archive an API key — hides it from the user's view while preserving it for audit.
    * Also deactivates in LiteLLM if still active there.
    */
-  async archiveApiKey(keyId: string, userId: string): Promise<void> {
-    const key = await this.fastify.dbUtils.queryOne<{ id: string; archived_at: Date | null; lite_llm_key_value: string | null; is_active: boolean }>(
-      `SELECT id, archived_at, lite_llm_key_value, is_active FROM api_keys WHERE id = $1 AND user_id = $2`,
-      [keyId, userId],
+  async archiveApiKey(
+    keyId: string,
+    userId: string,
+    adminUserId?: string,
+  ): Promise<{ archivedAt: Date }> {
+    const ownershipFilter = adminUserId ? `WHERE id = $1` : `WHERE id = $1 AND user_id = $2`;
+    const params = adminUserId ? [keyId] : [keyId, userId];
+
+    const key = await this.fastify.dbUtils.queryOne<{
+      id: string;
+      archived_at: Date | null;
+      lite_llm_key_value: string | null;
+      is_active: boolean;
+    }>(
+      `SELECT id, archived_at, lite_llm_key_value, is_active FROM api_keys ${ownershipFilter}`,
+      params,
     );
 
     if (!key) {
@@ -2260,7 +2274,11 @@ export class ApiKeyService extends BaseService {
     }
 
     if (key.archived_at) {
-      throw this.createValidationError('API key is already archived', 'archivedAt', key.archived_at);
+      throw this.createValidationError(
+        'API key is already archived',
+        'archivedAt',
+        key.archived_at,
+      );
     }
 
     // Deactivate in LiteLLM first if active
@@ -2272,28 +2290,36 @@ export class ApiKeyService extends BaseService {
       }
     }
 
-    await this.fastify.dbUtils.query(
-      `UPDATE api_keys SET archived_at = CURRENT_TIMESTAMP, is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1`,
+    const result = await this.fastify.dbUtils.queryOne<{ archived_at: Date }>(
+      `UPDATE api_keys SET archived_at = CURRENT_TIMESTAMP, is_active = false, updated_at = CURRENT_TIMESTAMP WHERE id = $1 RETURNING archived_at`,
       [keyId],
     );
+
+    const auditUserId = adminUserId || userId;
+    const metadata = adminUserId ? { keyId, adminUserId } : { keyId };
 
     await this.fastify.dbUtils.query(
       `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
        VALUES ($1, $2, $3, $4, $5)`,
-      [userId, 'API_KEY_ARCHIVED', 'API_KEY', keyId, JSON.stringify({ keyId })],
+      [auditUserId, 'API_KEY_ARCHIVED', 'API_KEY', keyId, JSON.stringify(metadata)],
     );
 
-    this.fastify.log.info({ keyId, userId }, 'API key archived');
+    this.fastify.log.info({ keyId, userId, adminUserId }, 'API key archived');
+
+    return { archivedAt: new Date(result!.archived_at) };
   }
 
   /**
    * Unarchive an API key — makes it visible again but keeps it inactive.
    * The user must re-subscribe and reassign models to reactivate.
    */
-  async unarchiveApiKey(keyId: string, userId: string): Promise<void> {
+  async unarchiveApiKey(keyId: string, userId: string, adminUserId?: string): Promise<void> {
+    const ownershipFilter = adminUserId ? `WHERE id = $1` : `WHERE id = $1 AND user_id = $2`;
+    const params = adminUserId ? [keyId] : [keyId, userId];
+
     const key = await this.fastify.dbUtils.queryOne<{ id: string; archived_at: Date | null }>(
-      `SELECT id, archived_at FROM api_keys WHERE id = $1 AND user_id = $2`,
-      [keyId, userId],
+      `SELECT id, archived_at FROM api_keys ${ownershipFilter}`,
+      params,
     );
 
     if (!key) {
@@ -2309,12 +2335,15 @@ export class ApiKeyService extends BaseService {
       [keyId],
     );
 
+    const auditUserId = adminUserId || userId;
+    const metadata = adminUserId ? { keyId, adminUserId } : { keyId };
+
     await this.fastify.dbUtils.query(
       `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
        VALUES ($1, $2, $3, $4, $5)`,
-      [userId, 'API_KEY_UNARCHIVED', 'API_KEY', keyId, JSON.stringify({ keyId })],
+      [auditUserId, 'API_KEY_UNARCHIVED', 'API_KEY', keyId, JSON.stringify(metadata)],
     );
 
-    this.fastify.log.info({ keyId, userId }, 'API key unarchived');
+    this.fastify.log.info({ keyId, userId, adminUserId }, 'API key unarchived');
   }
 }

@@ -872,9 +872,10 @@ export const applyMigrations = async (dbUtils: DatabaseUtils) => {
     console.log('📦 Backfilling archived_at for orphaned API keys...');
     await dbUtils.query(`
       UPDATE api_keys
-      SET archived_at = COALESCE(revoked_at, updated_at, CURRENT_TIMESTAMP)
+      SET archived_at = COALESCE(updated_at, CURRENT_TIMESTAMP)
       WHERE is_active = false
         AND archived_at IS NULL
+        AND revoked_at IS NULL
         AND id NOT IN (SELECT DISTINCT api_key_id FROM api_key_models)
     `);
 

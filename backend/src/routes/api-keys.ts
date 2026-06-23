@@ -760,16 +760,16 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
 
       try {
-        await apiKeyService.archiveApiKey(id, user.userId);
+        const result = await apiKeyService.archiveApiKey(id, user.userId);
         return {
           message: 'API key archived successfully',
-          archivedAt: new Date().toISOString(),
+          archivedAt: result.archivedAt.toISOString(),
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to archive API key');
@@ -802,7 +802,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
