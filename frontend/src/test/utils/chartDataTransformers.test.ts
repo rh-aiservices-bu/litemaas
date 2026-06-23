@@ -8,10 +8,15 @@ import {
   formatCurrency,
   formatDateRange,
 } from '../../utils/chartDataTransformers';
-import { UsageMetrics } from '../../services/usage.service';
-
 // Mock data for testing
-const mockDailyUsage: UsageMetrics['dailyUsage'] = [
+const mockDailyUsage: Array<{
+  date: string;
+  requests: number;
+  tokens: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  cost: number;
+}> = [
   {
     date: '2024-01-01',
     requests: 100,
@@ -38,7 +43,14 @@ const mockDailyUsage: UsageMetrics['dailyUsage'] = [
   },
 ];
 
-const mockTopModels: UsageMetrics['topModels'] = [
+const mockTopModels: Array<{
+  name: string;
+  requests: number;
+  tokens: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  cost: number;
+}> = [
   {
     name: 'GPT-4',
     requests: 450,
@@ -65,14 +77,14 @@ const mockTopModels: UsageMetrics['topModels'] = [
   },
 ];
 
-const mockHourlyUsage: UsageMetrics['hourlyUsage'] = [
+const mockHourlyUsage: Array<{ hour: string; requests: number }> = [
   { hour: '14:00', requests: 25 },
   { hour: '09:00', requests: 15 },
   { hour: '18:00', requests: 35 },
   { hour: '12:00', requests: 30 },
 ];
 
-const mockErrorBreakdown: UsageMetrics['errorBreakdown'] = [
+const mockErrorBreakdown: Array<{ type: string; count: number; percentage: number }> = [
   { type: '429 Rate Limit', count: 45, percentage: 45 },
   { type: '500 Internal Error', count: 35, percentage: 35 },
   { type: '400 Bad Request', count: 20, percentage: 20 },
@@ -109,7 +121,16 @@ describe('chartDataTransformers', () => {
     });
 
     it('handles missing values gracefully', () => {
-      const incompleteData: Partial<UsageMetrics['dailyUsage'][number]>[] = [
+      const incompleteData: Partial<
+        Array<{
+          date: string;
+          requests: number;
+          tokens: number;
+          prompt_tokens: number;
+          completion_tokens: number;
+          cost: number;
+        }>[number]
+      >[] = [
         { date: '2024-01-01', requests: 100 }, // Missing tokens and cost
         { date: '2024-01-02', tokens: 50000 }, // Missing requests and cost
       ];
@@ -149,7 +170,14 @@ describe('chartDataTransformers', () => {
     });
 
     it('handles invalid date strings gracefully', () => {
-      const invalidDateData: UsageMetrics['dailyUsage'] = [
+      const invalidDateData: Array<{
+        date: string;
+        requests: number;
+        tokens: number;
+        prompt_tokens: number;
+        completion_tokens: number;
+        cost: number;
+      }> = [
         {
           date: 'invalid-date',
           requests: 100,
@@ -204,7 +232,14 @@ describe('chartDataTransformers', () => {
 
     it('rounds percentages to one decimal place', () => {
       const totalRequests = 333;
-      const modelsData: UsageMetrics['topModels'] = [
+      const modelsData: Array<{
+        name: string;
+        requests: number;
+        tokens: number;
+        prompt_tokens: number;
+        completion_tokens: number;
+        cost: number;
+      }> = [
         {
           name: 'Model A',
           requests: 100,
@@ -236,7 +271,14 @@ describe('chartDataTransformers', () => {
     });
 
     it('handles missing model properties gracefully', () => {
-      const incompleteModels: UsageMetrics['topModels'] = [
+      const incompleteModels: Array<{
+        name: string;
+        requests: number;
+        tokens: number;
+        prompt_tokens: number;
+        completion_tokens: number;
+        cost: number;
+      }> = [
         { name: '', requests: undefined as any, tokens: null as any, cost: 0 },
         { requests: 100, tokens: 50000, cost: 5.0 } as any, // Missing name
       ];
@@ -292,7 +334,7 @@ describe('chartDataTransformers', () => {
     });
 
     it('handles edge case hours correctly', () => {
-      const edgeCaseHours: UsageMetrics['hourlyUsage'] = [
+      const edgeCaseHours: Array<{ hour: string; requests: number }> = [
         { hour: '00:00', requests: 10 },
         { hour: '12:00', requests: 20 },
         { hour: '23:00', requests: 15 },
@@ -306,7 +348,7 @@ describe('chartDataTransformers', () => {
     });
 
     it('handles invalid hour formats gracefully', () => {
-      const invalidHours: UsageMetrics['hourlyUsage'] = [
+      const invalidHours: Array<{ hour: string; requests: number }> = [
         { hour: 'invalid', requests: 10 },
         { hour: '25:00', requests: 15 },
       ];
@@ -319,7 +361,7 @@ describe('chartDataTransformers', () => {
     });
 
     it('handles missing requests gracefully', () => {
-      const missingRequests: UsageMetrics['hourlyUsage'] = [{ hour: '10:00' } as any];
+      const missingRequests: Array<{ hour: string; requests: number }> = [{ hour: '10:00' } as any];
 
       const result = transformHourlyUsageToChartData(missingRequests);
 
@@ -345,7 +387,7 @@ describe('chartDataTransformers', () => {
     });
 
     it('handles missing error properties gracefully', () => {
-      const incompleteErrors: UsageMetrics['errorBreakdown'] = [
+      const incompleteErrors: Array<{ type: string; count: number; percentage: number }> = [
         { type: '', count: undefined as any, percentage: null as any },
         { count: 25, percentage: 25 } as any, // Missing type
       ];

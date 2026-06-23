@@ -2,7 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { BaseService } from './base.service.js';
 import { LiteLLMService } from './litellm.service.js';
 import { ApplicationError } from '../utils/errors.js';
-import { format } from 'date-fns';
+import { format, eachDayOfInterval, parseISO } from 'date-fns';
 import {
   AdminUsageFilters,
   Analytics,
@@ -507,6 +507,30 @@ export class AdminUsageStatsService extends BaseService {
   }
 
   /**
+   * Export daily usage data in CSV or JSON format.
+   * Returns per-day rows with reconciled token totals — suitable for user-facing exports.
+   */
+  async exportDailyUsageData(
+    filters: AdminUsageFilters,
+    format: 'csv' | 'json',
+    currencyCode: string = 'USD',
+  ): Promise<string> {
+    try {
+      const analytics = await this.getAnalytics(filters);
+      const dailyUsage = analytics.dailyUsage || [];
+
+      if (format === 'json') {
+        return this.exportService.exportToJSON(dailyUsage, filters, 'daily');
+      } else {
+        return this.exportService.exportDailyUsageToCSV(dailyUsage, filters, currencyCode);
+      }
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to export daily usage data');
+      throw ApplicationError.fromUnknown(error, 'exporting daily usage data');
+    }
+  }
+
+  /**
    * Force refresh current day's data
    *
    * Invalidates both LiteLLM service cache and database cache, then fetches fresh data from LiteLLM.
@@ -534,6 +558,65 @@ export class AdminUsageStatsService extends BaseService {
     } catch (error) {
       this.fastify.log.error(error, "Failed to refresh today's data");
       throw ApplicationError.fromUnknown(error, "refreshing today's data");
+    }
+  }
+
+  /**
+   * Re-sync usage data for a date range by deleting cached data and re-importing from LiteLLM.
+   * Processes day-by-day sequentially to avoid overloading the system.
+   */
+  async resyncDateRange(
+    startDate: string,
+    endDate: string,
+  ): Promise<{ daysProcessed: number; daysTotal: number; startDate: string; endDate: string }> {
+    try {
+      this.validateDateRange(startDate, endDate);
+
+      const days = eachDayOfInterval({
+        start: parseISO(startDate),
+        end: parseISO(endDate),
+      });
+      const daysTotal = days.length;
+
+      this.fastify.log.info(
+        { startDate, endDate, daysTotal },
+        'Starting usage data resync for date range',
+      );
+
+      this.liteLLMService.clearActivityCache();
+
+      if (this.cacheManager) {
+        const deleted = await this.cacheManager.deleteDateRange(startDate, endDate);
+        this.fastify.log.info({ deleted }, 'Deleted cached data for date range');
+      }
+
+      let daysProcessed = 0;
+      for (const day of days) {
+        const dateString = format(day, 'yyyy-MM-dd');
+        try {
+          await this.aggregationService.refreshSingleDay(dateString);
+          daysProcessed++;
+          this.fastify.log.info(
+            { dateString, progress: `${daysProcessed}/${daysTotal}` },
+            'Re-synced day',
+          );
+        } catch (error) {
+          this.fastify.log.warn(
+            { dateString, error },
+            'Failed to re-sync day (no usage data or LiteLLM error), skipping',
+          );
+        }
+      }
+
+      this.fastify.log.info(
+        { daysProcessed, daysTotal, startDate, endDate },
+        'Usage data resync completed',
+      );
+
+      return { daysProcessed, daysTotal, startDate, endDate };
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to resync usage data');
+      throw ApplicationError.fromUnknown(error, 'resyncing usage data');
     }
   }
 

@@ -510,6 +510,14 @@ export interface IDailyUsageCacheManager {
    * @returns Number of records deleted
    */
   cleanupOldCache(retentionDays?: number): Promise<number>;
+
+  /**
+   * Delete cached data for a date range
+   * @param startDate Range start date (YYYY-MM-DD)
+   * @param endDate Range end date (YYYY-MM-DD)
+   * @returns Number of records deleted
+   */
+  deleteDateRange(startDate: string, endDate: string): Promise<number>;
 }
 
 /**

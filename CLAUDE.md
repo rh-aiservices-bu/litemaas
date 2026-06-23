@@ -99,6 +99,8 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 - **RBAC**: `admin:backup` permission (admin only), tab visible to adminReadonly (read-only)
 - **Configuration**: `LITELLM_DATABASE_URL` for LiteLLM database access (also used by model sync cross-referencing), `BACKUP_STORAGE_PATH` for storage location
 
+**Usage Data Sync**: Admin tool to re-import usage data from LiteLLM for a selected date range. Accessible from Settings and Tools → Usage Data Sync tab. Deletes cached data and re-fetches day-by-day with current enrichment logic (token reconciliation, user mapping). Useful after migrations or when cached data needs recalculation. RBAC: `admin:usage` permission (admin only), tab visible to adminReadonly (read-only).
+
 **Configurable Currency**: Admin-controlled currency settings (25 supported currencies) for all monetary displays across the platform. Configured via Settings and Tools → Currency tab, stored in `system_settings` table, exposed via public config endpoint. Default: USD ($).
 
 **State Management**: React Context for auth/notifications/config/branding, React Query for server state with dynamic cache TTL from backend configuration.

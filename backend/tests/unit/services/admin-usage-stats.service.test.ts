@@ -660,6 +660,86 @@ describe('AdminUsageStatsService', () => {
     });
   });
 
+  describe('exportDailyUsageData', () => {
+    it('should export per-day rows in CSV, not aggregated user rows', async () => {
+      const filters: AdminUsageFilters = {
+        startDate: '2024-01-01',
+        endDate: '2024-01-02',
+      };
+
+      const day1 = createMockEnrichedDayData('2024-01-01');
+      const day2 = createMockEnrichedDayData('2024-01-02');
+      (cacheManager.getCachedDailyData as Mock)
+        .mockResolvedValueOnce(day1)
+        .mockResolvedValueOnce(day2)
+        // comparison period calls return null
+        .mockResolvedValue(null);
+
+      const result = await service.exportDailyUsageData(filters, 'csv');
+
+      expect(result).toContain('Date,Total Requests,Total Tokens,Prompt Tokens,Completion Tokens');
+      expect(result).not.toContain('User ID');
+      expect(result).not.toContain('Username');
+
+      const lines = result.split('\n');
+      expect(lines.length).toBe(3);
+      expect(lines[1]).toMatch(/^2024-01-01,/);
+      expect(lines[2]).toMatch(/^2024-01-02,/);
+    });
+
+    it('should export per-day rows in JSON with daily breakdown type', async () => {
+      const filters: AdminUsageFilters = {
+        startDate: '2024-01-01',
+        endDate: '2024-01-01',
+      };
+
+      const mockEnrichedData = createMockEnrichedDayData('2024-01-01');
+      (cacheManager.getCachedDailyData as Mock)
+        .mockResolvedValueOnce(mockEnrichedData)
+        .mockResolvedValue(null);
+
+      const result = await service.exportDailyUsageData(filters, 'json');
+      const parsed = JSON.parse(result);
+
+      expect(parsed.metadata.breakdownType).toBe('daily');
+      expect(Array.isArray(parsed.data)).toBe(true);
+      expect(parsed.data.length).toBe(1);
+      expect(parsed.data[0]).toHaveProperty('date', '2024-01-01');
+      expect(parsed.data[0]).toHaveProperty('requests');
+      expect(parsed.data[0]).toHaveProperty('tokens');
+      expect(parsed.data[0]).toHaveProperty('prompt_tokens');
+      expect(parsed.data[0]).toHaveProperty('completion_tokens');
+    });
+
+    it('should produce reconciled tokens where total equals prompt + completion', async () => {
+      const filters: AdminUsageFilters = {
+        startDate: '2024-01-01',
+        endDate: '2024-01-01',
+      };
+
+      // Use divergent total_tokens to prove reconciliation
+      const mockData = createMockEnrichedDayData('2024-01-01');
+      mockData.metrics.total_tokens = 99999;
+      mockData.metrics.prompt_tokens = 3000;
+      mockData.metrics.completion_tokens = 2000;
+
+      (cacheManager.getCachedDailyData as Mock)
+        .mockResolvedValueOnce(mockData)
+        .mockResolvedValue(null);
+
+      const result = await service.exportDailyUsageData(filters, 'csv');
+      const dataLine = result.split('\n')[1];
+      const fields = dataLine.split(',');
+
+      const totalTokens = parseInt(fields[2]);
+      const promptTokens = parseInt(fields[3]);
+      const completionTokens = parseInt(fields[4]);
+
+      expect(totalTokens).toBe(promptTokens + completionTokens);
+      expect(totalTokens).not.toBe(99999);
+    });
+  });
+
   describe('refreshTodayData', () => {
     it('should invalidate cache and fetch fresh data for today', async () => {
       (liteLLMService.getDailyActivity as Mock).mockResolvedValue({
@@ -1247,7 +1327,8 @@ describe('AdminUsageStatsService', () => {
 
       const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
 
-      const mockLiteLLMData: LiteLLMDayData = {
+      // Raw LiteLLM response format uses api_key_breakdown, not api_keys
+      const mockLiteLLMResponse = {
         date: '2024-01-01',
         metrics: {
           api_requests: 100,
@@ -1255,8 +1336,6 @@ describe('AdminUsageStatsService', () => {
           prompt_tokens: 3000,
           completion_tokens: 2000,
           spend: 0.5,
-          successful_requests: 95,
-          failed_requests: 5,
         },
         breakdown: {
           models: {
@@ -1268,7 +1347,7 @@ describe('AdminUsageStatsService', () => {
                 completion_tokens: 2000,
                 spend: 0.5,
               },
-              api_keys: {
+              api_key_breakdown: {
                 'key-hash-1': {
                   metadata: { key_alias: 'user1-key-alpha' },
                   metrics: {
@@ -1327,8 +1406,10 @@ describe('AdminUsageStatsService', () => {
       (liteLLMService.getDailyActivity as Mock).mockResolvedValue({
         api_requests: 100,
         total_tokens: 5000,
+        prompt_tokens: 3000,
+        completion_tokens: 2000,
         spend: 0.5,
-        daily_metrics: [mockLiteLLMData],
+        daily_metrics: [mockLiteLLMResponse],
       });
 
       (cacheManager.getCachedDailyData as Mock).mockResolvedValue(null);
@@ -1600,7 +1681,8 @@ describe('AdminUsageStatsService', () => {
 
       const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
 
-      const mockLiteLLMData: LiteLLMDayData = {
+      // Raw LiteLLM response format uses api_key_breakdown, not api_keys
+      const mockLiteLLMResponse = {
         date: '2024-01-01',
         metrics: {
           api_requests: 100,
@@ -1608,8 +1690,6 @@ describe('AdminUsageStatsService', () => {
           prompt_tokens: 3000,
           completion_tokens: 2000,
           spend: 0.5,
-          successful_requests: 95,
-          failed_requests: 5,
         },
         breakdown: {
           models: {
@@ -1621,7 +1701,7 @@ describe('AdminUsageStatsService', () => {
                 completion_tokens: 2000,
                 spend: 0.5,
               },
-              api_keys: {
+              api_key_breakdown: {
                 'key-hash-1': {
                   metadata: { key_alias: 'user1-key-alpha' },
                   metrics: {
@@ -1680,8 +1760,10 @@ describe('AdminUsageStatsService', () => {
       (liteLLMService.getDailyActivity as Mock).mockResolvedValue({
         api_requests: 100,
         total_tokens: 5000,
+        prompt_tokens: 3000,
+        completion_tokens: 2000,
         spend: 0.5,
-        daily_metrics: [mockLiteLLMData],
+        daily_metrics: [mockLiteLLMResponse],
       });
 
       (cacheManager.getCachedDailyData as Mock).mockResolvedValue(null);
@@ -1707,7 +1789,8 @@ describe('AdminUsageStatsService', () => {
 
       const service = new AdminUsageStatsService(fastify, liteLLMService, cacheManager);
 
-      const mockLiteLLMData: LiteLLMDayData = {
+      // Raw LiteLLM response format uses api_key_breakdown, not api_keys
+      const mockLiteLLMResponse = {
         date: '2024-01-01',
         metrics: {
           api_requests: 100,
@@ -1715,8 +1798,6 @@ describe('AdminUsageStatsService', () => {
           prompt_tokens: 3000,
           completion_tokens: 2000,
           spend: 0.5,
-          successful_requests: 95,
-          failed_requests: 5,
         },
         breakdown: {
           models: {
@@ -1728,7 +1809,7 @@ describe('AdminUsageStatsService', () => {
                 completion_tokens: 2000,
                 spend: 0.5,
               },
-              api_keys: {
+              api_key_breakdown: {
                 'key-hash-unmapped': {
                   metadata: { key_alias: 'unmapped-key-xyz' },
                   metrics: {
@@ -1756,8 +1837,10 @@ describe('AdminUsageStatsService', () => {
       (liteLLMService.getDailyActivity as Mock).mockResolvedValue({
         api_requests: 100,
         total_tokens: 5000,
+        prompt_tokens: 3000,
+        completion_tokens: 2000,
         spend: 0.5,
-        daily_metrics: [mockLiteLLMData],
+        daily_metrics: [mockLiteLLMResponse],
       });
 
       (cacheManager.getCachedDailyData as Mock).mockResolvedValue(null);

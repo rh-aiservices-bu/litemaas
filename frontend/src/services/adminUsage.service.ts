@@ -399,6 +399,23 @@ class AdminUsageService {
   async refreshTodayData(): Promise<void> {
     return apiClient.post<void>('/admin/usage/refresh-today', {});
   }
+
+  /**
+   * Re-sync usage data for a date range from LiteLLM
+   */
+  async resyncDateRange(
+    startDate: string,
+    endDate: string,
+  ): Promise<{
+    message: string;
+    daysProcessed: number;
+    daysTotal: number;
+    startDate: string;
+    endDate: string;
+    resyncedAt: string;
+  }> {
+    return apiClient.post('/admin/usage/resync', { startDate, endDate });
+  }
 }
 
 export const adminUsageService = new AdminUsageService();

@@ -1505,7 +1505,23 @@
       "variantSuccess": "Éxito (Verde)",
       "variantWarning": "Advertencia (Naranja)",
       "visibility": "Visibilidad",
-      "visible": "Visible"
+      "visible": "Visible",
+      "usageSync": {
+        "tabTitle": "Sincronización de datos de uso",
+        "title": "Sincronización de datos de uso",
+        "description": "Vuelva a importar los datos de uso desde LiteLLM para un intervalo de fechas seleccionado. Esto elimina los datos en caché y los recupera con los cálculos actuales. Úselo después de migraciones o cuando los datos de uso necesiten recalcularse. Seleccione un intervalo de fechas y procese en bloques manejables para evitar la sobrecarga del sistema.",
+        "startDate": "Fecha de inicio",
+        "endDate": "Fecha de fin",
+        "resyncButton": "Actualizar datos de uso",
+        "syncing": "Sincronizando...",
+        "invalidRange": "La fecha de inicio debe ser anterior o igual a la fecha de fin.",
+        "adminRequired": "Se requieren permisos de administrador para sincronizar los datos de uso.",
+        "notifications": {
+          "successTitle": "Datos de uso sincronizados",
+          "success": "Se resincronizaron correctamente {{processed}} de {{total}} días de datos de uso.",
+          "errorTitle": "Error al sincronizar datos de uso"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {

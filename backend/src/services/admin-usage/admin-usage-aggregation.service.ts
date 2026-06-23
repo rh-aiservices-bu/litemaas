@@ -2037,18 +2037,55 @@ export class AdminUsageAggregationService extends BaseService {
         );
       }
 
-      // Recalculate global prompt/completion/success/failure from final model totals.
-      // Model totals now include mapped + unmapped keys and exclude skipped keys,
-      // so this single pass produces correct global values.
+      // Reconcile total_tokens = prompt_tokens + completion_tokens at every
+      // breakdown level. LiteLLM's raw total_tokens can diverge from the per-key
+      // prompt/completion sums, so we derive total_tokens everywhere from the
+      // rebuilt prompt + completion values.
+
+      // 1. Model-user and model-level metrics
+      enrichedData.metrics.total_tokens = 0;
       enrichedData.metrics.prompt_tokens = 0;
       enrichedData.metrics.completion_tokens = 0;
       enrichedData.metrics.successful_requests = 0;
       enrichedData.metrics.failed_requests = 0;
       Object.values(enrichedData.breakdown.models).forEach((modelData) => {
+        Object.values(modelData.users).forEach((userData) => {
+          userData.metrics.total_tokens =
+            (userData.metrics.prompt_tokens || 0) + (userData.metrics.completion_tokens || 0);
+        });
+        modelData.metrics.total_tokens =
+          modelData.metrics.prompt_tokens + modelData.metrics.completion_tokens;
+        enrichedData.metrics.total_tokens += modelData.metrics.total_tokens;
         enrichedData.metrics.prompt_tokens += modelData.metrics.prompt_tokens;
         enrichedData.metrics.completion_tokens += modelData.metrics.completion_tokens;
         enrichedData.metrics.successful_requests += modelData.metrics.successful_requests;
         enrichedData.metrics.failed_requests += modelData.metrics.failed_requests;
+      });
+
+      // 2. Provider metrics
+      if (enrichedData.breakdown.providers) {
+        Object.values(enrichedData.breakdown.providers).forEach((providerData) => {
+          providerData.metrics.total_tokens =
+            (providerData.metrics.prompt_tokens || 0) +
+            (providerData.metrics.completion_tokens || 0);
+        });
+      }
+
+      // 3. User-model, user-level, and API-key metrics
+      Object.values(enrichedData.breakdown.users).forEach((userData) => {
+        userData.metrics.total_tokens = 0;
+        Object.values(userData.models).forEach((userModelData) => {
+          if (userModelData.api_keys) {
+            Object.values(userModelData.api_keys).forEach((keyData) => {
+              keyData.metrics.total_tokens =
+                (keyData.metrics.prompt_tokens || 0) + (keyData.metrics.completion_tokens || 0);
+            });
+          }
+          userModelData.metrics.total_tokens =
+            (userModelData.metrics.prompt_tokens || 0) +
+            (userModelData.metrics.completion_tokens || 0);
+          userData.metrics.total_tokens += userModelData.metrics.total_tokens;
+        });
       });
 
       this.fastify.log.debug(
@@ -2063,28 +2100,6 @@ export class AdminUsageAggregationService extends BaseService {
         },
         'Global metrics recalculated from final model totals',
       );
-
-      // Validate token counts: prompt + completion should approximately equal total
-      const calculatedTotal =
-        enrichedData.metrics.prompt_tokens + enrichedData.metrics.completion_tokens;
-      const reportedTotal = enrichedData.metrics.total_tokens;
-      const tokenDifference = Math.abs(calculatedTotal - reportedTotal);
-      const percentDifference = reportedTotal > 0 ? (tokenDifference / reportedTotal) * 100 : 0;
-
-      if (percentDifference > 1) {
-        this.fastify.log.warn(
-          {
-            date: dayData.date,
-            prompt_tokens: enrichedData.metrics.prompt_tokens,
-            completion_tokens: enrichedData.metrics.completion_tokens,
-            calculated_total: calculatedTotal,
-            reported_total: reportedTotal,
-            difference: tokenDifference,
-            percent_difference: percentDifference.toFixed(2) + '%',
-          },
-          'Token count validation: prompt + completion does not match total tokens',
-        );
-      }
 
       // Filter out models that have 0 requests after adjustment (only skipped requests)
       const modelsToRemove: string[] = [];

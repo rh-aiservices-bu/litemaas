@@ -8,6 +8,7 @@ import type {
   UserBreakdown,
   ModelBreakdown,
   ProviderBreakdown,
+  DailyUsageSummary,
 } from '../../types/admin-usage.types';
 
 /**
@@ -147,6 +148,40 @@ export class AdminUsageExportService extends BaseService {
       return this.generateCSV(headers, rows);
     } catch (error) {
       this.fastify.log.error({ error, filters }, 'Failed to export provider breakdown to CSV');
+      throw ApplicationError.internal('Failed to generate CSV export', { error });
+    }
+  }
+
+  /**
+   * Export daily usage summary to CSV format
+   */
+  async exportDailyUsageToCSV(
+    dailyUsage: DailyUsageSummary[],
+    filters: AdminUsageFilters,
+    currencyCode: string = 'USD',
+  ): Promise<string> {
+    try {
+      const headers = [
+        'Date',
+        'Total Requests',
+        'Total Tokens',
+        'Prompt Tokens',
+        'Completion Tokens',
+        `Total Cost (${currencyCode})`,
+      ];
+
+      const rows = dailyUsage.map((day) => [
+        day.date,
+        day.requests.toString(),
+        day.tokens.toString(),
+        day.prompt_tokens.toString(),
+        day.completion_tokens.toString(),
+        day.cost.toFixed(4),
+      ]);
+
+      return this.generateCSV(headers, rows);
+    } catch (error) {
+      this.fastify.log.error({ error, filters }, 'Failed to export daily usage to CSV');
       throw ApplicationError.internal('Failed to generate CSV export', { error });
     }
   }

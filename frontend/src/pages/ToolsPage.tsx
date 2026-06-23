@@ -48,6 +48,7 @@ import { ApiKeyQuotaDefaultsSection, UserDefaultsSection } from '../components/a
 import BrandingTab from '../components/branding/BrandingTab';
 import CurrencyTab from '../components/currency/CurrencyTab';
 import BackupTab from '../components/backup/BackupTab';
+import UsageDataSyncTab from '../components/admin/UsageDataSyncTab';
 import { useQuery, useQueryClient } from 'react-query';
 import { extractErrorDetails } from '../utils/error.utils';
 
@@ -113,6 +114,9 @@ const ToolsPage: React.FC = () => {
   const canViewBackup =
     (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
   const canManageBackup = user?.roles?.includes('admin') ?? false;
+  const canViewUsageSync =
+    (user?.roles?.includes('admin') || user?.roles?.includes('admin-readonly')) ?? false;
+  const canManageUsageSync = user?.roles?.includes('admin') ?? false;
 
   // Fetch all banners for admin management
   const { data: allBanners = [] } = useQuery(['allBanners'], () => bannerService.getAllBanners(), {
@@ -681,6 +685,19 @@ const ToolsPage: React.FC = () => {
               <TabContent id="backup-tab-content" style={{ paddingTop: '10px' }}>
                 <TabContentBody>
                   <BackupTab canManage={canManageBackup} />
+                </TabContentBody>
+              </TabContent>
+            </Tab>
+          )}
+          {/* Usage Data Sync Tab */}
+          {canViewUsageSync && (
+            <Tab
+              eventKey="usageSync"
+              title={<TabTitleText>{t('pages.tools.usageSync.tabTitle')}</TabTitleText>}
+            >
+              <TabContent id="usage-sync-tab-content" style={{ paddingTop: '10px' }}>
+                <TabContentBody>
+                  <UsageDataSyncTab canManage={canManageUsageSync} />
                 </TabContentBody>
               </TabContent>
             </Tab>
