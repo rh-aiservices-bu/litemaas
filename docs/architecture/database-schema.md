@@ -241,6 +241,7 @@ CREATE TABLE api_keys (
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     revoked_at TIMESTAMP WITH TIME ZONE,
+    archived_at TIMESTAMP WITH TIME ZONE,   -- Set when key is archived (e.g., on subscription deletion)
     metadata JSONB DEFAULT '{}'
 );
 
@@ -251,6 +252,7 @@ CREATE INDEX idx_api_keys_prefix ON api_keys(key_prefix);
 CREATE INDEX idx_api_keys_active ON api_keys(is_active);
 CREATE INDEX idx_api_keys_litellm ON api_keys(lite_llm_key_value);
 CREATE INDEX idx_api_keys_team ON api_keys(team_id);
+CREATE INDEX idx_api_keys_archived_at ON api_keys(archived_at);
 ```
 
 ### api_key_models

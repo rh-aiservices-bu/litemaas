@@ -112,6 +112,13 @@ helm test litemaas -n litemaas
 | `global.imagePullPolicy` | Global image pull policy | `IfNotPresent` |
 | `hook.image.repository` | Image for the post-install OAuth setup hook | `bitnami/kubectl` |
 | `hook.image.tag` | Hook image tag | `latest` |
+| `networkPolicy.enabled` | Enable Kubernetes NetworkPolicies for network segmentation | `false` |
+| `networkPolicy.ingressController.namespaceSelector` | Namespace labels identifying ingress controller (required when networkPolicy and ingress/route enabled) | `null` |
+| `networkPolicy.ingressController.podSelector` | Pod labels identifying ingress controller pods | `{}` |
+| `podSecurityContext.runAsNonRoot` | Run pods as non-root user | `true` |
+| `podSecurityContext.seccompProfile.type` | Seccomp profile type | `RuntimeDefault` |
+| `containerSecurityContext.allowPrivilegeEscalation` | Prevent privilege escalation | `false` |
+| `containerSecurityContext.capabilities.drop` | Drop all Linux capabilities | `[ALL]` |
 
 ### OAuth Configuration
 
@@ -137,6 +144,16 @@ helm test litemaas -n litemaas
 | `postgresql.persistence.size` | PVC storage size | `10Gi` |
 | `postgresql.persistence.storageClass` | StorageClass name (empty = cluster default) | `""` |
 
+### Redis
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `redis.enabled` | Deploy built-in Redis for LiteLLM cache flush | `true` |
+| `redis.image.repository` | Redis image | `redis` |
+| `redis.image.tag` | Redis image tag | `7-alpine` |
+| `redis.auth.password` | Redis authentication password (`requirepass`) | `changeme` |
+| `redis.auth.existingSecret` | Use an existing Secret for Redis credentials | `""` |
+
 ### LiteLLM
 
 | Parameter | Description | Default |
@@ -149,6 +166,10 @@ helm test litemaas -n litemaas
 | `litellm.auth.uiUsername` | Admin UI username | `admin` |
 | `litellm.auth.uiPassword` | Admin UI password | `changeme` |
 | `litellm.auth.existingSecret` | Use an existing Secret (keys: `database-url`, `master-key`, `ui-username`, `ui-password`) | `""` |
+| `litellm.sslVerify` | Enable SSL certificate verification for model API calls | `true` |
+| `litellm.extraEnv` | Extra environment variables (e.g., CA bundle path) | `[]` |
+| `litellm.extraVolumes` | Extra volumes (e.g., CA certificate ConfigMaps) | `[]` |
+| `litellm.extraVolumeMounts` | Extra volume mounts (e.g., CA bundle mount paths) | `[]` |
 
 ### Backend
 
@@ -179,6 +200,8 @@ helm test litemaas -n litemaas
 | `backend.backup.storagePath` | Mount path for backup storage inside the container | `/data/backups` |
 | `backend.backup.persistence.size` | Backup PVC storage size | `5Gi` |
 | `backend.backup.persistence.storageClass` | StorageClass for backup PVC (empty = cluster default) | `""` |
+| `backend.redis.host` | Redis hostname for cache flush (auto-constructed when `redis.enabled`) | `""` |
+| `backend.redis.port` | Redis port | `6379` |
 | `backend.nodeTlsRejectUnauthorized` | Set to `"0"` to disable TLS verification | `""` |
 
 ### Frontend
@@ -416,6 +439,53 @@ helm uninstall litemaas -n litemaas
 > ```bash
 > kubectl delete pvc -l app.kubernetes.io/component=database -n litemaas
 > ```
+
+### LiteLLM SSL Configuration
+
+When LiteLLM connects to model endpoints using self-signed certificates (e.g., KServe inference on internal Kubernetes/OpenShift services), configure SSL verification:
+
+```yaml
+litellm:
+  sslVerify: false  # Quick fix: disable verification (not recommended for production)
+```
+
+For production, inject a custom CA bundle instead:
+
+```yaml
+litellm:
+  sslVerify: true
+  extraEnv:
+    - name: SSL_CERT_FILE
+      value: /etc/ssl/custom/ca-bundle.crt
+  extraVolumes:
+    - name: custom-ca
+      configMap:
+        name: my-ca-bundle
+  extraVolumeMounts:
+    - name: custom-ca
+      mountPath: /etc/ssl/custom
+      readOnly: true
+```
+
+See the [LiteLLM SSL Configuration Guide](litellm-ssl-configuration.md) for detailed options including OpenShift service CA auto-injection.
+
+### Network Policies
+
+Enable network segmentation to restrict pod-to-pod traffic:
+
+```yaml
+networkPolicy:
+  enabled: true
+  ingressController:
+    namespaceSelector:
+      matchLabels:
+        network.openshift.io/policy-group: ingress
+    podSelector:
+      matchLabels:
+        ingresscontroller.operator.openshift.io/deployment-ingresscontroller: default
+```
+
+When `networkPolicy.enabled` is `true` and `ingress.enabled` or `route.enabled` is also `true`, the ingress controller selectors are **required** — the chart will fail fast with a validation error if they are missing.
 
 ## Post-Deployment
 

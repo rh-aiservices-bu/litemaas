@@ -564,6 +564,7 @@ Response:
       "expiresAt": null,
       "isActive": true,
       "isLiteLLMKey": true,                   // Indicates LiteLLM compatibility
+      "archivedAt": null,                     // Set when key is archived (e.g., on subscription deletion)
       "metadata": {}
     }
   ],
@@ -882,6 +883,47 @@ Response:
 - The API key is completely removed from the database
 - An audit log entry is created to track the deletion
 - All active connections using this key will be immediately terminated
+
+#### POST /api/v1/api-keys/:id/archive
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only archive their own API keys; admins can archive any API key
+
+Archive an API key. Archived keys are hidden from normal listing but retained for audit purposes. The key is deactivated in LiteLLM.
+
+```json
+Response:
+{
+  "message": "API key archived successfully",
+  "archivedAt": "2024-01-20T10:00:00Z"
+}
+```
+
+**Notes**:
+
+- Archived keys are excluded from normal `GET /api-keys` listings
+- Admin users can see archived keys via `GET /admin/users/:id/api-keys` (with `includeArchived`)
+- Keys are automatically archived when their subscription is deleted
+- Action is audit logged
+
+#### POST /api/v1/api-keys/:id/unarchive
+
+**Authorization**: Requires valid JWT token (any role)
+**Data Access**: Users can only unarchive their own API keys; admins can unarchive any API key
+
+Unarchive a previously archived API key. The key becomes visible again but remains inactive (revoked).
+
+```json
+Response:
+{
+  "message": "API key unarchived successfully"
+}
+```
+
+**Notes**:
+
+- The key is restored to visible state but stays inactive — it must be separately reactivated if needed
+- Action is audit logged
 
 #### GET /api/v1/api-keys/:id/usage
 
@@ -1442,7 +1484,8 @@ Response:
       "lastUsedAt": "2024-01-15T10:30:00Z",
       "createdAt": "2024-01-01T00:00:00Z",
       "expiresAt": null,
-      "revokedAt": null
+      "revokedAt": null,
+      "archivedAt": null
     }
   ],
   "pagination": {
@@ -1597,6 +1640,24 @@ Response:
 **Notes**:
 
 - Resets spend in LiteLLM and updates local database
+- Action is logged in the audit trail
+
+#### POST /api/v1/admin/users/:id/api-keys/:keyId/unarchive
+
+**Authorization**: Requires `users:write` permission (admin role only)
+
+Restore an archived API key. The key becomes visible again but remains inactive.
+
+```json
+Response:
+{
+  "message": "API key unarchived successfully"
+}
+```
+
+**Notes**:
+
+- The key is restored to visible state but stays inactive
 - Action is logged in the audit trail
 
 #### GET /api/v1/admin/users/:id/subscriptions
@@ -2238,6 +2299,49 @@ Response:
   "rebuiltCount": 31,
   "totalEntries": 31,
   "status": "success"
+}
+```
+
+#### POST /api/v1/admin/usage/resync
+
+**Authorization**: Requires `admin` role (write operation)
+
+Re-import usage data from LiteLLM for a selected date range. Deletes cached data and re-fetches each day with current enrichment logic (token reconciliation, user mapping). Useful after migrations or when cached data needs recalculation.
+
+```json
+Request:
+{
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31"
+}
+
+Response:
+{
+  "message": "Usage data resynced successfully",
+  "daysProcessed": 31,
+  "daysTotal": 31,
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31",
+  "resyncedAt": "2024-02-01T10:30:00Z"
+}
+```
+
+#### GET /api/v1/admin/usage/cache/metrics
+
+**Authorization**: Requires `admin` or `adminReadonly` role
+
+Get cache performance metrics including hit/miss rates, rebuild counts, and lock contention stats.
+
+```json
+Response:
+{
+  "totalEntries": 150,
+  "completeEntries": 145,
+  "incompleteEntries": 5,
+  "oldestEntry": "2024-01-01",
+  "newestEntry": "2024-01-31",
+  "cacheHitRate": 0.95,
+  "lastRebuiltAt": "2024-01-30T12:00:00Z"
 }
 ```
 
