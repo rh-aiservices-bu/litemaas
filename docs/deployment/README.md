@@ -11,6 +11,7 @@ This directory contains guides for deploying and configuring LiteMaaS in various
 - **[Helm Chart Deployment](helm-deployment.md)** - Helm-based deployment for Kubernetes and OpenShift
 - **[Kustomize Deployment](kustomize-deployment.md)** - Kustomize-based deployment for OpenShift
 - **[Container Deployment](containers.md)** - Docker and Podman deployment
+- **[LiteLLM SSL Configuration](litellm-ssl-configuration.md)** - SSL certificate verification and custom CA bundle setup for LiteLLM
 - **[Production Guide](production-guide.md)** - Production deployment best practices
 
 ## Quick Start

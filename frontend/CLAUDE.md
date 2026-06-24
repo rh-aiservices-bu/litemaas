@@ -127,8 +127,10 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 - `components/admin/` - Admin user management components
   - `UserProfileTab.tsx` - User profile display with role toggles
   - `UserBudgetLimitsTab.tsx` - Budget and rate limit configuration with utilization tracking
-  - `UserApiKeysTab.tsx` - API key lifecycle management (create, view, revoke)
+  - `UserApiKeysTab.tsx` - API key lifecycle management (create, view, revoke, archive/unarchive)
   - `UserSubscriptionsTab.tsx` - Read-only subscription list with status display
+- `components/admin/` - Admin settings & tools components
+  - `UsageDataSyncTab.tsx` - Usage data re-import tool for selected date ranges
 - `components/charts/` - Shared chart components
   - `UsageTrends.tsx`, `ModelDistributionChart.tsx`, `ModelUsageTrends.tsx`
   - `UsageHeatmap.tsx` - Weekly heatmap (component ready, integration pending)

@@ -300,7 +300,7 @@ All admin analytics business logic constants are centralized in `src/config/admi
 
 ## 🔗 Environment Variables
 
-Key configuration: DATABASE_URL, JWT_SECRET, OAUTH_CLIENT_ID, LITELLM_API_URL, OAUTH_MOCK_ENABLED, LITELLM_DATABASE_URL (backup/restore + model sync cross-reference), BACKUP_STORAGE_PATH, REDIS_HOST/REDIS_PORT (optional, LiteLLM cache flush), plus 15+ admin analytics settings.
+Key configuration: DATABASE_URL, JWT_SECRET, OAUTH_CLIENT_ID, LITELLM_API_URL, OAUTH_MOCK_ENABLED, LITELLM_DATABASE_URL (backup/restore + model sync cross-reference), BACKUP_STORAGE_PATH, REDIS_HOST/REDIS_PORT/REDIS_PASSWORD (optional, LiteLLM cache flush with authentication), plus 15+ admin analytics settings.
 
 See [`docs/deployment/configuration.md`](../docs/deployment/configuration.md) and `.env.example` for complete list.
 

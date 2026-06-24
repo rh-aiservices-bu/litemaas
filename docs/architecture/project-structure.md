@@ -26,11 +26,13 @@ litemaas/
 │   │   ├── plugins/           # Fastify plugins (registered in order)
 │   │   │   ├── env.ts        # Environment variables
 │   │   │   ├── database.ts   # PostgreSQL connection pool
+│   │   │   ├── redis.ts      # Optional Redis connection (LiteLLM cache flush)
 │   │   │   ├── auth.ts       # JWT authentication
 │   │   │   ├── oauth.ts      # OAuth2/OIDC provider (session state, PKCE)
 │   │   │   ├── session.ts    # Session management
 │   │   │   ├── rbac.ts       # Role-based access control
 │   │   │   ├── rate-limit.ts # Rate limiting
+│   │   │   ├── logging.ts    # Structured logging (pino)
 │   │   │   ├── swagger.ts    # API documentation
 │   │   │   └── subscription-hooks.ts # Subscription lifecycle
 │   │   ├── routes/            # API endpoints (flat structure)
@@ -44,6 +46,10 @@ litemaas/
 │   │   │   ├── admin-models.ts # Admin model management (/api/v1/admin/models)
 │   │   │   ├── admin-users.ts # Admin user management (/api/v1/admin/users)
 │   │   │   ├── admin-usage.ts # Admin usage analytics (/api/v1/admin/usage)
+│   │   │   ├── admin-audit.ts # Admin audit log (/api/v1/admin/audit)
+│   │   │   ├── admin-backup.ts # Admin backup/restore (/api/v1/admin/backup)
+│   │   │   ├── admin-settings.ts # Admin settings (/api/v1/admin/settings)
+│   │   │   ├── admin-subscriptions.ts # Admin subscriptions (/api/v1/admin/subscriptions)
 │   │   │   ├── usage.ts      # Usage tracking (/api/v1/usage)
 │   │   │   ├── config.ts     # Configuration endpoints (/api/v1/config)
 │   │   │   ├── health.ts     # Health check (/api/v1/health)
@@ -65,21 +71,31 @@ litemaas/
 │   │   │   └── index.ts      # Schema exports
 │   │   ├── services/          # Business logic layer
 │   │   │   ├── base.service.ts # Base service class (inheritance pattern)
+│   │   │   ├── admin.service.ts # Admin operations (bulk limits, stats)
+│   │   │   ├── admin-usage-stats.service.ts # Admin usage analytics with trends
+│   │   │   ├── admin-usage/   # Admin analytics sub-services
+│   │   │   │   ├── aggregation.service.ts # Multi-dimensional filtering
+│   │   │   │   ├── enrichment.service.ts # Data enrichment
+│   │   │   │   ├── export.service.ts # CSV/JSON exports
+│   │   │   │   └── trend-calculator.ts # Trend analysis
 │   │   │   ├── api-key.service.ts # API key operations
+│   │   │   ├── backup.service.ts # Database backup and restore
+│   │   │   ├── banner.service.ts # Banner announcements
 │   │   │   ├── branding.service.ts # Branding customization
+│   │   │   ├── daily-usage-cache-manager.ts # Usage data caching manager
 │   │   │   ├── default-team.service.ts # Default team management
 │   │   │   ├── litellm.service.ts # LiteLLM API client
 │   │   │   ├── litellm-integration.service.ts # LiteLLM integration layer
 │   │   │   ├── model-sync.service.ts # Model synchronization
+│   │   │   ├── notification.service.ts # Notification management
 │   │   │   ├── oauth.service.ts # OAuth/OIDC provider integration (discovery, PKCE, token exchange)
 │   │   │   ├── rbac.service.ts # Role-based access control
 │   │   │   ├── session.service.ts # Session management
+│   │   │   ├── settings.service.ts # System settings (currency, quotas, user defaults)
 │   │   │   ├── subscription.service.ts # Subscription management
 │   │   │   ├── team.service.ts # Team operations
 │   │   │   ├── token.service.ts # Token generation and validation
-│   │   │   ├── usage-stats.service.ts # User usage analytics
-│   │   │   ├── admin-usage-stats.service.ts # Admin usage analytics with trends
-│   │   │   └── daily-usage-cache-manager.ts # Usage data caching manager
+│   │   │   └── usage-stats.service.ts # User usage analytics
 │   │   ├── types/             # TypeScript definitions
 │   │   │   ├── fastify.ts    # Fastify decorators
 │   │   │   ├── api-key.types.ts # API key types
@@ -121,9 +137,15 @@ litemaas/
 │   │   │   ├── admin/        # Admin-only components
 │   │   │   │   ├── MetricsOverview.tsx # Shared usage analytics dashboard with auth-aware admin sections
 │   │   │   │   ├── UserFilterSelect.tsx # User multi-select filter
-│   │   │   │   ├── ApiKeyFilterSelect.tsx # API key filter (cascading)
+│   │   │   │   ├── ApiKeyFilterSelect.tsx # API key filter (cascading, supports useAdminEndpoint prop)
+│   │   │   │   ├── StatusFilterSelect.tsx # Subscription status filter
 │   │   │   │   ├── TopUsersTable.tsx # Admin-only top users by usage table
 │   │   │   │   ├── ProviderBreakdownTable.tsx # Provider breakdown table
+│   │   │   │   ├── ModelBreakdownTable.tsx # Model usage breakdown table
+│   │   │   │   ├── UserBreakdownTable.tsx # User usage breakdown table
+│   │   │   │   ├── UsageDataSyncTab.tsx # Usage data re-sync from LiteLLM
+│   │   │   │   ├── UserDefaultsSection.tsx # New user defaults settings
+│   │   │   │   ├── ApiKeyQuotaDefaultsSection.tsx # API key quota defaults/maximums
 │   │   │   │   ├── UserProfileTab.tsx # User profile display with role toggles
 │   │   │   │   ├── UserBudgetLimitsTab.tsx # Budget & rate limit configuration
 │   │   │   │   ├── UserApiKeysTab.tsx # API key lifecycle management
@@ -144,7 +166,9 @@ litemaas/
 │   │   │   └── navigation.ts # Navigation structure
 │   │   ├── contexts/          # React Context providers
 │   │   │   ├── AuthContext.tsx # Authentication state
+│   │   │   ├── BannerContext.tsx # Banner announcements
 │   │   │   ├── BrandingContext.tsx # Branding settings
+│   │   │   ├── ConfigContext.tsx # App configuration (currency, cache TTL, analytics config)
 │   │   │   └── NotificationContext.tsx # Notifications
 │   │   ├── hooks/             # Custom React hooks
 │   │   │   └── useAsyncError.ts # Async error handling hook
@@ -215,7 +239,8 @@ litemaas/
 ├── dev-tools/               # Development utilities
 │   └── run_with_stderr.sh  # Bash tool workaround script
 ├── deployment/              # Deployment configurations
-│   └── openshift/          # OpenShift/Kubernetes manifests
+│   ├── helm/               # Helm chart for Kubernetes/OpenShift
+│   └── kustomize/          # Kustomize overlays for OpenShift
 ├── .github/                # GitHub workflows and templates
 ├── package.json            # Workspace configuration
 ├── compose.yaml            # Docker Compose for development
@@ -231,7 +256,7 @@ litemaas/
 #### Core Directories
 
 - **`src/config/`** - Configuration modules for database connections and environment setup
-- **`src/plugins/`** - Fastify plugins registered in specific order (env → database → redis → auth → oauth → session → rbac → rate-limit → swagger → subscription-hooks)
+- **`src/plugins/`** - Fastify plugins registered in specific order (env → database → redis → logging → auth → oauth → session → rbac → rate-limit → swagger → subscription-hooks)
 - **`src/routes/`** - API endpoints organized by functionality, following flat structure
 - **`src/services/`** - Business logic layer with BaseService inheritance pattern
 - **`src/schemas/`** - TypeBox validation schemas for request/response validation

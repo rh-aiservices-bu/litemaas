@@ -251,6 +251,44 @@ See [REST API Documentation](rest-api.md#admin-usage-analytics-apiv1adminusage) 
 }
 ```
 
+### Resync Usage Data Endpoint
+
+**Endpoint:** `POST /api/v1/admin/usage/resync`
+
+**Required Permission:** `admin:usage` (admin role only, not adminReadonly)
+
+**Description**: Re-import usage data from LiteLLM for a selected date range. Deletes cached data for the date range and re-fetches each day with current enrichment logic (token reconciliation, user mapping). Useful after migrations or when cached data needs recalculation.
+
+**Request Body:**
+
+```json
+{
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Usage data resynced successfully",
+  "daysProcessed": 31,
+  "daysTotal": 31,
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31",
+  "resyncedAt": "2024-02-01T10:30:00Z"
+}
+```
+
+### Cache Metrics Endpoint
+
+**Endpoint:** `GET /api/v1/admin/usage/cache/metrics`
+
+**Required Permission:** `admin:usage`
+
+**Description**: Get cache performance metrics including hit/miss rates, rebuild counts, and lock contention stats.
+
 **Note**: For complete API specifications including all request/response formats, see [REST API Documentation](rest-api.md#admin-usage-analytics-apiv1adminusage).
 
 ## Implementation Details
