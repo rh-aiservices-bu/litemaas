@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Model Popularity Rating**: Usage-based 1–5 star rating displayed on model cards, computed from the last 30 days of usage data with logarithmic min-max scaling
+  - Backend: `ModelPopularityService` with 1-hour in-memory cache, `GET /api/v1/models/popularity` endpoint (any authenticated role)
+  - Frontend: reusable `StarRating` component with PatternFly icons, tooltip, and ARIA support integrated into ModelsPage via React Query
+  - Cross-references `daily_usage_cache` model keys against the `models` table with case-insensitive matching and provider-prefix stripping
+  - i18n: Translations across all 9 locales
 - **Usage Data Sync tool**: Admin tool in Settings and Tools to re-import usage data from LiteLLM for a selected date range, useful after migrations or when cached data needs recalculation with current enrichment logic (token reconciliation, user mapping)
   - Backend: `resyncDateRange()` on AdminUsageStatsService, `deleteDateRange()` on DailyUsageCacheManager, new `POST /api/v1/admin/usage/resync` endpoint
   - Frontend: UsageDataSyncTab with date range pickers and sync button
