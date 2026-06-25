@@ -99,6 +99,10 @@ export interface CapabilitiesResponse {
   }[];
 }
 
+export interface ModelPopularityResponse {
+  popularity: Record<string, number>;
+}
+
 class ModelsService {
   // Helper function to convert backend model to frontend model
   private convertBackendModel(backendModel: BackendModel): Model {
@@ -228,6 +232,10 @@ class ModelsService {
   async refreshModels(): Promise<any> {
     const response = await apiClient.post('/models/sync', {});
     return response;
+  }
+
+  async getModelPopularity(): Promise<ModelPopularityResponse> {
+    return apiClient.get<ModelPopularityResponse>('/models/popularity');
   }
 }
 

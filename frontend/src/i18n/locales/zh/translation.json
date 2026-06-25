@@ -1133,6 +1133,10 @@
         "output": "输出",
         "separator": "•"
       },
+      "popularity": {
+        "tooltip": "月度热度",
+        "ariaLabel": "热度评分：{{rating}}/5 星"
+      },
       "pricingLabel": "价格：不适用",
       "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "搜索模型...",

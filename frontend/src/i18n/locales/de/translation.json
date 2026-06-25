@@ -1133,6 +1133,10 @@
         "output": "Ausgabe",
         "separator": "•"
       },
+      "popularity": {
+        "tooltip": "Monatliche Beliebtheit",
+        "ariaLabel": "Beliebtheitsbewertung: {{rating}} von 5 Sternen"
+      },
       "pricingLabel": "Preisgestaltung: N/A",
       "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "Modelle suchen...",

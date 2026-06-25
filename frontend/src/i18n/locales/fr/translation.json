@@ -1133,6 +1133,10 @@
         "output": "Sortie",
         "separator": "•"
       },
+      "popularity": {
+        "tooltip": "Popularité mensuelle",
+        "ariaLabel": "Note de popularité : {{rating}} sur 5 étoiles"
+      },
       "pricingLabel": "Tarification : N/A",
       "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "Rechercher des modèles...",

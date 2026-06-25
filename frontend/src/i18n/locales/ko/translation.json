@@ -1133,6 +1133,10 @@
         "output": "출력",
         "separator": "•"
       },
+      "popularity": {
+        "tooltip": "월간 인기도",
+        "ariaLabel": "인기도 평가: 별 5개 중 {{rating}}개"
+      },
       "pricingLabel": "가격: N/A",
       "restrictedAccess": "제한된 액세스",
       "searchPlaceholder": "모델 검색...",
