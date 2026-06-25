@@ -871,6 +871,11 @@ const ChatbotPage: React.FC = () => {
                                     : message.role
                               }
                               content={message.content}
+                              isLoading={
+                                streamingState.isStreaming &&
+                                message.id === streamingState.streamingMessageId &&
+                                !message.content
+                              }
                               timestamp={message.timestamp.toLocaleTimeString()}
                               avatar={message.role === 'assistant' ? orb : userAvatar}
                             />

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Chatbot thinking indicator**: Animated loading dots in the assistant message bubble while waiting for the first token, providing visual feedback during the thinking phase of reasoning models
 - **Model Popularity Rating**: Usage-based 1–5 star rating displayed on model cards, computed from the last 30 days of usage data with logarithmic min-max scaling
   - Backend: `ModelPopularityService` with 1-hour in-memory cache, `GET /api/v1/models/popularity` endpoint (any authenticated role)
   - Frontend: reusable `StarRating` component with PatternFly icons, tooltip, and ARIA support integrated into ModelsPage via React Query
