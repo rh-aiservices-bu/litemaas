@@ -25,6 +25,7 @@ describe('Security Tests', () => {
         '/api/v1/api-keys',
         '/api/v1/usage/dashboard',
         '/api/v1/users/me/activity',
+        '/api/v1/models/popularity',
       ];
 
       for (const endpoint of protectedEndpoints) {

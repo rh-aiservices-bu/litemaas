@@ -30,6 +30,7 @@ This directory contains documentation for key features and functionality in Lite
 
 - Model synchronization with LiteLLM
 - Model configuration and testing
+- Model popularity rating (1–5 stars based on 30-day usage, displayed on model cards)
 - API key management (multi-model support)
 - Self-service API key quotas with admin-controlled defaults and maximums
 

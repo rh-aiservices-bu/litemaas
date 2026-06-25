@@ -9,12 +9,14 @@ import {
 import { LiteLLMModel } from '../types/model.types';
 import { LiteLLMService } from '../services/litellm.service';
 import { ModelSyncService } from '../services/model-sync.service';
+import { ModelPopularityService } from '../services/model-popularity.service';
 import { ApplicationError } from '../utils/errors';
 
 const modelsRoutes: FastifyPluginAsync = async (fastify) => {
   // Initialize services
   const liteLLMService = new LiteLLMService(fastify);
   const modelSyncService = new ModelSyncService(fastify);
+  const modelPopularityService = new ModelPopularityService(fastify);
 
   // Helper function to convert LiteLLM model to our Model format
   const convertLiteLLMModel = (model: LiteLLMModel): Model => {
@@ -721,6 +723,31 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         fastify.log.error(error, 'Failed to retrieve capabilities');
         throw fastify.createError(500, 'Failed to retrieve capabilities');
       }
+    },
+  });
+
+  // Get model popularity ratings (1-5 stars based on last 30 days of usage)
+  fastify.get('/popularity', {
+    schema: {
+      tags: ['Models'],
+      description: 'Get model popularity ratings based on monthly usage',
+      security: [{ bearerAuth: [] }],
+      response: {
+        200: {
+          type: 'object',
+          properties: {
+            popularity: {
+              type: 'object',
+              additionalProperties: { type: 'number' },
+            },
+          },
+        },
+      },
+    },
+    preHandler: [fastify.authenticate],
+    handler: async (_request, _reply) => {
+      const popularity = await modelPopularityService.getPopularityRatings();
+      return { popularity };
     },
   });
 

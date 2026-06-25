@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useQuery } from 'react-query';
 import { useTranslation } from 'react-i18next';
 import {
   PageSection,
@@ -52,8 +53,9 @@ import {
 import { useNotifications } from '../contexts/NotificationContext';
 import { useCurrency } from '../contexts/ConfigContext';
 import { useErrorHandler } from '../hooks/useErrorHandler';
-import { modelsService, Model } from '../services/models.service';
+import { modelsService, Model, ModelPopularityResponse } from '../services/models.service';
 import { subscriptionsService, Subscription } from '../services/subscriptions.service';
+import StarRating from '../components/StarRating';
 import {
   ScreenReaderAnnouncement,
   useScreenReaderAnnouncement,
@@ -123,6 +125,16 @@ const ModelsPage: React.FC = () => {
   const [perPage, setPerPage] = useState(12);
   const [total, setTotal] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  const { data: popularityData } = useQuery<ModelPopularityResponse>(
+    ['modelPopularity'],
+    () => modelsService.getModelPopularity(),
+    {
+      staleTime: 30 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  );
 
   // Load subscriptions from API
   const loadSubscriptions = async (): Promise<void> => {
@@ -587,6 +599,17 @@ const ModelsPage: React.FC = () => {
                               : t('pages.models.pricingLabel')}
                           </Content>
                         </FlexItem>
+                        {popularityData?.popularity[model.id] && (
+                          <FlexItem>
+                            <StarRating
+                              rating={popularityData.popularity[model.id]}
+                              tooltip={t('pages.models.popularity.tooltip')}
+                              ariaLabel={t('pages.models.popularity.ariaLabel', {
+                                rating: popularityData.popularity[model.id],
+                              })}
+                            />
+                          </FlexItem>
+                        )}
                       </Flex>
                     </CardBody>
                     <CardFooter>

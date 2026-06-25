@@ -210,6 +210,25 @@ Response:
 }
 ```
 
+#### GET /api/v1/models/popularity
+
+**Authorization**: Requires valid JWT token (any role)
+
+Get popularity ratings for all models based on the last 30 days of usage data. Ratings are computed using logarithmic min-max scaling and cached for 1 hour.
+
+```json
+Response:
+{
+  "popularity": {
+    "model-id-1": 5,
+    "model-id-2": 3,
+    "model-id-3": 1
+  }
+}
+```
+
+Each value is an integer from 1 (least popular) to 5 (most popular). Models with zero usage in the window are omitted.
+
 ### Subscriptions
 
 #### GET /api/v1/subscriptions

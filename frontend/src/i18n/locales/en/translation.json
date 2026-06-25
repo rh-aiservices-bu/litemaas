@@ -1133,6 +1133,10 @@
         "output": "Output",
         "separator": "•"
       },
+      "popularity": {
+        "tooltip": "Monthly popularity",
+        "ariaLabel": "Popularity rating: {{rating}} out of 5 stars"
+      },
       "pricingLabel": "Pricing: N/A",
       "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "Search models...",

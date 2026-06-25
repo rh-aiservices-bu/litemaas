@@ -1133,6 +1133,10 @@
         "output": "Output",
         "separator": "•"
       },
+      "popularity": {
+        "tooltip": "Popolarità mensile",
+        "ariaLabel": "Valutazione di popolarità: {{rating}} su 5 stelle"
+      },
       "pricingLabel": "Prezzi: N/D",
       "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "Cerca modelli...",

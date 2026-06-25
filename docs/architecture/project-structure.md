@@ -86,6 +86,7 @@ litemaas/
 │   │   │   ├── default-team.service.ts # Default team management
 │   │   │   ├── litellm.service.ts # LiteLLM API client
 │   │   │   ├── litellm-integration.service.ts # LiteLLM integration layer
+│   │   │   ├── model-popularity.service.ts # Model popularity ratings (1-5 stars from usage data)
 │   │   │   ├── model-sync.service.ts # Model synchronization
 │   │   │   ├── notification.service.ts # Notification management
 │   │   │   ├── oauth.service.ts # OAuth/OIDC provider integration (discovery, PKCE, token exchange)
@@ -154,6 +155,7 @@ litemaas/
 │   │   │   ├── charts/       # Chart components (AccessibleChart, etc.)
 │   │   │   ├── branding/      # Branding customization components
 │   │   │   │   └── BrandingTab.tsx # Branding settings tab
+│   │   │   ├── StarRating.tsx  # Reusable 1-5 star rating (popularity)
 │   │   │   ├── AlertToastGroup.tsx # Toast notifications
 │   │   │   ├── ComponentErrorBoundary.tsx # Component-level error handling
 │   │   │   ├── ErrorBoundary.tsx # Global error handling

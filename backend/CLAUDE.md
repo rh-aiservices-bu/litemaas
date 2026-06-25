@@ -138,6 +138,7 @@ For details, see [`docs/features/user-roles-administration.md`](../docs/features
   - `UsageStatsService` - User-level usage analytics
   - `AdminUsageStatsService` - **System-wide analytics** with trend analysis and multi-dimensional filtering
   - `DailyUsageCacheManager` - **Day-by-day incremental caching** (permanent historical cache, 5-min TTL for current day)
+- **Popularity**: `ModelPopularityService` - 1–5 star ratings from 30-day usage data (1-hour in-memory cache, log-scaled)
 - **Integration**: LiteLLMService, LiteLLMIntegrationService
 - **Admin**: AdminService, admin-users route (user details, budget/limits, API keys, subscriptions)
 - **Settings**: SettingsService (API key quota defaults and maximums via `system_settings` table)

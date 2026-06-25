@@ -1133,6 +1133,10 @@
         "output": "出力",
         "separator": "•"
       },
+      "popularity": {
+        "tooltip": "月間人気度",
+        "ariaLabel": "人気度評価：5つ星中{{rating}}つ星"
+      },
       "pricingLabel": "価格：N/A",
       "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "モデルを検索...",

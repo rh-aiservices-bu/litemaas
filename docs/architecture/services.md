@@ -95,6 +95,31 @@ The LiteMaaS backend service layer implements the business logic and core functi
 
 ---
 
+### ModelPopularityService
+
+**Purpose**: Compute 1–5 star popularity ratings for models based on recent usage data
+
+**Extends**: BaseService
+
+**Responsibilities**:
+
+- Aggregate API request counts from `daily_usage_cache` over a 30-day rolling window
+- Resolve cache model keys (which may include provider prefixes like `openai/`) to `models` table IDs using case-insensitive matching
+- Apply logarithmic min-max scaling to produce 1–5 star ratings
+- Maintain a 1-hour in-memory cache of computed ratings
+
+**Dependencies**:
+
+- Database connection for `daily_usage_cache` and `models` tables
+- Utility functions from `admin-usage.utils.ts` (`getTodayUTC`, `subDaysUTC`)
+
+**Key Operations**:
+
+- `getPopularityRatings()` - Return `Record<modelId, rating>` (cached, recomputed hourly)
+- `invalidateCache()` - Force recomputation on next call
+
+---
+
 ### LiteLLMService ✅ **UPDATED 2025-08-06**
 
 **Purpose**: Core integration with LiteLLM instances

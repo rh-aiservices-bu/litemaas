@@ -131,6 +131,7 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
   - `UserSubscriptionsTab.tsx` - Read-only subscription list with status display
 - `components/admin/` - Admin settings & tools components
   - `UsageDataSyncTab.tsx` - Usage data re-import tool for selected date ranges
+- `components/StarRating.tsx` - Reusable 1–5 star rating with PatternFly icons, tooltip, and ARIA (used on model cards for popularity)
 - `components/charts/` - Shared chart components
   - `UsageTrends.tsx`, `ModelDistributionChart.tsx`, `ModelUsageTrends.tsx`
   - `UsageHeatmap.tsx` - Weekly heatmap (component ready, integration pending)

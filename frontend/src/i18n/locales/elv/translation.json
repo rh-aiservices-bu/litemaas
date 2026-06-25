@@ -1133,6 +1133,10 @@
         "output": "Toltha",
         "separator": "•"
       },
+      "popularity": {
+        "tooltip": "Iastadh astarennen",
+        "ariaLabel": "Iastadh: {{rating}} o 5 elenath"
+      },
       "pricingLabel": "Vuin: Ú-úir",
       "restrictedAccess": "Restricted Access",
       "searchPlaceholder": "Drego echuin...",
