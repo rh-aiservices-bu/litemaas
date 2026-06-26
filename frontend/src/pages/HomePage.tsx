@@ -18,6 +18,7 @@ import {
   CubesIcon,
   CommentsIcon,
 } from '@patternfly/react-icons';
+import DashboardWidgets from '../components/home/DashboardWidgets';
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
@@ -31,6 +32,9 @@ const HomePage: React.FC = () => {
           </Title>
           <Content component={ContentVariants.p}>{t('pages.home.subtitle')}</Content>
         </Content>
+      </PageSection>
+      <PageSection>
+        <DashboardWidgets />
       </PageSection>
       <PageSection>
         <Flex direction={{ default: 'column' }} spaceItems={{ default: 'spaceItemsLg' }}>

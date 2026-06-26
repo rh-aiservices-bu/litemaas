@@ -1050,6 +1050,21 @@
         "usageAriaLabel": "Navigate to Usage page to monitor your API usage and metrics",
         "usageDescription": "Monitor your API usage"
       },
+      "dashboard": {
+        "completionTokens": "Completion Tokens",
+        "completionTokensAriaLabel": "Completion tokens used in last 7 days: {{count}}",
+        "copyEndpoint": "Copy endpoint URL",
+        "endpointCopied": "Copied",
+        "endpointCopiedDescription": "API endpoint URL copied to clipboard",
+        "endpointDescription": "Use this URL to make API requests",
+        "endpointTitle": "API Endpoint",
+        "noBudgetConfigured": "No budget limit is currently configured for your account.",
+        "promptTokens": "Prompt Tokens",
+        "promptTokensAriaLabel": "Prompt tokens used in last 7 days: {{count}}",
+        "tokenSubtitle": "Last 7 days",
+        "totalTokens": "Total Tokens",
+        "totalTokensAriaLabel": "Total tokens used in last 7 days: {{count}}"
+      },
       "subtitle": "Your Model as a Service platform for accessing and managing AI models.",
       "title": "Welcome to LiteMaaS"
     },

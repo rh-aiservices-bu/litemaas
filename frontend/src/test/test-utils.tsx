@@ -20,6 +20,7 @@ vi.mock('../contexts/ConfigContext', () => {
     version: '1.0.0-test',
     usageCacheTTL: 300, // 5 minutes in seconds
     environment: 'test',
+    litellmApiUrl: 'https://test.litemaas.com',
   };
 
   const mockConfigContext = React.createContext({

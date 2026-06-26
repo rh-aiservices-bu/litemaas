@@ -1050,6 +1050,21 @@
         "usageAriaLabel": "API 사용량 및 메트릭을 모니터링하려면 사용량 페이지로 이동",
         "usageDescription": "API 사용량 모니터링"
       },
+      "dashboard": {
+        "completionTokens": "완성 토큰",
+        "completionTokensAriaLabel": "최근 7일간 사용된 완성 토큰: {{count}}",
+        "copyEndpoint": "엔드포인트 URL 복사",
+        "endpointCopied": "복사됨",
+        "endpointCopiedDescription": "API 엔드포인트 URL이 클립보드에 복사되었습니다",
+        "endpointDescription": "이 URL을 사용하여 API 요청을 보내세요",
+        "endpointTitle": "API 엔드포인트",
+        "noBudgetConfigured": "현재 계정에 설정된 예산 한도가 없습니다.",
+        "promptTokens": "프롬프트 토큰",
+        "promptTokensAriaLabel": "최근 7일간 사용된 프롬프트 토큰: {{count}}",
+        "tokenSubtitle": "최근 7일",
+        "totalTokens": "전체 토큰",
+        "totalTokensAriaLabel": "최근 7일간 사용된 전체 토큰: {{count}}"
+      },
       "subtitle": "AI 모델에 액세스하고 관리하기 위한 Model as a Service 플랫폼입니다.",
       "title": "LiteMaaS에 오신 것을 환영합니다"
     },

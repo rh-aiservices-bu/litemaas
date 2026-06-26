@@ -1050,6 +1050,21 @@
         "usageAriaLabel": "使用状況ページに移動してAPI使用状況とメトリクスを監視",
         "usageDescription": "API使用状況の監視"
       },
+      "dashboard": {
+        "completionTokens": "補完トークン",
+        "completionTokensAriaLabel": "過去7日間の補完トークン使用量: {{count}}",
+        "copyEndpoint": "エンドポイントURLをコピー",
+        "endpointCopied": "コピーしました",
+        "endpointCopiedDescription": "APIエンドポイントURLがクリップボードにコピーされました",
+        "endpointDescription": "このURLを使用してAPIリクエストを送信します",
+        "endpointTitle": "APIエンドポイント",
+        "noBudgetConfigured": "現在、アカウントに予算制限は設定されていません。",
+        "promptTokens": "プロンプトトークン",
+        "promptTokensAriaLabel": "過去7日間のプロンプトトークン使用量: {{count}}",
+        "tokenSubtitle": "過去7日間",
+        "totalTokens": "トークン合計",
+        "totalTokensAriaLabel": "過去7日間の合計トークン使用量: {{count}}"
+      },
       "subtitle": "AIモデルへのアクセスと管理のためのModel as a Serviceプラットフォーム。",
       "title": "LiteMaaSへようこそ"
     },

@@ -1050,6 +1050,21 @@
         "usageAriaLabel": "Zur Nutzungs-Seite navigieren, um Ihre API-Nutzung und Metriken zu überwachen",
         "usageDescription": "Ihre API-Nutzung überwachen"
       },
+      "dashboard": {
+        "completionTokens": "Completion-Tokens",
+        "completionTokensAriaLabel": "Completion-Tokens der letzten 7 Tage: {{count}}",
+        "copyEndpoint": "Endpoint-URL kopieren",
+        "endpointCopied": "Kopiert",
+        "endpointCopiedDescription": "Die API-Endpoint-URL wurde in die Zwischenablage kopiert",
+        "endpointDescription": "Verwenden Sie diese URL für API-Anfragen",
+        "endpointTitle": "API-Endpoint",
+        "noBudgetConfigured": "Für Ihr Konto ist derzeit kein Budgetlimit konfiguriert.",
+        "promptTokens": "Prompt-Tokens",
+        "promptTokensAriaLabel": "Prompt-Tokens der letzten 7 Tage: {{count}}",
+        "tokenSubtitle": "Letzte 7 Tage",
+        "totalTokens": "Tokens gesamt",
+        "totalTokensAriaLabel": "Tokens gesamt der letzten 7 Tage: {{count}}"
+      },
       "subtitle": "Ihre Model-as-a-Service-Plattform für den Zugriff und die Verwaltung von KI-Modellen.",
       "title": "Willkommen bei LiteMaaS"
     },
