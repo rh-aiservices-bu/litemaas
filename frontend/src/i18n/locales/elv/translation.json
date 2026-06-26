@@ -1050,6 +1050,21 @@
         "usageAriaLabel": "Linna na aerlinn-band ad tirno API-aerlinn a govaded",
         "usageDescription": "Tirno aerlinn-API"
       },
+      "dashboard": {
+        "completionTokens": "Tîw Thelion",
+        "completionTokensAriaLabel": "Tîw thelion ú-annannen ned i neder aur verthennin: {{count}}",
+        "copyEndpoint": "Genedio i Ment-palan",
+        "endpointCopied": "Gennediol",
+        "endpointCopiedDescription": "I ment-palan API na-gennediol na i gwannad",
+        "endpointDescription": "Avo i ment-palan chen an eriad cerir API",
+        "endpointTitle": "Ment-palan API",
+        "noBudgetConfigured": "Ú-darthannen rim-mîr an i herth lín.",
+        "promptTokens": "Tîw Treitho",
+        "promptTokensAriaLabel": "Tîw treitho ú-annannen ned i neder aur verthennin: {{count}}",
+        "tokenSubtitle": "I neder aur verthennin",
+        "totalTokens": "Tîw Palan",
+        "totalTokensAriaLabel": "Tîw palan ú-annannen ned i neder aur verthennin: {{count}}"
+      },
       "subtitle": "En echuis-i-Vilya in êl aduial pedo sui henion ned Echuin-Eru.",
       "title": "Mae govannen mi LiteMaaS"
     },

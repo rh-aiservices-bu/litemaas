@@ -89,6 +89,9 @@ export interface Analytics {
     requestsTrend: TrendData;
     costTrend: TrendData;
     usersTrend: TrendData;
+    totalTokensTrend?: TrendData;
+    promptTokensTrend?: TrendData;
+    completionTokensTrend?: TrendData;
   };
   dailyUsage?: DailyUsageSummary[];
   dailyModelUsage?: DailyModelUsage[];

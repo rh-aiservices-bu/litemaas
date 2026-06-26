@@ -1050,6 +1050,21 @@
         "usageAriaLabel": "导航到使用情况页面以监控您的API使用情况和指标",
         "usageDescription": "监控您的API使用情况"
       },
+      "dashboard": {
+        "completionTokens": "补全 Token",
+        "completionTokensAriaLabel": "过去 7 天使用的补全 Token：{{count}}",
+        "copyEndpoint": "复制端点 URL",
+        "endpointCopied": "已复制",
+        "endpointCopiedDescription": "API 端点 URL 已复制到剪贴板",
+        "endpointDescription": "使用此 URL 发送 API 请求",
+        "endpointTitle": "API 端点",
+        "noBudgetConfigured": "您的账户当前未设置预算限额。",
+        "promptTokens": "Prompt Token",
+        "promptTokensAriaLabel": "过去 7 天使用的 Prompt Token：{{count}}",
+        "tokenSubtitle": "过去 7 天",
+        "totalTokens": "Token 总计",
+        "totalTokensAriaLabel": "过去 7 天使用的 Token 总计：{{count}}"
+      },
       "subtitle": "您的模型即服务平台，用于访问和管理AI模型。",
       "title": "欢迎使用LiteMaaS"
     },

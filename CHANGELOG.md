@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Home page dashboard widgets**: Live summary widgets above the existing navigation cards, surfacing key information at a glance (#159)
+  - **Budget Utilization**: Reuses `UserBudgetSummary` component with new `showNoBudgetMessage` and `isFullHeight` props; shows spend vs. limit or a neutral "no budget configured" message
+  - **API Endpoint URL**: Displays `litellmApiUrl/v1` from backend config with copy-to-clipboard button
+  - **Token Consumption (Last 7 Days)**: Three compact `MetricCard` widgets (Total, Prompt, Completion tokens) with trend indicators vs. previous 7-day period
+  - Responsive PatternFly Grid layout (2-column top row, 3-column bottom row, stacked on mobile)
+  - Added optional token trend fields (`totalTokensTrend`, `promptTokensTrend`, `completionTokensTrend`) to `Analytics` interface
+  - i18n: Translations across all 9 locales
 - **Chatbot thinking indicator**: Animated loading dots in the assistant message bubble while waiting for the first token, providing visual feedback during the thinking phase of reasoning models
 - **Model Popularity Rating**: Usage-based 1–5 star rating displayed on model cards, computed from the last 30 days of usage data with logarithmic min-max scaling
   - Backend: `ModelPopularityService` with 1-hour in-memory cache, `GET /api/v1/models/popularity` endpoint (any authenticated role)
