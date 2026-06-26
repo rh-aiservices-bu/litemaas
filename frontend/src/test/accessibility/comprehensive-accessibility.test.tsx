@@ -10,7 +10,7 @@
  */
 
 import React from 'react';
-import { render } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { RouterProvider } from 'react-router-dom';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -23,6 +23,66 @@ expect.extend(toHaveNoViolations);
 vi.mock('../../services/usage.service');
 vi.mock('../../services/apiKeys.service');
 vi.mock('../../services/models.service');
+
+// Mock ConfigContext to provide synchronous config (avoids async API calls in tests)
+vi.mock('../../contexts/ConfigContext', () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const React = require('react');
+
+  const mockConfig = {
+    version: '1.0.0-test',
+    usageCacheTTL: 300,
+    environment: 'test',
+    litellmApiUrl: 'https://test.litemaas.com',
+  };
+
+  const mockConfigContext = React.createContext({
+    config: mockConfig,
+    isLoading: false,
+    error: null,
+  });
+
+  return {
+    useConfig: () => {
+      const context = React.useContext(mockConfigContext);
+      if (!context) {
+        throw new Error('useConfig must be used within a ConfigProvider');
+      }
+      return context;
+    },
+    useCurrency: () => ({
+      currencyCode: 'USD',
+      currencySymbol: '$',
+      currencyName: 'US Dollar',
+      formatCurrency: (amount: number) => {
+        if (!isFinite(amount) || amount < 0) return '$0.00';
+        return new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }).format(amount);
+      },
+    }),
+    ConfigProvider: ({ children }: { children: React.ReactNode }) =>
+      React.createElement(
+        mockConfigContext.Provider,
+        { value: { config: mockConfig, isLoading: false, error: null } },
+        children,
+      ),
+  };
+});
+
+vi.mock('../../services/config.service', () => ({
+  configService: {
+    getConfig: vi.fn().mockResolvedValue({
+      version: '1.0.0-test',
+      usageCacheTTL: 300,
+      environment: 'test',
+    }),
+  },
+}));
+
 // Note: We'll use the real NotificationProvider instead of mocking it,
 // since we need the full provider implementation for accessibility tests
 
@@ -83,8 +143,7 @@ describe('Comprehensive Accessibility Test Suite', () => {
   });
 
   afterEach(() => {
-    // Clean up any global state
-    document.body.innerHTML = '';
+    cleanup();
   });
 
   describe('WCAG 2.1 AA Compliance Validation', () => {
