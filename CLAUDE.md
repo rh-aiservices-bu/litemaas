@@ -38,6 +38,13 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 - **Redis Cache Flush**: Optional Redis integration (`REDIS_HOST`/`REDIS_PORT`) to flush LiteLLM's cache after model CRUD, ensuring all proxy pods pick up changes immediately
 - **Deployment**: Redis deployment included in Helm (`redis.enabled: true`) and Kustomize charts
 
+**Model Popularity Rating**: Usage-based 1–5 star rating on model cards, giving users a quick visual indicator of which models are most actively used:
+
+- **Computation**: Last 30 days of usage data with logarithmic min-max scaling (1–5 stars)
+- **Backend**: `ModelPopularityService` with 1-hour in-memory cache, `GET /api/v1/models/popularity`
+- **Frontend**: Reusable `StarRating` component with PatternFly icons, tooltip, and ARIA support
+- **Key Resolution**: Cross-references `daily_usage_cache` model keys against the `models` table with case-insensitive matching and provider-prefix stripping
+
 **Restricted Model Subscription Approval** (Major feature - 2025 Q4): Admin-controlled access to sensitive/costly models with comprehensive approval workflow:
 
 - **Restricted Model Flagging**: Administrators mark models requiring approval
@@ -99,6 +106,8 @@ See [`docs/architecture/project-structure.md`](docs/architecture/project-structu
 - **RBAC**: `admin:backup` permission (admin only), tab visible to adminReadonly (read-only)
 - **Configuration**: `LITELLM_DATABASE_URL` for LiteLLM database access (also used by model sync cross-referencing), `BACKUP_STORAGE_PATH` for storage location
 
+**Usage Data Sync**: Admin tool to re-import usage data from LiteLLM for a selected date range. Accessible from Settings and Tools → Usage Data Sync tab. Deletes cached data and re-fetches day-by-day with current enrichment logic (token reconciliation, user mapping). Useful after migrations or when cached data needs recalculation. RBAC: `admin:usage` permission (admin only), tab visible to adminReadonly (read-only).
+
 **Configurable Currency**: Admin-controlled currency settings (25 supported currencies) for all monetary displays across the platform. Configured via Settings and Tools → Currency tab, stored in `system_settings` table, exposed via public config endpoint. Default: USD ($).
 
 **State Management**: React Context for auth/notifications/config/branding, React Query for server state with dynamic cache TTL from backend configuration.
@@ -156,6 +165,14 @@ docker compose up -d  # Local development with containers (using compose.yaml)
 ```
 
 _See `docs/development/` for detailed setup, `docs/deployment/helm-deployment.md` for Helm deployment, and `docs/deployment/configuration.md` for environment variables_
+
+## 🔀 Git Workflow
+
+**⚠️ IMPORTANT**: The `dev` branch is the integration branch. All feature branches and pull requests MUST target `dev`, NOT `main`. The `main` branch is reserved for stable releases only.
+
+- **Create feature branches from**: `dev`
+- **Target PRs at**: `dev`
+- **Never push directly to**: `main` or `dev`
 
 ## 🚨 CRITICAL DEVELOPMENT NOTES
 

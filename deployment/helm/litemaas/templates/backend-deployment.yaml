@@ -19,12 +19,16 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       serviceAccountName: {{ include "litemaas.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       initContainers:
         {{- include "litemaas.initWaitForDatabase" (dict "context" . "secretName" (include "litemaas.backend.secretName" .) "secretKey" "database-url") | nindent 8 }}
       containers:
         - name: backend
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.global.imagePullPolicy }}
+          securityContext:
+            {{- toYaml .Values.containerSecurityContext | nindent 12 }}
           ports:
             - containerPort: 8080
               name: http
@@ -99,6 +103,14 @@ spec:
                 secretKeyRef:
                   name: {{ include "litemaas.backend.secretName" . }}
                   key: litellm-database-url
+            {{- if and (include "litemaas.redis.host" .) (include "litemaas.redis.authEnabled" .) }}
+            # Redis authentication
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "litemaas.redis.secretName" . }}
+                  key: password
+            {{- end }}
           volumeMounts:
             - name: backup-storage
               mountPath: {{ .Values.backend.backup.storagePath }}

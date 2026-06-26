@@ -22,6 +22,40 @@ nameOverride: ""
 # -- Override fully qualified app name
 fullnameOverride: ""
 
+# -- Network policy configuration
+networkPolicy:
+  # -- Enable NetworkPolicies for network segmentation.
+  # When enabled, deploys deny-all-ingress default and per-component allow rules
+  # so only expected traffic flows are permitted (e.g., only backend can reach PostgreSQL).
+  enabled: false
+  # -- Selectors to identify ingress controller / OpenShift router pods.
+  # Required when networkPolicy and ingress/route are both enabled.
+  # Example:
+  #   namespaceSelector:
+  #     kubernetes.io/metadata.name: ingress-nginx
+  #   podSelector:
+  #     app.kubernetes.io/name: ingress-nginx
+  ingressController:
+    # -- Namespace labels that identify the ingress controller namespace.
+    # Required when networkPolicy and ingress/route are both enabled.
+    # Example: { kubernetes.io/metadata.name: ingress-nginx }
+    namespaceSelector: null
+    # -- Pod labels that identify the ingress controller pods (omit to allow all pods in matched namespaces)
+    # podSelector: {}
+
+# -- Pod-level security context applied to all workloads.
+# Matches the pattern already used in the OAuth setup hook Job.
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Container-level security context applied to all workloads.
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop: [ALL]
+
 # -- ServiceAccount configuration
 serviceAccount:
   # -- Create a ServiceAccount
@@ -121,6 +155,13 @@ redis:
     repository: redis
     tag: "7-alpine"
 
+  auth:
+    # -- Redis password (CHANGE THIS). Set to "" to disable authentication.
+    password: changeme
+    # -- Use an existing Secret instead of creating one.
+    # Must contain key: password
+    existingSecret: ""
+
   resources:
     requests:
       memory: "64Mi"
@@ -153,6 +194,48 @@ litellm:
     # -- Use an existing Secret instead of creating one.
     # Must contain keys: database-url, master-key, ui-username, ui-password
     existingSecret: ""
+
+  # -- Enable SSL verification for model API calls (set to false for self-signed certs)
+  # ⚠️ Security Warning: Only disable for development/testing or when using internal
+  # services with self-signed certificates (e.g., KServe on OpenShift)
+  sslVerify: true
+
+  # -- Extra environment variables for LiteLLM container
+  # Use this to inject custom CA bundle environment variables for production SSL setup
+  # Example:
+  #   extraEnv:
+  #     - name: REQUESTS_CA_BUNDLE
+  #       value: /etc/ssl/certs/kserve-ca-bundle.crt
+  #     - name: SSL_CERT_FILE
+  #       value: /etc/ssl/certs/kserve-ca-bundle.crt
+  #     - name: CURL_CA_BUNDLE
+  #       value: /etc/ssl/certs/kserve-ca-bundle.crt
+  #     # Set to "0" to disable Python's default HTTPS certificate verification (PEP 493)
+  #     - name: PYTHONHTTPSVERIFY
+  #       value: "0"
+  extraEnv: []
+
+  # -- Extra volumes for LiteLLM pod
+  # Use this to mount custom CA bundles from ConfigMaps for production SSL setup
+  # Example:
+  #   extraVolumes:
+  #     - name: kserve-ca-bundle
+  #       configMap:
+  #         name: kserve-ca-bundle
+  #         items:
+  #           - key: ca-bundle.crt
+  #             path: kserve-ca-bundle.crt
+  extraVolumes: []
+
+  # -- Extra volume mounts for LiteLLM container
+  # Use this to mount custom CA bundle files for production SSL setup
+  # Example:
+  #   extraVolumeMounts:
+  #     - name: kserve-ca-bundle
+  #       mountPath: /etc/ssl/certs/kserve-ca-bundle.crt
+  #       subPath: kserve-ca-bundle.crt
+  #       readOnly: true
+  extraVolumeMounts: []
 
   resources:
     requests:

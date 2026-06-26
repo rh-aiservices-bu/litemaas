@@ -33,7 +33,7 @@ const mockBackendApiKeys = [
       },
     ],
     lastUsedAt: '2024-06-23T00:00:00.000Z',
-    expiresAt: '2026-06-01T00:00:00.000Z',
+    expiresAt: '2030-06-01T00:00:00.000Z',
     isActive: true,
     createdAt: '2024-06-01T00:00:00.000Z',
     revokedAt: null,
@@ -292,40 +292,10 @@ export const handlers = [
     });
   }),
 
-  // Usage endpoints
-  http.get('/api/v1/usage/metrics', ({ request }) => {
-    const url = new URL(request.url);
-    const modelId = url.searchParams.get('modelId');
-    const apiKeyId = url.searchParams.get('apiKeyId');
-
-    // Simulate filtered responses based on query parameters
-    let metrics = { ...mockUsageMetrics };
-
-    if (modelId === 'gpt-4') {
-      metrics = {
-        ...metrics,
-        totalRequests: 50000,
-        totalTokens: 4000000,
-        totalCost: 800.0,
-      };
-    }
-
-    if (apiKeyId === 'key-1') {
-      metrics = {
-        ...metrics,
-        totalRequests: 25000,
-        totalTokens: 2000000,
-        totalCost: 400.0,
-      };
-    }
-
-    return HttpResponse.json(metrics);
-  }),
-
   // Usage export endpoint
-  http.get('/api/v1/usage/export', ({ request }) => {
-    const url = new URL(request.url);
-    const format = url.searchParams.get('format') || 'csv';
+  http.post('/api/v1/usage/export', async ({ request }) => {
+    const body = (await request.json()) as any;
+    const format = body?.format || 'csv';
 
     if (format === 'csv') {
       const csvContent = `Date,Requests,Tokens,Cost\n2024-06-01,5000,400000,50.0\n2024-06-02,4500,360000,45.0`;

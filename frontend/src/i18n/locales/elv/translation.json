@@ -223,6 +223,7 @@
       "totalRequests": "Pedi",
       "totalTokens": "Têw Îl"
     },
+    "apiKeyFilterChanged": "Halad dan {{count}} echui-cair(in)",
     "modelFilterChanged": "Halad dan {{count}} echui(n)",
     "noData": "Úin gwaed úir",
     "noModelData": "Úin echuin-gwaed úir",
@@ -362,6 +363,9 @@
     "weekly": "Weekly",
     "yearly": "Yearly",
     "yes": "Mae"
+  },
+  "errors": {
+    "maxRetriesExceeded": "Adlenn-athrad daen estent"
   },
   "models": {
     "admin": {
@@ -619,6 +623,8 @@
         "description": "Orthael",
         "expires": "Firn",
         "keyDetails": "Anguirel Vuin",
+        "keyDetailsAriaLabel": "Cair teithad",
+        "keyLimitsAriaLabel": "Cair glandath",
         "lastUsed": "Methed Aerlinn",
         "rateLimit": "Rond-Lim",
         "rateLimitLabel": "Rond-lim (pedi hen vuilin)",
@@ -635,6 +641,7 @@
         "keyCreatedMessage": "Anguirel-API banda prestann.",
         "keyCreatedSuccess": "{{name}} band prestann",
         "keyDeleted": "{{name}} orthad",
+        "keyArchivedMessage": "Anguirel-API sin aglarnen a ú-fîr.",
         "keyExpiredMessage": "Anguirel-API sin firn {{date}}.",
         "keyRevokedMessage": "Anguirel-API sin tógail a ú-ern aerlinn.",
         "keyUpdatedSuccess": "{{name}} orthant sui chenin",
@@ -659,6 +666,7 @@
         "createdTitle": "Anguirel-API Band Prestann",
         "deleteTitle": "Orthad Anguirel-API",
         "editTitle": "Orthad Anguirel-API",
+        "keyArchived": "Anguirel Aglarnen",
         "keyExpired": "Anguirel Firn",
         "keyRevoked": "Anguirel Tógail",
         "secureRetrieval": "Anguirel Díhen Dotha",
@@ -1048,6 +1056,21 @@
         "usageAriaLabel": "Linna na aerlinn-band ad tirno API-aerlinn a govaded",
         "usageDescription": "Tirno aerlinn-API"
       },
+      "dashboard": {
+        "completionTokens": "Tîw Thelion",
+        "completionTokensAriaLabel": "Tîw thelion ú-annannen ned i neder aur verthennin: {{count}}",
+        "copyEndpoint": "Genedio i Ment-palan",
+        "endpointCopied": "Gennediol",
+        "endpointCopiedDescription": "I ment-palan API na-gennediol na i gwannad",
+        "endpointDescription": "Avo i ment-palan chen an eriad cerir API",
+        "endpointTitle": "Ment-palan API",
+        "noBudgetConfigured": "Ú-darthannen rim-mîr an i herth lín.",
+        "promptTokens": "Tîw Treitho",
+        "promptTokensAriaLabel": "Tîw treitho ú-annannen ned i neder aur verthennin: {{count}}",
+        "tokenSubtitle": "I neder aur verthennin",
+        "totalTokens": "Tîw Palan",
+        "totalTokensAriaLabel": "Tîw palan ú-annannen ned i neder aur verthennin: {{count}}"
+      },
       "subtitle": "En echuis-i-Vilya in êl aduial pedo sui henion ned Echuin-Eru.",
       "title": "Mae govannen mi LiteMaaS"
     },
@@ -1130,6 +1153,10 @@
         "input": "Minno",
         "output": "Toltha",
         "separator": "•"
+      },
+      "popularity": {
+        "tooltip": "Iastadh astarennen",
+        "ariaLabel": "Iastadh: {{rating}} o 5 elenath"
       },
       "pricingLabel": "Vuin: Ú-úir",
       "restrictedAccess": "Restricted Access",
@@ -1337,6 +1364,7 @@
         "createBackup": "Caro tirith-gwaed",
         "creating": "Carad...",
         "table": {
+          "ariaLabel": "Adlenn-bord",
           "database": "Gwaed-dagor",
           "timestamp": "Lû-anim",
           "size": "Daer",
@@ -1505,7 +1533,24 @@
       "variantSuccess": "Orthad (Calen)",
       "variantWarning": "Balch (Galadh)",
       "visibility": "Tiruith",
-      "visible": "Tiria"
+      "viewBanner": "Tiro Faer",
+      "visible": "Tiria",
+      "usageSync": {
+        "tabTitle": "Sennui Gwanur-Mathon",
+        "title": "Sennui Gwanur-Mathon",
+        "description": "Erio i mathon gwanur o LiteLLM an dîr-annûn dînen. I sennui hennio i mathon orthad a eria dîn sui gwanur edaid. Boe ledhi sui heryn orthad, hen dân i chrûm anann. Tiro dîr-annûn a orthado sui rîn vi thimraid maer, ben gwanur lagor i chost.",
+        "startDate": "Erin Echui",
+        "endDate": "Erin Methed",
+        "resyncButton": "Eria mathon gwanur",
+        "syncing": "Gwanuriel...",
+        "invalidRange": "Boe i erin echui na farad vi erin methed, egor sennui.",
+        "adminRequired": "Aníron heryn aran an gwanur i mathon gwanur.",
+        "notifications": {
+          "successTitle": "Mathon gwanur orthaded",
+          "success": "Gwanuriel vi orthad {{processed}} o {{total}} aurin mathon gwanur.",
+          "errorTitle": "Gwanur mathon úvannen"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {
@@ -1652,6 +1697,7 @@
   },
   "status": {
     "active": "Fîr",
+    "archived": "Aglarnen",
     "inactive": "Firn"
   },
   "ui": {
@@ -1714,6 +1760,7 @@
       "configLoadFailed": "Lain amloth-orthad fael",
       "details": "En-chinn",
       "errorCode": "Ú-acharn côd",
+      "errorDetails": "Raeg teithad",
       "field": "Talaf",
       "general": "Ohtar túl",
       "hideDetails": "Thuia en-chinn",
@@ -1727,7 +1774,6 @@
       "showDetails": "Tira en-chinn",
       "somethingWentWrong": "Rhein ohtar orthant",
       "somethingWentWrongDesc": "Goheno, nan rhein ú-prestann orthant. Anno orthor dan athra-band pe pado na orthad-uin sui ohtar dartha.",
-      "somethingWrong": "Rhein ohtar orthant",
       "statusCode": "Stat côd",
       "title": "Ohtar",
       "tryRefresh": "Goheno, nan rhein ú-prestann orthant. Anno athra-band i band pe pado na orthad-uin sui ohtar dartha.",
@@ -1783,6 +1829,7 @@
       "noNotificationsFound": "Ú-ennen thúl",
       "notificationSrTitle": "Thúl",
       "notificationsLabel": "Thúl",
+      "removeNotification": "Dago prestannen: {{title}}",
       "title": "Thúl"
     },
     "pagination": {
@@ -1893,6 +1940,10 @@
       "revokeError": "Thurio ú-gwannad",
       "revokeSuccess": "API-Cair Thurion",
       "revokeSuccessDesc": "ELV: The API key has been deactivated successfully.",
+      "unarchive": "Díheno Aglar",
+      "unarchiveError": "Díheno Aglar Fael",
+      "unarchiveSuccess": "Anguirel-API Díheno Aglarnen",
+      "unarchiveSuccessDesc": "Anguirel-API edregol a sí tirin na aduiadan.",
       "rpm": "RPM",
       "rpmLimit": "RPM Rim",
       "status": "Said",

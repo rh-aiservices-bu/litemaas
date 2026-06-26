@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Settings and Tools page (`/admin/tools`) provides administrative tools for managing LiteMaaS system configurations. It includes tabs for Limits, Banners, Branding, Currency, Backup, and Models Sync.
+The Settings and Tools page (`/admin/tools`) provides administrative tools for managing LiteMaaS system configurations. It includes tabs for Limits, Banners, Branding, Currency, Backup, Usage Data Sync, and Models Sync.
 
 ### Access Requirements
 
@@ -660,6 +660,63 @@ For complete technical documentation, see:
 - **[Admin Usage Analytics Implementation](../archive/features/admin-usage-analytics-implementation-plan.md)** - Complete feature specification
 - **[Usage API Documentation](../api/usage-api.md#admin-endpoints)** - API endpoints and data formats
 - **[REST API Reference](../api/rest-api.md#admin-usage-analytics-apiv1adminusage)** - Detailed endpoint specifications
+
+## Usage Data Sync
+
+The Usage Data Sync feature is accessible from the **Usage Data Sync** tab on the Settings and Tools page (`/admin/tools`). It allows administrators to re-import usage data from LiteLLM for a selected date range, recalculating all token counts and cost metrics with the current enrichment logic.
+
+### Purpose
+
+Usage data sync is useful when:
+
+- **After upgrading LiteMaaS**: Cached usage data may have been calculated with older logic (e.g., token reconciliation fixes). Re-syncing ensures all historical data uses the latest calculations.
+- **Data inconsistencies**: If usage metrics appear incorrect for certain periods, re-syncing re-fetches the raw data from LiteLLM and re-enriches it.
+- **User mapping changes**: If API key-to-user mappings were corrected, re-syncing updates the cached breakdowns.
+
+### Access Requirements
+
+| Role | Capabilities |
+|------|-------------|
+| Admin | Full access — select date range and trigger resync |
+| Admin-readonly | View-only access — can see the tab but the sync button is disabled |
+| Regular user | No access |
+
+**Permission**: Requires `admin` role (enforced via `requireAdmin` middleware — admin-readonly cannot trigger resync)
+
+### How to Sync Usage Data
+
+1. Navigate to **Admin → Settings and Tools** and select the **Usage Data Sync** tab
+2. Select a **Start Date** and **End Date** for the period to re-sync
+3. Click **Refresh usage data**
+4. Wait for the operation to complete — the system processes each day sequentially
+5. Review the result showing how many days were successfully processed
+
+### How It Works
+
+The resync operation performs these steps for the selected date range:
+
+1. **Clears in-memory cache** for LiteLLM API responses
+2. **Deletes cached data** from the `daily_usage_cache` table for the date range
+3. **Re-fetches each day** from LiteLLM's `/user/daily/activity` API endpoint
+4. **Re-enriches** each day with user mappings (API key → user resolution)
+5. **Recalculates** all token breakdowns (prompt, completion, total) using the current reconciliation logic
+6. **Saves** the re-enriched data back to the cache
+
+Days are processed **sequentially** to avoid overloading the system. If a particular day has no usage data or encounters an error, it is skipped and the operation continues with the next day.
+
+### Best Practices
+
+- **Process in chunks**: Select manageable date ranges (e.g., 1-4 weeks at a time) rather than syncing months of data at once
+- **Off-peak timing**: Run large resyncs during low-usage periods
+- **Verify results**: After syncing, check the Usage Analytics dashboard to confirm the data looks correct
+
+### API Endpoint
+
+- `POST /api/v1/admin/usage/resync` — Re-sync usage data for a date range (admin only)
+  - **Body**: `{ "startDate": "YYYY-MM-DD", "endDate": "YYYY-MM-DD" }`
+  - **Response**: `{ "message": "...", "daysProcessed": N, "daysTotal": N, "startDate": "...", "endDate": "...", "resyncedAt": "..." }`
+
+---
 
 ## Audit Log
 

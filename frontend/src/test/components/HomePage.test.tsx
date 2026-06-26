@@ -2,6 +2,7 @@
  * Tests for HomePage.tsx
  *
  * Comprehensive test coverage for the home page including:
+ * - Dashboard widget rendering (budget, endpoint URL, token consumption)
  * - Dashboard card rendering and navigation
  * - Accessibility compliance and WCAG standards
  * - Responsive layout behavior
@@ -9,7 +10,7 @@
  * - Quick action functionality
  */
 
-import { screen } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import { render } from '../test-utils'; // Use centralized test utilities
 import userEvent from '@testing-library/user-event';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -18,8 +19,45 @@ import { axe, toHaveNoViolations } from 'jest-axe';
 // Extend expect with jest-axe matchers
 expect.extend(toHaveNoViolations);
 
-// Note: i18n is now configured globally in test setup
-// Individual test mocks are no longer needed
+// Mock clipboard API
+Object.defineProperty(navigator, 'clipboard', {
+  value: {
+    writeText: vi.fn(() => Promise.resolve()),
+  },
+  writable: true,
+  configurable: true,
+});
+
+// Mock usage service for dashboard widget data
+vi.mock('../../services/usage.service', () => ({
+  usageService: {
+    getBudgetInfo: vi.fn().mockResolvedValue({
+      maxBudget: 10,
+      currentSpend: 8,
+      budgetDuration: 'monthly',
+      budgetResetAt: '2026-07-01T00:00:00Z',
+    }),
+    getAnalytics: vi.fn().mockResolvedValue({
+      period: { startDate: '2026-06-18', endDate: '2026-06-25' },
+      totalUsers: 1,
+      activeUsers: 1,
+      totalRequests: 100,
+      totalTokens: { total: 45200, prompt: 32100, completion: 13100 },
+      totalCost: { total: 0.5, byProvider: {}, byModel: {} },
+      successRate: 99,
+      averageLatency: 200,
+      topMetrics: { topUser: null, topModel: null },
+      trends: {
+        requestsTrend: { metric: 'requests', current: 100, previous: 80, percentageChange: 25, direction: 'up' },
+        costTrend: { metric: 'cost', current: 0.5, previous: 0.4, percentageChange: 25, direction: 'up' },
+        usersTrend: { metric: 'users', current: 1, previous: 1, percentageChange: 0, direction: 'stable' },
+        totalTokensTrend: { metric: 'totalTokens', current: 45200, previous: 40000, percentageChange: 13, direction: 'up' },
+        promptTokensTrend: { metric: 'promptTokens', current: 32100, previous: 28000, percentageChange: 14.6, direction: 'up' },
+        completionTokensTrend: { metric: 'completionTokens', current: 13100, previous: 12000, percentageChange: 9.2, direction: 'up' },
+      },
+    }),
+  },
+}));
 
 import HomePage from '../../pages/HomePage';
 
@@ -42,10 +80,9 @@ describe('HomePage', () => {
       expect(screen.getByText('Your AI Model Management Platform')).toBeInTheDocument();
     });
 
-    it('should render all four navigation cards', () => {
+    it('should render all navigation cards', () => {
       render(<HomePage />);
 
-      // Card headings are h2 elements (level 2), not h3
       expect(screen.getByRole('heading', { level: 2, name: 'Models' })).toBeInTheDocument();
       expect(screen.getByRole('heading', { level: 2, name: 'Subscriptions' })).toBeInTheDocument();
       expect(screen.getByRole('heading', { level: 2, name: 'API Keys' })).toBeInTheDocument();
@@ -64,13 +101,75 @@ describe('HomePage', () => {
     it('should display icons for each card', () => {
       render(<HomePage />);
 
-      // Icons should be present as SVG elements
       const icons = document.querySelectorAll('svg[role="img"]');
       expect(icons.length).toBeGreaterThanOrEqual(4);
 
-      // Verify the card structure is correct
-      const cards = document.querySelectorAll('.pf-v6-c-card');
-      expect(cards).toHaveLength(5);
+      // Navigation cards (5) plus dashboard widget cards
+      const navCards = document.querySelectorAll('.pf-v6-c-card.pf-m-clickable');
+      expect(navCards).toHaveLength(5);
+    });
+  });
+
+  describe('Dashboard widgets', () => {
+    it('should render the endpoint URL widget', async () => {
+      render(<HomePage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('API Endpoint')).toBeInTheDocument();
+      });
+      expect(screen.getByText('https://test.litemaas.com/v1')).toBeInTheDocument();
+      expect(screen.getByText('Use this URL to make API requests')).toBeInTheDocument();
+    });
+
+    it('should render copy button for endpoint URL', async () => {
+      render(<HomePage />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Copy endpoint URL')).toBeInTheDocument();
+      });
+    });
+
+    it('should copy endpoint URL to clipboard when copy button is clicked', async () => {
+      const writeTextSpy = vi.spyOn(navigator.clipboard, 'writeText');
+      const user = userEvent.setup();
+      render(<HomePage />);
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Copy endpoint URL')).toBeInTheDocument();
+      });
+
+      await user.click(screen.getByLabelText('Copy endpoint URL'));
+
+      expect(writeTextSpy).toHaveBeenCalledWith('https://test.litemaas.com/v1');
+    });
+
+    it('should render token consumption metric cards', async () => {
+      render(<HomePage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Total Tokens')).toBeInTheDocument();
+      });
+      expect(screen.getByText('Prompt Tokens')).toBeInTheDocument();
+      expect(screen.getByText('Completion Tokens')).toBeInTheDocument();
+    });
+
+    it('should display formatted token values', async () => {
+      render(<HomePage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('45.2K')).toBeInTheDocument();
+      });
+      expect(screen.getByText('32.1K')).toBeInTheDocument();
+      expect(screen.getByText('13.1K')).toBeInTheDocument();
+    });
+
+    it('should display "Last 7 days" subtitle on token cards', async () => {
+      render(<HomePage />);
+
+      await waitFor(() => {
+        const subtitles = screen.getAllByText('Last 7 days');
+        expect(subtitles).toHaveLength(3);
+      });
     });
   });
 
@@ -78,11 +177,6 @@ describe('HomePage', () => {
     it('should have correct navigation links for all cards', () => {
       render(<HomePage />);
 
-      // Find cards by their PatternFly class structure
-      const cards = document.querySelectorAll('.pf-v6-c-card');
-      expect(cards).toHaveLength(5);
-
-      // Check for navigation links with aria-labels
       const modelsLink = screen.getByLabelText('View available AI models');
       const subscriptionsLink = screen.getByLabelText('View your model subscriptions');
       const apiKeysLink = screen.getByLabelText('View your API keys');
@@ -97,11 +191,9 @@ describe('HomePage', () => {
     it('should have appropriate aria-labels for navigation', () => {
       render(<HomePage />);
 
-      // Check that translated aria-labels are present in the links
       const links = screen.getAllByRole('link');
       expect(links).toHaveLength(5);
 
-      // Verify specific aria-labels exist
       expect(screen.getByLabelText('View available AI models')).toBeInTheDocument();
       expect(screen.getByLabelText('View your model subscriptions')).toBeInTheDocument();
       expect(screen.getByLabelText('View your API keys')).toBeInTheDocument();
@@ -111,7 +203,6 @@ describe('HomePage', () => {
     it('should handle card click interactions', async () => {
       render(<HomePage />);
 
-      // Cards should be clickable (PatternFly CardHeader with selectableActions)
       const cards = document.querySelectorAll('.pf-v6-c-card.pf-m-clickable');
       expect(cards.length).toBeGreaterThan(0);
     });
@@ -121,7 +212,6 @@ describe('HomePage', () => {
     it('should apply correct responsive breakpoints', () => {
       render(<HomePage />);
 
-      // Verify that PatternFly grid system classes are applied
       const gridItems = document.querySelectorAll('[class*="pf-m-"]');
       expect(gridItems.length).toBeGreaterThan(0);
     });
@@ -131,7 +221,6 @@ describe('HomePage', () => {
     it('should display translated text content', () => {
       render(<HomePage />);
 
-      // Check that the translated text is actually displayed
       expect(screen.getByText('Welcome to LiteMaaS')).toBeInTheDocument();
       expect(screen.getByText('Your AI Model Management Platform')).toBeInTheDocument();
       expect(screen.getByText('Browse and manage AI models')).toBeInTheDocument();
@@ -143,7 +232,6 @@ describe('HomePage', () => {
     it('should render navigation labels correctly', () => {
       render(<HomePage />);
 
-      // Check navigation labels are translated
       expect(screen.getByText('Models')).toBeInTheDocument();
       expect(screen.getByText('Subscriptions')).toBeInTheDocument();
       expect(screen.getByText('API Keys')).toBeInTheDocument();
@@ -166,19 +254,17 @@ describe('HomePage', () => {
     it('should have proper heading hierarchy', () => {
       render(<HomePage />);
 
-      // Should have one h1 and multiple h2 headings for cards
-      // The component uses h2 for card headings, which is proper hierarchy after h1
       const h1 = screen.getByRole('heading', { level: 1 });
       const h2s = screen.getAllByRole('heading', { level: 2 });
 
       expect(h1).toBeInTheDocument();
-      expect(h2s).toHaveLength(5); // 5 cards with h2 headings
+      // 5 navigation card h2 headings (dashboard widgets use h3 via MetricCard)
+      expect(h2s).toHaveLength(5);
     });
 
     it('should have proper landmarks and regions', () => {
       render(<HomePage />);
 
-      // Check for main content sections
       const sections = document.querySelectorAll('section[class*="pf-v6-c-page__main-section"]');
       expect(sections.length).toBeGreaterThanOrEqual(2);
     });
@@ -187,10 +273,8 @@ describe('HomePage', () => {
       const user = userEvent.setup();
       render(<HomePage />);
 
-      // Cards should be focusable via keyboard
       await user.tab();
 
-      // At least one interactive element should be focused
       const focusedElement = document.activeElement;
       expect(focusedElement).toBeTruthy();
       expect(focusedElement?.tagName).toMatch(/BUTTON|A|INPUT/i);
@@ -199,11 +283,9 @@ describe('HomePage', () => {
     it('should have appropriate ARIA labels', () => {
       render(<HomePage />);
 
-      // Verify links have proper aria-labels
       const links = screen.getAllByRole('link');
       expect(links).toHaveLength(5);
 
-      // Cards should have accessible headings (h2, not h3)
       expect(screen.getByRole('heading', { level: 2, name: 'Models' })).toBeInTheDocument();
       expect(screen.getByRole('heading', { level: 2, name: 'Subscriptions' })).toBeInTheDocument();
       expect(screen.getByRole('heading', { level: 2, name: 'API Keys' })).toBeInTheDocument();
@@ -213,8 +295,6 @@ describe('HomePage', () => {
     it('should provide sufficient color contrast', () => {
       render(<HomePage />);
 
-      // PatternFly components should provide adequate contrast
-      // This is more of a visual regression test, but we can check structure
       const titleElement = screen.getByRole('heading', { level: 1 });
       const computedStyle = window.getComputedStyle(titleElement);
       expect(computedStyle).toBeTruthy();
@@ -224,7 +304,6 @@ describe('HomePage', () => {
       const user = userEvent.setup();
       render(<HomePage />);
 
-      // Should be able to tab through interactive elements
       await user.tab();
       const firstFocusable = document.activeElement;
 
@@ -239,20 +318,15 @@ describe('HomePage', () => {
     it('should use correct PatternFly component structure', () => {
       render(<HomePage />);
 
-      // Check for PatternFly page sections
       const pageSections = document.querySelectorAll('.pf-v6-c-page__main-section');
-      expect(pageSections.length).toBeGreaterThanOrEqual(2);
-
-      // Check for cards
-      const cards = document.querySelectorAll('.pf-v6-c-card');
-      expect(cards).toHaveLength(5);
+      expect(pageSections.length).toBeGreaterThanOrEqual(3); // title + dashboard + nav cards
     });
 
-    it('should apply compact and clickable card modifiers', () => {
+    it('should apply compact and clickable card modifiers to navigation cards', () => {
       render(<HomePage />);
 
-      const cards = document.querySelectorAll('.pf-v6-c-card');
-      cards.forEach((card) => {
+      const navCards = document.querySelectorAll('.pf-v6-c-card.pf-m-clickable');
+      navCards.forEach((card) => {
         expect(card.classList.contains('pf-m-compact')).toBe(true);
         expect(card.classList.contains('pf-m-clickable')).toBe(true);
       });
@@ -268,7 +342,6 @@ describe('HomePage', () => {
     it('should display icons with proper styling', () => {
       render(<HomePage />);
 
-      // Icons should have appropriate font size styling
       const iconElements = document.querySelectorAll('svg[style*="font-size"]');
       expect(iconElements.length).toBeGreaterThanOrEqual(4);
     });
@@ -278,28 +351,23 @@ describe('HomePage', () => {
     it('should not cause unnecessary re-renders', () => {
       const { rerender } = render(<HomePage />);
 
-      // Re-render should not cause issues
       expect(() => rerender(<HomePage />)).not.toThrow();
     });
 
     it('should have efficient component structure', () => {
       const { container } = render(<HomePage />);
 
-      // Should not have excessive nesting - PatternFly components can be nested but should be reasonable
       const deeplyNestedElements = container.querySelectorAll('div div div div div div div div');
-      expect(deeplyNestedElements.length).toBeLessThan(50); // More reasonable expectation for PatternFly
+      expect(deeplyNestedElements.length).toBeLessThan(60);
     });
   });
 
   describe('Error boundaries and edge cases', () => {
     it('should handle translation errors gracefully', () => {
-      // Since we use a properly initialized i18n instance,
-      // translation errors should be handled by react-i18next
       expect(() => render(<HomePage />)).not.toThrow();
     });
 
     it('should work with router context provided', () => {
-      // Since we use centralized test utilities with router context, this should work
       expect(() => render(<HomePage />)).not.toThrow();
     });
   });
@@ -330,7 +398,6 @@ describe('HomePage', () => {
     it('should match card titles with navigation labels', () => {
       render(<HomePage />);
 
-      // Navigation labels should match card titles
       expect(screen.getByText('Models')).toBeInTheDocument();
       expect(screen.getByText('Subscriptions')).toBeInTheDocument();
       expect(screen.getByText('API Keys')).toBeInTheDocument();

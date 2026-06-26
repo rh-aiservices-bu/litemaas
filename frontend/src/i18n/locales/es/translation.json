@@ -84,6 +84,7 @@
   "adminUsage": {
     "accessDenied": "Acceso denegado",
     "activeUsers": "Usuarios activos",
+    "apiKeyFilterChanged": "Filtrando por {{count}} clave(s) API",
     "apiKeysCleared": "Filtro de claves API deshabilitado - seleccione usuarios primero",
     "apiKeysFilterAdjusted": "El filtro de claves API puede haber cambiado - por favor revise las selecciones",
     "apiKeysFilterAvailable": "El filtro de claves API ahora está disponible",
@@ -363,6 +364,9 @@
     "yearly": "Yearly",
     "yes": "Sí"
   },
+  "errors": {
+    "maxRetriesExceeded": "Número máximo de reintentos excedido"
+  },
   "models": {
     "admin": {
       "apiBaseUrl": "URL Base de API",
@@ -619,6 +623,8 @@
         "description": "Descripción",
         "expires": "Expira",
         "keyDetails": "Detalles de Clave",
+        "keyDetailsAriaLabel": "Detalles de la clave",
+        "keyLimitsAriaLabel": "Límites de la clave",
         "lastUsed": "Último Uso",
         "rateLimit": "Límite de Velocidad",
         "rateLimitLabel": "Límite de velocidad (solicitudes por minuto)",
@@ -635,6 +641,7 @@
         "keyCreatedMessage": "Tu clave API se creó exitosamente.",
         "keyCreatedSuccess": "{{name}} se creó exitosamente",
         "keyDeleted": "{{name}} fue eliminada",
+        "keyArchivedMessage": "Esta clave API ha sido archivada y ya no está activa.",
         "keyExpiredMessage": "Esta clave API expiró el {{date}}.",
         "keyRevokedMessage": "Esta clave API ha sido revocada y ya no se puede usar.",
         "keyUpdatedSuccess": "{{name}} ha sido actualizada exitosamente",
@@ -659,6 +666,7 @@
         "createdTitle": "Clave API Creada Exitosamente",
         "deleteTitle": "Eliminar Clave API",
         "editTitle": "Editar Clave API",
+        "keyArchived": "Clave Archivada",
         "keyExpired": "Clave Expirada",
         "keyRevoked": "Clave Revocada",
         "secureRetrieval": "Recuperación Segura de Clave",
@@ -1048,6 +1056,21 @@
         "usageAriaLabel": "Navegar a la página de Uso para monitorear tu uso de API y métricas",
         "usageDescription": "Monitorear tu uso de API"
       },
+      "dashboard": {
+        "completionTokens": "Tokens de finalización",
+        "completionTokensAriaLabel": "Tokens de finalización utilizados en los últimos 7 días: {{count}}",
+        "copyEndpoint": "Copiar URL del endpoint",
+        "endpointCopied": "Copiado",
+        "endpointCopiedDescription": "La URL del endpoint API se ha copiado al portapapeles",
+        "endpointDescription": "Utilice esta URL para realizar solicitudes API",
+        "endpointTitle": "Endpoint API",
+        "noBudgetConfigured": "No hay ningún límite de presupuesto configurado actualmente para su cuenta.",
+        "promptTokens": "Tokens de prompt",
+        "promptTokensAriaLabel": "Tokens de prompt utilizados en los últimos 7 días: {{count}}",
+        "tokenSubtitle": "Últimos 7 días",
+        "totalTokens": "Tokens totales",
+        "totalTokensAriaLabel": "Tokens totales utilizados en los últimos 7 días: {{count}}"
+      },
       "subtitle": "Tu plataforma Modelo como Servicio para acceder y gestionar modelos de IA.",
       "title": "Bienvenido a LiteMaaS"
     },
@@ -1130,6 +1153,10 @@
         "input": "Entrada",
         "output": "Salida",
         "separator": "•"
+      },
+      "popularity": {
+        "tooltip": "Popularidad mensual",
+        "ariaLabel": "Valoración de popularidad: {{rating}} de 5 estrellas"
       },
       "pricingLabel": "Precios: N/D",
       "restrictedAccess": "Acceso Restringido",
@@ -1337,6 +1364,7 @@
         "createBackup": "Crear copia de seguridad",
         "creating": "Creando...",
         "table": {
+          "ariaLabel": "Tabla de copias de seguridad",
           "database": "Base de datos",
           "timestamp": "Fecha y hora",
           "size": "Tamaño",
@@ -1504,8 +1532,25 @@
       "variantInfo": "Info (Azul)",
       "variantSuccess": "Éxito (Verde)",
       "variantWarning": "Advertencia (Naranja)",
+      "viewBanner": "Ver Banner",
       "visibility": "Visibilidad",
-      "visible": "Visible"
+      "visible": "Visible",
+      "usageSync": {
+        "tabTitle": "Sincronización de datos de uso",
+        "title": "Sincronización de datos de uso",
+        "description": "Vuelva a importar los datos de uso desde LiteLLM para un intervalo de fechas seleccionado. Esto elimina los datos en caché y los recupera con los cálculos actuales. Úselo después de migraciones o cuando los datos de uso necesiten recalcularse. Seleccione un intervalo de fechas y procese en bloques manejables para evitar la sobrecarga del sistema.",
+        "startDate": "Fecha de inicio",
+        "endDate": "Fecha de fin",
+        "resyncButton": "Actualizar datos de uso",
+        "syncing": "Sincronizando...",
+        "invalidRange": "La fecha de inicio debe ser anterior o igual a la fecha de fin.",
+        "adminRequired": "Se requieren permisos de administrador para sincronizar los datos de uso.",
+        "notifications": {
+          "successTitle": "Datos de uso sincronizados",
+          "success": "Se resincronizaron correctamente {{processed}} de {{total}} días de datos de uso.",
+          "errorTitle": "Error al sincronizar datos de uso"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {
@@ -1652,6 +1697,7 @@
   },
   "status": {
     "active": "Activo",
+    "archived": "Archivada",
     "inactive": "Inactivo"
   },
   "ui": {
@@ -1714,6 +1760,7 @@
       "configLoadFailed": "Error al cargar la configuración de la aplicación",
       "details": "Detalles",
       "errorCode": "Código de error",
+      "errorDetails": "Detalles del error",
       "field": "Campo",
       "general": "Ocurrió un error",
       "hideDetails": "Ocultar detalles",
@@ -1727,7 +1774,6 @@
       "showDetails": "Mostrar detalles",
       "somethingWentWrong": "Algo salió mal",
       "somethingWentWrongDesc": "Lo sentimos, pero algo inesperado ocurrió. Por favor, intenta actualizar la página o contacta con soporte si el problema persiste.",
-      "somethingWrong": "Algo salió mal",
       "statusCode": "Código de estado",
       "title": "Error",
       "tryRefresh": "Lo sentimos, pero algo inesperado ocurrió. Por favor, intenta actualizar la página o contacta con soporte si el problema persiste.",
@@ -1783,6 +1829,7 @@
       "noNotificationsFound": "No se encontraron notificaciones",
       "notificationSrTitle": "Notificación",
       "notificationsLabel": "Notificaciones",
+      "removeNotification": "Eliminar notificación: {{title}}",
       "title": "Notificaciones"
     },
     "pagination": {
@@ -1893,6 +1940,10 @@
       "revokeError": "Error al Revocar",
       "revokeSuccess": "Clave API Revocada",
       "revokeSuccessDesc": "La clave API se ha desactivado correctamente.",
+      "unarchive": "Desarchivar",
+      "unarchiveError": "Error al Desarchivar",
+      "unarchiveSuccess": "Clave API Restaurada",
+      "unarchiveSuccessDesc": "La clave API ha sido restaurada y ahora es visible para el usuario.",
       "rpm": "RPM",
       "rpmLimit": "Límite RPM",
       "status": "Estado",

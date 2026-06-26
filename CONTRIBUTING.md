@@ -44,10 +44,12 @@ We are committed to providing a welcoming and inclusive environment. Please:
 
 ### 1. Create a Feature Branch
 
+> **Important**: The `dev` branch is the integration branch. All feature branches and pull requests must target `dev`, not `main`. The `main` branch is reserved for stable releases only.
+
 ```bash
-# Update your main branch
-git checkout main
-git pull upstream main
+# Update your dev branch
+git checkout dev
+git pull upstream dev
 
 # Create a new branch
 git checkout -b feature/your-feature-name
@@ -84,7 +86,7 @@ Commit types:
 
 ```bash
 git fetch upstream
-git rebase upstream/main
+git rebase upstream/dev
 ```
 
 ## Code Style and Conventions

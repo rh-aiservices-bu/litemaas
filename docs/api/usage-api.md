@@ -31,256 +31,52 @@ The usage tracking system uses a multi-step process to retrieve data from LiteLL
 
 ## Endpoints
 
-### Get Usage Metrics
+### User Analytics
 
-Retrieve usage metrics for the frontend dashboard.
+Get comprehensive usage analytics for the current user. Uses the same analytics engine as the admin analytics endpoint, automatically scoped to the current user.
 
-**Endpoint:** `GET /api/v1/usage/metrics`
+**Endpoint:** `POST /api/v1/usage/analytics`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| startDate | string | No | Start date (YYYY-MM-DD) |
-| endDate | string | No | End date (YYYY-MM-DD) |
-| modelId | string | No | Filter by specific model |
-| apiKeyId | string | No | Filter by specific API key |
-
-**Response:**
+**Request Body:**
 
 ```json
 {
-  "totalRequests": 125000,
-  "totalTokens": 8500000,
-  "totalCost": 127.5,
-  "averageResponseTime": 1.2,
-  "successRate": 99.2,
-  "activeModels": 4,
-  "topModels": [
-    {
-      "name": "gpt-4",
-      "requests": 45000,
-      "tokens": 3200000,
-      "cost": 96.0
-    }
-  ],
-  "dailyUsage": [
-    {
-      "date": "2025-08-01",
-      "requests": 18000,
-      "tokens": 1200000,
-      "cost": 18.0
-    }
-  ],
-  "hourlyUsage": [
-    {
-      "hour": "14:00",
-      "requests": 523
-    }
-  ],
-  "errorBreakdown": [
-    {
-      "type": "Rate Limit",
-      "count": 125,
-      "percentage": 1.0
-    }
-  ]
+  "startDate": "2025-01-01",
+  "endDate": "2025-01-31",
+  "modelIds": ["gpt-4", "gpt-3.5"],
+  "providerIds": ["openai"],
+  "apiKeyIds": ["key-alias-1"]
 }
 ```
 
-### Get Usage Summary
-
-Retrieve aggregated usage statistics.
-
-**Endpoint:** `GET /api/v1/usage/summary`
-
-**Query Parameters:**
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| startDate | string | Yes | Start date (YYYY-MM-DD) |
-| endDate | string | Yes | End date (YYYY-MM-DD) |
-| modelId | string | No | Filter by model |
-| subscriptionId | string | No | Filter by subscription |
-| granularity | string | No | hour, day, week, month (default: day) |
-
-**Response:**
-
-```json
-{
-  "period": {
-    "start": "2025-07-01T00:00:00Z",
-    "end": "2025-07-31T23:59:59Z"
-  },
-  "totals": {
-    "requests": 125000,
-    "tokens": 8500000,
-    "cost": 127.5,
-    "promptTokens": 5100000,
-    "completionTokens": 3400000,
-    "averageLatency": 1200,
-    "errorRate": 0.8,
-    "successRate": 99.2
-  },
-  "byModel": [
-    {
-      "modelId": "gpt-4",
-      "modelName": "GPT-4",
-      "requests": 45000,
-      "tokens": 3200000,
-      "cost": 96.0
-    }
-  ]
-}
-```
-
-### Get Time Series Data
-
-Retrieve usage data over time.
-
-**Endpoint:** `GET /api/v1/usage/timeseries`
-
-**Query Parameters:**
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| startDate | string | Yes | Start date (YYYY-MM-DD) |
-| endDate | string | Yes | End date (YYYY-MM-DD) |
-| interval | string | No | hour, day, week, month (default: day) |
-| modelId | string | No | Filter by model |
-| subscriptionId | string | No | Filter by subscription |
-
-**Response:**
-
-```json
-{
-  "interval": "day",
-  "data": [
-    {
-      "period": "2025-08-01",
-      "startTime": "2025-08-01T00:00:00Z",
-      "endTime": "2025-08-01T23:59:59Z",
-      "totalRequests": 18000,
-      "totalTokens": 1200000,
-      "totalPromptTokens": 720000,
-      "totalCompletionTokens": 480000,
-      "averageLatency": 1150,
-      "errorRate": 0.5,
-      "successRate": 99.5
-    }
-  ]
-}
-```
-
-### Get Usage Dashboard
-
-Retrieve comprehensive dashboard data.
-
-**Endpoint:** `GET /api/v1/usage/dashboard`
-
-**Query Parameters:**
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| timeRange | string | No | day, week, month (default: month) |
-
-**Response:**
-
-```json
-{
-  "summary": {
-    "currentPeriod": {
-      "requests": 125000,
-      "tokens": 8500000,
-      "cost": 127.5
-    },
-    "previousPeriod": {
-      "requests": 108000,
-      "tokens": 7300000,
-      "cost": 109.5
-    },
-    "percentChange": {
-      "requests": 15.7,
-      "tokens": 16.4,
-      "cost": 16.4
-    },
-    "quotaUtilization": {
-      "requests": 62.5,
-      "tokens": 42.5,
-      "budget": 25.5
-    }
-  },
-  "topStats": {
-    "topModels": [
-      {
-        "modelId": "gpt-4",
-        "modelName": "GPT-4",
-        "totalRequests": 45000,
-        "totalTokens": 3200000
-      }
-    ],
-    "recentActivity": [
-      {
-        "timestamp": "2025-08-04T14:23:45Z",
-        "modelId": "gpt-4",
-        "requestTokens": 1523,
-        "responseTokens": 892,
-        "statusCode": 200
-      }
-    ]
-  }
-}
-```
-
-### Get Top Statistics
-
-Retrieve top usage statistics.
-
-**Endpoint:** `GET /api/v1/usage/top`
-
-**Query Parameters:**
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| timeRange | string | No | day, week, month (default: month) |
-| limit | number | No | Max results (1-50, default: 10) |
+**Response:** Same format as `POST /api/v1/admin/usage/analytics` (see Admin Endpoints section), scoped to the authenticated user's data only.
 
 ### Export Usage Data
 
-Export usage data in CSV or JSON format.
+Export usage data in CSV or JSON format. Uses the admin analytics pipeline for consistent token reconciliation (`total_tokens = prompt_tokens + completion_tokens`).
 
-**Endpoint:** `GET /api/v1/usage/export`
+**Endpoint:** `POST /api/v1/usage/export`
 
-**Query Parameters:**
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| startDate | string | No | Start date (YYYY-MM-DD) |
-| endDate | string | No | End date (YYYY-MM-DD) |
+**Request Body:**
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| startDate | string | Yes | Start date (YYYY-MM-DD) |
+| endDate | string | Yes | End date (YYYY-MM-DD) |
 | format | string | No | csv, json (default: csv) |
-| modelId | string | No | Filter by model |
-| subscriptionId | string | No | Filter by subscription |
-| apiKeyId | string | No | Filter by API key |
+| modelIds | string[] | No | Filter by model IDs |
+| providerIds | string[] | No | Filter by provider IDs |
+| apiKeyIds | string[] | No | Filter by API key aliases |
 
 **Response:**
 
 - CSV: Returns file download with Content-Type: text/csv
 - JSON: Returns structured JSON with metadata
 
-### Track Usage (Internal)
-
-Record real-time usage for API requests.
-
-**Endpoint:** `POST /api/v1/usage/track`
-
-**Required Permission:** `usage:write`
-
-**Request Body:**
-
-```json
-{
-  "subscriptionId": "sub_123",
-  "modelId": "gpt-4",
-  "requestTokens": 1523,
-  "responseTokens": 892,
-  "latencyMs": 1245,
-  "statusCode": 200
-}
-```
+**Notes:**
+- Date range limited to 365 days maximum
+- API key IDs are validated against the authenticated user's keys
+- Data is automatically scoped to the authenticated user
 
 ## Admin Endpoints
 
@@ -455,6 +251,44 @@ See [REST API Documentation](rest-api.md#admin-usage-analytics-apiv1adminusage) 
 }
 ```
 
+### Resync Usage Data Endpoint
+
+**Endpoint:** `POST /api/v1/admin/usage/resync`
+
+**Required Permission:** `admin:usage` (admin role only, not adminReadonly)
+
+**Description**: Re-import usage data from LiteLLM for a selected date range. Deletes cached data for the date range and re-fetches each day with current enrichment logic (token reconciliation, user mapping). Useful after migrations or when cached data needs recalculation.
+
+**Request Body:**
+
+```json
+{
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31"
+}
+```
+
+**Response:**
+
+```json
+{
+  "message": "Usage data resynced successfully",
+  "daysProcessed": 31,
+  "daysTotal": 31,
+  "startDate": "2024-01-01",
+  "endDate": "2024-01-31",
+  "resyncedAt": "2024-02-01T10:30:00Z"
+}
+```
+
+### Cache Metrics Endpoint
+
+**Endpoint:** `GET /api/v1/admin/usage/cache/metrics`
+
+**Required Permission:** `admin:usage`
+
+**Description**: Get cache performance metrics including hit/miss rates, rebuild counts, and lock contention stats.
+
 **Note**: For complete API specifications including all request/response formats, see [REST API Documentation](rest-api.md#admin-usage-analytics-apiv1adminusage).
 
 ## Implementation Details
@@ -468,29 +302,22 @@ sequenceDiagram
     participant Database
     participant LiteLLM
 
-    Frontend->>Backend: GET /usage/metrics?apiKeyId=123
-    Backend->>Database: Get API key details
-    Backend->>LiteLLM: GET /user/info?user_id={userId}
-    LiteLLM->>Backend: Return user info with keys
-    Backend->>Backend: Match key by last 4 chars
-    Backend->>Backend: Extract internal token
-    Backend->>LiteLLM: GET /user/daily/activity?api_key={token}
-    LiteLLM->>Backend: Return usage data
-    Backend->>Backend: Transform and aggregate
-    Backend->>Frontend: Return formatted metrics
+    Frontend->>Backend: POST /usage/analytics
+    Backend->>Database: Get user's API keys
+    Backend->>LiteLLM: GET /user/daily/activity
+    LiteLLM->>Backend: Return raw usage data
+    Backend->>Backend: Enrich with user mappings
+    Backend->>Backend: Reconcile tokens (total = prompt + completion)
+    Backend->>Backend: Aggregate and filter
+    Backend->>Frontend: Return formatted analytics
 ```
 
 ### Caching Strategy
 
-**User Usage Endpoints** (`/api/v1/usage/metrics`, `/api/v1/usage/summary`):
+**All Usage Endpoints** (`/api/v1/usage/*` and `/api/v1/admin/usage/*`):
 
-- Simple in-memory caching with 5-minute TTL
-- Cache key format: `usage:{userId}:{apiKeyId}:{startDate}:{endDate}`
-- Cache invalidated on new usage tracking events
+Both user and admin analytics use the same pipeline backed by persistent database caching in `daily_usage_cache` table:
 
-**Admin Analytics Endpoints** (`/api/v1/admin/usage/*`):
-
-- Persistent database caching in `daily_usage_cache` table
 - Intelligent TTL strategy:
   - Historical days (> 1 day): Permanent cache (`is_complete = true`)
   - Current day: 5-minute TTL with stale detection (`is_complete = false`)

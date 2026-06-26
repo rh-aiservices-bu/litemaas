@@ -533,6 +533,52 @@ describe('SubscriptionService', () => {
       );
       expect(deactivateKeyCall).toBeTruthy();
       expect(deactivateKeyCall[1]).toEqual(['api-key-123']);
+      expect(deactivateKeyCall[0]).toMatch(/archived_at\s*=\s*CURRENT_TIMESTAMP/);
+      expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    it('should deactivate but NOT archive key when LiteLLM deletion fails', async () => {
+      const mockClient = await (mockFastify.pg! as any).connect();
+      const mockApiKey = {
+        id: 'api-key-456',
+        lite_llm_key_value: 'llm-key-456',
+        name: 'Orphan Key',
+        all_models: ['gpt-4'],
+      };
+
+      mockLiteLLMService.deleteKey = vi.fn().mockRejectedValue(new Error('LiteLLM unreachable'));
+
+      mockClient.query
+        .mockResolvedValueOnce('BEGIN')
+        .mockResolvedValueOnce({ rows: [mockSubscription] })
+        .mockResolvedValueOnce(undefined) // Update subscription to inactive
+        .mockResolvedValueOnce({ rows: [mockApiKey] }) // Affected API keys
+        .mockResolvedValueOnce(undefined) // Delete model from api_key_models
+        .mockResolvedValueOnce({ rows: [] }) // No remaining models
+        .mockResolvedValueOnce(undefined) // Deactivate API key (no archive)
+        .mockResolvedValueOnce(undefined) // Insert audit log
+        .mockResolvedValueOnce('COMMIT');
+
+      const result = await service.cancelSubscription(mockSubscription.id, mockUser.id);
+
+      expect(result.status).toBe('inactive');
+      expect(mockLiteLLMService.deleteKey).toHaveBeenCalledWith('llm-key-456');
+
+      // Key should be deactivated but archived_at should NOT be set to CURRENT_TIMESTAMP
+      const calls = mockClient.query.mock.calls;
+      const deactivateKeyCall = calls.find(
+        (call) => call[0].includes('UPDATE api_keys') && call[0].includes('is_active = false'),
+      );
+      expect(deactivateKeyCall).toBeTruthy();
+      expect(deactivateKeyCall[0]).toContain('archived_at = archived_at');
+      expect(deactivateKeyCall[0]).not.toMatch(/archived_at\s*=\s*CURRENT_TIMESTAMP/);
+      expect(deactivateKeyCall[1]).toEqual(['api-key-456']);
+
+      // Should log error, not warn
+      expect((mockFastify.log as any).error).toHaveBeenCalledWith(
+        expect.objectContaining({ keyId: 'api-key-456' }),
+        expect.stringContaining('may still be active remotely'),
+      );
       expect(mockClient.release).toHaveBeenCalled();
     });
   });

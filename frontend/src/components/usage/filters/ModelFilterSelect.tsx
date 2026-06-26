@@ -31,6 +31,7 @@ interface ModelFilterSelectProps {
     startDate: string;
     endDate: string;
   };
+  useAdminEndpoint?: boolean;
 }
 
 /**
@@ -44,6 +45,7 @@ export const ModelFilterSelect: React.FC<ModelFilterSelectProps> = ({
   selected,
   onSelect,
   dateRange,
+  useAdminEndpoint = true,
 }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -58,14 +60,15 @@ export const ModelFilterSelect: React.FC<ModelFilterSelectProps> = ({
 
   const NO_RESULTS = 'no results';
 
-  // Fetch models from API - either from /models or from usage data based on dateRange
+  const useAdminPath = dateRange && useAdminEndpoint;
+
+  // Fetch models from API - admin path uses usage filter-options, user path uses /models
   const { data: modelsData } = useQuery(
-    dateRange
+    useAdminPath
       ? ['models-from-usage', dateRange.startDate, dateRange.endDate]
       : ['models-for-filter'],
     async () => {
-      if (dateRange) {
-        // Fetch models that have usage data in the specified date range
+      if (useAdminPath) {
         const response = await apiClient.get<{
           models: ModelOption[];
           users: Array<{ userId: string; username: string; email: string }>;
@@ -74,7 +77,6 @@ export const ModelFilterSelect: React.FC<ModelFilterSelectProps> = ({
         );
         return response.models;
       } else {
-        // Fetch currently active models
         const response = await apiClient.get<{ data: ModelOption[] }>('/models?limit=1000');
         return response.data;
       }
@@ -82,7 +84,7 @@ export const ModelFilterSelect: React.FC<ModelFilterSelectProps> = ({
     {
       staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: false,
-      enabled: !dateRange || (!!dateRange.startDate && !!dateRange.endDate),
+      enabled: !useAdminPath || (!!dateRange?.startDate && !!dateRange?.endDate),
     },
   );
 

@@ -115,7 +115,7 @@ const UsagePage: React.FC = () => {
       enabled: !!filters.startDate && !!filters.endDate,
       onError: (error) => {
         handleError(error, {
-          fallbackMessageKey: 'usage.errors.fetchMetrics',
+          fallbackMessageKey: 'adminUsage.errors.fetchMetrics',
         });
       },
       select: (data) => transformAnalyticsForComponent(data),
@@ -130,7 +130,7 @@ const UsagePage: React.FC = () => {
   const handleModelFilterChange = (modelIds: string[]) => {
     setSelectedModelIds(modelIds);
     announce(
-      t('usage.modelFilterChanged', 'Filtering by {{count}} model(s)', {
+      t('adminUsage.modelFilterChanged', 'Filtering by {{count}} model(s)', {
         count: modelIds.length,
       }),
     );
@@ -139,7 +139,7 @@ const UsagePage: React.FC = () => {
   const handleApiKeyFilterChange = (apiKeyIds: string[]) => {
     setSelectedApiKeyIds(apiKeyIds);
     announce(
-      t('usage.apiKeyFilterChanged', 'Filtering by {{count}} API key(s)', {
+      t('adminUsage.apiKeyFilterChanged', 'Filtering by {{count}} API key(s)', {
         count: apiKeyIds.length,
       }),
     );
@@ -184,7 +184,7 @@ const UsagePage: React.FC = () => {
               onPresetChange={(preset) => {
                 setDatePreset(preset);
                 announce(
-                  t('usage.dateRangeChanged', 'Date range changed to {{preset}}', { preset }),
+                  t('adminUsage.dateRangeChanged', 'Date range changed to {{preset}}', { preset }),
                 );
               }}
               customStartDate={customStartDate}
@@ -200,6 +200,7 @@ const UsagePage: React.FC = () => {
                 selected={selectedModelIds}
                 onSelect={handleModelFilterChange}
                 dateRange={{ startDate: filters.startDate, endDate: filters.endDate }}
+                useAdminEndpoint={false}
               />
             </ToolbarItem>
 
@@ -209,6 +210,7 @@ const UsagePage: React.FC = () => {
                 onSelect={handleApiKeyFilterChange}
                 selectedUserIds={currentUser?.id ? [currentUser.id] : []}
                 isDisabled={false}
+                useAdminEndpoint={false}
               />
             </ToolbarItem>
           </ToolbarContent>

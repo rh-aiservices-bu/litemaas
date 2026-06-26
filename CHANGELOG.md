@@ -5,14 +5,104 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.0] - 2026-06-26
+
+### Added
+
+- **Home page dashboard widgets**: Live summary widgets above the existing navigation cards, surfacing key information at a glance (#159)
+  - **Budget Utilization**: Reuses `UserBudgetSummary` component with new `showNoBudgetMessage` and `isFullHeight` props; shows spend vs. limit or a neutral "no budget configured" message
+  - **API Endpoint URL**: Displays `litellmApiUrl/v1` from backend config with copy-to-clipboard button
+  - **Token Consumption (Last 7 Days)**: Three compact `MetricCard` widgets (Total, Prompt, Completion tokens) with trend indicators vs. previous 7-day period
+  - Responsive PatternFly Grid layout (2-column top row, 3-column bottom row, stacked on mobile)
+  - Added optional token trend fields (`totalTokensTrend`, `promptTokensTrend`, `completionTokensTrend`) to `Analytics` interface
+  - i18n: Translations across all 9 locales
+- **Chatbot thinking indicator**: Animated loading dots in the assistant message bubble while waiting for the first token, providing visual feedback during the thinking phase of reasoning models
+- **Model Popularity Rating**: Usage-based 1–5 star rating displayed on model cards, computed from the last 30 days of usage data with logarithmic min-max scaling
+  - Backend: `ModelPopularityService` with 1-hour in-memory cache, `GET /api/v1/models/popularity` endpoint (any authenticated role)
+  - Frontend: reusable `StarRating` component with PatternFly icons, tooltip, and ARIA support integrated into ModelsPage via React Query
+  - Cross-references `daily_usage_cache` model keys against the `models` table with case-insensitive matching and provider-prefix stripping
+  - i18n: Translations across all 9 locales
+- **Usage Data Sync tool**: Admin tool in Settings and Tools to re-import usage data from LiteLLM for a selected date range, useful after migrations or when cached data needs recalculation with current enrichment logic (token reconciliation, user mapping)
+  - Backend: `resyncDateRange()` on AdminUsageStatsService, `deleteDateRange()` on DailyUsageCacheManager, new `POST /api/v1/admin/usage/resync` endpoint
+  - Frontend: UsageDataSyncTab with date range pickers and sync button
+  - RBAC: `admin:usage` permission (admin only), tab visible to adminReadonly (read-only)
+  - i18n: Translations across all 9 locales
+- **NetworkPolicy resources**: Deny-all-ingress default plus per-component allow rules for network segmentation, gated by `networkPolicy.enabled` (default `false`)
+  - Configurable ingress controller selectors via `networkPolicy.ingressController.{namespaceSelector,podSelector}`
+  - Ingress controller rules gated behind `ingress.enabled || route.enabled`
+  - Fail-fast validation when networkPolicy and ingress/route are both enabled without explicit ingress controller selectors
+- **Redis authentication support**: `requirepass` authentication for Redis deployments
+  - Backend: ioredis client accepts optional `REDIS_PASSWORD`
+  - Helm: `redis.auth.password` value with `existingSecret` support, `redis-secret.yaml` template, authenticated health probes, and `REDIS_PASSWORD` env var injected into backend and LiteLLM deployments
+  - Kustomize: commented instructions for enabling auth
+  - Fixed auth conditionals for external Redis and existingSecret scenarios
+- **SecurityContext for all workloads**: Pod-level (`runAsNonRoot`, seccomp `RuntimeDefault`) and container-level (`allowPrivilegeEscalation: false`, drop ALL capabilities) security contexts added to all 5 main workloads (backend, frontend, LiteLLM, PostgreSQL, Redis), init containers, and hook Job
+  - Configurable via `podSecurityContext` and `containerSecurityContext` in `values.yaml`
+- **LiteLLM SSL configuration**: Configurable SSL verification for LiteLLM with internal Kubernetes/OpenShift services using self-signed certificates (e.g., KServe inference endpoints)
+  - `litellm.sslVerify` Helm parameter (default: `true`) and `SSL_VERIFY` env var in Kustomize
+  - Production CA bundle support via `litellm.extraEnv`, `litellm.extraVolumes`, and `litellm.extraVolumeMounts` for injecting custom CA certificates without disabling SSL globally
+  - New `docs/deployment/litellm-ssl-configuration.md` guide with OpenShift auto-inject, custom CA, and development quick-fix options
+
+### Changed
+
+- **Top Users restricted to admin users**: Top Users table in usage analytics overview is now only visible to users with `admin` or `admin-readonly` roles, with proper state cleanup on role changes
 
 ### Fixed
 
+- **Usage page incomplete and missing translations**: Fixed broken translation keys and hardcoded strings across the frontend (#163)
+- **Usage analytics token reconciliation**: `total_tokens` is now consistently computed as `prompt_tokens + completion_tokens` at every breakdown level (model, user, provider, API key, daily), fixing dashboard mismatches where total tokens did not equal prompt + completion tokens
+- **User usage export migrated to admin pipeline**: User export endpoint now returns per-day rows with reconciled token totals instead of a single aggregated record, with date range validation, API key ownership checks, and currency-aware cost headers
+- **Date picker popover clipping**: DatePicker calendar in Usage Data Sync tab now renders at `document.body` to prevent clipping by tab panel overflow
+- **Production authentication bypass removed**: Removed `authenticateWithDevBypass` which allowed unauthenticated access in production when `MOCK_AUTH` was unset
+- **Dev-only endpoints locked down**: `dev-token`, `mock-login`, and `mock-users` endpoints now restricted to development and test environments only via allowlist
+- **Session invalidation IDOR**: Session delete endpoint now enforces ownership check, preventing users from invalidating other users' sessions
+- **Swagger/dev endpoint visibility**: Swagger `hide` property now uses the same allowlist as handler guards, preventing dev endpoints from being advertised in non-development environments
+- **UsagePage 403 errors for regular users**: `ModelFilterSelect` and `ApiKeyFilterSelect` on the user usage page (`/usage`) unconditionally called admin-only endpoints; both now accept a `useAdminEndpoint` prop and fall back to user-scoped `/models` and `/api-keys` endpoints (#135)
 - **Usage analytics enrichment**: Revoked or inactive API keys are now included in user mapping during usage report enrichment, fixing undercounted requests and spend for users whose keys were later deactivated
 - **Usage cache staleness**: Yesterday's completed usage data is now permanently cached instead of being re-fetched on every request, improving performance and consistency
+- **Usage analytics billing calculation**: Eliminated token double-counting where model metrics were initialized with LiteLLM's already-aggregated prompt/completion tokens then added again per API key, and excluded tokens/spend from skipped requests with empty or invalid API keys
+- **Usage analytics unmapped metrics**: Fixed unmapped metrics being added to model totals for fields already initialized from LiteLLM aggregate (api_requests, total_tokens, spend); relocated token validation to run after all adjustments
+- **Usage analytics global request counts**: Fixed global successful/failed request counts excluding unmapped traffic because recalculation ran before unmapped metrics were folded into model totals; removed incorrect skippedRequests subtraction
+- **API key archiving on subscription deletion**: Subscription cancellation now archives associated API keys instead of only deactivating them, preventing orphaned keys from remaining visible to users; `archivedAt` exposed in admin API responses to restore the Archived badge and Unarchive action; admin API keys query cache invalidated on subscription removal
+- **LiteLLM access expansion on archive**: Deleting the last model from an API key now removes the key from LiteLLM entirely instead of updating it with an empty model list, which would silently grant access to all models; LiteLLM errors in archive/unarchive now propagate so keys remain visible for admin intervention on failure; subscription cancellation deletes from LiteLLM before archiving locally
 - **Notification timer cleanup**: Success notification auto-dismiss timers are now properly cleared on component unmount, fixing intermittent `window is not defined` errors during test runs
 - **LiteLLM schema creation**: Set `DISABLE_SCHEMA_UPDATE` to `false` in Helm and Kustomize deployment templates, fixing fresh deployments where LiteLLM could not create its database schema
+- **PYTHONHTTPSVERIFY Helm value**: Corrected from CA bundle file path to boolean toggle (`"0"`) per PEP 493; commented out by default since CA bundle approach is preferred
+
+### Security
+
+- **CWE-287 — Authentication bypass**: Removed `authenticateWithDevBypass` function that fell through to mock authentication in production when `MOCK_AUTH` was not explicitly set
+- **CWE-639 — Session IDOR**: Session invalidation now enforces ownership, preventing horizontal privilege escalation via session ID guessing
+- **CWE-250 — SecurityContext hardening**: All Helm workloads now run with `runAsNonRoot`, seccomp `RuntimeDefault`, `allowPrivilegeEscalation: false`, and drop ALL capabilities
+- **CWE-284 — Network segmentation**: NetworkPolicy resources restrict pod-to-pod traffic so only expected flows (e.g., backend → PostgreSQL, backend → Redis) are permitted
+- **CWE-284 — Redis authentication**: Redis deployments now require `requirepass` authentication by default, preventing unauthenticated access from any pod that can reach port 6379
+- **Dev endpoint exposure**: `dev-token`, `mock-login`, and `mock-users` endpoints are now blocked outside development/test environments
+
+### Documentation
+
+- Fixed documentation drift on `MOCK_AUTH` and Redis configuration in `.env.example` and CLAUDE.md files
+- Added `OAUTH_MOCK_ENABLED` to `.env.example` and `docs/deployment/configuration.md`
+- Aligned `CONTRIBUTING.md` and setup guide with dev-branch workflow
+- Added git workflow section to `CLAUDE.md`
+- Removed 4 unused legacy usage endpoints and their dead frontend code
+
+### Tests
+
+- Added CWE-287 regression test for browser User-Agent authentication bypass
+- Strengthened IDOR test with real session injection and ownership verification
+- Added Swagger hide regression test to verify dev endpoint visibility matches allowlist
+- Fixed 10 broken test expectations across 3 test files
+- Added missing `jsonwebtoken` dev dependency for backend tests
+- Updated mock API key expiration date to prevent time-sensitive test failures
+
+### Contributors
+
+- Guillaume Moutier
+- Chris Brown (new contributor)
+- Markus Gersdorf (new contributor)
+- Adriano Machado (new contributor)
+- Bryon Baker (new contributor)
+- Co-authored-by: Claude (AI pair programming assistant)
 
 ## [0.4.0] - 2026-03-11
 

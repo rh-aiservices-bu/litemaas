@@ -86,6 +86,7 @@
     "activeUsers": "활성 사용자",
     "apiKeysCleared": "API 키 필터 비활성화됨 - 먼저 사용자를 선택하세요",
     "apiKeysFilterAdjusted": "API 키 필터가 변경되었을 수 있습니다 - 선택 사항을 확인해 주세요",
+    "apiKeyFilterChanged": "{{count}}개 API 키로 필터링 중",
     "apiKeysFilterAvailable": "이제 API 키 필터를 사용할 수 있습니다",
     "budgetSummary": {
       "period": "기간: {{period}}",
@@ -363,6 +364,9 @@
     "yearly": "Yearly",
     "yes": "예"
   },
+  "errors": {
+    "maxRetriesExceeded": "최대 재시도 횟수 초과"
+  },
   "models": {
     "admin": {
       "apiBaseUrl": "API 기본 URL",
@@ -619,6 +623,8 @@
         "description": "설명",
         "expires": "만료",
         "keyDetails": "키 상세 정보",
+        "keyDetailsAriaLabel": "키 상세 정보",
+        "keyLimitsAriaLabel": "키 제한",
         "lastUsed": "마지막 사용",
         "rateLimit": "속도 제한",
         "rateLimitLabel": "속도 제한 (분당 요청)",
@@ -635,6 +641,7 @@
         "keyCreatedMessage": "API 키가 성공적으로 생성되었습니다.",
         "keyCreatedSuccess": "{{name}}이(가) 성공적으로 생성되었습니다",
         "keyDeleted": "{{name}}이(가) 삭제되었습니다",
+        "keyArchivedMessage": "이 API 키는 보관 처리되어 더 이상 활성 상태가 아닙니다.",
         "keyExpiredMessage": "이 API 키는 {{date}}에 만료되었습니다.",
         "keyRevokedMessage": "이 API 키는 취소되었으며 더 이상 사용할 수 없습니다.",
         "keyUpdatedSuccess": "{{name}}이(가) 성공적으로 업데이트되었습니다",
@@ -659,6 +666,7 @@
         "createdTitle": "API 키가 성공적으로 생성되었습니다",
         "deleteTitle": "API 키 삭제",
         "editTitle": "API 키 편집",
+        "keyArchived": "키 보관됨",
         "keyExpired": "키 만료됨",
         "keyRevoked": "키 취소됨",
         "secureRetrieval": "안전한 키 검색",
@@ -1048,6 +1056,21 @@
         "usageAriaLabel": "API 사용량 및 메트릭을 모니터링하려면 사용량 페이지로 이동",
         "usageDescription": "API 사용량 모니터링"
       },
+      "dashboard": {
+        "completionTokens": "완성 토큰",
+        "completionTokensAriaLabel": "최근 7일간 사용된 완성 토큰: {{count}}",
+        "copyEndpoint": "엔드포인트 URL 복사",
+        "endpointCopied": "복사됨",
+        "endpointCopiedDescription": "API 엔드포인트 URL이 클립보드에 복사되었습니다",
+        "endpointDescription": "이 URL을 사용하여 API 요청을 보내세요",
+        "endpointTitle": "API 엔드포인트",
+        "noBudgetConfigured": "현재 계정에 설정된 예산 한도가 없습니다.",
+        "promptTokens": "프롬프트 토큰",
+        "promptTokensAriaLabel": "최근 7일간 사용된 프롬프트 토큰: {{count}}",
+        "tokenSubtitle": "최근 7일",
+        "totalTokens": "전체 토큰",
+        "totalTokensAriaLabel": "최근 7일간 사용된 전체 토큰: {{count}}"
+      },
       "subtitle": "AI 모델에 액세스하고 관리하기 위한 Model as a Service 플랫폼입니다.",
       "title": "LiteMaaS에 오신 것을 환영합니다"
     },
@@ -1130,6 +1153,10 @@
         "input": "입력",
         "output": "출력",
         "separator": "•"
+      },
+      "popularity": {
+        "tooltip": "월간 인기도",
+        "ariaLabel": "인기도 평가: 별 5개 중 {{rating}}개"
       },
       "pricingLabel": "가격: N/A",
       "restrictedAccess": "제한된 액세스",
@@ -1337,6 +1364,7 @@
         "createBackup": "백업 생성",
         "creating": "생성 중...",
         "table": {
+          "ariaLabel": "백업 테이블",
           "database": "데이터베이스",
           "timestamp": "날짜 및 시간",
           "size": "크기",
@@ -1505,7 +1533,24 @@
       "variantSuccess": "성공 (녹색)",
       "variantWarning": "경고 (주황색)",
       "visibility": "표시",
-      "visible": "표시"
+      "visible": "표시",
+      "usageSync": {
+        "tabTitle": "사용 데이터 동기화",
+        "title": "사용 데이터 동기화",
+        "description": "선택한 날짜 범위에 대해 LiteLLM에서 사용 데이터를 다시 가져옵니다. 캐시된 데이터를 삭제하고 최신 계산으로 다시 불러옵니다. 마이그레이션 후 또는 사용 데이터를 재계산해야 할 때 사용하세요. 날짜 범위를 선택하고 시스템 과부하를 방지하기 위해 적절한 단위로 나누어 처리하세요.",
+        "startDate": "시작 날짜",
+        "endDate": "종료 날짜",
+        "resyncButton": "사용 데이터 새로고침",
+        "syncing": "동기화 중...",
+        "invalidRange": "시작 날짜는 종료 날짜보다 이전이거나 같아야 합니다.",
+        "adminRequired": "사용 데이터를 동기화하려면 관리자 권한이 필요합니다.",
+        "notifications": {
+          "successTitle": "사용 데이터 동기화 완료",
+          "success": "{{total}}일 중 {{processed}}일치 사용 데이터를 성공적으로 재동기화했습니다.",
+          "errorTitle": "사용 데이터 동기화 실패"
+        }
+      },
+      "viewBanner": "배너 보기"
     },
     "usage": {
       "ariaLabels": {
@@ -1652,6 +1697,7 @@
   },
   "status": {
     "active": "활성",
+    "archived": "보관됨",
     "inactive": "비활성"
   },
   "ui": {
@@ -1714,6 +1760,7 @@
       "configLoadFailed": "애플리케이션 설정을 로드하는 데 실패했습니다",
       "details": "세부사항",
       "errorCode": "오류 코드",
+      "errorDetails": "오류 상세 정보",
       "field": "필드",
       "general": "오류가 발생했습니다",
       "hideDetails": "세부사항 숨기기",
@@ -1721,19 +1768,12 @@
       "rateLimited": "요청 제한 초과",
       "rateLimitedDescription": "너무 많은 요청입니다. 제한: {{timeWindow}}당 {{limit}}회. {{retryAfter}}초 기다린 후 다시 시도하세요.",
       "requestId": "요청 ID",
-      "restrictedAccessHelp": "사용자는 액세스를 요청해야 하며 관리자의 승인을 받아야 합니다",
-      "restrictedAccessLabel": "관리자 승인 필요",
-      "restrictedAccessWarning": {
-        "message": "이 설정은 이 모델의 모든 활성 구독을 대기 상태로 변경하고 기존 API 키에서 모델을 제거합니다. 사용자는 다시 승인을 받아야 합니다.",
-        "title": "제한된 액세스를 활성화하시겠습니까?"
-      },
       "retry": "다시 시도",
       "retryAction": "실패한 작업을 다시 시도",
       "retryAfter": "{{seconds}}초 후에 다시 시도해 주세요",
       "showDetails": "세부사항 보기",
       "somethingWentWrong": "문제가 발생했습니다",
       "somethingWentWrongDesc": "죄송합니다. 예상치 못한 문제가 발생했습니다. 페이지를 새로고침하거나 문제가 지속되면 지원팀에 문의해 주세요.",
-      "somethingWrong": "문제가 발생했습니다",
       "statusCode": "상태 코드",
       "title": "오류",
       "tryRefresh": "죄송합니다만 예기치 않은 문제가 발생했습니다. 페이지를 새로고침하거나 문제가 지속되면 지원팀에 문의하세요.",
@@ -1789,6 +1829,7 @@
       "noNotificationsFound": "알림을 찾을 수 없습니다",
       "notificationSrTitle": "알림",
       "notificationsLabel": "알림",
+      "removeNotification": "알림 삭제: {{title}}",
       "title": "알림"
     },
     "pagination": {
@@ -1899,6 +1940,10 @@
       "revokeError": "취소 실패",
       "revokeSuccess": "API 키가 취소되었습니다",
       "revokeSuccessDesc": "API 키가 성공적으로 비활성화되었습니다.",
+      "unarchive": "보관 취소",
+      "unarchiveError": "보관 취소 실패",
+      "unarchiveSuccess": "API 키 보관 취소됨",
+      "unarchiveSuccessDesc": "API 키가 복원되어 사용자에게 다시 표시됩니다.",
       "rpm": "RPM",
       "rpmLimit": "RPM 제한",
       "status": "상태",

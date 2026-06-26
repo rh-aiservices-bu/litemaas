@@ -1,11 +1,15 @@
 // backend/tests/unit/services/admin-usage/admin-usage-aggregation.service.test.ts
 
-import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll, afterAll } from 'vitest';
 import { createTestApp } from '../../../helpers/test-app';
 import { initTestConfig } from '../../../helpers/test-config';
 import { AdminUsageAggregationService } from '../../../../src/services/admin-usage/admin-usage-aggregation.service';
 import { extractProviderFromModel } from '../../../../src/services/admin-usage/admin-usage.utils';
-import type { EnrichedDayData, AdminUsageFilters } from '../../../../src/types/admin-usage.types';
+import type {
+  EnrichedDayData,
+  AdminUsageFilters,
+  LiteLLMDayData,
+} from '../../../../src/types/admin-usage.types';
 
 describe('AdminUsageAggregationService', () => {
   let fastify: any;
@@ -544,6 +548,638 @@ describe('AdminUsageAggregationService', () => {
       expect(openai!.topModels).toHaveLength(1);
       expect(openai!.topModels[0].modelName).toBe('openai/gpt-4');
       expect(openai!.topModels[0].cost).toBe(1.25);
+    });
+  });
+
+  // ============================================================================
+  // enrichWithUserMapping — skipped + unmapped success/failure accounting
+  // ============================================================================
+
+  describe('enrichWithUserMapping: skipped and unmapped success/failure', () => {
+    // Calls the private method directly with DB unavailable (so all non-skipped
+    // keys land in the "unmapped / Unknown User" bucket). This lets us exercise
+    // the full skipped-exclusion and unmapped-folding paths without a real DB.
+    const callEnrich = async (dayData: LiteLLMDayData): Promise<EnrichedDayData> => {
+      return (aggregationService as any).enrichWithUserMapping(dayData);
+    };
+
+    it('should exclude skipped (empty-hash) requests from global successful_requests', async () => {
+      const dayData: LiteLLMDayData = {
+        date: '2025-06-18',
+        metrics: {
+          api_requests: 20,
+          total_tokens: 1000,
+          prompt_tokens: 600,
+          completion_tokens: 400,
+          spend: 0.5,
+          successful_requests: 0,
+          failed_requests: 0,
+        },
+        breakdown: {
+          models: {
+            'openai/gpt-4': {
+              metrics: {
+                api_requests: 20,
+                total_tokens: 1000,
+                prompt_tokens: 600,
+                completion_tokens: 400,
+                spend: 0.5,
+              },
+              api_keys: {
+                // Valid key — will be unmapped (no DB) but still counted
+                hash_valid: {
+                  metrics: {
+                    api_requests: 15,
+                    total_tokens: 800,
+                    prompt_tokens: 500,
+                    completion_tokens: 300,
+                    spend: 0.4,
+                    successful_requests: 14,
+                    failed_requests: 1,
+                  },
+                },
+                // Skipped key — empty string hash, should be excluded entirely
+                '': {
+                  metrics: {
+                    api_requests: 5,
+                    total_tokens: 200,
+                    prompt_tokens: 100,
+                    completion_tokens: 100,
+                    spend: 0.1,
+                    successful_requests: 3,
+                    failed_requests: 2,
+                  },
+                },
+              },
+            },
+          },
+          api_keys: {},
+          providers: {},
+        },
+      };
+
+      const result = await callEnrich(dayData);
+
+      // Global metrics should reflect only the valid key
+      expect(result.metrics.successful_requests).toBe(14);
+      expect(result.metrics.failed_requests).toBe(1);
+      expect(result.metrics.api_requests).toBe(15);
+      expect(result.metrics.total_tokens).toBe(800);
+      expect(result.metrics.spend).toBeCloseTo(0.4);
+    });
+
+    it('should include unmapped keys in global successful/failed counts', async () => {
+      const dayData: LiteLLMDayData = {
+        date: '2025-06-18',
+        metrics: {
+          api_requests: 30,
+          total_tokens: 1500,
+          prompt_tokens: 900,
+          completion_tokens: 600,
+          spend: 0.75,
+          successful_requests: 0,
+          failed_requests: 0,
+        },
+        breakdown: {
+          models: {
+            'openai/gpt-4': {
+              metrics: {
+                api_requests: 30,
+                total_tokens: 1500,
+                prompt_tokens: 900,
+                completion_tokens: 600,
+                spend: 0.75,
+              },
+              api_keys: {
+                hash_a: {
+                  metrics: {
+                    api_requests: 10,
+                    total_tokens: 500,
+                    prompt_tokens: 300,
+                    completion_tokens: 200,
+                    spend: 0.25,
+                    successful_requests: 9,
+                    failed_requests: 1,
+                  },
+                },
+                hash_b: {
+                  metrics: {
+                    api_requests: 20,
+                    total_tokens: 1000,
+                    prompt_tokens: 600,
+                    completion_tokens: 400,
+                    spend: 0.5,
+                    successful_requests: 18,
+                    failed_requests: 2,
+                  },
+                },
+              },
+            },
+          },
+          api_keys: {},
+          providers: {},
+        },
+      };
+
+      const result = await callEnrich(dayData);
+
+      // Both keys are unmapped (no DB). Global totals must include both.
+      expect(result.metrics.successful_requests).toBe(27);
+      expect(result.metrics.failed_requests).toBe(3);
+    });
+
+    it('should handle mixed mapped, unmapped, and skipped across multiple models', async () => {
+      // Set up a DB mock so hash_mapped resolves to a real user
+      vi.spyOn(aggregationService as any, 'isDatabaseUnavailable').mockReturnValue(false);
+      vi.spyOn(aggregationService as any, 'executeQuery').mockResolvedValue({
+        rows: [
+          {
+            litellm_key_alias: 'sk-mapped',
+            key_hash: 'hash_mapped',
+            user_id: 'user-1',
+            key_name: 'Mapped Key',
+            username: 'alice',
+            email: 'alice@example.com',
+            role: 'user',
+          },
+        ],
+      });
+
+      const dayData: LiteLLMDayData = {
+        date: '2025-06-18',
+        metrics: {
+          api_requests: 50,
+          total_tokens: 2500,
+          prompt_tokens: 1500,
+          completion_tokens: 1000,
+          spend: 1.25,
+          successful_requests: 0,
+          failed_requests: 0,
+        },
+        breakdown: {
+          models: {
+            'openai/gpt-4': {
+              metrics: {
+                api_requests: 30,
+                total_tokens: 1500,
+                prompt_tokens: 900,
+                completion_tokens: 600,
+                spend: 0.75,
+              },
+              api_keys: {
+                hash_mapped: {
+                  metrics: {
+                    api_requests: 20,
+                    total_tokens: 1000,
+                    prompt_tokens: 600,
+                    completion_tokens: 400,
+                    spend: 0.5,
+                    successful_requests: 18,
+                    failed_requests: 2,
+                  },
+                },
+                '': {
+                  metrics: {
+                    api_requests: 10,
+                    total_tokens: 500,
+                    prompt_tokens: 300,
+                    completion_tokens: 200,
+                    spend: 0.25,
+                    successful_requests: 2,
+                    failed_requests: 8,
+                  },
+                },
+              },
+            },
+            'anthropic/claude-3': {
+              metrics: {
+                api_requests: 20,
+                total_tokens: 1000,
+                prompt_tokens: 600,
+                completion_tokens: 400,
+                spend: 0.5,
+              },
+              api_keys: {
+                hash_unmapped: {
+                  metrics: {
+                    api_requests: 20,
+                    total_tokens: 1000,
+                    prompt_tokens: 600,
+                    completion_tokens: 400,
+                    spend: 0.5,
+                    successful_requests: 17,
+                    failed_requests: 3,
+                  },
+                },
+              },
+            },
+          },
+          api_keys: {},
+          providers: {},
+        },
+      };
+
+      const result = await callEnrich(dayData);
+
+      // Mapped (18s/2f) + Unmapped (17s/3f) = 35 successful, 5 failed
+      // Skipped (2s/8f) must NOT be included
+      expect(result.metrics.successful_requests).toBe(35);
+      expect(result.metrics.failed_requests).toBe(5);
+
+      // Global totals should also exclude skipped for other fields
+      expect(result.metrics.api_requests).toBe(40); // 50 - 10 skipped
+      expect(result.metrics.total_tokens).toBe(2000); // 2500 - 500 skipped
+      expect(result.metrics.spend).toBeCloseTo(1.0); // 1.25 - 0.25 skipped
+
+      // prompt/completion recalculated from model totals (mapped + unmapped only)
+      expect(result.metrics.prompt_tokens).toBe(1200); // 600 mapped + 600 unmapped
+      expect(result.metrics.completion_tokens).toBe(800); // 400 mapped + 400 unmapped
+
+      vi.restoreAllMocks();
+    });
+
+    it('should not produce negative successful_requests when all traffic is skipped', async () => {
+      const dayData: LiteLLMDayData = {
+        date: '2025-06-18',
+        metrics: {
+          api_requests: 5,
+          total_tokens: 200,
+          prompt_tokens: 120,
+          completion_tokens: 80,
+          spend: 0.1,
+          successful_requests: 0,
+          failed_requests: 0,
+        },
+        breakdown: {
+          models: {
+            'openai/gpt-4': {
+              metrics: {
+                api_requests: 5,
+                total_tokens: 200,
+                prompt_tokens: 120,
+                completion_tokens: 80,
+                spend: 0.1,
+              },
+              api_keys: {
+                '': {
+                  metrics: {
+                    api_requests: 5,
+                    total_tokens: 200,
+                    prompt_tokens: 120,
+                    completion_tokens: 80,
+                    spend: 0.1,
+                    successful_requests: 0,
+                    failed_requests: 5,
+                  },
+                },
+              },
+            },
+          },
+          api_keys: {},
+          providers: {},
+        },
+      };
+
+      const result = await callEnrich(dayData);
+
+      expect(result.metrics.successful_requests).toBe(0);
+      expect(result.metrics.failed_requests).toBe(0);
+      expect(result.metrics.api_requests).toBe(0);
+      expect(result.metrics.total_tokens).toBe(0);
+      expect(result.metrics.spend).toBeCloseTo(0);
+    });
+  });
+
+  // ============================================================================
+  // enrichWithUserMapping — total_tokens reconciliation
+  // ============================================================================
+
+  describe('enrichWithUserMapping: total_tokens reconciliation from divergent inputs', () => {
+    const callEnrich = async (dayData: LiteLLMDayData): Promise<EnrichedDayData> => {
+      return (aggregationService as any).enrichWithUserMapping(dayData);
+    };
+
+    it('should reconcile total_tokens = prompt + completion at all breakdown levels when raw values diverge', async () => {
+      vi.spyOn(aggregationService as any, 'isDatabaseUnavailable').mockReturnValue(false);
+      vi.spyOn(aggregationService as any, 'executeQuery').mockResolvedValue({
+        rows: [
+          {
+            litellm_key_alias: 'sk-user1',
+            key_hash: 'hash_user1',
+            user_id: 'user-1',
+            key_name: 'User 1 Key',
+            username: 'alice',
+            email: 'alice@example.com',
+            role: 'user',
+          },
+        ],
+      });
+
+      const dayData: LiteLLMDayData = {
+        date: '2025-07-01',
+        metrics: {
+          api_requests: 50,
+          total_tokens: 6000, // divergent: should be 5000 from prompt+completion
+          prompt_tokens: 3000,
+          completion_tokens: 2000,
+          spend: 1.0,
+          successful_requests: 0,
+          failed_requests: 0,
+        },
+        breakdown: {
+          models: {
+            'openai/gpt-4': {
+              metrics: {
+                api_requests: 50,
+                total_tokens: 6000, // divergent at model level too
+                prompt_tokens: 3000,
+                completion_tokens: 2000,
+                spend: 1.0,
+              },
+              api_keys: {
+                hash_user1: {
+                  metrics: {
+                    api_requests: 50,
+                    total_tokens: 6000, // divergent at key level
+                    prompt_tokens: 3000,
+                    completion_tokens: 2000,
+                    spend: 1.0,
+                    successful_requests: 48,
+                    failed_requests: 2,
+                  },
+                },
+              },
+            },
+          },
+          api_keys: {},
+          providers: {},
+        },
+      };
+
+      const result = await callEnrich(dayData);
+
+      const expected = 3000 + 2000; // 5000, not 6000
+
+      // Global level
+      expect(result.metrics.total_tokens).toBe(expected);
+
+      // Model level
+      const modelMetrics = result.breakdown.models['openai/gpt-4'].metrics;
+      expect(modelMetrics.total_tokens).toBe(expected);
+
+      // Model-user level
+      const modelUserMetrics = result.breakdown.models['openai/gpt-4'].users['user-1'].metrics;
+      expect(modelUserMetrics.total_tokens).toBe(expected);
+
+      // User level
+      const userMetrics = result.breakdown.users['user-1'].metrics;
+      expect(userMetrics.total_tokens).toBe(expected);
+
+      // User-model level
+      const userModelMetrics = result.breakdown.users['user-1'].models['openai/gpt-4'].metrics;
+      expect(userModelMetrics.total_tokens).toBe(expected);
+
+      // API key level
+      const apiKeyMetrics =
+        result.breakdown.users['user-1'].models['openai/gpt-4'].api_keys!['sk-user1'].metrics;
+      expect(apiKeyMetrics.total_tokens).toBe(expected);
+
+      vi.restoreAllMocks();
+    });
+
+    it('should reconcile total_tokens for unmapped (Unknown User) keys', async () => {
+      const dayData: LiteLLMDayData = {
+        date: '2025-07-01',
+        metrics: {
+          api_requests: 30,
+          total_tokens: 3500, // divergent: prompt+completion = 3000
+          prompt_tokens: 1800,
+          completion_tokens: 1200,
+          spend: 0.6,
+          successful_requests: 0,
+          failed_requests: 0,
+        },
+        breakdown: {
+          models: {
+            'openai/gpt-4': {
+              metrics: {
+                api_requests: 30,
+                total_tokens: 3500,
+                prompt_tokens: 1800,
+                completion_tokens: 1200,
+                spend: 0.6,
+              },
+              api_keys: {
+                hash_unknown: {
+                  metrics: {
+                    api_requests: 30,
+                    total_tokens: 3500, // divergent
+                    prompt_tokens: 1800,
+                    completion_tokens: 1200,
+                    spend: 0.6,
+                    successful_requests: 28,
+                    failed_requests: 2,
+                  },
+                },
+              },
+            },
+          },
+          api_keys: {},
+          providers: {},
+        },
+      };
+
+      const result = await callEnrich(dayData);
+
+      const expected = 1800 + 1200; // 3000, not 3500
+
+      expect(result.metrics.total_tokens).toBe(expected);
+
+      // Unknown User metrics
+      const unknownUser = result.breakdown.users['00000000-0000-0000-0000-000000000000'];
+      expect(unknownUser).toBeDefined();
+      expect(unknownUser.metrics.total_tokens).toBe(expected);
+
+      // Unknown User's model breakdown
+      const unknownUserModel = unknownUser!.models['openai/gpt-4'];
+      expect(unknownUserModel.metrics.total_tokens).toBe(expected);
+    });
+
+    it('should reconcile total_tokens for provider breakdown', async () => {
+      const dayData: LiteLLMDayData = {
+        date: '2025-07-01',
+        metrics: {
+          api_requests: 40,
+          total_tokens: 4500,
+          prompt_tokens: 2500,
+          completion_tokens: 1500,
+          spend: 0.8,
+          successful_requests: 0,
+          failed_requests: 0,
+        },
+        breakdown: {
+          models: {
+            'openai/gpt-4': {
+              metrics: {
+                api_requests: 40,
+                total_tokens: 4500,
+                prompt_tokens: 2500,
+                completion_tokens: 1500,
+                spend: 0.8,
+              },
+              api_keys: {
+                hash_a: {
+                  metrics: {
+                    api_requests: 40,
+                    total_tokens: 4500,
+                    prompt_tokens: 2500,
+                    completion_tokens: 1500,
+                    spend: 0.8,
+                    successful_requests: 38,
+                    failed_requests: 2,
+                  },
+                },
+              },
+            },
+          },
+          api_keys: {},
+          providers: {
+            openai: {
+              metrics: {
+                api_requests: 40,
+                total_tokens: 4500, // divergent: prompt+completion = 4000
+                prompt_tokens: 2500,
+                completion_tokens: 1500,
+                spend: 0.8,
+              },
+            },
+          },
+        },
+      };
+
+      const result = await callEnrich(dayData);
+
+      const providerMetrics = result.breakdown.providers!['openai'].metrics;
+      expect(providerMetrics.total_tokens).toBe(2500 + 1500); // 4000, not 4500
+    });
+
+    it('should reconcile total_tokens correctly when aggregated through aggregateDailyData with filters', async () => {
+      // Build enriched data with divergent total_tokens directly
+      const enrichedDay: EnrichedDayData = {
+        date: '2025-07-01',
+        metrics: {
+          api_requests: 80,
+          total_tokens: 4000, // will be recalculated by aggregateDailyData
+          prompt_tokens: 2400,
+          completion_tokens: 1600,
+          spend: 2.0,
+          successful_requests: 78,
+          failed_requests: 2,
+        },
+        breakdown: {
+          models: {
+            'openai/gpt-4': {
+              metrics: {
+                api_requests: 80,
+                total_tokens: 4000, // consistent here
+                prompt_tokens: 2400,
+                completion_tokens: 1600,
+                spend: 2.0,
+                successful_requests: 78,
+                failed_requests: 2,
+              },
+              users: {
+                'user-1': {
+                  userId: 'user-1',
+                  username: 'alice',
+                  email: 'alice@example.com',
+                  metrics: {
+                    api_requests: 80,
+                    total_tokens: 5000, // DIVERGENT: prompt+completion = 4000
+                    prompt_tokens: 2400,
+                    completion_tokens: 1600,
+                    spend: 2.0,
+                    successful_requests: 78,
+                    failed_requests: 2,
+                  },
+                },
+              },
+            },
+          },
+          providers: {
+            openai: {
+              metrics: {
+                api_requests: 80,
+                total_tokens: 4000,
+                prompt_tokens: 2400,
+                completion_tokens: 1600,
+                spend: 2.0,
+              },
+            },
+          },
+          users: {
+            'user-1': {
+              userId: 'user-1',
+              username: 'alice',
+              email: 'alice@example.com',
+              role: 'user',
+              metrics: {
+                api_requests: 80,
+                total_tokens: 5000, // DIVERGENT
+                prompt_tokens: 2400,
+                completion_tokens: 1600,
+                spend: 2.0,
+                successful_requests: 78,
+                failed_requests: 2,
+              },
+              models: {
+                'openai/gpt-4': {
+                  modelName: 'openai/gpt-4',
+                  metrics: {
+                    api_requests: 80,
+                    total_tokens: 5000, // DIVERGENT
+                    prompt_tokens: 2400,
+                    completion_tokens: 1600,
+                    spend: 2.0,
+                    successful_requests: 78,
+                    failed_requests: 2,
+                  },
+                  api_keys: {
+                    'key-1': {
+                      keyAlias: 'key-1',
+                      metrics: {
+                        api_requests: 80,
+                        total_tokens: 5000, // DIVERGENT
+                        prompt_tokens: 2400,
+                        completion_tokens: 1600,
+                        spend: 2.0,
+                        successful_requests: 78,
+                        failed_requests: 2,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      // Test with user filter — totalMetrics is summed from user breakdown
+      const result = aggregationService.aggregateDailyData([enrichedDay], {
+        startDate: '2025-07-01',
+        endDate: '2025-07-01',
+        userIds: ['user-1'],
+      });
+
+      // With divergent user data, the user-level total_tokens (5000) would
+      // propagate to totalMetrics. This verifies that the raw divergent value
+      // flows through as-is at the aggregation layer (the fix is upstream in enrichment).
+      expect(result.totalMetrics.prompt_tokens).toBe(2400);
+      expect(result.totalMetrics.completion_tokens).toBe(1600);
+      // The byUser breakdown total_tokens comes from the enriched data
+      expect(result.byUser['user-1'].metrics.prompt_tokens).toBe(2400);
+      expect(result.byUser['user-1'].metrics.completion_tokens).toBe(1600);
     });
   });
 

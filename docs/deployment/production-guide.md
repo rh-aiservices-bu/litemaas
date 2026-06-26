@@ -70,10 +70,9 @@ NODE_ENV=production npm run dev
 
 ### Development Mode (`NODE_ENV=development`)
 
-- ✅ Mock OAuth authentication with test users
-- ✅ Frontend requests bypass authentication (localhost origins)
-- ✅ Swagger docs accessible with logging
-- ✅ Development endpoints available
+- ✅ Mock OAuth authentication with test users (via `OAUTH_MOCK_ENABLED=true`)
+- ✅ Swagger docs accessible without authentication
+- ✅ Development endpoints available (`dev-token`, `mock-login`, `mock-users`)
 - 📝 All access logged for security monitoring
 
 ### Production Mode (`NODE_ENV=production`)
@@ -147,6 +146,12 @@ curl -H "Authorization: Bearer ${ADMIN_API_KEY}" \
 - [ ] CORS configured for production domain only
 - [ ] Rate limiting enabled
 - [ ] Audit logging configured
+- [ ] Pod security contexts enforced (`runAsNonRoot`, seccomp `RuntimeDefault`)
+- [ ] Container security contexts enforced (`allowPrivilegeEscalation: false`, drop ALL capabilities)
+- [ ] NetworkPolicy resources enabled to restrict pod-to-pod communication
+- [ ] Redis authentication enabled (`requirepass`) if Redis is deployed
+- [ ] LiteLLM SSL verification enabled (`litellm.sslVerify: true`) with custom CA bundles if needed
+- [ ] Dev endpoints (`dev-token`, `mock-login`, `mock-users`) confirmed blocked in production (`NODE_ENV=production`)
 
 ### 2. Required OpenShift Permissions
 
@@ -220,14 +225,15 @@ curl -X POST https://litemaas.example.com/api/auth/dev-token \
 
 | Feature             | Development    | Production            | Notes                             |
 | ------------------- | -------------- | --------------------- | --------------------------------- |
-| OAuth Provider      | Mock users     | OpenShift OAuth       | Real authentication in production |
-| Frontend Bypass     | ✅ Enabled     | 🚫 Disabled           | No bypass in production           |
+| OAuth Provider      | Mock users     | OpenShift/OIDC OAuth  | Real authentication in production |
 | Mock Authentication | ✅ Enabled     | 🚫 Disabled           | `OAUTH_MOCK_ENABLED=false`        |
 | Swagger Access      | ✅ Open        | 🔒 Admin/JWT required | Requires authentication           |
-| Dev Token Endpoint  | ✅ Available   | 🚫 Hidden             | Not available in production       |
+| Dev Endpoints       | ✅ Available   | 🚫 404 Not Found      | `dev-token`, `mock-login`, `mock-users` |
 | Admin API Keys      | ✅ Full access | ✅ Full access        | System operations only            |
 | User API Keys       | ✅ Validated   | ✅ Validated          | Full LiteLLM integration          |
 | Security Logging    | 📝 Debug       | ⚠️ Warning            | Enhanced monitoring               |
+| SecurityContext     | Optional       | ✅ Enforced           | `runAsNonRoot`, drop ALL caps     |
+| NetworkPolicy       | Optional       | ✅ Recommended        | Restrict pod-to-pod traffic       |
 
 ---
 

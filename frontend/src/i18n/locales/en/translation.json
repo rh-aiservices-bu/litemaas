@@ -223,6 +223,7 @@
       "totalRequests": "Requests",
       "totalTokens": "Total Tokens"
     },
+    "apiKeyFilterChanged": "Filtering by {{count}} API key(s)",
     "modelFilterChanged": "Filtering by {{count}} model(s)",
     "noData": "No data available",
     "noModelData": "No model data available",
@@ -362,6 +363,9 @@
     "weekly": "Weekly",
     "yearly": "Yearly",
     "yes": "Yes"
+  },
+  "errors": {
+    "maxRetriesExceeded": "Maximum retries exceeded"
   },
   "models": {
     "admin": {
@@ -619,6 +623,8 @@
         "description": "Description",
         "expires": "Expires",
         "keyDetails": "Key Details",
+        "keyDetailsAriaLabel": "Key details",
+        "keyLimitsAriaLabel": "Key limits",
         "lastUsed": "Last Used",
         "rateLimit": "Rate Limit",
         "rateLimitLabel": "Rate Limit (requests per minute)",
@@ -635,6 +641,7 @@
         "keyCreatedMessage": "Your API key has been created successfully.",
         "keyCreatedSuccess": "{{name}} has been created successfully",
         "keyDeleted": "{{name}} has been deleted",
+        "keyArchivedMessage": "This key has been archived and is no longer active.",
         "keyExpiredMessage": "This API key has expired on {{date}}.",
         "keyRevokedMessage": "This API key has been revoked and can no longer be used.",
         "keyUpdatedSuccess": "{{name}} has been updated successfully",
@@ -659,6 +666,7 @@
         "createdTitle": "API Key Created Successfully",
         "deleteTitle": "Delete API Key",
         "editTitle": "Edit API Key",
+        "keyArchived": "Key Archived",
         "keyExpired": "Key Expired",
         "keyRevoked": "Key Revoked",
         "secureRetrieval": "Secure Key Retrieval",
@@ -1048,6 +1056,21 @@
         "usageAriaLabel": "Navigate to Usage page to monitor your API usage and metrics",
         "usageDescription": "Monitor your API usage"
       },
+      "dashboard": {
+        "completionTokens": "Completion Tokens",
+        "completionTokensAriaLabel": "Completion tokens used in last 7 days: {{count}}",
+        "copyEndpoint": "Copy endpoint URL",
+        "endpointCopied": "Copied",
+        "endpointCopiedDescription": "API endpoint URL copied to clipboard",
+        "endpointDescription": "Use this URL to make API requests",
+        "endpointTitle": "API Endpoint",
+        "noBudgetConfigured": "No budget limit is currently configured for your account.",
+        "promptTokens": "Prompt Tokens",
+        "promptTokensAriaLabel": "Prompt tokens used in last 7 days: {{count}}",
+        "tokenSubtitle": "Last 7 days",
+        "totalTokens": "Total Tokens",
+        "totalTokensAriaLabel": "Total tokens used in last 7 days: {{count}}"
+      },
       "subtitle": "Your Model as a Service platform for accessing and managing AI models.",
       "title": "Welcome to LiteMaaS"
     },
@@ -1130,6 +1153,10 @@
         "input": "Input",
         "output": "Output",
         "separator": "•"
+      },
+      "popularity": {
+        "tooltip": "Monthly popularity",
+        "ariaLabel": "Popularity rating: {{rating}} out of 5 stars"
       },
       "pricingLabel": "Pricing: N/A",
       "restrictedAccess": "Restricted Access",
@@ -1348,6 +1375,7 @@
           "alreadyRunning": "A backup is already in progress."
         },
         "table": {
+          "ariaLabel": "Backups table",
           "database": "Database",
           "timestamp": "Timestamp",
           "size": "Size",
@@ -1463,6 +1491,7 @@
       "saveBanner": "Save Banner",
       "saving": "Saving...",
       "showBanner": "Show Banner",
+      "viewBanner": "View Banner",
       "successfulUpdates": "Successful",
       "syncError": "Failed to synchronize models",
       "syncErrorGeneric": "An error occurred while synchronizing models. Please try again.",
@@ -1505,7 +1534,23 @@
       "variantSuccess": "Success (Green)",
       "variantWarning": "Warning (Orange)",
       "visibility": "Visibility",
-      "visible": "Visible"
+      "visible": "Visible",
+      "usageSync": {
+        "tabTitle": "Usage Data Sync",
+        "title": "Usage Data Sync",
+        "description": "Re-import usage data from LiteLLM for a selected date range. This deletes cached data and re-fetches it with current calculations. Use this after migrations or when usage data needs recalculation. Select a date range and process in manageable chunks to avoid system overload.",
+        "startDate": "Start Date",
+        "endDate": "End Date",
+        "resyncButton": "Refresh usage data",
+        "syncing": "Syncing...",
+        "invalidRange": "Start date must be before or equal to end date.",
+        "adminRequired": "Admin access required to sync usage data.",
+        "notifications": {
+          "successTitle": "Usage data synced",
+          "success": "Successfully re-synced {{processed}} of {{total}} days of usage data.",
+          "errorTitle": "Usage data sync failed"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {
@@ -1652,6 +1697,7 @@
   },
   "status": {
     "active": "Active",
+    "archived": "Archived",
     "inactive": "Inactive"
   },
   "ui": {
@@ -1713,6 +1759,7 @@
       "componentLoadingErrorDesc": "Failed to load this component. Please try refreshing the page.",
       "configLoadFailed": "Failed to load application configuration",
       "details": "Details",
+      "errorDetails": "Error details",
       "errorCode": "Error Code",
       "field": "Field",
       "general": "An error occurred",
@@ -1782,6 +1829,7 @@
       "noNotificationsFound": "No notifications found",
       "notificationSrTitle": "Notification",
       "notificationsLabel": "Notifications",
+      "removeNotification": "Remove notification: {{title}}",
       "title": "Notifications"
     },
     "pagination": {
@@ -1892,6 +1940,10 @@
       "revokeError": "Revoke Failed",
       "revokeSuccess": "API Key Revoked",
       "revokeSuccessDesc": "The API key has been deactivated successfully.",
+      "unarchive": "Unarchive",
+      "unarchiveError": "Unarchive Failed",
+      "unarchiveSuccess": "API Key Unarchived",
+      "unarchiveSuccessDesc": "The API key has been restored and is now visible to the user.",
       "rpm": "RPM",
       "rpmLimit": "RPM Limit",
       "status": "Status",

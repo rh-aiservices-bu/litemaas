@@ -7,6 +7,7 @@ import type {
   UserBreakdown,
   ModelBreakdown,
   ProviderBreakdown,
+  DailyUsageSummary,
   AdminUsageFilters,
 } from '../../../../src/types/admin-usage.types';
 
@@ -193,6 +194,86 @@ describe('AdminUsageExportService', () => {
 
       expect(csv).toContain('Provider,Total Requests');
       expect(csv).toContain('openai,100,5000,3000,2000,1.2500,5,3');
+    });
+  });
+
+  describe('exportDailyUsageToCSV', () => {
+    it('should generate per-day rows with correct headers', async () => {
+      const dailyUsage: DailyUsageSummary[] = [
+        {
+          date: '2025-01-01',
+          requests: 100,
+          tokens: 5000,
+          prompt_tokens: 3000,
+          completion_tokens: 2000,
+          cost: 1.25,
+        },
+        {
+          date: '2025-01-02',
+          requests: 150,
+          tokens: 7500,
+          prompt_tokens: 4500,
+          completion_tokens: 3000,
+          cost: 1.875,
+        },
+      ];
+
+      const csv = await exportService.exportDailyUsageToCSV(dailyUsage, filters);
+
+      expect(csv).toContain('Date,Total Requests,Total Tokens,Prompt Tokens,Completion Tokens');
+      expect(csv).toContain('2025-01-01,100,5000,3000,2000,1.2500');
+      expect(csv).toContain('2025-01-02,150,7500,4500,3000,1.8750');
+
+      const lines = csv.split('\n');
+      expect(lines).toHaveLength(3);
+    });
+
+    it('should include currency code in cost header', async () => {
+      const dailyUsage: DailyUsageSummary[] = [
+        {
+          date: '2025-01-01',
+          requests: 10,
+          tokens: 500,
+          prompt_tokens: 300,
+          completion_tokens: 200,
+          cost: 0.05,
+        },
+      ];
+
+      const csv = await exportService.exportDailyUsageToCSV(dailyUsage, filters, 'EUR');
+
+      expect(csv).toContain('Total Cost (EUR)');
+    });
+
+    it('should handle empty daily usage', async () => {
+      const csv = await exportService.exportDailyUsageToCSV([], filters);
+
+      const lines = csv.split('\n');
+      expect(lines).toHaveLength(1);
+      expect(lines[0]).toContain('Date');
+    });
+
+    it('should produce rows where tokens equal prompt + completion', async () => {
+      const dailyUsage: DailyUsageSummary[] = [
+        {
+          date: '2025-01-01',
+          requests: 50,
+          tokens: 4000,
+          prompt_tokens: 2500,
+          completion_tokens: 1500,
+          cost: 0.4,
+        },
+      ];
+
+      const csv = await exportService.exportDailyUsageToCSV(dailyUsage, filters);
+      const dataLine = csv.split('\n')[1];
+      const fields = dataLine.split(',');
+
+      const totalTokens = parseInt(fields[2]);
+      const promptTokens = parseInt(fields[3]);
+      const completionTokens = parseInt(fields[4]);
+
+      expect(totalTokens).toBe(promptTokens + completionTokens);
     });
   });
 

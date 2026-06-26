@@ -938,29 +938,34 @@ export class SubscriptionService extends BaseService {
         );
 
         if (remainingModels.rows.length === 0) {
-          // No models left - deactivate the key
-          await client.query(
-            `UPDATE api_keys 
-             SET is_active = false, updated_at = CURRENT_TIMESTAMP
-             WHERE id = $1`,
-            [key.id],
-          );
-
-          // Delete from LiteLLM (can't exist without models)
+          // Delete from LiteLLM FIRST (security priority — don't hide a key that's still active remotely)
+          let litellmDeleted = true;
           if (key.lite_llm_key_value && this.liteLLMService) {
             try {
               await this.liteLLMService.deleteKey(key.lite_llm_key_value);
             } catch (error) {
-              this.fastify.log.warn(
+              litellmDeleted = false;
+              this.fastify.log.error(
                 { keyId: key.id, error },
-                'Failed to delete orphaned key from LiteLLM',
+                'Failed to delete orphaned key from LiteLLM — key deactivated locally but may still be active remotely',
               );
             }
           }
 
+          // Deactivate locally; only archive if LiteLLM deletion succeeded
+          // so the key stays visible for admin investigation on failure
+          await client.query(
+            `UPDATE api_keys
+             SET is_active = false,
+                 archived_at = ${litellmDeleted ? 'CURRENT_TIMESTAMP' : 'archived_at'},
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = $1`,
+            [key.id],
+          );
+
           this.fastify.log.info(
             { keyId: key.id, keyName: key.name },
-            'API key deactivated due to no remaining models after subscription cancellation',
+            'API key deactivated and archived due to no remaining models after subscription cancellation',
           );
         } else {
           // Update LiteLLM key to remove the cancelled model
@@ -1097,29 +1102,34 @@ export class SubscriptionService extends BaseService {
         );
 
         if (remainingModels.rows.length === 0) {
-          // No models left - deactivate the key
-          await client.query(
-            `UPDATE api_keys 
-             SET is_active = false, updated_at = CURRENT_TIMESTAMP
-             WHERE id = $1`,
-            [key.id],
-          );
-
-          // Delete from LiteLLM (can't exist without models)
+          // Delete from LiteLLM FIRST (security priority — don't hide a key that's still active remotely)
+          let litellmDeleted = true;
           if (key.lite_llm_key_value && this.liteLLMService) {
             try {
               await this.liteLLMService.deleteKey(key.lite_llm_key_value);
             } catch (error) {
-              this.fastify.log.warn(
+              litellmDeleted = false;
+              this.fastify.log.error(
                 { keyId: key.id, error },
-                'Failed to delete orphaned key from LiteLLM during subscription deletion',
+                'Failed to delete orphaned key from LiteLLM — key deactivated locally but may still be active remotely',
               );
             }
           }
 
+          // Deactivate locally; only archive if LiteLLM deletion succeeded
+          // so the key stays visible for admin investigation on failure
+          await client.query(
+            `UPDATE api_keys
+             SET is_active = false,
+                 archived_at = ${litellmDeleted ? 'CURRENT_TIMESTAMP' : 'archived_at'},
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = $1`,
+            [key.id],
+          );
+
           this.fastify.log.info(
             { keyId: key.id, keyName: key.name },
-            'API key deactivated due to no remaining models after subscription deletion',
+            'API key deactivated and archived due to no remaining models after subscription deletion',
           );
         } else {
           // Update LiteLLM key to remove the deleted model

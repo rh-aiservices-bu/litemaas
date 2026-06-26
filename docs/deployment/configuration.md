@@ -47,6 +47,7 @@ DB_CONNECTION_TIMEOUT=10000
 | `K8S_API_SKIP_TLS_VERIFY` | Skip TLS verification for Kubernetes API calls (⚠️ OpenShift only)   | -                                         | No       |
 | `OIDC_GROUPS_CLAIM`       | Claim name in OIDC userinfo for group memberships                    | `groups`                                  | No       |
 | `OIDC_SCOPES`             | Override OIDC scopes (space-separated)                               | `openid profile email`                    | No       |
+| `OAUTH_MOCK_ENABLED`      | Enable mock OAuth flow, bypassing real provider. Also enabled automatically when `NODE_ENV=development`. | `false`                                   | No       |
 
 ### Authentication Provider
 
@@ -315,10 +316,11 @@ In Kustomize deployments, the value is stored in `backend-secret` and constructe
 
 ## Redis Cache
 
-| Variable     | Description                                             | Default | Required |
-| ------------ | ------------------------------------------------------- | ------- | -------- |
-| `REDIS_HOST` | Redis hostname for flushing LiteLLM's cache after model CRUD | -       | No       |
-| `REDIS_PORT` | Redis port                                              | `6379`  | No       |
+| Variable         | Description                                             | Default | Required |
+| ---------------- | ------------------------------------------------------- | ------- | -------- |
+| `REDIS_HOST`     | Redis hostname for flushing LiteLLM's cache after model CRUD | -       | No       |
+| `REDIS_PORT`     | Redis port                                              | `6379`  | No       |
+| `REDIS_PASSWORD` | Redis password for authentication (`requirepass`)       | -       | No       |
 
 When configured, the backend flushes LiteLLM's Redis cache (`FLUSHALL`) after every model create, update, or delete operation to ensure all LiteLLM proxy pods immediately pick up the changes. When `REDIS_HOST` is not set, cache flush is silently skipped (non-fatal).
 
@@ -331,6 +333,7 @@ When configured, the backend flushes LiteLLM's Redis cache (`FLUSHALL`) after ev
 ```bash
 REDIS_HOST=litellm-redis
 REDIS_PORT=6379
+REDIS_PASSWORD=your-redis-password  # Optional, for requirepass authentication
 ```
 
 ## Backend API Protection

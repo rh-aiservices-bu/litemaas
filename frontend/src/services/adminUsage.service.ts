@@ -89,6 +89,9 @@ export interface Analytics {
     requestsTrend: TrendData;
     costTrend: TrendData;
     usersTrend: TrendData;
+    totalTokensTrend?: TrendData;
+    promptTokensTrend?: TrendData;
+    completionTokensTrend?: TrendData;
   };
   dailyUsage?: DailyUsageSummary[];
   dailyModelUsage?: DailyModelUsage[];
@@ -398,6 +401,23 @@ class AdminUsageService {
    */
   async refreshTodayData(): Promise<void> {
     return apiClient.post<void>('/admin/usage/refresh-today', {});
+  }
+
+  /**
+   * Re-sync usage data for a date range from LiteLLM
+   */
+  async resyncDateRange(
+    startDate: string,
+    endDate: string,
+  ): Promise<{
+    message: string;
+    daysProcessed: number;
+    daysTotal: number;
+    startDate: string;
+    endDate: string;
+    resyncedAt: string;
+  }> {
+    return apiClient.post('/admin/usage/resync', { startDate, endDate });
   }
 }
 

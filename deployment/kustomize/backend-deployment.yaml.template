@@ -140,6 +140,12 @@ spec:
               value: 'litellm-redis'
             - name: REDIS_PORT
               value: '6379'
+            # Uncomment to enable Redis authentication (requires redis-auth Secret):
+            # - name: REDIS_PASSWORD
+            #   valueFrom:
+            #     secretKeyRef:
+            #       name: redis-auth
+            #       key: password
 
             # Backend API Rate Limiting (NOT for LLM requests)
             - name: RATE_LIMIT_MAX

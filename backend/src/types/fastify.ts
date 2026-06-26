@@ -35,6 +35,7 @@ declare module 'fastify' {
       // Redis (optional)
       REDIS_HOST?: string;
       REDIS_PORT: string;
+      REDIS_PASSWORD?: string;
 
       // LiteLLM
       LITELLM_API_URL: string;

@@ -17,7 +17,6 @@ describe('Models Routes Integration', () => {
   beforeAll(async () => {
     // Set test environment
     process.env.NODE_ENV = 'test';
-    process.env.ALLOWED_FRONTEND_ORIGINS = ''; // Disable frontend bypass
 
     app = await createApp({ logger: false });
     await app.ready();
@@ -624,6 +623,100 @@ describe('Models Routes Integration', () => {
         const result = JSON.parse(response.body);
         expect(typeof result.litellmConnected).toBe('boolean');
       }
+    });
+  });
+
+  describe('GET /api/v1/models/popularity', () => {
+    it('should require authentication', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/models/popularity',
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('should allow access for regular users', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/models/popularity',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
+
+      expect([200, 500]).toContain(response.statusCode);
+
+      if (response.statusCode === 200) {
+        const result = JSON.parse(response.body);
+        expect(result).toHaveProperty('popularity');
+        expect(typeof result.popularity).toBe('object');
+      }
+    });
+
+    it('should allow access for admin users', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/models/popularity',
+        headers: {
+          Authorization: `Bearer ${adminToken}`,
+        },
+      });
+
+      expect([200, 500]).toContain(response.statusCode);
+
+      if (response.statusCode === 200) {
+        const result = JSON.parse(response.body);
+        expect(result).toHaveProperty('popularity');
+      }
+    });
+
+    it('should allow access for admin readonly users', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/models/popularity',
+        headers: {
+          Authorization: `Bearer ${adminReadonlyToken}`,
+        },
+      });
+
+      expect([200, 500]).toContain(response.statusCode);
+
+      if (response.statusCode === 200) {
+        const result = JSON.parse(response.body);
+        expect(result).toHaveProperty('popularity');
+      }
+    });
+
+    it('should return star ratings between 1 and 5', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/models/popularity',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
+      });
+
+      if (response.statusCode === 200) {
+        const result = JSON.parse(response.body);
+        for (const [, rating] of Object.entries(result.popularity)) {
+          expect(rating).toBeGreaterThanOrEqual(1);
+          expect(rating).toBeLessThanOrEqual(5);
+          expect(Number.isInteger(rating)).toBe(true);
+        }
+      }
+    });
+
+    it('should reject requests with invalid tokens', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/models/popularity',
+        headers: {
+          Authorization: 'Bearer invalid-token-value',
+        },
+      });
+
+      expect(response.statusCode).toBe(401);
     });
   });
 

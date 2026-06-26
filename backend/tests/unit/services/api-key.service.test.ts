@@ -1044,7 +1044,7 @@ describe('ApiKeyService', () => {
           .mockResolvedValueOnce(apiKeys) // Get API keys with this model
           .mockResolvedValue([{ model_id: 'other-model' }]); // Remaining models
 
-        mockDbUtils.query.mockResolvedValue({ rowCount: 1 });
+        mockPgClient.query.mockResolvedValue({ rowCount: 1 });
         vi.mocked(mockLiteLLMService.updateKey!).mockResolvedValue(undefined);
 
         await service.removeModelFromUserApiKeys('user-123', 'gpt-4o');
@@ -1052,8 +1052,9 @@ describe('ApiKeyService', () => {
         // Verify LiteLLM was updated for both keys
         expect(mockLiteLLMService.updateKey).toHaveBeenCalledTimes(2);
 
-        // Verify database was updated
-        expect(mockDbUtils.query).toHaveBeenCalledWith(
+        // Verify database was updated within a transaction
+        expect(mockFastify.dbUtils!.withTransaction).toHaveBeenCalled();
+        expect(mockPgClient.query).toHaveBeenCalledWith(
           expect.stringContaining('DELETE FROM api_key_models'),
           expect.anything(),
         );
@@ -1075,7 +1076,7 @@ describe('ApiKeyService', () => {
           .mockResolvedValueOnce(apiKeys)
           .mockResolvedValue([{ model_id: 'other-model' }]);
 
-        mockDbUtils.query.mockImplementation(async () => {
+        mockPgClient.query.mockImplementation(async () => {
           callOrder.push('database');
           return { rowCount: 1 };
         });
@@ -1086,7 +1087,7 @@ describe('ApiKeyService', () => {
 
         await service.removeModelFromUserApiKeys('user-123', 'gpt-4o');
 
-        // Verify LiteLLM was called before database
+        // Verify LiteLLM was called before database (transaction)
         expect(callOrder[0]).toBe('litellm');
         expect(callOrder[1]).toBe('database');
       });
@@ -1129,7 +1130,7 @@ describe('ApiKeyService', () => {
           .mockResolvedValueOnce(apiKeys)
           .mockResolvedValue([{ model_id: 'other-model' }]);
 
-        mockDbUtils.query.mockResolvedValue({ rowCount: 1 });
+        mockPgClient.query.mockResolvedValue({ rowCount: 1 });
 
         // First key succeeds, second fails
         vi.mocked(mockLiteLLMService.updateKey!)
@@ -1138,8 +1139,8 @@ describe('ApiKeyService', () => {
 
         await service.removeModelFromUserApiKeys('user-123', 'gpt-4o');
 
-        // Only first key should be updated in database
-        expect(mockDbUtils.query).toHaveBeenCalledWith(
+        // Only first key should be updated in database (within transaction)
+        expect(mockPgClient.query).toHaveBeenCalledWith(
           expect.stringContaining('DELETE FROM api_key_models'),
           expect.arrayContaining([['key-1'], 'gpt-4o']),
         );

@@ -147,7 +147,11 @@ export const NotificationDrawer: React.FC<NotificationDrawerProps> = (_props) =>
                   >
                     <Button
                       variant="plain"
-                      aria-label={`Remove notification: ${notification.title}`}
+                      aria-label={t(
+                        'ui.notifications.removeNotification',
+                        'Remove notification: {{title}}',
+                        { title: notification.title },
+                      )}
                       onClick={(e) => {
                         e.stopPropagation();
                         removeNotification(notification.id);

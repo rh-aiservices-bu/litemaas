@@ -84,6 +84,7 @@
   "adminUsage": {
     "accessDenied": "Zugriff verweigert",
     "activeUsers": "Aktive Benutzer",
+    "apiKeyFilterChanged": "Filtern nach {{count}} API-Schlüssel(n)",
     "apiKeysCleared": "API-Schlüssel-Filter deaktiviert - wählen Sie zuerst Benutzer aus",
     "apiKeysFilterAdjusted": "API-Schlüssel-Filter wurde möglicherweise geändert - bitte überprüfen Sie Ihre Auswahl",
     "apiKeysFilterAvailable": "API-Schlüssel-Filter ist jetzt verfügbar",
@@ -363,6 +364,9 @@
     "yearly": "Yearly",
     "yes": "Ja"
   },
+  "errors": {
+    "maxRetriesExceeded": "Maximale Anzahl an Wiederholungen überschritten"
+  },
   "models": {
     "admin": {
       "apiBaseUrl": "API-Basis-URL",
@@ -619,6 +623,8 @@
         "description": "Beschreibung",
         "expires": "Läuft ab",
         "keyDetails": "Schlüssel-Details",
+        "keyDetailsAriaLabel": "Schlüsseldetails",
+        "keyLimitsAriaLabel": "Schlüssel-Limits",
         "lastUsed": "Zuletzt verwendet",
         "rateLimit": "Ratenlimit",
         "rateLimitLabel": "Ratenlimit (Anfragen pro Minute)",
@@ -635,6 +641,7 @@
         "keyCreatedMessage": "Ihr API-Schlüssel wurde erfolgreich erstellt.",
         "keyCreatedSuccess": "{{name}} wurde erfolgreich erstellt",
         "keyDeleted": "{{name}} wurde gelöscht",
+        "keyArchivedMessage": "Dieser API-Schlüssel wurde archiviert und ist nicht mehr aktiv.",
         "keyExpiredMessage": "Dieser API-Schlüssel ist am {{date}} abgelaufen.",
         "keyRevokedMessage": "Dieser API-Schlüssel wurde widerrufen und kann nicht mehr verwendet werden.",
         "keyUpdatedSuccess": "{{name}} wurde erfolgreich aktualisiert",
@@ -659,6 +666,7 @@
         "createdTitle": "API-Schlüssel erfolgreich erstellt",
         "deleteTitle": "API-Schlüssel löschen",
         "editTitle": "API-Schlüssel bearbeiten",
+        "keyArchived": "Schlüssel archiviert",
         "keyExpired": "Schlüssel abgelaufen",
         "keyRevoked": "Schlüssel widerrufen",
         "secureRetrieval": "Sichere Schlüsselabfrage",
@@ -1048,6 +1056,21 @@
         "usageAriaLabel": "Zur Nutzungs-Seite navigieren, um Ihre API-Nutzung und Metriken zu überwachen",
         "usageDescription": "Ihre API-Nutzung überwachen"
       },
+      "dashboard": {
+        "completionTokens": "Completion-Tokens",
+        "completionTokensAriaLabel": "Completion-Tokens der letzten 7 Tage: {{count}}",
+        "copyEndpoint": "Endpoint-URL kopieren",
+        "endpointCopied": "Kopiert",
+        "endpointCopiedDescription": "Die API-Endpoint-URL wurde in die Zwischenablage kopiert",
+        "endpointDescription": "Verwenden Sie diese URL für API-Anfragen",
+        "endpointTitle": "API-Endpoint",
+        "noBudgetConfigured": "Für Ihr Konto ist derzeit kein Budgetlimit konfiguriert.",
+        "promptTokens": "Prompt-Tokens",
+        "promptTokensAriaLabel": "Prompt-Tokens der letzten 7 Tage: {{count}}",
+        "tokenSubtitle": "Letzte 7 Tage",
+        "totalTokens": "Tokens gesamt",
+        "totalTokensAriaLabel": "Tokens gesamt der letzten 7 Tage: {{count}}"
+      },
       "subtitle": "Ihre Model-as-a-Service-Plattform für den Zugriff und die Verwaltung von KI-Modellen.",
       "title": "Willkommen bei LiteMaaS"
     },
@@ -1130,6 +1153,10 @@
         "input": "Eingabe",
         "output": "Ausgabe",
         "separator": "•"
+      },
+      "popularity": {
+        "tooltip": "Monatliche Beliebtheit",
+        "ariaLabel": "Beliebtheitsbewertung: {{rating}} von 5 Sternen"
       },
       "pricingLabel": "Preisgestaltung: N/A",
       "restrictedAccess": "Restricted Access",
@@ -1337,6 +1364,7 @@
         "createBackup": "Sicherung erstellen",
         "creating": "Wird erstellt...",
         "table": {
+          "ariaLabel": "Sicherungstabelle",
           "database": "Datenbank",
           "timestamp": "Zeitstempel",
           "size": "Größe",
@@ -1504,8 +1532,25 @@
       "variantInfo": "Info (Blau)",
       "variantSuccess": "Erfolg (Grün)",
       "variantWarning": "Warnung (Orange)",
+      "viewBanner": "Banner ansehen",
       "visibility": "Sichtbarkeit",
-      "visible": "Sichtbar"
+      "visible": "Sichtbar",
+      "usageSync": {
+        "tabTitle": "Nutzungsdaten-Synchronisierung",
+        "title": "Nutzungsdaten-Synchronisierung",
+        "description": "Nutzungsdaten aus LiteLLM für einen ausgewählten Datumsbereich erneut importieren. Dabei werden gecachte Daten gelöscht und mit aktuellen Berechnungen neu abgerufen. Verwenden Sie diese Funktion nach Migrationen oder wenn Nutzungsdaten neu berechnet werden müssen. Wählen Sie einen Datumsbereich und verarbeiten Sie ihn in überschaubaren Blöcken, um eine Überlastung des Systems zu vermeiden.",
+        "startDate": "Startdatum",
+        "endDate": "Enddatum",
+        "resyncButton": "Nutzungsdaten aktualisieren",
+        "syncing": "Synchronisierung läuft...",
+        "invalidRange": "Das Startdatum muss vor oder gleich dem Enddatum liegen.",
+        "adminRequired": "Administratorzugriff erforderlich, um Nutzungsdaten zu synchronisieren.",
+        "notifications": {
+          "successTitle": "Nutzungsdaten synchronisiert",
+          "success": "{{processed}} von {{total}} Tagen der Nutzungsdaten erfolgreich neu synchronisiert.",
+          "errorTitle": "Synchronisierung der Nutzungsdaten fehlgeschlagen"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {
@@ -1652,6 +1697,7 @@
   },
   "status": {
     "active": "Aktiv",
+    "archived": "Archiviert",
     "inactive": "Inaktiv"
   },
   "ui": {
@@ -1714,6 +1760,7 @@
       "configLoadFailed": "Fehler beim Laden der Anwendungskonfiguration",
       "details": "Details",
       "errorCode": "Fehlercode",
+      "errorDetails": "Fehlerdetails",
       "field": "Feld",
       "general": "Ein Fehler ist aufgetreten",
       "hideDetails": "Details ausblenden",
@@ -1727,7 +1774,6 @@
       "showDetails": "Details anzeigen",
       "somethingWentWrong": "Etwas ist schiefgelaufen",
       "somethingWentWrongDesc": "Es tut uns leid, aber etwas Unerwartetes ist passiert. Bitte versuchen Sie, die Seite zu aktualisieren oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
-      "somethingWrong": "Etwas ist schief gelaufen",
       "statusCode": "Statuscode",
       "title": "Fehler",
       "tryRefresh": "Es tut uns leid, aber etwas Unerwartetes ist passiert. Bitte versuchen Sie, die Seite zu aktualisieren oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
@@ -1783,6 +1829,7 @@
       "noNotificationsFound": "Keine Benachrichtigungen gefunden",
       "notificationSrTitle": "Benachrichtigung",
       "notificationsLabel": "Benachrichtigungen",
+      "removeNotification": "Benachrichtigung entfernen: {{title}}",
       "title": "Benachrichtigungen"
     },
     "pagination": {
@@ -1893,6 +1940,10 @@
       "revokeError": "Widerruf fehlgeschlagen",
       "revokeSuccess": "API-Schlüssel widerrufen",
       "revokeSuccessDesc": "Der API-Schlüssel wurde erfolgreich deaktiviert.",
+      "unarchive": "Archivierung aufheben",
+      "unarchiveError": "Archivierung fehlgeschlagen",
+      "unarchiveSuccess": "API-Schlüssel wiederhergestellt",
+      "unarchiveSuccessDesc": "Der API-Schlüssel wurde wiederhergestellt und ist nun für den Benutzer sichtbar.",
       "rpm": "RPM",
       "rpmLimit": "RPM-Limit",
       "status": "Status",

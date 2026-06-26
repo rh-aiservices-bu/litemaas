@@ -100,6 +100,7 @@ const UserSubscriptionsTab: React.FC<UserSubscriptionsTabProps> = ({ userId, can
     {
       onSuccess: () => {
         queryClient.invalidateQueries(['admin-user-subscriptions', userId]);
+        queryClient.invalidateQueries(['admin-user-api-keys', userId]);
         addNotification({
           title: t('users.subscriptions.removeSuccess', 'Subscription Removed'),
           description: t(

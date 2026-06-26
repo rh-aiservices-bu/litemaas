@@ -86,6 +86,7 @@
     "activeUsers": "Utenti Attivi",
     "apiKeysCleared": "Filtro chiavi API disabilitato - seleziona prima gli utenti",
     "apiKeysFilterAdjusted": "Il filtro chiavi API potrebbe essere cambiato - controlla le selezioni",
+    "apiKeyFilterChanged": "Filtro per {{count}} chiave/i API",
     "apiKeysFilterAvailable": "Il filtro chiavi API è ora disponibile",
     "budgetSummary": {
       "period": "Periodo: {{period}}",
@@ -363,6 +364,9 @@
     "yearly": "Yearly",
     "yes": "Sì"
   },
+  "errors": {
+    "maxRetriesExceeded": "Numero massimo di tentativi superato"
+  },
   "models": {
     "admin": {
       "apiBaseUrl": "URL Base API",
@@ -619,6 +623,8 @@
         "description": "Descrizione",
         "expires": "Scade",
         "keyDetails": "Dettagli Chiave",
+        "keyDetailsAriaLabel": "Dettagli della chiave",
+        "keyLimitsAriaLabel": "Limiti della chiave",
         "lastUsed": "Ultimo Utilizzo",
         "rateLimit": "Limite di Frequenza",
         "rateLimitLabel": "Limite di frequenza (richieste al minuto)",
@@ -635,6 +641,7 @@
         "keyCreatedMessage": "La tua chiave API è stata creata con successo.",
         "keyCreatedSuccess": "{{name}} è stata creata con successo",
         "keyDeleted": "{{name}} è stata eliminata",
+        "keyArchivedMessage": "Questa chiave API è stata archiviata e non è più attiva.",
         "keyExpiredMessage": "Questa chiave API è scaduta il {{date}}.",
         "keyRevokedMessage": "Questa chiave API è stata revocata e non può più essere utilizzata.",
         "keyUpdatedSuccess": "{{name}} è stata aggiornata con successo",
@@ -659,6 +666,7 @@
         "createdTitle": "Chiave API Creata con Successo",
         "deleteTitle": "Elimina Chiave API",
         "editTitle": "Modifica Chiave API",
+        "keyArchived": "Chiave Archiviata",
         "keyExpired": "Chiave Scaduta",
         "keyRevoked": "Chiave Revocata",
         "secureRetrieval": "Recupero Sicuro Chiave",
@@ -1048,6 +1056,21 @@
         "usageAriaLabel": "Naviga alla pagina Utilizzo per monitorare il tuo utilizzo API e le metriche",
         "usageDescription": "Monitora il tuo utilizzo API"
       },
+      "dashboard": {
+        "completionTokens": "Token di completamento",
+        "completionTokensAriaLabel": "Token di completamento utilizzati negli ultimi 7 giorni: {{count}}",
+        "copyEndpoint": "Copia URL dell'endpoint",
+        "endpointCopied": "Copiato",
+        "endpointCopiedDescription": "L'URL dell'endpoint API è stato copiato negli appunti",
+        "endpointDescription": "Usa questo URL per effettuare richieste API",
+        "endpointTitle": "Endpoint API",
+        "noBudgetConfigured": "Nessun limite di budget è attualmente configurato per il tuo account.",
+        "promptTokens": "Token di prompt",
+        "promptTokensAriaLabel": "Token di prompt utilizzati negli ultimi 7 giorni: {{count}}",
+        "tokenSubtitle": "Ultimi 7 giorni",
+        "totalTokens": "Token totali",
+        "totalTokensAriaLabel": "Token totali utilizzati negli ultimi 7 giorni: {{count}}"
+      },
       "subtitle": "La tua piattaforma Model as a Service per accedere e gestire i modelli AI.",
       "title": "Benvenuti su LiteMaaS"
     },
@@ -1130,6 +1153,10 @@
         "input": "Input",
         "output": "Output",
         "separator": "•"
+      },
+      "popularity": {
+        "tooltip": "Popolarità mensile",
+        "ariaLabel": "Valutazione di popolarità: {{rating}} su 5 stelle"
       },
       "pricingLabel": "Prezzi: N/D",
       "restrictedAccess": "Restricted Access",
@@ -1337,12 +1364,13 @@
         "createBackup": "Crea backup",
         "creating": "Creazione in corso...",
         "table": {
-          "database": "Database",
-          "timestamp": "Data e ora",
-          "size": "Dimensione",
           "actions": "Azioni",
+          "ariaLabel": "Tabella dei backup",
+          "database": "Database",
           "empty": "Nessun backup trovato",
-          "emptyDescription": "Crea un backup per iniziare."
+          "emptyDescription": "Crea un backup per iniziare.",
+          "size": "Dimensione",
+          "timestamp": "Data e ora"
         },
         "download": "Scarica",
         "restore": "Ripristina",
@@ -1504,8 +1532,25 @@
       "variantInfo": "Info (Blu)",
       "variantSuccess": "Successo (Verde)",
       "variantWarning": "Avvertimento (Arancione)",
+      "viewBanner": "Visualizza Banner",
       "visibility": "Visibilità",
-      "visible": "Visibile"
+      "visible": "Visibile",
+      "usageSync": {
+        "tabTitle": "Sincronizzazione dati di utilizzo",
+        "title": "Sincronizzazione dati di utilizzo",
+        "description": "Reimporta i dati di utilizzo da LiteLLM per un intervallo di date selezionato. Questa operazione elimina i dati in cache e li recupera con i calcoli aggiornati. Utilizzala dopo le migrazioni o quando i dati di utilizzo devono essere ricalcolati. Seleziona un intervallo di date ed elabora in blocchi gestibili per evitare il sovraccarico del sistema.",
+        "startDate": "Data di inizio",
+        "endDate": "Data di fine",
+        "resyncButton": "Aggiorna dati di utilizzo",
+        "syncing": "Sincronizzazione in corso...",
+        "invalidRange": "La data di inizio deve essere precedente o uguale alla data di fine.",
+        "adminRequired": "Accesso amministratore richiesto per sincronizzare i dati di utilizzo.",
+        "notifications": {
+          "successTitle": "Dati di utilizzo sincronizzati",
+          "success": "Risincronizzati correttamente {{processed}} di {{total}} giorni di dati di utilizzo.",
+          "errorTitle": "Sincronizzazione dati di utilizzo non riuscita"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {
@@ -1652,6 +1697,7 @@
   },
   "status": {
     "active": "Attivo",
+    "archived": "Archiviata",
     "inactive": "Inattivo"
   },
   "ui": {
@@ -1714,6 +1760,7 @@
       "configLoadFailed": "Impossibile caricare la configurazione dell'applicazione",
       "details": "Dettagli",
       "errorCode": "Codice errore",
+      "errorDetails": "Dettagli dell'errore",
       "field": "Campo",
       "general": "Si è verificato un errore",
       "hideDetails": "Nascondi dettagli",
@@ -1727,7 +1774,6 @@
       "showDetails": "Mostra dettagli",
       "somethingWentWrong": "Qualcosa è andato storto",
       "somethingWentWrongDesc": "Ci dispiace, ma si è verificato qualcosa di inaspettato. Prova ad aggiornare la pagina o contatta il supporto se il problema persiste.",
-      "somethingWrong": "Qualcosa è andato storto",
       "statusCode": "Codice di stato",
       "title": "Errore",
       "tryRefresh": "Ci dispiace, ma si è verificato qualcosa di inaspettato. Prova ad aggiornare la pagina o contatta il supporto se il problema persiste.",
@@ -1782,6 +1828,7 @@
       "noNotificationsDescription": "Al momento non ci sono notifiche.",
       "noNotificationsFound": "Nessuna notifica trovata",
       "notificationSrTitle": "Notifica",
+      "removeNotification": "Rimuovi notifica: {{title}}",
       "notificationsLabel": "Notifiche",
       "title": "Notifiche"
     },
@@ -1893,6 +1940,10 @@
       "revokeError": "Revoca Fallita",
       "revokeSuccess": "Chiave API Revocata",
       "revokeSuccessDesc": "La chiave API è stata disattivata con successo.",
+      "unarchive": "Ripristina",
+      "unarchiveError": "Ripristino non riuscito",
+      "unarchiveSuccess": "Chiave API Ripristinata",
+      "unarchiveSuccessDesc": "La chiave API è stata ripristinata ed è ora visibile all'utente.",
       "rpm": "RPM",
       "rpmLimit": "Limite RPM",
       "status": "Stato",

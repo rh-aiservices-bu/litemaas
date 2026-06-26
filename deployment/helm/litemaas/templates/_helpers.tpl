@@ -106,6 +106,18 @@ app.kubernetes.io/component: {{ .component }}
 
 {{/* ========== Secret name helpers ========== */}}
 
+{{- define "litemaas.redis.authEnabled" -}}
+{{- if or .Values.redis.auth.password .Values.redis.auth.existingSecret -}}true{{- end -}}
+{{- end -}}
+
+{{- define "litemaas.redis.secretName" -}}
+{{- if .Values.redis.auth.existingSecret }}
+{{- .Values.redis.auth.existingSecret }}
+{{- else }}
+{{- include "litemaas.redis.fullname" . }}
+{{- end }}
+{{- end }}
+
 {{- define "litemaas.postgresql.secretName" -}}
 {{- if .Values.postgresql.auth.existingSecret }}
 {{- .Values.postgresql.auth.existingSecret }}
@@ -372,12 +384,8 @@ Call with dict "context" $ "secretName" "xxx" "secretKey" "database-url"
 {{- define "litemaas.initWaitForDatabase" -}}
 - name: wait-for-database
   image: {{ .context.Values.postgresql.image.repository }}:{{ .context.Values.postgresql.image.tag }}
-  {{- if eq .context.Values.global.platform "openshift" }}
   securityContext:
-    allowPrivilegeEscalation: false
-    capabilities:
-      drop: [ALL]
-  {{- end }}
+    {{- toYaml .context.Values.containerSecurityContext | nindent 4 }}
   command:
     - sh
     - -c
@@ -413,6 +421,9 @@ Uses busybox on Kubernetes, OpenShift tools image on OpenShift.
   {{- else }}
   image: busybox:1.36
   {{- end }}
+  securityContext:
+    {{- toYaml .Values.containerSecurityContext | nindent 4 }}
+    runAsUser: 65534
   command: ['sh', '-c']
   args:
     - |

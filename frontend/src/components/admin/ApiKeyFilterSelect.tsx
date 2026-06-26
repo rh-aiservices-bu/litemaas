@@ -32,6 +32,7 @@ interface ApiKeyFilterSelectProps {
   onSelect: (keyAliases: string[]) => void;
   selectedUserIds: string[];
   isDisabled?: boolean;
+  useAdminEndpoint?: boolean;
 }
 
 /**
@@ -44,6 +45,7 @@ export const ApiKeyFilterSelect: React.FC<ApiKeyFilterSelectProps> = ({
   onSelect,
   selectedUserIds,
   isDisabled = false,
+  useAdminEndpoint = true,
 }) => {
   const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -58,21 +60,45 @@ export const ApiKeyFilterSelect: React.FC<ApiKeyFilterSelectProps> = ({
 
   const NO_RESULTS = 'no results';
 
-  // Fetch API keys from API - only when users are selected
+  // Fetch API keys - admin path uses /admin/api-keys, user path uses /api-keys
   const { data: apiKeysData, error: apiKeysError } = useQuery(
-    ['api-keys-for-filter', selectedUserIds.sort().join(',')],
+    useAdminEndpoint
+      ? ['api-keys-for-filter', selectedUserIds.sort().join(',')]
+      : ['user-api-keys-for-filter'],
     async () => {
-      const params = new URLSearchParams();
-      selectedUserIds.forEach((id) => params.append('userIds', id));
-      const response = await apiClient.get<{ apiKeys: ApiKeyOption[] }>(
-        `/admin/api-keys?${params.toString()}`,
-      );
-      return response.apiKeys;
+      if (useAdminEndpoint) {
+        const params = new URLSearchParams();
+        selectedUserIds.forEach((id) => params.append('userIds', id));
+        const response = await apiClient.get<{ apiKeys: ApiKeyOption[] }>(
+          `/admin/api-keys?${params.toString()}`,
+        );
+        return response.apiKeys;
+      } else {
+        const response = await apiClient.get<{
+          data: Array<{
+            id: string;
+            name: string;
+            liteLLMKeyAlias?: string;
+            keyPrefix: string;
+            isActive: boolean;
+          }>;
+        }>('/api-keys?limit=100&isActive=true');
+        return response.data
+          .filter((key) => key.liteLLMKeyAlias)
+          .map((key) => ({
+            id: key.id,
+            name: key.name,
+            keyAlias: key.liteLLMKeyAlias!,
+            userId: '',
+            username: '',
+            email: '',
+          }));
+      }
     },
     {
       staleTime: 5 * 60 * 1000, // 5 minutes
       refetchOnWindowFocus: false,
-      enabled: selectedUserIds.length > 0 && !isDisabled,
+      enabled: useAdminEndpoint ? selectedUserIds.length > 0 && !isDisabled : !isDisabled,
     },
   );
 
@@ -81,7 +107,7 @@ export const ApiKeyFilterSelect: React.FC<ApiKeyFilterSelectProps> = ({
   // Convert API keys to select options
   const initialSelectOptions: SelectOptionProps[] = allApiKeys.map((apiKey) => ({
     value: apiKey.keyAlias,
-    children: `${apiKey.name} (${apiKey.username})`,
+    children: useAdminEndpoint ? `${apiKey.name} (${apiKey.username})` : apiKey.name,
   }));
 
   // Helper function to truncate text
@@ -128,7 +154,7 @@ export const ApiKeyFilterSelect: React.FC<ApiKeyFilterSelectProps> = ({
   }, [inputValue, initialSelectOptions.length]);
 
   useEffect(() => {
-    if (isDisabled || selectedUserIds.length === 0) {
+    if (useAdminEndpoint && (isDisabled || selectedUserIds.length === 0)) {
       setPlaceholder(
         t('adminUsage.filters.apiKeysPlaceholder', 'Select users first to filter by API keys'),
       );
@@ -139,7 +165,7 @@ export const ApiKeyFilterSelect: React.FC<ApiKeyFilterSelectProps> = ({
     } else {
       setPlaceholder(''); // Empty when labels are shown
     }
-  }, [selected, selectedUserIds, isDisabled, t]);
+  }, [selected, selectedUserIds, isDisabled, useAdminEndpoint, t]);
 
   // Show error state if API key loading failed
   useEffect(() => {
@@ -150,18 +176,21 @@ export const ApiKeyFilterSelect: React.FC<ApiKeyFilterSelectProps> = ({
 
   // Show no API keys available state
   useEffect(() => {
+    const hasUsers = useAdminEndpoint ? selectedUserIds.length > 0 : true;
     if (
-      selectedUserIds.length > 0 &&
+      hasUsers &&
       !isDisabled &&
       !apiKeysError &&
       allApiKeys.length === 0 &&
       apiKeysData !== undefined
     ) {
       setPlaceholder(
-        t('adminUsage.filters.noApiKeysAvailable', 'No API keys available for selected users'),
+        useAdminEndpoint
+          ? t('adminUsage.filters.noApiKeysAvailable', 'No API keys available for selected users')
+          : t('adminUsage.filters.noApiKeysAvailableUser', 'No API keys available'),
       );
     }
-  }, [selectedUserIds, isDisabled, apiKeysError, allApiKeys, apiKeysData, t]);
+  }, [selectedUserIds, isDisabled, apiKeysError, allApiKeys, apiKeysData, useAdminEndpoint, t]);
 
   const createItemId = (value: any) =>
     `select-multi-typeahead-api-keys-${value.replace(/[^a-zA-Z0-9]/g, '-')}`;

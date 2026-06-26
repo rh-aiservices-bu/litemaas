@@ -4,6 +4,9 @@ import { AuthenticatedRequest } from '../types';
 import { LoginResponseSchema, AuthCallbackQuerySchema, TokenResponseSchema } from '../schemas';
 import { ApplicationError } from '../utils/errors';
 
+const DEV_ALLOWED_ENVS = ['development', 'test'];
+const hideDevEndpoints = !DEV_ALLOWED_ENVS.includes(process.env.NODE_ENV || '');
+
 interface DevTokenRequestBody {
   username?: string;
   roles?: string[];
@@ -85,7 +88,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       tags: ['Authentication'],
       description: 'Get development JWT token for frontend (development only)',
-      hide: process.env.NODE_ENV === 'production',
+      hide: hideDevEndpoints,
       body: {
         type: 'object',
         properties: {
@@ -114,8 +117,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     handler: async (request, _reply) => {
-      // Only allow in development or with explicit dev token environment variable
-      if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_DEV_TOKENS) {
+      if (!DEV_ALLOWED_ENVS.includes(process.env.NODE_ENV || '')) {
         throw fastify.createError(404, 'Endpoint not available');
       }
 
@@ -183,7 +185,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       tags: ['Authentication'],
       description: 'Mock login for development (hidden in production)',
-      hide: process.env.NODE_ENV === 'production',
+      hide: hideDevEndpoints,
       querystring: {
         type: 'object',
         properties: {
@@ -194,7 +196,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     handler: async (request, reply) => {
-      if (process.env.NODE_ENV === 'production') {
+      if (!DEV_ALLOWED_ENVS.includes(process.env.NODE_ENV || '')) {
         throw fastify.createNotFoundError('Endpoint');
       }
 
@@ -335,7 +337,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       tags: ['Authentication'],
       description: 'List mock users for development',
-      hide: process.env.NODE_ENV === 'production',
+      hide: hideDevEndpoints,
       response: {
         200: {
           type: 'array',
@@ -353,7 +355,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       },
     },
     handler: async (_request, _reply) => {
-      if (process.env.NODE_ENV === 'production') {
+      if (!DEV_ALLOWED_ENVS.includes(process.env.NODE_ENV || '')) {
         throw fastify.createNotFoundError('Endpoint');
       }
 

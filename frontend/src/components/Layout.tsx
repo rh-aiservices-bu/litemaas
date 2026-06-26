@@ -87,8 +87,6 @@ const Layout: React.FC = () => {
   const location = useLocation();
 
   // Refs for dropdown management
-  const languageDropdownRef = useRef<HTMLUListElement>(null);
-  const userDropdownRef = useRef<HTMLUListElement>(null);
   const languageToggleRef = useRef<HTMLButtonElement>(null);
   const userToggleRef = useRef<HTMLButtonElement>(null);
 
@@ -317,7 +315,7 @@ const Layout: React.FC = () => {
   );
 
   const languageDropdownItemsJSX = (
-    <DropdownList ref={languageDropdownRef} onKeyDown={handleLanguageDropdownKeyDown}>
+    <DropdownList onKeyDown={handleLanguageDropdownKeyDown}>
       {languageDropdownItems.map((item, index) => (
         <DropdownItem
           key={item.key}
@@ -333,7 +331,7 @@ const Layout: React.FC = () => {
   );
 
   const userDropdownItemsJSX = (
-    <DropdownList ref={userDropdownRef} onKeyDown={handleUserDropdownKeyDown}>
+    <DropdownList onKeyDown={handleUserDropdownKeyDown}>
       <DropdownItem isDisabled key="user-info" role="presentation">
         <div style={{ padding: '0.5rem 0' }}>
           <div style={{ fontWeight: 'bold' }}>{user?.name || user?.username}</div>

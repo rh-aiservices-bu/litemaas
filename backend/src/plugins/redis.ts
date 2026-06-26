@@ -5,6 +5,7 @@ import Redis from 'ioredis';
 const redisPlugin: FastifyPluginAsync = async (fastify) => {
   const redisHost = fastify.config.REDIS_HOST;
   const redisPort = parseInt(fastify.config.REDIS_PORT || '6379');
+  const redisPassword = fastify.config.REDIS_PASSWORD || undefined;
 
   if (!redisHost) {
     fastify.log.info('REDIS_HOST not set — Redis cache flush disabled');
@@ -21,6 +22,7 @@ const redisPlugin: FastifyPluginAsync = async (fastify) => {
     client = new Redis({
       host: redisHost,
       port: redisPort,
+      password: redisPassword,
       maxRetriesPerRequest: 3,
       retryStrategy(times) {
         if (times > 3) return null; // stop retrying

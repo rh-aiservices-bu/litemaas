@@ -223,6 +223,7 @@
       "totalRequests": "请求数",
       "totalTokens": "总令牌数"
     },
+    "apiKeyFilterChanged": "按 {{count}} 个 API 密钥筛选",
     "modelFilterChanged": "按 {{count}} 个模型筛选",
     "noData": "无可用数据",
     "noModelData": "无可用模型数据",
@@ -362,6 +363,9 @@
     "weekly": "Weekly",
     "yearly": "Yearly",
     "yes": "是"
+  },
+  "errors": {
+    "maxRetriesExceeded": "已超过最大重试次数"
   },
   "models": {
     "admin": {
@@ -619,6 +623,8 @@
         "description": "描述",
         "expires": "过期时间",
         "keyDetails": "密钥详情",
+        "keyDetailsAriaLabel": "密钥详情",
+        "keyLimitsAriaLabel": "密钥限制",
         "lastUsed": "最后使用",
         "rateLimit": "速率限制",
         "rateLimitLabel": "速率限制（每分钟请求数）",
@@ -635,6 +641,7 @@
         "keyCreatedMessage": "您的API密钥已成功创建。",
         "keyCreatedSuccess": "{{name}}已成功创建",
         "keyDeleted": "{{name}}已被删除",
+        "keyArchivedMessage": "此API密钥已被归档，不再处于活跃状态。",
         "keyExpiredMessage": "此API密钥已于{{date}}过期。",
         "keyRevokedMessage": "此API密钥已被撤销，无法再使用。",
         "keyUpdatedSuccess": "{{name}} 已成功更新",
@@ -659,6 +666,7 @@
         "createdTitle": "API密钥创建成功",
         "deleteTitle": "删除API密钥",
         "editTitle": "编辑API密钥",
+        "keyArchived": "密钥已归档",
         "keyExpired": "密钥已过期",
         "keyRevoked": "密钥已撤销",
         "secureRetrieval": "安全密钥检索",
@@ -1048,6 +1056,21 @@
         "usageAriaLabel": "导航到使用情况页面以监控您的API使用情况和指标",
         "usageDescription": "监控您的API使用情况"
       },
+      "dashboard": {
+        "completionTokens": "补全 Token",
+        "completionTokensAriaLabel": "过去 7 天使用的补全 Token：{{count}}",
+        "copyEndpoint": "复制端点 URL",
+        "endpointCopied": "已复制",
+        "endpointCopiedDescription": "API 端点 URL 已复制到剪贴板",
+        "endpointDescription": "使用此 URL 发送 API 请求",
+        "endpointTitle": "API 端点",
+        "noBudgetConfigured": "您的账户当前未设置预算限额。",
+        "promptTokens": "Prompt Token",
+        "promptTokensAriaLabel": "过去 7 天使用的 Prompt Token：{{count}}",
+        "tokenSubtitle": "过去 7 天",
+        "totalTokens": "Token 总计",
+        "totalTokensAriaLabel": "过去 7 天使用的 Token 总计：{{count}}"
+      },
       "subtitle": "您的模型即服务平台，用于访问和管理AI模型。",
       "title": "欢迎使用LiteMaaS"
     },
@@ -1130,6 +1153,10 @@
         "input": "输入",
         "output": "输出",
         "separator": "•"
+      },
+      "popularity": {
+        "tooltip": "月度热度",
+        "ariaLabel": "热度评分：{{rating}}/5 星"
       },
       "pricingLabel": "价格：不适用",
       "restrictedAccess": "Restricted Access",
@@ -1337,6 +1364,7 @@
         "createBackup": "创建备份",
         "creating": "创建中...",
         "table": {
+          "ariaLabel": "备份表",
           "database": "数据库",
           "timestamp": "时间",
           "size": "大小",
@@ -1505,7 +1533,24 @@
       "variantSuccess": "成功（绿色）",
       "variantWarning": "警告（橙色）",
       "visibility": "可见性",
-      "visible": "可见"
+      "viewBanner": "查看横幅",
+      "visible": "可见",
+      "usageSync": {
+        "tabTitle": "使用数据同步",
+        "title": "使用数据同步",
+        "description": "从 LiteLLM 重新导入所选日期范围的使用数据。此操作将删除缓存数据并使用最新计算重新获取。可在迁移后或使用数据需要重新计算时使用。请选择日期范围并分批处理，以避免系统过载。",
+        "startDate": "开始日期",
+        "endDate": "结束日期",
+        "resyncButton": "刷新使用数据",
+        "syncing": "同步中...",
+        "invalidRange": "开始日期必须早于或等于结束日期。",
+        "adminRequired": "同步使用数据需要管理员权限。",
+        "notifications": {
+          "successTitle": "使用数据已同步",
+          "success": "已成功重新同步 {{total}} 天中的 {{processed}} 天使用数据。",
+          "errorTitle": "使用数据同步失败"
+        }
+      }
     },
     "usage": {
       "ariaLabels": {
@@ -1652,6 +1697,7 @@
   },
   "status": {
     "active": "活跃",
+    "archived": "已归档",
     "inactive": "非活跃"
   },
   "ui": {
@@ -1714,6 +1760,7 @@
       "configLoadFailed": "加载应用程序配置失败",
       "details": "详情",
       "errorCode": "错误代码",
+      "errorDetails": "错误详情",
       "field": "字段",
       "general": "发生了错误",
       "hideDetails": "隐藏详情",
@@ -1727,7 +1774,6 @@
       "showDetails": "显示详情",
       "somethingWentWrong": "出现问题",
       "somethingWentWrongDesc": "抱歉，发生了意外情况。请尝试刷新页面，如果问题仍然存在，请联系支持。",
-      "somethingWrong": "出现问题",
       "statusCode": "状态代码",
       "title": "错误",
       "tryRefresh": "抱歉，发生了意外情况。请尝试刷新页面，如果问题仍然存在，请联系支持。",
@@ -1782,6 +1828,7 @@
       "noNotificationsDescription": "当前没有通知。",
       "noNotificationsFound": "未找到通知",
       "notificationSrTitle": "通知",
+      "removeNotification": "删除通知：{{title}}",
       "notificationsLabel": "通知",
       "title": "通知"
     },
@@ -1893,6 +1940,10 @@
       "revokeError": "撤销失败",
       "revokeSuccess": "API 密钥已撤销",
       "revokeSuccessDesc": "API 密钥已成功停用。",
+      "unarchive": "取消归档",
+      "unarchiveError": "取消归档失败",
+      "unarchiveSuccess": "API 密钥已取消归档",
+      "unarchiveSuccessDesc": "API 密钥已恢复，用户现在可以看到该密钥。",
       "rpm": "RPM",
       "rpmLimit": "RPM限制",
       "status": "状态",

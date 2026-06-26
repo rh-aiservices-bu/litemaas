@@ -37,6 +37,8 @@ describe('OAuthService', () => {
     };
     mockDefaultTeamService = {
       ensureUserMembership: vi.fn(),
+      ensureDefaultTeamExists: vi.fn().mockResolvedValue(undefined),
+      assignUserToDefaultTeam: vi.fn().mockResolvedValue(undefined),
     };
 
     service = new OAuthService(mockFastify, mockLiteLLMService, mockDefaultTeamService);
@@ -291,7 +293,8 @@ describe('OAuthService', () => {
     it('should query database for existing user', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // Check for existing user by oauth_id
+        .mockResolvedValueOnce(null) // Email migration check by email
         .mockResolvedValueOnce(null) // system_settings query (user_defaults)
         .mockResolvedValueOnce(mockUserDbRow); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
@@ -308,7 +311,8 @@ describe('OAuthService', () => {
     it('should create new user with INSERT RETURNING', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // Check for existing user by oauth_id
+        .mockResolvedValueOnce(null) // Email migration check by email
         .mockResolvedValueOnce(null) // system_settings query (user_defaults)
         .mockResolvedValueOnce(mockUserDbRow); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
@@ -346,7 +350,8 @@ describe('OAuthService', () => {
     it('should handle LiteLLM sync errors gracefully', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // Check for existing user by oauth_id
+        .mockResolvedValueOnce(null) // Email migration check by email
         .mockResolvedValueOnce(null) // system_settings query (user_defaults)
         .mockResolvedValueOnce(mockUserDbRow); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
@@ -363,7 +368,8 @@ describe('OAuthService', () => {
     it('should log info on successful user creation', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // Check for existing user by oauth_id
+        .mockResolvedValueOnce(null) // Email migration check by email
         .mockResolvedValueOnce(null) // system_settings query (user_defaults)
         .mockResolvedValueOnce(mockUserDbRow); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
@@ -387,7 +393,8 @@ describe('OAuthService', () => {
     it('should map admin groups correctly', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // Check for existing user by oauth_id
+        .mockResolvedValueOnce(null) // Email migration check by email
         .mockResolvedValueOnce(null) // system_settings query (user_defaults)
         .mockResolvedValueOnce({ ...mockUserDbRow, roles: ['user', 'admin'] }); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
@@ -403,7 +410,8 @@ describe('OAuthService', () => {
     it('should map readonly groups correctly', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // Check for existing user by oauth_id
+        .mockResolvedValueOnce(null) // Email migration check by email
         .mockResolvedValueOnce(null) // system_settings query (user_defaults)
         .mockResolvedValueOnce({ ...mockUserDbRow, roles: ['user', 'admin-readonly'] }); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
@@ -419,7 +427,8 @@ describe('OAuthService', () => {
     it('should default to user role for unknown groups', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // Check for existing user by oauth_id
+        .mockResolvedValueOnce(null) // Email migration check by email
         .mockResolvedValueOnce(null) // system_settings query (user_defaults)
         .mockResolvedValueOnce(mockUserDbRow); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
@@ -434,7 +443,8 @@ describe('OAuthService', () => {
     it('should handle empty groups array', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // Check for existing user by oauth_id
+        .mockResolvedValueOnce(null) // Email migration check by email
         .mockResolvedValueOnce(null) // system_settings query (user_defaults)
         .mockResolvedValueOnce(mockUserDbRow); // INSERT RETURNING
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
@@ -449,7 +459,8 @@ describe('OAuthService', () => {
     it('should throw error if user creation fails', async () => {
       mockFastify.dbUtils.queryOne = vi
         .fn()
-        .mockResolvedValueOnce(null) // Check for existing user
+        .mockResolvedValueOnce(null) // Check for existing user by oauth_id
+        .mockResolvedValueOnce(null) // Email migration check by email
         .mockResolvedValueOnce(null) // system_settings query (user_defaults)
         .mockResolvedValueOnce(null); // INSERT RETURNING returns null
       mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });

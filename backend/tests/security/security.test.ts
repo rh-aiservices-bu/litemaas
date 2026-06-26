@@ -8,7 +8,7 @@ describe('Security Tests', () => {
 
   beforeAll(async () => {
     // Use strict authentication mode for security tests
-    app = await createTestApp({ strictAuth: true, logger: false });
+    app = await createTestApp({ logger: false });
   });
 
   afterAll(async () => {
@@ -25,6 +25,7 @@ describe('Security Tests', () => {
         '/api/v1/api-keys',
         '/api/v1/usage/dashboard',
         '/api/v1/users/me/activity',
+        '/api/v1/models/popularity',
       ];
 
       for (const endpoint of protectedEndpoints) {
@@ -57,6 +58,35 @@ describe('Security Tests', () => {
       expect([200, 500]).toContain(modelsResponse.statusCode);
     });
 
+    it('should reject unauthenticated requests with browser-like User-Agent (CWE-287 regression)', async () => {
+      const browserUserAgents = [
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+        'Mozilla/5.0 (X11; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0',
+      ];
+
+      const protectedEndpoints = [
+        { method: 'GET' as const, url: '/api/v1/api-keys' },
+        { method: 'GET' as const, url: '/api/v1/subscriptions' },
+        { method: 'GET' as const, url: '/api/v1/usage/dashboard' },
+      ];
+
+      for (const ua of browserUserAgents) {
+        for (const endpoint of protectedEndpoints) {
+          const response = await app.inject({
+            method: endpoint.method,
+            url: endpoint.url,
+            headers: {
+              'user-agent': ua,
+              accept: 'application/json',
+            },
+          });
+
+          expect(response.statusCode).toBe(401);
+        }
+      }
+    });
+
     it('should reject requests with invalid tokens', async () => {
       const response = await app.inject({
         method: 'GET',
@@ -82,6 +112,29 @@ describe('Security Tests', () => {
       });
 
       expect(response.statusCode).toBe(401);
+    });
+
+    it('should block dev-token, mock-login, and mock-users outside dev/test environments', async () => {
+      const originalNodeEnv = process.env.NODE_ENV;
+      try {
+        process.env.NODE_ENV = 'staging';
+        const stagingApp = await createTestApp({ logger: false });
+
+        const endpoints = [
+          { method: 'POST' as const, url: '/api/auth/dev-token', payload: {} },
+          { method: 'GET' as const, url: '/api/auth/mock-login?state=test' },
+          { method: 'GET' as const, url: '/api/auth/mock-users' },
+        ];
+
+        for (const endpoint of endpoints) {
+          const response = await stagingApp.inject(endpoint);
+          expect(response.statusCode).toBe(404);
+        }
+
+        await stagingApp.close();
+      } finally {
+        process.env.NODE_ENV = originalNodeEnv;
+      }
     });
 
     it('should prevent access to other users resources', async () => {
@@ -121,6 +174,42 @@ describe('Security Tests', () => {
         expect([401, 403]).toContain(user1UsageResponse.statusCode);
         expect([401, 403]).toContain(user2UsageResponse.statusCode);
       }
+    });
+
+    it('should prevent cross-user session invalidation (IDOR)', async () => {
+      const user1Id = 'idor-user-1';
+      const user2Token = generateTestToken('idor-user-2', ['user']);
+      const sessionId = 'idor-test-session';
+
+      // Inject a session owned by user1 directly into the in-memory store
+      const sessionStore = (app.sessionService as any).sessionStore as Map<string, any>;
+      sessionStore.set(sessionId, {
+        id: sessionId,
+        userId: user1Id,
+        token: 'dummy',
+        ipAddress: '127.0.0.1',
+        userAgent: 'vitest',
+        createdAt: new Date(),
+        lastActivityAt: new Date(),
+        expiresAt: new Date(Date.now() + 3600_000),
+        isActive: true,
+      });
+
+      // User2 attempts to invalidate user1's session — should be rejected
+      const response = await app.inject({
+        method: 'DELETE',
+        url: `/api/auth/sessions/${sessionId}`,
+        headers: { authorization: `Bearer ${user2Token}` },
+      });
+      expect(response.statusCode).toBe(404);
+
+      // Verify user1's session is still active after the failed attempt
+      const session = sessionStore.get(sessionId);
+      expect(session).toBeDefined();
+      expect(session.isActive).toBe(true);
+
+      // Clean up
+      sessionStore.delete(sessionId);
     });
 
     it('should validate API key authentication alongside JWT', async () => {

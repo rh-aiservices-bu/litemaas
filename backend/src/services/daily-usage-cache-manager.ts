@@ -521,6 +521,28 @@ export class DailyUsageCacheManager extends BaseService {
     }
   }
 
+  async deleteDateRange(startDate: string, endDate: string): Promise<number> {
+    try {
+      const result = await this.executeQuery<{ rowCount: number }>(
+        `DELETE FROM daily_usage_cache WHERE date >= $1 AND date <= $2`,
+        [startDate, endDate],
+        'deleting cache date range',
+      );
+
+      const deletedCount = result.rowCount || 0;
+
+      this.fastify.log.info(
+        { deletedCount, startDate, endDate },
+        'Deleted cache data for date range',
+      );
+
+      return deletedCount;
+    } catch (error) {
+      this.fastify.log.error({ error, startDate, endDate }, 'Failed to delete cache date range');
+      throw this.mapDatabaseError(error, 'deleting cache date range');
+    }
+  }
+
   // ==========================================
   // Private Helper Methods
   // ==========================================

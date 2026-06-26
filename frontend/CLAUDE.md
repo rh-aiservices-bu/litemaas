@@ -119,16 +119,19 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
 **Admin Component Structure**:
 
 - `components/admin/` - Admin-specific UI components
-  - `MetricsOverview.tsx` - Main analytics dashboard with trend indicators
-  - `TopUsersTable.tsx` - User usage breakdown table
+  - `MetricsOverview.tsx` - Shared usage analytics dashboard with trend indicators and auth-aware admin sections
+  - `TopUsersTable.tsx` - Admin-only user usage breakdown table rendered by `MetricsOverview`
   - `UserFilterSelect.tsx` - Multi-select user filter with search
   - `ApiKeyFilterSelect.tsx` - Cascading API key filter (depends on selected users)
   - `ProviderBreakdownTable.tsx` - Provider metrics (component ready, integration pending)
 - `components/admin/` - Admin user management components
   - `UserProfileTab.tsx` - User profile display with role toggles
   - `UserBudgetLimitsTab.tsx` - Budget and rate limit configuration with utilization tracking
-  - `UserApiKeysTab.tsx` - API key lifecycle management (create, view, revoke)
+  - `UserApiKeysTab.tsx` - API key lifecycle management (create, view, revoke, archive/unarchive)
   - `UserSubscriptionsTab.tsx` - Read-only subscription list with status display
+- `components/admin/` - Admin settings & tools components
+  - `UsageDataSyncTab.tsx` - Usage data re-import tool for selected date ranges
+- `components/StarRating.tsx` - Reusable 1–5 star rating with PatternFly icons, tooltip, and ARIA (used on model cards for popularity)
 - `components/charts/` - Shared chart components
   - `UsageTrends.tsx`, `ModelDistributionChart.tsx`, `ModelUsageTrends.tsx`
   - `UsageHeatmap.tsx` - Weekly heatmap (component ready, integration pending)
@@ -179,7 +182,7 @@ See [`docs/architecture/project-structure.md`](../docs/architecture/project-stru
   - Budget and rate limit configuration with progress indicators
   - API key creation with auto-subscription and revocation
   - RBAC: admin (full access) vs adminReadonly (view only)
-- `/admin/tools` - **Settings and Tools (ToolsPage.tsx)** - Tabs: Limits, Banners, Branding, Currency, Models Sync, Backup
+- `/admin/tools` - **Settings and Tools (ToolsPage.tsx)** - Tabs: Limits, Banners, Branding, Currency, Backup, Usage Data Sync, Models Sync
   - Limits tab: Bulk User Limits (max budget, TPM, RPM for all users) and API Key Quota Defaults (admin-configurable defaults and maximums)
   - Backup tab: Create/restore/test-restore/download/delete database backups for LiteMaaS and LiteLLM (admin only, visible read-only for adminReadonly)
 
@@ -318,9 +321,9 @@ For detailed patterns, see [`docs/development/accessibility/`](../docs/developme
 
 ## 🔗 Environment Variables
 
-Key configuration: `VITE_API_BASE_URL`, `VITE_AUTH_URL`, `VITE_ENABLE_MOCK_AUTH`, `VITE_DEFAULT_LOCALE`
+The frontend has no build-time `VITE_*` configuration of its own. At runtime, the container is configured via `BACKEND_URL` (used to proxy `/api` requests). Auth-mode signaling — including whether mock auth is enabled — comes from the backend's public `GET /api/v1/config` endpoint (`authMode: 'oauth' | 'mock'`), consumed by `LoginPage.tsx`. To toggle mock auth, set `OAUTH_MOCK_ENABLED` on the **backend**, not the frontend.
 
-See [`docs/deployment/configuration.md`](../docs/deployment/configuration.md) for complete list.
+See [`docs/deployment/containers.md`](../docs/deployment/containers.md) for container configuration and [`docs/deployment/configuration.md`](../docs/deployment/configuration.md) for backend environment variables.
 
 ## 🚨 Error Handling Architecture
 

@@ -25,6 +25,8 @@ interface UserBudgetSummaryProps {
   userId: string;
   isAdminView?: boolean;
   username?: string;
+  showNoBudgetMessage?: boolean;
+  isFullHeight?: boolean;
 }
 
 const budgetDurationKeyMap: Record<string, string> = {
@@ -45,6 +47,8 @@ export const UserBudgetSummary: React.FC<UserBudgetSummaryProps> = ({
   userId,
   isAdminView = false,
   username,
+  showNoBudgetMessage = false,
+  isFullHeight = false,
 }) => {
   const { t } = useTranslation();
   const { formatCurrency } = useCurrency();
@@ -90,7 +94,11 @@ export const UserBudgetSummary: React.FC<UserBudgetSummaryProps> = ({
 
   if (isLoading) {
     return (
-      <Card isCompact style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+      <Card
+        isCompact
+        isFullHeight={isFullHeight}
+        style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}
+      >
         <CardBody>
           <Skeleton height="60px" />
         </CardBody>
@@ -111,6 +119,37 @@ export const UserBudgetSummary: React.FC<UserBudgetSummaryProps> = ({
   }
 
   if (!budgetData) {
+    if (showNoBudgetMessage) {
+      return (
+        <Card
+          isCompact
+          isFullHeight={isFullHeight}
+          style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}
+        >
+          <CardTitle>
+            <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
+              <FlexItem>
+                <Icon size="md">
+                  <WalletIcon />
+                </Icon>
+              </FlexItem>
+              <FlexItem>{t('adminUsage.budgetSummary.title', 'Budget (User)')}</FlexItem>
+            </Flex>
+          </CardTitle>
+          <CardBody>
+            <Content
+              component={ContentVariants.small}
+              style={{ color: 'var(--pf-t--global--text--color--subtle)' }}
+            >
+              {t(
+                'pages.home.dashboard.noBudgetConfigured',
+                'No budget limit is currently configured for your account.',
+              )}
+            </Content>
+          </CardBody>
+        </Card>
+      );
+    }
     return null;
   }
 
@@ -129,13 +168,17 @@ export const UserBudgetSummary: React.FC<UserBudgetSummaryProps> = ({
   const spendText = `${formatCurrency(currentSpend)} / ${maxBudget != null ? formatCurrency(maxBudget) : t('users.budget.unlimited', 'Unlimited')}`;
 
   const cardTitle = displayName
-    ? t('usage.budgetSummary.titleForUser', 'Budget (User) — {{username}}', {
+    ? t('adminUsage.budgetSummary.titleForUser', 'Budget (User) — {{username}}', {
         username: displayName,
       })
-    : t('usage.budgetSummary.title', 'Budget (User)');
+    : t('adminUsage.budgetSummary.title', 'Budget (User)');
 
   return (
-    <Card isCompact style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}>
+    <Card
+      isCompact
+      isFullHeight={isFullHeight}
+      style={{ marginBottom: 'var(--pf-t--global--spacer--md)' }}
+    >
       <CardTitle>
         <Flex alignItems={{ default: 'alignItemsCenter' }} gap={{ default: 'gapSm' }}>
           <FlexItem>
@@ -166,7 +209,9 @@ export const UserBudgetSummary: React.FC<UserBudgetSummaryProps> = ({
               {periodLabel && (
                 <FlexItem>
                   <Content component={ContentVariants.small}>
-                    {t('usage.budgetSummary.period', 'Period: {{period}}', { period: periodLabel })}
+                    {t('adminUsage.budgetSummary.period', 'Period: {{period}}', {
+                      period: periodLabel,
+                    })}
                   </Content>
                 </FlexItem>
               )}

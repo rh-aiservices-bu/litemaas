@@ -97,7 +97,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { page = 1, limit = 20, status, modelId } = request.query;
@@ -186,7 +186,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
@@ -269,7 +269,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { modelId, quotaRequests, quotaTokens, expiresAt, metadata } = request.body;
@@ -387,7 +387,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
@@ -443,7 +443,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
@@ -518,7 +518,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
       const { id } = request.params;
@@ -594,7 +594,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
 
@@ -658,7 +658,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: fastify.authenticateWithDevBypass,
+    preHandler: fastify.authenticate,
     handler: async (request, _reply) => {
       try {
         const user = (request as AuthenticatedRequest).user;
@@ -725,6 +725,7 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         properties: {
           userId: { type: 'string' },
         },
+        required: ['userId'],
       },
       response: {
         200: {
@@ -736,10 +737,10 @@ const subscriptionsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: [fastify.authenticate, fastify.requirePermission('subscriptions:write')],
+    preHandler: [fastify.authenticate, fastify.requirePermission('admin:subscriptions:write')],
     handler: async (request, _reply) => {
       const user = (request as AuthenticatedRequest).user;
-      const { userId } = request.body as { userId?: string };
+      const { userId } = request.body as { userId: string };
 
       try {
         const resetCount = await subscriptionService.resetQuotas(userId);
