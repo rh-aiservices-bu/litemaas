@@ -86,6 +86,7 @@
     "activeUsers": "Utenti Attivi",
     "apiKeysCleared": "Filtro chiavi API disabilitato - seleziona prima gli utenti",
     "apiKeysFilterAdjusted": "Il filtro chiavi API potrebbe essere cambiato - controlla le selezioni",
+    "apiKeyFilterChanged": "Filtro per {{count}} chiave/i API",
     "apiKeysFilterAvailable": "Il filtro chiavi API è ora disponibile",
     "budgetSummary": {
       "period": "Periodo: {{period}}",
@@ -363,6 +364,9 @@
     "yearly": "Yearly",
     "yes": "Sì"
   },
+  "errors": {
+    "maxRetriesExceeded": "Numero massimo di tentativi superato"
+  },
   "models": {
     "admin": {
       "apiBaseUrl": "URL Base API",
@@ -619,6 +623,8 @@
         "description": "Descrizione",
         "expires": "Scade",
         "keyDetails": "Dettagli Chiave",
+        "keyDetailsAriaLabel": "Dettagli della chiave",
+        "keyLimitsAriaLabel": "Limiti della chiave",
         "lastUsed": "Ultimo Utilizzo",
         "rateLimit": "Limite di Frequenza",
         "rateLimitLabel": "Limite di frequenza (richieste al minuto)",
@@ -1358,12 +1364,13 @@
         "createBackup": "Crea backup",
         "creating": "Creazione in corso...",
         "table": {
-          "database": "Database",
-          "timestamp": "Data e ora",
-          "size": "Dimensione",
           "actions": "Azioni",
+          "ariaLabel": "Tabella dei backup",
+          "database": "Database",
           "empty": "Nessun backup trovato",
-          "emptyDescription": "Crea un backup per iniziare."
+          "emptyDescription": "Crea un backup per iniziare.",
+          "size": "Dimensione",
+          "timestamp": "Data e ora"
         },
         "download": "Scarica",
         "restore": "Ripristina",
@@ -1525,6 +1532,7 @@
       "variantInfo": "Info (Blu)",
       "variantSuccess": "Successo (Verde)",
       "variantWarning": "Avvertimento (Arancione)",
+      "viewBanner": "Visualizza Banner",
       "visibility": "Visibilità",
       "visible": "Visibile",
       "usageSync": {
@@ -1752,6 +1760,7 @@
       "configLoadFailed": "Impossibile caricare la configurazione dell'applicazione",
       "details": "Dettagli",
       "errorCode": "Codice errore",
+      "errorDetails": "Dettagli dell'errore",
       "field": "Campo",
       "general": "Si è verificato un errore",
       "hideDetails": "Nascondi dettagli",
@@ -1765,7 +1774,6 @@
       "showDetails": "Mostra dettagli",
       "somethingWentWrong": "Qualcosa è andato storto",
       "somethingWentWrongDesc": "Ci dispiace, ma si è verificato qualcosa di inaspettato. Prova ad aggiornare la pagina o contatta il supporto se il problema persiste.",
-      "somethingWrong": "Qualcosa è andato storto",
       "statusCode": "Codice di stato",
       "title": "Errore",
       "tryRefresh": "Ci dispiace, ma si è verificato qualcosa di inaspettato. Prova ad aggiornare la pagina o contatta il supporto se il problema persiste.",
@@ -1820,6 +1828,7 @@
       "noNotificationsDescription": "Al momento non ci sono notifiche.",
       "noNotificationsFound": "Nessuna notifica trovata",
       "notificationSrTitle": "Notifica",
+      "removeNotification": "Rimuovi notifica: {{title}}",
       "notificationsLabel": "Notifiche",
       "title": "Notifiche"
     },

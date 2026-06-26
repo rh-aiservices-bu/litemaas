@@ -84,6 +84,7 @@
   "adminUsage": {
     "accessDenied": "Zugriff verweigert",
     "activeUsers": "Aktive Benutzer",
+    "apiKeyFilterChanged": "Filtern nach {{count}} API-Schlüssel(n)",
     "apiKeysCleared": "API-Schlüssel-Filter deaktiviert - wählen Sie zuerst Benutzer aus",
     "apiKeysFilterAdjusted": "API-Schlüssel-Filter wurde möglicherweise geändert - bitte überprüfen Sie Ihre Auswahl",
     "apiKeysFilterAvailable": "API-Schlüssel-Filter ist jetzt verfügbar",
@@ -363,6 +364,9 @@
     "yearly": "Yearly",
     "yes": "Ja"
   },
+  "errors": {
+    "maxRetriesExceeded": "Maximale Anzahl an Wiederholungen überschritten"
+  },
   "models": {
     "admin": {
       "apiBaseUrl": "API-Basis-URL",
@@ -619,6 +623,8 @@
         "description": "Beschreibung",
         "expires": "Läuft ab",
         "keyDetails": "Schlüssel-Details",
+        "keyDetailsAriaLabel": "Schlüsseldetails",
+        "keyLimitsAriaLabel": "Schlüssel-Limits",
         "lastUsed": "Zuletzt verwendet",
         "rateLimit": "Ratenlimit",
         "rateLimitLabel": "Ratenlimit (Anfragen pro Minute)",
@@ -1358,6 +1364,7 @@
         "createBackup": "Sicherung erstellen",
         "creating": "Wird erstellt...",
         "table": {
+          "ariaLabel": "Sicherungstabelle",
           "database": "Datenbank",
           "timestamp": "Zeitstempel",
           "size": "Größe",
@@ -1525,6 +1532,7 @@
       "variantInfo": "Info (Blau)",
       "variantSuccess": "Erfolg (Grün)",
       "variantWarning": "Warnung (Orange)",
+      "viewBanner": "Banner ansehen",
       "visibility": "Sichtbarkeit",
       "visible": "Sichtbar",
       "usageSync": {
@@ -1752,6 +1760,7 @@
       "configLoadFailed": "Fehler beim Laden der Anwendungskonfiguration",
       "details": "Details",
       "errorCode": "Fehlercode",
+      "errorDetails": "Fehlerdetails",
       "field": "Feld",
       "general": "Ein Fehler ist aufgetreten",
       "hideDetails": "Details ausblenden",
@@ -1765,7 +1774,6 @@
       "showDetails": "Details anzeigen",
       "somethingWentWrong": "Etwas ist schiefgelaufen",
       "somethingWentWrongDesc": "Es tut uns leid, aber etwas Unerwartetes ist passiert. Bitte versuchen Sie, die Seite zu aktualisieren oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
-      "somethingWrong": "Etwas ist schief gelaufen",
       "statusCode": "Statuscode",
       "title": "Fehler",
       "tryRefresh": "Es tut uns leid, aber etwas Unerwartetes ist passiert. Bitte versuchen Sie, die Seite zu aktualisieren oder kontaktieren Sie den Support, wenn das Problem weiterhin besteht.",
@@ -1821,6 +1829,7 @@
       "noNotificationsFound": "Keine Benachrichtigungen gefunden",
       "notificationSrTitle": "Benachrichtigung",
       "notificationsLabel": "Benachrichtigungen",
+      "removeNotification": "Benachrichtigung entfernen: {{title}}",
       "title": "Benachrichtigungen"
     },
     "pagination": {

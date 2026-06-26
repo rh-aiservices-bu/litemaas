@@ -86,6 +86,7 @@
     "activeUsers": "アクティブユーザー",
     "apiKeysCleared": "APIキーフィルターが無効化されました - 最初にユーザーを選択してください",
     "apiKeysFilterAdjusted": "APIキーフィルターが変更された可能性があります - 選択内容を確認してください",
+    "apiKeyFilterChanged": "{{count}}個のAPIキーでフィルタリング中",
     "apiKeysFilterAvailable": "APIキーフィルターが利用可能になりました",
     "budgetSummary": {
       "period": "期間: {{period}}",
@@ -363,6 +364,9 @@
     "yearly": "Yearly",
     "yes": "はい"
   },
+  "errors": {
+    "maxRetriesExceeded": "最大リトライ回数を超えました"
+  },
   "models": {
     "admin": {
       "apiBaseUrl": "APIベースURL",
@@ -619,6 +623,8 @@
         "description": "説明",
         "expires": "有効期限",
         "keyDetails": "キー詳細",
+        "keyDetailsAriaLabel": "キーの詳細",
+        "keyLimitsAriaLabel": "キーの制限",
         "lastUsed": "最終使用",
         "rateLimit": "レート制限",
         "rateLimitLabel": "レート制限（リクエスト/分）",
@@ -1358,6 +1364,7 @@
         "createBackup": "バックアップを作成",
         "creating": "作成中...",
         "table": {
+          "ariaLabel": "バックアップテーブル",
           "database": "データベース",
           "timestamp": "日時",
           "size": "サイズ",
@@ -1542,7 +1549,8 @@
           "success": "{{total}}日分のうち{{processed}}日分の使用データを正常に再同期しました。",
           "errorTitle": "使用データの同期に失敗しました"
         }
-      }
+      },
+      "viewBanner": "バナーを閲覧"
     },
     "usage": {
       "ariaLabels": {
@@ -1752,6 +1760,7 @@
       "configLoadFailed": "アプリケーション設定の読み込みに失敗しました",
       "details": "詳細",
       "errorCode": "エラーコード",
+      "errorDetails": "エラーの詳細",
       "field": "フィールド",
       "general": "エラーが発生しました",
       "hideDetails": "詳細を非表示",
@@ -1765,7 +1774,6 @@
       "showDetails": "詳細を表示",
       "somethingWentWrong": "問題が発生しました",
       "somethingWentWrongDesc": "申し訳ございませんが、予期しない問題が発生しました。ページを更新するか、問題が続く場合はサポートにお問い合わせください。",
-      "somethingWrong": "問題が発生しました",
       "statusCode": "ステータスコード",
       "title": "エラー",
       "tryRefresh": "申し訳ございませんが、予期しない問題が発生しました。ページを更新するか、問題が続く場合はサポートにお問い合わせください。",
@@ -1821,6 +1829,7 @@
       "noNotificationsFound": "通知が見つかりません",
       "notificationSrTitle": "通知",
       "notificationsLabel": "通知",
+      "removeNotification": "通知を削除: {{title}}",
       "title": "通知"
     },
     "pagination": {

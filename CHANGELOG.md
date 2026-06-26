@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Usage page incomplete and missing translations**: Fixed broken translation keys and hardcoded strings across the frontend (#163)
 - **Usage analytics token reconciliation**: `total_tokens` is now consistently computed as `prompt_tokens + completion_tokens` at every breakdown level (model, user, provider, API key, daily), fixing dashboard mismatches where total tokens did not equal prompt + completion tokens
 - **User usage export migrated to admin pipeline**: User export endpoint now returns per-day rows with reconciled token totals instead of a single aggregated record, with date range validation, API key ownership checks, and currency-aware cost headers
 - **Date picker popover clipping**: DatePicker calendar in Usage Data Sync tab now renders at `document.body` to prevent clipping by tab panel overflow

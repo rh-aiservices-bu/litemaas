@@ -133,7 +133,7 @@ export const UserBudgetSummary: React.FC<UserBudgetSummaryProps> = ({
                   <WalletIcon />
                 </Icon>
               </FlexItem>
-              <FlexItem>{t('usage.budgetSummary.title', 'Budget (User)')}</FlexItem>
+              <FlexItem>{t('adminUsage.budgetSummary.title', 'Budget (User)')}</FlexItem>
             </Flex>
           </CardTitle>
           <CardBody>
@@ -168,10 +168,10 @@ export const UserBudgetSummary: React.FC<UserBudgetSummaryProps> = ({
   const spendText = `${formatCurrency(currentSpend)} / ${maxBudget != null ? formatCurrency(maxBudget) : t('users.budget.unlimited', 'Unlimited')}`;
 
   const cardTitle = displayName
-    ? t('usage.budgetSummary.titleForUser', 'Budget (User) — {{username}}', {
+    ? t('adminUsage.budgetSummary.titleForUser', 'Budget (User) — {{username}}', {
         username: displayName,
       })
-    : t('usage.budgetSummary.title', 'Budget (User)');
+    : t('adminUsage.budgetSummary.title', 'Budget (User)');
 
   return (
     <Card
@@ -209,7 +209,9 @@ export const UserBudgetSummary: React.FC<UserBudgetSummaryProps> = ({
               {periodLabel && (
                 <FlexItem>
                   <Content component={ContentVariants.small}>
-                    {t('usage.budgetSummary.period', 'Period: {{period}}', { period: periodLabel })}
+                    {t('adminUsage.budgetSummary.period', 'Period: {{period}}', {
+                      period: periodLabel,
+                    })}
                   </Content>
                 </FlexItem>
               )}

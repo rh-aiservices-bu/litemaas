@@ -223,6 +223,7 @@
       "totalRequests": "Pedi",
       "totalTokens": "Têw Îl"
     },
+    "apiKeyFilterChanged": "Halad dan {{count}} echui-cair(in)",
     "modelFilterChanged": "Halad dan {{count}} echui(n)",
     "noData": "Úin gwaed úir",
     "noModelData": "Úin echuin-gwaed úir",
@@ -362,6 +363,9 @@
     "weekly": "Weekly",
     "yearly": "Yearly",
     "yes": "Mae"
+  },
+  "errors": {
+    "maxRetriesExceeded": "Adlenn-athrad daen estent"
   },
   "models": {
     "admin": {
@@ -619,6 +623,8 @@
         "description": "Orthael",
         "expires": "Firn",
         "keyDetails": "Anguirel Vuin",
+        "keyDetailsAriaLabel": "Cair teithad",
+        "keyLimitsAriaLabel": "Cair glandath",
         "lastUsed": "Methed Aerlinn",
         "rateLimit": "Rond-Lim",
         "rateLimitLabel": "Rond-lim (pedi hen vuilin)",
@@ -1358,6 +1364,7 @@
         "createBackup": "Caro tirith-gwaed",
         "creating": "Carad...",
         "table": {
+          "ariaLabel": "Adlenn-bord",
           "database": "Gwaed-dagor",
           "timestamp": "Lû-anim",
           "size": "Daer",
@@ -1526,6 +1533,7 @@
       "variantSuccess": "Orthad (Calen)",
       "variantWarning": "Balch (Galadh)",
       "visibility": "Tiruith",
+      "viewBanner": "Tiro Faer",
       "visible": "Tiria",
       "usageSync": {
         "tabTitle": "Sennui Gwanur-Mathon",
@@ -1752,6 +1760,7 @@
       "configLoadFailed": "Lain amloth-orthad fael",
       "details": "En-chinn",
       "errorCode": "Ú-acharn côd",
+      "errorDetails": "Raeg teithad",
       "field": "Talaf",
       "general": "Ohtar túl",
       "hideDetails": "Thuia en-chinn",
@@ -1765,7 +1774,6 @@
       "showDetails": "Tira en-chinn",
       "somethingWentWrong": "Rhein ohtar orthant",
       "somethingWentWrongDesc": "Goheno, nan rhein ú-prestann orthant. Anno orthor dan athra-band pe pado na orthad-uin sui ohtar dartha.",
-      "somethingWrong": "Rhein ohtar orthant",
       "statusCode": "Stat côd",
       "title": "Ohtar",
       "tryRefresh": "Goheno, nan rhein ú-prestann orthant. Anno athra-band i band pe pado na orthad-uin sui ohtar dartha.",
@@ -1821,6 +1829,7 @@
       "noNotificationsFound": "Ú-ennen thúl",
       "notificationSrTitle": "Thúl",
       "notificationsLabel": "Thúl",
+      "removeNotification": "Dago prestannen: {{title}}",
       "title": "Thúl"
     },
     "pagination": {
