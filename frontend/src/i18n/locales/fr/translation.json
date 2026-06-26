@@ -86,6 +86,7 @@
     "activeUsers": "Utilisateurs actifs",
     "apiKeysCleared": "Filtre de clés API désactivé - sélectionnez d'abord des utilisateurs",
     "apiKeysFilterAdjusted": "Le filtre de clés API a peut-être changé - veuillez vérifier les sélections",
+    "apiKeyFilterChanged": "Filtrage par {{count}} clé(s) API",
     "apiKeysFilterAvailable": "Le filtre de clés API est maintenant disponible",
     "budgetSummary": {
       "period": "Période : {{period}}",
@@ -363,6 +364,9 @@
     "yearly": "Yearly",
     "yes": "Oui"
   },
+  "errors": {
+    "maxRetriesExceeded": "Nombre maximum de tentatives dépassé"
+  },
   "models": {
     "admin": {
       "apiBaseUrl": "URL de Base API",
@@ -619,6 +623,8 @@
         "description": "Description",
         "expires": "Expire",
         "keyDetails": "Détails de la Clé",
+        "keyDetailsAriaLabel": "Détails de la clé",
+        "keyLimitsAriaLabel": "Limites de la clé",
         "lastUsed": "Dernière Utilisation",
         "rateLimit": "Limite de Débit",
         "rateLimitLabel": "Limite de Débit (requêtes par minute)",
@@ -1358,12 +1364,13 @@
         "createBackup": "Créer une sauvegarde",
         "creating": "Création en cours...",
         "table": {
-          "database": "Base de données",
-          "timestamp": "Date et heure",
-          "size": "Taille",
           "actions": "Actions",
+          "ariaLabel": "Tableau des sauvegardes",
+          "database": "Base de données",
           "empty": "Aucune sauvegarde trouvée",
-          "emptyDescription": "Créez une sauvegarde pour commencer."
+          "emptyDescription": "Créez une sauvegarde pour commencer.",
+          "size": "Taille",
+          "timestamp": "Date et heure"
         },
         "download": "Télécharger",
         "restore": "Restaurer",
@@ -1525,6 +1532,7 @@
       "variantInfo": "Info (Bleu)",
       "variantSuccess": "Succès (Vert)",
       "variantWarning": "Avertissement (Orange)",
+      "viewBanner": "Voir la Bannière",
       "visibility": "Visibilité",
       "visible": "Visible",
       "usageSync": {
@@ -1752,6 +1760,7 @@
       "configLoadFailed": "Échec du chargement de la configuration de l'application",
       "details": "Détails",
       "errorCode": "Code d'erreur",
+      "errorDetails": "Détails de l'erreur",
       "field": "Champ",
       "general": "Une erreur s'est produite",
       "hideDetails": "Masquer les détails",
@@ -1765,7 +1774,6 @@
       "showDetails": "Afficher les détails",
       "somethingWentWrong": "Une erreur s'est produite",
       "somethingWentWrongDesc": "Nous sommes désolés, mais quelque chose d'inattendu s'est produit. Veuillez essayer d'actualiser la page ou contacter le support si le problème persiste.",
-      "somethingWrong": "Quelque chose s'est mal passé",
       "statusCode": "Code de statut",
       "title": "Erreur",
       "tryRefresh": "Nous sommes désolés, mais quelque chose d'inattendu s'est produit. Veuillez essayer d'actualiser la page ou contacter le support si le problème persiste.",
@@ -1820,6 +1828,7 @@
       "noNotificationsDescription": "Il n'y a actuellement aucune notification.",
       "noNotificationsFound": "Aucune notification trouvée",
       "notificationSrTitle": "Notification",
+      "removeNotification": "Supprimer la notification : {{title}}",
       "notificationsLabel": "Notifications",
       "title": "Notifications"
     },

@@ -223,6 +223,7 @@
       "totalRequests": "Requests",
       "totalTokens": "Total Tokens"
     },
+    "apiKeyFilterChanged": "Filtering by {{count}} API key(s)",
     "modelFilterChanged": "Filtering by {{count}} model(s)",
     "noData": "No data available",
     "noModelData": "No model data available",
@@ -362,6 +363,9 @@
     "weekly": "Weekly",
     "yearly": "Yearly",
     "yes": "Yes"
+  },
+  "errors": {
+    "maxRetriesExceeded": "Maximum retries exceeded"
   },
   "models": {
     "admin": {
@@ -619,6 +623,8 @@
         "description": "Description",
         "expires": "Expires",
         "keyDetails": "Key Details",
+        "keyDetailsAriaLabel": "Key details",
+        "keyLimitsAriaLabel": "Key limits",
         "lastUsed": "Last Used",
         "rateLimit": "Rate Limit",
         "rateLimitLabel": "Rate Limit (requests per minute)",
@@ -1369,6 +1375,7 @@
           "alreadyRunning": "A backup is already in progress."
         },
         "table": {
+          "ariaLabel": "Backups table",
           "database": "Database",
           "timestamp": "Timestamp",
           "size": "Size",
@@ -1484,6 +1491,7 @@
       "saveBanner": "Save Banner",
       "saving": "Saving...",
       "showBanner": "Show Banner",
+      "viewBanner": "View Banner",
       "successfulUpdates": "Successful",
       "syncError": "Failed to synchronize models",
       "syncErrorGeneric": "An error occurred while synchronizing models. Please try again.",
@@ -1751,6 +1759,7 @@
       "componentLoadingErrorDesc": "Failed to load this component. Please try refreshing the page.",
       "configLoadFailed": "Failed to load application configuration",
       "details": "Details",
+      "errorDetails": "Error details",
       "errorCode": "Error Code",
       "field": "Field",
       "general": "An error occurred",
@@ -1820,6 +1829,7 @@
       "noNotificationsFound": "No notifications found",
       "notificationSrTitle": "Notification",
       "notificationsLabel": "Notifications",
+      "removeNotification": "Remove notification: {{title}}",
       "title": "Notifications"
     },
     "pagination": {

@@ -454,7 +454,10 @@ const BackupTab: React.FC<BackupTabProps> = ({ canManage }) => {
                 <EmptyStateBody>{t('pages.tools.backup.table.emptyDescription')}</EmptyStateBody>
               </EmptyState>
             ) : (
-              <Table aria-label="Backups table" variant="compact">
+              <Table
+                aria-label={t('pages.tools.backup.table.ariaLabel', 'Backups table')}
+                variant="compact"
+              >
                 <Thead>
                   <Tr>
                     <Th screenReaderText={t('pages.tools.backup.table.database')}>

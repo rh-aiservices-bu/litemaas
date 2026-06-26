@@ -84,6 +84,7 @@
   "adminUsage": {
     "accessDenied": "Acceso denegado",
     "activeUsers": "Usuarios activos",
+    "apiKeyFilterChanged": "Filtrando por {{count}} clave(s) API",
     "apiKeysCleared": "Filtro de claves API deshabilitado - seleccione usuarios primero",
     "apiKeysFilterAdjusted": "El filtro de claves API puede haber cambiado - por favor revise las selecciones",
     "apiKeysFilterAvailable": "El filtro de claves API ahora está disponible",
@@ -363,6 +364,9 @@
     "yearly": "Yearly",
     "yes": "Sí"
   },
+  "errors": {
+    "maxRetriesExceeded": "Número máximo de reintentos excedido"
+  },
   "models": {
     "admin": {
       "apiBaseUrl": "URL Base de API",
@@ -619,6 +623,8 @@
         "description": "Descripción",
         "expires": "Expira",
         "keyDetails": "Detalles de Clave",
+        "keyDetailsAriaLabel": "Detalles de la clave",
+        "keyLimitsAriaLabel": "Límites de la clave",
         "lastUsed": "Último Uso",
         "rateLimit": "Límite de Velocidad",
         "rateLimitLabel": "Límite de velocidad (solicitudes por minuto)",
@@ -1358,6 +1364,7 @@
         "createBackup": "Crear copia de seguridad",
         "creating": "Creando...",
         "table": {
+          "ariaLabel": "Tabla de copias de seguridad",
           "database": "Base de datos",
           "timestamp": "Fecha y hora",
           "size": "Tamaño",
@@ -1525,6 +1532,7 @@
       "variantInfo": "Info (Azul)",
       "variantSuccess": "Éxito (Verde)",
       "variantWarning": "Advertencia (Naranja)",
+      "viewBanner": "Ver Banner",
       "visibility": "Visibilidad",
       "visible": "Visible",
       "usageSync": {
@@ -1752,6 +1760,7 @@
       "configLoadFailed": "Error al cargar la configuración de la aplicación",
       "details": "Detalles",
       "errorCode": "Código de error",
+      "errorDetails": "Detalles del error",
       "field": "Campo",
       "general": "Ocurrió un error",
       "hideDetails": "Ocultar detalles",
@@ -1765,7 +1774,6 @@
       "showDetails": "Mostrar detalles",
       "somethingWentWrong": "Algo salió mal",
       "somethingWentWrongDesc": "Lo sentimos, pero algo inesperado ocurrió. Por favor, intenta actualizar la página o contacta con soporte si el problema persiste.",
-      "somethingWrong": "Algo salió mal",
       "statusCode": "Código de estado",
       "title": "Error",
       "tryRefresh": "Lo sentimos, pero algo inesperado ocurrió. Por favor, intenta actualizar la página o contacta con soporte si el problema persiste.",
@@ -1821,6 +1829,7 @@
       "noNotificationsFound": "No se encontraron notificaciones",
       "notificationSrTitle": "Notificación",
       "notificationsLabel": "Notificaciones",
+      "removeNotification": "Eliminar notificación: {{title}}",
       "title": "Notificaciones"
     },
     "pagination": {

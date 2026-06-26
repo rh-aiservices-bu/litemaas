@@ -1915,7 +1915,14 @@ const ApiKeysPage: React.FC = () => {
                       <Td colSpan={2} style={{ padding: 0 }}>
                         <Split hasGutter>
                           <SplitItem isFilled>
-                            <Table aria-label="Key details left" variant="compact" borders={false}>
+                            <Table
+                              aria-label={t(
+                                'pages.apiKeys.labels.keyDetailsAriaLabel',
+                                'Key details',
+                              )}
+                              variant="compact"
+                              borders={false}
+                            >
                               <Tbody>
                                 <Tr>
                                   <Th scope="row">
@@ -1952,7 +1959,14 @@ const ApiKeysPage: React.FC = () => {
                             </Table>
                           </SplitItem>
                           <SplitItem isFilled>
-                            <Table aria-label="Key limits" variant="compact" borders={false}>
+                            <Table
+                              aria-label={t(
+                                'pages.apiKeys.labels.keyLimitsAriaLabel',
+                                'Key limits',
+                              )}
+                              variant="compact"
+                              borders={false}
+                            >
                               <Tbody>
                                 <Tr>
                                   <Th scope="row">
@@ -2108,7 +2122,10 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \\
                   title={t('pages.apiKeys.modals.keyArchived', 'Key Archived')}
                   style={{ marginTop: '1rem' }}
                 >
-                  {t('pages.apiKeys.messages.keyArchivedMessage', 'This key has been archived and is no longer active.')}
+                  {t(
+                    'pages.apiKeys.messages.keyArchivedMessage',
+                    'This key has been archived and is no longer active.',
+                  )}
                 </Alert>
               )}
             </>

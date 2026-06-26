@@ -223,6 +223,7 @@
       "totalRequests": "请求数",
       "totalTokens": "总令牌数"
     },
+    "apiKeyFilterChanged": "按 {{count}} 个 API 密钥筛选",
     "modelFilterChanged": "按 {{count}} 个模型筛选",
     "noData": "无可用数据",
     "noModelData": "无可用模型数据",
@@ -362,6 +363,9 @@
     "weekly": "Weekly",
     "yearly": "Yearly",
     "yes": "是"
+  },
+  "errors": {
+    "maxRetriesExceeded": "已超过最大重试次数"
   },
   "models": {
     "admin": {
@@ -619,6 +623,8 @@
         "description": "描述",
         "expires": "过期时间",
         "keyDetails": "密钥详情",
+        "keyDetailsAriaLabel": "密钥详情",
+        "keyLimitsAriaLabel": "密钥限制",
         "lastUsed": "最后使用",
         "rateLimit": "速率限制",
         "rateLimitLabel": "速率限制（每分钟请求数）",
@@ -1358,6 +1364,7 @@
         "createBackup": "创建备份",
         "creating": "创建中...",
         "table": {
+          "ariaLabel": "备份表",
           "database": "数据库",
           "timestamp": "时间",
           "size": "大小",
@@ -1526,6 +1533,7 @@
       "variantSuccess": "成功（绿色）",
       "variantWarning": "警告（橙色）",
       "visibility": "可见性",
+      "viewBanner": "查看横幅",
       "visible": "可见",
       "usageSync": {
         "tabTitle": "使用数据同步",
@@ -1752,6 +1760,7 @@
       "configLoadFailed": "加载应用程序配置失败",
       "details": "详情",
       "errorCode": "错误代码",
+      "errorDetails": "错误详情",
       "field": "字段",
       "general": "发生了错误",
       "hideDetails": "隐藏详情",
@@ -1765,7 +1774,6 @@
       "showDetails": "显示详情",
       "somethingWentWrong": "出现问题",
       "somethingWentWrongDesc": "抱歉，发生了意外情况。请尝试刷新页面，如果问题仍然存在，请联系支持。",
-      "somethingWrong": "出现问题",
       "statusCode": "状态代码",
       "title": "错误",
       "tryRefresh": "抱歉，发生了意外情况。请尝试刷新页面，如果问题仍然存在，请联系支持。",
@@ -1820,6 +1828,7 @@
       "noNotificationsDescription": "当前没有通知。",
       "noNotificationsFound": "未找到通知",
       "notificationSrTitle": "通知",
+      "removeNotification": "删除通知：{{title}}",
       "notificationsLabel": "通知",
       "title": "通知"
     },

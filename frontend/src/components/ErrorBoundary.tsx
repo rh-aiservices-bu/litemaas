@@ -80,7 +80,7 @@ class ErrorBoundaryComponent extends Component<Props, State> {
               {t('ui.errors.somethingWentWrongDesc')}
               {process.env.NODE_ENV === 'development' && this.state.error && (
                 <details style={{ marginTop: '20px', textAlign: 'left' }}>
-                  <summary>Error details</summary>
+                  <summary>{t('ui.errors.errorDetails', 'Error details')}</summary>
                   <pre
                     style={{
                       fontSize: 'var(--pf-t--global--font--size--xs)',
