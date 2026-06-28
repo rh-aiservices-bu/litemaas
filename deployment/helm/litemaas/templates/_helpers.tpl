@@ -423,7 +423,6 @@ Uses busybox on Kubernetes, OpenShift tools image on OpenShift.
   {{- end }}
   securityContext:
     {{- toYaml .Values.containerSecurityContext | nindent 4 }}
-    runAsUser: 65534
   command: ['sh', '-c']
   args:
     - |
