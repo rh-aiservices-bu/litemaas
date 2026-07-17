@@ -1,4 +1,4 @@
-{{- if and (eq .Values.global.platform "kubernetes") .Values.ingress.enabled .Values.ingress.frontend.host }}
+{{- if .Values.ingress.enabled .Values.ingress.frontend.host }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
