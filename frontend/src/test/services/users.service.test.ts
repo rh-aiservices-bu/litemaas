@@ -246,6 +246,56 @@ describe('UsersService', () => {
       expect(result.data[0].username).toBe('jane_admin');
     });
 
+    it('should include sortBy and sortOrder params when provided', async () => {
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        data: mockUsers,
+        pagination: { page: 1, limit: 20, total: 3, totalPages: 1 },
+      });
+
+      await usersService.getUsers({ sortBy: 'username', sortOrder: 'asc' });
+
+      expect(apiClient.get).toHaveBeenCalledWith('/users?sortBy=username&sortOrder=asc');
+    });
+
+    it('should include sortBy with desc order', async () => {
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        data: mockUsers,
+        pagination: { page: 1, limit: 20, total: 3, totalPages: 1 },
+      });
+
+      await usersService.getUsers({ sortBy: 'email', sortOrder: 'desc' });
+
+      expect(apiClient.get).toHaveBeenCalledWith('/users?sortBy=email&sortOrder=desc');
+    });
+
+    it('should combine sort params with other filters', async () => {
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        data: [mockUsers[0]],
+        pagination: { page: 1, limit: 20, total: 1, totalPages: 1 },
+      });
+
+      await usersService.getUsers({
+        search: 'john',
+        sortBy: 'fullName',
+        sortOrder: 'asc',
+      });
+
+      expect(apiClient.get).toHaveBeenCalledWith(
+        '/users?search=john&sortBy=fullName&sortOrder=asc',
+      );
+    });
+
+    it('should not include sort params when sortBy is not provided', async () => {
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        data: mockUsers,
+        pagination: { page: 1, limit: 20, total: 3, totalPages: 1 },
+      });
+
+      await usersService.getUsers({ page: 1 });
+
+      expect(apiClient.get).toHaveBeenCalledWith('/users?page=1');
+    });
+
     it('should handle API errors', async () => {
       const error = new Error('Forbidden');
       (error as any).response = { status: 403, data: { message: 'Forbidden', statusCode: 403 } };

@@ -15,6 +15,8 @@ export interface UserListParams {
   search?: string;
   role?: string;
   isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface UserUpdateData {

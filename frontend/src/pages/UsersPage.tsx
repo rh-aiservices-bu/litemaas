@@ -39,7 +39,7 @@ import {
   TimesCircleIcon,
   UserIcon,
 } from '@patternfly/react-icons';
-import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn } from '@patternfly/react-table';
+import { Table, Thead, Tbody, Tr, Th, Td, ActionsColumn, ThProps } from '@patternfly/react-table';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../contexts/NotificationContext';
 import { usersService } from '../services/users.service';
@@ -63,6 +63,8 @@ const UsersPage: React.FC = () => {
   const [isStatusFilterOpen, setIsStatusFilterOpen] = useState(false);
   const [page, setPage] = useState(parseInt(searchParams.get('page') || '1', 10));
   const [perPage, setPerPage] = useState(parseInt(searchParams.get('limit') || '10', 10));
+  const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || '');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>((searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc');
 
   // Modal focus management ref
   const editModalTriggerRef = useRef<HTMLElement | null>(null);
@@ -79,6 +81,7 @@ const UsersPage: React.FC = () => {
     ...(roleFilter && { role: roleFilter }),
     ...(statusFilter === 'active' && { isActive: true }),
     ...(statusFilter === 'inactive' && { isActive: false }),
+    ...(sortBy && { sortBy, sortOrder }),
   };
 
   // Fetch users data with React Query
@@ -109,9 +112,11 @@ const UsersPage: React.FC = () => {
     if (searchValue) newParams.set('search', searchValue);
     if (roleFilter) newParams.set('role', roleFilter);
     if (statusFilter) newParams.set('status', statusFilter);
+    if (sortBy) newParams.set('sortBy', sortBy);
+    if (sortBy) newParams.set('sortOrder', sortOrder);
 
     setSearchParams(newParams);
-  }, [page, perPage, searchValue, roleFilter, statusFilter, setSearchParams]);
+  }, [page, perPage, searchValue, roleFilter, statusFilter, sortBy, sortOrder, setSearchParams]);
 
   // Helper functions
   const getStatusBadge = (isActive: boolean) => {
@@ -170,6 +175,22 @@ const UsersPage: React.FC = () => {
     }
     setIsEditModalOpen(true);
   };
+
+  const handleSort = (columnKey: string) => {
+    const newOrder = sortBy === columnKey && sortOrder === 'asc' ? 'desc' : 'asc';
+    setSortBy(columnKey);
+    setSortOrder(newOrder);
+    setPage(1);
+  };
+
+  const getSortParams = (columnKey: string): ThProps['sort'] => ({
+    sortBy:
+      sortBy === columnKey
+        ? { index: 0, direction: sortOrder }
+        : {},
+    onSort: () => handleSort(columnKey),
+    columnIndex: 0,
+  });
 
   const clearAllFilters = () => {
     setSearchValue('');
@@ -388,11 +409,11 @@ const UsersPage: React.FC = () => {
                   </caption>
                   <Thead>
                     <Tr>
-                      <Th width={20}>{t('users.table.username')}</Th>
-                      <Th width={25}>{t('users.table.email')}</Th>
-                      <Th width={20}>{t('users.table.fullName')}</Th>
+                      <Th width={20} sort={getSortParams('username')}>{t('users.table.username')}</Th>
+                      <Th width={25} sort={getSortParams('email')}>{t('users.table.email')}</Th>
+                      <Th width={20} sort={getSortParams('fullName')}>{t('users.table.fullName')}</Th>
                       <Th width={25}>{t('users.table.roles')}</Th>
-                      <Th width={10}>{t('users.table.status')}</Th>
+                      <Th width={10} sort={getSortParams('status')}>{t('users.table.status')}</Th>
                       <Th screenReaderText={t('users.table.actions')}></Th>
                     </Tr>
                   </Thead>

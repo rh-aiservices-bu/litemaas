@@ -15,7 +15,17 @@ interface UserListQuery {
   search?: string;
   role?: string;
   isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
 }
+
+const SORTABLE_COLUMNS: Record<string, string> = {
+  username: 'username',
+  email: 'email',
+  fullName: 'full_name',
+  status: 'is_active',
+  createdAt: 'created_at',
+};
 
 interface FastifyError extends Error {
   statusCode?: number;
@@ -345,6 +355,8 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
           search: { type: 'string' },
           role: { type: 'string' },
           isActive: { type: 'boolean' },
+          sortBy: { type: 'string', enum: ['username', 'email', 'fullName', 'status', 'createdAt'] },
+          sortOrder: { type: 'string', enum: ['asc', 'desc'], default: 'asc' },
         },
       },
       response: {
@@ -382,7 +394,7 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
     },
     preHandler: [fastify.authenticate, fastify.requirePermission('users:read')],
     handler: async (request, _reply) => {
-      const { page = 1, limit = 20, search, role, isActive } = request.query as UserListQuery;
+      const { page = 1, limit = 20, search, role, isActive, sortBy, sortOrder = 'asc' } = request.query as UserListQuery;
 
       try {
         const offset = (page - 1) * limit;
@@ -410,7 +422,9 @@ const usersRoutes: FastifyPluginAsync = async (fastify) => {
           params.push(isActive);
         }
 
-        query += ` ORDER BY created_at DESC LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
+        const orderColumn = (sortBy && SORTABLE_COLUMNS[sortBy]) || 'created_at';
+        const orderDirection = sortOrder === 'desc' ? 'DESC' : 'ASC';
+        query += ` ORDER BY ${orderColumn} ${orderDirection} LIMIT $${params.length + 1} OFFSET $${params.length + 2}`;
         params.push(limit, offset);
 
         // Get count

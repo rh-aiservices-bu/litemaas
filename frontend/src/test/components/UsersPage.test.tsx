@@ -864,6 +864,130 @@ describe('UsersPage', () => {
     });
   });
 
+  describe('4b. Column Sorting', () => {
+    it('should render sortable column headers for Username, Email, Full Name, and Status', () => {
+      renderWithAuth(<UsersPage />, { user: mockAdminUser });
+
+      const headers = screen.getAllByRole('columnheader');
+      // 6 columns: Username, Email, Full Name, Roles, Status, Actions
+      expect(headers).toHaveLength(6);
+
+      // Sortable columns should contain a button (PatternFly SortColumn renders a button)
+      const usernameHeader = headers[0];
+      const emailHeader = headers[1];
+      const fullNameHeader = headers[2];
+      const rolesHeader = headers[3];
+      const statusHeader = headers[4];
+
+      expect(within(usernameHeader).getByRole('button')).toBeInTheDocument();
+      expect(within(emailHeader).getByRole('button')).toBeInTheDocument();
+      expect(within(fullNameHeader).getByRole('button')).toBeInTheDocument();
+      expect(within(statusHeader).getByRole('button')).toBeInTheDocument();
+
+      // Roles column should NOT be sortable (no button)
+      expect(within(rolesHeader).queryByRole('button')).not.toBeInTheDocument();
+    });
+
+    it('should update URL params when a sortable column header is clicked', async () => {
+      const user = userEvent.setup();
+      renderWithAuth(<UsersPage />, { user: mockAdminUser });
+
+      const headers = screen.getAllByRole('columnheader');
+      const usernameButton = within(headers[0]).getByRole('button');
+      await user.click(usernameButton);
+
+      await waitFor(() => {
+        const calls = mockSetSearchParams.mock.calls;
+        const lastCall = calls[calls.length - 1];
+        const params = lastCall[0] as URLSearchParams;
+        expect(params.get('sortBy')).toBe('username');
+        expect(params.get('sortOrder')).toBe('asc');
+      });
+    });
+
+    it('should toggle sort direction when clicking the same column again', async () => {
+      const user = userEvent.setup();
+      renderWithAuth(<UsersPage />, { user: mockAdminUser });
+
+      const headers = screen.getAllByRole('columnheader');
+      const usernameButton = within(headers[0]).getByRole('button');
+
+      // First click — asc
+      await user.click(usernameButton);
+      await waitFor(() => {
+        const calls = mockSetSearchParams.mock.calls;
+        const params = calls[calls.length - 1][0] as URLSearchParams;
+        expect(params.get('sortOrder')).toBe('asc');
+      });
+
+      // Second click — desc
+      await user.click(usernameButton);
+      await waitFor(() => {
+        const calls = mockSetSearchParams.mock.calls;
+        const params = calls[calls.length - 1][0] as URLSearchParams;
+        expect(params.get('sortOrder')).toBe('desc');
+      });
+    });
+
+    it('should reset to page 1 when sort column is clicked', async () => {
+      const user = userEvent.setup();
+      renderWithAuth(<UsersPage />, { user: mockAdminUser });
+
+      const headers = screen.getAllByRole('columnheader');
+      const emailButton = within(headers[1]).getByRole('button');
+      await user.click(emailButton);
+
+      await waitFor(() => {
+        const calls = mockSetSearchParams.mock.calls;
+        const params = calls[calls.length - 1][0] as URLSearchParams;
+        // Page should not be set (defaults to 1)
+        expect(params.has('page')).toBe(false);
+      });
+    });
+
+    it('should include sort params in React Query key', async () => {
+      const user = userEvent.setup();
+      renderWithAuth(<UsersPage />, { user: mockAdminUser });
+
+      const headers = screen.getAllByRole('columnheader');
+      const fullNameButton = within(headers[2]).getByRole('button');
+      await user.click(fullNameButton);
+
+      await waitFor(() => {
+        const lastCall = vi.mocked(useQuery).mock.calls[vi.mocked(useQuery).mock.calls.length - 1];
+        const queryKey = lastCall[0] as [string, any];
+        expect(queryKey[1]).toMatchObject({
+          sortBy: 'fullName',
+          sortOrder: 'asc',
+        });
+      });
+    });
+
+    it('should switch sort column when clicking a different column', async () => {
+      const user = userEvent.setup();
+      renderWithAuth(<UsersPage />, { user: mockAdminUser });
+
+      const headers = screen.getAllByRole('columnheader');
+
+      // Click Username first
+      await user.click(within(headers[0]).getByRole('button'));
+      await waitFor(() => {
+        const calls = mockSetSearchParams.mock.calls;
+        const params = calls[calls.length - 1][0] as URLSearchParams;
+        expect(params.get('sortBy')).toBe('username');
+      });
+
+      // Click Email — should switch column and reset to asc
+      await user.click(within(headers[1]).getByRole('button'));
+      await waitFor(() => {
+        const calls = mockSetSearchParams.mock.calls;
+        const params = calls[calls.length - 1][0] as URLSearchParams;
+        expect(params.get('sortBy')).toBe('email');
+        expect(params.get('sortOrder')).toBe('asc');
+      });
+    });
+  });
+
   describe('5. Permissions', () => {
     it('should show access denied message when user cannot read users', () => {
       vi.mocked(usersService.canReadUsers).mockReturnValue(false);
