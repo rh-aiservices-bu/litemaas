@@ -1426,6 +1426,37 @@ export class AdminUsageAggregationService extends BaseService {
    * @param dateString - The date to fetch (YYYY-MM-DD)
    * @returns Raw LiteLLM day data or null if no data
    */
+  private resolveModelPricing(
+    modelName: string,
+    pricingMap: Map<string, { inputCost: number; outputCost: number }>,
+  ): { inputCost: number; outputCost: number } | null {
+    const lower = modelName.toLowerCase();
+
+    const direct = pricingMap.get(lower);
+    if (direct) return direct;
+
+    // Progressively strip leading provider prefixes
+    // e.g. "openai/Qwen/Qwen3-Coder-Next-FP8" → "Qwen/Qwen3-Coder-Next-FP8" → "Qwen3-Coder-Next-FP8"
+    let remaining = lower;
+    while (remaining.includes('/')) {
+      remaining = remaining.substring(remaining.indexOf('/') + 1);
+      const match = pricingMap.get(remaining);
+      if (match) return match;
+    }
+
+    return null;
+  }
+
+  private recalculateSpend(
+    promptTokens: number,
+    completionTokens: number,
+    originalSpend: number,
+    pricing: { inputCost: number; outputCost: number } | null,
+  ): number {
+    if (!pricing) return originalSpend;
+    return promptTokens * pricing.inputCost + completionTokens * pricing.outputCost;
+  }
+
   private async fetchDailyDataFromLiteLLM(dateString: string): Promise<LiteLLMDayData | null> {
     this.fastify.log.debug({ date: dateString }, 'Fetching daily data from LiteLLM');
 
@@ -1556,6 +1587,36 @@ export class AdminUsageAggregationService extends BaseService {
       // Create lookup map using database key_hash (SHA256 of LiteLLM key value)
       const keyHashToUser = new Map(apiKeyMappings.map((mapping) => [mapping.tokenHash, mapping]));
 
+      // Query model pricing for cost recalculation (ignore LiteLLM's spend which
+      // discounts vLLM prefix-cached tokens — charge full rate for all tokens)
+      const modelPricingMap = new Map<string, { inputCost: number; outputCost: number }>();
+      if (!this.isDatabaseUnavailable()) {
+        try {
+          const pricingResult = await this.executeQuery<{ rows: any[] }>(
+            `SELECT id, name, input_cost_per_token, output_cost_per_token, backend_model_name FROM models`,
+            [],
+            'fetching model pricing for cost recalculation',
+          );
+          for (const row of pricingResult.rows) {
+            if (!row.id || !row.name) continue;
+            const pricing = {
+              inputCost: parseFloat(row.input_cost_per_token) || 0,
+              outputCost: parseFloat(row.output_cost_per_token) || 0,
+            };
+            modelPricingMap.set(row.id.toLowerCase(), pricing);
+            modelPricingMap.set(row.name.toLowerCase(), pricing);
+            if (row.backend_model_name) {
+              modelPricingMap.set(row.backend_model_name.toLowerCase(), pricing);
+            }
+          }
+        } catch (error) {
+          this.fastify.log.warn(
+            { error },
+            'Failed to fetch model pricing; falling back to LiteLLM spend values',
+          );
+        }
+      }
+
       // Build enriched data structure
       const enrichedData: EnrichedDayData = {
         date: dayData.date,
@@ -1590,6 +1651,9 @@ export class AdminUsageAggregationService extends BaseService {
 
       // Process model breakdown and map to users
       Object.entries(dayData.breakdown.models || {}).forEach(([modelName, modelData]) => {
+        // Resolve model pricing for cost recalculation
+        const modelPricing = this.resolveModelPricing(modelName, modelPricingMap);
+
         enrichedData.breakdown.models[modelName] = {
           metrics: {
             api_requests: modelData.metrics.api_requests || 0,
@@ -1597,7 +1661,7 @@ export class AdminUsageAggregationService extends BaseService {
             // Initialize to 0 - will be summed from API key breakdown to avoid double-counting
             prompt_tokens: 0,
             completion_tokens: 0,
-            spend: modelData.metrics.spend || 0,
+            spend: 0,
             successful_requests: 0,
             failed_requests: 0,
           },
@@ -1621,7 +1685,12 @@ export class AdminUsageAggregationService extends BaseService {
             const skippedTokens = keyData.metrics?.total_tokens || 0;
             const skippedPrompt = keyData.metrics?.prompt_tokens || 0;
             const skippedCompletion = keyData.metrics?.completion_tokens || 0;
-            const skippedCost = keyData.metrics?.spend || 0;
+            const skippedCost = this.recalculateSpend(
+              skippedPrompt,
+              skippedCompletion,
+              keyData.metrics?.spend || 0,
+              modelPricing,
+            );
 
             // Track per-model skipped metrics
             modelSkippedRequests += skippedCount;
@@ -1659,6 +1728,13 @@ export class AdminUsageAggregationService extends BaseService {
             modelMappedRequests += keyData.metrics.api_requests || 0;
             mappedRequests += keyData.metrics.api_requests || 0;
 
+            const resolvedSpend = this.recalculateSpend(
+              keyData.metrics.prompt_tokens || 0,
+              keyData.metrics.completion_tokens || 0,
+              keyData.metrics.spend,
+              modelPricing,
+            );
+
             // Add to model's user breakdown
             if (!enrichedData.breakdown.models[modelName].users[userId]) {
               enrichedData.breakdown.models[modelName].users[userId] = {
@@ -1683,7 +1759,7 @@ export class AdminUsageAggregationService extends BaseService {
             userMetrics.total_tokens += keyData.metrics.total_tokens;
             userMetrics.prompt_tokens += keyData.metrics.prompt_tokens || 0;
             userMetrics.completion_tokens += keyData.metrics.completion_tokens || 0;
-            userMetrics.spend += keyData.metrics.spend;
+            userMetrics.spend += resolvedSpend;
             userMetrics.successful_requests += keyData.metrics.successful_requests || 0;
             userMetrics.failed_requests += keyData.metrics.failed_requests || 0;
 
@@ -1691,6 +1767,7 @@ export class AdminUsageAggregationService extends BaseService {
             const modelMetrics = enrichedData.breakdown.models[modelName].metrics;
             modelMetrics.prompt_tokens += keyData.metrics.prompt_tokens || 0;
             modelMetrics.completion_tokens += keyData.metrics.completion_tokens || 0;
+            modelMetrics.spend += resolvedSpend;
             modelMetrics.successful_requests += keyData.metrics.successful_requests || 0;
             modelMetrics.failed_requests += keyData.metrics.failed_requests || 0;
 
@@ -1720,7 +1797,7 @@ export class AdminUsageAggregationService extends BaseService {
             userTotalMetrics.total_tokens += keyData.metrics.total_tokens;
             userTotalMetrics.prompt_tokens += keyData.metrics.prompt_tokens || 0;
             userTotalMetrics.completion_tokens += keyData.metrics.completion_tokens || 0;
-            userTotalMetrics.spend += keyData.metrics.spend;
+            userTotalMetrics.spend += resolvedSpend;
             userTotalMetrics.successful_requests += keyData.metrics.successful_requests || 0;
             userTotalMetrics.failed_requests += keyData.metrics.failed_requests || 0;
 
@@ -1746,7 +1823,7 @@ export class AdminUsageAggregationService extends BaseService {
             userModelMetrics.total_tokens += keyData.metrics.total_tokens;
             userModelMetrics.prompt_tokens += keyData.metrics.prompt_tokens || 0;
             userModelMetrics.completion_tokens += keyData.metrics.completion_tokens || 0;
-            userModelMetrics.spend += keyData.metrics.spend;
+            userModelMetrics.spend += resolvedSpend;
             userModelMetrics.successful_requests += keyData.metrics.successful_requests || 0;
             userModelMetrics.failed_requests += keyData.metrics.failed_requests || 0;
 
@@ -1761,7 +1838,7 @@ export class AdminUsageAggregationService extends BaseService {
                   total_tokens: keyData.metrics.total_tokens,
                   prompt_tokens: keyData.metrics.prompt_tokens || 0,
                   completion_tokens: keyData.metrics.completion_tokens || 0,
-                  spend: keyData.metrics.spend,
+                  spend: resolvedSpend,
                   successful_requests: keyData.metrics.successful_requests || 0,
                   failed_requests: keyData.metrics.failed_requests || 0,
                 },
@@ -1779,12 +1856,18 @@ export class AdminUsageAggregationService extends BaseService {
                 failed_requests: 0,
               };
             }
+            const unmappedSpend = this.recalculateSpend(
+              keyData.metrics.prompt_tokens || 0,
+              keyData.metrics.completion_tokens || 0,
+              keyData.metrics.spend || 0,
+              modelPricing,
+            );
             unmappedModelMetrics[modelName].api_requests += keyData.metrics.api_requests || 0;
             unmappedModelMetrics[modelName].total_tokens += keyData.metrics.total_tokens || 0;
             unmappedModelMetrics[modelName].prompt_tokens += keyData.metrics.prompt_tokens || 0;
             unmappedModelMetrics[modelName].completion_tokens +=
               keyData.metrics.completion_tokens || 0;
-            unmappedModelMetrics[modelName].spend += keyData.metrics.spend || 0;
+            unmappedModelMetrics[modelName].spend += unmappedSpend;
             unmappedModelMetrics[modelName].successful_requests +=
               keyData.metrics.successful_requests || 0;
             unmappedModelMetrics[modelName].failed_requests += keyData.metrics.failed_requests || 0;
@@ -1837,7 +1920,7 @@ export class AdminUsageAggregationService extends BaseService {
                 total_tokens: keyData.metrics.total_tokens,
                 prompt_tokens: keyData.metrics.prompt_tokens || 0,
                 completion_tokens: keyData.metrics.completion_tokens || 0,
-                spend: keyData.metrics.spend,
+                spend: unmappedSpend,
                 successful_requests: keyData.metrics.successful_requests || 0,
                 failed_requests: keyData.metrics.failed_requests || 0,
               },
@@ -1850,7 +1933,7 @@ export class AdminUsageAggregationService extends BaseService {
             unmappedUserModelMetrics.total_tokens += keyData.metrics.total_tokens;
             unmappedUserModelMetrics.prompt_tokens += keyData.metrics.prompt_tokens || 0;
             unmappedUserModelMetrics.completion_tokens += keyData.metrics.completion_tokens || 0;
-            unmappedUserModelMetrics.spend += keyData.metrics.spend;
+            unmappedUserModelMetrics.spend += unmappedSpend;
             unmappedUserModelMetrics.successful_requests +=
               keyData.metrics.successful_requests || 0;
             unmappedUserModelMetrics.failed_requests += keyData.metrics.failed_requests || 0;
@@ -1861,7 +1944,7 @@ export class AdminUsageAggregationService extends BaseService {
             unmappedUserMetrics.total_tokens += keyData.metrics.total_tokens;
             unmappedUserMetrics.prompt_tokens += keyData.metrics.prompt_tokens || 0;
             unmappedUserMetrics.completion_tokens += keyData.metrics.completion_tokens || 0;
-            unmappedUserMetrics.spend += keyData.metrics.spend;
+            unmappedUserMetrics.spend += unmappedSpend;
             unmappedUserMetrics.successful_requests += keyData.metrics.successful_requests || 0;
             unmappedUserMetrics.failed_requests += keyData.metrics.failed_requests || 0;
           }
@@ -1891,9 +1974,7 @@ export class AdminUsageAggregationService extends BaseService {
           const modelMetrics = enrichedData.breakdown.models[modelName].metrics;
           modelMetrics.api_requests -= modelSkippedRequests;
           modelMetrics.total_tokens -= modelSkippedTokens;
-          modelMetrics.spend -= modelSkippedSpend;
-          // Note: prompt_tokens and completion_tokens are already correct (summed from valid keys only)
-          // But we should validate they don't include skipped values
+          // Note: spend, prompt_tokens and completion_tokens are already correct (summed from valid keys only)
 
           this.fastify.log.debug(
             {
@@ -1981,13 +2062,13 @@ export class AdminUsageAggregationService extends BaseService {
               metrics,
             };
 
-            // Add unmapped prompt/completion/success/failure to model totals.
-            // api_requests, total_tokens, and spend already come from the LiteLLM
-            // aggregate used to initialize the model metrics — only the fields that
-            // were initialized to 0 and summed per-key need the unmapped contribution.
+            // Add unmapped metrics to model totals.
+            // api_requests and total_tokens come from the LiteLLM aggregate;
+            // spend, prompt/completion tokens, and success/failure are summed per-key.
             const modelMetrics = enrichedData.breakdown.models[modelName].metrics;
             modelMetrics.prompt_tokens += metrics.prompt_tokens;
             modelMetrics.completion_tokens += metrics.completion_tokens;
+            modelMetrics.spend += metrics.spend;
             modelMetrics.successful_requests += metrics.successful_requests || 0;
             modelMetrics.failed_requests += metrics.failed_requests || 0;
 
@@ -2041,11 +2122,14 @@ export class AdminUsageAggregationService extends BaseService {
       // breakdown level. LiteLLM's raw total_tokens can diverge from the per-key
       // prompt/completion sums, so we derive total_tokens everywhere from the
       // rebuilt prompt + completion values.
+      // Spend is recalculated from per-token model pricing (not LiteLLM's spend which
+      // discounts vLLM prefix-cached tokens).
 
       // 1. Model-user and model-level metrics
       enrichedData.metrics.total_tokens = 0;
       enrichedData.metrics.prompt_tokens = 0;
       enrichedData.metrics.completion_tokens = 0;
+      enrichedData.metrics.spend = 0;
       enrichedData.metrics.successful_requests = 0;
       enrichedData.metrics.failed_requests = 0;
       Object.values(enrichedData.breakdown.models).forEach((modelData) => {
@@ -2058,6 +2142,7 @@ export class AdminUsageAggregationService extends BaseService {
         enrichedData.metrics.total_tokens += modelData.metrics.total_tokens;
         enrichedData.metrics.prompt_tokens += modelData.metrics.prompt_tokens;
         enrichedData.metrics.completion_tokens += modelData.metrics.completion_tokens;
+        enrichedData.metrics.spend += modelData.metrics.spend;
         enrichedData.metrics.successful_requests += modelData.metrics.successful_requests;
         enrichedData.metrics.failed_requests += modelData.metrics.failed_requests;
       });

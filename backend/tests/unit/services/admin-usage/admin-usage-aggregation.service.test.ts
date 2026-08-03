@@ -691,19 +691,23 @@ describe('AdminUsageAggregationService', () => {
     it('should handle mixed mapped, unmapped, and skipped across multiple models', async () => {
       // Set up a DB mock so hash_mapped resolves to a real user
       vi.spyOn(aggregationService as any, 'isDatabaseUnavailable').mockReturnValue(false);
-      vi.spyOn(aggregationService as any, 'executeQuery').mockResolvedValue({
-        rows: [
-          {
-            litellm_key_alias: 'sk-mapped',
-            key_hash: 'hash_mapped',
-            user_id: 'user-1',
-            key_name: 'Mapped Key',
-            username: 'alice',
-            email: 'alice@example.com',
-            role: 'user',
-          },
-        ],
-      });
+      vi.spyOn(aggregationService as any, 'executeQuery')
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              litellm_key_alias: 'sk-mapped',
+              key_hash: 'hash_mapped',
+              user_id: 'user-1',
+              key_name: 'Mapped Key',
+              username: 'alice',
+              email: 'alice@example.com',
+              role: 'user',
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          rows: [],
+        });
 
       const dayData: LiteLLMDayData = {
         date: '2025-06-18',

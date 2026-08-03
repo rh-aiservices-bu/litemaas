@@ -1733,29 +1733,33 @@ describe('AdminUsageStatsService', () => {
         },
       };
 
-      // Mock database query for API key mapping
-      (fastify.pg.query as Mock).mockResolvedValueOnce({
-        rows: [
-          {
-            litellm_key_alias: 'user1-key-alpha',
-            key_hash: 'key-hash-1',
-            user_id: 'user-1',
-            key_name: 'Production Key',
-            username: 'user1',
-            email: 'user1@example.com',
-            role: 'user',
-          },
-          {
-            litellm_key_alias: 'user1-key-beta',
-            key_hash: 'key-hash-2',
-            user_id: 'user-1',
-            key_name: 'Dev Key',
-            username: 'user1',
-            email: 'user1@example.com',
-            role: 'user',
-          },
-        ],
-      });
+      // Mock database queries: API key mapping, then model pricing (empty = fallback to LiteLLM spend)
+      (fastify.pg!.query as Mock)
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              litellm_key_alias: 'user1-key-alpha',
+              key_hash: 'key-hash-1',
+              user_id: 'user-1',
+              key_name: 'Production Key',
+              username: 'user1',
+              email: 'user1@example.com',
+              role: 'user',
+            },
+            {
+              litellm_key_alias: 'user1-key-beta',
+              key_hash: 'key-hash-2',
+              user_id: 'user-1',
+              key_name: 'Dev Key',
+              username: 'user1',
+              email: 'user1@example.com',
+              role: 'user',
+            },
+          ],
+        })
+        .mockResolvedValueOnce({
+          rows: [],
+        });
 
       (liteLLMService.getDailyActivity as Mock).mockResolvedValue({
         api_requests: 100,
