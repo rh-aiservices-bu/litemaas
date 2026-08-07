@@ -475,6 +475,21 @@ describe('OAuthService', () => {
       await expect(service.processOAuthUser(mockUserInfo)).rejects.toThrow('DB error');
     });
 
+    it('should use preferred_username as email fallback when updating existing user without email claim', async () => {
+      const existingUser = { ...mockUserDbRow };
+      mockFastify.dbUtils.queryOne = vi.fn().mockResolvedValue(existingUser);
+      mockFastify.dbUtils.query = vi.fn().mockResolvedValue({ rowCount: 1 });
+      mockLiteLLMService.getUserInfo = vi.fn().mockResolvedValue(null);
+
+      const noEmailUserInfo = { ...mockUserInfo, email: undefined };
+      await service.processOAuthUser(noEmailUserInfo);
+
+      expect(mockFastify.dbUtils.query).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE users'),
+        expect.arrayContaining([noEmailUserInfo.preferred_username, noEmailUserInfo.preferred_username]),
+      );
+    });
+
     it('should preserve application-set admin role even with basic OpenShift groups', async () => {
       const adminUser = { ...mockUserDbRow, roles: ['user', 'admin'] };
       mockFastify.dbUtils.queryOne = vi.fn().mockResolvedValue(adminUser);
