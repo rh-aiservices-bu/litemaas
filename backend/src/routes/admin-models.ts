@@ -218,6 +218,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
         api_key,
         input_cost_per_token,
         output_cost_per_token,
+        cache_read_input_token_cost,
         tpm,
         rpm,
         max_tokens,
@@ -242,6 +243,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
             custom_llm_provider: provider as 'openai' | 'docling',
             input_cost_per_token,
             output_cost_per_token,
+            ...(cache_read_input_token_cost !== undefined && { cache_read_input_token_cost }),
             tpm,
             rpm,
             ...(api_key && { api_key }), // Only include api_key if provided
@@ -280,23 +282,25 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
 
           await fastify.dbUtils.query(
             `INSERT INTO models (id, name, provider, description, category, context_length,
-              input_cost_per_token, output_cost_per_token, supports_vision, supports_function_calling,
+              input_cost_per_token, output_cost_per_token, cache_read_input_token_cost,
+              supports_vision, supports_function_calling,
               supports_tool_choice, supports_parallel_function_calling, supports_streaming,
               features, availability, version, api_base, tpm, rpm, max_tokens,
               litellm_model_id, backend_model_name, restricted_access)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
             ON CONFLICT (id) DO UPDATE SET
               availability = 'available',
-              litellm_model_id = COALESCE($21, models.litellm_model_id),
+              litellm_model_id = COALESCE($22, models.litellm_model_id),
               description = COALESCE($4, models.description),
-              backend_model_name = COALESCE($22, models.backend_model_name),
-              restricted_access = COALESCE($23, models.restricted_access),
+              backend_model_name = COALESCE($23, models.backend_model_name),
+              restricted_access = COALESCE($24, models.restricted_access),
               input_cost_per_token = $7,
               output_cost_per_token = $8,
-              api_base = $17,
-              tpm = $18,
-              rpm = $19,
-              max_tokens = $20,
+              cache_read_input_token_cost = $9,
+              api_base = $18,
+              tpm = $19,
+              rpm = $20,
+              max_tokens = $21,
               updated_at = CURRENT_TIMESTAMP`,
             [
               model_name, // $1 id
@@ -307,21 +311,22 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
               max_tokens || null, // $6 context_length
               input_cost_per_token || null, // $7
               output_cost_per_token || null, // $8
-              supports_vision || false, // $9
-              supports_function_calling || false, // $10
-              supports_tool_choice || false, // $11
-              supports_parallel_function_calling || false, // $12
-              true, // $13 supports_streaming
-              features, // $14
-              'available', // $15 availability
-              '1.0', // $16 version
-              api_base || null, // $17
-              tpm || null, // $18
-              rpm || null, // $19
-              max_tokens || null, // $20
-              litellmModelId, // $21
-              backend_model_name || null, // $22
-              restrictedAccess !== undefined ? restrictedAccess : false, // $23
+              cache_read_input_token_cost ?? null, // $9
+              supports_vision || false, // $10
+              supports_function_calling || false, // $11
+              supports_tool_choice || false, // $12
+              supports_parallel_function_calling || false, // $13
+              true, // $14 supports_streaming
+              features, // $15
+              'available', // $16 availability
+              '1.0', // $17 version
+              api_base || null, // $18
+              tpm || null, // $19
+              rpm || null, // $20
+              max_tokens || null, // $21
+              litellmModelId, // $22
+              backend_model_name || null, // $23
+              restrictedAccess !== undefined ? restrictedAccess : false, // $24
             ],
           );
 
@@ -483,6 +488,7 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
               'api_key',
               'input_cost_per_token',
               'output_cost_per_token',
+              'cache_read_input_token_cost',
               'tpm',
               'rpm',
               'supports_convert',
@@ -507,6 +513,10 @@ const adminModelsRoutes: FastifyPluginAsync = async (fastify) => {
           }
           if (updateData.output_cost_per_token !== undefined) {
             liteLLMPayload.litellm_params.output_cost_per_token = updateData.output_cost_per_token;
+          }
+          if (updateData.cache_read_input_token_cost !== undefined) {
+            liteLLMPayload.litellm_params.cache_read_input_token_cost =
+              updateData.cache_read_input_token_cost;
           }
           if (updateData.tpm !== undefined) {
             liteLLMPayload.litellm_params.tpm = updateData.tpm;

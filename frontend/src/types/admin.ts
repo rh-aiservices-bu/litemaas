@@ -6,6 +6,7 @@ export interface LiteLLMModelCreate {
   api_key?: string;
   input_cost_per_token: number;
   output_cost_per_token: number;
+  cache_read_input_token_cost?: number;
   tpm: number; // tokens per minute
   rpm: number; // requests per minute
   max_tokens: number;
@@ -66,6 +67,7 @@ export interface AdminModelFormData {
   api_key: string;
   input_cost_per_token: number;
   output_cost_per_token: number;
+  cache_read_input_token_cost?: number;
   tpm: number;
   rpm: number;
   max_tokens: number;
@@ -87,6 +89,7 @@ export interface AdminModelFormErrors {
   api_key?: string;
   input_cost_per_token?: string;
   output_cost_per_token?: string;
+  cache_read_input_token_cost?: string;
   tpm?: string;
   rpm?: string;
   max_tokens?: string;

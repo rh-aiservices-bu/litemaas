@@ -22,6 +22,7 @@ export interface BackendModel {
   backendModelName?: string;
   inputCostPerToken?: number;
   outputCostPerToken?: number;
+  cacheReadInputTokenCost?: number;
   tpm?: number;
   rpm?: number;
   maxTokens?: number;
@@ -57,6 +58,7 @@ export interface Model {
   backendModelName?: string;
   inputCostPerToken?: number;
   outputCostPerToken?: number;
+  cacheReadInputTokenCost?: number;
   tpm?: number;
   rpm?: number;
   maxTokens?: number;
@@ -161,6 +163,7 @@ class ModelsService {
       backendModelName: backendModel.backendModelName,
       inputCostPerToken: backendModel.inputCostPerToken,
       outputCostPerToken: backendModel.outputCostPerToken,
+      cacheReadInputTokenCost: backendModel.cacheReadInputTokenCost,
       tpm: backendModel.tpm,
       rpm: backendModel.rpm,
       maxTokens: backendModel.maxTokens,

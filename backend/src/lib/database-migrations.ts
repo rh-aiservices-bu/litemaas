@@ -166,6 +166,9 @@ ALTER TABLE models ADD COLUMN IF NOT EXISTS restricted_access BOOLEAN DEFAULT fa
 -- Add encrypted_api_key column for storing encrypted provider API keys
 ALTER TABLE models ADD COLUMN IF NOT EXISTS encrypted_api_key TEXT;
 
+-- Add cache_read_input_token_cost for LiteLLM prefix caching support
+ALTER TABLE models ADD COLUMN IF NOT EXISTS cache_read_input_token_cost DECIMAL(15,10);
+
 CREATE INDEX IF NOT EXISTS idx_models_provider ON models(provider);
 CREATE INDEX IF NOT EXISTS idx_models_category ON models(category);
 CREATE INDEX IF NOT EXISTS idx_models_availability ON models(availability);
