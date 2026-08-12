@@ -905,6 +905,10 @@
         "welcomeDescription": "Togo glingad ad prestanno echui a anguirel-API edhellen",
         "welcomeTitle": "Echui-Prestann Orthad-Uin"
       },
+      "thinking": {
+        "thought": "Nauth",
+        "thinkingInProgress": "Nautha..."
+      },
       "configuration": {
         "advancedSettings": "Orthad Govannon",
         "apiKey": "Edhello Anguirel-API",

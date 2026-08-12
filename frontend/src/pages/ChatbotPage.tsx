@@ -72,6 +72,8 @@ import {
   StreamingState,
 } from '../types/chat';
 
+import ThinkingBlock from '../components/chat/ThinkingBlock';
+import { parseThinkingTags } from '../utils/thinkingParser';
 import userAvatar from '../../src/assets/images/avatar-placeholder.svg';
 import orb from '../../src/assets/images/orb.svg';
 
@@ -860,26 +862,45 @@ const ChatbotPage: React.FC = () => {
                             description={t('pages.chatbot.welcome.description')}
                           />
                         ) : (
-                          messages.map((message) => (
-                            <Message
-                              key={message.id}
-                              role={
-                                message.role === 'assistant'
-                                  ? 'bot'
-                                  : message.role === 'system'
-                                    ? 'bot'
-                                    : message.role
-                              }
-                              content={message.content}
-                              isLoading={
-                                streamingState.isStreaming &&
-                                message.id === streamingState.streamingMessageId &&
-                                !message.content
-                              }
-                              timestamp={message.timestamp.toLocaleTimeString()}
-                              avatar={message.role === 'assistant' ? orb : userAvatar}
-                            />
-                          ))
+                          messages.map((message) => {
+                            const isAssistant = message.role === 'assistant';
+                            const isCurrentlyStreaming =
+                              streamingState.isStreaming &&
+                              message.id === streamingState.streamingMessageId;
+                            const parsed =
+                              isAssistant && message.content
+                                ? parseThinkingTags(message.content)
+                                : null;
+
+                            return (
+                              <Message
+                                key={message.id}
+                                role={
+                                  message.role === 'user' ? 'user' : 'bot'
+                                }
+                                content={parsed ? parsed.response : message.content}
+                                extraContent={
+                                  parsed?.thinking
+                                    ? {
+                                        beforeMainContent: (
+                                          <ThinkingBlock
+                                            content={parsed.thinking}
+                                            isStreaming={
+                                              isCurrentlyStreaming &&
+                                              !parsed.isThinkingComplete
+                                            }
+                                          />
+                                        ),
+                                      }
+                                    : undefined
+                                }
+                                isLoading={isCurrentlyStreaming && !message.content}
+                                timestamp={message.timestamp.toLocaleTimeString()}
+                                avatar={isAssistant ? orb : userAvatar}
+                              />
+                            );
+                          })
+
                         )}
                         {isSending && !streamingState.isStreaming && (
                           <Message role="bot" content="" isLoading avatar={orb} />

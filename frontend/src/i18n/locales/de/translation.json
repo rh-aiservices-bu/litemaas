@@ -905,6 +905,10 @@
         "welcomeDescription": "Beginnen Sie eine Unterhaltung, um Ihr ausgewähltes Modell und den API-Schlüssel zu testen",
         "welcomeTitle": "Modell-Test-Assistent"
       },
+      "thinking": {
+        "thought": "Gedanke",
+        "thinkingInProgress": "Denkt nach..."
+      },
       "configuration": {
         "advancedSettings": "Erweiterte Einstellungen",
         "apiKey": "API-Schlüssel auswählen",

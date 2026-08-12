@@ -905,6 +905,10 @@
         "welcomeDescription": "선택한 모델과 API 키를 테스트하기 위해 대화를 시작하세요",
         "welcomeTitle": "모델 테스트 어시스턴트"
       },
+      "thinking": {
+        "thought": "사고",
+        "thinkingInProgress": "생각 중..."
+      },
       "configuration": {
         "advancedSettings": "고급 설정",
         "apiKey": "API 키 선택",
