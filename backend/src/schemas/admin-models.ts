@@ -8,6 +8,7 @@ export const LiteLLMModelParamsSchema = Type.Object({
   custom_llm_provider: Type.Union([Type.Literal('openai'), Type.Literal('docling')]),
   input_cost_per_token: Type.Number({ minimum: 0 }),
   output_cost_per_token: Type.Number({ minimum: 0 }),
+  cache_read_input_token_cost: Type.Optional(Type.Number({ minimum: 0 })),
   tpm: Type.Integer({ minimum: 1 }),
   rpm: Type.Integer({ minimum: 1 }),
 });
@@ -37,6 +38,7 @@ export const AdminCreateModelSchema = Type.Object({
   api_key: Type.Optional(Type.String()),
   input_cost_per_token: Type.Number({ minimum: 0 }),
   output_cost_per_token: Type.Number({ minimum: 0 }),
+  cache_read_input_token_cost: Type.Optional(Type.Number({ minimum: 0 })),
   tpm: Type.Integer({ minimum: 1 }),
   rpm: Type.Integer({ minimum: 1 }),
   max_tokens: Type.Integer({ minimum: 1 }),

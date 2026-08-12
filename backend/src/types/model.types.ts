@@ -15,6 +15,7 @@ export interface Model {
   backendModelName?: string; // The backend model name used in LiteLLM (e.g., gpt-4-turbo)
   inputCostPerToken?: number;
   outputCostPerToken?: number;
+  cacheReadInputTokenCost?: number;
   tpm?: number; // tokens per minute
   rpm?: number; // requests per minute
   maxTokens?: number;
@@ -54,6 +55,7 @@ export interface CreateModelDto {
   backendModelName?: string; // The backend model name used in LiteLLM
   inputCostPerToken?: number;
   outputCostPerToken?: number;
+  cacheReadInputTokenCost?: number;
   tpm?: number;
   rpm?: number;
   maxTokens?: number;
@@ -77,6 +79,7 @@ export interface UpdateModelDto {
   backendModelName?: string; // The backend model name used in LiteLLM
   inputCostPerToken?: number;
   outputCostPerToken?: number;
+  cacheReadInputTokenCost?: number;
   tpm?: number;
   rpm?: number;
   maxTokens?: number;

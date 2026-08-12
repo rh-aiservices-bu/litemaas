@@ -75,6 +75,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     result.apiBase = model.litellm_params.api_base;
     result.inputCostPerToken = inputCost;
     result.outputCostPerToken = outputCost;
+    result.cacheReadInputTokenCost = model.litellm_params.cache_read_input_token_cost;
     result.tpm = model.litellm_params.tpm;
     result.rpm = model.litellm_params.rpm;
     result.maxTokens = model.model_info.max_tokens;
@@ -137,6 +138,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
                   backendModelName: { type: 'string' },
                   inputCostPerToken: { type: 'number' },
                   outputCostPerToken: { type: 'number' },
+                  cacheReadInputTokenCost: { type: 'number' },
                   tpm: { type: 'number' },
                   rpm: { type: 'number' },
                   maxTokens: { type: 'number' },
@@ -208,6 +210,9 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
               : undefined,
             outputCostPerToken: model.output_cost_per_token
               ? Number(model.output_cost_per_token)
+              : undefined,
+            cacheReadInputTokenCost: model.cache_read_input_token_cost
+              ? Number(model.cache_read_input_token_cost)
               : undefined,
             tpm: model.tpm ? Number(model.tpm) : undefined,
             rpm: model.rpm ? Number(model.rpm) : undefined,

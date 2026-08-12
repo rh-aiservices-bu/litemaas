@@ -221,6 +221,8 @@ export class ModelSyncService {
     const outputCostPerToken =
       litellmModel.model_info?.output_cost_per_token ||
       litellmModel.litellm_params?.output_cost_per_token;
+    const cacheReadInputTokenCost =
+      litellmModel.litellm_params?.cache_read_input_token_cost ?? null;
 
     // Extract admin-specific fields
     const apiBase = litellmModel.litellm_params?.api_base;
@@ -262,12 +264,12 @@ export class ModelSyncService {
       `
       INSERT INTO models (
         id, name, provider, description, category, context_length,
-        input_cost_per_token, output_cost_per_token, supports_vision,
-        supports_function_calling, supports_tool_choice,
+        input_cost_per_token, output_cost_per_token, cache_read_input_token_cost,
+        supports_vision, supports_function_calling, supports_tool_choice,
         supports_parallel_function_calling, supports_streaming,
         features, availability, version, metadata,
         api_base, tpm, rpm, max_tokens, litellm_model_id, backend_model_name
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
     `,
       [
         modelId,
@@ -278,6 +280,7 @@ export class ModelSyncService {
         contextLength,
         inputCostPerToken,
         outputCostPerToken,
+        cacheReadInputTokenCost,
         supportsVision,
         supportsFunctionCalling,
         supportsToolChoice,
@@ -332,6 +335,8 @@ export class ModelSyncService {
     const outputCostPerToken =
       litellmModel.model_info?.output_cost_per_token ||
       litellmModel.litellm_params?.output_cost_per_token;
+    const cacheReadInputTokenCost =
+      litellmModel.litellm_params?.cache_read_input_token_cost ?? null;
 
     const supportsVision = litellmModel.model_info?.supports_vision || false;
     const supportsFunctionCalling = litellmModel.model_info?.supports_function_calling || false;
@@ -364,8 +369,8 @@ export class ModelSyncService {
     if (!forceUpdate) {
       const existing = await this.fastify.dbUtils.queryOne(
         `
-        SELECT input_cost_per_token, output_cost_per_token, availability, 
-               context_length, supports_vision, supports_function_calling,
+        SELECT input_cost_per_token, output_cost_per_token, cache_read_input_token_cost,
+               availability, context_length, supports_vision, supports_function_calling,
                supports_tool_choice, supports_parallel_function_calling,
                supports_streaming, features, version, metadata,
                api_base, tpm, rpm, max_tokens, description, backend_model_name,
@@ -406,21 +411,22 @@ export class ModelSyncService {
         context_length = $6,
         input_cost_per_token = $7,
         output_cost_per_token = $8,
-        supports_vision = $9,
-        supports_function_calling = $10,
-        supports_tool_choice = $11,
-        supports_parallel_function_calling = $12,
-        supports_streaming = $13,
-        features = $14,
-        availability = $15,
-        version = $16,
-        metadata = $17,
-        api_base = $18,
-        tpm = $19,
-        rpm = $20,
-        max_tokens = $21,
-        litellm_model_id = $22,
-        backend_model_name = $23,
+        cache_read_input_token_cost = $9,
+        supports_vision = $10,
+        supports_function_calling = $11,
+        supports_tool_choice = $12,
+        supports_parallel_function_calling = $13,
+        supports_streaming = $14,
+        features = $15,
+        availability = $16,
+        version = $17,
+        metadata = $18,
+        api_base = $19,
+        tpm = $20,
+        rpm = $21,
+        max_tokens = $22,
+        litellm_model_id = $23,
+        backend_model_name = $24,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = $1
     `,
@@ -433,6 +439,7 @@ export class ModelSyncService {
         contextLength,
         inputCostPerToken,
         outputCostPerToken,
+        cacheReadInputTokenCost,
         supportsVision,
         supportsFunctionCalling,
         supportsToolChoice,
@@ -619,14 +626,19 @@ export class ModelSyncService {
       litellmModel.model_info?.output_cost_per_token ||
       litellmModel.litellm_params?.output_cost_per_token;
 
+    const cacheReadInputTokenCost =
+      litellmModel.litellm_params?.cache_read_input_token_cost ?? null;
+
     const existingPrice = {
       input: parseFloat(existing.input_cost_per_token || '0'),
       output: parseFloat(existing.output_cost_per_token || '0'),
+      cacheRead: parseFloat(existing.cache_read_input_token_cost || '0'),
     };
 
     const newPrice = {
       input: parseFloat(inputCostPerToken || '0'),
       output: parseFloat(outputCostPerToken || '0'),
+      cacheRead: parseFloat(cacheReadInputTokenCost || '0'),
     };
 
     // Extract capabilities from LiteLLM model
@@ -669,6 +681,7 @@ export class ModelSyncService {
       existing.context_length === (litellmModel.model_info?.max_tokens || null) &&
       Math.abs(existingPrice.input - newPrice.input) < 0.0000000001 &&
       Math.abs(existingPrice.output - newPrice.output) < 0.0000000001 &&
+      Math.abs(existingPrice.cacheRead - newPrice.cacheRead) < 0.0000000001 &&
       existing.supports_vision === supportsVision &&
       existing.supports_function_calling === supportsFunctionCalling &&
       existing.supports_tool_choice === supportsToolChoice &&

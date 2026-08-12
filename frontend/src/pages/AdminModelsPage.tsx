@@ -97,6 +97,7 @@ const AdminModelsPage: React.FC = () => {
   // Display state for cost inputs (per million tokens for better UX)
   const [displayInputCost, setDisplayInputCost] = useState<number>(0);
   const [displayOutputCost, setDisplayOutputCost] = useState<number>(0);
+  const [displayCacheReadCost, setDisplayCacheReadCost] = useState<number>(0);
 
   // Expandable rows state for API Base column
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
@@ -249,6 +250,7 @@ const AdminModelsPage: React.FC = () => {
       api_key: '',
       input_cost_per_token: 0,
       output_cost_per_token: 0,
+      cache_read_input_token_cost: undefined,
       tpm: 1000000,
       rpm: 100000,
       max_tokens: 5000,
@@ -263,6 +265,7 @@ const AdminModelsPage: React.FC = () => {
     });
     setDisplayInputCost(0);
     setDisplayOutputCost(0);
+    setDisplayCacheReadCost(0);
     setFormErrors({});
   };
 
@@ -306,6 +309,10 @@ const AdminModelsPage: React.FC = () => {
       errors.output_cost_per_token = t('models.admin.outputCostCannotBeNegative');
     }
 
+    if (displayCacheReadCost < 0) {
+      errors.cache_read_input_token_cost = t('models.admin.cacheReadCostCannotBeNegative');
+    }
+
     if (formData.tpm < 1) {
       errors.tpm = t('models.admin.tpmMustBeAtLeast_1');
     }
@@ -343,6 +350,7 @@ const AdminModelsPage: React.FC = () => {
       api_key: '', // Never populate from existing model for security
       input_cost_per_token: model.inputCostPerToken || 0,
       output_cost_per_token: model.outputCostPerToken || 0,
+      cache_read_input_token_cost: model.cacheReadInputTokenCost,
       tpm: model.tpm || 1000,
       rpm: model.rpm || 100,
       max_tokens: model.maxTokens || 4000,
@@ -357,8 +365,10 @@ const AdminModelsPage: React.FC = () => {
     });
 
     // Set display values for cost inputs
+    const cacheReadCostPerMillion = (model.cacheReadInputTokenCost || 0) * 1000000;
     setDisplayInputCost(inputCostPerMillion);
     setDisplayOutputCost(outputCostPerMillion);
+    setDisplayCacheReadCost(cacheReadCostPerMillion);
 
     setFormErrors({});
     if (canModifyModels) {
@@ -1054,6 +1064,61 @@ const AdminModelsPage: React.FC = () => {
                             </HelperTextItem>
                           </HelperText>
                         )}
+                      </FormGroup>
+                    </GridItem>
+                    <GridItem span={6}>
+                      <FormGroup
+                        label={t('models.admin.cacheReadCostPerMillionTokens')}
+                        fieldId="cache-read-cost"
+                      >
+                        <NumberInput
+                          id="cache-read-cost"
+                          value={displayCacheReadCost}
+                          onChange={(event) => {
+                            const value = parseFloat((event.target as HTMLInputElement).value) || 0;
+                            setDisplayCacheReadCost(value);
+                            setFormData({
+                              ...formData,
+                              cache_read_input_token_cost: value > 0 ? value / 1000000 : undefined,
+                            });
+                          }}
+                          onPlus={() => {
+                            const newValue =
+                              Math.round((displayCacheReadCost + 0.01) * 10000) / 10000;
+                            setDisplayCacheReadCost(newValue);
+                            setFormData({
+                              ...formData,
+                              cache_read_input_token_cost: newValue / 1000000,
+                            });
+                          }}
+                          onMinus={() => {
+                            const newValue =
+                              Math.round(Math.max(0, displayCacheReadCost - 0.01) * 10000) / 10000;
+                            setDisplayCacheReadCost(newValue);
+                            setFormData({
+                              ...formData,
+                              cache_read_input_token_cost:
+                                newValue > 0 ? newValue / 1000000 : undefined,
+                            });
+                          }}
+                          min={0}
+                          step={0.01}
+                          validated={
+                            formErrors.cache_read_input_token_cost ? 'error' : 'default'
+                          }
+                          isDisabled={isViewModalOpen}
+                        />
+                        <HelperText>
+                          {formErrors.cache_read_input_token_cost ? (
+                            <HelperTextItem variant="error">
+                              {formErrors.cache_read_input_token_cost}
+                            </HelperTextItem>
+                          ) : (
+                            <HelperTextItem>
+                              {t('models.admin.cacheReadCostHelperText')}
+                            </HelperTextItem>
+                          )}
+                        </HelperText>
                       </FormGroup>
                     </GridItem>
                     <GridItem span={6}>
