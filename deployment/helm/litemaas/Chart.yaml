@@ -3,7 +3,7 @@ name: litemaas
 description: LiteMaaS - Model subscription and management platform with LiteLLM integration
 type: application
 version: 0.1.0
-appVersion: "0.5.0"
+appVersion: "0.5.1"
 keywords:
   - litemaas
   - litellm

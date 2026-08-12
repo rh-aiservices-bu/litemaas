@@ -84,7 +84,12 @@ export class ChatService {
     litellmUrl: string,
     apiKey: string,
     request: ChatCompletionRequest,
-    onChunk: (content: string, isComplete: boolean, timeToFirstToken?: number) => void,
+    onChunk: (
+      content: string,
+      reasoning: string,
+      isComplete: boolean,
+      timeToFirstToken?: number,
+    ) => void,
     onComplete: (metrics: ResponseMetrics) => void,
     abortController?: AbortController,
   ): Promise<void> {
@@ -120,6 +125,7 @@ export class ChatService {
       const decoder = new TextDecoder();
       let buffer = '';
       let fullContent = '';
+      let fullReasoning = '';
       let finalUsage: TokenUsage | null = null;
       let timeToFirstToken: number | undefined = undefined;
       let firstChunkReceived = false;
@@ -160,7 +166,25 @@ export class ChatService {
 
               try {
                 const chunk: ChatCompletionStreamChunk = JSON.parse(data);
-                const deltaContent = chunk.choices[0]?.delta?.content || '';
+                const delta = chunk.choices[0]?.delta;
+                const deltaContent = delta?.content || '';
+                // Reasoning may stream in a dedicated field (mirrors the non-streaming payload).
+                const deltaReasoning =
+                  delta?.reasoning_content ||
+                  delta?.provider_specific_fields?.reasoning_content ||
+                  delta?.provider_specific_fields?.reasoning ||
+                  '';
+
+                if (deltaReasoning) {
+                  // Capture time to first token on first reasoning chunk too
+                  if (!firstChunkReceived) {
+                    timeToFirstToken = performance.now() - startTime;
+                    firstChunkReceived = true;
+                  }
+
+                  fullReasoning += deltaReasoning;
+                  onChunk(fullContent, fullReasoning, false, timeToFirstToken);
+                }
 
                 if (deltaContent) {
                   // Capture time to first token on first content chunk
@@ -170,7 +194,7 @@ export class ChatService {
                   }
 
                   fullContent += deltaContent;
-                  onChunk(fullContent, false, timeToFirstToken);
+                  onChunk(fullContent, fullReasoning, false, timeToFirstToken);
                 }
 
                 // Save usage data from final chunk
@@ -180,7 +204,7 @@ export class ChatService {
 
                 // Handle completion
                 if (chunk.choices[0]?.finish_reason) {
-                  onChunk(fullContent, true, timeToFirstToken);
+                  onChunk(fullContent, fullReasoning, true, timeToFirstToken);
                 }
               } catch (parseError) {
                 console.warn('Failed to parse streaming chunk:', parseError);
@@ -272,11 +296,17 @@ export class ChatService {
   /**
    * Create a chat message object
    */
-  createMessage(role: 'user' | 'assistant' | 'system', content: string, id?: string): ChatMessage {
+  createMessage(
+    role: 'user' | 'assistant' | 'system',
+    content: string,
+    id?: string,
+    reasoning?: string | null,
+  ): ChatMessage {
     return {
       id: id || this.generateMessageId(),
       role,
       content,
+      ...(reasoning ? { reasoning } : {}),
       timestamp: new Date(),
     };
   }

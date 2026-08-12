@@ -73,7 +73,7 @@ import {
 } from '../types/chat';
 
 import ThinkingBlock from '../components/chat/ThinkingBlock';
-import { parseThinkingTags } from '../utils/thinkingParser';
+import { extractReasoning, resolveThinking } from '../utils/thinkingParser';
 import userAvatar from '../../src/assets/images/avatar-placeholder.svg';
 import orb from '../../src/assets/images/orb.svg';
 
@@ -316,7 +316,12 @@ const ChatbotPage: React.FC = () => {
             litellmApiUrl,
             apiKeyToUse,
             request,
-            (content: string, _isComplete: boolean, timeToFirstToken?: number) => {
+            (
+              content: string,
+              reasoning: string,
+              _isComplete: boolean,
+              timeToFirstToken?: number,
+            ) => {
               // Capture TTFT as soon as first chunk arrives
               if (timeToFirstToken && !streamingTTFT) {
                 setStreamingTTFT(timeToFirstToken);
@@ -331,7 +336,9 @@ const ChatbotPage: React.FC = () => {
               // Update the message in the messages array
               setMessages((prev) =>
                 prev.map((msg) =>
-                  msg.id === assistantMessageWithId.id ? { ...msg, content } : msg,
+                  msg.id === assistantMessageWithId.id
+                    ? { ...msg, content, ...(reasoning ? { reasoning } : {}) }
+                    : msg,
                 ),
               );
             },
@@ -358,9 +365,12 @@ const ChatbotPage: React.FC = () => {
 
           // Add assistant response
           if (response.choices && response.choices.length > 0) {
+            const responseMessage = response.choices[0].message;
             const assistantMessage = chatService.createMessage(
               'assistant',
-              response.choices[0].message.content,
+              responseMessage.content,
+              undefined,
+              extractReasoning(responseMessage),
             );
             setMessages((prev) => [...prev, assistantMessage]);
           }
@@ -868,16 +878,18 @@ const ChatbotPage: React.FC = () => {
                               streamingState.isStreaming &&
                               message.id === streamingState.streamingMessageId;
                             const parsed =
-                              isAssistant && message.content
-                                ? parseThinkingTags(message.content)
+                              isAssistant && (message.content || message.reasoning)
+                                ? resolveThinking(
+                                    message.content,
+                                    message.reasoning,
+                                    isCurrentlyStreaming,
+                                  )
                                 : null;
 
                             return (
                               <Message
                                 key={message.id}
-                                role={
-                                  message.role === 'user' ? 'user' : 'bot'
-                                }
+                                role={message.role === 'user' ? 'user' : 'bot'}
                                 content={parsed ? parsed.response : message.content}
                                 extraContent={
                                   parsed?.thinking
@@ -886,8 +898,7 @@ const ChatbotPage: React.FC = () => {
                                           <ThinkingBlock
                                             content={parsed.thinking}
                                             isStreaming={
-                                              isCurrentlyStreaming &&
-                                              !parsed.isThinkingComplete
+                                              isCurrentlyStreaming && !parsed.isThinkingComplete
                                             }
                                           />
                                         ),
@@ -900,7 +911,6 @@ const ChatbotPage: React.FC = () => {
                               />
                             );
                           })
-
                         )}
                         {isSending && !streamingState.isStreaming && (
                           <Message role="bot" content="" isLoading avatar={orb} />
