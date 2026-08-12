@@ -1103,6 +1103,7 @@
       },
       "categories": {
         "audio": "오디오",
+        "functionCalling": "함수 호출",
         "imageGeneration": "이미지 생성",
         "languageModel": "언어 모델",
         "multimodal": "멀티모달"

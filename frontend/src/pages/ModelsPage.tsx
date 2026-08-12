@@ -181,9 +181,10 @@ const ModelsPage: React.FC = () => {
 
       if (selectedCategory !== 'all' && selectedCategory !== 'Multimodal') {
         filteredModels = response.models.filter((model) => {
+          if (selectedCategory === 'Function Calling') {
+            return model.supportsFunctionCalling === true;
+          }
           if (selectedCategory === 'Language Model') {
-            // Language Model includes all models except pure image/audio generation
-            // (includes multimodal since they also have language capabilities)
             return model.category === 'Language Model' || model.category === 'Multimodal';
           }
           return model.category === selectedCategory;
@@ -254,7 +255,7 @@ const ModelsPage: React.FC = () => {
   }, [page, perPage]);
 
   // Define all available categories (static list)
-  const categories = ['all', 'Language Model', 'Multimodal', 'Image Generation', 'Audio'];
+  const categories = ['all', 'Language Model', 'Multimodal', 'Function Calling', 'Image Generation', 'Audio'];
 
   // Translation function for category names
   const getCategoryLabel = (category: string) => {
@@ -262,6 +263,7 @@ const ModelsPage: React.FC = () => {
     if (category === 'Language Model') return t('pages.models.categories.languageModel');
     if (category === 'Multimodal') return t('pages.models.categories.multimodal');
     if (category === 'Image Generation') return t('pages.models.categories.imageGeneration');
+    if (category === 'Function Calling') return t('pages.models.categories.functionCalling');
     if (category === 'Audio') return t('pages.models.categories.audio');
     return category;
   };

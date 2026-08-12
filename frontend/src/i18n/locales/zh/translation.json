@@ -1103,6 +1103,7 @@
       },
       "categories": {
         "audio": "音频",
+        "functionCalling": "函数调用",
         "imageGeneration": "图像生成",
         "languageModel": "语言模型",
         "multimodal": "多模态"
