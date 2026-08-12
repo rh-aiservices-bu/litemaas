@@ -6,7 +6,22 @@ export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
   content: string;
+  /** Reasoning/thinking text returned as a dedicated field by the provider (e.g. `reasoning_content`). */
+  reasoning?: string;
   timestamp: Date;
+}
+
+/**
+ * Some providers/engines return the reasoning trace in a dedicated payload field rather than
+ * embedded in `content` as `<think>...</think>` tags. LiteLLM surfaces this as `reasoning_content`
+ * (and mirrors it under `provider_specific_fields`).
+ */
+export interface ReasoningFields {
+  reasoning_content?: string | null;
+  provider_specific_fields?: {
+    reasoning?: string | null;
+    reasoning_content?: string | null;
+  } | null;
 }
 
 export interface TokenUsage {
@@ -43,7 +58,7 @@ export interface ChatCompletionResponse {
     message: {
       role: 'assistant';
       content: string;
-    };
+    } & ReasoningFields;
     finish_reason: 'stop' | 'length' | 'content_filter' | 'tool_calls' | null;
   }>;
   usage: TokenUsage;
@@ -60,7 +75,7 @@ export interface ChatCompletionStreamChunk {
     delta: {
       role?: 'assistant';
       content?: string;
-    };
+    } & ReasoningFields;
     finish_reason: 'stop' | 'length' | 'content_filter' | 'tool_calls' | null;
   }>;
   usage?: TokenUsage; // Only present in the final chunk

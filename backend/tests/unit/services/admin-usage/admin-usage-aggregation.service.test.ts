@@ -851,6 +851,112 @@ describe('AdminUsageAggregationService', () => {
   });
 
   // ============================================================================
+  // enrichWithUserMapping — soft-deleted key usage attribution
+  // ============================================================================
+
+  describe('enrichWithUserMapping: soft-deleted keys preserve usage attribution', () => {
+    const callEnrich = async (dayData: LiteLLMDayData): Promise<EnrichedDayData> => {
+      return (aggregationService as any).enrichWithUserMapping(dayData);
+    };
+
+    const dayData: LiteLLMDayData = {
+      date: '2025-07-01',
+      metrics: {
+        api_requests: 10,
+        total_tokens: 500,
+        prompt_tokens: 300,
+        completion_tokens: 200,
+        spend: 0.25,
+        successful_requests: 0,
+        failed_requests: 0,
+      },
+      breakdown: {
+        models: {
+          'openai/gpt-4': {
+            metrics: {
+              api_requests: 10,
+              total_tokens: 500,
+              prompt_tokens: 300,
+              completion_tokens: 200,
+              spend: 0.25,
+            },
+            api_keys: {
+              hash_deleted: {
+                metrics: {
+                  api_requests: 10,
+                  total_tokens: 500,
+                  prompt_tokens: 300,
+                  completion_tokens: 200,
+                  spend: 0.25,
+                  successful_requests: 9,
+                  failed_requests: 1,
+                },
+              },
+            },
+          },
+        },
+        api_keys: {},
+        providers: {},
+      },
+    };
+
+    it('should map usage to the correct user when key is soft-deleted (archived/revoked)', async () => {
+      vi.spyOn(aggregationService as any, 'isDatabaseUnavailable').mockReturnValue(false);
+      vi.spyOn(aggregationService as any, 'executeQuery')
+        .mockResolvedValueOnce({
+          rows: [
+            {
+              litellm_key_alias: 'sk-deleted',
+              key_hash: 'hash_deleted',
+              user_id: 'user-deleted-key',
+              key_name: 'Deleted Key',
+              username: 'bob',
+              email: 'bob@example.com',
+              role: 'user',
+            },
+          ],
+        })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const result = await callEnrich(dayData);
+
+      // Usage should be attributed to bob, not Unknown User
+      expect(result.breakdown.users['user-deleted-key']).toBeDefined();
+      expect(result.breakdown.users['user-deleted-key'].username).toBe('bob');
+      expect(result.breakdown.users['user-deleted-key'].email).toBe('bob@example.com');
+      expect(result.breakdown.users['user-deleted-key'].metrics.api_requests).toBe(10);
+      expect(result.breakdown.users['user-deleted-key'].metrics.spend).toBeCloseTo(0.25);
+
+      // Unknown User should NOT exist
+      expect(result.breakdown.users['00000000-0000-0000-0000-000000000000']).toBeUndefined();
+
+      vi.restoreAllMocks();
+    });
+
+    it('should attribute usage to Unknown User when key is hard-deleted (row gone)', async () => {
+      vi.spyOn(aggregationService as any, 'isDatabaseUnavailable').mockReturnValue(false);
+      // Empty rows: the key_hash no longer exists in the database
+      vi.spyOn(aggregationService as any, 'executeQuery')
+        .mockResolvedValueOnce({ rows: [] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const result = await callEnrich(dayData);
+
+      // Usage should fall to Unknown User
+      const unknownUser = result.breakdown.users['00000000-0000-0000-0000-000000000000'];
+      expect(unknownUser).toBeDefined();
+      expect(unknownUser.username).toBe('Unknown User');
+      expect(unknownUser.metrics.api_requests).toBe(10);
+      expect(unknownUser.metrics.spend).toBeCloseTo(0.25);
+
+      // The original user should NOT exist
+      expect(result.breakdown.users['user-deleted-key']).toBeUndefined();
+
+      vi.restoreAllMocks();
+    });
+  });
+
+  // ============================================================================
   // enrichWithUserMapping — total_tokens reconciliation
   // ============================================================================
 

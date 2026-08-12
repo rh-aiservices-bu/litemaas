@@ -415,11 +415,15 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
       const { id } = request.params;
 
       try {
-        await apiKeyService.deleteApiKey(id, user.userId);
+        // Soft-delete (archive) instead of hard delete so the key_hash row
+        // remains in the database and the usage enrichment pipeline can still
+        // map historical LiteLLM usage data back to this user.
+        // The key is still deleted from LiteLLM, preventing further use.
+        const { archivedAt } = await apiKeyService.archiveApiKey(id, user.userId);
 
         return {
           message: 'API key deleted successfully',
-          deletedAt: new Date().toISOString(),
+          deletedAt: archivedAt.toISOString(),
         };
       } catch (error) {
         fastify.log.error(error, 'Failed to delete API key');

@@ -1,0 +1,16 @@
+.thinking-block {
+  margin-bottom: var(--pf-t--global--spacer--sm);
+}
+
+.thinking-block__expandable {
+  border-left: 3px solid var(--pf-t--global--border--color--default);
+  padding-left: var(--pf-t--global--spacer--md);
+}
+
+.thinking-block__content {
+  font-style: italic;
+  color: var(--pf-t--global--text--color--subtle);
+  white-space: pre-wrap;
+  font-size: var(--pf-t--global--font--size--sm);
+  line-height: var(--pf-t--global--font--line-height--body);
+}

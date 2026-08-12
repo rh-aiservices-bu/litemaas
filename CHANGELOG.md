@@ -5,6 +5,34 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-08-12
+
+### Added
+
+- **Reasoning field support in chatbot playground**: The playground now renders the thinking trace when the provider returns it in a dedicated payload field (`reasoning_content`, also mirrored under `provider_specific_fields`) instead of inline `<think>` tags — as served by e.g. DeepSeek R1 distills through LiteLLM
+  - New `ReasoningFields` type and optional `reasoning` field on `ChatMessage`; `extractReasoning()` and `resolveThinking()` helpers where a dedicated reasoning field takes precedence over inline tag parsing
+  - Streaming path captures `reasoning_content` deltas separately from content and reports them as they arrive
+- **Thinking tag formatting in chatbot playground**: Parse `<think>...</think>` tags in assistant responses and render them as a collapsible section above the main response; during streaming the block stays expanded with a "Thinking..." label, then collapses to "Thought" once complete (#71)
+  - `ThinkingBlock` component built on PatternFly `ExpandableSection`, `thinkingParser` utility with full test coverage, and i18n across all 9 locales
+- **Function Calling category filter**: New "Function Calling" option in the models page category dropdown, showing only models with `supportsFunctionCalling` enabled, with translations across all 9 locales (#175)
+- **Column sorting on Users Management table**: Admins can sort the Users Management table by Username, Email, Full Name, or Status via clickable column headers, with sort state persisted in URL search params; sorting is server-side. Roles is intentionally left unsortable as an array column (#170)
+
+### Fixed
+
+- **API key deletion no longer loses usage attribution**: User self-service key deletion now soft-deletes (archives) the key instead of hard-deleting the row. The key is still revoked in LiteLLM immediately, but the database row is preserved (`is_active=false`, `archived_at` set) so the usage enrichment pipeline can still map historical usage back to the user. Admin permanent delete (`?permanent=true`) remains a hard delete for compliance/GDPR use cases (#172)
+- **Email NOT NULL constraint violation on user update**: The OIDC update path set `email` to null when the provider omitted the email claim, violating the `users.email` NOT NULL constraint; it now falls back to `preferred_username`, matching the insert path (#167, #173)
+- **Ingress resources blocked on OpenShift**: Removed the `platform == "kubernetes"` guard from the frontend and LiteLLM ingress templates so `Ingress` resources are deployable on OpenShift as well as Kubernetes whenever `ingress.enabled` is set — enabling cert-manager-based TLS on OpenShift, which relies on Ingress annotations (#168, #169)
+- **Frontend initContainer permission**: Removed the hardcoded `runAsUser: 65534` on the frontend initContainer that could block startup under restrictive security contexts
+- **Backup restore progress reporting**: Progress messages during database restore now report reliably at each 10,000-statement interval instead of only on exact multiples
+
+### Contributors
+
+- Guillaume Moutier
+- Chris Brown
+- ashok jammula (new contributor)
+- FlorentMair80 (new contributor)
+- Co-authored-by: Claude (AI pair programming assistant)
+
 ## [0.5.0] - 2026-06-26
 
 ### Added

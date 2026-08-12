@@ -905,6 +905,10 @@
         "welcomeDescription": "選択したモデルとAPIキーをテストするために会話を開始してください",
         "welcomeTitle": "モデルテストアシスタント"
       },
+      "thinking": {
+        "thought": "思考内容",
+        "thinkingInProgress": "思考中..."
+      },
       "configuration": {
         "advancedSettings": "詳細設定",
         "apiKey": "APIキーを選択",
@@ -1103,6 +1107,7 @@
       },
       "categories": {
         "audio": "音声",
+        "functionCalling": "関数呼び出し",
         "imageGeneration": "画像生成",
         "languageModel": "言語モデル",
         "multimodal": "マルチモーダル"

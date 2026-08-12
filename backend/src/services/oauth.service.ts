@@ -984,7 +984,7 @@ export class OAuthService extends BaseService {
          WHERE id = $5`,
         [
           userInfo.preferred_username,
-          userInfo.email || null,
+          userInfo.email || userInfo.preferred_username,
           userInfo.name || null,
           mergedRoles,
           existingUser.id as string,

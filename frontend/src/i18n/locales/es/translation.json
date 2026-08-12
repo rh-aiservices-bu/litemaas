@@ -905,6 +905,10 @@
         "welcomeDescription": "Inicia una conversación para probar tu modelo y clave API seleccionados",
         "welcomeTitle": "Asistente de Prueba de Modelos"
       },
+      "thinking": {
+        "thought": "Pensamiento",
+        "thinkingInProgress": "Pensando..."
+      },
       "configuration": {
         "advancedSettings": "Configuración Avanzada",
         "apiKey": "Seleccionar Clave API",
@@ -1103,6 +1107,7 @@
       },
       "categories": {
         "audio": "Audio",
+        "functionCalling": "Llamada de Funciones",
         "imageGeneration": "Generación de Imágenes",
         "languageModel": "Modelo de Lenguaje",
         "multimodal": "Multimodal"

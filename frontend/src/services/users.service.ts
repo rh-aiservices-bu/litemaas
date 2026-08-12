@@ -41,6 +41,12 @@ export class UsersService {
     if (typeof params.isActive === 'boolean') {
       searchParams.append('isActive', params.isActive.toString());
     }
+    if (params.sortBy) {
+      searchParams.append('sortBy', params.sortBy);
+    }
+    if (params.sortOrder) {
+      searchParams.append('sortOrder', params.sortOrder);
+    }
 
     const queryString = searchParams.toString();
     const url = queryString ? `/users?${queryString}` : '/users';

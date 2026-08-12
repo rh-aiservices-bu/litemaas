@@ -905,6 +905,10 @@
         "welcomeDescription": "Select an API key and model from the configuration panel to start testing your AI models",
         "welcomeTitle": "Welcome to the AI Chat Interface"
       },
+      "thinking": {
+        "thought": "Thought",
+        "thinkingInProgress": "Thinking..."
+      },
       "configuration": {
         "advancedSettings": "Advanced Settings",
         "apiKey": "API Key",
@@ -1103,6 +1107,7 @@
       },
       "categories": {
         "audio": "Audio",
+        "functionCalling": "Function Calling",
         "imageGeneration": "Image Generation",
         "languageModel": "Language Model",
         "multimodal": "Multimodal"

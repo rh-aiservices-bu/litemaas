@@ -905,6 +905,10 @@
         "welcomeDescription": "开始对话来测试您选择的模型和API密钥",
         "welcomeTitle": "模型测试助手"
       },
+      "thinking": {
+        "thought": "思考",
+        "thinkingInProgress": "思考中..."
+      },
       "configuration": {
         "advancedSettings": "高级设置",
         "apiKey": "选择API密钥",
@@ -1103,6 +1107,7 @@
       },
       "categories": {
         "audio": "音频",
+        "functionCalling": "函数调用",
         "imageGeneration": "图像生成",
         "languageModel": "语言模型",
         "multimodal": "多模态"
