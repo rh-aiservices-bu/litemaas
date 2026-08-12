@@ -1103,6 +1103,7 @@
       },
       "categories": {
         "audio": "音声",
+        "functionCalling": "関数呼び出し",
         "imageGeneration": "画像生成",
         "languageModel": "言語モデル",
         "multimodal": "マルチモーダル"

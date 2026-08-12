@@ -1103,6 +1103,7 @@
       },
       "categories": {
         "audio": "Audio",
+        "functionCalling": "Funktionsaufruf",
         "imageGeneration": "Bildgenerierung",
         "languageModel": "Sprachmodell",
         "multimodal": "Multimodal"
