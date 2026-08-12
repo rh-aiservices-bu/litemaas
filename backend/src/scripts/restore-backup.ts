@@ -110,6 +110,7 @@ async function streamRestoreSQL(backupPath: string, client: PoolClient): Promise
     const readStream = createReadStream(backupPath);
     let buffer = '';
     let statementsExecuted = 0;
+    let lastReportedAt = 0;
 
     gunzip.on('data', (chunk: Buffer) => {
       buffer += chunk.toString('utf-8');
@@ -129,8 +130,9 @@ async function streamRestoreSQL(backupPath: string, client: PoolClient): Promise
         gunzip.pause();
         statementsExecuted += statements.length;
 
-        if (statementsExecuted % 10000 === 0) {
+        if (statementsExecuted - lastReportedAt >= 10000) {
           process.stdout.write(`  ... ${statementsExecuted} statements executed\n`);
+          lastReportedAt = statementsExecuted;
         }
 
         const batch = statements.join('\n');
