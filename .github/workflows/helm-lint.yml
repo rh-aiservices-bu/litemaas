@@ -1,0 +1,66 @@
+name: Helm Lint
+
+on:
+  push:
+    branches: [main, dev]
+    paths:
+      - "deployment/helm/**"
+  pull_request:
+    branches: [main, dev]
+    paths:
+      - "deployment/helm/**"
+
+jobs:
+  helm-lint:
+    name: Lint & Template Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.16.0
+
+      - name: Lint Helm chart
+        run: helm lint deployment/helm/litemaas/
+
+      - name: Template with default values
+        run: |
+          helm template litemaas deployment/helm/litemaas/ \
+            --set backend.secrets.jwtSecret=test-secret \
+            --set backend.secrets.adminApiKeys=test-key \
+            --set backend.secrets.litellmApiKey=test-key \
+            --set postgresql.password=test-password \
+            --set litellm.masterKey=test-key \
+            --set litellm.uiPassword=test-password \
+            > /dev/null
+
+      - name: Template with OpenShift route enabled
+        run: |
+          helm template litemaas deployment/helm/litemaas/ \
+            --set backend.secrets.jwtSecret=test-secret \
+            --set backend.secrets.adminApiKeys=test-key \
+            --set backend.secrets.litellmApiKey=test-key \
+            --set postgresql.password=test-password \
+            --set litellm.masterKey=test-key \
+            --set litellm.uiPassword=test-password \
+            --set backend.route.enabled=true \
+            --set frontend.route.enabled=true \
+            > /dev/null
+
+      - name: Template with existing secrets
+        run: |
+          helm template litemaas deployment/helm/litemaas/ \
+            --set backend.existingSecret=my-secret \
+            --set postgresql.existingSecret=my-pg-secret \
+            --set litellm.existingSecret=my-litellm-secret \
+            > /dev/null
+
+      - name: Validate no default passwords in template output
+        run: |
+          OUTPUT=$(helm template litemaas deployment/helm/litemaas/)
+          if echo "$OUTPUT" | grep -q "changeme"; then
+            echo "WARNING: Default 'changeme' passwords found in template output."
+            echo "Ensure production deployments override these values."
+          fi
