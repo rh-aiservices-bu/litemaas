@@ -64,7 +64,9 @@ const UsersPage: React.FC = () => {
   const [page, setPage] = useState(parseInt(searchParams.get('page') || '1', 10));
   const [perPage, setPerPage] = useState(parseInt(searchParams.get('limit') || '10', 10));
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || '');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>((searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>(
+    (searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc',
+  );
 
   // Modal focus management ref
   const editModalTriggerRef = useRef<HTMLElement | null>(null);
@@ -184,10 +186,7 @@ const UsersPage: React.FC = () => {
   };
 
   const getSortParams = (columnKey: string): ThProps['sort'] => ({
-    sortBy:
-      sortBy === columnKey
-        ? { index: 0, direction: sortOrder }
-        : {},
+    sortBy: sortBy === columnKey ? { index: 0, direction: sortOrder } : {},
     onSort: () => handleSort(columnKey),
     columnIndex: 0,
   });
@@ -409,11 +408,19 @@ const UsersPage: React.FC = () => {
                   </caption>
                   <Thead>
                     <Tr>
-                      <Th width={20} sort={getSortParams('username')}>{t('users.table.username')}</Th>
-                      <Th width={25} sort={getSortParams('email')}>{t('users.table.email')}</Th>
-                      <Th width={20} sort={getSortParams('fullName')}>{t('users.table.fullName')}</Th>
+                      <Th width={20} sort={getSortParams('username')}>
+                        {t('users.table.username')}
+                      </Th>
+                      <Th width={25} sort={getSortParams('email')}>
+                        {t('users.table.email')}
+                      </Th>
+                      <Th width={20} sort={getSortParams('fullName')}>
+                        {t('users.table.fullName')}
+                      </Th>
                       <Th width={25}>{t('users.table.roles')}</Th>
-                      <Th width={10} sort={getSortParams('status')}>{t('users.table.status')}</Th>
+                      <Th width={10} sort={getSortParams('status')}>
+                        {t('users.table.status')}
+                      </Th>
                       <Th screenReaderText={t('users.table.actions')}></Th>
                     </Tr>
                   </Thead>
