@@ -59,7 +59,7 @@ import {
 } from '@patternfly/react-icons';
 import { Table, Thead, Tbody, Tr, Th, Td } from '@patternfly/react-table';
 import { useNotifications } from '../contexts/NotificationContext';
-import { useCurrency } from '../contexts/ConfigContext';
+import { useCurrency, useConfig } from '../contexts/ConfigContext';
 import { useErrorHandler } from '../hooks/useErrorHandler';
 import { apiKeysService, ApiKey, CreateApiKeyRequest } from '../services/apiKeys.service';
 import { subscriptionsService } from '../services/subscriptions.service';
@@ -81,6 +81,8 @@ const ApiKeysPage: React.FC = () => {
   const { addNotification } = useNotifications();
   const { handleError } = useErrorHandler();
   const { formatCurrency, currencyCode } = useCurrency();
+  const { config } = useConfig();
+  const litellmApiUrl = config?.litellmApiUrl ?? 'https://api.litemaas.com';
 
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -131,9 +133,6 @@ const ApiKeysPage: React.FC = () => {
   const [quotaDefaults, setQuotaDefaults] = useState<ApiKeyQuotaDefaults | null>(null);
   const [newKeyModelLimits, setNewKeyModelLimits] = useState<Record<string, ModelLimits>>({});
 
-  // Configuration state
-  const [litellmApiUrl, setLitellmApiUrl] = useState<string>('https://api.litemaas.com');
-
   // Load API keys from backend
   const loadApiKeys = async () => {
     try {
@@ -149,17 +148,6 @@ const ApiKeysPage: React.FC = () => {
       setError(t('pages.apiKeys.notifications.loadErrorDesc'));
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Load configuration
-  const loadConfig = async () => {
-    try {
-      const config = await configService.getConfig();
-      setLitellmApiUrl(config.litellmApiUrl ?? 'https://api.litemaas.com');
-    } catch (err) {
-      console.error('Failed to load configuration:', err);
-      // Keep default value if config load fails
     }
   };
 
@@ -193,7 +181,6 @@ const ApiKeysPage: React.FC = () => {
   useEffect(() => {
     loadApiKeys();
     loadModels(); // ✅ Load models on component mount
-    loadConfig(); // Load configuration including LiteLLM API URL
     // Load quota defaults for create key modal
     configService
       .getApiKeyDefaults()
@@ -961,6 +948,20 @@ const ApiKeysPage: React.FC = () => {
       </PageSection>
 
       <PageSection>
+        <Alert
+          variant="info"
+          isInline
+          title={t('pages.apiKeys.labels.apiUrl')}
+          style={{ marginBottom: '1rem' }}
+        >
+          <ClipboardCopy
+            isReadOnly
+            hoverTip={t('pages.apiKeys.clipboard.copy')}
+            clickTip={t('pages.apiKeys.clipboard.copied')}
+          >
+            {litellmApiUrl}
+          </ClipboardCopy>
+        </Alert>
         {error ? (
           <EmptyState
             variant={EmptyStateVariant.lg}
@@ -2253,6 +2254,20 @@ curl -X POST ${litellmApiUrl}/v1/chat/completions \\
                         <Td>{formatDate(generatedKey.expiresAt)}</Td>
                       </Tr>
                     )}
+                    <Tr>
+                      <Th scope="row">
+                        <strong>{t('pages.apiKeys.labels.apiUrl')}</strong>
+                      </Th>
+                      <Td>
+                        <ClipboardCopy
+                          isReadOnly
+                          hoverTip={t('pages.apiKeys.clipboard.copy')}
+                          clickTip={t('pages.apiKeys.clipboard.copied')}
+                        >
+                          {litellmApiUrl}
+                        </ClipboardCopy>
+                      </Td>
+                    </Tr>
                   </Tbody>
                 </Table>
               </div>

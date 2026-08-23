@@ -40,7 +40,7 @@ import { KeyIcon, ExternalLinkAltIcon, PlusCircleIcon } from '@patternfly/react-
 import { usersService } from '../../services/users.service';
 import { modelsService } from '../../services/models.service';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { useCurrency } from '../../contexts/ConfigContext';
+import { useCurrency, useConfig } from '../../contexts/ConfigContext';
 import { formatDate } from '../../utils/formatters';
 import {
   UserApiKey,
@@ -72,6 +72,8 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
   const { addNotification } = useNotifications();
   const queryClient = useQueryClient();
   const { formatCurrency, currencyCode } = useCurrency();
+  const { config } = useConfig();
+  const litellmApiUrl = config?.litellmApiUrl ?? '';
 
   // Revoke confirmation modal state
   const [revokeModalOpen, setRevokeModalOpen] = useState(false);
@@ -1714,6 +1716,20 @@ const UserApiKeysTab: React.FC<UserApiKeysTabProps> = ({ userId, canEdit }) => {
                   {generatedKey.key}
                 </ClipboardCopy>
               </FormGroup>
+              {litellmApiUrl && (
+                <FormGroup
+                  label={t('pages.apiKeys.labels.apiUrl', 'API URL')}
+                  fieldId="generated-key-api-url"
+                >
+                  <ClipboardCopy
+                    isReadOnly
+                    hoverTip={t('common.copy', 'Copy')}
+                    clickTip={t('common.copied', 'Copied')}
+                  >
+                    {litellmApiUrl}
+                  </ClipboardCopy>
+                </FormGroup>
+              )}
             </>
           )}
         </ModalBody>

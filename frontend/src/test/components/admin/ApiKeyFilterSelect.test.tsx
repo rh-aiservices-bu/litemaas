@@ -428,12 +428,8 @@ describe('ApiKeyFilterSelect', () => {
         useAdminEndpoint: false,
       });
 
-      expect(
-        screen.getByPlaceholderText(/all api keys \(click to filter\)/i),
-      ).toBeInTheDocument();
-      expect(
-        screen.queryByPlaceholderText(/select users first/i),
-      ).not.toBeInTheDocument();
+      expect(screen.getByPlaceholderText(/all api keys \(click to filter\)/i)).toBeInTheDocument();
+      expect(screen.queryByPlaceholderText(/select users first/i)).not.toBeInTheDocument();
     });
   });
 });

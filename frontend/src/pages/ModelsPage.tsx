@@ -255,7 +255,14 @@ const ModelsPage: React.FC = () => {
   }, [page, perPage]);
 
   // Define all available categories (static list)
-  const categories = ['all', 'Language Model', 'Multimodal', 'Function Calling', 'Image Generation', 'Audio'];
+  const categories = [
+    'all',
+    'Language Model',
+    'Multimodal',
+    'Function Calling',
+    'Image Generation',
+    'Audio',
+  ];
 
   // Translation function for category names
   const getCategoryLabel = (category: string) => {
