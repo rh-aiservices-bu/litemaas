@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { oauthConfig, databaseConfig } from '../../../src/config/index.js';
+import { oauthConfig, databaseConfig, getMaxKeysPerUser } from '../../../src/config/index.js';
 
 describe('Config Index Exports', () => {
   describe('Module Exports', () => {
@@ -16,6 +16,11 @@ describe('Config Index Exports', () => {
     it('should export databaseConfig', () => {
       expect(databaseConfig).toBeDefined();
       expect(typeof databaseConfig).toBe('function');
+    });
+
+    it('should export getMaxKeysPerUser', () => {
+      expect(getMaxKeysPerUser).toBeDefined();
+      expect(typeof getMaxKeysPerUser).toBe('function');
     });
   });
 
@@ -62,13 +67,15 @@ describe('Config Index Exports', () => {
   describe('Configuration Consistency', () => {
     it('should export consistent configuration objects', async () => {
       // Import again to verify consistency
-      const { oauthConfig: oauth2 } = await import('../../../src/config/index.js');
+      const { oauthConfig: oauth2, databaseConfig: db2, getMaxKeysPerUser: maxKeys2 } = await import('../../../src/config/index.js');
 
       // Should reference the same configuration object
       expect(oauth2.clientId).toBe(oauthConfig.clientId);
       expect(oauth2.clientSecret).toBe(oauthConfig.clientSecret);
       expect(oauth2.issuer).toBe(oauthConfig.issuer);
       expect(oauth2.callbackUrl).toBe(oauthConfig.callbackUrl);
+      expect(db2).toBe(databaseConfig);
+      expect(maxKeys2).toBe(getMaxKeysPerUser);
     });
   });
 });

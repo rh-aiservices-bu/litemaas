@@ -16,6 +16,7 @@ import {
 } from '../types/api-key.types.js';
 import { QueryParameter } from '../types/common.types.js';
 import { LITELLM_UNLIMITED } from '../config/litellm.js';
+import { getMaxKeysPerUser } from '../config/api-key-limit.config.js';
 
 // Types moved to types/api-key.types.ts for consistency
 // Keeping legacy interface for backward compatibility in service
@@ -346,7 +347,7 @@ export class ApiKeyService extends BaseService {
         [userId],
       );
 
-      const maxKeysPerUser = 10;
+      const maxKeysPerUser = getMaxKeysPerUser();
       if (existingKeysCount && parseInt(String(existingKeysCount.count)) >= maxKeysPerUser) {
         throw this.createValidationError(
           `Maximum ${maxKeysPerUser} active API keys allowed per user`,

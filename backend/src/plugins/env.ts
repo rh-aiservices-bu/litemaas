@@ -61,6 +61,9 @@ const envSchema = Type.Object({
   DEFAULT_USER_TPM_LIMIT: Type.String({ default: '100000' }),
   DEFAULT_USER_RPM_LIMIT: Type.String({ default: '120' }),
 
+  // API Key Limit Configuration
+  API_KEY_LIMIT_MAX_KEYS_PER_USER: Type.String({ default: '10' }),
+
   // Backup Configuration
   LITELLM_DATABASE_URL: Type.Optional(Type.String()),
   BACKUP_STORAGE_PATH: Type.Optional(Type.String()),

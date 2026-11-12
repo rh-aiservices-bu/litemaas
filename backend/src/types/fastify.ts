@@ -59,6 +59,9 @@ declare module 'fastify' {
       DEFAULT_USER_MAX_BUDGET: string;
       DEFAULT_USER_TPM_LIMIT: string;
       DEFAULT_USER_RPM_LIMIT: string;
+
+      // API Key Limit Configuration
+      API_KEY_LIMIT_MAX_KEYS_PER_USER: string;
     };
 
     // Remove custom logger interface to avoid conflict with Fastify's built-in logger

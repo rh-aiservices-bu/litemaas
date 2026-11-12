@@ -25,6 +25,7 @@ import {
   getAdminAnalyticsConfig,
   type AdminAnalyticsConfig,
 } from './config/admin-analytics.config.js';
+import { getMaxKeysPerUser } from './config/api-key-limit.config.js';
 
 export const createApp = async (opts: { logger?: boolean } = {}): Promise<FastifyInstance> => {
   const fastify = Fastify({
@@ -63,6 +64,10 @@ export const createApp = async (opts: { logger?: boolean } = {}): Promise<Fastif
     fastify.log.fatal({ error }, 'Failed to load admin analytics configuration');
     throw error;
   }
+
+  // Initialize API key limit configuration
+  const maxKeys = getMaxKeysPerUser();
+  fastify.log.info({ maxKeysPerUser: maxKeys }, 'API key limit configuration loaded');
 
   // Decorate fastify instance with config getter
   fastify.decorate('getAdminAnalyticsConfig', getAdminAnalyticsConfig);

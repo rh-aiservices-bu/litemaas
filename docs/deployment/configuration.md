@@ -388,6 +388,34 @@ These variables control the default limits assigned to new users when they first
 | `DEFAULT_USER_TPM_LIMIT`  | Default tokens per minute limit   | `1000`  | No       |
 | `DEFAULT_USER_RPM_LIMIT`  | Default requests per minute limit | `60`    | No       |
 
+## API Key Limit Configuration
+
+Controls the maximum number of active API keys per user. This setting prevents users from creating unlimited API keys.
+
+| Variable                      | Description                              | Default | Required |
+| ----------------------------- | ---------------------------------------- | ------- | -------- |
+| `API_KEY_LIMIT_MAX_KEYS_PER_USER` | Maximum active API keys per user     | `10`    | No       |
+
+### Examples
+
+```bash
+# Production (standard deployment)
+API_KEY_LIMIT_MAX_KEYS_PER_USER=20
+
+# Production (reseller deployments - no upper bound)
+API_KEY_LIMIT_MAX_KEYS_PER_USER=100
+
+# Development (conservative for testing)
+API_KEY_LIMIT_MAX_KEYS_PER_USER=5
+```
+
+### Important Notes
+
+- **Hard limit**: Users cannot create more active API keys than this limit
+- **Enforcement**: Checked during API key creation via the `createApiKey()` method
+- **Error message**: Shows actual limit value (e.g., "Maximum 20 active API keys allowed per user")
+- **Security**: Environment variable only (no database storage) to ensure changes require deployment
+
 ### Example
 
 ```bash

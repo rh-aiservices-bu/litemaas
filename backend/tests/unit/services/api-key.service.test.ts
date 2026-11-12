@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { ApiKeyService } from '../../../src/services/api-key.service.js';
 import { LiteLLMService } from '../../../src/services/litellm.service.js';
 import type { FastifyInstance } from 'fastify';
@@ -14,6 +14,7 @@ describe('ApiKeyService', () => {
   let mockLiteLLMService: Partial<LiteLLMService>;
   let mockDbUtils: any;
   let mockPgClient: any;
+  let originalEnvValue: string | undefined;
 
   const mockLiteLLMKeyResponse = {
     key: 'sk-litellm-abc123def456',
@@ -59,6 +60,9 @@ describe('ApiKeyService', () => {
   };
 
   beforeEach(() => {
+    originalEnvValue = process.env.API_KEY_LIMIT_MAX_KEYS_PER_USER;
+    delete process.env.API_KEY_LIMIT_MAX_KEYS_PER_USER;
+
     mockDbUtils = {
       query: vi.fn(),
       queryOne: vi.fn(),
@@ -101,6 +105,14 @@ describe('ApiKeyService', () => {
       mockFastify as FastifyInstance,
       mockLiteLLMService as LiteLLMService,
     );
+  });
+
+  afterEach(() => {
+    if (originalEnvValue !== undefined) {
+      process.env.API_KEY_LIMIT_MAX_KEYS_PER_USER = originalEnvValue;
+    } else {
+      delete process.env.API_KEY_LIMIT_MAX_KEYS_PER_USER;
+    }
   });
 
   describe('createApiKey - Modern Multi-Model', () => {
@@ -154,18 +166,51 @@ describe('ApiKeyService', () => {
     });
 
     it('should enforce maximum API keys per user limit', async () => {
+      process.env.API_KEY_LIMIT_MAX_KEYS_PER_USER = '5';
       vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
 
-      // Mock active subscriptions for both models
       mockDbUtils.queryMany.mockResolvedValue([
         { model_id: 'gpt-4o', model_name: 'GPT-4o', provider: 'openai' },
         { model_id: 'claude-3-5-sonnet-20241022', model_name: 'Claude 3.5', provider: 'anthropic' },
       ]);
 
-      mockDbUtils.queryOne.mockResolvedValue({ count: 10 }); // Already at limit
+      mockDbUtils.queryOne.mockResolvedValue({ count: 5 });
 
       await expect(service.createApiKey('user-123', createRequest)).rejects.toThrow(
-        /Maximum.*active API keys/i,
+        'Maximum 5 active API keys allowed per user',
+      );
+    });
+
+    it('should allow API key creation when below limit', async () => {
+      process.env.API_KEY_LIMIT_MAX_KEYS_PER_USER = '20';
+      vi.spyOn(service, 'shouldUseMockData').mockReturnValue(false);
+
+      const validModels = [
+        { model_id: 'gpt-4o', model_name: 'GPT-4o', provider: 'openai' },
+        { model_id: 'claude-3-5-sonnet-20241022', model_name: 'Claude 3.5', provider: 'anthropic' },
+      ];
+
+      mockDbUtils.queryMany.mockResolvedValue(validModels);
+      mockDbUtils.queryOne.mockResolvedValue({ count: 10 });
+
+      vi.mocked(mockLiteLLMService.generateApiKey!).mockResolvedValue(mockLiteLLMKeyResponse);
+
+      mockPgClient.query
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce({ rows: [mockApiKeyDbRow] })
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined);
+
+      const result = await service.createApiKey('user-123', createRequest);
+
+      expect(result).toBeDefined();
+      expect(result.models).toEqual(['gpt-4o', 'claude-3-5-sonnet-20241022']);
+      expect(mockLiteLLMService.generateApiKey).toHaveBeenCalled();
+      expect(mockPgClient.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO api_key_models'),
+        expect.anything(),
       );
     });
 
