@@ -483,7 +483,8 @@
       "subscriptions": "サブスクリプション管理",
       "tools": "設定とツール",
       "usage": "使用分析",
-      "users": "ユーザー管理"
+      "users": "ユーザー管理",
+      "apiKeys": "API キー管理"
     },
     "apiKeys": "APIキー",
     "chatbot": "チャットボットプレイグラウンド",
@@ -2104,6 +2105,67 @@
     "warnings": {
       "roleConflict": "役割の競合",
       "roleConflictDesc": "管理者と管理者（読み取り専用）の役割が競合しています。管理者の役割が優先されます。"
+    }
+  },
+  "adminApiKeys": {
+    "title": "API キー管理",
+    "accessDenied": "アクセス拒否",
+    "accessDeniedDescription": "API キー管理パネルを表示する権限がありません。",
+    "refresh": "更新",
+    "status": {
+      "active": "アクティブ",
+      "revoked": "失効",
+      "expired": "期限切れ",
+      "archived": "アーカイブ",
+      "all": "すべて"
+    },
+    "filters": {
+      "searchPlaceholder": "キー名、ユーザー名、メールアドレスで検索…",
+      "searchAria": "API キーを検索",
+      "statusAria": "ステータスでフィルター"
+    },
+    "table": {
+      "ariaLabel": "API キー",
+      "select": "選択",
+      "name": "名前",
+      "owner": "所有者",
+      "status": "ステータス",
+      "models": "モデル",
+      "modelsCount": "{{count}} モデル",
+      "budget": "予算",
+      "budgetProgress": "予算使用率",
+      "lastUsed": "最終使用",
+      "created": "作成日",
+      "never": "未使用"
+    },
+    "revoke": {
+      "button": "選択を失効 ({{count}})",
+      "clearSelection": "選択を解除",
+      "confirmTitle": "{{count}} 個の API キーを失効させますか?",
+      "confirmBody": "選択した API キーは LiteLLM から即時削除され、LiteMaaS で無効化されます。これらを使用しているアプリケーションは動作しなくなります。",
+      "confirmNote": "この操作は監査ログに記録されます。失効したキーは復元できません。ユーザーは新しいキーを作成する必要があります。",
+      "confirmAction": "キーを失効",
+      "success": "{{count}} 個のキーを失効しました",
+      "partial": "{{revoked}} 個が失効、{{failed}} 個が失敗"
+    },
+    "cleanup": {
+      "button": "期限切れを整理",
+      "confirmTitle": "期限切れの API キーを整理しますか?",
+      "confirmBody": "有効期限が過ぎたすべてのアクティブなキーは無効化され、LiteLLM から削除されます。",
+      "confirmAction": "期限切れを整理",
+      "success": "期限切れキー {{count}} 個を整理しました"
+    },
+    "error": {
+      "load": "API キーの読み込みに失敗しました",
+      "loadDescription": "API キーの取得中にエラーが発生しました。再試行してください。"
+    },
+    "empty": {
+      "title": "API キーが見つかりません",
+      "description": "現在のフィルターに一致する API キーはありません。"
+    },
+    "pagination": {
+      "items": "件",
+      "of": "/"
     }
   }
 }

@@ -23,6 +23,7 @@ import AdminModelsPage from '../pages/AdminModelsPage';
 import AdminUsagePage from '../pages/AdminUsagePage';
 import AdminSubscriptionsPage from '../pages/AdminSubscriptionsPage';
 import UsersPage from '../pages/UsersPage';
+import AdminApiKeysPage from '../pages/AdminApiKeysPage';
 import AuditPage from '../pages/AuditPage';
 
 import { AppConfig } from '../types/navigation';
@@ -116,6 +117,14 @@ export const appConfig: AppConfig = {
           requiredRoles: ['admin', 'admin-readonly'],
         },
         {
+          id: 'admin-api-keys',
+          path: '/admin/api-keys',
+          element: AdminApiKeysPage,
+          label: 'nav.admin.apiKeys',
+          icon: KeyIcon,
+          requiredRoles: ['admin', 'admin-readonly'],
+        },
+        {
           id: 'admin-audit',
           path: '/admin/audit',
           element: AuditPage,
@@ -204,6 +213,13 @@ export const appConfig: AppConfig = {
       label: 'nav.admin.users',
       path: '/admin/users',
       icon: UsersIcon,
+      requiredRoles: ['admin', 'admin-readonly'],
+    },
+    {
+      id: 'admin-api-keys',
+      label: 'nav.admin.apiKeys',
+      path: '/admin/api-keys',
+      icon: KeyIcon,
       requiredRoles: ['admin', 'admin-readonly'],
     },
     {

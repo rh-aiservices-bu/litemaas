@@ -483,7 +483,8 @@
       "subscriptions": "Glaemscath Govannen",
       "tools": "Estel ah Echad",
       "usage": "Aerlinn-Minithith",
-      "users": "Tirith Aduiain"
+      "users": "Tirith Aduiain",
+      "apiKeys": "API Management"
     },
     "apiKeys": "Anguirel-API",
     "chatbot": "Glingad-Celeb",
@@ -2104,6 +2105,67 @@
     "warnings": {
       "roleConflict": "Varad-Glaemscaul",
       "roleConflictDesc": "Aran a Aran-leithron barad glaemscatha. Aran-varad tiri orthor."
+    }
+  },
+  "adminApiKeys": {
+    "title": "API Key Management",
+    "accessDenied": "Access denied",
+    "accessDeniedDescription": "You do not have permission to view the API Management panel.",
+    "refresh": "Refresh",
+    "status": {
+      "active": "Active",
+      "revoked": "Revoked",
+      "expired": "Expired",
+      "archived": "Archived",
+      "all": "All"
+    },
+    "filters": {
+      "searchPlaceholder": "Search by key name, username or email…",
+      "searchAria": "Search API keys",
+      "statusAria": "Filter by status"
+    },
+    "table": {
+      "ariaLabel": "API keys",
+      "select": "Select",
+      "name": "Name",
+      "owner": "Owner",
+      "status": "Status",
+      "models": "Models",
+      "modelsCount": "{{count}} models",
+      "budget": "Budget",
+      "budgetProgress": "Budget utilization",
+      "lastUsed": "Last used",
+      "created": "Created",
+      "never": "Never"
+    },
+    "revoke": {
+      "button": "Revoke selected ({{count}})",
+      "clearSelection": "Clear selection",
+      "confirmTitle": "Revoke {{count}} API key(s)?",
+      "confirmBody": "The selected API keys will be deleted from LiteLLM immediately and deactivated in LiteMaaS. Applications using them will stop working.",
+      "confirmNote": "This action is logged in the audit trail. Revoked keys cannot be restored; users must create new keys.",
+      "confirmAction": "Revoke keys",
+      "success": "Successfully revoked {{count}} key(s)",
+      "partial": "Revoked {{revoked}} key(s), {{failed}} failed"
+    },
+    "cleanup": {
+      "button": "Cleanup expired",
+      "confirmTitle": "Cleanup expired API keys?",
+      "confirmBody": "All active keys whose expiration date has passed will be deactivated and removed from LiteLLM.",
+      "confirmAction": "Cleanup expired",
+      "success": "Cleaned up {{count}} expired key(s)"
+    },
+    "error": {
+      "load": "Failed to load API keys",
+      "loadDescription": "An error occurred while fetching API keys. Please try again."
+    },
+    "empty": {
+      "title": "No API keys found",
+      "description": "No API keys match the current filters."
+    },
+    "pagination": {
+      "items": "items",
+      "of": "of"
     }
   }
 }
