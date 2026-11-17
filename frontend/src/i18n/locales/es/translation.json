@@ -483,7 +483,8 @@
       "subscriptions": "Gestión de Suscripciones",
       "tools": "Configuración y Herramientas",
       "usage": "Analíticas de uso",
-      "users": "Gestión de Usuarios"
+      "users": "Gestión de Usuarios",
+      "apiKeys": "Gestión de claves API"
     },
     "apiKeys": "Claves API",
     "chatbot": "Área de Juegos del Chatbot",
@@ -2104,6 +2105,67 @@
     "warnings": {
       "roleConflict": "Conflicto de Roles",
       "roleConflictDesc": "Los roles de Administrador y Administrador de solo lectura entran en conflicto. El rol de Administrador tendrá precedencia."
+    }
+  },
+  "adminApiKeys": {
+    "title": "Gestión de claves API",
+    "accessDenied": "Acceso denegado",
+    "accessDeniedDescription": "No tiene permiso para ver el panel de gestión de claves API.",
+    "refresh": "Actualizar",
+    "status": {
+      "active": "Activa",
+      "revoked": "Revocada",
+      "expired": "Caducada",
+      "archived": "Archivada",
+      "all": "Todas"
+    },
+    "filters": {
+      "searchPlaceholder": "Buscar por nombre de clave, usuario o correo…",
+      "searchAria": "Buscar claves API",
+      "statusAria": "Filtrar por estado"
+    },
+    "table": {
+      "ariaLabel": "Claves API",
+      "select": "Seleccionar",
+      "name": "Nombre",
+      "owner": "Propietario",
+      "status": "Estado",
+      "models": "Modelos",
+      "modelsCount": "{{count}} modelos",
+      "budget": "Presupuesto",
+      "budgetProgress": "Uso del presupuesto",
+      "lastUsed": "Último uso",
+      "created": "Creada",
+      "never": "Nunca"
+    },
+    "revoke": {
+      "button": "Revocar seleccionadas ({{count}})",
+      "clearSelection": "Quitar selección",
+      "confirmTitle": "¿Revocar {{count}} clave(s) API?",
+      "confirmBody": "Las claves API seleccionadas se eliminarán de LiteLLM inmediatamente y se desactivarán en LiteMaaS. Las aplicaciones que las usen dejarán de funcionar.",
+      "confirmNote": "Esta acción queda registrada en el historial de auditoría. Las claves revocadas no se pueden restaurar; los usuarios deberán crear claves nuevas.",
+      "confirmAction": "Revocar claves",
+      "success": "Se revocaron {{count}} clave(s) correctamente",
+      "partial": "Se revocaron {{revoked}} clave(s), {{failed}} fallaron"
+    },
+    "cleanup": {
+      "button": "Limpiar caducadas",
+      "confirmTitle": "¿Limpiar claves API caducadas?",
+      "confirmBody": "Todas las claves activas cuya fecha de caducidad haya pasado se desactivarán y se eliminarán de LiteLLM.",
+      "confirmAction": "Limpiar caducadas",
+      "success": "Se limpiaron {{count}} clave(s) caducada(s)"
+    },
+    "error": {
+      "load": "Error al cargar las claves API",
+      "loadDescription": "Se produjo un error al obtener las claves API. Inténtelo de nuevo."
+    },
+    "empty": {
+      "title": "No se encontraron claves API",
+      "description": "Ninguna clave API coincide con los filtros actuales."
+    },
+    "pagination": {
+      "items": "elementos",
+      "of": "de"
     }
   }
 }

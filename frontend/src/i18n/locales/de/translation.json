@@ -483,7 +483,8 @@
       "subscriptions": "Abonnementverwaltung",
       "tools": "Einstellungen und Werkzeuge",
       "usage": "Nutzungsanalyse",
-      "users": "Benutzerverwaltung"
+      "users": "Benutzerverwaltung",
+      "apiKeys": "API-Verwaltung"
     },
     "apiKeys": "API-Schlüssel",
     "chatbot": "Chatbot-Spielplatz",
@@ -2104,6 +2105,67 @@
     "warnings": {
       "roleConflict": "Rollenkonflikt",
       "roleConflictDesc": "Administrator- und Administrator-Nur-Lesen-Rollen stehen in Konflikt. Die Administrator-Rolle hat Vorrang."
+    }
+  },
+  "adminApiKeys": {
+    "title": "API-Verwaltung",
+    "accessDenied": "Zugriff verweigert",
+    "accessDeniedDescription": "Sie haben keine Berechtigung, den Bereich „API-Verwaltung“ anzuzeigen.",
+    "refresh": "Aktualisieren",
+    "status": {
+      "active": "Aktiv",
+      "revoked": "Widerrufen",
+      "expired": "Abgelaufen",
+      "archived": "Archiviert",
+      "all": "Alle"
+    },
+    "filters": {
+      "searchPlaceholder": "Nach Schlüsselname, Benutzername oder E-Mail suchen…",
+      "searchAria": "API-Schlüssel suchen",
+      "statusAria": "Nach Status filtern"
+    },
+    "table": {
+      "ariaLabel": "API-Schlüssel",
+      "select": "Auswählen",
+      "name": "Name",
+      "owner": "Besitzer",
+      "status": "Status",
+      "models": "Modelle",
+      "modelsCount": "{{count}} Modelle",
+      "budget": "Budget",
+      "budgetProgress": "Budgetauslastung",
+      "lastUsed": "Zuletzt verwendet",
+      "created": "Erstellt",
+      "never": "Nie"
+    },
+    "revoke": {
+      "button": "Auswahl widerrufen ({{count}})",
+      "clearSelection": "Auswahl aufheben",
+      "confirmTitle": "{{count}} API-Schlüssel widerrufen?",
+      "confirmBody": "Die ausgewählten API-Schlüssel werden sofort aus LiteLLM gelöscht und in LiteMaaS deaktiviert. Anwendungen, die sie verwenden, funktionieren nicht mehr.",
+      "confirmNote": "Diese Aktion wird im Audit-Protokoll festgehalten. Widerrufene Schlüssel können nicht wiederhergestellt werden; Benutzer müssen neue Schlüssel erstellen.",
+      "confirmAction": "Schlüssel widerrufen",
+      "success": "{{count}} Schlüssel erfolgreich widerrufen",
+      "partial": "{{revoked}} Schlüssel widerrufen, {{failed}} fehlgeschlagen"
+    },
+    "cleanup": {
+      "button": "Abgelaufene bereinigen",
+      "confirmTitle": "Abgelaufene API-Schlüssel bereinigen?",
+      "confirmBody": "Alle aktiven Schlüssel, deren Ablaufdatum überschritten ist, werden deaktiviert und aus LiteLLM entfernt.",
+      "confirmAction": "Abgelaufene bereinigen",
+      "success": "{{count}} abgelaufene(r) Schlüssel bereinigt"
+    },
+    "error": {
+      "load": "API-Schlüssel konnten nicht geladen werden",
+      "loadDescription": "Beim Abrufen der API-Schlüssel ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut."
+    },
+    "empty": {
+      "title": "Keine API-Schlüssel gefunden",
+      "description": "Keine API-Schlüssel entsprechen den aktuellen Filtern."
+    },
+    "pagination": {
+      "items": "Einträge",
+      "of": "von"
     }
   }
 }

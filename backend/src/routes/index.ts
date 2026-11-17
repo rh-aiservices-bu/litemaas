@@ -14,6 +14,7 @@ import adminModelsRoutes from './admin-models';
 import adminSubscriptionsRoutes from './admin-subscriptions';
 import adminUsageRoutes from './admin-usage';
 import adminUsersRoutes from './admin-users';
+import adminApiKeysRoutes from './admin-api-keys';
 import adminSettingsRoutes from './admin-settings';
 import adminAuditRoutes from './admin-audit';
 import adminBackupRoutes from './admin-backup';
@@ -43,6 +44,7 @@ const routes: FastifyPluginAsync = async (fastify) => {
   await fastify.register(adminSubscriptionsRoutes, { prefix: '/admin/subscriptions' });
   await fastify.register(adminUsageRoutes, { prefix: '/admin/usage' });
   await fastify.register(adminUsersRoutes, { prefix: '/admin/users' });
+  await fastify.register(adminApiKeysRoutes, { prefix: '/admin/api-keys' });
   await fastify.register(adminSettingsRoutes, { prefix: '/admin/settings' });
   await fastify.register(adminAuditRoutes, { prefix: '/admin/audit' });
   await fastify.register(adminBackupRoutes, { prefix: '/admin/backup' });

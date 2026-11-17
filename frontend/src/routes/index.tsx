@@ -17,6 +17,7 @@ import AdminModelsPage from '../pages/AdminModelsPage';
 import AdminUsagePage from '../pages/AdminUsagePage';
 import AdminSubscriptionsPage from '../pages/AdminSubscriptionsPage';
 import UsersPage from '../pages/UsersPage';
+import AdminApiKeysPage from '../pages/AdminApiKeysPage';
 import AuditPage from '../pages/AuditPage';
 import LoginPage from '../pages/LoginPage';
 import AuthCallbackPage from '../pages/AuthCallbackPage';
@@ -129,6 +130,10 @@ export const router = createBrowserRouter(
             {
               path: 'admin/users',
               element: <UsersPage />,
+            },
+            {
+              path: 'admin/api-keys',
+              element: <AdminApiKeysPage />,
             },
             {
               path: 'admin/tools',

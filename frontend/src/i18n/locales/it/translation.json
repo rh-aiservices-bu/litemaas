@@ -483,7 +483,8 @@
       "subscriptions": "Gestione degli Abbonamenti",
       "tools": "Impostazioni e Strumenti",
       "usage": "Analitiche di Utilizzo",
-      "users": "Gestione Utenti"
+      "users": "Gestione Utenti",
+      "apiKeys": "Gestione chiavi API"
     },
     "apiKeys": "Chiavi API",
     "chatbot": "Area Giochi del Chatbot",
@@ -2104,6 +2105,67 @@
     "warnings": {
       "roleConflict": "Conflitto di Ruoli",
       "roleConflictDesc": "I ruoli Amministratore e Amministratore-sola lettura sono in conflitto. Il ruolo Amministratore avrà precedenza."
+    }
+  },
+  "adminApiKeys": {
+    "title": "Gestione chiavi API",
+    "accessDenied": "Accesso negato",
+    "accessDeniedDescription": "Non hai i permessi per visualizzare il pannello di gestione delle chiavi API.",
+    "refresh": "Aggiorna",
+    "status": {
+      "active": "Attiva",
+      "revoked": "Revocata",
+      "expired": "Scaduta",
+      "archived": "Archiviata",
+      "all": "Tutte"
+    },
+    "filters": {
+      "searchPlaceholder": "Cerca per nome chiave, nome utente o email…",
+      "searchAria": "Cerca chiavi API",
+      "statusAria": "Filtra per stato"
+    },
+    "table": {
+      "ariaLabel": "Chiavi API",
+      "select": "Seleziona",
+      "name": "Nome",
+      "owner": "Proprietario",
+      "status": "Stato",
+      "models": "Modelli",
+      "modelsCount": "{{count}} modelli",
+      "budget": "Budget",
+      "budgetProgress": "Utilizzo del budget",
+      "lastUsed": "Ultimo uso",
+      "created": "Creata",
+      "never": "Mai"
+    },
+    "revoke": {
+      "button": "Revoca selezionate ({{count}})",
+      "clearSelection": "Cancella selezione",
+      "confirmTitle": "Revocare {{count}} chiave/i API?",
+      "confirmBody": "Le chiavi API selezionate verranno eliminate immediatamente da LiteLLM e disattivate in LiteMaaS. Le applicazioni che le usano smetteranno di funzionare.",
+      "confirmNote": "Questa azione viene registrata nel registro di audit. Le chiavi revocate non possono essere ripristinate; gli utenti dovranno creare nuove chiavi.",
+      "confirmAction": "Revoca chiavi",
+      "success": "{{count}} chiave/i revocate con successo",
+      "partial": "Revocate {{revoked}} chiave/i, {{failed}} fallite"
+    },
+    "cleanup": {
+      "button": "Pulisci scadute",
+      "confirmTitle": "Pulire le chiavi API scadute?",
+      "confirmBody": "Tutte le chiavi attive la cui data di scadenza è passata verranno disattivate e rimosse da LiteLLM.",
+      "confirmAction": "Pulisci scadute",
+      "success": "Pulite {{count}} chiave/i scadute"
+    },
+    "error": {
+      "load": "Impossibile caricare le chiavi API",
+      "loadDescription": "Si è verificato un errore durante il recupero delle chiavi API. Riprova."
+    },
+    "empty": {
+      "title": "Nessuna chiave API trovata",
+      "description": "Nessuna chiave API corrisponde ai filtri correnti."
+    },
+    "pagination": {
+      "items": "elementi",
+      "of": "di"
     }
   }
 }

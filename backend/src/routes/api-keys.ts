@@ -904,7 +904,7 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
-    preHandler: [fastify.authenticate, fastify.requirePermission('admin:api_keys')],
+    preHandler: [fastify.authenticate, fastify.requirePermission('api_keys:read')],
     handler: async (request, _reply) => {
       const { key } = request.body as { key: string };
 
@@ -920,88 +920,6 @@ const apiKeysRoutes: FastifyPluginAsync = async (fastify) => {
         // For other errors, include original message
         const errorMessage = error instanceof Error ? error.message : String(error);
         throw fastify.createError(500, `Failed to validate API key: ${errorMessage}`);
-      }
-    },
-  });
-
-  // Admin endpoints
-
-  // List all API keys (admin only)
-  fastify.get('/admin/all', {
-    schema: {
-      tags: ['API Keys'],
-      description: 'List all API keys (admin only)',
-      security: [{ bearerAuth: [] }],
-      querystring: {
-        type: 'object',
-        properties: {
-          page: { type: 'number', minimum: 1, default: 1 },
-          limit: { type: 'number', minimum: 1, maximum: 100, default: 20 },
-          userId: { type: 'string' },
-          subscriptionId: { type: 'string' },
-          isActive: { type: 'boolean' },
-        },
-      },
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            data: { type: 'array' },
-            pagination: { type: 'object' },
-          },
-        },
-      },
-    },
-    preHandler: [fastify.authenticate, fastify.requirePermission('admin:api_keys')],
-    handler: async (_request, _reply) => {
-      // This would be implemented for admin use
-      throw fastify.createError(501, 'Admin endpoint not implemented yet');
-    },
-  });
-
-  // Cleanup expired keys (admin only)
-  fastify.post('/admin/cleanup-expired', {
-    schema: {
-      tags: ['API Keys'],
-      description: 'Cleanup expired API keys (admin only)',
-      security: [{ bearerAuth: [] }],
-      response: {
-        200: {
-          type: 'object',
-          properties: {
-            message: { type: 'string' },
-            cleanedCount: { type: 'number' },
-          },
-        },
-      },
-    },
-    preHandler: [fastify.authenticate, fastify.requirePermission('admin:api_keys')],
-    handler: async (request, _reply) => {
-      const user = (request as AuthenticatedRequest).user;
-
-      try {
-        const cleanedCount = await apiKeyService.cleanupExpiredKeys();
-
-        // Create audit log
-        await fastify.dbUtils.query(
-          `INSERT INTO audit_logs (user_id, action, resource_type, metadata)
-           VALUES ($1, $2, $3, $4)`,
-          [user.userId, 'API_KEYS_CLEANUP', 'API_KEY', JSON.stringify({ cleanedCount })],
-        );
-
-        return {
-          message: 'Expired API keys cleaned up successfully',
-          cleanedCount,
-        };
-      } catch (error) {
-        fastify.log.error(error, 'Failed to cleanup expired API keys');
-        // Re-throw ApplicationError instances as-is
-        if (error instanceof ApplicationError) {
-          throw error;
-        }
-        // For other errors, include original message
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        throw fastify.createError(500, `Failed to cleanup expired API keys: ${errorMessage}`);
       }
     },
   });

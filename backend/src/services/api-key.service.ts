@@ -1959,7 +1959,286 @@ export class ApiKeyService extends BaseService {
   calculateDurationFromDate(expiresAt: Date): string {
     return this.calculateDuration(expiresAt);
   }
+  /**
+   * System-wide API key listing for the admin API Management panel.
+   * JOINs users for owner info; supports status filter, text search on
+   * key name / username / email, sorting, pagination. Always returns
+   * status stats for the whole system (independent of filters).
+   */
+  async listAllApiKeysAdmin(options: {
+    page?: number;
+    limit?: number;
+    status?: 'active' | 'revoked' | 'expired' | 'archived' | 'all';
+    userId?: string;
+    search?: string;
+    sortBy?: 'createdAt' | 'name' | 'lastUsedAt' | 'username' | 'currentSpend';
+    sortOrder?: 'asc' | 'desc';
+  }): Promise<{
+    data: Array<{
+      id: string;
+      name: string;
+      keyPrefix?: string;
+      status: 'active' | 'revoked' | 'expired' | 'archived';
+      isActive: boolean;
+      userId: string;
+      username?: string;
+      email?: string;
+      models: string[];
+      maxBudget?: number;
+      currentSpend?: number;
+      lastUsedAt?: string;
+      expiresAt?: string;
+      createdAt: string;
+      revokedAt?: string;
+      archivedAt?: string;
+    }>;
+    pagination: { page: number; limit: number; total: number; totalPages: number };
+    stats: { total: number; active: number; revoked: number; expired: number; archived: number };
+  }> {
+    const {
+      page = 1,
+      limit = 20,
+      status = 'active',
+      userId,
+      search,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = options;
+    const offset = (page - 1) * limit;
 
+    if (this.shouldUseMockData()) {
+      // Mock mode (no database): return empty dataset consistent with other
+      // service mock branches; the mock query fallback would otherwise
+      // return unrelated mock user rows.
+      return {
+        data: [],
+        pagination: { page, limit, total: 0, totalPages: 0 },
+        stats: { total: 0, active: 0, revoked: 0, expired: 0, archived: 0 },
+      };
+    }
+
+    try {
+      // --- Stats: whole-system status counts (ignores filters) ---
+      const statsResult = await this.fastify.dbUtils.queryOne(
+        `SELECT
+           COUNT(*)::int AS total,
+           COUNT(*) FILTER (WHERE is_active = true AND archived_at IS NULL)::int AS active,
+           COUNT(*) FILTER (WHERE is_active = false AND revoked_at IS NOT NULL)::int AS revoked,
+           COUNT(*) FILTER (WHERE is_active = true AND expires_at IS NOT NULL AND expires_at <= NOW())::int AS expired,
+           COUNT(*) FILTER (WHERE archived_at IS NOT NULL)::int AS archived
+         FROM api_keys`,
+      );
+      const stats = {
+        total: Number(statsResult?.total || 0),
+        active: Number(statsResult?.active || 0),
+        revoked: Number(statsResult?.revoked || 0),
+        expired: Number(statsResult?.expired || 0),
+        archived: Number(statsResult?.archived || 0),
+      };
+
+      // --- Filtered listing ---
+      const params: (string | number)[] = [];
+      let where = ' WHERE 1=1';
+
+      if (status === 'active') {
+        where += ` AND ak.is_active = true AND ak.archived_at IS NULL
+                   AND (ak.expires_at IS NULL OR ak.expires_at > NOW())`;
+      } else if (status === 'revoked') {
+        where += ` AND ak.is_active = false AND ak.revoked_at IS NOT NULL`;
+      } else if (status === 'expired') {
+        where += ` AND ak.is_active = true AND ak.expires_at IS NOT NULL AND ak.expires_at <= NOW()`;
+      } else if (status === 'archived') {
+        where += ` AND ak.archived_at IS NOT NULL`;
+      }
+
+      if (userId) {
+        params.push(userId);
+        where += ` AND ak.user_id = $${params.length}`;
+      }
+
+      if (search && search.trim()) {
+        params.push(`%${search.trim()}%`);
+        where += ` AND (ak.name ILIKE $${params.length}
+                       OR u.username ILIKE $${params.length}
+                       OR u.email ILIKE $${params.length})`;
+      }
+
+      const sortColumns: Record<string, string> = {
+        createdAt: 'ak.created_at',
+        name: 'ak.name',
+        lastUsedAt: 'ak.last_used_at',
+        username: 'u.username',
+        currentSpend: 'ak.current_spend',
+      };
+      const orderBy = `${sortColumns[sortBy] || 'ak.created_at'} ${sortOrder === 'asc' ? 'ASC' : 'DESC'} NULLS LAST`;
+
+      const countResult = await this.fastify.dbUtils.queryOne(
+        `SELECT COUNT(*)::int AS total
+         FROM api_keys ak
+         LEFT JOIN users u ON ak.user_id = u.id${where}`,
+        params,
+      );
+      const total = Number(countResult?.total || 0);
+
+      const dataResult = await this.fastify.dbUtils.queryMany(
+        `SELECT
+           ak.id, ak.name, ak.key_prefix, ak.is_active, ak.user_id,
+           ak.max_budget, ak.current_spend, ak.last_used_at,
+           ak.expires_at, ak.created_at, ak.revoked_at, ak.archived_at,
+           u.username, u.email,
+           COALESCE(
+             ARRAY_AGG(DISTINCT akm.model_id) FILTER (WHERE akm.model_id IS NOT NULL),
+             '{}'::text[]
+           ) AS models
+         FROM api_keys ak
+         LEFT JOIN users u ON ak.user_id = u.id
+         LEFT JOIN api_key_models akm ON ak.id = akm.api_key_id${where}
+         GROUP BY ak.id, u.username, u.email
+         ORDER BY ${orderBy}
+         LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+        [...params, limit, offset],
+      );
+
+      const now = Date.now();
+      const data = dataResult.map((row: Record<string, unknown>) => {
+        const isActive = Boolean(row.is_active);
+        const isArchived = Boolean(row.archived_at);
+        const isExpired =
+          isActive && row.expires_at && new Date(String(row.expires_at)).getTime() <= now;
+        let keyStatus: 'active' | 'revoked' | 'expired' | 'archived' = 'active';
+        if (isArchived) keyStatus = 'archived';
+        else if (!isActive) keyStatus = 'revoked';
+        else if (isExpired) keyStatus = 'expired';
+
+        return {
+          id: String(row.id),
+          name: String(row.name),
+          keyPrefix: row.key_prefix ? String(row.key_prefix) : undefined,
+          status: keyStatus,
+          isActive,
+          userId: String(row.user_id),
+          username: row.username ? String(row.username) : undefined,
+          email: row.email ? String(row.email) : undefined,
+          models: (row.models as string[]) || [],
+          maxBudget: row.max_budget != null ? Number(row.max_budget) : undefined,
+          currentSpend: row.current_spend != null ? Number(row.current_spend) : undefined,
+          lastUsedAt: row.last_used_at ? String(row.last_used_at) : undefined,
+          expiresAt: row.expires_at ? String(row.expires_at) : undefined,
+          createdAt: String(row.created_at),
+          revokedAt: row.revoked_at ? String(row.revoked_at) : undefined,
+          archivedAt: row.archived_at ? String(row.archived_at) : undefined,
+        };
+      });
+
+      return {
+        data,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+        stats,
+      };
+    } catch (error) {
+      this.fastify.log.error(error, 'Failed to list all API keys (admin)');
+      throw error;
+    }
+  }
+
+  /**
+   * Bulk soft-revoke for the admin API Management panel.
+   * LiteLLM-first per key (warn-and-continue), local deactivation, one audit
+   * log entry per successfully revoked key. Skips keys already inactive.
+   */
+  async bulkRevokeKeysAdmin(
+    keyIds: string[],
+    adminUserId: string,
+    reason: string,
+  ): Promise<{
+    revoked: number;
+    failed: number;
+    results: Array<{ keyId: string; success: boolean; error?: string }>;
+  }> {
+    const results: Array<{ keyId: string; success: boolean; error?: string }> = [];
+    let revoked = 0;
+    let failed = 0;
+
+    for (const keyId of keyIds) {
+      try {
+        const keyRow = await this.fastify.dbUtils.queryOne(
+          `SELECT id, user_id, name, key_prefix, models, is_active, lite_llm_key_value
+           FROM api_keys WHERE id = $1`,
+          [keyId],
+        );
+
+        if (!keyRow) {
+          results.push({ keyId, success: false, error: 'Key not found' });
+          failed++;
+          continue;
+        }
+
+        if (!keyRow.is_active) {
+          results.push({ keyId, success: false, error: 'Key already inactive' });
+          failed++;
+          continue;
+        }
+
+        // LiteLLM first — security priority (key stops working immediately)
+        if (keyRow.lite_llm_key_value && typeof keyRow.lite_llm_key_value === 'string') {
+          try {
+            await this.liteLLMService.deleteKey(keyRow.lite_llm_key_value);
+          } catch (error) {
+            this.fastify.log.warn(
+              { error, keyId },
+              'Failed to delete key from LiteLLM during bulk revocation, proceeding with local deactivation',
+            );
+          }
+        }
+
+        await this.fastify.dbUtils.query(
+          `UPDATE api_keys
+           SET is_active = false, revoked_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+           WHERE id = $1`,
+          [keyId],
+        );
+
+        await this.fastify.dbUtils.query(
+          `INSERT INTO audit_logs (user_id, action, resource_type, resource_id, metadata)
+           VALUES ($1, $2, $3, $4, $5)`,
+          [
+            adminUserId,
+            'ADMIN_REVOKE_API_KEY',
+            'API_KEY',
+            keyId,
+            JSON.stringify({
+              targetUserId: String(keyRow.user_id),
+              keyName: keyRow.name,
+              keyPrefix: keyRow.key_prefix,
+              models: keyRow.models,
+              reason,
+              bulk: true,
+            }),
+          ],
+        );
+
+        results.push({ keyId, success: true });
+        revoked++;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        this.fastify.log.error(
+          { error, keyId },
+          'Failed to revoke key during bulk revocation',
+        );
+        results.push({ keyId, success: false, error: errorMessage });
+        failed++;
+      }
+    }
+
+    return { revoked, failed, results };
+  }
+
+  // Private helper methods
   // Private helper methods
   private calculateDuration(expiresAt: Date): string {
     const diffMs = expiresAt.getTime() - Date.now();

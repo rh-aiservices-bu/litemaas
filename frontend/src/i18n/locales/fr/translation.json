@@ -483,7 +483,8 @@
       "subscriptions": "Gestion des Abonnements",
       "tools": "Paramètres et Outils",
       "usage": "Analyses d'utilisation",
-      "users": "Gestion des Utilisateurs"
+      "users": "Gestion des Utilisateurs",
+      "apiKeys": "Gestion des clés API"
     },
     "apiKeys": "Clés API",
     "chatbot": "Terrain de Jeu du Chatbot",
@@ -2104,6 +2105,67 @@
     "warnings": {
       "roleConflict": "Conflit de Rôles",
       "roleConflictDesc": "Les rôles Administrateur et Administrateur-lecture seule sont en conflit. Le rôle Administrateur aura la priorité."
+    }
+  },
+  "adminApiKeys": {
+    "title": "Gestion des clés API",
+    "accessDenied": "Accès refusé",
+    "accessDeniedDescription": "Vous n'avez pas l'autorisation d'afficher le panneau de gestion des clés API.",
+    "refresh": "Rafraîchir",
+    "status": {
+      "active": "Active",
+      "revoked": "Révoquée",
+      "expired": "Expirée",
+      "archived": "Archivée",
+      "all": "Toutes"
+    },
+    "filters": {
+      "searchPlaceholder": "Rechercher par nom de clé, utilisateur ou e-mail…",
+      "searchAria": "Rechercher des clés API",
+      "statusAria": "Filtrer par statut"
+    },
+    "table": {
+      "ariaLabel": "Clés API",
+      "select": "Sélectionner",
+      "name": "Nom",
+      "owner": "Propriétaire",
+      "status": "Statut",
+      "models": "Modèles",
+      "modelsCount": "{{count}} modèles",
+      "budget": "Budget",
+      "budgetProgress": "Utilisation du budget",
+      "lastUsed": "Dernière utilisation",
+      "created": "Créée",
+      "never": "Jamais"
+    },
+    "revoke": {
+      "button": "Révoquer la sélection ({{count}})",
+      "clearSelection": "Effacer la sélection",
+      "confirmTitle": "Révoquer {{count}} clé(s) API ?",
+      "confirmBody": "Les clés API sélectionnées seront immédiatement supprimées de LiteLLM et désactivées dans LiteMaaS. Les applications qui les utilisent cesseront de fonctionner.",
+      "confirmNote": "Cette action est consignée dans le journal d'audit. Les clés révoquées ne peuvent pas être restaurées ; les utilisateurs doivent créer de nouvelles clés.",
+      "confirmAction": "Révoquer les clés",
+      "success": "{{count}} clé(s) révoquée(s) avec succès",
+      "partial": "{{revoked}} clé(s) révoquée(s), {{failed}} échec(s)"
+    },
+    "cleanup": {
+      "button": "Nettoyer les expirées",
+      "confirmTitle": "Nettoyer les clés API expirées ?",
+      "confirmBody": "Toutes les clés actives dont la date d'expiration est dépassée seront désactivées et supprimées de LiteLLM.",
+      "confirmAction": "Nettoyer les expirées",
+      "success": "{{count}} clé(s) expirée(s) nettoyée(s)"
+    },
+    "error": {
+      "load": "Échec du chargement des clés API",
+      "loadDescription": "Une erreur s'est produite lors de la récupération des clés API. Veuillez réessayer."
+    },
+    "empty": {
+      "title": "Aucune clé API trouvée",
+      "description": "Aucune clé API ne correspond aux filtres actuels."
+    },
+    "pagination": {
+      "items": "éléments",
+      "of": "sur"
     }
   }
 }

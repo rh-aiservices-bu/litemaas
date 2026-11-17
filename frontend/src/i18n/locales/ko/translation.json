@@ -483,7 +483,8 @@
       "subscriptions": "구독 관리",
       "tools": "설정 및 도구",
       "usage": "사용량 분석",
-      "users": "사용자 관리"
+      "users": "사용자 관리",
+      "apiKeys": "API 키 관리"
     },
     "apiKeys": "API 키",
     "chatbot": "챗봇 플레이그라운드",
@@ -2104,6 +2105,67 @@
     "warnings": {
       "roleConflict": "역할 충돌",
       "roleConflictDesc": "관리자와 관리자(읽기 전용) 역할이 충돌합니다. 관리자 역할이 우선합니다."
+    }
+  },
+  "adminApiKeys": {
+    "title": "API 키 관리",
+    "accessDenied": "접근 거부",
+    "accessDeniedDescription": "API 키 관리 패널을 볼 권한이 없습니다.",
+    "refresh": "새로 고침",
+    "status": {
+      "active": "활성",
+      "revoked": "해지됨",
+      "expired": "만료됨",
+      "archived": "보관됨",
+      "all": "전체"
+    },
+    "filters": {
+      "searchPlaceholder": "키 이름, 사용자 이름 또는 이메일로 검색…",
+      "searchAria": "API 키 검색",
+      "statusAria": "상태별 필터"
+    },
+    "table": {
+      "ariaLabel": "API 키",
+      "select": "선택",
+      "name": "이름",
+      "owner": "소유자",
+      "status": "상태",
+      "models": "모델",
+      "modelsCount": "모델 {{count}}개",
+      "budget": "예산",
+      "budgetProgress": "예산 사용률",
+      "lastUsed": "마지막 사용",
+      "created": "생성일",
+      "never": "사용 안 함"
+    },
+    "revoke": {
+      "button": "선택 항목 해지 ({{count}})",
+      "clearSelection": "선택 취소",
+      "confirmTitle": "API 키 {{count}}개를 해지하시겠습니까?",
+      "confirmBody": "선택한 API 키는 LiteLLM에서 즉시 삭제되고 LiteMaaS에서 비활성화됩니다. 해당 키를 사용하는 애플리케이션은 작동이 중단됩니다.",
+      "confirmNote": "이 작업은 감사 로그에 기록됩니다. 해지된 키는 복구할 수 없으며 사용자는 새 키를 만들어야 합니다.",
+      "confirmAction": "키 해지",
+      "success": "{{count}}개 키가 성공적으로 해지되었습니다",
+      "partial": "{{revoked}}개 해지됨, {{failed}}개 실패"
+    },
+    "cleanup": {
+      "button": "만료 키 정리",
+      "confirmTitle": "만료된 API 키를 정리하시겠습니까?",
+      "confirmBody": "만료일이 지난 모든 활성 키는 비활성화되고 LiteLLM에서 제거됩니다.",
+      "confirmAction": "만료 키 정리",
+      "success": "만료된 키 {{count}}개가 정리되었습니다"
+    },
+    "error": {
+      "load": "API 키를 불러오지 못했습니다",
+      "loadDescription": "API 키를 가져오는 중 오류가 발생했습니다. 다시 시도해 주세요."
+    },
+    "empty": {
+      "title": "API 키가 없습니다",
+      "description": "현재 필터와 일치하는 API 키가 없습니다."
+    },
+    "pagination": {
+      "items": "항목",
+      "of": "/"
     }
   }
 }
