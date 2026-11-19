@@ -107,13 +107,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
         'Authentication failed',
       );
 
-      reply.status(401).send({
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Invalid or missing authentication token',
-        },
-        requestId: request.id,
-      });
+      throw fastify.createAuthError('Invalid or missing authentication token');
     }
   });
 

@@ -908,6 +908,10 @@ const ChatbotPage: React.FC = () => {
                                 isLoading={isCurrentlyStreaming && !message.content}
                                 timestamp={message.timestamp.toLocaleTimeString()}
                                 avatar={isAssistant ? orb : userAvatar}
+                                reactMarkdownProps={{
+                                  disallowedElements: ['img'],
+                                  unwrapDisallowed: true,
+                                }}
                               />
                             );
                           })

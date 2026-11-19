@@ -87,6 +87,12 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     return result;
   };
 
+  const stripSensitiveFields = (model: Model): Model => {
+    const { apiBase, backendModelName, inputCostPerToken, outputCostPerToken, tpm, rpm, ...safe } =
+      model as Model & Record<string, unknown>;
+    return safe as Model;
+  };
+
   // List models
   fastify.get<{
     Querystring: ModelListParams;
@@ -95,6 +101,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       tags: ['Models'],
       description: 'List available models',
+      security: [{ bearerAuth: [] }],
       querystring: {
         type: 'object',
         properties: {
@@ -165,8 +172,11 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
+    preHandler: [fastify.authenticate],
     handler: async (request, _reply) => {
       const { page = 1, limit = 20, search, provider, capability, isActive } = request.query;
+      const user = (request as AuthenticatedRequest).user;
+      const isAdmin = user?.roles?.includes('admin');
 
       try {
         // Try to get models from database first (synchronized models)
@@ -376,7 +386,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         );
 
         return {
-          data: paginatedModels,
+          data: isAdmin ? paginatedModels : paginatedModels.map(stripSensitiveFields),
           pagination: {
             page,
             limit,
@@ -405,6 +415,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       tags: ['Models'],
       description: 'Get model details',
+      security: [{ bearerAuth: [] }],
       params: {
         type: 'object',
         properties: {
@@ -447,8 +458,11 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
+    preHandler: [fastify.authenticate],
     handler: async (request, _reply) => {
       const { id } = request.params;
+      const user = (request as AuthenticatedRequest).user;
+      const isAdmin = user?.roles?.includes('admin');
 
       try {
         // First, query local database for the model
@@ -503,6 +517,15 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
           };
 
           fastify.log.info({ modelId: id }, 'Model details retrieved from database');
+
+          if (!isAdmin && modelDetails.metadata) {
+            const { apiBase, backendModelName, ...safeMetadata } = modelDetails.metadata as Record<
+              string,
+              unknown
+            >;
+            modelDetails.metadata = safeMetadata;
+          }
+
           return modelDetails;
         }
 
