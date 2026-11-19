@@ -19,12 +19,15 @@ describe('Security Tests', () => {
 
   describe('Authentication & Authorization', () => {
     it('should reject requests without authentication', async () => {
-      // Note: /api/v1/models is intentionally public and doesn't require authentication
       const protectedEndpoints = [
         '/api/v1/subscriptions',
         '/api/v1/api-keys',
         '/api/v1/usage/dashboard',
         '/api/v1/users/me/activity',
+        '/api/v1/models',
+        '/api/v1/models/providers',
+        '/api/v1/models/capabilities',
+        '/api/v1/models/health',
         '/api/v1/models/popularity',
       ];
 
@@ -44,18 +47,6 @@ describe('Security Tests', () => {
           expect(errorMessage).toMatch(/authentication|unauthorized/i);
         }
       }
-
-      // Verify that models endpoint is public (though it might fail if backend is unavailable)
-      const modelsResponse = await app.inject({
-        method: 'GET',
-        url: '/api/v1/models',
-        headers: {
-          'user-agent': 'vitest-test-runner',
-        },
-      });
-      // Models endpoint is public, so it should not return 401
-      // It may return 200 (success) or 500 (if LiteLLM/DB unavailable)
-      expect([200, 500]).toContain(modelsResponse.statusCode);
     });
 
     it('should reject unauthenticated requests with browser-like User-Agent (CWE-287 regression)', async () => {
@@ -223,7 +214,6 @@ describe('Security Tests', () => {
       });
 
       // API key validation should either work (200) or fail gracefully (401/403/500)
-      // Models endpoint might be public, but could also fail if backend unavailable (500)
       expect([200, 401, 403, 500]).toContain(response.statusCode);
       if (response.statusCode !== 200) {
         const error = response.json();

@@ -147,6 +147,9 @@ Response:
 
 List available models
 
+Non-admin responses omit internal fields (`apiBase`, `backendModelName`, `inputCostPerToken`,
+`outputCostPerToken`, `tpm`, `rpm`); `admin` and `admin-readonly` roles receive them.
+
 ```json
 Query Parameters:
 - page: number (default: 1)
@@ -186,6 +189,10 @@ Response:
 **Authorization**: Requires valid JWT token (any role)
 
 Get model details
+
+Non-admin responses omit internal metadata keys (`apiBase`, `backendModelName`,
+`inputCostPerToken`, `outputCostPerToken`, `tpm`, `rpm`, `litellmModelId`); `admin` and
+`admin-readonly` roles receive them.
 
 ```json
 Response:

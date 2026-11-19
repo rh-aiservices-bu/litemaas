@@ -92,8 +92,10 @@ describe('Error Flows Integration', () => {
       const result = JSON.parse(response.body);
       expect(result.error.code).toBe('UNAUTHORIZED');
       expect(result.error.message).toBe('Invalid or missing authentication token');
-      expect(result.requestId).toBeDefined();
-      // Note: Basic auth responses don't include statusCode, timestamp fields
+      expect(result.error.requestId).toBeDefined();
+      expect(result.error.statusCode).toBe(401);
+      expect(result.error.timestamp).toBeDefined();
+      expect(result).not.toHaveProperty('requestId');
     });
 
     it('should handle invalid JWT token', async () => {
@@ -478,33 +480,21 @@ describe('Error Flows Integration', () => {
         );
         expect(result.error, `${testCase.name} has message`).toHaveProperty('message');
 
-        // Authentication errors use basic format without statusCode/timestamp
-        if (testCase.name === 'Authentication Error') {
-          expect(result, `${testCase.name} has requestId`).toHaveProperty('requestId');
-        } else {
-          // Other error types should have full error format
-          expect(result.error, `${testCase.name} has statusCode`).toHaveProperty(
-            'statusCode',
-            testCase.expectedStatus,
-          );
-          expect(result.error, `${testCase.name} has requestId`).toHaveProperty('requestId');
-          expect(result.error, `${testCase.name} has timestamp`).toHaveProperty('timestamp');
+        // Every error, including authentication failures, uses the full format
+        expect(result.error, `${testCase.name} has statusCode`).toHaveProperty(
+          'statusCode',
+          testCase.expectedStatus,
+        );
+        expect(result.error, `${testCase.name} has requestId`).toHaveProperty('requestId');
+        expect(result.error, `${testCase.name} has timestamp`).toHaveProperty('timestamp');
 
-          // Verify timestamp format
-          expect(result.error.timestamp, `${testCase.name} timestamp format`).toMatch(
-            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
-          );
-        }
+        // Verify timestamp format
+        expect(result.error.timestamp, `${testCase.name} timestamp format`).toMatch(
+          /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/,
+        );
 
         // Check top-level structure
-        if (testCase.name === 'Authentication Error') {
-          expect(Object.keys(result).sort(), `${testCase.name} top-level properties`).toEqual([
-            'error',
-            'requestId',
-          ]);
-        } else {
-          expect(Object.keys(result), `${testCase.name} top-level properties`).toEqual(['error']);
-        }
+        expect(Object.keys(result), `${testCase.name} top-level properties`).toEqual(['error']);
       }
     });
 

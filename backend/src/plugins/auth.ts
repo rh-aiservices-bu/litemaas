@@ -16,7 +16,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorate('tokenService', tokenService);
 
   // Authentication decorator
-  fastify.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.decorate('authenticate', async (request: FastifyRequest, _reply: FastifyReply) => {
     try {
       // Try to get token from Authorization header
       let token = request.headers.authorization;

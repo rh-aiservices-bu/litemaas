@@ -22,6 +22,10 @@ export interface Model {
   supportsFunctionCalling?: boolean;
   supportsParallelFunctionCalling?: boolean;
   supportsToolChoice?: boolean;
+  supportsChat?: boolean;
+  supportsEmbeddings?: boolean;
+  supportsTokenize?: boolean;
+  supportsConvert?: boolean;
   restrictedAccess?: boolean; // When true, subscriptions require admin approval
 }
 

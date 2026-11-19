@@ -128,7 +128,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN" \
 
 Check the health status of the model synchronization system.
 
-**Authentication**: Not required (public health check)
+**Authentication**: Requires a valid JWT token (any role)
 
 #### Response
 
@@ -157,7 +157,8 @@ Check the health status of the model synchronization system.
 #### Example
 
 ```bash
-curl http://localhost:8081/api/v1/models/health
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  http://localhost:8081/api/v1/models/health
 ```
 
 ## Synchronization Process

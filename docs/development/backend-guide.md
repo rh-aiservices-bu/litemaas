@@ -77,7 +77,7 @@ curl -X POST localhost:8081/api/v1/models/sync \
   -H "Content-Type: application/json"
 
 # Check sync health and last sync time
-curl localhost:8081/api/v1/models/health
+curl -H "Authorization: Bearer $USER_TOKEN" localhost:8081/api/v1/models/health
 ```
 
 #### Authentication Problems
