@@ -87,6 +87,62 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     return result;
   };
 
+  // Fields that expose internal infrastructure or raw per-token cost/rate-limit data.
+  // Only administrators and read-only administrators may see them.
+  const INTERNAL_MODEL_FIELDS = [
+    'apiBase',
+    'backendModelName',
+    'inputCostPerToken',
+    'outputCostPerToken',
+    'tpm',
+    'rpm',
+  ] as const;
+
+  type InternalModelField = (typeof INTERNAL_MODEL_FIELDS)[number];
+
+  type PublicModel = Omit<Model, InternalModelField>;
+
+  // Same fields as above plus the LiteLLM-side identifier, which is only needed
+  // for admin-side wiring and is never exposed publicly.
+  const INTERNAL_METADATA_FIELDS = [...INTERNAL_MODEL_FIELDS, 'litellmModelId'] as const;
+
+  const INTERNAL_MODEL_ROLE: Record<string, true> = { admin: true, 'admin-readonly': true };
+
+  /**
+   * Allowlist of fields safe to return to non-privileged users. Keeping this
+   * explicit makes new Model fields private until deliberately exposed.
+   */
+  const toPublicModel = (model: Model): PublicModel => ({
+    id: model.id,
+    name: model.name,
+    provider: model.provider,
+    description: model.description,
+    capabilities: model.capabilities,
+    contextLength: model.contextLength,
+    pricing: model.pricing,
+    isActive: model.isActive,
+    createdAt: model.createdAt,
+    updatedAt: model.updatedAt,
+    maxTokens: model.maxTokens,
+    supportsVision: model.supportsVision,
+    supportsFunctionCalling: model.supportsFunctionCalling,
+    supportsParallelFunctionCalling: model.supportsParallelFunctionCalling,
+    supportsToolChoice: model.supportsToolChoice,
+    supportsChat: model.supportsChat,
+    supportsEmbeddings: model.supportsEmbeddings,
+    supportsTokenize: model.supportsTokenize,
+    supportsConvert: model.supportsConvert,
+    restrictedAccess: model.restrictedAccess,
+  });
+
+  const stripInternalMetadata = (metadata: Record<string, unknown>): Record<string, unknown> => {
+    const safe = { ...metadata };
+    for (const field of INTERNAL_METADATA_FIELDS) {
+      delete safe[field];
+    }
+    return safe;
+  };
+
   // List models
   fastify.get<{
     Querystring: ModelListParams;
@@ -95,6 +151,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       tags: ['Models'],
       description: 'List available models',
+      security: [{ bearerAuth: [] }],
       querystring: {
         type: 'object',
         properties: {
@@ -165,8 +222,11 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
+    preHandler: [fastify.authenticate],
     handler: async (request, _reply) => {
       const { page = 1, limit = 20, search, provider, capability, isActive } = request.query;
+      const user = (request as AuthenticatedRequest).user;
+      const seesInternalFields = user?.roles?.some((role) => INTERNAL_MODEL_ROLE[role]) ?? false;
 
       try {
         // Try to get models from database first (synchronized models)
@@ -376,7 +436,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         );
 
         return {
-          data: paginatedModels,
+          data: seesInternalFields ? paginatedModels : paginatedModels.map(toPublicModel),
           pagination: {
             page,
             limit,
@@ -405,6 +465,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       tags: ['Models'],
       description: 'Get model details',
+      security: [{ bearerAuth: [] }],
       params: {
         type: 'object',
         properties: {
@@ -430,7 +491,9 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
                 unit: { type: 'string' },
               },
             },
-            metadata: { type: 'object' },
+            // Metadata is built from internal model wiring; internal keys are
+            // removed for non-privileged users in the handler.
+            metadata: { type: 'object', additionalProperties: true },
           },
         },
         404: {
@@ -447,8 +510,11 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
+    preHandler: [fastify.authenticate],
     handler: async (request, _reply) => {
       const { id } = request.params;
+      const user = (request as AuthenticatedRequest).user;
+      const seesInternalFields = user?.roles?.some((role) => INTERNAL_MODEL_ROLE[role]) ?? false;
 
       try {
         // First, query local database for the model
@@ -503,6 +569,11 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
           };
 
           fastify.log.info({ modelId: id }, 'Model details retrieved from database');
+
+          if (!seesInternalFields) {
+            modelDetails.metadata = stripInternalMetadata(modelDetails.metadata);
+          }
+
           return modelDetails;
         }
 
@@ -578,6 +649,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       tags: ['Models'],
       description: 'Get available model providers',
+      security: [{ bearerAuth: [] }],
       response: {
         200: {
           type: 'object',
@@ -598,6 +670,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
+    preHandler: [fastify.authenticate],
     handler: async (_request, _reply) => {
       try {
         const liteLLMModels = await liteLLMService.getModels();
@@ -662,6 +735,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       tags: ['Models'],
       description: 'Get available model capabilities',
+      security: [{ bearerAuth: [] }],
       response: {
         200: {
           type: 'object',
@@ -682,6 +756,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
+    preHandler: [fastify.authenticate],
     handler: async (_request, _reply) => {
       try {
         const liteLLMModels = await liteLLMService.getModels();
@@ -899,6 +974,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       tags: ['Models', 'Health'],
       description: 'Check model synchronization health',
+      security: [{ bearerAuth: [] }],
       response: {
         200: {
           type: 'object',
@@ -912,6 +988,7 @@ const modelsRoutes: FastifyPluginAsync = async (fastify) => {
         },
       },
     },
+    preHandler: [fastify.authenticate],
     handler: async (_request, _reply) => {
       try {
         const stats = await modelSyncService.getSyncStats();

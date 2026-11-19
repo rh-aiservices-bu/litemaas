@@ -3,7 +3,7 @@
  * Tests model listing, details, sync, and provider information
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, afterEach, beforeEach } from 'vitest';
 import { FastifyInstance } from 'fastify';
 import { createApp } from '../../../src/app';
 import { generateTestToken } from '../setup';
@@ -34,10 +34,23 @@ describe('Models Routes Integration', () => {
   });
 
   describe('GET /api/v1/models', () => {
+    it('should require authentication', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/models',
+      });
+
+      expect(response.statusCode).toBe(401);
+      expect(response.json().error.code).toBe('UNAUTHORIZED');
+    });
+
     it('should list all available models', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       expect([200, 500]).toContain(response.statusCode);
@@ -56,6 +69,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models?page=1&limit=10',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (response.statusCode === 200) {
@@ -70,6 +86,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models?provider=openai',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (response.statusCode === 200) {
@@ -87,6 +106,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models?capability=vision',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (response.statusCode === 200) {
@@ -104,6 +126,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models?search=gpt',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       expect([200, 500]).toContain(response.statusCode);
@@ -113,6 +138,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (response.statusCode === 200) {
@@ -132,6 +160,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (response.statusCode === 200) {
@@ -150,6 +181,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models?page=0&limit=10000',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       // Should accept any page/limit within reasonable bounds in current impl
@@ -158,11 +192,23 @@ describe('Models Routes Integration', () => {
   });
 
   describe('GET /api/v1/models/:id', () => {
+    it('should require authentication', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/models/some-model',
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
     it('should retrieve model details by ID', async () => {
       // First get a model ID
       const listResponse = await app.inject({
         method: 'GET',
         url: '/api/v1/models',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (listResponse.statusCode === 200) {
@@ -173,6 +219,9 @@ describe('Models Routes Integration', () => {
           const response = await app.inject({
             method: 'GET',
             url: `/api/v1/models/${modelId}`,
+            headers: {
+              Authorization: `Bearer ${userToken}`,
+            },
           });
 
           expect([200, 404, 500]).toContain(response.statusCode);
@@ -191,6 +240,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models/non-existent-model',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       expect([404, 500]).toContain(response.statusCode);
@@ -205,6 +257,9 @@ describe('Models Routes Integration', () => {
       const listResponse = await app.inject({
         method: 'GET',
         url: '/api/v1/models',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (listResponse.statusCode === 200) {
@@ -215,6 +270,9 @@ describe('Models Routes Integration', () => {
           const response = await app.inject({
             method: 'GET',
             url: `/api/v1/models/${modelId}`,
+            headers: {
+              Authorization: `Bearer ${userToken}`,
+            },
           });
 
           if (response.statusCode === 200) {
@@ -230,6 +288,9 @@ describe('Models Routes Integration', () => {
       const listResponse = await app.inject({
         method: 'GET',
         url: '/api/v1/models',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (listResponse.statusCode === 200) {
@@ -240,6 +301,9 @@ describe('Models Routes Integration', () => {
           const response = await app.inject({
             method: 'GET',
             url: `/api/v1/models/${modelWithPricing.id}`,
+            headers: {
+              Authorization: `Bearer ${userToken}`,
+            },
           });
 
           if (response.statusCode === 200) {
@@ -253,11 +317,153 @@ describe('Models Routes Integration', () => {
     });
   });
 
+  describe('Model field visibility', () => {
+    const modelRow = {
+      id: 'visibility-model',
+      name: 'visibility-model',
+      provider: 'openai',
+      description: 'Model used to verify field visibility',
+      features: ['chat'],
+      context_length: 128000,
+      input_cost_per_token: 0.01,
+      output_cost_per_token: 0.03,
+      availability: 'available',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+      api_base: 'http://litellm.internal.svc.cluster.local:4000',
+      backend_model_name: 'internal-backend-model',
+      tpm: 1000,
+      rpm: 100,
+      max_tokens: 128000,
+      supports_vision: false,
+      supports_function_calling: true,
+      supports_parallel_function_calling: false,
+      supports_tool_choice: false,
+      restricted_access: false,
+      litellm_model_id: 'litellm-model-id',
+    };
+
+    const internalFields = [
+      'apiBase',
+      'backendModelName',
+      'inputCostPerToken',
+      'outputCostPerToken',
+      'tpm',
+      'rpm',
+    ];
+
+    let originalQueryMany: typeof app.dbUtils.queryMany;
+    let originalQuery: typeof app.dbUtils.query;
+
+    beforeEach(() => {
+      originalQueryMany = app.dbUtils.queryMany;
+      originalQuery = app.dbUtils.query;
+      app.dbUtils.queryMany = (async () => [modelRow]) as typeof app.dbUtils.queryMany;
+      app.dbUtils.query = (async () => ({
+        rows: [modelRow],
+        rowCount: 1,
+      })) as unknown as typeof app.dbUtils.query;
+    });
+
+    afterEach(() => {
+      app.dbUtils.queryMany = originalQueryMany;
+      app.dbUtils.query = originalQuery;
+    });
+
+    const listAs = (token: string) =>
+      app.inject({
+        method: 'GET',
+        url: '/api/v1/models',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+    const detailAs = (token: string) =>
+      app.inject({
+        method: 'GET',
+        url: `/api/v1/models/${modelRow.id}`,
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+    it('should hide internal fields from regular users in the model list', async () => {
+      const response = await listAs(userToken);
+      expect(response.statusCode).toBe(200);
+
+      const model = response.json().data[0];
+      expect(model).toMatchObject({ id: modelRow.id, name: modelRow.name });
+      for (const field of internalFields) {
+        expect(model, `leaked ${field}`).not.toHaveProperty(field);
+      }
+    });
+
+    it('should show internal fields to admins in the model list', async () => {
+      const response = await listAs(adminToken);
+      expect(response.statusCode).toBe(200);
+
+      const model = response.json().data[0];
+      expect(model.apiBase).toBe(modelRow.api_base);
+      expect(model.backendModelName).toBe(modelRow.backend_model_name);
+      expect(model.inputCostPerToken).toBe(modelRow.input_cost_per_token);
+      expect(model.tpm).toBe(modelRow.tpm);
+      expect(model.rpm).toBe(modelRow.rpm);
+    });
+
+    it('should show internal fields to read-only admins in the model list', async () => {
+      const response = await listAs(adminReadonlyToken);
+      expect(response.statusCode).toBe(200);
+
+      const model = response.json().data[0];
+      expect(model.apiBase).toBe(modelRow.api_base);
+      expect(model.inputCostPerToken).toBe(modelRow.input_cost_per_token);
+      expect(model.tpm).toBe(modelRow.tpm);
+    });
+
+    it('should hide internal metadata from regular users in model details', async () => {
+      const response = await detailAs(userToken);
+      expect(response.statusCode).toBe(200);
+
+      const { metadata } = response.json();
+      expect(metadata.maxTokens).toBe(modelRow.max_tokens);
+      for (const field of [...internalFields, 'litellmModelId']) {
+        expect(metadata, `leaked ${field}`).not.toHaveProperty(field);
+      }
+    });
+
+    it('should include internal metadata for admins in model details', async () => {
+      const response = await detailAs(adminToken);
+      expect(response.statusCode).toBe(200);
+
+      const { metadata } = response.json();
+      expect(metadata.apiBase).toBe(modelRow.api_base);
+      expect(metadata.backendModelName).toBe(modelRow.backend_model_name);
+      expect(metadata.inputCostPerToken).toBe(modelRow.input_cost_per_token);
+      expect(metadata.litellmModelId).toBe(modelRow.litellm_model_id);
+    });
+
+    it('should include internal metadata for read-only admins in model details', async () => {
+      const response = await detailAs(adminReadonlyToken);
+      expect(response.statusCode).toBe(200);
+
+      expect(response.json().metadata.apiBase).toBe(modelRow.api_base);
+    });
+  });
+
   describe('GET /api/v1/models/providers', () => {
+    it('should require authentication', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/models/providers',
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
     it('should return list of providers', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models/providers',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       expect([200, 500]).toContain(response.statusCode);
@@ -273,6 +479,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models/providers',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (response.statusCode === 200) {
@@ -291,6 +500,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models/providers',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (response.statusCode === 200) {
@@ -307,6 +519,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models/providers',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (response.statusCode === 200) {
@@ -324,10 +539,22 @@ describe('Models Routes Integration', () => {
   });
 
   describe('GET /api/v1/models/capabilities', () => {
+    it('should require authentication', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/models/capabilities',
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
     it('should return list of capabilities', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models/capabilities',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       expect([200, 500]).toContain(response.statusCode);
@@ -343,6 +570,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models/capabilities',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (response.statusCode === 200) {
@@ -361,6 +591,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models/capabilities',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (response.statusCode === 200) {
@@ -583,10 +816,22 @@ describe('Models Routes Integration', () => {
   });
 
   describe('GET /api/v1/models/health', () => {
-    it('should return health status without authentication', async () => {
+    it('should require authentication', async () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models/health',
+      });
+
+      expect(response.statusCode).toBe(401);
+    });
+
+    it('should return health status for authenticated users', async () => {
+      const response = await app.inject({
+        method: 'GET',
+        url: '/api/v1/models/health',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       expect([200, 500]).toContain(response.statusCode);
@@ -605,6 +850,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models/health',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (response.statusCode === 200) {
@@ -617,6 +865,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models/health',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       if (response.statusCode === 200) {
@@ -725,6 +976,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models?page=abc&limit=xyz',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       expect([200, 400, 500]).toContain(response.statusCode);
@@ -734,6 +988,9 @@ describe('Models Routes Integration', () => {
       const response = await app.inject({
         method: 'GET',
         url: '/api/v1/models?isActive=not-a-boolean',
+        headers: {
+          Authorization: `Bearer ${userToken}`,
+        },
       });
 
       expect([200, 400, 500]).toContain(response.statusCode);

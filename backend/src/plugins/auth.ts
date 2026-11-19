@@ -16,7 +16,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
   fastify.decorate('tokenService', tokenService);
 
   // Authentication decorator
-  fastify.decorate('authenticate', async (request: FastifyRequest, reply: FastifyReply) => {
+  fastify.decorate('authenticate', async (request: FastifyRequest, _reply: FastifyReply) => {
     try {
       // Try to get token from Authorization header
       let token = request.headers.authorization;
@@ -107,13 +107,7 @@ const authPlugin: FastifyPluginAsync = async (fastify) => {
         'Authentication failed',
       );
 
-      reply.status(401).send({
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Invalid or missing authentication token',
-        },
-        requestId: request.id,
-      });
+      throw fastify.createAuthError('Invalid or missing authentication token');
     }
   });
 

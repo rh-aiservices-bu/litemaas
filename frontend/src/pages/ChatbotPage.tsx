@@ -73,6 +73,7 @@ import {
 } from '../types/chat';
 
 import ThinkingBlock from '../components/chat/ThinkingBlock';
+import { rehypeStripImages } from '../utils/markdown.utils';
 import { extractReasoning, resolveThinking } from '../utils/thinkingParser';
 import userAvatar from '../../src/assets/images/avatar-placeholder.svg';
 import orb from '../../src/assets/images/orb.svg';
@@ -908,6 +909,7 @@ const ChatbotPage: React.FC = () => {
                                 isLoading={isCurrentlyStreaming && !message.content}
                                 timestamp={message.timestamp.toLocaleTimeString()}
                                 avatar={isAssistant ? orb : userAvatar}
+                                additionalRehypePlugins={[rehypeStripImages]}
                               />
                             );
                           })
